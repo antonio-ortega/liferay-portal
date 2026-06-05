@@ -317,3 +317,4 @@ public class ContentElementSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-950458528

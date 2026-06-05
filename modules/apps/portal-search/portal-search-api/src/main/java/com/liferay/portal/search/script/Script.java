@@ -5,26 +5,51 @@
 
 package com.liferay.portal.search.script;
 
+import java.util.Collections;
 import java.util.Map;
-
-import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author Michael C. Han
  * @author Wade Cao
  * @author André de Oliveira
  */
-@ProviderType
-public interface Script {
+public class Script {
 
-	public String getIdOrCode();
+	public String getIdOrCode() {
+		return _idOrCode;
+	}
 
-	public String getLanguage();
+	public String getLanguage() {
+		return _language;
+	}
 
-	public Map<String, String> getOptions();
+	public Map<String, String> getOptions() {
+		return Collections.unmodifiableMap(_options);
+	}
 
-	public Map<String, Object> getParameters();
+	public Map<String, Object> getParameters() {
+		return Collections.unmodifiableMap(_parameters);
+	}
 
-	public ScriptType getScriptType();
+	public ScriptType getScriptType() {
+		return _scriptType;
+	}
+
+	protected Script(
+		String idOrCode, String language, ScriptType scriptType,
+		Map<String, String> options, Map<String, Object> parameters) {
+
+		_idOrCode = idOrCode;
+		_language = language;
+		_scriptType = scriptType;
+		_options = options;
+		_parameters = parameters;
+	}
+
+	private final String _idOrCode;
+	private final String _language;
+	private final Map<String, String> _options;
+	private final Map<String, Object> _parameters;
+	private final ScriptType _scriptType;
 
 }

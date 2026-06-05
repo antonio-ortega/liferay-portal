@@ -21,7 +21,6 @@ long accountEntryId = accountEntryDisplay.getAccountEntryId();
 	direction="left-side"
 	icon="<%= StringPool.BLANK %>"
 	markupView="lexicon"
-	message="<%= StringPool.BLANK %>"
 	showWhenSingleIcon="<%= true %>"
 >
 	<c:if test="<%= AccountEntryPermission.contains(permissionChecker, accountEntryId, ActionKeys.UPDATE) %>">
@@ -37,16 +36,16 @@ long accountEntryId = accountEntryDisplay.getAccountEntryId();
 		/>
 	</c:if>
 
-	<c:if test="<%= Objects.equals(AccountConstants.ACCOUNT_ENTRY_TYPE_BUSINESS, accountEntryDisplay.getType()) && AccountEntryPermission.contains(permissionChecker, accountEntryId, ActionKeys.MANAGE_USERS) %>">
-		<portlet:renderURL var="manageUsersURL">
+	<c:if test="<%= Objects.equals(AccountConstants.ACCOUNT_ENTRY_TYPE_BUSINESS, accountEntryDisplay.getType()) && AccountEntryPermission.contains(permissionChecker, accountEntryId, AccountActionKeys.VIEW_USERS) %>">
+		<portlet:renderURL var="viewUsersURL">
 			<portlet:param name="mvcRenderCommandName" value="/account_admin/edit_account_entry" />
 			<portlet:param name="screenNavigationCategoryKey" value="<%= AccountScreenNavigationEntryConstants.CATEGORY_KEY_USERS %>" />
 			<portlet:param name="accountEntryId" value="<%= String.valueOf(accountEntryId) %>" />
 		</portlet:renderURL>
 
 		<liferay-ui:icon
-			message="manage-users"
-			url="<%= manageUsersURL %>"
+			message="view-users"
+			url="<%= viewUsersURL %>"
 		/>
 	</c:if>
 

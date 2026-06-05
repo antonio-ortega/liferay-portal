@@ -6,9 +6,11 @@
 package com.liferay.object.rest.internal.util;
 
 import com.liferay.asset.kernel.model.AssetCategory;
-import com.liferay.asset.kernel.service.AssetCategoryLocalServiceUtil;
+import com.liferay.asset.kernel.service.AssetCategoryServiceUtil;
 import com.liferay.object.comment.ObjectEntryComment;
 import com.liferay.object.rest.dto.v1_0.ObjectEntry;
+import com.liferay.object.rest.dto.v1_0.ParentTaxonomyCategory;
+import com.liferay.object.rest.dto.v1_0.ParentTaxonomyVocabulary;
 import com.liferay.object.rest.dto.v1_0.Status;
 import com.liferay.object.rest.dto.v1_0.TaxonomyCategoryBrief;
 import com.liferay.object.service.ObjectEntryLocalServiceUtil;
@@ -92,8 +94,7 @@ public class ServiceContextUtil {
 		serviceContext.setAddGuestPermissions(true);
 
 		if (objectEntry.getTaxonomyCategoryIds() == null) {
-			_setObjectEntryTaxonomyCategoryIds(
-				companyId, groupId, userId, objectEntry);
+			_setObjectEntryTaxonomyCategoryIds(companyId, groupId, objectEntry);
 		}
 
 		if (objectEntry.getTaxonomyCategoryIds() != null) {
@@ -168,7 +169,7 @@ public class ServiceContextUtil {
 	}
 
 	private static void _setObjectEntryTaxonomyCategoryIds(
-		long companyId, long groupId, long userId, ObjectEntry objectEntry) {
+		long companyId, long groupId, ObjectEntry objectEntry) {
 
 		TaxonomyCategoryBrief[] taxonomyCategoryBriefs =
 			objectEntry.getTaxonomyCategoryBriefs();
@@ -195,9 +196,31 @@ public class ServiceContextUtil {
 				taxonomyCategoryBrief);
 
 			try {
+				String parentTaxonomyCategoryExternalReferenceCode = null;
+
+				ParentTaxonomyCategory parentTaxonomyCategory =
+					taxonomyCategoryBrief.getParentTaxonomyCategory();
+
+				if (parentTaxonomyCategory != null) {
+					parentTaxonomyCategoryExternalReferenceCode =
+						parentTaxonomyCategory.getExternalReferenceCode();
+				}
+
+				String parentTaxonomyVocabularyExternalReferenceCode = null;
+
+				ParentTaxonomyVocabulary parentTaxonomyVocabulary =
+					taxonomyCategoryBrief.getParentTaxonomyVocabulary();
+
+				if (parentTaxonomyVocabulary != null) {
+					parentTaxonomyVocabularyExternalReferenceCode =
+						parentTaxonomyVocabulary.getExternalReferenceCode();
+				}
+
 				AssetCategory assetCategory =
-					AssetCategoryLocalServiceUtil.getOrAddEmptyCategory(
-						externalReferenceCode, userId, groupId);
+					AssetCategoryServiceUtil.getOrAddEmptyCategoryWithAncestors(
+						externalReferenceCode, groupId,
+						parentTaxonomyCategoryExternalReferenceCode,
+						parentTaxonomyVocabularyExternalReferenceCode);
 
 				assetCategoryIds.add(assetCategory.getCategoryId());
 			}

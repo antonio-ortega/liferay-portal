@@ -11,6 +11,7 @@ import com.liferay.notification.model.NotificationTemplate;
 import com.liferay.notification.service.NotificationTemplateLocalService;
 import com.liferay.notification.type.NotificationType;
 import com.liferay.notification.type.NotificationTypeServiceTracker;
+import com.liferay.object.action.executor.BaseObjectActionExecutor;
 import com.liferay.object.action.executor.ObjectActionExecutor;
 import com.liferay.object.constants.ObjectActionExecutorConstants;
 import com.liferay.object.internal.action.util.ObjectEntryVariablesUtil;
@@ -20,7 +21,6 @@ import com.liferay.object.model.ObjectField;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.object.system.SystemObjectDefinitionManagerRegistry;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
@@ -37,10 +37,10 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(service = ObjectActionExecutor.class)
 public class NotificationTemplateObjectActionExecutorImpl
-	implements ObjectActionExecutor {
+	extends BaseObjectActionExecutor {
 
 	@Override
-	public void execute(
+	public void doExecute(
 			long companyId, long objectActionId,
 			UnicodeProperties parametersUnicodeProperties,
 			JSONObject payloadJSONObject, long userId)
@@ -106,8 +106,7 @@ public class NotificationTemplateObjectActionExecutorImpl
 			).parentClassPK(
 				GetterUtil.getLong(targetValues.get("parentClassPK"))
 			).portletId(
-				sourceObjectDefinition.isUnmodifiableSystemObject() ?
-					StringPool.BLANK : sourceObjectDefinition.getPortletId()
+				sourceObjectDefinition.getPortletId()
 			).preferredLanguageId(
 				payloadJSONObject.getString("preferredLanguageId")
 			).usePreferredLanguageForGuests(

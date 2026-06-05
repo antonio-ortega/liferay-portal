@@ -640,3 +640,4 @@ public class BatchPlannerPlanWrapper
 	}
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-1597958273

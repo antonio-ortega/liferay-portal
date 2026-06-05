@@ -721,12 +721,12 @@ public class LayoutServiceWrapper
 
 	@Override
 	public Layout getOrAddEmptyLayout(
-			String externalReferenceCode, long groupId,
+			String externalReferenceCode, long groupId, boolean privateLayout,
 			ServiceContext serviceContext)
 		throws Exception {
 
 		return _layoutService.getOrAddEmptyLayout(
-			externalReferenceCode, groupId, serviceContext);
+			externalReferenceCode, groupId, privateLayout, serviceContext);
 	}
 
 	/**
@@ -921,6 +921,13 @@ public class LayoutServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _layoutService.updateIconImage(plid, bytes);
+	}
+
+	@Override
+	public Layout updateIconImageId(long plid, long iconImageId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _layoutService.updateIconImageId(plid, iconImageId);
 	}
 
 	/**
@@ -1204,3 +1211,4 @@ public class LayoutServiceWrapper
 	private LayoutService _layoutService;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-1795368686

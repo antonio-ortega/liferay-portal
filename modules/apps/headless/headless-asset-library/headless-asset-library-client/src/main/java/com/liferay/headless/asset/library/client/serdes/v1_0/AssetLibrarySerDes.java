@@ -99,6 +99,16 @@ public class AssetLibrarySerDes {
 			sb.append("]");
 		}
 
+		if (assetLibrary.getCreator() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"creator\": ");
+
+			sb.append(String.valueOf(assetLibrary.getCreator()));
+		}
+
 		if (assetLibrary.getCreatorUserId() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -173,6 +183,20 @@ public class AssetLibrarySerDes {
 			sb.append("\"");
 
 			sb.append(_escape(assetLibrary.getExternalReferenceCode()));
+
+			sb.append("\"");
+		}
+
+		if (assetLibrary.getFriendlyURL() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"friendlyURL\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(assetLibrary.getFriendlyURL()));
 
 			sb.append("\"");
 		}
@@ -380,6 +404,13 @@ public class AssetLibrarySerDes {
 				String.valueOf(assetLibrary.getConnectedSites()));
 		}
 
+		if (assetLibrary.getCreator() == null) {
+			map.put("creator", null);
+		}
+		else {
+			map.put("creator", String.valueOf(assetLibrary.getCreator()));
+		}
+
 		if (assetLibrary.getCreatorUserId() == null) {
 			map.put("creatorUserId", null);
 		}
@@ -431,6 +462,14 @@ public class AssetLibrarySerDes {
 			map.put(
 				"externalReferenceCode",
 				String.valueOf(assetLibrary.getExternalReferenceCode()));
+		}
+
+		if (assetLibrary.getFriendlyURL() == null) {
+			map.put("friendlyURL", null);
+		}
+		else {
+			map.put(
+				"friendlyURL", String.valueOf(assetLibrary.getFriendlyURL()));
 		}
 
 		if (assetLibrary.getId() == null) {
@@ -552,6 +591,9 @@ public class AssetLibrarySerDes {
 			else if (Objects.equals(jsonParserFieldName, "connectedSites")) {
 				return false;
 			}
+			else if (Objects.equals(jsonParserFieldName, "creator")) {
+				return false;
+			}
 			else if (Objects.equals(jsonParserFieldName, "creatorUserId")) {
 				return false;
 			}
@@ -570,6 +612,9 @@ public class AssetLibrarySerDes {
 			else if (Objects.equals(
 						jsonParserFieldName, "externalReferenceCode")) {
 
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "friendlyURL")) {
 				return false;
 			}
 			else if (Objects.equals(jsonParserFieldName, "id")) {
@@ -651,6 +696,12 @@ public class AssetLibrarySerDes {
 					assetLibrary.setConnectedSites(connectedSitesArray);
 				}
 			}
+			else if (Objects.equals(jsonParserFieldName, "creator")) {
+				if (jsonParserFieldValue != null) {
+					assetLibrary.setCreator(
+						CreatorSerDes.toDTO((String)jsonParserFieldValue));
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "creatorUserId")) {
 				if (jsonParserFieldValue != null) {
 					assetLibrary.setCreatorUserId(
@@ -686,6 +737,11 @@ public class AssetLibrarySerDes {
 				if (jsonParserFieldValue != null) {
 					assetLibrary.setExternalReferenceCode(
 						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "friendlyURL")) {
+				if (jsonParserFieldValue != null) {
+					assetLibrary.setFriendlyURL((String)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "id")) {
@@ -880,3 +936,4 @@ public class AssetLibrarySerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-723259776

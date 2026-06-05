@@ -39,9 +39,11 @@ public class LayoutPageTemplateCollectionUpgradeProcess extends UpgradeProcess {
 
 	private void _upgradeLayoutPageTemplateCollectionKey() throws Exception {
 		try (Statement s = connection.createStatement();
+
 			ResultSet resultSet = s.executeQuery(
 				"select layoutPageTemplateCollectionId, name from " +
 					"LayoutPageTemplateCollection");
+
 			PreparedStatement preparedStatement =
 				AutoBatchPreparedStatementUtil.autoBatch(
 					connection,

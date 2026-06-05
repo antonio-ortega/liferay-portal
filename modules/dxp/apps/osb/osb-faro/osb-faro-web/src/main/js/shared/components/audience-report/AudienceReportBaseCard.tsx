@@ -21,12 +21,13 @@ function AudienceReportBaseCard({
 			minHeight={536}
 			reportContainer={ReportContainer.AudienceCard}
 		>
-			{({filters, rangeSelectors}) => (
+			{({experienceId, filters, rangeSelectors}) => (
 				<Card.Body>
 					<AudienceReport
 						{...props}
+						experienceId={experienceId}
 						filters={filters}
-						mapper={result => result?.[name]?.[metricName]}
+						mapper={(result: any) => result?.[name]?.[metricName]}
 						name={name}
 						Query={AudienceReportQuery({
 							metricName,

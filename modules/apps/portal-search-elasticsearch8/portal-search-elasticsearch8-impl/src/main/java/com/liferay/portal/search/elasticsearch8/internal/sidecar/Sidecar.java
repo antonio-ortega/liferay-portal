@@ -13,7 +13,6 @@ import com.liferay.petra.process.ProcessConfig;
 import com.liferay.petra.process.ProcessExecutor;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
@@ -52,8 +51,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
-import java.util.TreeSet;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
@@ -103,16 +100,23 @@ public class Sidecar {
 
 		PersistedProcess persistedProcess = new PersistedProcess(
 			bundleURL,
-			new String[] {
-				SidecarMainProcessCallable.class.getName(),
-				StartSidecarProcessCallable.class.getName()
-			},
 			_createProcessConfig(
 				_getJVMArguments(), bootstrapClassPath, _getEnvironment(),
 				StringBundler.concat(
 					bundleURL.getPath(), File.pathSeparator,
 					bootstrapClassPath)),
-			"sidecar");
+			"sidecar",
+			new SidecarMainProcessCallable(
+				_elasticsearchConfigurationWrapper.sidecarHeartbeatInterval()),
+			new StartSidecarProcessCallable(
+				StringBundler.concat(
+					"logger.bootstrapchecks.level=error\nlogger.",
+					"bootstrapchecks.name=org.elasticsearch.bootstrap.",
+					"BootstrapChecks\nlogger.deprecation.level=error\nlogger.",
+					"deprecation.name=org.elasticsearch.deprecation\n",
+					ResourceUtil.getResourceAsString(
+						Sidecar.class, "dependencies/log4j2.properties")),
+				_getSettings()));
 
 		Serializer serializer = new Serializer();
 
@@ -382,19 +386,6 @@ public class Sidecar {
 		}
 
 		arguments.add("-Djava.io.tmpdir=" + _sidecarTempPath.toAbsolutePath());
-		arguments.add(
-			"-Dsidecar.heart.beat.interval=" +
-				_elasticsearchConfigurationWrapper.sidecarHeartbeatInterval());
-		arguments.add(
-			StringBundler.concat(
-				"-Dsidecar.log4j2.properties=",
-				"logger.bootstrapchecks.name=org.elasticsearch.bootstrap.",
-				"BootstrapChecks\nlogger.bootstrapchecks.level=error\n",
-				"logger.deprecation.name=org.elasticsearch.deprecation\n",
-				"logger.deprecation.level=error\n",
-				ResourceUtil.getResourceAsString(
-					Sidecar.class, "dependencies/log4j2.properties")));
-		arguments.add("-Dsidecar.settings=" + _getSettings());
 		arguments.add("--enable-native-access=ALL-UNNAMED");
 		arguments.add(
 			"--enable-native-access=org.elasticsearch.nativeaccess," +
@@ -546,21 +537,7 @@ public class Sidecar {
 		settingsHelperImpl.loadFromSource(
 			_elasticsearchConfigurationWrapper.additionalConfigurations());
 
-		JSONObject settingsJSONObject =
-			settingsHelperImpl.getSettingsJSONObject();
-
-		Set<String> keys = new TreeSet<>(settingsJSONObject.keySet());
-
-		StringBundler sb = new StringBundler(keys.size() * 4);
-
-		for (String key : keys) {
-			sb.append(key);
-			sb.append(": ");
-			sb.append(settingsJSONObject.get(key));
-			sb.append(StringPool.NEW_LINE);
-		}
-
-		return sb.toString();
+		return String.valueOf(settingsHelperImpl.getSettingsJSONObject());
 	}
 
 	private String _getSidecarVersion() {

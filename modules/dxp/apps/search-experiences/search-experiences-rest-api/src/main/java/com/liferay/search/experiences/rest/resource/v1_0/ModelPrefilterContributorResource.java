@@ -148,3 +148,4 @@ public interface ModelPrefilterContributorResource {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:539595503

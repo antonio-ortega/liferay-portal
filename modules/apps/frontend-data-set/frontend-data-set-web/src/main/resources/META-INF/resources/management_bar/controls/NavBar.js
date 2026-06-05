@@ -15,9 +15,9 @@ import ActiveViewSelector from './ActiveViewSelector';
 import CreationMenu from './CreationMenu';
 import InfoPanelToggleButton from './InfoPanelToggleButton';
 import MainSearch from './MainSearch';
-import SnapshotsControls from './SnapshotsControls';
 import SortDropdown from './SortDropdown';
 import FiltersDropdown from './filters/FiltersDropdown';
+import SnapshotsControls from './snapshots/SnapshotsControls';
 
 function NavBar({creationMenu, showSearch}) {
 	const {globalFDSState, showInfoPanel} = useContext(FrontendDataSetContext);
@@ -76,7 +76,9 @@ function NavBar({creationMenu, showSearch}) {
 					</ManagementToolbar.Item>
 				)}
 
-				{snapshotsEnabled && <SnapshotsControls />}
+				{Liferay.FeatureFlags['LPS-164563'] && snapshotsEnabled && (
+					<SnapshotsControls />
+				)}
 
 				{views?.length > 1 && (
 					<ManagementToolbar.Item>

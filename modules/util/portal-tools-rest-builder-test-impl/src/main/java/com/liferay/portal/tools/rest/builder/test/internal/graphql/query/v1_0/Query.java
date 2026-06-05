@@ -249,7 +249,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {batchTestEntity(batchTestEntityId: ___){customFields, externalReferenceCode, id, name, nestedField, relatedCompanyTestEntity}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {batchTestEntity(batchTestEntityId: ___){acceptAllLanguages, customFields, externalReferenceCode, id, name, nestedField, relatedCompanyTestEntity}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
 	public BatchTestEntity batchTestEntity(
@@ -266,7 +266,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {batchTestEntityByExternalReferenceCode(externalReferenceCode: ___){customFields, externalReferenceCode, id, name, nestedField, relatedCompanyTestEntity}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {batchTestEntityByExternalReferenceCode(externalReferenceCode: ___){acceptAllLanguages, customFields, externalReferenceCode, id, name, nestedField, relatedCompanyTestEntity}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
 	public BatchTestEntity batchTestEntityByExternalReferenceCode(
@@ -1034,55 +1034,6 @@ public class Query {
 					testEntityId));
 	}
 
-	@GraphQLTypeExtension(SiteTestEntity.class)
-	public class GetSiteTestEntityPermissionsPageTypeExtension {
-
-		public GetSiteTestEntityPermissionsPageTypeExtension(
-			SiteTestEntity siteTestEntity) {
-
-			_siteTestEntity = siteTestEntity;
-		}
-
-		@GraphQLField
-		public SiteTestEntityPage testEntityPermissions(
-				@GraphQLName("roleNames") String roleNames)
-			throws Exception {
-
-			return _applyComponentServiceObjects(
-				_siteTestEntityResourceComponentServiceObjects,
-				Query.this::_populateResourceContext,
-				siteTestEntityResource -> new SiteTestEntityPage(
-					siteTestEntityResource.getSiteTestEntityPermissionsPage(
-						_siteTestEntity.getId(), roleNames)));
-		}
-
-		private SiteTestEntity _siteTestEntity;
-
-	}
-
-	@GraphQLTypeExtension(TestEntity.class)
-	public class GetTestEntityTestEntityAddressTypeExtension {
-
-		public GetTestEntityTestEntityAddressTypeExtension(
-			TestEntity testEntity) {
-
-			_testEntity = testEntity;
-		}
-
-		@GraphQLField
-		public TestEntityAddress testEntityAddress() throws Exception {
-			return _applyComponentServiceObjects(
-				_testEntityAddressResourceComponentServiceObjects,
-				Query.this::_populateResourceContext,
-				testEntityAddressResource ->
-					testEntityAddressResource.getTestEntityTestEntityAddress(
-						_testEntity.getId()));
-		}
-
-		private TestEntity _testEntity;
-
-	}
-
 	@GraphQLTypeExtension(CompanyTestEntity.class)
 	public class GetBatchTestEntityByExternalReferenceCodeTypeExtension {
 
@@ -1160,6 +1111,55 @@ public class Query {
 		}
 
 		private BatchTestEntity _batchTestEntity;
+
+	}
+
+	@GraphQLTypeExtension(SiteTestEntity.class)
+	public class GetSiteTestEntityPermissionsPageTypeExtension {
+
+		public GetSiteTestEntityPermissionsPageTypeExtension(
+			SiteTestEntity siteTestEntity) {
+
+			_siteTestEntity = siteTestEntity;
+		}
+
+		@GraphQLField
+		public SiteTestEntityPage testEntityPermissions(
+				@GraphQLName("roleNames") String roleNames)
+			throws Exception {
+
+			return _applyComponentServiceObjects(
+				_siteTestEntityResourceComponentServiceObjects,
+				Query.this::_populateResourceContext,
+				siteTestEntityResource -> new SiteTestEntityPage(
+					siteTestEntityResource.getSiteTestEntityPermissionsPage(
+						_siteTestEntity.getId(), roleNames)));
+		}
+
+		private SiteTestEntity _siteTestEntity;
+
+	}
+
+	@GraphQLTypeExtension(TestEntity.class)
+	public class GetTestEntityTestEntityAddressTypeExtension {
+
+		public GetTestEntityTestEntityAddressTypeExtension(
+			TestEntity testEntity) {
+
+			_testEntity = testEntity;
+		}
+
+		@GraphQLField
+		public TestEntityAddress testEntityAddress() throws Exception {
+			return _applyComponentServiceObjects(
+				_testEntityAddressResourceComponentServiceObjects,
+				Query.this::_populateResourceContext,
+				testEntityAddressResource ->
+					testEntityAddressResource.getTestEntityTestEntityAddress(
+						_testEntity.getId()));
+		}
+
+		private TestEntity _testEntity;
 
 	}
 
@@ -2150,3 +2150,4 @@ public class Query {
 	private com.liferay.portal.kernel.model.User _user;
 
 }
+// LIFERAY-REST-BUILDER-HASH:268900490

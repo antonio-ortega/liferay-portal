@@ -8,11 +8,8 @@ package com.liferay.portal.search.opensearch2.internal.search.engine.adapter;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.search.engine.adapter.SearchEngineAdapter;
 import com.liferay.portal.search.opensearch2.internal.connection.OpenSearchConnectionManager;
-import com.liferay.portal.search.opensearch2.internal.search.engine.adapter.cluster.ClusterRequestExecutorTestUtil;
-import com.liferay.portal.search.opensearch2.internal.search.engine.adapter.document.DocumentRequestExecutorFixture;
-import com.liferay.portal.search.opensearch2.internal.search.engine.adapter.index.IndexRequestExecutorTestUtil;
-import com.liferay.portal.search.opensearch2.internal.search.engine.adapter.search.SearchRequestExecutorFixture;
-import com.liferay.portal.search.opensearch2.internal.search.engine.adapter.snapshot.SnapshotRequestExecutorTestUtil;
+
+import java.util.Collections;
 
 /**
  * @author Michael C. Han
@@ -31,23 +28,7 @@ public class OpenSearchEngineAdapterFixture {
 	protected static SearchEngineAdapter createSearchEngineAdapter(
 		OpenSearchConnectionManager openSearchConnectionManager) {
 
-		DocumentRequestExecutorFixture documentRequestExecutorFixture =
-			new DocumentRequestExecutorFixture() {
-				{
-					setOpenSearchConnectionManager(openSearchConnectionManager);
-				}
-			};
-
-		_searchRequestExecutorFixture = new SearchRequestExecutorFixture() {
-			{
-				setOpenSearchConnectionManager(openSearchConnectionManager);
-			}
-		};
-
-		documentRequestExecutorFixture.setUp();
-		_searchRequestExecutorFixture.setUp();
-
-		SearchEngineAdapter searchEngineAdapter =
+		OpenSearchSearchEngineAdapterImpl openSearchSearchEngineAdapterImpl =
 			new OpenSearchSearchEngineAdapterImpl() {
 				{
 					setThrowOriginalExceptions(true);
@@ -55,25 +36,12 @@ public class OpenSearchEngineAdapterFixture {
 			};
 
 		ReflectionTestUtil.setFieldValue(
-			searchEngineAdapter, "_clusterRequestExecutor",
-			ClusterRequestExecutorTestUtil.createClusterRequestExecutor(
-				openSearchConnectionManager));
-		ReflectionTestUtil.setFieldValue(
-			searchEngineAdapter, "_documentRequestExecutor",
-			documentRequestExecutorFixture.getDocumentRequestExecutor());
-		ReflectionTestUtil.setFieldValue(
-			searchEngineAdapter, "_indexRequestExecutor",
-			IndexRequestExecutorTestUtil.createIndexRequestExecutor(
-				openSearchConnectionManager));
-		ReflectionTestUtil.setFieldValue(
-			searchEngineAdapter, "_searchRequestExecutor",
-			_searchRequestExecutorFixture.getSearchRequestExecutor());
-		ReflectionTestUtil.setFieldValue(
-			searchEngineAdapter, "_snapshotRequestExecutor",
-			SnapshotRequestExecutorTestUtil.createSnapshotRequestExecutor(
-				openSearchConnectionManager));
+			openSearchSearchEngineAdapterImpl, "_openSearchConnectionManager",
+			openSearchConnectionManager);
 
-		return searchEngineAdapter;
+		openSearchSearchEngineAdapterImpl.activate(Collections.emptyMap());
+
+		return openSearchSearchEngineAdapterImpl;
 	}
 
 	protected void setOpenSearchConnectionManager(
@@ -81,8 +49,6 @@ public class OpenSearchEngineAdapterFixture {
 
 		_openSearchConnectionManager = openSearchConnectionManager;
 	}
-
-	private static SearchRequestExecutorFixture _searchRequestExecutorFixture;
 
 	private OpenSearchConnectionManager _openSearchConnectionManager;
 	private SearchEngineAdapter _searchEngineAdapter;

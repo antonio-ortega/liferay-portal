@@ -26,6 +26,7 @@ export default function CategoryUsagesFDSPropsTransformer({
 				{
 					component: ({itemData}) =>
 						SpaceRendererWithCache({
+							scopeKey: itemData.embedded.scopeKey,
 							spaceExternalReferenceCode:
 								getScopeExternalReferenceCode(itemData),
 						}),
@@ -34,5 +35,6 @@ export default function CategoryUsagesFDSPropsTransformer({
 				} as IInternalRenderer,
 			],
 		},
+		hideManagementBarInEmptyState: true,
 	};
 }

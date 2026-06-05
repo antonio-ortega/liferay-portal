@@ -50,9 +50,8 @@ const ProductDetail = ({product}: {product: Product}) => {
 									className="aspect-square object-cover rounded-lg w-full"
 									height={500}
 									onError={handleImageError}
-									quality={500}
+									quality={100}
 									src={images[selectedImageIndex].src}
-									unoptimized
 									width={480}
 								/>
 
@@ -94,7 +93,6 @@ const ProductDetail = ({product}: {product: Product}) => {
 										onError={handleImageError}
 										quality={100}
 										src={image.src}
-										unoptimized
 										width={16}
 									/>
 								</button>

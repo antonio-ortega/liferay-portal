@@ -5,6 +5,7 @@
 
 package com.liferay.headless.commerce.admin.shipment.internal.resource.v1_0;
 
+import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.headless.commerce.admin.shipment.dto.v1_0.ShipmentItem;
 import com.liferay.headless.commerce.admin.shipment.resource.v1_0.ShipmentItemResource;
 import com.liferay.petra.function.UnsafeBiConsumer;
@@ -75,6 +76,9 @@ public abstract class BaseShipmentItemResourceImpl
 	 *
 	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-commerce-admin-shipment/v1.0/shipment-items/{shipmentItemId}'  -u 'test@liferay.com:test'
 	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Deletes the shipment item identified by shipmentItemId. Calls the service with restoreStockQuantity=false; the row is removed without re-crediting the shipped quantity back to the order item."
+	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
@@ -147,6 +151,9 @@ public abstract class BaseShipmentItemResourceImpl
 	 *
 	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-commerce-admin-shipment/v1.0/shipment-items/by-externalReferenceCode/{externalReferenceCode}'  -u 'test@liferay.com:test'
 	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Deletes the shipment item identified by external reference code. Resolves the row and calls deleteCommerceShipmentItem with restoreStockQuantity=false; raises a not-found error (404) when the ERC is unknown."
+	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
@@ -177,6 +184,9 @@ public abstract class BaseShipmentItemResourceImpl
 	 *
 	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-admin-shipment/v1.0/shipment-items/by-externalReferenceCode/{externalReferenceCode}'  -u 'test@liferay.com:test'
 	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Returns the shipment item identified by external reference code. Resolves the row against the current company scope; raises a not-found error (404) when the ERC is unknown."
+	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
@@ -209,6 +219,9 @@ public abstract class BaseShipmentItemResourceImpl
 	 *
 	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-admin-shipment/v1.0/shipments/by-externalReferenceCode/{externalReferenceCode}/items'  -u 'test@liferay.com:test'
 	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Returns the shipment item rows owned by the shipment identified by external reference code, paged. Raises a not-found error (404) when the parent ERC is unknown."
+	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
@@ -250,6 +263,9 @@ public abstract class BaseShipmentItemResourceImpl
 	 *
 	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-admin-shipment/v1.0/shipment-items/{shipmentItemId}'  -u 'test@liferay.com:test'
 	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Returns the shipment item identified by shipmentItemId. Read-only fetch; the response includes the actions HATEOAS map for the current user."
+	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
@@ -280,6 +296,9 @@ public abstract class BaseShipmentItemResourceImpl
 	 *
 	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-admin-shipment/v1.0/shipments/{shipmentId}/items'  -u 'test@liferay.com:test'
 	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Returns the shipment item rows owned by the shipment identified by shipmentId, paged. Exposed as a nested field on the Shipment schema so a single GET on the parent can expand the shipmentItems collection."
+	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
@@ -319,6 +338,9 @@ public abstract class BaseShipmentItemResourceImpl
 	 *
 	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-commerce-admin-shipment/v1.0/shipment-items/{shipmentItemId}' -d $'{"externalReferenceCode": ___, "orderItemExternalReferenceCode": ___, "orderItemId": ___, "quantity": ___, "shipmentExternalReferenceCode": ___, "unitOfMeasureKey": ___, "validateInventory": ___, "warehouseExternalReferenceCode": ___, "warehouseId": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Updates the shipment item identified by shipmentItemId using JSON Merge Patch (only the supplied fields are modified). Resolves the row, then calls updateCommerceShipmentItem with the resolved warehouse, the new quantity, and the validateInventory flag (default true). Domain validation (inactive warehouse, insufficient stock) maps to 422."
+	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
@@ -351,6 +373,9 @@ public abstract class BaseShipmentItemResourceImpl
 	 *
 	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-commerce-admin-shipment/v1.0/shipment-items/by-externalReferenceCode/{externalReferenceCode}' -d $'{"externalReferenceCode": ___, "orderItemExternalReferenceCode": ___, "orderItemId": ___, "quantity": ___, "shipmentExternalReferenceCode": ___, "unitOfMeasureKey": ___, "validateInventory": ___, "warehouseExternalReferenceCode": ___, "warehouseId": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Updates the shipment item identified by external reference code using JSON Merge Patch (only the supplied fields are modified). Resolves the row, then calls the service with the resolved warehouse, the new quantity, and the validateInventory flag (default true). Raises a not-found error (404) when the ERC is unknown; domain validation (inactive warehouse, insufficient stock) maps to 422."
+	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
@@ -385,6 +410,9 @@ public abstract class BaseShipmentItemResourceImpl
 	 *
 	 * curl -X 'POST' 'http://localhost:8080/o/headless-commerce-admin-shipment/v1.0/shipments/{shipmentId}/items' -d $'{"externalReferenceCode": ___, "orderItemExternalReferenceCode": ___, "orderItemId": ___, "quantity": ___, "shipmentExternalReferenceCode": ___, "unitOfMeasureKey": ___, "validateInventory": ___, "warehouseExternalReferenceCode": ___, "warehouseId": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Creates a shipment item on the shipment identified by shipmentId. Resolves the order item and warehouse via the supplied IDs or external reference codes, then calls the service with the requested quantity and the validateInventory flag (default true). Domain validation (inactive warehouse, insufficient stock, missing order item) maps to 422."
+	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
@@ -417,6 +445,9 @@ public abstract class BaseShipmentItemResourceImpl
 	 *
 	 * curl -X 'POST' 'http://localhost:8080/o/headless-commerce-admin-shipment/v1.0/shipments/by-externalReferenceCode/{externalReferenceCode}/items' -d $'{"externalReferenceCode": ___, "orderItemExternalReferenceCode": ___, "orderItemId": ___, "quantity": ___, "shipmentExternalReferenceCode": ___, "unitOfMeasureKey": ___, "validateInventory": ___, "warehouseExternalReferenceCode": ___, "warehouseId": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Creates a shipment item on the shipment identified by external reference code. Resolves the parent shipment via fetchCommerceShipmentByExternalReferenceCode and then delegates to the postShipmentItem flow, which resolves the warehouse and order item, then calls the service with the supplied quantity and validateInventory flag (default true). Raises a not-found error (404) when the parent ERC is unknown; domain validation (inactive warehouse, insufficient stock) maps to 422."
+	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
@@ -451,6 +482,9 @@ public abstract class BaseShipmentItemResourceImpl
 	 *
 	 * curl -X 'PUT' 'http://localhost:8080/o/headless-commerce-admin-shipment/v1.0/shipments/by-externalReferenceCode/{externalReferenceCode}/items' -d $'{"externalReferenceCode": ___, "orderItemExternalReferenceCode": ___, "orderItemId": ___, "quantity": ___, "shipmentExternalReferenceCode": ___, "unitOfMeasureKey": ___, "validateInventory": ___, "warehouseExternalReferenceCode": ___, "warehouseId": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Upserts a shipment item on the shipment addressed by external reference code. The parent shipment is resolved by ERC and, when missing, by the body's shipmentId; the item is then created or updated through the service keyed by the body's externalReferenceCode. Domain validation (inactive warehouse, insufficient stock) maps to 422."
+	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
@@ -593,6 +627,15 @@ public abstract class BaseShipmentItemResourceImpl
 			@Override
 			public Locale getPreferredLocale() {
 				return LocaleUtil.fromLanguageId(languageId);
+			}
+
+			@Override
+			public boolean isAcceptAllLanguages() {
+				if (ExportImportThreadLocal.isExportInProcess()) {
+					return true;
+				}
+
+				return AcceptLanguage.super.isAcceptAllLanguages();
 			}
 
 		};
@@ -1202,3 +1245,4 @@ public abstract class BaseShipmentItemResourceImpl
 		LogFactoryUtil.getLog(BaseShipmentItemResourceImpl.class);
 
 }
+// LIFERAY-REST-BUILDER-HASH:76491899

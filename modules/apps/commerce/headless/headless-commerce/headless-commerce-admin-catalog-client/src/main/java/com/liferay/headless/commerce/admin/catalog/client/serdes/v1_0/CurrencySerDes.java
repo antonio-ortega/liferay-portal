@@ -529,3 +529,4 @@ public class CurrencySerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:297118296

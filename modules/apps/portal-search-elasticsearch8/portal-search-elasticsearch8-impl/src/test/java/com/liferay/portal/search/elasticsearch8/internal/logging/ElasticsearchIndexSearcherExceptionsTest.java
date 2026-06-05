@@ -5,20 +5,19 @@
 
 package com.liferay.portal.search.elasticsearch8.internal.logging;
 
+import co.elastic.clients.elasticsearch._types.ElasticsearchException;
+
 import com.liferay.portal.kernel.search.BooleanClauseOccur;
+import com.liferay.portal.kernel.search.BooleanQuery;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Query;
-import com.liferay.portal.kernel.search.generic.BooleanQueryImpl;
-import com.liferay.portal.kernel.search.generic.TermQueryImpl;
+import com.liferay.portal.kernel.search.TermQuery;
 import com.liferay.portal.search.elasticsearch8.internal.indexing.LiferayElasticsearchIndexingFixtureFactory;
 import com.liferay.portal.search.test.util.indexing.BaseIndexingTestCase;
 import com.liferay.portal.search.test.util.indexing.IndexingFixture;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
-import org.elasticsearch.ElasticsearchStatusException;
-
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -34,22 +33,20 @@ public class ElasticsearchIndexSearcherExceptionsTest
 	public static final LiferayUnitTestRule liferayUnitTestRule =
 		LiferayUnitTestRule.INSTANCE;
 
-	@Ignore
 	@Test
 	public void testExceptionThrownWhenQueryMalformedSearch() {
-		expectedException.expect(ElasticsearchStatusException.class);
+		expectedException.expect(ElasticsearchException.class);
 		expectedException.expectMessage(
-			"type=search_phase_execution_exception, reason=all shards failed");
+			"[search_phase_execution_exception] all shards failed");
 
 		search(createSearchContext(), getMalformedQuery());
 	}
 
-	@Ignore
 	@Test
 	public void testExceptionThrownWhenQueryMalformedSearchCount() {
-		expectedException.expect(ElasticsearchStatusException.class);
+		expectedException.expect(ElasticsearchException.class);
 		expectedException.expectMessage(
-			"type=search_phase_execution_exception, reason=all shards failed");
+			"[search_phase_execution_exception] all shards failed");
 
 		searchCount(createSearchContext(), getMalformedQuery());
 	}
@@ -63,13 +60,13 @@ public class ElasticsearchIndexSearcherExceptionsTest
 	}
 
 	protected Query getMalformedQuery() {
-		BooleanQueryImpl booleanQueryImpl = new BooleanQueryImpl();
+		BooleanQuery booleanQuery = new BooleanQuery();
 
-		booleanQueryImpl.add(
-			new TermQueryImpl(Field.EXPIRATION_DATE, "text"),
+		booleanQuery.add(
+			new TermQuery(Field.EXPIRATION_DATE, "text"),
 			BooleanClauseOccur.MUST);
 
-		return booleanQueryImpl;
+		return booleanQuery;
 	}
 
 }

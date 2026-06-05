@@ -283,3 +283,4 @@ public class ObjectViewColumnSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1902037864

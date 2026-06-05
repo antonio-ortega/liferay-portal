@@ -80,3 +80,4 @@ public class NoneActionInteraction
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-2095713324

@@ -36,6 +36,20 @@ public class CTRemoteUtil {
 	 */
 
 	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(List)
+	 */
+	public static void cacheResult(List<CTRemote> ctRemotes) {
+		getPersistence().cacheResult(ctRemotes);
+	}
+
+	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(com.liferay.portal.kernel.model.BaseModel)
+	 */
+	public static void cacheResult(CTRemote ctRemote) {
+		getPersistence().cacheResult(ctRemote);
+	}
+
+	/**
 	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#clearCache()
 	 */
 	public static void clearCache() {
@@ -111,59 +125,10 @@ public class CTRemoteUtil {
 	}
 
 	/**
-	 * Returns all the ct remotes where companyId = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @return the matching ct remotes
-	 */
-	public static List<CTRemote> findByCompanyId(long companyId) {
-		return getPersistence().findByCompanyId(companyId);
-	}
-
-	/**
-	 * Returns a range of all the ct remotes where companyId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CTRemoteModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param start the lower bound of the range of ct remotes
-	 * @param end the upper bound of the range of ct remotes (not inclusive)
-	 * @return the range of matching ct remotes
-	 */
-	public static List<CTRemote> findByCompanyId(
-		long companyId, int start, int end) {
-
-		return getPersistence().findByCompanyId(companyId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the ct remotes where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CTRemoteModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param start the lower bound of the range of ct remotes
-	 * @param end the upper bound of the range of ct remotes (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching ct remotes
-	 */
-	public static List<CTRemote> findByCompanyId(
-		long companyId, int start, int end,
-		OrderByComparator<CTRemote> orderByComparator) {
-
-		return getPersistence().findByCompanyId(
-			companyId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the ct remotes where companyId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CTRemoteModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.change.tracking.model.impl.CTRemoteModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -212,86 +177,10 @@ public class CTRemoteUtil {
 	}
 
 	/**
-	 * Returns the last ct remote in the ordered set where companyId = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching ct remote
-	 * @throws NoSuchRemoteException if a matching ct remote could not be found
-	 */
-	public static CTRemote findByCompanyId_Last(
-			long companyId, OrderByComparator<CTRemote> orderByComparator)
-		throws com.liferay.change.tracking.exception.NoSuchRemoteException {
-
-		return getPersistence().findByCompanyId_Last(
-			companyId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last ct remote in the ordered set where companyId = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching ct remote, or <code>null</code> if a matching ct remote could not be found
-	 */
-	public static CTRemote fetchByCompanyId_Last(
-		long companyId, OrderByComparator<CTRemote> orderByComparator) {
-
-		return getPersistence().fetchByCompanyId_Last(
-			companyId, orderByComparator);
-	}
-
-	/**
-	 * Returns the ct remotes before and after the current ct remote in the ordered set where companyId = &#63;.
-	 *
-	 * @param ctRemoteId the primary key of the current ct remote
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next ct remote
-	 * @throws NoSuchRemoteException if a ct remote with the primary key could not be found
-	 */
-	public static CTRemote[] findByCompanyId_PrevAndNext(
-			long ctRemoteId, long companyId,
-			OrderByComparator<CTRemote> orderByComparator)
-		throws com.liferay.change.tracking.exception.NoSuchRemoteException {
-
-		return getPersistence().findByCompanyId_PrevAndNext(
-			ctRemoteId, companyId, orderByComparator);
-	}
-
-	/**
-	 * Returns all the ct remotes that the user has permission to view where companyId = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @return the matching ct remotes that the user has permission to view
-	 */
-	public static List<CTRemote> filterFindByCompanyId(long companyId) {
-		return getPersistence().filterFindByCompanyId(companyId);
-	}
-
-	/**
-	 * Returns a range of all the ct remotes that the user has permission to view where companyId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CTRemoteModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param start the lower bound of the range of ct remotes
-	 * @param end the upper bound of the range of ct remotes (not inclusive)
-	 * @return the range of matching ct remotes that the user has permission to view
-	 */
-	public static List<CTRemote> filterFindByCompanyId(
-		long companyId, int start, int end) {
-
-		return getPersistence().filterFindByCompanyId(companyId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the ct remotes that the user has permissions to view where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CTRemoteModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.change.tracking.model.impl.CTRemoteModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -306,24 +195,6 @@ public class CTRemoteUtil {
 
 		return getPersistence().filterFindByCompanyId(
 			companyId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns the ct remotes before and after the current ct remote in the ordered set of ct remotes that the user has permission to view where companyId = &#63;.
-	 *
-	 * @param ctRemoteId the primary key of the current ct remote
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next ct remote
-	 * @throws NoSuchRemoteException if a ct remote with the primary key could not be found
-	 */
-	public static CTRemote[] filterFindByCompanyId_PrevAndNext(
-			long ctRemoteId, long companyId,
-			OrderByComparator<CTRemote> orderByComparator)
-		throws com.liferay.change.tracking.exception.NoSuchRemoteException {
-
-		return getPersistence().filterFindByCompanyId_PrevAndNext(
-			ctRemoteId, companyId, orderByComparator);
 	}
 
 	/**
@@ -353,24 +224,6 @@ public class CTRemoteUtil {
 	 */
 	public static int filterCountByCompanyId(long companyId) {
 		return getPersistence().filterCountByCompanyId(companyId);
-	}
-
-	/**
-	 * Caches the ct remote in the entity cache if it is enabled.
-	 *
-	 * @param ctRemote the ct remote
-	 */
-	public static void cacheResult(CTRemote ctRemote) {
-		getPersistence().cacheResult(ctRemote);
-	}
-
-	/**
-	 * Caches the ct remotes in the entity cache if it is enabled.
-	 *
-	 * @param ctRemotes the ct remotes
-	 */
-	public static void cacheResult(List<CTRemote> ctRemotes) {
-		getPersistence().cacheResult(ctRemotes);
 	}
 
 	/**
@@ -424,82 +277,80 @@ public class CTRemoteUtil {
 	}
 
 	/**
-	 * Returns all the ct remotes.
+	 * Returns all the ct remotes where companyId = &#63;.
 	 *
-	 * @return the ct remotes
+	 * @param companyId the company ID
+	 * @return the matching ct remotes
 	 */
-	public static List<CTRemote> findAll() {
-		return getPersistence().findAll();
+	public static List<CTRemote> findByCompanyId(long companyId) {
+		return getPersistence().findByCompanyId(companyId);
 	}
 
 	/**
-	 * Returns a range of all the ct remotes.
+	 * Returns a range of all the ct remotes where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CTRemoteModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.change.tracking.model.impl.CTRemoteModelImpl</code>.
 	 * </p>
 	 *
+	 * @param companyId the company ID
 	 * @param start the lower bound of the range of ct remotes
 	 * @param end the upper bound of the range of ct remotes (not inclusive)
-	 * @return the range of ct remotes
+	 * @return the range of matching ct remotes
 	 */
-	public static List<CTRemote> findAll(int start, int end) {
-		return getPersistence().findAll(start, end);
+	public static List<CTRemote> findByCompanyId(
+		long companyId, int start, int end) {
+
+		return getPersistence().findByCompanyId(companyId, start, end);
 	}
 
 	/**
-	 * Returns an ordered range of all the ct remotes.
+	 * Returns an ordered range of all the ct remotes where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CTRemoteModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.change.tracking.model.impl.CTRemoteModelImpl</code>.
 	 * </p>
 	 *
-	 * @param start the lower bound of the range of ct remotes
-	 * @param end the upper bound of the range of ct remotes (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of ct remotes
-	 */
-	public static List<CTRemote> findAll(
-		int start, int end, OrderByComparator<CTRemote> orderByComparator) {
-
-		return getPersistence().findAll(start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the ct remotes.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CTRemoteModelImpl</code>.
-	 * </p>
-	 *
+	 * @param companyId the company ID
 	 * @param start the lower bound of the range of ct remotes
 	 * @param end the upper bound of the range of ct remotes (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param useFinderCache whether to use the finder cache
-	 * @return the ordered range of ct remotes
+	 * @return the ordered range of matching ct remotes
 	 */
-	public static List<CTRemote> findAll(
-		int start, int end, OrderByComparator<CTRemote> orderByComparator,
-		boolean useFinderCache) {
+	public static List<CTRemote> findByCompanyId(
+		long companyId, int start, int end,
+		OrderByComparator<CTRemote> orderByComparator) {
 
-		return getPersistence().findAll(
-			start, end, orderByComparator, useFinderCache);
+		return getPersistence().findByCompanyId(
+			companyId, start, end, orderByComparator);
 	}
 
 	/**
-	 * Removes all the ct remotes from the database.
-	 */
-	public static void removeAll() {
-		getPersistence().removeAll();
-	}
-
-	/**
-	 * Returns the number of ct remotes.
+	 * Returns all the ct remotes that the user has permission to view where companyId = &#63;.
 	 *
-	 * @return the number of ct remotes
+	 * @param companyId the company ID
+	 * @return the matching ct remotes that the user has permission to view
 	 */
-	public static int countAll() {
-		return getPersistence().countAll();
+	public static List<CTRemote> filterFindByCompanyId(long companyId) {
+		return getPersistence().filterFindByCompanyId(companyId);
+	}
+
+	/**
+	 * Returns a range of all the ct remotes that the user has permission to view where companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.change.tracking.model.impl.CTRemoteModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of ct remotes
+	 * @param end the upper bound of the range of ct remotes (not inclusive)
+	 * @return the range of matching ct remotes that the user has permission to view
+	 */
+	public static List<CTRemote> filterFindByCompanyId(
+		long companyId, int start, int end) {
+
+		return getPersistence().filterFindByCompanyId(companyId, start, end);
 	}
 
 	public static CTRemotePersistence getPersistence() {
@@ -513,3 +364,4 @@ public class CTRemoteUtil {
 	private static volatile CTRemotePersistence _persistence;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:355322614

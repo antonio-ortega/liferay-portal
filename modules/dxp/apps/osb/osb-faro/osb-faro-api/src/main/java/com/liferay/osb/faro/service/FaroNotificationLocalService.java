@@ -282,3 +282,4 @@ public interface FaroNotificationLocalService
 		FaroNotification faroNotification);
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-904814118

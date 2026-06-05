@@ -7,10 +7,10 @@ package com.liferay.headless.admin.site.resource.v1_0.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.exportimport.kernel.service.StagingLocalService;
+import com.liferay.exportimport.test.util.LazyReferencingTestUtil;
 import com.liferay.headless.admin.site.client.dto.v1_0.DisplayPageTemplateFolder;
 import com.liferay.headless.admin.site.client.pagination.Page;
 import com.liferay.headless.admin.site.client.problem.Problem;
-import com.liferay.headless.admin.site.resource.v1_0.DisplayPageTemplateFolderResource;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateCollectionTypeConstants;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateCollection;
@@ -20,34 +20,31 @@ import com.liferay.petra.function.UnsafeRunnable;
 import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.lazy.referencing.LazyReferencingThreadLocal;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.ListUtil;
-import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.test.log.LogCapture;
+import com.liferay.portal.test.log.LoggerTestUtil;
 import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
-import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -69,34 +66,6 @@ public class DisplayPageTemplateFolderResourceTest
 		new AggregateTestRule(
 			new LiferayIntegrationTestRule(),
 			PermissionCheckerMethodTestRule.INSTANCE);
-
-	@Before
-	@Override
-	public void setUp() throws Exception {
-		super.setUp();
-
-		_displayPageTemplateFolderResource.setContextAcceptLanguage(
-			new AcceptLanguage() {
-
-				@Override
-				public List<Locale> getLocales() {
-					return Arrays.asList(LocaleUtil.getDefault());
-				}
-
-				@Override
-				public String getPreferredLanguageId() {
-					return LocaleUtil.toLanguageId(LocaleUtil.getDefault());
-				}
-
-				@Override
-				public Locale getPreferredLocale() {
-					return LocaleUtil.getDefault();
-				}
-
-			});
-		_displayPageTemplateFolderResource.setContextUser(
-			TestPropsValues.getUser());
-	}
 
 	@Ignore
 	@Override
@@ -125,17 +94,17 @@ public class DisplayPageTemplateFolderResourceTest
 
 		DisplayPageTemplateFolder liveGroupDisplayPageTemplateFolder =
 			testGetSiteDisplayPageTemplateFoldersPage_addDisplayPageTemplateFolder(
-				testGroup.getExternalReferenceCode(),
+				irrelevantGroup.getExternalReferenceCode(),
 				randomDisplayPageTemplateFolder());
 
-		_enableLocalStaging();
+		_enableLocalStaging(irrelevantGroup);
 
 		_assertProblemException(
 			"BAD_REQUEST", null,
 			() ->
 				displayPageTemplateFolderResource.
 					deleteSiteDisplayPageTemplateFolder(
-						testGroup.getExternalReferenceCode(),
+						irrelevantGroup.getExternalReferenceCode(),
 						liveGroupDisplayPageTemplateFolder.
 							getExternalReferenceCode()));
 	}
@@ -384,15 +353,6 @@ public class DisplayPageTemplateFolderResourceTest
 				DisplayPageTemplateFolder displayPageTemplateFolder)
 		throws Exception {
 
-		if (LazyReferencingThreadLocal.isEnabled()) {
-			return _toDisplayPageTemplateFolder(
-				_displayPageTemplateFolderResource.
-					postSiteDisplayPageTemplateFolder(
-						siteExternalReferenceCode,
-						_toDisplayPageTemplateFolder(
-							displayPageTemplateFolder)));
-		}
-
 		return displayPageTemplateFolderResource.
 			postSiteDisplayPageTemplateFolder(
 				siteExternalReferenceCode, displayPageTemplateFolder);
@@ -415,32 +375,6 @@ public class DisplayPageTemplateFolderResourceTest
 
 		return testGetSiteDisplayPageTemplateFoldersPage_addDisplayPageTemplateFolder(
 			testGroup.getExternalReferenceCode(), displayPageTemplateFolder);
-	}
-
-	private static
-		com.liferay.headless.admin.site.dto.v1_0.DisplayPageTemplateFolder
-			_toDisplayPageTemplateFolder(
-				DisplayPageTemplateFolder displayPageTemplateFolder) {
-
-		if (displayPageTemplateFolder == null) {
-			return null;
-		}
-
-		return com.liferay.headless.admin.site.dto.v1_0.
-			DisplayPageTemplateFolder.toDTO(
-				displayPageTemplateFolder.toString());
-	}
-
-	private static DisplayPageTemplateFolder _toDisplayPageTemplateFolder(
-		com.liferay.headless.admin.site.dto.v1_0.DisplayPageTemplateFolder
-			displayPageTemplateFolder) {
-
-		if (displayPageTemplateFolder == null) {
-			return null;
-		}
-
-		return DisplayPageTemplateFolder.toDTO(
-			displayPageTemplateFolder.toString());
 	}
 
 	private void _assertNoParentDisplayPageTemplateFolder(
@@ -540,10 +474,22 @@ public class DisplayPageTemplateFolderResourceTest
 	}
 
 	private void _enableLocalStaging() throws Exception {
-		_stagingLocalService.enableLocalStaging(
-			TestPropsValues.getUserId(), testGroup, true, false,
-			ServiceContextTestUtil.getServiceContext(
-				testGroup, TestPropsValues.getUserId()));
+		_enableLocalStaging(testGroup);
+	}
+
+	private void _enableLocalStaging(Group group) throws Exception {
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				"com.liferay.batch.engine.internal." +
+					"BatchEngineImportTaskExecutorImpl",
+				LoggerTestUtil.OFF)) {
+
+			_stagingLocalService.enableLocalStaging(
+				TestPropsValues.getUserId(), group, true, false,
+				ServiceContextTestUtil.getServiceContext(
+					group, TestPropsValues.getUserId()));
+		}
+
+		Assert.assertTrue(group.hasStagingGroup());
 	}
 
 	private DisplayPageTemplateFolder _getParentDisplayPageTemplateFolder(
@@ -788,26 +734,32 @@ public class DisplayPageTemplateFolderResourceTest
 				parentDisplayPageTemplateFolder.getExternalReferenceCode());
 
 		try {
-			_displayPageTemplateFolderResource.putSiteDisplayPageTemplateFolder(
+			displayPageTemplateFolderResource.putSiteDisplayPageTemplateFolder(
 				testGroup.getExternalReferenceCode(),
 				putDisplayPageTemplateFolder.getExternalReferenceCode(),
-				_toDisplayPageTemplateFolder(putDisplayPageTemplateFolder));
+				putDisplayPageTemplateFolder);
 
 			Assert.fail();
 		}
-		catch (UnsupportedOperationException unsupportedOperationException) {
+		catch (Problem.ProblemException problemException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(unsupportedOperationException);
+				_log.debug(problemException);
 			}
+
+			Problem problem = problemException.getProblem();
+
+			Assert.assertEquals(
+				"UnsupportedOperationException", problem.getType());
 		}
 
 		try (SafeCloseable safeCloseable =
-				LazyReferencingThreadLocal.setEnabledWithSafeCloseable(true)) {
+				LazyReferencingTestUtil.setLazyReferencingWithSafeCloseable(
+					true)) {
 
-			_displayPageTemplateFolderResource.putSiteDisplayPageTemplateFolder(
+			displayPageTemplateFolderResource.putSiteDisplayPageTemplateFolder(
 				testGroup.getExternalReferenceCode(),
 				putDisplayPageTemplateFolder.getExternalReferenceCode(),
-				_toDisplayPageTemplateFolder(putDisplayPageTemplateFolder));
+				putDisplayPageTemplateFolder);
 
 			List<LayoutPageTemplateCollection>
 				parentLayoutPageTemplateCollections = new ArrayList<>();
@@ -836,10 +788,6 @@ public class DisplayPageTemplateFolderResourceTest
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		DisplayPageTemplateFolderResourceTest.class);
-
-	@Inject
-	private DisplayPageTemplateFolderResource
-		_displayPageTemplateFolderResource;
 
 	@Inject
 	private LayoutPageTemplateCollectionLocalService

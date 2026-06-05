@@ -5,12 +5,21 @@
 
 import ClayIcon from '@clayui/icon';
 import {Card, IView, replaceTokens} from '@liferay/frontend-data-set-web';
+import {sub} from 'frontend-js-web';
 import React from 'react';
 
 import dateFormat from '../../../common/utils/dateFormat';
 
 import '../../../../css/props_transformer/TransformViewsItemProps.scss';
-import {OBJECT_ENTRY_FOLDER_CLASS_NAME} from '../../../common/utils/constants';
+import {
+	ASSET_STATUS,
+	OBJECT_ENTRY_FOLDER_CLASS_NAME,
+} from '../../../common/utils/constants';
+import {
+	formatExpirationDate,
+	formatExpirationDateLong,
+	isExpiringSoon,
+} from '../../../common/utils/expirationStatus';
 
 type Card = React.ComponentProps<typeof Card> & {
 	actions: {data: {id: string}; href?: string}[];
@@ -40,20 +49,58 @@ const getHrefLink = (item: any, props: Card) => {
 	return replaceTokens(selectedAction.href, item);
 };
 
+const getYouTubeVideoId = (videoURL: string) => {
+	try {
+		const url = new URL(videoURL);
+
+		if (['www.youtube.com', 'youtube.com'].includes(url.hostname)) {
+			return url.searchParams.get('v');
+		}
+		else if (['www.youtu.be', 'youtu.be'].includes(url.hostname)) {
+			return url.pathname.substring(1);
+		}
+	}
+	catch (_error) {
+		return null;
+	}
+
+	return null;
+};
+
 const getThumbnailProps = (item: any) => {
 	if (item.entryClassName === OBJECT_ENTRY_FOLDER_CLASS_NAME) {
 		return {symbol: 'folder'};
 	}
 
 	if (item.embedded.file) {
-		const {thumbnailURL} = item.embedded.file;
+		const {alternativeText, name, thumbnailURL} = item.embedded.file;
 
 		if (thumbnailURL) {
-			return {imgProps: thumbnailURL};
+			return {
+				imgProps: {
+					alt: alternativeText || name,
+					src: thumbnailURL,
+				},
+			};
 		}
 		else {
 			return {symbol: 'documents-and-media'};
 		}
+	}
+
+	if (item.embedded.videoURL) {
+		const videoId = getYouTubeVideoId(item.embedded.videoURL);
+
+		if (videoId) {
+			return {
+				imgProps: {
+					alt: item.embedded.title || item.title,
+					src: `https://img.youtube.com/vi/${videoId}/0.jpg`,
+				},
+			};
+		}
+
+		return {symbol: 'video'};
 	}
 
 	return {symbol: 'web-content'};
@@ -130,7 +177,69 @@ const getLabels = (item: any, props: Card) => {
 		];
 	}
 
-	return props.labels;
+	const labels = props.labels ?? [];
+
+	if (
+		item.embedded?.status?.label === ASSET_STATUS.APPROVED &&
+		isExpiringSoon(item.embedded?.expirationDate)
+	) {
+		const formattedDate = formatExpirationDate(
+			item.embedded.expirationDate
+		);
+		const formattedDateLong = formatExpirationDateLong(
+			item.embedded.expirationDate
+		);
+
+		if (formattedDate && formattedDateLong) {
+			return [
+				...labels,
+				{
+					'aria-label': sub(
+						Liferay.Language.get('expiring-soon-expires-on-x'),
+						formattedDateLong
+					),
+					'className': 'lfr-portal-tooltip',
+					'displayType': 'warning',
+					'tabIndex': 0,
+					'title': formattedDate,
+					'value': Liferay.Language.get('expiring-soon'),
+				},
+			];
+		}
+	}
+
+	if (
+		item.embedded?.status?.label === ASSET_STATUS.EXPIRED &&
+		item.embedded?.expirationDate
+	) {
+		const formattedDate = formatExpirationDate(
+			item.embedded.expirationDate
+		);
+		const formattedDateLong = formatExpirationDateLong(
+			item.embedded.expirationDate
+		);
+
+		if (formattedDate && formattedDateLong) {
+			const expiredText = Liferay.Language.get('expired');
+
+			return labels.map((label: any) =>
+				label.value === expiredText
+					? {
+							...label,
+							'aria-label': sub(
+								Liferay.Language.get('expired-on-x'),
+								formattedDateLong
+							),
+							'className': 'lfr-portal-tooltip',
+							'tabIndex': 0,
+							'title': formattedDate,
+						}
+					: label
+			);
+		}
+	}
+
+	return labels;
 };
 
 type ViewsItemsProps = {
@@ -151,7 +260,18 @@ export function transformItemCardView(
 ) {
 	return {
 		...props,
-		description: dateFormat(item.dateModified),
+		description: dateFormat(
+			{
+				day: 'numeric',
+				hour: 'numeric',
+				minute: 'numeric',
+				month: 'short',
+				second: 'numeric',
+				timeZone: Liferay.ThemeDisplay.getTimeZone(),
+				year: 'numeric',
+			},
+			item.dateModified
+		),
 		href: getHrefLink(item, props),
 		labels: getLabels(item, props),
 		stickerProps: {

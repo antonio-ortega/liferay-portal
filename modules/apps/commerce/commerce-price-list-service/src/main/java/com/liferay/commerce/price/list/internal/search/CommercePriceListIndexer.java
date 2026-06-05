@@ -19,7 +19,6 @@ import com.liferay.commerce.product.model.CommerceCatalog;
 import com.liferay.commerce.product.service.CommerceCatalogLocalService;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
-import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.BaseIndexer;
@@ -311,12 +310,18 @@ public class CommercePriceListIndexer extends BaseIndexer<CommercePriceList> {
 	}
 
 	@Override
-	protected void doReindex(String[] ids) throws Exception {
-		long companyId = GetterUtil.getLong(ids[0]);
-
-		_reindexCommercePriceLists(companyId);
+	protected void doReindexCompany(long companyId) throws Exception {
+		super.doReindexCompany(companyId);
 
 		_commercePriceListLocalService.cleanPriceListCache();
+	}
+
+	@Override
+	protected IndexableActionableDynamicQuery
+		getIndexableActionableDynamicQuery() {
+
+		return _commercePriceListLocalService.
+			getIndexableActionableDynamicQuery();
 	}
 
 	private long _getCatalogId(CommercePriceList commercePriceList)
@@ -331,30 +336,6 @@ public class CommercePriceListIndexer extends BaseIndexer<CommercePriceList> {
 		}
 
 		return commerceCatalog.getCommerceCatalogId();
-	}
-
-	private void _reindexCommercePriceLists(long companyId) throws Exception {
-		IndexableActionableDynamicQuery indexableActionableDynamicQuery =
-			_commercePriceListLocalService.getIndexableActionableDynamicQuery();
-
-		indexableActionableDynamicQuery.setCompanyId(companyId);
-		indexableActionableDynamicQuery.setPerformActionMethod(
-			(CommercePriceList commercePriceList) -> {
-				try {
-					indexableActionableDynamicQuery.addDocuments(
-						getDocument(commercePriceList));
-				}
-				catch (PortalException portalException) {
-					if (_log.isWarnEnabled()) {
-						_log.warn(
-							"Unable to index commerce price list " +
-								commercePriceList,
-							portalException);
-					}
-				}
-			});
-
-		indexableActionableDynamicQuery.performActions();
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

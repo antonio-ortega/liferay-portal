@@ -79,6 +79,7 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.test.TestInfo;
+import com.liferay.portal.kernel.test.context.ContextUserReplace;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
@@ -122,6 +123,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.TimeZone;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -192,6 +194,65 @@ public class FragmentEntryProcessorHelperTest {
 					"fieldId", "AssetTag_tagNames"
 				),
 				LocaleUtil.SPAIN));
+	}
+
+	@Test
+	@TestInfo("LPD-82453")
+	public void testGetFieldValueFromDateValueWithTimeZone() throws Exception {
+		DDMFormField ddmFormField = _createDDMFormField(
+			DDMFormFieldTypeConstants.TEXT);
+
+		JournalArticle journalArticle = JournalTestUtil.addJournalArticle(
+			_dataDefinitionResourceFactory, ddmFormField,
+			_ddmFormValuesToFieldsConverter, RandomTestUtil.randomString(),
+			_group.getGroupId(), _journalConverter);
+
+		Date displayDate = journalArticle.getDisplayDate();
+
+		TimeZone originalTimeZone = _themeDisplay.getTimeZone();
+
+		try {
+			TimeZone tokyoTimeZone = TimeZone.getTimeZone("Asia/Tokyo");
+
+			_themeDisplay.setTimeZone(tokyoTimeZone);
+
+			Assert.assertEquals(
+				_formatDate(displayDate, LocaleUtil.US, tokyoTimeZone),
+				_getFieldValue(
+					JSONUtil.put(
+						"className", JournalArticle.class.getName()
+					).put(
+						"classNameId",
+						_portal.getClassNameId(JournalArticle.class.getName())
+					).put(
+						"classPK", journalArticle.getResourcePrimKey()
+					).put(
+						"fieldId", "displayDate"
+					),
+					LocaleUtil.US));
+
+			TimeZone utcTimeZone = TimeZone.getTimeZone("UTC");
+
+			_themeDisplay.setTimeZone(utcTimeZone);
+
+			Assert.assertEquals(
+				_formatDate(displayDate, LocaleUtil.US, utcTimeZone),
+				_getFieldValue(
+					JSONUtil.put(
+						"className", JournalArticle.class.getName()
+					).put(
+						"classNameId",
+						_portal.getClassNameId(JournalArticle.class.getName())
+					).put(
+						"classPK", journalArticle.getResourcePrimKey()
+					).put(
+						"fieldId", "displayDate"
+					),
+					LocaleUtil.US));
+		}
+		finally {
+			_themeDisplay.setTimeZone(originalTimeZone);
+		}
 	}
 
 	@Test
@@ -526,6 +587,51 @@ public class FragmentEntryProcessorHelperTest {
 					"fieldId", "AssetTag_tagNames"
 				),
 				LocaleUtil.SPAIN));
+	}
+
+	@Test
+	public void testGetFieldValueWithoutPermissions() throws Exception {
+		ObjectDefinition objectDefinition =
+			ObjectDefinitionTestUtil.publishObjectDefinition(
+				Collections.singletonList(
+					ObjectFieldUtil.createObjectField(
+						ObjectFieldConstants.BUSINESS_TYPE_TEXT,
+						ObjectFieldConstants.DB_TYPE_STRING, "My Text",
+						"myText")),
+				ObjectDefinitionConstants.SCOPE_SITE);
+
+		ObjectEntry objectEntry = _objectEntryLocalService.addObjectEntry(
+			TestPropsValues.getGroupId(), objectDefinition.getUserId(),
+			objectDefinition.getObjectDefinitionId(),
+			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+			null,
+			HashMapBuilder.<String, Serializable>put(
+				"externalReferenceCode", RandomTestUtil.randomString()
+			).put(
+				"myText", RandomTestUtil.randomString()
+			).build(),
+			ServiceContextTestUtil.getServiceContext(
+				TestPropsValues.getGroupId(), TestPropsValues.getUserId()));
+
+		try (ContextUserReplace contextUserReplace = new ContextUserReplace(
+				_userLocalService.getGuestUser(
+					TestPropsValues.getCompanyId()))) {
+
+			Assert.assertEquals(
+				StringPool.BLANK,
+				_getFieldValue(
+					JSONUtil.put(
+						"className", objectDefinition.getClassName()
+					).put(
+						"classNameId",
+						_portal.getClassNameId(objectDefinition.getClassName())
+					).put(
+						"classPK", objectEntry.getObjectEntryId()
+					).put(
+						"fieldId", "myText"
+					),
+					LocaleUtil.getSiteDefault()));
+		}
 	}
 
 	@Test
@@ -1246,6 +1352,16 @@ public class FragmentEntryProcessorHelperTest {
 		return dateFormat.format(date);
 	}
 
+	private String _formatDate(Date date, Locale locale, TimeZone timeZone) {
+		DateFormat dateFormat = DateFormatFactoryUtil.getSimpleDateFormat(
+			DateTimeFormatterBuilder.getLocalizedDateTimePattern(
+				FormatStyle.SHORT, FormatStyle.SHORT, IsoChronology.INSTANCE,
+				locale),
+			locale, timeZone);
+
+		return dateFormat.format(date);
+	}
+
 	private Object _getFieldValue(
 			JSONObject editableValuesJSONObject, Locale locale)
 		throws Exception {
@@ -1422,12 +1538,6 @@ public class FragmentEntryProcessorHelperTest {
 	}
 
 	@Inject
-	private static JournalArticleLocalService _journalArticleLocalService;
-
-	@Inject(filter = "ddm.form.deserializer.type=json")
-	private static DDMFormDeserializer _jsonDDMFormDeserializer;
-
-	@Inject
 	private AssetCategoryLocalService _assetCategoryLocalService;
 
 	private AssetVocabulary _assetVocabulary;
@@ -1454,7 +1564,13 @@ public class FragmentEntryProcessorHelperTest {
 	private Group _group;
 
 	@Inject
+	private JournalArticleLocalService _journalArticleLocalService;
+
+	@Inject
 	private JournalConverter _journalConverter;
+
+	@Inject(filter = "ddm.form.deserializer.type=json")
+	private DDMFormDeserializer _jsonDDMFormDeserializer;
 
 	private Layout _layout;
 

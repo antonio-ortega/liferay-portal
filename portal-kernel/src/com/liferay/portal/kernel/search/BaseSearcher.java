@@ -97,7 +97,7 @@ public abstract class BaseSearcher extends BaseIndexer<Object> {
 	}
 
 	@Override
-	protected void doReindex(String[] ids) throws Exception {
+	protected void doReindexCompany(long companyId) throws Exception {
 		throw new UnsupportedOperationException();
 	}
 

@@ -10,6 +10,7 @@ import {
 	orderBy,
 	toPairs
 } from 'lodash/fp';
+import {getSafeDecodedURIComponent} from './util';
 import {RangeSelectors} from 'shared/types';
 import {sub} from 'shared/util/lang';
 import {TimeIntervals} from 'shared/util/constants';
@@ -25,20 +26,11 @@ export const INTERVAL_MAP = {
 };
 
 type SessionEvent = {
-	attributes: SessionEventAttribute;
+	attributes: Record<string, unknown>;
 	description: string;
-	subtitle: string;
+	subtitle: string | undefined;
 	time: moment.Moment;
 	title: string;
-};
-
-type SessionEventAttribute = {
-	assetTitle?: string;
-	canonicalUrl: string;
-	header: string;
-	referrer: string;
-	pageTitle: string;
-	url: string;
 };
 
 export type UserSessionAttributes = {
@@ -61,11 +53,13 @@ export type VerticalTimelineHeader = {
 };
 
 export type VerticalTimelineSession = {
+	applicationId: string;
 	attributes: UserSessionAttributes;
 	device: string;
 	endTime: Date;
 	nestedItems: SessionEvent[];
 	time: moment.Moment;
+	userAgent: string;
 };
 
 /**
@@ -107,30 +101,32 @@ export const formatEvents = (events: UserSessionEvent[]): Array<SessionEvent> =>
 			assetTitle,
 			canonicalUrl,
 			createDate,
+			eventDate,
+			eventId,
 			name,
-			pageTitle,
-			referrer,
-			url
-		}) => {
-			const isAsset = ['Blog', 'Document', 'Form', 'WebContent'].includes(
-				applicationId
-			);
-
-			return {
-				attributes: {
-					...(isAsset && {assetTitle}),
-					canonicalUrl: decodeURIComponent(canonicalUrl),
-					header: Liferay.Language.get('event-attributes'),
-					pageTitle,
-					referrer: decodeURIComponent(referrer),
-					url: decodeURIComponent(url)
-				},
-				description: assetTitle,
-				subtitle: decodeURIComponent(canonicalUrl),
-				time: moment(createDate),
-				title: name
-			};
-		}
+			properties
+		}) => ({
+			attributes: {
+				applicationId,
+				...(eventDate && {eventDate}),
+				eventId,
+				...(properties?.length && {
+					properties: Object.fromEntries(
+						properties.map(({name: propName, value}) => [
+							propName,
+							value
+						])
+					)
+				})
+			},
+			description: assetTitle,
+			subtitle:
+				applicationId !== 'HubSpot'
+					? getSafeDecodedURIComponent(canonicalUrl)
+					: undefined,
+			time: moment(createDate),
+			title: name
+		})
 	);
 
 /**
@@ -140,7 +136,7 @@ export const formatEvents = (events: UserSessionEvent[]): Array<SessionEvent> =>
  */
 export const formatGroupingTime = (
 	datetime: Date | string | number
-): moment.Moment => {
+): string => {
 	const time = moment(datetime);
 
 	return time.isSame(moment(), 'day')
@@ -157,11 +153,11 @@ export const formatSessions = (
 	sessions: UserSession[]
 ): (VerticalTimelineHeader | VerticalTimelineSession)[] =>
 	flow(
-		groupBy(({createDate}) =>
+		groupBy(({createDate}: UserSession) =>
 			moment.utc(createDate).startOf('day').format()
 		),
-		mapValues(items =>
-			items.map(
+		mapValues((items: unknown) =>
+			(items as (UserSession & {createDate: string})[]).map(
 				({
 					browserName,
 					completeDate,
@@ -176,6 +172,9 @@ export const formatSessions = (
 					timezoneOffset,
 					userAgent
 				}) => ({
+					applicationId:
+						(events as unknown as UserSessionEvent[])[0]
+							?.applicationId ?? '',
 					attributes: {
 						contentLanguageID,
 						devicePixelRatioz,
@@ -189,20 +188,25 @@ export const formatSessions = (
 					browserName,
 					device: deviceType,
 					endTime: completeDate,
-					nestedItems: formatEvents(events),
-					time: createDate
+					nestedItems: formatEvents(
+						events as unknown as UserSessionEvent[]
+					),
+					time: createDate,
+					userAgent
 				})
 			)
 		),
 		toPairs,
 		orderBy([([time]) => moment(time).unix()], ['desc']),
-		map(([time, items]: any[]) => [
+		map(([time, items]: [string, {nestedItems: unknown[]}[]]) => [
 			{
 				header: true,
 				title: formatGroupingTime(time),
 				totalEvents: items.reduce(
-					(previousValue, currentValue) =>
-						previousValue + currentValue.nestedItems.length,
+					(
+						previousValue: number,
+						currentValue: {nestedItems: unknown[]}
+					) => previousValue + currentValue.nestedItems.length,
 					0
 				)
 			},

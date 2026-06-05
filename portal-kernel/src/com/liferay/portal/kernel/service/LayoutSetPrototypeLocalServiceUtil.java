@@ -56,18 +56,6 @@ public class LayoutSetPrototypeLocalServiceUtil {
 	public static LayoutSetPrototype addLayoutSetPrototype(
 			long userId, long companyId, Map<java.util.Locale, String> nameMap,
 			Map<java.util.Locale, String> descriptionMap, boolean active,
-			boolean layoutsUpdateable, boolean readyForPropagation,
-			ServiceContext serviceContext)
-		throws PortalException {
-
-		return getService().addLayoutSetPrototype(
-			userId, companyId, nameMap, descriptionMap, active,
-			layoutsUpdateable, readyForPropagation, serviceContext);
-	}
-
-	public static LayoutSetPrototype addLayoutSetPrototype(
-			long userId, long companyId, Map<java.util.Locale, String> nameMap,
-			Map<java.util.Locale, String> descriptionMap, boolean active,
 			boolean layoutsUpdateable, ServiceContext serviceContext)
 		throws PortalException {
 
@@ -391,18 +379,6 @@ public class LayoutSetPrototypeLocalServiceUtil {
 	public static LayoutSetPrototype updateLayoutSetPrototype(
 			long layoutSetPrototypeId, Map<java.util.Locale, String> nameMap,
 			Map<java.util.Locale, String> descriptionMap, boolean active,
-			boolean layoutsUpdateable, boolean readyForPropagation,
-			ServiceContext serviceContext)
-		throws PortalException {
-
-		return getService().updateLayoutSetPrototype(
-			layoutSetPrototypeId, nameMap, descriptionMap, active,
-			layoutsUpdateable, readyForPropagation, serviceContext);
-	}
-
-	public static LayoutSetPrototype updateLayoutSetPrototype(
-			long layoutSetPrototypeId, Map<java.util.Locale, String> nameMap,
-			Map<java.util.Locale, String> descriptionMap, boolean active,
 			boolean layoutsUpdateable, ServiceContext serviceContext)
 		throws PortalException {
 
@@ -430,3 +406,4 @@ public class LayoutSetPrototypeLocalServiceUtil {
 	private static volatile LayoutSetPrototypeLocalService _service;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:921485973

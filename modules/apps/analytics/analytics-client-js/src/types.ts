@@ -47,10 +47,19 @@ export namespace Analytics {
 		WebContentViewed = 'webContentViewed',
 	}
 
+	export type AccountMessage = {
+		emailAddressHashed: string;
+		id: string;
+		userId: string;
+		[key: string]: unknown;
+	};
+
 	export type Config = {
 		channelId: string;
 		dataSourceId: string;
+		demandbaseAccountEndpoint: string;
 		endpointUrl: string;
+		faroBackendUrl: string;
 		flushInterval: number;
 		identity: {
 			emailAddressHashed: string;
@@ -81,12 +90,16 @@ export namespace Analytics {
 		dataset: {
 			[Analytics.DataSetList
 				.AnalyticsAssetAction]?: Analytics.ElementAction;
+			[Analytics.DataSetList.AnalyticsAssetCategories]?: string;
 			[Analytics.DataSetList.AnalyticsAssetCategory]?: string;
 			[Analytics.DataSetList.AnalyticsAssetId]: string;
+			[Analytics.DataSetList.AnalyticsAssetMimeType]?: string;
 			[Analytics.DataSetList.AnalyticsAssetSubtype]?: string;
+			[Analytics.DataSetList.AnalyticsAssetTags]?: string;
 			[Analytics.DataSetList.AnalyticsAssetTitle]?: string;
 			[Analytics.DataSetList.AnalyticsAssetType]?: Analytics.ElementType;
 			[Analytics.DataSetList.AnalyticsAssetVersion]?: string;
+			[Analytics.DataSetList.AnalyticsAssetVocabularies]?: string;
 			[Analytics.DataSetList.AnalyticsExternalReferenceCode]?: string;
 			[Analytics.DataSetList.AnalyticsWebContentResourcePk]?: string;
 		};
@@ -97,23 +110,34 @@ export namespace Analytics {
 		dataset: {
 			[Analytics.DataSetList
 				.AnalyticsAssetAction]: Analytics.ElementAction;
+			[Analytics.DataSetList.AnalyticsAssetCategories]?: string;
+			[Analytics.DataSetList.AnalyticsAssetMimeType]?: string;
+			[Analytics.DataSetList.AnalyticsAssetTags]?: string;
+			[Analytics.DataSetList.AnalyticsAssetTitle]?: string;
 			[Analytics.DataSetList.AnalyticsAssetType]: Analytics.ElementType;
+			[Analytics.DataSetList.AnalyticsAssetVocabularies]?: string;
 			[Analytics.DataSetList.AnalyticsExternalReferenceCode]: string;
 			[Analytics.DataSetList.AnalyticsObjectDefinitionName]: string;
+			[Analytics.DataSetList.AnalyticsObjectType]?: string;
 		};
 		innerText: string;
 	}
 
 	export enum DataSetList {
+		AnalyticsAssetMimeType = 'analyticsAssetMimeType',
 		AnalyticsAssetAction = 'analyticsAssetAction',
+		AnalyticsAssetCategories = 'analyticsAssetCategories',
 		AnalyticsAssetCategory = 'analyticsAssetCategory',
-		AnalyticsExternalReferenceCode = 'analyticsExternalReferenceCode',
 		AnalyticsAssetId = 'analyticsAssetId',
 		AnalyticsAssetSubtype = 'analyticsAssetSubtype',
+		AnalyticsAssetTags = 'analyticsAssetTags',
 		AnalyticsAssetTitle = 'analyticsAssetTitle',
 		AnalyticsAssetType = 'analyticsAssetType',
 		AnalyticsAssetVersion = 'analyticsAssetVersion',
+		AnalyticsAssetVocabularies = 'analyticsAssetVocabularies',
+		AnalyticsExternalReferenceCode = 'analyticsExternalReferenceCode',
 		AnalyticsObjectDefinitionName = 'analyticsObjectDefinitionName',
+		AnalyticsObjectType = 'analyticsObjectType',
 		AnalyticsWebContentResourcePk = 'analyticsWebContentResourcePk',
 	}
 
@@ -165,6 +189,7 @@ export namespace Analytics {
 	export enum Keys {
 		ChannelId = 'ac_client_channel_id',
 		Contexts = 'ac_client_context',
+		DemandbaseAccount = 'ac_client_demandbase_account',
 		DisableTracking = 'ac_client_disable_tracking',
 		Identity = 'ac_client_identity',
 		PrevEmailAddressHash = 'ac_client_previous_email_address_hash',
@@ -173,10 +198,16 @@ export namespace Analytics {
 	}
 
 	export enum Queues {
+		AccountMessage = 'ac_message_queue_account',
 		Events = 'ac_client_batch',
 		IdentityMessage = 'ac_message_queue_identity',
 		Messages = 'ac_message_queue',
 	}
+
+	export type QueueItem =
+		| Analytics.AccountMessage
+		| Analytics.Event
+		| Analytics.Identity;
 
 	export type FlushResult = {
 		status: string;

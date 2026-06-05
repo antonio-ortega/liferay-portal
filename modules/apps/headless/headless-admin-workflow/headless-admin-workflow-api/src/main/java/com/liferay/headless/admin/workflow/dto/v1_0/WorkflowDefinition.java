@@ -389,6 +389,51 @@ public class WorkflowDefinition implements Serializable {
 	private Supplier<String> _externalReferenceCodeSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema
+	public String getGroupExternalReferenceCode() {
+		if (_groupExternalReferenceCodeSupplier != null) {
+			groupExternalReferenceCode =
+				_groupExternalReferenceCodeSupplier.get();
+
+			_groupExternalReferenceCodeSupplier = null;
+		}
+
+		return groupExternalReferenceCode;
+	}
+
+	public void setGroupExternalReferenceCode(
+		String groupExternalReferenceCode) {
+
+		this.groupExternalReferenceCode = groupExternalReferenceCode;
+
+		_groupExternalReferenceCodeSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setGroupExternalReferenceCode(
+		UnsafeSupplier<String, Exception>
+			groupExternalReferenceCodeUnsafeSupplier) {
+
+		_groupExternalReferenceCodeSupplier = () -> {
+			try {
+				return groupExternalReferenceCodeUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String groupExternalReferenceCode;
+
+	@JsonIgnore
+	private Supplier<String> _groupExternalReferenceCodeSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Long getId() {
 		if (_idSupplier != null) {
 			id = _idSupplier.get();
@@ -862,6 +907,22 @@ public class WorkflowDefinition implements Serializable {
 			sb.append("\"");
 		}
 
+		String groupExternalReferenceCode = getGroupExternalReferenceCode();
+
+		if (groupExternalReferenceCode != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"groupExternalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(groupExternalReferenceCode));
+
+			sb.append("\"");
+		}
+
 		Long id = getId();
 
 		if (id != null) {
@@ -1095,3 +1156,4 @@ public class WorkflowDefinition implements Serializable {
 	private Map<String, Serializable> _extendedProperties;
 
 }
+// LIFERAY-REST-BUILDER-HASH:-273443172

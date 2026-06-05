@@ -251,3 +251,4 @@ public class MembershipSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-2133762294

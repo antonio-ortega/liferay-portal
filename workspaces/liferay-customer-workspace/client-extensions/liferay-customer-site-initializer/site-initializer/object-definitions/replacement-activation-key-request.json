@@ -1,5 +1,6 @@
 {
 	"externalReferenceCode": "C_REPLACEMENT_ACTIVATION_KEY_REQUEST",
+	"friendlyURLSeparator": "cprakr",
 	"label": {
 		"en_US": "Replacement Activation Key Request"
 	},
@@ -36,7 +37,7 @@
 			"label": {
 				"en_US": "Clustered?"
 			},
-			"listTypeDefinitionExternalReferenceCode": "CLUSTERED",
+			"listTypeDefinitionExternalReferenceCode": "LT_CLUSTERED",
 			"name": "clustered",
 			"required": true,
 			"type": "String"
@@ -94,7 +95,7 @@
 			"label": {
 				"en_US": "Support Region"
 			},
-			"listTypeDefinitionExternalReferenceCode": "SUPPORT_REGION",
+			"listTypeDefinitionExternalReferenceCode": "LT_SUPPORT_REGION",
 			"name": "supportRegion",
 			"required": true,
 			"type": "String"
@@ -108,7 +109,7 @@
 			"label": {
 				"en_US": "Type of Server"
 			},
-			"listTypeDefinitionExternalReferenceCode": "TYPE_OF_SERVER",
+			"listTypeDefinitionExternalReferenceCode": "LT_TYPE_OF_SERVER",
 			"name": "typeOfServer",
 			"required": true,
 			"type": "String"
@@ -122,12 +123,13 @@
 			"label": {
 				"en_US": "Version of Liferay Software"
 			},
-			"listTypeDefinitionExternalReferenceCode": "VERSION_OF_LIFERAY_SOFTWARE",
+			"listTypeDefinitionExternalReferenceCode": "LT_VERSION_OF_LIFERAY_SOFTWARE",
 			"name": "versionOfLiferaySoftware",
 			"required": false,
 			"type": "String"
 		}
 	],
+	"panelAppOrder": 300,
 	"panelCategoryKey": "applications_menu.applications.content",
 	"pluralLabel": {
 		"en_US": "Replacement Activation Key Requests"

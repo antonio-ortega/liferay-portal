@@ -103,6 +103,8 @@ public class NotificationRecipientSettingModelImpl
 	public static final String TABLE_SQL_DROP =
 		"drop table NotificationRecipientSetting";
 
+	public static final String ENTITY_ALIAS = "notificationRecipientSetting";
+
 	public static final String ORDER_BY_JPQL =
 		" ORDER BY notificationRecipientSetting.notificationRecipientSettingId ASC";
 
@@ -1179,3 +1181,4 @@ public class NotificationRecipientSettingModelImpl
 	private NotificationRecipientSetting _escapedModel;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-14066211

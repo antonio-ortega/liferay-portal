@@ -128,48 +128,35 @@ public class TemplatesAspect {
 
 			TraceEntry traceEntry = null;
 
-			StringBuilder sb = new StringBuilder();
-
-			sb.append("Journal Article FreeMarker Template (Company ID ");
-
-			ThemeDisplayShim themeDisplayShim = (ThemeDisplayShim)parameters[9];
-
-			sb.append(themeDisplayShim.getCompanyId());
-
-			sb.append(", Site Group ID ");
-			sb.append(themeDisplayShim.getSiteGroupId());
-			sb.append(", and Template ID ");
-
-			DDMTemplateShim dDMTemplateShim = (DDMTemplateShim)parameters[1];
-
-			sb.append(dDMTemplateShim.getTemplateId());
-
-			sb.append(")");
+			String message = _buildMessage(
+				(DDMTemplateShim)parameters[1],
+				(JournalArticleShim)parameters[0],
+				(ThemeDisplayShim)parameters[9]);
 
 			if (_INSTRUMENTATION_LEVEL_TRACE.equals(
 					TemplatesPluginProperties.instrumentationLevel())) {
 
 				traceEntry = optionalThreadContext.startTransaction(
-					"FreeMarker Templates", sb.toString(),
-					MessageSupplier.create(sb.toString()), _timerName);
+					"FreeMarker Templates", message,
+					MessageSupplier.create(message), _timerName);
 
 				optionalThreadContext.setTransactionOuter();
 
 				optionalThreadContext.addTransactionAttribute(
-					"Script", dDMTemplateShim.getScript());
+					"Script", (String)parameters[8]);
 			}
 			else if (_INSTRUMENTATION_LEVEL_DEBUG.equals(
 						TemplatesPluginProperties.instrumentationLevel())) {
 
 				traceEntry = optionalThreadContext.startTransaction(
-					"FreeMarker Templates", sb.toString(),
-					MessageSupplier.create(sb.toString()), _timerName);
+					"FreeMarker Templates", message,
+					MessageSupplier.create(message), _timerName);
 
 				optionalThreadContext.setTransactionOuter();
 			}
 			else {
 				traceEntry = optionalThreadContext.startTraceEntry(
-					MessageSupplier.create(sb.toString()), _timerName);
+					MessageSupplier.create(message), _timerName);
 			}
 
 			return traceEntry;
@@ -199,7 +186,7 @@ public class TemplatesAspect {
 		methodParameterTypes = {
 			"com.liferay.portal.kernel.theme.ThemeDisplay", "java.util.Map",
 			"java.lang.String", "java.lang.String",
-			"com.liferay.portal.kernel.io.unsync.UnsyncStringWriter",
+			"com.liferay.petra.io.unsync.UnsyncStringWriter",
 			"jakarta.servlet.http.HttpServletRequest",
 			"jakarta.servlet.http.HttpServletResponse"
 		},
@@ -299,6 +286,11 @@ public class TemplatesAspect {
 
 	@Shim("com.liferay.journal.model.JournalArticle")
 	public interface JournalArticleShim {
+
+		public long getCompanyId();
+
+		public long getGroupId();
+
 	}
 
 	@Shim("com.liferay.portal.kernel.theme.ThemeDisplay")
@@ -312,6 +304,40 @@ public class TemplatesAspect {
 
 		public long getSiteGroupId();
 
+	}
+
+	private static String _buildMessage(
+		DDMTemplateShim dDMTemplateShim, JournalArticleShim journalArticleShim,
+		ThemeDisplayShim themeDisplayShim) {
+
+		StringBuilder sb = new StringBuilder();
+
+		sb.append("Journal Article FreeMarker Template (Company ID ");
+
+		if (themeDisplayShim != null) {
+			sb.append(themeDisplayShim.getCompanyId());
+			sb.append(", Site Group ID ");
+			sb.append(themeDisplayShim.getSiteGroupId());
+		}
+		else if (journalArticleShim != null) {
+			sb.append(journalArticleShim.getCompanyId());
+			sb.append(", Site Group ID ");
+			sb.append(journalArticleShim.getGroupId());
+		}
+		else {
+			sb.append("?");
+			sb.append(", Site Group ID ");
+			sb.append("?");
+		}
+
+		if (dDMTemplateShim != null) {
+			sb.append(", and Dynamic Data Mapping Template ID ");
+			sb.append(dDMTemplateShim.getTemplateId());
+		}
+
+		sb.append(")");
+
+		return sb.toString();
 	}
 
 	private static final String _INSTRUMENTATION_LEVEL_DEBUG = "DEBUG";

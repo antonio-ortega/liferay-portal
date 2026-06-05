@@ -283,3 +283,4 @@ public interface CommerceChannelResource {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:366474995

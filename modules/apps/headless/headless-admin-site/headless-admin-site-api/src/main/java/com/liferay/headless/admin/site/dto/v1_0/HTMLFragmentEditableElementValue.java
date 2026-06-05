@@ -257,3 +257,4 @@ public class HTMLFragmentEditableElementValue
 	private Map<String, Serializable> _extendedProperties;
 
 }
+// LIFERAY-REST-BUILDER-HASH:1258100768

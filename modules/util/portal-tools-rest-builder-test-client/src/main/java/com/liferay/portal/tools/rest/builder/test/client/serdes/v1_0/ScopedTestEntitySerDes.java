@@ -456,3 +456,4 @@ public class ScopedTestEntitySerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1948301208

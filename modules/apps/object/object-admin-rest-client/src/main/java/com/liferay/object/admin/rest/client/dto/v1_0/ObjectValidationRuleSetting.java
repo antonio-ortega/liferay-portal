@@ -101,3 +101,4 @@ public class ObjectValidationRuleSetting implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-825307315

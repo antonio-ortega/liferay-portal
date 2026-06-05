@@ -6,9 +6,9 @@
 package com.liferay.dynamic.data.lists.internal.search;
 
 import com.liferay.dynamic.data.lists.model.DDLRecord;
+import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
-import com.liferay.portal.search.batch.BatchIndexingActionable;
 import com.liferay.portal.search.indexer.IndexerDocumentBuilder;
 import com.liferay.portal.search.indexer.IndexerWriter;
 
@@ -26,22 +26,21 @@ public class DDLRecordBatchReindexer {
 	}
 
 	public void reindex(long ddlRecordSetId, long companyId) {
-		BatchIndexingActionable batchIndexingActionable =
-			_indexerWriter.getBatchIndexingActionable();
+		IndexableActionableDynamicQuery indexableActionableDynamicQuery =
+			_indexerWriter.getIndexableActionableDynamicQuery();
 
-		batchIndexingActionable.setAddCriteriaMethod(
+		indexableActionableDynamicQuery.setAddCriteriaMethod(
 			dynamicQuery -> {
 				Property recordIdProperty = PropertyFactoryUtil.forName(
 					"recordSetId");
 
 				dynamicQuery.add(recordIdProperty.eq(ddlRecordSetId));
 			});
-		batchIndexingActionable.setCompanyId(companyId);
-		batchIndexingActionable.setPerformActionMethod(
-			(DDLRecord record) -> batchIndexingActionable.addDocuments(
-				_indexerDocumentBuilder.getDocument(record)));
+		indexableActionableDynamicQuery.setCompanyId(companyId);
+		indexableActionableDynamicQuery.setPerformActionMethod(
+			_indexerDocumentBuilder::getDocument);
 
-		batchIndexingActionable.performActions();
+		indexableActionableDynamicQuery.performActions();
 	}
 
 	private final IndexerDocumentBuilder _indexerDocumentBuilder;

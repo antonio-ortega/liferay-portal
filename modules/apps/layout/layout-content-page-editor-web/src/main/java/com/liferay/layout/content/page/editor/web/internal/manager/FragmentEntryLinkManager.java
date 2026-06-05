@@ -244,7 +244,7 @@ public class FragmentEntryLinkManager {
 				).put(
 					"fragmentEntryKey",
 					FragmentRendererConstants.
-						FRAGMENT_ENTRY_FRAGMENT_RENDERER_KEY
+						FRAGMENT_RENDERER_KEY_FRAGMENT_ENTRY
 				).put(
 					"fragmentEntryLinkId",
 					String.valueOf(fragmentEntryLink.getFragmentEntryLinkId())
@@ -352,7 +352,7 @@ public class FragmentEntryLinkManager {
 					if (Validator.isNull(rendererKey)) {
 						rendererKey =
 							FragmentRendererConstants.
-								FRAGMENT_ENTRY_FRAGMENT_RENDERER_KEY;
+								FRAGMENT_RENDERER_KEY_FRAGMENT_ENTRY;
 					}
 
 					FragmentRenderer fragmentRenderer =
@@ -588,16 +588,15 @@ public class FragmentEntryLinkManager {
 	private FragmentEntry _getFragmentEntry(
 		FragmentEntryLink fragmentEntryLink, Locale locale) {
 
-		if (Validator.isNull(fragmentEntryLink.getFragmentEntryERC())) {
-			return getFragmentEntry(
-				fragmentEntryLink.getGroupId(),
-				fragmentEntryLink.getRendererKey(), locale);
+		FragmentEntry fragmentEntry = fragmentEntryLink.fetchFragmentEntry();
+
+		if (fragmentEntry != null) {
+			return fragmentEntry;
 		}
 
-		return _fragmentEntryLocalService.
-			fetchFragmentEntryByExternalReferenceCode(
-				fragmentEntryLink.getFragmentEntryERC(),
-				fragmentEntryLink.getFragmentEntryGroupId());
+		return getFragmentEntry(
+			fragmentEntryLink.getGroupId(), fragmentEntryLink.getRendererKey(),
+			locale);
 	}
 
 	private JSONArray _getFragmentEntryLinkCommentsJSONArray(

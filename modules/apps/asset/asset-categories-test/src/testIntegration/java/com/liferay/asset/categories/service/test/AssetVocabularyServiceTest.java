@@ -13,7 +13,9 @@ import com.liferay.asset.kernel.exception.VocabularyNameException;
 import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.model.AssetVocabulary;
 import com.liferay.asset.kernel.model.AssetVocabularyConstants;
+import com.liferay.asset.kernel.model.AssetVocabularyGroupRel;
 import com.liferay.asset.kernel.service.AssetCategoryLocalService;
+import com.liferay.asset.kernel.service.AssetVocabularyGroupRelLocalService;
 import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
 import com.liferay.asset.kernel.service.AssetVocabularyService;
 import com.liferay.asset.test.util.AssetTestUtil;
@@ -24,6 +26,7 @@ import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.lazy.referencing.LazyReferencingThreadLocal;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.ModelHintsUtil;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.ResourcePermission;
@@ -60,9 +63,11 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.search.test.rule.SearchTestRule;
+import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
+import com.liferay.site.cms.site.initializer.test.util.CMSTestUtil;
 
 import java.util.List;
 import java.util.Locale;
@@ -186,6 +191,32 @@ public class AssetVocabularyServiceTest {
 
 		Assert.assertEquals(
 			externalReferenceCode, vocabulary.getExternalReferenceCode());
+	}
+
+	@FeatureFlag("LPD-17564")
+	@Test
+	public void testAddVocabularyWithoutAssetLibrary() throws Exception {
+		Group cmsGroup = CMSTestUtil.getOrAddGroup(
+			AssetVocabularyServiceTest.class);
+
+		AssetVocabulary vocabulary = AssetTestUtil.addVocabulary(
+			cmsGroup.getGroupId(), RandomTestUtil.randomString());
+
+		List<AssetVocabularyGroupRel> assetVocabularyGroupRels =
+			_assetVocabularyGroupRelLocalService.
+				getAssetVocabularyGroupRelsByVocabularyId(
+					vocabulary.getVocabularyId());
+
+		Assert.assertEquals(
+			assetVocabularyGroupRels.toString(), 1,
+			assetVocabularyGroupRels.size());
+
+		AssetVocabularyGroupRel assetVocabularyGroupRel =
+			assetVocabularyGroupRels.get(0);
+
+		Assert.assertEquals(
+			assetVocabularyGroupRels.toString(), GroupConstants.GROUP_ID_ALL,
+			assetVocabularyGroupRel.getGroupId());
 	}
 
 	@Test
@@ -723,6 +754,10 @@ public class AssetVocabularyServiceTest {
 
 	@Inject
 	private AssetCategoryLocalService _assetCategoryLocalService;
+
+	@Inject
+	private AssetVocabularyGroupRelLocalService
+		_assetVocabularyGroupRelLocalService;
 
 	@Inject
 	private AssetVocabularyLocalService _assetVocabularyLocalService;

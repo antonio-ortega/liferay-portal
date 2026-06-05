@@ -311,3 +311,4 @@ public class OrganizationBriefSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:2025075191

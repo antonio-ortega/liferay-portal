@@ -215,3 +215,4 @@ public interface NavigationMenuResource {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1140378471

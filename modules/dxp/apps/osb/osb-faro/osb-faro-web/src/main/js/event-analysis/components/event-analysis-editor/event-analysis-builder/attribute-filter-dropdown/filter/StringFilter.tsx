@@ -3,6 +3,7 @@ import EventAttributeValuesQuery from 'event-analysis/queries/EventAttributeValu
 import Form, {validateRequired} from 'shared/components/form';
 import React from 'react';
 import {DataTypes, IFilterProps, Operators} from 'event-analysis/utils/types';
+import {getSafeDecodedURIComponent} from 'shared/util/util';
 import {
 	STRING_OPERATOR_LABELS_MAP,
 	STRING_OPTIONS
@@ -95,14 +96,13 @@ const StringFilter: React.FC<IFilterProps> = ({
 												return {
 													data: data.eventAttributeValues.eventAttributeValues.map(
 														value =>
-															decodeURIComponent(
+															getSafeDecodedURIComponent(
 																value
 															)
 													),
-													total:
-														data
-															.eventAttributeValues
-															.total
+													total: data
+														.eventAttributeValues
+														.total
 												};
 											}
 
@@ -114,7 +114,8 @@ const StringFilter: React.FC<IFilterProps> = ({
 										query: EventAttributeValuesQuery,
 										variables: {
 											channelId,
-											eventAttributeDefinitionId: attributeId,
+											eventAttributeDefinitionId:
+												attributeId,
 											eventDefinitionId: eventId,
 											size: delta,
 											start: (page - 1) * delta

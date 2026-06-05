@@ -25,12 +25,11 @@ export default function ProductGridView({product}: ProductGridViewProps) {
 					<Image
 						alt={product.name}
 						className="duration-300 group-hover:scale-105 h-48 object-cover transition-transform w-full"
-						height={48}
+						height={120}
 						onError={handleImageError}
 						quality={100}
 						src={product.urlImage}
-						unoptimized
-						width={48}
+						width={120}
 					/>
 
 					{skuDetails.available && (

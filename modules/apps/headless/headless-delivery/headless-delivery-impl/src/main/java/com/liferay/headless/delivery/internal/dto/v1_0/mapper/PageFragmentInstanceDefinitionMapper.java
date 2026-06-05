@@ -130,9 +130,7 @@ public class PageFragmentInstanceDefinitionMapper {
 		String rendererKey = fragmentEntryLink.getRendererKey();
 
 		FragmentEntry fragmentEntry = _getFragmentEntry(
-			_fragmentCollectionContributorRegistry,
-			fragmentEntryLink.getFragmentEntryERC(),
-			fragmentEntryLink.getFragmentEntryGroupId(), rendererKey);
+			_fragmentCollectionContributorRegistry, fragmentEntryLink);
 
 		return new PageFragmentInstanceDefinition() {
 			{
@@ -275,8 +273,7 @@ public class PageFragmentInstanceDefinitionMapper {
 			else {
 				value = _fragmentEntryConfigurationParser.getFieldValue(
 					fragmentEntryLink.getConfigurationJSONObject(),
-					fragmentEntryLink.getEditableValuesJSONObject(),
-					LocaleUtil.getMostRelevantLocale(), key);
+					fragmentEntryLink.getEditableValuesJSONObject(), key);
 			}
 
 			if (value == null) {
@@ -314,13 +311,9 @@ public class PageFragmentInstanceDefinitionMapper {
 	private FragmentEntry _getFragmentEntry(
 		FragmentCollectionContributorRegistry
 			fragmentCollectionContributorRegistry,
-		String fragmentEntryERC, long fragmentEntryGroupId,
-		String rendererKey) {
+		FragmentEntryLink fragmentEntryLink) {
 
-		FragmentEntry fragmentEntry =
-			_fragmentEntryLocalService.
-				fetchFragmentEntryByExternalReferenceCode(
-					fragmentEntryERC, fragmentEntryGroupId);
+		FragmentEntry fragmentEntry = fragmentEntryLink.fetchFragmentEntry();
 
 		if (fragmentEntry != null) {
 			return fragmentEntry;
@@ -329,7 +322,7 @@ public class PageFragmentInstanceDefinitionMapper {
 		Map<String, FragmentEntry> fragmentEntries =
 			fragmentCollectionContributorRegistry.getFragmentEntries();
 
-		return fragmentEntries.get(rendererKey);
+		return fragmentEntries.get(fragmentEntryLink.getRendererKey());
 	}
 
 	private FragmentField[] _getFragmentFields(

@@ -21,7 +21,7 @@ import PublisherSalesSummary from '../../../../services/rest/PublisherSalesSumma
 import {exportToCSV} from '../../../../utils/csv';
 import {safeJSONParse} from '../../../../utils/util';
 import DetailsHeader from '../../components/DetailsHeader/DetailsHeader';
-import PaymentStatus from '../../components/PaymentStatus/PaymentStatus';
+import PaymentStatusBadge from '../../components/PaymentStatus/PaymentStatusBadge';
 import {formatCurrency, getTotalByOrderKey} from '../../util/finance';
 import {formatDate, textWrapper} from '../../util/util';
 
@@ -72,7 +72,7 @@ const PaymentDetails = () => {
 
 	const paymentStatus = publisherSalesSummary?.paymentStatus.key;
 
-	const paymentStautsCode =
+	const paymentStatusCode =
 		paymentStatus === PublisherPayoutStatus.PAID
 			? PaymentStatusCode.PAID
 			: PaymentStatusCode.PENDING;
@@ -82,16 +82,15 @@ const PaymentDetails = () => {
 			return;
 		}
 
-		const _formatCurrency = (
-			currencyCode: string,
-			price: number
-		): string => {
-			try {
-				return formatCurrency(currencyCode, price);
+		const _formatNumber = (price: number): string => {
+			if (!price) {
+				return '0.00';
 			}
-			catch {
-				return String(price);
-			}
+
+			return price.toLocaleString(undefined, {
+				maximumFractionDigits: 2,
+				minimumFractionDigits: 2,
+			});
 		};
 
 		const headers = [
@@ -101,6 +100,7 @@ const PaymentDetails = () => {
 			i18n.translate('net-price'),
 			i18n.translate('vat'),
 			i18n.translate('total'),
+			i18n.translate('currency-code'),
 		];
 
 		const rows = completeOrderItems.map(({orderItem, placedOrderItem}) => {
@@ -112,9 +112,10 @@ const PaymentDetails = () => {
 				placedOrderItem.name || '',
 				orderItem.account?.name || '',
 				placedOrderItem.quantity,
-				_formatCurrency(orderItem.currencyCode, finalPrice),
-				_formatCurrency(orderItem.currencyCode, vat),
-				_formatCurrency(orderItem.currencyCode, finalPriceWithTax),
+				_formatNumber(finalPrice),
+				_formatNumber(vat),
+				_formatNumber(finalPriceWithTax),
+				orderItem.currencyCode,
 			];
 		});
 
@@ -152,7 +153,7 @@ const PaymentDetails = () => {
 						);
 					})
 				}
-				paymentStatusCode={paymentStautsCode}
+				paymentStatusCode={paymentStatusCode}
 				showButton={paymentStatus !== PublisherPayoutStatus.PAID}
 				title={publisherSalesSummary?.publisherName as string}
 			/>
@@ -251,8 +252,8 @@ const PaymentDetails = () => {
 							{
 								title: i18n.translate('status'),
 								value: (
-									<PaymentStatus
-										paymentStatus={paymentStautsCode}
+									<PaymentStatusBadge
+										paymentStatus={paymentStatusCode}
 									/>
 								),
 							},

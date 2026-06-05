@@ -120,3 +120,4 @@ public class LandscapeMobile implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:443470030

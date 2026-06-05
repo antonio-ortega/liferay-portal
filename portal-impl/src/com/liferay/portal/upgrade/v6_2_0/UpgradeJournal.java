@@ -5,6 +5,7 @@
 
 package com.liferay.portal.upgrade.v6_2_0;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.dao.orm.common.SQLTransformer;
 import com.liferay.portal.kernel.dao.jdbc.AutoBatchPreparedStatementUtil;
@@ -20,7 +21,6 @@ import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LoggingTimer;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.xml.Attribute;
@@ -455,11 +455,13 @@ public class UpgradeJournal extends BaseUpgradePortletPreferences {
 
 	protected void updateAssetEntryClassTypeId() throws Exception {
 		try (LoggingTimer loggingTimer = new LoggingTimer();
+
 			PreparedStatement preparedStatement1 = connection.prepareStatement(
 				SQLTransformer.transform(
 					"select distinct companyId, groupId, resourcePrimKey, " +
 						"structureId from JournalArticle where structureId " +
 							"!= ''"));
+
 			ResultSet resultSet = preparedStatement1.executeQuery()) {
 
 			long classNameId = _getClassNameId(
@@ -495,10 +497,12 @@ public class UpgradeJournal extends BaseUpgradePortletPreferences {
 
 	protected void updateContentSearch() throws Exception {
 		try (LoggingTimer loggingTimer = new LoggingTimer();
+
 			PreparedStatement preparedStatement = connection.prepareStatement(
 				"select groupId, portletId from JournalContentSearch group " +
 					"by groupId, portletId having count(groupId) > 1 and " +
 						"count(portletId) > 1");
+
 			ResultSet resultSet = preparedStatement.executeQuery()) {
 
 			while (resultSet.next()) {
@@ -521,14 +525,20 @@ public class UpgradeJournal extends BaseUpgradePortletPreferences {
 				"select companyId, privateLayout, layoutId, portletId from " +
 					"JournalContentSearch where JournalContentSearch.groupId " +
 						"= ? and JournalContentSearch.articleId = ?");
-			PreparedStatement preparedStatement3 = connection.prepareStatement(
-				"delete from JournalContentSearch where " +
-					"JournalContentSearch.groupId = ? and " +
-						"JournalContentSearch.articleId = ?");
-			PreparedStatement preparedStatement4 = connection.prepareStatement(
-				"insert into JournalContentSearch(contentSearchId, " +
-					"companyId, groupId, privateLayout, layoutId, portletId, " +
-						"articleId) values (?, ?, ?, ?, ?, ?, ?)")) {
+			PreparedStatement preparedStatement3 =
+				AutoBatchPreparedStatementUtil.autoBatch(
+					connection,
+					"delete from JournalContentSearch where " +
+						"JournalContentSearch.groupId = ? and " +
+							"JournalContentSearch.articleId = ?");
+			PreparedStatement preparedStatement4 =
+				AutoBatchPreparedStatementUtil.autoBatch(
+					connection,
+					StringBundler.concat(
+						"insert into JournalContentSearch(contentSearchId, ",
+						"companyId, groupId, privateLayout, layoutId, ",
+						"portletId, articleId) values (?, ?, ?, ?, ?, ?, ",
+						"?)"))) {
 
 			preparedStatement1.setLong(1, groupId);
 			preparedStatement1.setString(2, portletId);
@@ -560,7 +570,7 @@ public class UpgradeJournal extends BaseUpgradePortletPreferences {
 							preparedStatement3.setLong(1, groupId);
 							preparedStatement3.setString(2, articleId);
 
-							preparedStatement3.executeUpdate();
+							preparedStatement3.addBatch();
 
 							preparedStatement4.setLong(1, increment());
 							preparedStatement4.setLong(2, companyId);
@@ -571,9 +581,13 @@ public class UpgradeJournal extends BaseUpgradePortletPreferences {
 								6, journalContentSearchPortletId);
 							preparedStatement4.setString(7, articleId);
 
-							preparedStatement4.executeUpdate();
+							preparedStatement4.addBatch();
 						}
 					}
+
+					preparedStatement3.executeBatch();
+
+					preparedStatement4.executeBatch();
 				}
 			}
 		}
@@ -1054,8 +1068,10 @@ public class UpgradeJournal extends BaseUpgradePortletPreferences {
 
 	protected void updateStructures() throws Exception {
 		try (LoggingTimer loggingTimer = new LoggingTimer();
+
 			PreparedStatement preparedStatement = connection.prepareStatement(
 				"select * from JournalStructure");
+
 			ResultSet resultSet = preparedStatement.executeQuery()) {
 
 			while (resultSet.next()) {
@@ -1068,8 +1084,10 @@ public class UpgradeJournal extends BaseUpgradePortletPreferences {
 
 	protected void updateTemplates() throws Exception {
 		try (LoggingTimer loggingTimer = new LoggingTimer();
+
 			PreparedStatement preparedStatement = connection.prepareStatement(
 				"select * from JournalTemplate");
+
 			ResultSet resultSet = preparedStatement.executeQuery()) {
 
 			while (resultSet.next()) {
@@ -1211,9 +1229,11 @@ public class UpgradeJournal extends BaseUpgradePortletPreferences {
 		int count = 0;
 
 		try (LoggingTimer loggingTimer = new LoggingTimer();
+
 			PreparedStatement preparedStatement1 = connection.prepareStatement(
 				"select distinct groupId, articleId, urlTitle from " +
 					"JournalArticle");
+
 			ResultSet resultSet = preparedStatement1.executeQuery()) {
 
 			Map<String, String> processedArticleIds = new HashMap<>();
@@ -1310,8 +1330,8 @@ public class UpgradeJournal extends BaseUpgradePortletPreferences {
 		throws Exception {
 
 		try (PreparedStatement preparedStatement = connection.prepareStatement(
-				"select count(*) from JournalArticle where groupId = ? and " +
-					"articleId != ? and urlTitle = ?")) {
+				"select count(*) as count from JournalArticle where groupId " +
+					"= ? and articleId != ? and urlTitle = ?")) {
 
 			preparedStatement.setLong(1, groupId);
 			preparedStatement.setString(2, articleId);
@@ -1319,9 +1339,7 @@ public class UpgradeJournal extends BaseUpgradePortletPreferences {
 
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				while (resultSet.next()) {
-					int count = resultSet.getInt(1);
-
-					if (count > 0) {
+					if (resultSet.getLong("count") > 0) {
 						return false;
 					}
 				}

@@ -359,3 +359,4 @@ public class TaskBulkSelectionSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:1932910802

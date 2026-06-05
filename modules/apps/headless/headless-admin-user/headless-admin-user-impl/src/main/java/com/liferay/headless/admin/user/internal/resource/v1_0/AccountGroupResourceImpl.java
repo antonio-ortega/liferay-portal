@@ -15,6 +15,7 @@ import com.liferay.account.service.AccountGroupRelService;
 import com.liferay.account.service.AccountGroupService;
 import com.liferay.expando.kernel.service.ExpandoColumnLocalService;
 import com.liferay.expando.kernel.service.ExpandoTableLocalService;
+import com.liferay.exportimport.constants.ExportImportConstants;
 import com.liferay.exportimport.vulcan.batch.engine.ExportImportVulcanBatchEngineTaskItemDelegate;
 import com.liferay.headless.admin.user.dto.v1_0.Account;
 import com.liferay.headless.admin.user.dto.v1_0.AccountBrief;
@@ -26,7 +27,6 @@ import com.liferay.headless.admin.user.resource.v1_0.AccountGroupResource;
 import com.liferay.headless.common.spi.odata.entity.EntityFieldsUtil;
 import com.liferay.headless.common.spi.service.context.ServiceContextBuilder;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.Field;
@@ -202,8 +202,15 @@ public class AccountGroupResourceImpl
 	}
 
 	@Override
-	public ExportImportDescriptor getExportImportDescriptor() {
-		return new ExportImportDescriptor() {
+	public ExportImportDescriptor<com.liferay.account.model.AccountGroup>
+		getExportImportDescriptor() {
+
+		return new ExportImportDescriptor<>() {
+
+			@Override
+			public String getKey() {
+				return AccountGroupResourceImpl.class.getName();
+			}
 
 			@Override
 			public String getLabelLanguageKey() {
@@ -211,8 +218,10 @@ public class AccountGroupResourceImpl
 			}
 
 			@Override
-			public String getModelClassName() {
-				return com.liferay.account.model.AccountGroup.class.getName();
+			public Class<com.liferay.account.model.AccountGroup>
+				getModelClass() {
+
+				return com.liferay.account.model.AccountGroup.class;
 			}
 
 			@Override
@@ -226,13 +235,13 @@ public class AccountGroupResourceImpl
 			}
 
 			@Override
-			public String getResourceClassName() {
-				return AccountGroupResourceImpl.class.getName();
+			public Scope getScope() {
+				return Scope.COMPANY;
 			}
 
 			@Override
-			public Scope getScope() {
-				return Scope.COMPANY;
+			public String getSectionKey() {
+				return ExportImportConstants.SECTION_KEY_USERS;
 			}
 
 		};
@@ -501,10 +510,6 @@ public class AccountGroupResourceImpl
 			AccountGroup accountGroup,
 			com.liferay.account.model.AccountGroup serviceBuilderAccountGroup)
 		throws Exception {
-
-		if (!FeatureFlagManagerUtil.isEnabled("LPD-35914")) {
-			return serviceBuilderAccountGroup;
-		}
 
 		AccountBrief[] accountBriefs = accountGroup.getAccountBriefs();
 

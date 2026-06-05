@@ -69,3 +69,4 @@ public interface CommercePaymentEntryAuditService extends BaseService {
 		throws PortalException;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-478915961

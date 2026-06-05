@@ -9,6 +9,7 @@ import com.liferay.asset.kernel.AssetRendererFactoryRegistryUtil;
 import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.asset.kernel.model.AssetRenderer;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
+import com.liferay.asset.kernel.service.AssetEntryLocalServiceUtil;
 import com.liferay.change.tracking.constants.CTConstants;
 import com.liferay.change.tracking.model.CTCollection;
 import com.liferay.change.tracking.service.CTCollectionLocalServiceUtil;
@@ -526,7 +527,8 @@ public class WorkflowTaskDisplayContext {
 
 		StringBundler sb = new StringBundler(7);
 
-		sb.append("javascript:Liferay.Util.openModal({id: '");
+		sb.append(
+			"javascript:Liferay.Util.openModal({iframeBodyCssClass: '', id: '");
 		sb.append(_liferayPortletResponse.getNamespace());
 		sb.append("viewDiffs', title: '");
 		sb.append(
@@ -627,6 +629,21 @@ public class WorkflowTaskDisplayContext {
 				addTableViewTypeItem();
 			}
 		};
+	}
+
+	public AssetEntry getWorkflowAssetEntry(
+			String className, long classPK, long fallbackClassPK)
+		throws PortalException {
+
+		AssetEntry assetEntry = AssetEntryLocalServiceUtil.fetchEntry(
+			className, classPK);
+
+		if (assetEntry == null) {
+			assetEntry = AssetEntryLocalServiceUtil.fetchEntry(
+				className, fallbackClassPK);
+		}
+
+		return assetEntry;
 	}
 
 	public long getWorkflowContextEntryClassPK(

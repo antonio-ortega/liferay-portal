@@ -96,6 +96,8 @@ public class SegmentsExperimentRelModelImpl
 	public static final String TABLE_SQL_DROP =
 		"drop table SegmentsExperimentRel";
 
+	public static final String ENTITY_ALIAS = "segmentsExperimentRel";
+
 	public static final String ORDER_BY_JPQL =
 		" ORDER BY segmentsExperimentRel.segmentsExperimentRelId ASC";
 
@@ -965,3 +967,4 @@ public class SegmentsExperimentRelModelImpl
 	private SegmentsExperimentRel _escapedModel;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:261411914

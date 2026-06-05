@@ -6,7 +6,6 @@
 import ClayButton from '@clayui/button';
 import ClayIcon from '@clayui/icon';
 import ClayLoadingIndicator from '@clayui/loading-indicator';
-import {Fragment} from 'react';
 import useSWR from 'swr';
 
 import checkCircleIcon from '../../assets/icons/check_circle_icon.svg';
@@ -15,27 +14,40 @@ import timesCircleIcon from '../../assets/icons/times_circle_icon.svg';
 import {AccountAndAppCard} from '../../components/Card/AccountAndAppCard';
 import {Header} from '../../components/Header/Header';
 import {PageRenderer} from '../../components/Page';
+import {MarketplaceCategories} from '../../enums/Categories';
 import {OrderTypes, PaymentStatus} from '../../enums/Order';
-import {ProductTypeVocabulary, SolutionTypes} from '../../enums/Product';
+import {
+	ProductSpecificationKey,
+	ProductTypeVocabulary,
+	SolutionTypes,
+} from '../../enums/Product';
 import withProviders from '../../hoc/withProviders';
 import useGetProductByOrderId from '../../hooks/useGetProductByOrderId';
 import i18n from '../../i18n';
 import {Liferay} from '../../liferay/liferay';
 import HeadlessAdminUser from '../../services/rest/HeadlessAdminUser';
+import {
+	getProductCategoriesByVocabularyName,
+	getProductSpecification,
+} from '../../utils/productUtils';
 import {getSiteURL} from '../../utils/site';
 import {getAccountImage} from '../../utils/util';
+import AIHubNextSteps from '../ProductPurchase/pages/LiferayProduct/AIHub/AIHubNextSteps';
+import AIHubOpenBetaNextSteps from '../ProductPurchase/pages/LiferayProduct/AIHub/AIHubOpenBetaNextSteps';
+import LDPNextSteps from '../ProductPurchase/pages/LiferayProduct/LDPNextSteps';
 import ProductPurchaseNextSteps from '../ProductPurchase/pages/NextSteps';
 
 import './NextSteps.scss';
+
 type NextStepsBodyProps = ReturnType<typeof useGetProductByOrderId>['data'];
 
 export function NextStepsBody(props: NextStepsBodyProps) {
 	const placedOrder = props!.placedOrder;
 	const product = props!.product;
 
-	const accountId = placedOrder.accountId;
-	const orderId = placedOrder.id;
-	const productName = product.name;
+	const accountId = placedOrder?.accountId;
+	const orderId = placedOrder?.id;
+	const productName = product?.name;
 
 	const {data: accountCommerce} = useSWR(
 		accountId ? `/next-steps/account-commerce/${accountId}` : null,
@@ -89,7 +101,6 @@ export function NextStepsBody(props: NextStepsBodyProps) {
 				}
 			/>
 		),
-
 		[PaymentStatus.PAID]: (
 			<Header
 				description={
@@ -175,7 +186,7 @@ export function NextStepsBody(props: NextStepsBodyProps) {
 				<AccountAndAppCard
 					category="Application"
 					logo={
-						props!.marketplaceDeliveryOrder.productThumbnail ||
+						props!.marketplaceDeliveryOrder?.productThumbnail ||
 						'catalog'
 					}
 					title={productName}
@@ -253,9 +264,60 @@ export function NextSteps() {
 		return <ClayLoadingIndicator />;
 	}
 
+	const solutionTypeSpecification = getProductSpecification(
+		ProductSpecificationKey.SOLUTION_TYPE,
+		data?.product as DeliveryProduct
+	);
+
+	const solutionTypeSpecificationValue =
+		solutionTypeSpecification?.value as SolutionTypes;
+
+	const productTypes = getProductCategoriesByVocabularyName(
+		data?.product?.categories || [],
+		MarketplaceCategories.MARKETPLACE_PRODUCT_TYPE
+	);
+
+	const productTypeCategory = productTypes[0] as ProductTypeVocabulary;
+
+	if (
+		productTypeCategory === ProductTypeVocabulary.LIFERAY_PRODUCT &&
+		solutionTypeSpecificationValue === SolutionTypes.LIFERAY_DATA_PLATFORM
+	) {
+		return (
+			<LDPNextSteps
+				description={i18n.translate(
+					'hold-tight-we-re-preparing-your-environment-so-you-can-start-using-your-liferay-data-platform-this-will-only-take-a-moment'
+				)}
+				title={i18n.translate('setting-up-your-free-version-ldp')}
+			/>
+		);
+	}
+
+	if (
+		productTypeCategory === ProductTypeVocabulary.LIFERAY_PRODUCT &&
+		solutionTypeSpecificationValue === SolutionTypes.AI_HUB
+	) {
+		return (
+			<AIHubNextSteps data={data} error={error} isLoading={isLoading} />
+		);
+	}
+
+	if (
+		productTypeCategory === ProductTypeVocabulary.LIFERAY_PRODUCT &&
+		solutionTypeSpecificationValue === SolutionTypes.AI_HUB_OPEN_BETA
+	) {
+		return (
+			<AIHubOpenBetaNextSteps
+				data={data}
+				error={error}
+				isLoading={isLoading}
+			/>
+		);
+	}
+
 	if (
 		[OrderTypes.ADDONS, OrderTypes.SOLUTIONS7].includes(
-			data?.placedOrder.orderTypeExternalReferenceCode as OrderTypes
+			data?.placedOrder?.orderTypeExternalReferenceCode as OrderTypes
 		)
 	) {
 		return (

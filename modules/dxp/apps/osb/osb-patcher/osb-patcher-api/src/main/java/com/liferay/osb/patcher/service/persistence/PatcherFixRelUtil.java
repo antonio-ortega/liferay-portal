@@ -36,6 +36,20 @@ public class PatcherFixRelUtil {
 	 */
 
 	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(List)
+	 */
+	public static void cacheResult(List<PatcherFixRel> patcherFixRels) {
+		getPersistence().cacheResult(patcherFixRels);
+	}
+
+	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(com.liferay.portal.kernel.model.BaseModel)
+	 */
+	public static void cacheResult(PatcherFixRel patcherFixRel) {
+		getPersistence().cacheResult(patcherFixRel);
+	}
+
+	/**
 	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#clearCache()
 	 */
 	public static void clearCache() {
@@ -111,62 +125,10 @@ public class PatcherFixRelUtil {
 	}
 
 	/**
-	 * Returns all the patcher fix rels where childPatcherFixId = &#63;.
-	 *
-	 * @param childPatcherFixId the child patcher fix ID
-	 * @return the matching patcher fix rels
-	 */
-	public static List<PatcherFixRel> findByChildPatcherFixId(
-		long childPatcherFixId) {
-
-		return getPersistence().findByChildPatcherFixId(childPatcherFixId);
-	}
-
-	/**
-	 * Returns a range of all the patcher fix rels where childPatcherFixId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>PatcherFixRelModelImpl</code>.
-	 * </p>
-	 *
-	 * @param childPatcherFixId the child patcher fix ID
-	 * @param start the lower bound of the range of patcher fix rels
-	 * @param end the upper bound of the range of patcher fix rels (not inclusive)
-	 * @return the range of matching patcher fix rels
-	 */
-	public static List<PatcherFixRel> findByChildPatcherFixId(
-		long childPatcherFixId, int start, int end) {
-
-		return getPersistence().findByChildPatcherFixId(
-			childPatcherFixId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the patcher fix rels where childPatcherFixId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>PatcherFixRelModelImpl</code>.
-	 * </p>
-	 *
-	 * @param childPatcherFixId the child patcher fix ID
-	 * @param start the lower bound of the range of patcher fix rels
-	 * @param end the upper bound of the range of patcher fix rels (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching patcher fix rels
-	 */
-	public static List<PatcherFixRel> findByChildPatcherFixId(
-		long childPatcherFixId, int start, int end,
-		OrderByComparator<PatcherFixRel> orderByComparator) {
-
-		return getPersistence().findByChildPatcherFixId(
-			childPatcherFixId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the patcher fix rels where childPatcherFixId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>PatcherFixRelModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.osb.patcher.model.impl.PatcherFixRelModelImpl</code>.
 	 * </p>
 	 *
 	 * @param childPatcherFixId the child patcher fix ID
@@ -218,56 +180,6 @@ public class PatcherFixRelUtil {
 	}
 
 	/**
-	 * Returns the last patcher fix rel in the ordered set where childPatcherFixId = &#63;.
-	 *
-	 * @param childPatcherFixId the child patcher fix ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching patcher fix rel
-	 * @throws NoSuchPatcherFixRelException if a matching patcher fix rel could not be found
-	 */
-	public static PatcherFixRel findByChildPatcherFixId_Last(
-			long childPatcherFixId,
-			OrderByComparator<PatcherFixRel> orderByComparator)
-		throws com.liferay.osb.patcher.exception.NoSuchPatcherFixRelException {
-
-		return getPersistence().findByChildPatcherFixId_Last(
-			childPatcherFixId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last patcher fix rel in the ordered set where childPatcherFixId = &#63;.
-	 *
-	 * @param childPatcherFixId the child patcher fix ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching patcher fix rel, or <code>null</code> if a matching patcher fix rel could not be found
-	 */
-	public static PatcherFixRel fetchByChildPatcherFixId_Last(
-		long childPatcherFixId,
-		OrderByComparator<PatcherFixRel> orderByComparator) {
-
-		return getPersistence().fetchByChildPatcherFixId_Last(
-			childPatcherFixId, orderByComparator);
-	}
-
-	/**
-	 * Returns the patcher fix rels before and after the current patcher fix rel in the ordered set where childPatcherFixId = &#63;.
-	 *
-	 * @param patcherFixRelId the primary key of the current patcher fix rel
-	 * @param childPatcherFixId the child patcher fix ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next patcher fix rel
-	 * @throws NoSuchPatcherFixRelException if a patcher fix rel with the primary key could not be found
-	 */
-	public static PatcherFixRel[] findByChildPatcherFixId_PrevAndNext(
-			long patcherFixRelId, long childPatcherFixId,
-			OrderByComparator<PatcherFixRel> orderByComparator)
-		throws com.liferay.osb.patcher.exception.NoSuchPatcherFixRelException {
-
-		return getPersistence().findByChildPatcherFixId_PrevAndNext(
-			patcherFixRelId, childPatcherFixId, orderByComparator);
-	}
-
-	/**
 	 * Removes all the patcher fix rels where childPatcherFixId = &#63; from the database.
 	 *
 	 * @param childPatcherFixId the child patcher fix ID
@@ -287,62 +199,10 @@ public class PatcherFixRelUtil {
 	}
 
 	/**
-	 * Returns all the patcher fix rels where parentPatcherFixId = &#63;.
-	 *
-	 * @param parentPatcherFixId the parent patcher fix ID
-	 * @return the matching patcher fix rels
-	 */
-	public static List<PatcherFixRel> findByParentPatcherFixId(
-		long parentPatcherFixId) {
-
-		return getPersistence().findByParentPatcherFixId(parentPatcherFixId);
-	}
-
-	/**
-	 * Returns a range of all the patcher fix rels where parentPatcherFixId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>PatcherFixRelModelImpl</code>.
-	 * </p>
-	 *
-	 * @param parentPatcherFixId the parent patcher fix ID
-	 * @param start the lower bound of the range of patcher fix rels
-	 * @param end the upper bound of the range of patcher fix rels (not inclusive)
-	 * @return the range of matching patcher fix rels
-	 */
-	public static List<PatcherFixRel> findByParentPatcherFixId(
-		long parentPatcherFixId, int start, int end) {
-
-		return getPersistence().findByParentPatcherFixId(
-			parentPatcherFixId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the patcher fix rels where parentPatcherFixId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>PatcherFixRelModelImpl</code>.
-	 * </p>
-	 *
-	 * @param parentPatcherFixId the parent patcher fix ID
-	 * @param start the lower bound of the range of patcher fix rels
-	 * @param end the upper bound of the range of patcher fix rels (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching patcher fix rels
-	 */
-	public static List<PatcherFixRel> findByParentPatcherFixId(
-		long parentPatcherFixId, int start, int end,
-		OrderByComparator<PatcherFixRel> orderByComparator) {
-
-		return getPersistence().findByParentPatcherFixId(
-			parentPatcherFixId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the patcher fix rels where parentPatcherFixId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>PatcherFixRelModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.osb.patcher.model.impl.PatcherFixRelModelImpl</code>.
 	 * </p>
 	 *
 	 * @param parentPatcherFixId the parent patcher fix ID
@@ -394,56 +254,6 @@ public class PatcherFixRelUtil {
 	}
 
 	/**
-	 * Returns the last patcher fix rel in the ordered set where parentPatcherFixId = &#63;.
-	 *
-	 * @param parentPatcherFixId the parent patcher fix ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching patcher fix rel
-	 * @throws NoSuchPatcherFixRelException if a matching patcher fix rel could not be found
-	 */
-	public static PatcherFixRel findByParentPatcherFixId_Last(
-			long parentPatcherFixId,
-			OrderByComparator<PatcherFixRel> orderByComparator)
-		throws com.liferay.osb.patcher.exception.NoSuchPatcherFixRelException {
-
-		return getPersistence().findByParentPatcherFixId_Last(
-			parentPatcherFixId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last patcher fix rel in the ordered set where parentPatcherFixId = &#63;.
-	 *
-	 * @param parentPatcherFixId the parent patcher fix ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching patcher fix rel, or <code>null</code> if a matching patcher fix rel could not be found
-	 */
-	public static PatcherFixRel fetchByParentPatcherFixId_Last(
-		long parentPatcherFixId,
-		OrderByComparator<PatcherFixRel> orderByComparator) {
-
-		return getPersistence().fetchByParentPatcherFixId_Last(
-			parentPatcherFixId, orderByComparator);
-	}
-
-	/**
-	 * Returns the patcher fix rels before and after the current patcher fix rel in the ordered set where parentPatcherFixId = &#63;.
-	 *
-	 * @param patcherFixRelId the primary key of the current patcher fix rel
-	 * @param parentPatcherFixId the parent patcher fix ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next patcher fix rel
-	 * @throws NoSuchPatcherFixRelException if a patcher fix rel with the primary key could not be found
-	 */
-	public static PatcherFixRel[] findByParentPatcherFixId_PrevAndNext(
-			long patcherFixRelId, long parentPatcherFixId,
-			OrderByComparator<PatcherFixRel> orderByComparator)
-		throws com.liferay.osb.patcher.exception.NoSuchPatcherFixRelException {
-
-		return getPersistence().findByParentPatcherFixId_PrevAndNext(
-			patcherFixRelId, parentPatcherFixId, orderByComparator);
-	}
-
-	/**
 	 * Removes all the patcher fix rels where parentPatcherFixId = &#63; from the database.
 	 *
 	 * @param parentPatcherFixId the parent patcher fix ID
@@ -460,24 +270,6 @@ public class PatcherFixRelUtil {
 	 */
 	public static int countByParentPatcherFixId(long parentPatcherFixId) {
 		return getPersistence().countByParentPatcherFixId(parentPatcherFixId);
-	}
-
-	/**
-	 * Caches the patcher fix rel in the entity cache if it is enabled.
-	 *
-	 * @param patcherFixRel the patcher fix rel
-	 */
-	public static void cacheResult(PatcherFixRel patcherFixRel) {
-		getPersistence().cacheResult(patcherFixRel);
-	}
-
-	/**
-	 * Caches the patcher fix rels in the entity cache if it is enabled.
-	 *
-	 * @param patcherFixRels the patcher fix rels
-	 */
-	public static void cacheResult(List<PatcherFixRel> patcherFixRels) {
-		getPersistence().cacheResult(patcherFixRels);
 	}
 
 	/**
@@ -531,83 +323,107 @@ public class PatcherFixRelUtil {
 	}
 
 	/**
-	 * Returns all the patcher fix rels.
+	 * Returns all the patcher fix rels where childPatcherFixId = &#63;.
 	 *
-	 * @return the patcher fix rels
+	 * @param childPatcherFixId the child patcher fix ID
+	 * @return the matching patcher fix rels
 	 */
-	public static List<PatcherFixRel> findAll() {
-		return getPersistence().findAll();
+	public static List<PatcherFixRel> findByChildPatcherFixId(
+		long childPatcherFixId) {
+
+		return getPersistence().findByChildPatcherFixId(childPatcherFixId);
 	}
 
 	/**
-	 * Returns a range of all the patcher fix rels.
+	 * Returns a range of all the patcher fix rels where childPatcherFixId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>PatcherFixRelModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.osb.patcher.model.impl.PatcherFixRelModelImpl</code>.
 	 * </p>
 	 *
+	 * @param childPatcherFixId the child patcher fix ID
 	 * @param start the lower bound of the range of patcher fix rels
 	 * @param end the upper bound of the range of patcher fix rels (not inclusive)
-	 * @return the range of patcher fix rels
+	 * @return the range of matching patcher fix rels
 	 */
-	public static List<PatcherFixRel> findAll(int start, int end) {
-		return getPersistence().findAll(start, end);
+	public static List<PatcherFixRel> findByChildPatcherFixId(
+		long childPatcherFixId, int start, int end) {
+
+		return getPersistence().findByChildPatcherFixId(
+			childPatcherFixId, start, end);
 	}
 
 	/**
-	 * Returns an ordered range of all the patcher fix rels.
+	 * Returns an ordered range of all the patcher fix rels where childPatcherFixId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>PatcherFixRelModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.osb.patcher.model.impl.PatcherFixRelModelImpl</code>.
 	 * </p>
 	 *
+	 * @param childPatcherFixId the child patcher fix ID
 	 * @param start the lower bound of the range of patcher fix rels
 	 * @param end the upper bound of the range of patcher fix rels (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of patcher fix rels
+	 * @return the ordered range of matching patcher fix rels
 	 */
-	public static List<PatcherFixRel> findAll(
-		int start, int end,
+	public static List<PatcherFixRel> findByChildPatcherFixId(
+		long childPatcherFixId, int start, int end,
 		OrderByComparator<PatcherFixRel> orderByComparator) {
 
-		return getPersistence().findAll(start, end, orderByComparator);
+		return getPersistence().findByChildPatcherFixId(
+			childPatcherFixId, start, end, orderByComparator);
 	}
 
 	/**
-	 * Returns an ordered range of all the patcher fix rels.
+	 * Returns all the patcher fix rels where parentPatcherFixId = &#63;.
+	 *
+	 * @param parentPatcherFixId the parent patcher fix ID
+	 * @return the matching patcher fix rels
+	 */
+	public static List<PatcherFixRel> findByParentPatcherFixId(
+		long parentPatcherFixId) {
+
+		return getPersistence().findByParentPatcherFixId(parentPatcherFixId);
+	}
+
+	/**
+	 * Returns a range of all the patcher fix rels where parentPatcherFixId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>PatcherFixRelModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.osb.patcher.model.impl.PatcherFixRelModelImpl</code>.
 	 * </p>
 	 *
+	 * @param parentPatcherFixId the parent patcher fix ID
+	 * @param start the lower bound of the range of patcher fix rels
+	 * @param end the upper bound of the range of patcher fix rels (not inclusive)
+	 * @return the range of matching patcher fix rels
+	 */
+	public static List<PatcherFixRel> findByParentPatcherFixId(
+		long parentPatcherFixId, int start, int end) {
+
+		return getPersistence().findByParentPatcherFixId(
+			parentPatcherFixId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the patcher fix rels where parentPatcherFixId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.osb.patcher.model.impl.PatcherFixRelModelImpl</code>.
+	 * </p>
+	 *
+	 * @param parentPatcherFixId the parent patcher fix ID
 	 * @param start the lower bound of the range of patcher fix rels
 	 * @param end the upper bound of the range of patcher fix rels (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param useFinderCache whether to use the finder cache
-	 * @return the ordered range of patcher fix rels
+	 * @return the ordered range of matching patcher fix rels
 	 */
-	public static List<PatcherFixRel> findAll(
-		int start, int end, OrderByComparator<PatcherFixRel> orderByComparator,
-		boolean useFinderCache) {
+	public static List<PatcherFixRel> findByParentPatcherFixId(
+		long parentPatcherFixId, int start, int end,
+		OrderByComparator<PatcherFixRel> orderByComparator) {
 
-		return getPersistence().findAll(
-			start, end, orderByComparator, useFinderCache);
-	}
-
-	/**
-	 * Removes all the patcher fix rels from the database.
-	 */
-	public static void removeAll() {
-		getPersistence().removeAll();
-	}
-
-	/**
-	 * Returns the number of patcher fix rels.
-	 *
-	 * @return the number of patcher fix rels
-	 */
-	public static int countAll() {
-		return getPersistence().countAll();
+		return getPersistence().findByParentPatcherFixId(
+			parentPatcherFixId, start, end, orderByComparator);
 	}
 
 	public static PatcherFixRelPersistence getPersistence() {
@@ -621,3 +437,4 @@ public class PatcherFixRelUtil {
 	private static volatile PatcherFixRelPersistence _persistence;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:1450088127

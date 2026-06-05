@@ -15,13 +15,13 @@ import com.liferay.document.library.kernel.store.StoreArea;
 import com.liferay.document.library.kernel.store.StoreAreaAwareStoreWrapper;
 import com.liferay.document.library.kernel.store.StoreAreaProcessor;
 import com.liferay.document.library.kernel.util.DLValidatorUtil;
+import com.liferay.petra.io.ByteArrayFileInputStream;
 import com.liferay.petra.io.unsync.UnsyncByteArrayInputStream;
 import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
-import com.liferay.portal.kernel.io.ByteArrayFileInputStream;
 import com.liferay.portal.kernel.messaging.DestinationNames;
 import com.liferay.portal.kernel.messaging.Message;
 import com.liferay.portal.kernel.messaging.MessageBusUtil;
@@ -92,6 +92,41 @@ public class DLStoreImpl implements DLStore {
 				dlStoreRequest.isValidateFileExtension(), null);
 
 			_addFile(dlStoreRequest, dlStoreFileProvider);
+		}
+	}
+
+	@Override
+	public void copyFileVersion(
+			DLStoreRequest dlStoreRequest, String toVersionLabel)
+		throws PortalException {
+
+		if (_isStoreAreaSupported()) {
+			StoreAreaProcessor storeAreaProcessor =
+				_storeAreaProcessorSnapshot.get();
+
+			StoreArea.tryRunWithStoreAreas(
+				sourceStoreArea -> storeAreaProcessor.copy(
+					sourceStoreArea.getPath(
+						dlStoreRequest.getCompanyId(),
+						dlStoreRequest.getRepositoryId(),
+						dlStoreRequest.getFileName(),
+						dlStoreRequest.getVersionLabel()),
+					StoreArea.NEW.getPath(
+						dlStoreRequest.getCompanyId(),
+						dlStoreRequest.getRepositoryId(),
+						dlStoreRequest.getFileName(), toVersionLabel)),
+				StoreArea.LIVE, StoreArea.NEW, StoreArea.DELETED);
+		}
+		else {
+			_wrappedStore.addFile(
+				dlStoreRequest.getCompanyId(), dlStoreRequest.getRepositoryId(),
+				dlStoreRequest.getFileName(), toVersionLabel,
+				_getNullSafeInputStream(
+					_wrappedStore.getFileAsStream(
+						dlStoreRequest.getCompanyId(),
+						dlStoreRequest.getRepositoryId(),
+						dlStoreRequest.getFileName(),
+						dlStoreRequest.getVersionLabel())));
 		}
 	}
 

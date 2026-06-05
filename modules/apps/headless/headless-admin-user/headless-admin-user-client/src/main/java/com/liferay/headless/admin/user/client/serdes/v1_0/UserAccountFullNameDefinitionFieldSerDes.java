@@ -288,3 +288,4 @@ public class UserAccountFullNameDefinitionFieldSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-244823589

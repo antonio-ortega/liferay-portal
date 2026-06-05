@@ -40,7 +40,7 @@ ext {
 		"com.liferay.gradle.plugins.theme.builder.version": "2.0.17",
 		"com.liferay.portal.tools.bundle.support.version": "3.7.5",
 		"com.liferay.portal.tools.service.builder.version": "1.0.501",
-		"com.liferay.portal.tools.rest.builder.version": "1.0.445",
+		"com.liferay.portal.tools.rest.builder.version": "1.0.467",
 		"com.liferay.portal.tools.soy.builder.version": "3.0.4",
 		"com.liferay.portal.tools.theme.builder.version": "1.1.9",
 		"com.liferay.portal.vulcan.api.version": "9.3.1"
@@ -265,6 +265,17 @@ gradle.beforeProject {
 						add project.dependencies.create(group: "jakarta.servlet.jsp", name: "jakarta.servlet.jsp-api", version: "3.1.1")
 
 						liferay.appServer.addAdditionalDependencies("portal")
+					}
+				}
+			}
+
+			pluginManager.withPlugin("com.liferay.node") {
+				File nodeScriptsConfigFile = project.file("node-scripts.config.js")
+
+				if (tasks.findByName("packageRunBuild") && nodeScriptsConfigFile.exists()) {
+					packageRunBuild {
+						inputs.file nodeScriptsConfigFile
+						inputs.file project.rootProject.file("node-scripts.config.js")
 					}
 				}
 			}
@@ -570,28 +581,11 @@ gradle.beforeProject {
 
 		pluginManager.withPlugin("com.liferay.jasper.jspc") {
 			if (!project.name.endsWith("-demo")) {
-				compileJSP {
+				configure([compileJSP, generateJSPJava]) {
 					configurations.compileOnly.allDependencies.withType(ProjectDependency) {
-						mustRunAfter "${it.dependencyProject.path}:deploy"
-						mustRunAfter "${it.dependencyProject.path}:deployDependencies"
-					}
-
-					if (!implicitDependencyProjects.contains(project)) {
-						implicitDependencyProjects.forEach {
-							mustRunAfter "${it.path}:deploy"
-							mustRunAfter "${it.path}:deployDependencies"
-
-							if (it.name.equals("portal-osgi-web-jasper-plugins-taglib")) {
-								mustRunAfter "${it.path}:deployAppServerPortalFile"
-							}
+						mustRunAfter it.dependencyProject.tasks.matching {
+							name.equals("deploy") || name.equals("deployDependencies")
 						}
-					}
-				}
-
-				generateJSPJava {
-					configurations.compileOnly.allDependencies.withType(ProjectDependency) {
-						mustRunAfter "${it.dependencyProject.path}:deploy"
-						mustRunAfter "${it.dependencyProject.path}:deployDependencies"
 					}
 
 					if (!implicitDependencyProjects.contains(project)) {
@@ -881,12 +875,12 @@ gradle.beforeProject {
 
 				dependencies {
 					compileJspClasspath files(Project.class.classLoader.getURLs())
-					compileJspClasspath group: "org.apache.tomcat", name: "tomcat-jasper", version: "10.1.48"
+					compileJspClasspath group: "org.apache.tomcat", name: "tomcat-jasper", version: "10.1.55"
 					compileJspClasspathTransform group: "com.liferay", name: "com.liferay.gradle.plugins.jasper.jspc", transitive: false, version: "2.0.20"
 					jspCClasspath files(tasks.named(sourceSets.main.compileJavaTaskName))
 					jspCClasspath files(tasks.named(sourceSets.main.processResourcesTaskName))
 					jspCClasspath group: "jakarta.servlet.jsp.jstl", name: "jakarta.servlet.jsp.jstl-api", version: "3.0.2"
-					jspCClasspath group: "org.apache.tomcat", name: "tomcat-jasper", version: "10.1.48"
+					jspCClasspath group: "org.apache.tomcat", name: "tomcat-jasper", version: "10.1.55"
 					jspCClasspath group: "org.glassfish.web", name: "jakarta.servlet.jsp.jstl", version: "3.0.1"
 				}
 

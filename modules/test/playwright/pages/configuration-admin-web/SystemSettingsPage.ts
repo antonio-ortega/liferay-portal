@@ -8,23 +8,23 @@ import {Locator, Page, expect} from '@playwright/test';
 import {clickAndExpectToBeVisible} from '../../utils/clickAndExpectToBeVisible';
 import {waitForAlert} from '../../utils/waitForAlert';
 import {waitForPageToBeLoaded} from '../../utils/waitForPageToBeLoaded';
-import {ApplicationsMenuPage} from '../product-navigation-applications-menu/ApplicationsMenuPage';
+import {GlobalMenuPage} from '../product-navigation-applications-menu/GlobalMenuPage';
 
 export class SystemSettingsPage {
-	private applicationsMenuPage;
+	private readonly globalMenuPage: GlobalMenuPage;
 	readonly page: Page;
 	readonly saveButton: Locator;
 
 	constructor(page: Page) {
 		this.page = page;
-		this.applicationsMenuPage = new ApplicationsMenuPage(page);
+		this.globalMenuPage = new GlobalMenuPage(page);
 		this.saveButton = page
 			.getByRole('button', {name: 'Save'})
 			.or(page.getByRole('button', {name: 'Update'}));
 	}
 
 	async goto() {
-		await this.applicationsMenuPage.goToSystemSettings();
+		await this.globalMenuPage.goToControlPanel('System Settings');
 	}
 
 	async goToSystemSetting(
@@ -32,7 +32,19 @@ export class SystemSettingsPage {
 		configurationName: string,
 		sectionName?: string
 	) {
-		await this.applicationsMenuPage.goToSystemSettings();
+		await this.globalMenuPage.goToHome();
+		await this.globalMenuPage.goToControlPanel('System Settings');
+
+		if (
+			await this.page
+				.getByRole('tab', {name: 'Close Product Menu'})
+				.isVisible()
+		) {
+			await this.page
+				.getByRole('tab', {name: 'Close Product Menu'})
+				.click();
+		}
+
 		await this.page
 			.getByRole('link', {
 				exact: true,
@@ -99,6 +111,8 @@ export class SystemSettingsPage {
 
 	async resetToDefaultValues() {
 		await this.clickOnAction('Reset Default Values');
+
+		await waitForAlert(this.page);
 	}
 
 	async saveAndWaitForAlert({

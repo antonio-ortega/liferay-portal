@@ -5,16 +5,19 @@
 
 import {expect, mergeTests} from '@playwright/test';
 
+import {dataApiHelpersTest} from '../../../../fixtures/dataApiHelpersTest';
 import {featureFlagsTest} from '../../../../fixtures/featureFlagsTest';
 import {loginTest} from '../../../../fixtures/loginTest';
 import {checkAccessibility} from '../../../../utils/checkAccessibility';
 import {clickAndExpectToBeHidden} from '../../../../utils/clickAndExpectToBeHidden';
 import {clickAndExpectToBeVisible} from '../../../../utils/clickAndExpectToBeVisible';
 import {getRandomInt} from '../../../../utils/getRandomInt';
+import getRandomString from '../../../../utils/getRandomString';
 import {cmsPagesTest} from '../fixtures/cmsPagesTest';
 
 const test = mergeTests(
 	cmsPagesTest,
+	dataApiHelpersTest,
 	featureFlagsTest({
 		'LPD-17564': {enabled: true},
 	}),
@@ -33,7 +36,6 @@ test('Add a new tag', {tag: '@LPD-51250'}, async ({page, tagsPage}) => {
 	await checkAccessibility({
 		page,
 		selectors: ['.categorization-section'],
-		selectorsToExclude: ['.management-bar-wrapper'],
 	});
 
 	await tagsPage.deleteTag(tagName);
@@ -224,7 +226,6 @@ test('Bulk Merge tags', {tag: '@LPD-43388'}, async ({page, tagsPage}) => {
 	await checkAccessibility({
 		page,
 		selectors: ['.merge-tags'],
-		selectorsToExclude: ['.management-bar-wrapper'],
 	});
 
 	await page
@@ -239,6 +240,18 @@ test('Bulk Merge tags', {tag: '@LPD-43388'}, async ({page, tagsPage}) => {
 		.click();
 
 	await page.locator('.modal').getByRole('button', {name: 'Done'}).click();
+
+	const targetTagSelect = page
+		.locator('.form-group', {hasText: 'Into This Tag:'})
+		.locator('select');
+
+	await expect(
+		targetTagSelect.locator('option', {hasText: tagName1})
+	).toHaveCount(1);
+
+	await expect(
+		targetTagSelect.locator('option', {hasText: tagName2})
+	).toHaveCount(1);
 
 	await clickAndExpectToBeVisible({
 		target: page.getByRole('heading', {name: 'Confirm Merge Tags'}),
@@ -291,6 +304,18 @@ test('Merge tags', {tag: '@LPD-43388'}, async ({page, tagsPage}) => {
 		).toBeVisible();
 	}).toPass();
 
+	const targetTagSelect = page
+		.locator('.form-group', {hasText: 'Into This Tag:'})
+		.locator('select');
+
+	await expect(
+		targetTagSelect.locator('option', {hasText: tagName1})
+	).toHaveCount(1);
+
+	await expect(
+		targetTagSelect.locator('option', {hasText: tagName2})
+	).toHaveCount(1);
+
 	await clickAndExpectToBeVisible({
 		target: page.getByRole('heading', {name: 'Confirm Merge Tags'}),
 		trigger: tagsPage.saveButton,
@@ -311,7 +336,7 @@ test('Merge tags', {tag: '@LPD-43388'}, async ({page, tagsPage}) => {
 
 test(
 	'Validate that a UI error appears when attempting to create or edit a tag with an existing name',
-	{tag: '@LPD-57497'},
+	{tag: ['@LPD-57497', '@LPD-92349']},
 	async ({page, tagsPage}) => {
 		const name1 = await tagsPage.createTag();
 
@@ -324,9 +349,11 @@ test(
 		await page.getByLabel('NameRequired').fill(name1);
 
 		await clickAndExpectToBeVisible({
-			target: page.getByText(
-				'Please enter a unique name. This one is already in use.'
-			),
+			target: page
+				.locator('.modal-body')
+				.getByText(
+					'Please enter a unique name. This one is already in use.'
+				),
 			trigger: tagsPage.saveButton,
 		});
 
@@ -358,9 +385,11 @@ test(
 		await page.getByLabel('NameRequired').fill(name1);
 
 		await clickAndExpectToBeVisible({
-			target: page.getByText(
-				'Please enter a unique name. This one is already in use.'
-			),
+			target: page
+				.locator('.modal-body')
+				.getByText(
+					'Please enter a unique name. This one is already in use.'
+				),
 			trigger: tagsPage.saveButton,
 		});
 
@@ -409,6 +438,61 @@ test(
 	}
 );
 
+test(
+	"View a Tag's usages",
+	{tag: '@LPD-89713'},
+	async ({apiHelpers, dataSetPage, page, tagsPage}) => {
+		const {id: siteId} =
+			await apiHelpers.headlessAdminUser.getSiteByFriendlyUrlPath('cms');
+
+		const tagName = getRandomString();
+
+		await apiHelpers.headlessAdminTaxonomy.postSiteKeyword({
+			name: tagName,
+			siteId,
+		});
+
+		await tagsPage.goto();
+
+		await tagsPage.execItemAction({
+			action: 'View Usages',
+			filter: tagName,
+		});
+
+		await expect(page.getByText('No Results Found')).toBeVisible();
+
+		const basicWebContentTitle = getRandomString();
+
+		await apiHelpers.objectEntry.postObjectEntry(
+			{
+				keywords: [tagName],
+				objectEntryFolderExternalReferenceCode: 'L_CONTENTS',
+				title: basicWebContentTitle,
+			},
+			'cms/basic-web-contents/scopes/Default'
+		);
+
+		await tagsPage.goto();
+
+		await tagsPage.execItemAction({
+			action: 'View Usages',
+			filter: tagName,
+		});
+
+		await checkAccessibility({
+			page,
+			selectors: ['.content'],
+			selectorsToExclude: [
+				'.control-menu-container',
+				'.sidebar-container',
+				'.top-bar',
+			],
+		});
+
+		await expect(dataSetPage.getRow(basicWebContentTitle)).toBeVisible();
+	}
+);
+
 test('Validate tag inputs', {tag: ['@LPD-69687']}, async ({page, tagsPage}) => {
 	await tagsPage.goto();
 
@@ -444,3 +528,70 @@ test('Validate tag inputs', {tag: ['@LPD-69687']}, async ({page, tagsPage}) => {
 
 	await expect(tagsPage.saveButton).toBeDisabled();
 });
+
+test(
+	'Tags with the same name can be created',
+	{tag: ['@LPD-69204', '@LPD-92491']},
+	async ({apiHelpers, assetsPage, infoPanelPage, page}) => {
+		const applicationName = 'cms/basic-web-contents';
+		const contentTitle = `title ${getRandomString()}`;
+		let objectEntry: ObjectEntry;
+		const tagNameBase = getRandomString().substring(0, 7);
+		const tagName1 = `A${tagNameBase}`;
+		const tagName2 = `a${tagNameBase}`;
+
+		try {
+			objectEntry = await apiHelpers.objectEntry.postObjectEntry(
+				{
+					objectEntryFolderExternalReferenceCode: 'L_CONTENTS',
+					title: contentTitle,
+				},
+				applicationName,
+				'Default'
+			);
+
+			await assetsPage.gotoAll();
+
+			await assetsPage.execItemAction({
+				action: 'Show Details',
+				filter: contentTitle,
+			});
+
+			await expect(
+				page.getByRole('heading', {name: contentTitle})
+			).toBeVisible();
+
+			await infoPanelPage.selectTab('Categorization').click();
+
+			await page.getByPlaceholder('Add tag').fill(tagName1);
+
+			const newTagOption = page.getByRole('option', {
+				name: 'Create New Tag:',
+			});
+
+			await newTagOption.waitFor();
+			await newTagOption.click();
+
+			await expect(page.getByText(tagName1, {exact: true})).toBeVisible();
+
+			await expect(async () => {
+				await page.getByPlaceholder('Add tag').fill(tagName2);
+
+				await newTagOption.waitFor();
+				await newTagOption.click();
+
+				await expect(
+					page.getByText(tagName2, {exact: true})
+				).toBeVisible();
+			}).toPass({timeout: 5000});
+		}
+		finally {
+			if (objectEntry) {
+				await apiHelpers.objectEntry.deleteObjectEntry(
+					applicationName,
+					String(objectEntry.id)
+				);
+			}
+		}
+	}
+);

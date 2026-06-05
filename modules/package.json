@@ -1,4 +1,7 @@
 {
+	"dependencies": {
+		"prettier": "3.2.5"
+	},
 	"devDependencies": {
 		"@liferay/eslint-plugin": "1.9.1",
 		"@liferay/prettier-plugin": "1.1.5",
@@ -11,6 +14,7 @@
 		"@types/react-router-dom": "^5.3.3",
 		"@types/react-transition-group": "^4.4.6",
 		"@types/tinycolor2": "1.4.3",
+		"@types/ua-parser-js": "0.7.39",
 		"@types/uuid": "10.0.0",
 		"@types/warning": "^3.0.0",
 		"acorn": "7.1.1",
@@ -21,20 +25,19 @@
 		"fetch-mock": "^5.13.1",
 		"jsdoc": "3.6.3",
 		"liferay-frontend-common-css": "1.0.4",
-		"resize-observer-polyfill": "^1.5.1"
+		"resize-observer-polyfill": "^1.5.1",
+		"typescript": "4.7.4"
 	},
 	"private": true,
 	"resolutions": {
 		"@types/html-minifier-terser": "5.1.0",
-		"prettier": "3.2.5",
-		"typescript": "4.7.4",
 		"ua-parser-js": "^0.7.30"
 	},
 	"scripts": {
-		"checkFormat": "node-scripts check:ci",
-		"format": "node-scripts format:ci --all",
-		"formatCurrentBranch": "node-scripts format:ci --current-branch",
-		"formatLocalChanges": "node-scripts format:ci --local-changes",
+		"checkFormat": "node-scripts format --check --current-branch",
+		"format": "node-scripts format",
+		"formatCurrentBranch": "node-scripts format --current-branch",
+		"formatLocalChanges": "node-scripts format --local-changes",
 		"test:all": "node-scripts test"
 	},
 	"workspaces": {
@@ -44,8 +47,9 @@
 			"apps/frontend-js/frontend-js-clay-web/clay/clay-*",
 			"dxp/apps/*/*",
 			"dxp/apps/osb/osb-patcher/*",
-			"util/portal-tools-rest-builder-test-client-js",
-			"_node-scripts"
+			"frontend-sdk/*",
+			"test/playwright",
+			"util/portal-tools-rest-builder-test-client-js"
 		]
 	}
 }

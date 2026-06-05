@@ -4,15 +4,17 @@
  */
 
 import getDateTimeFieldComponents from '../components/field_components/DateTimeFieldComponents';
+import getEmailFieldComponents from '../components/field_components/EmailFieldComponents';
 import getLongTextFieldComponents from '../components/field_components/LongTextFieldComponents';
-import getMultiSelectFieldComponents from '../components/field_components/MultiSelectFieldComponents';
 import getNumericFieldComponents from '../components/field_components/NumericFieldComponents';
-import getSingleSelectFieldComponents from '../components/field_components/SingleSelectFieldComponents';
+import getPhoneNumberFieldComponents from '../components/field_components/PhoneNumberFieldComponents';
+import getSelectFromListFieldComponents from '../components/field_components/SelectFromListFieldComponents';
 import getTextFieldComponents from '../components/field_components/TextFieldComponents';
 import getUploadFieldComponents from '../components/field_components/UploadFieldComponents';
 import {Field, FieldType} from './field';
 
 type FieldComponents = {
+	AdvancedTabComponent: React.FC<{disabled?: boolean; field: Field}>;
 	FirstSectionComponent: React.FC<{disabled?: boolean; field: Field}>;
 	SecondSectionComponent: React.FC<{disabled?: boolean; field: Field}>;
 };
@@ -22,11 +24,12 @@ const GETTERS: Record<FieldType, () => Partial<FieldComponents>> = {
 	'date': () => ({}),
 	'datetime': getDateTimeFieldComponents,
 	'decimal': () => ({}),
+	'email': getEmailFieldComponents,
 	'integer': getNumericFieldComponents,
 	'long-text': getLongTextFieldComponents,
-	'multiselect': getMultiSelectFieldComponents,
+	'phone-number': getPhoneNumberFieldComponents,
 	'rich-text': () => ({}),
-	'single-select': getSingleSelectFieldComponents,
+	'select-from-list': getSelectFromListFieldComponents,
 	'text': getTextFieldComponents,
 	'upload': getUploadFieldComponents,
 };
@@ -36,9 +39,14 @@ export default function getFieldComponents(
 ): FieldComponents {
 	const getter = GETTERS[fieldType];
 
-	const {FirstSectionComponent, SecondSectionComponent} = getter?.() ?? {};
+	const {
+		AdvancedTabComponent,
+		FirstSectionComponent,
+		SecondSectionComponent,
+	} = getter?.() ?? {};
 
 	return {
+		AdvancedTabComponent: AdvancedTabComponent ?? (() => null),
 		FirstSectionComponent: FirstSectionComponent ?? (() => null),
 		SecondSectionComponent: SecondSectionComponent ?? (() => null),
 	};

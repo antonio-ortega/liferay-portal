@@ -79,3 +79,4 @@ public class FragmentSettingsAllowed implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:735237801

@@ -94,6 +94,18 @@ public class BaseCookiesBannerDisplayContext {
 		return cookiesBannerConfiguration.includeDeclineAllButton();
 	}
 
+	public boolean isStoreConsent() {
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
+
+		if (themeDisplay.isSignedIn()) {
+			return cookiesPreferenceHandlingConfiguration.storeConsent();
+		}
+
+		return false;
+	}
+
 	protected JSONArray getConsentCookieTypeNamesJSONArray(
 		List<ConsentCookieType> consentCookieTypes) {
 
@@ -109,6 +121,20 @@ public class BaseCookiesBannerDisplayContext {
 
 	protected int getConsentRenewalPeriod() {
 		return cookiesPreferenceHandlingConfiguration.consentRenewalPeriod();
+	}
+
+	protected String getConsentRenewalPeriodTimeUnit() {
+		return cookiesPreferenceHandlingConfiguration.
+			consentRenewalPeriodTimeUnit();
+	}
+
+	protected int getDissentRenewalPeriod() {
+		return cookiesPreferenceHandlingConfiguration.dissentRenewalPeriod();
+	}
+
+	protected String getDissentRenewalPeriodTimeUnit() {
+		return cookiesPreferenceHandlingConfiguration.
+			dissentRenewalPeriodTimeUnit();
 	}
 
 	protected long getModifiedDate() {

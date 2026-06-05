@@ -157,3 +157,4 @@ public class ActionFragmentEditableElementValue
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:1096419560

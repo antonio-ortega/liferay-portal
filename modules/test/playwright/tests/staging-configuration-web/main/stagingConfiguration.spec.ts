@@ -8,9 +8,9 @@ import {createReadStream} from 'fs';
 import path from 'path';
 
 import {apiHelpersTest} from '../../../fixtures/apiHelpersTest';
-import {applicationsMenuPageTest} from '../../../fixtures/applicationsMenuPageTest';
 import {dataApiHelpersTest} from '../../../fixtures/dataApiHelpersTest';
 import {featureFlagsTest} from '../../../fixtures/featureFlagsTest';
+import {globalMenuPagesTest} from '../../../fixtures/globalMenuPagesTest';
 import {instanceSettingsPagesTest} from '../../../fixtures/instanceSettingsPagesTest';
 import {loginTest} from '../../../fixtures/loginTest';
 import {pageEditorPagesTest} from '../../../fixtures/pageEditorPagesTest';
@@ -33,9 +33,9 @@ import {portletPublishToLivePageTest} from './fixtures/portletPublishToLivePageT
 import {stagingConfigurationPageTest} from './fixtures/stagingConfigurationPageTest';
 
 export const test = mergeTests(
-	applicationsMenuPageTest,
 	dataApiHelpersTest,
 	exportImportPagesTest,
+	globalMenuPagesTest,
 	loginTest(),
 	instanceSettingsPagesTest,
 	pageViewModePagesTest,
@@ -68,18 +68,16 @@ export const testFlagsEnabled = mergeTests(
 
 test(
 	'Verify there is advanced staging configuration checkbox with description in Instance Setting,the configuration checkbox can be enabled',
-	{tag: ['@LPS-189238']},
+	{tag: ['@LPS-189238', '@LPD-88913']},
 	async ({
 		apiHelpers,
 		exportImportStagingInstanceSettingsPage,
 		page,
 		portletPublishToLivePage,
 	}) => {
-		const site = await apiHelpers.headlessSite.createSite({
+		const site = await apiHelpers.headlessAdminSite.postSite({
 			name: getRandomString(),
 		});
-
-		apiHelpers.data.push({id: site.id, type: 'site'});
 
 		const layout = await apiHelpers.jsonWebServicesLayout.addLayout({
 			groupId: site.id,
@@ -112,6 +110,14 @@ test(
 			});
 			await portletPublishToLivePage.publishToLiveButton.click();
 
+			await test.step('LPD-88913 - Publish to Live modal must keep the cadmin wrapper', async () => {
+				await expect(
+					page.locator(
+						'div.cadmin > [id$="publishLatestChangesDialog"]'
+					)
+				).toBeVisible();
+			});
+
 			await expect(
 				portletPublishToLivePage.publishToLiveIframe.getByRole('link', {
 					name: 'Switch to Simple Publish Process',
@@ -134,11 +140,9 @@ test(
 		page,
 		portletPublishToLivePage,
 	}) => {
-		const site = await apiHelpers.headlessSite.createSite({
+		const site = await apiHelpers.headlessAdminSite.postSite({
 			name: getRandomString(),
 		});
-
-		apiHelpers.data.push({id: site.id, type: 'site'});
 
 		const layout = await apiHelpers.jsonWebServicesLayout.addLayout({
 			groupId: site.id,
@@ -184,14 +188,14 @@ test(
 
 test('Check if local staging can be enabled', async ({
 	apiHelpers,
-	applicationsMenuPage,
+	globalMenuPage,
 	stagingConfigurationPage,
 }) => {
 	const siteName: string = getRandomString();
 
-	await applicationsMenuPage.goToSites();
+	await globalMenuPage.goToControlPanel('Sites');
 
-	const site = await apiHelpers.headlessSite.createSite({
+	const site = await apiHelpers.headlessAdminSite.postSite({
 		name: siteName,
 	});
 
@@ -207,20 +211,18 @@ test(
 	{tag: ['@LPS-89116']},
 	async ({
 		apiHelpers,
-		applicationsMenuPage,
+		globalMenuPage,
 		journalPage,
 		page,
 		pagesAdminPage,
 		productMenuPage,
 		stagingConfigurationPage,
 	}) => {
-		const site = await apiHelpers.headlessSite.createSite({
+		const site = await apiHelpers.headlessAdminSite.postSite({
 			name: getRandomString(),
 		});
 
-		apiHelpers.data.push({id: site.id, type: 'site'});
-
-		await applicationsMenuPage.goToSite(site.name);
+		await globalMenuPage.goToSite(site.name);
 		await productMenuPage.goToPages();
 
 		await pagesAdminPage.createNewPage({
@@ -275,11 +277,9 @@ test(
 		page,
 		portletPublishToLivePage,
 	}) => {
-		const site = await apiHelpers.headlessSite.createSite({
+		const site = await apiHelpers.headlessAdminSite.postSite({
 			name: getRandomString(),
 		});
-
-		apiHelpers.data.push({id: site.id, type: 'site'});
 
 		const layout = await apiHelpers.jsonWebServicesLayout.addLayout({
 			groupId: site.id,
@@ -394,11 +394,9 @@ testFlagsEnabled(
 		const layoutName = getRandomString();
 		const webContentName = getRandomString();
 
-		const site = await apiHelpers.headlessSite.createSite({
+		const site = await apiHelpers.headlessAdminSite.postSite({
 			name: siteName,
 		});
-
-		apiHelpers.data.push({id: site.id, type: 'site'});
 
 		const layout = await apiHelpers.jsonWebServicesLayout.addLayout({
 			groupId: site.id,

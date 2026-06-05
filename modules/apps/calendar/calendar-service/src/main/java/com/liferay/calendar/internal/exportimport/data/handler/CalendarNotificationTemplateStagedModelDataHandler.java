@@ -163,9 +163,10 @@ public class CalendarNotificationTemplateStagedModelDataHandler
 
 		if (portletDataContext.isDataStrategyMirror()) {
 			CalendarNotificationTemplate existingCalendarNotificationTemplate =
-				fetchStagedModelByUuidAndGroupId(
-					calendarNotificationTemplate.getUuid(),
-					portletDataContext.getScopeGroupId());
+				_fetchExistingCalendarNotificationTemplate(
+					calendarId, calendarNotificationTemplate,
+					notificationTemplateType, notificationType,
+					portletDataContext);
 
 			if (existingCalendarNotificationTemplate == null) {
 				serviceContext.setUuid(calendarNotificationTemplate.getUuid());
@@ -206,6 +207,29 @@ public class CalendarNotificationTemplateStagedModelDataHandler
 
 		portletDataContext.importClassedModel(
 			calendarNotificationTemplate, importedCalendarNotificationTemplate);
+	}
+
+	private CalendarNotificationTemplate
+		_fetchExistingCalendarNotificationTemplate(
+			long calendarId,
+			CalendarNotificationTemplate calendarNotificationTemplate,
+			NotificationTemplateType notificationTemplateType,
+			NotificationType notificationType,
+			PortletDataContext portletDataContext) {
+
+		CalendarNotificationTemplate existingCalendarNotificationTemplate =
+			fetchStagedModelByUuidAndGroupId(
+				calendarNotificationTemplate.getUuid(),
+				portletDataContext.getScopeGroupId());
+
+		if (existingCalendarNotificationTemplate == null) {
+			existingCalendarNotificationTemplate =
+				_calendarNotificationTemplateLocalService.
+					fetchCalendarNotificationTemplate(
+						calendarId, notificationType, notificationTemplateType);
+		}
+
+		return existingCalendarNotificationTemplate;
 	}
 
 	@Reference

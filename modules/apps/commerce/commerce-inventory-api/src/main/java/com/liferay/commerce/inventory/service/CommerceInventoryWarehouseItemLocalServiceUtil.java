@@ -317,6 +317,13 @@ public class CommerceInventoryWarehouseItemLocalServiceUtil {
 		return getService().getActionableDynamicQuery();
 	}
 
+	public static List<Long> getCommerceInventoryWarehouseIds(
+		long companyId, String sku, String unitOfMeasureKey) {
+
+		return getService().getCommerceInventoryWarehouseIds(
+			companyId, sku, unitOfMeasureKey);
+	}
+
 	/**
 	 * Returns the commerce inventory warehouse item with the primary key.
 	 *
@@ -588,3 +595,4 @@ public class CommerceInventoryWarehouseItemLocalServiceUtil {
 			CommerceInventoryWarehouseItemLocalService.class);
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-1896607626

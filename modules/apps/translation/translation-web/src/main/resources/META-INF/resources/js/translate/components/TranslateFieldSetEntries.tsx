@@ -196,11 +196,12 @@ const TranslateFieldEditor = ({
 	useEffect(() => {
 		if (editorRef.current?.editor && !internalUpdateRef.current) {
 			editorRef.current.editor.setData(targetContent);
-			setContent(targetContent);
 		}
 		else {
 			internalUpdateRef.current = false;
 		}
+
+		setContent(targetContent);
 	}, [targetContent]);
 
 	return (
@@ -221,16 +222,16 @@ const TranslateFieldEditor = ({
 				<ClayForm.Group>
 					<label className="control-label">{label}</label>
 
-					{Liferay.FeatureFlags['LPD-11235'] ? (
+					{!Liferay.FeatureFlags['LPD-11235'] ? (
 						<CKEditor5ClassicEditor
 							config={{
 								...editorConfiguration.editorConfig,
-								initialData: targetContent,
 								language: {
 									content:
 										getISO639LanguageCode(targetLanguageId),
 								},
 							}}
+							data={targetContent}
 							onChange={(event, editor) => {
 								handleOnChange(editor.getData());
 							}}
@@ -253,7 +254,7 @@ const TranslateFieldEditor = ({
 								// LPS-139363
 
 								editor?.setData?.(content, {
-									interal: true,
+									internal: true,
 									noSnapshot: true,
 								});
 							}}
@@ -261,7 +262,12 @@ const TranslateFieldEditor = ({
 						/>
 					)}
 
-					<input defaultValue={content} name={name} type="hidden" />
+					<input
+						name={name}
+						onChange={() => {}}
+						type="hidden"
+						value={content}
+					/>
 
 					<TranslateFieldFeedback
 						message={fieldStatus.message}

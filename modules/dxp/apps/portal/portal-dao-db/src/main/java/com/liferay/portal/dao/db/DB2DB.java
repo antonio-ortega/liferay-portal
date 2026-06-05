@@ -5,6 +5,8 @@
 
 package com.liferay.portal.dao.db;
 
+import com.liferay.petra.io.unsync.UnsyncBufferedReader;
+import com.liferay.petra.io.unsync.UnsyncStringReader;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -12,8 +14,6 @@ import com.liferay.portal.kernel.dao.db.DBInspector;
 import com.liferay.portal.kernel.dao.db.DBType;
 import com.liferay.portal.kernel.dao.db.IndexMetadata;
 import com.liferay.portal.kernel.dao.jdbc.DataAccess;
-import com.liferay.portal.kernel.io.unsync.UnsyncBufferedReader;
-import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
@@ -215,7 +215,7 @@ public class DB2DB extends BaseDB {
 
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				if (resultSet.next()) {
-					return resultSet.getString(1);
+					return resultSet.getString("value");
 				}
 			}
 		}
@@ -433,6 +433,41 @@ public class DB2DB extends BaseDB {
 	}
 
 	@Override
+	protected String getLockedQueryInfosSQL() {
+		return StringBundler.concat(
+			"select timestampdiff(2, char(current timestamp - ",
+			"activity.local_start_time)) * 1000 as duration, ",
+			"sysibmadm.applications.agent_id as id, cast(activity.stmt_text ",
+			"as varchar(4000)) as query, sysibmadm.applications.db_name as ",
+			"schema_, sysibmadm.applications.appl_status as state from ",
+			"sysibmadm.applications left join table(",
+			"sysproc.mon_get_activity(null, -2)) as activity on ",
+			"sysibmadm.applications.agent_id = activity.application_handle ",
+			"where timestampdiff(2, char(current timestamp - ",
+			"activity.local_start_time)) * 1000 >= ? and ",
+			"sysibmadm.applications.agent_id != mon_get_application_handle() ",
+			"and sysibmadm.applications.appl_status = 'LOCKWAIT'");
+	}
+
+	@Override
+	protected String getLongRunningQueryInfosSQL() {
+		return StringBundler.concat(
+			"select timestampdiff(2, char(current timestamp - ",
+			"activity.local_start_time)) * 1000 as duration, ",
+			"sysibmadm.applications.agent_id as id, cast(activity.stmt_text ",
+			"as varchar(4000)) as query, sysibmadm.applications.db_name as ",
+			"schema_, sysibmadm.applications.appl_status as state from ",
+			"sysibmadm.applications left join table(",
+			"sysproc.mon_get_activity(null, -2)) as activity on ",
+			"sysibmadm.applications.agent_id = activity.application_handle ",
+			"where timestampdiff(2, char(current timestamp - ",
+			"activity.local_start_time)) * 1000 >= ? and ",
+			"sysibmadm.applications.agent_id != mon_get_application_handle() ",
+			"and (sysibmadm.applications.appl_status is null or ",
+			"sysibmadm.applications.appl_status != 'LOCKWAIT')");
+	}
+
+	@Override
 	protected String getRenameTableSQL(
 		String oldTableName, String newTableName) {
 
@@ -481,10 +516,12 @@ public class DB2DB extends BaseDB {
 					"sysproc.admin_get_tab_info(current_schema, '",
 					StringUtil.toUpperCase(tableName),
 					"')) where reorg_pending = 'Y'"));
+
 			ResultSet resultSet = preparedStatement.executeQuery()) {
 
 			if (resultSet.next()) {
-				int numReorgRecAlters = resultSet.getInt(1);
+				int numReorgRecAlters = resultSet.getInt(
+					"num_reorg_rec_alters");
 
 				if (numReorgRecAlters >= 1) {
 					reorgTableRequired = true;

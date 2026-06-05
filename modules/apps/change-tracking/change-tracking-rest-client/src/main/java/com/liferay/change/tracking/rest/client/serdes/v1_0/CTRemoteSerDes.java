@@ -469,3 +469,4 @@ public class CTRemoteSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:1487101797

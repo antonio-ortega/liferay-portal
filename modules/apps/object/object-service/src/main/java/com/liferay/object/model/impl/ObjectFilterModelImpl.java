@@ -93,6 +93,8 @@ public class ObjectFilterModelImpl
 
 	public static final String TABLE_SQL_DROP = "drop table ObjectFilter";
 
+	public static final String ENTITY_ALIAS = "objectFilter";
+
 	public static final String ORDER_BY_JPQL =
 		" ORDER BY objectFilter.objectFilterId ASC";
 
@@ -985,3 +987,4 @@ public class ObjectFilterModelImpl
 	private ObjectFilter _escapedModel;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-1007174365

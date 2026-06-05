@@ -16,9 +16,9 @@ import com.liferay.portal.kernel.util.Validator;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -695,7 +695,7 @@ public class Entity implements Comparable<Entity> {
 		getUADAnonymizableEntityColumnsMap() {
 
 		Map<String, List<EntityColumn>> uadAnonymizableEntityColumnsMap =
-			new HashMap<>();
+			new LinkedHashMap<>();
 
 		for (EntityColumn entityColumn : _entityColumns) {
 			if (entityColumn.isUADUserId()) {
@@ -837,6 +837,16 @@ public class Entity implements Comparable<Entity> {
 	public boolean hasArrayableOperator() {
 		for (EntityFinder finder : _entityFinders) {
 			if (finder.hasArrayableOperator()) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	public boolean hasCollectionEntityFinder() {
+		for (EntityFinder entityFinder : _entityFinders) {
+			if (entityFinder.isCollection()) {
 				return true;
 			}
 		}

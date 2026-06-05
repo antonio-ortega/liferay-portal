@@ -16,8 +16,9 @@ export const test = mergeTests(
 	cmsPagesTest,
 	dataApiHelpersTest,
 	featureFlagsTest({
-		'LPD-11235': {enabled: true},
+		'LPD-11235': {enabled: false},
 		'LPD-17564': {enabled: true},
+		'LPD-34594': {enabled: true},
 	}),
 	loginTest()
 );

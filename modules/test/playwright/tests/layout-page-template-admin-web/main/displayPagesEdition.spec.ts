@@ -9,10 +9,10 @@ import {
 } from '@liferay/object-admin-rest-client-js';
 import {expect, mergeTests} from '@playwright/test';
 
-import {applicationsMenuPageTest} from '../../../fixtures/applicationsMenuPageTest';
 import {dataApiHelpersTest} from '../../../fixtures/dataApiHelpersTest';
 import {displayPageTemplatesPagesTest} from '../../../fixtures/displayPageTemplatesPagesTest';
 import {featureFlagsTest} from '../../../fixtures/featureFlagsTest';
+import {globalMenuPagesTest} from '../../../fixtures/globalMenuPagesTest';
 import {isolatedSiteTest} from '../../../fixtures/isolatedSiteTest';
 import {loginTest} from '../../../fixtures/loginTest';
 import {pageEditorPagesTest} from '../../../fixtures/pageEditorPagesTest';
@@ -21,7 +21,6 @@ import {ApiHelpers} from '../../../helpers/ApiHelpers';
 import {clickAndExpectToBeHidden} from '../../../utils/clickAndExpectToBeHidden';
 import {clickAndExpectToBeVisible} from '../../../utils/clickAndExpectToBeVisible';
 import getRandomString from '../../../utils/getRandomString';
-import {getWebContentStructureId} from '../../../utils/structured-content/getBasicWebContentStructureId';
 import {waitForAlert} from '../../../utils/waitForAlert';
 import {pagesPagesTest} from '../../layout-admin-web/main/fixtures/pagesPagesTest';
 import {
@@ -32,7 +31,7 @@ import {getObjectERC} from '../../setup/page-management-site/main/utils/getObjec
 import {goToObjectEntity} from '../../setup/page-management-site/main/utils/goToObjectEntity';
 
 const test = mergeTests(
-	applicationsMenuPageTest,
+	globalMenuPagesTest,
 	dataApiHelpersTest,
 	displayPageTemplatesPagesTest,
 	featureFlagsTest({
@@ -54,17 +53,11 @@ async function addDefaultAnimalDisplayPageTemplate(
 		'com.liferay.journal.model.JournalArticle'
 	);
 
-	const animalWebContentStructureId = await getWebContentStructureId(
-		apiHelpers,
-		site.id,
-		ANIMAL_DDM_STRUCTURE_KEY
-	);
-
 	const displayPage =
 		await apiHelpers.jsonWebServicesLayoutPageTemplateEntry.addDisplayPageLayoutPageTemplateEntry(
 			{
 				classNameId: className.classNameId,
-				classTypeId: String(animalWebContentStructureId),
+				classTypeKey: ANIMAL_DDM_STRUCTURE_KEY,
 				groupId: site.id,
 				name: displayPageTemplateName,
 			}
@@ -544,7 +537,7 @@ test.describe('Image Resolution', () => {
 				await apiHelpers.jsonWebServicesLayoutPageTemplateEntry.addDisplayPageLayoutPageTemplateEntry(
 					{
 						classNameId: className.classNameId,
-						classTypeId: '0',
+						classTypeKey: 'BASIC-DOCUMENT',
 						groupId: pageManagementSite.id,
 						name: displayPageTemplateName,
 					}
@@ -998,8 +991,8 @@ test.describe('Object Display page', () => {
 		{tag: '@LPS-165556'},
 		async ({
 			apiHelpers,
-			applicationsMenuPage,
 			displayPageTemplatesPage,
+			globalMenuPage,
 			page,
 			pageEditorPage,
 			site,
@@ -1176,7 +1169,7 @@ test.describe('Object Display page', () => {
 
 			// Check object entry was created
 
-			await applicationsMenuPage.goToControlPanel();
+			await globalMenuPage.goToControlPanel();
 
 			page.getByRole('menuitem', {
 				exact: true,

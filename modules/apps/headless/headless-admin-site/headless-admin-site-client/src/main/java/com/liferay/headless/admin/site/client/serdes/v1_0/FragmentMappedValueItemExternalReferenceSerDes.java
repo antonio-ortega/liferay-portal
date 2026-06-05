@@ -332,3 +332,4 @@ public class FragmentMappedValueItemExternalReferenceSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-2016151908

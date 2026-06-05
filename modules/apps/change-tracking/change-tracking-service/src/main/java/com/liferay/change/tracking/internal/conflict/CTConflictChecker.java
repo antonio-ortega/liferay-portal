@@ -39,6 +39,7 @@ import com.liferay.portal.kernel.dao.jdbc.CurrentConnectionUtil;
 import com.liferay.portal.kernel.dao.orm.ORMException;
 import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.model.ClassName;
 import com.liferay.portal.kernel.model.change.tracking.CTModel;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
@@ -192,7 +193,8 @@ public class CTConflictChecker<T extends CTModel<T>> {
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				while (resultSet.next()) {
 					conflictInfos.add(
-						new AdditionConflictInfo(resultSet.getLong(1)));
+						new AdditionConflictInfo(
+							resultSet.getLong(primaryKeyName)));
 				}
 			}
 		}
@@ -380,7 +382,7 @@ public class CTConflictChecker<T extends CTModel<T>> {
 					while (resultSet.next()) {
 						conflictInfos.add(
 							new ModificationDeletionConflictInfo(
-								resultSet.getLong(1), false));
+								resultSet.getLong(primaryKeyName), false));
 					}
 				}
 			}
@@ -421,7 +423,7 @@ public class CTConflictChecker<T extends CTModel<T>> {
 				while (resultSet.next()) {
 					conflictInfos.add(
 						new ModificationDeletionConflictInfo(
-							resultSet.getLong(1), true));
+							resultSet.getLong("modelClassPK"), true));
 				}
 			}
 		}
@@ -494,6 +496,7 @@ public class CTConflictChecker<T extends CTModel<T>> {
 		if (dslQuery != null) {
 			try (PreparedStatement preparedStatement = _getPreparedStatement(
 					connection, dslQuery);
+
 				ResultSet resultSet = preparedStatement.executeQuery()) {
 
 				while (resultSet.next()) {
@@ -690,6 +693,7 @@ public class CTConflictChecker<T extends CTModel<T>> {
 
 		try (PreparedStatement preparedStatement1 = connection.prepareStatement(
 				constraintEntriesSQL);
+
 			ResultSet resultSet1 = preparedStatement1.executeQuery()) {
 
 			while (resultSet1.next()) {
@@ -759,7 +763,7 @@ public class CTConflictChecker<T extends CTModel<T>> {
 
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				while (resultSet.next()) {
-					primaryKeys.add(resultSet.getLong(1));
+					primaryKeys.add(resultSet.getLong("modelClassPK"));
 				}
 			}
 
@@ -940,6 +944,7 @@ public class CTConflictChecker<T extends CTModel<T>> {
 
 		try (PreparedStatement preparedStatement = connection.prepareStatement(
 				SQLTransformer.transform(sb.toString()));
+
 			ResultSet resultSet = preparedStatement.executeQuery()) {
 
 			List<Long> primaryKeys = new ArrayList<>();
@@ -1088,6 +1093,7 @@ public class CTConflictChecker<T extends CTModel<T>> {
 
 		try (PreparedStatement preparedStatement = connection.prepareStatement(
 				sb.toString());
+
 			ResultSet resultSet = preparedStatement.executeQuery()) {
 
 			while (resultSet.next()) {
@@ -1100,6 +1106,9 @@ public class CTConflictChecker<T extends CTModel<T>> {
 						ctEntry.getCtEntryId(), resultSet.getLong(2));
 				}
 			}
+		}
+		catch (PortalException portalException) {
+			throw new SystemException(portalException);
 		}
 		catch (SQLException sqlException) {
 			throw new ORMException(sqlException);

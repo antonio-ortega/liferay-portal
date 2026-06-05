@@ -3,23 +3,32 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {expect, mergeTests} from '@playwright/test';
+import {Locator, Page, expect, mergeTests} from '@playwright/test';
 
-import {applicationsMenuPageTest} from '../../../fixtures/applicationsMenuPageTest';
 import {captchaConfigPageTest} from '../../../fixtures/captchaConfigPageTest';
 import {loginTest} from '../../../fixtures/loginTest';
 import {passwordPoliciesAdminPageTest} from '../../../fixtures/passwordPoliciesAdminConfigPageTest';
+import {systemSettingsPageTest} from '../../../fixtures/systemSettingsPageTest';
+import {usersAndOrganizationsPagesTest} from '../../../fixtures/usersAndOrganizationsPagesTest';
 import {TPasswordPolicy} from '../../../helpers/PasswordPolicyApiHelper';
+import {liferayConfig} from '../../../liferay.config';
+import {SystemSettingsPage} from '../../../pages/configuration-admin-web/SystemSettingsPage';
 import {PasswordPoliciesAdminPage} from '../../../pages/password-policies-admin-web/PasswordPoliciesAdminPage';
 import getRandomString from '../../../utils/getRandomString';
-import performLoginViaApi from '../../../utils/performLogin';
+import performLogin, {
+	performLoginViaApi,
+	performLogout,
+} from '../../../utils/performLogin';
 
 export const test = mergeTests(
-	applicationsMenuPageTest,
 	captchaConfigPageTest,
 	loginTest(),
-	passwordPoliciesAdminPageTest
+	passwordPoliciesAdminPageTest,
+	systemSettingsPageTest,
+	usersAndOrganizationsPagesTest
 );
+
+let passwordPolicyHasBeenCreated = false;
 
 test.afterEach(
 	'Reset CAPTCHA configuration',
@@ -27,7 +36,7 @@ test.afterEach(
 		await page.goto('/');
 
 		if (await page.getByRole('button', {name: 'Sign In'}).isVisible()) {
-			await performLoginViaApi(page, 'test');
+			await performLogin(page, 'test');
 		}
 
 		await captchaConfigPage.goTo();
@@ -39,6 +48,10 @@ test.afterEach(
 		await passwordPoliciesAdminConfigPage.goTo();
 
 		await passwordPoliciesAdminConfigPage.resetDefaultPasswordPolicy();
+
+		if (passwordPolicyHasBeenCreated) {
+			await passwordPoliciesAdminConfigPage.deleteAllPasswordPolicies();
+		}
 	}
 );
 
@@ -48,7 +61,7 @@ test.beforeEach(
 		await page.goto('/');
 
 		if (await page.getByRole('button', {name: 'Sign In'}).isVisible()) {
-			await performLoginViaApi(page, 'test');
+			await performLogin(page, 'test');
 		}
 
 		await captchaConfigPage.goTo();
@@ -192,6 +205,158 @@ test(
 			passwordPolicy,
 			'abc123'
 		);
+	}
+);
+
+test(
+	`Verify display 'Eternal' option is visible and 0 weeks is not when Ticket Max Age is set to 0`,
+	{tag: '@LPD-85143'},
+	async ({page, passwordPoliciesAdminConfigPage, systemSettingsPage}) => {
+		await testDefaultMessageCanBeSaved(
+			'Eternal',
+			page,
+			passwordPoliciesAdminConfigPage,
+			systemSettingsPage,
+			passwordPoliciesAdminConfigPage.resetTicketMaxAge
+		);
+	}
+);
+
+test(
+	`Verify display 'None' option is visible and 0 weeks is not when Minimum Age is set to 0`,
+	{tag: '@LPD-85143'},
+	async ({page, passwordPoliciesAdminConfigPage, systemSettingsPage}) => {
+		await testDefaultMessageCanBeSaved(
+			'None',
+			page,
+			passwordPoliciesAdminConfigPage,
+			systemSettingsPage,
+			passwordPoliciesAdminConfigPage.minimumAge
+		);
+	}
+);
+
+test(
+	`Verify display 'Until unlocked' by an administrator option is visible and 0 weeks is not when Lockout Duration is set to 0`,
+	{tag: '@LPD-85143'},
+	async ({page, passwordPoliciesAdminConfigPage, systemSettingsPage}) => {
+		await testDefaultMessageCanBeSaved(
+			'Until unlocked by an administrator',
+			page,
+			passwordPoliciesAdminConfigPage,
+			systemSettingsPage,
+			passwordPoliciesAdminConfigPage.lockoutDuration
+		);
+	}
+);
+
+async function testDefaultMessageCanBeSaved(
+	defaultMessage: string,
+	page: Page,
+	passwordPoliciesAdminConfigPage: PasswordPoliciesAdminPage,
+	systemSettingsPage: SystemSettingsPage,
+	targetLocator: Locator
+) {
+	await systemSettingsPage.goToSystemSetting('Users', 'Password Policies');
+
+	await expect(targetLocator.first()).toBeVisible();
+
+	await targetLocator
+		.locator('xpath=./ancestor::div[contains(@class, "form-group")]')
+		.locator('button[title="Duplicate"]')
+		.first()
+		.click();
+
+	if (await passwordPoliciesAdminConfigPage.updateButton.isVisible()) {
+		await passwordPoliciesAdminConfigPage.updateButton.click();
+	}
+	else {
+		await passwordPoliciesAdminConfigPage.saveButton.click();
+	}
+
+	await expect(passwordPoliciesAdminConfigPage.successMessage).toBeVisible();
+
+	await page.goto(liferayConfig.environment.baseUrl);
+
+	await passwordPoliciesAdminConfigPage.goTo();
+
+	await passwordPoliciesAdminConfigPage.editDefaultPasswordPolicy({
+		checkSyntaxToggle: true,
+		minNumbers: 1,
+	});
+
+	await expect(targetLocator.last()).toContainText(defaultMessage);
+	await expect(targetLocator.last()).not.toContainText('0 weeks');
+
+	await targetLocator
+		.last()
+		.selectOption({label: defaultMessage}, {force: true});
+
+	if (await passwordPoliciesAdminConfigPage.updateButton.isVisible()) {
+		await passwordPoliciesAdminConfigPage.updateButton.click();
+	}
+	else {
+		await passwordPoliciesAdminConfigPage.saveButton.click();
+	}
+
+	await expect(passwordPoliciesAdminConfigPage.successMessage).toBeVisible();
+
+	await expect(targetLocator.last().locator('option:checked')).toHaveText(
+		defaultMessage
+	);
+}
+
+test(
+	'Create password policy and assign to a recently logged-in user and verify it applied the Edit Password page',
+	{tag: '@LPP-63539'},
+	async ({
+		editUserPage,
+		page,
+		passwordPoliciesAdminConfigPage,
+		usersAndOrganizationsPage,
+	}) => {
+		const screenName = 'demo.unprivileged';
+
+		await performLogout(page);
+
+		await performLoginViaApi({page, rememberMe: false, screenName});
+
+		const passwordPolicy: TPasswordPolicy = {
+			changeRequiredToggle: true,
+			changeableToggle: true,
+			name: getRandomString(),
+		};
+
+		await performLoginViaApi({page, screenName: 'test'});
+
+		await passwordPoliciesAdminConfigPage.goTo();
+
+		await passwordPoliciesAdminConfigPage.createPasswordPolicy(
+			passwordPolicy
+		);
+
+		passwordPolicyHasBeenCreated = true;
+
+		await passwordPoliciesAdminConfigPage.goTo();
+
+		await passwordPoliciesAdminConfigPage.assignUser(
+			passwordPolicy.name,
+			screenName
+		);
+		await usersAndOrganizationsPage.goToUsers();
+
+		await usersAndOrganizationsPage.goToUser(screenName);
+
+		await editUserPage.passwordLink.click();
+
+		const requiredPasswordResetCheckbox =
+			editUserPage.requiredPasswordResetCheckbox;
+
+		await expect(editUserPage.passwordInput).toBeEnabled();
+
+		await expect(requiredPasswordResetCheckbox).toBeDisabled();
+
+		await expect(requiredPasswordResetCheckbox).toBeChecked();
 	}
 );
 

@@ -284,3 +284,4 @@ public class FormFieldOptionSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:2001632026

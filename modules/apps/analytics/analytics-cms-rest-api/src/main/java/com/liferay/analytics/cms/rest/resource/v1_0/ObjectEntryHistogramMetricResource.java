@@ -134,3 +134,4 @@ public interface ObjectEntryHistogramMetricResource {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-239160787

@@ -202,3 +202,4 @@ public class ContentTypeSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:1745836645

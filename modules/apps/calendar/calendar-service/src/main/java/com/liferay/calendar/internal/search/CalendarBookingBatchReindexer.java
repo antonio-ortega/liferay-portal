@@ -7,10 +7,10 @@ package com.liferay.calendar.internal.search;
 
 import com.liferay.calendar.model.CalendarBooking;
 import com.liferay.calendar.workflow.constants.CalendarBookingWorkflowConstants;
+import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.portal.search.batch.BatchIndexingActionable;
 import com.liferay.portal.search.indexer.IndexerDocumentBuilder;
 import com.liferay.portal.search.indexer.IndexerWriter;
 
@@ -28,10 +28,10 @@ public class CalendarBookingBatchReindexer {
 	}
 
 	public void reindex(long calendarId, long companyId) {
-		BatchIndexingActionable batchIndexingActionable =
-			_indexerWriter.getBatchIndexingActionable();
+		IndexableActionableDynamicQuery indexableActionableDynamicQuery =
+			_indexerWriter.getIndexableActionableDynamicQuery();
 
-		batchIndexingActionable.setAddCriteriaMethod(
+		indexableActionableDynamicQuery.setAddCriteriaMethod(
 			dynamicQuery -> {
 				Property calendarIdProperty = PropertyFactoryUtil.forName(
 					"calendarId");
@@ -47,13 +47,11 @@ public class CalendarBookingBatchReindexer {
 							CalendarBookingWorkflowConstants.STATUS_MAYBE
 						}));
 			});
-		batchIndexingActionable.setCompanyId(companyId);
-		batchIndexingActionable.setPerformActionMethod(
-			(CalendarBooking calendarBooking) ->
-				batchIndexingActionable.addDocuments(
-					_indexerDocumentBuilder.getDocument(calendarBooking)));
+		indexableActionableDynamicQuery.setCompanyId(companyId);
+		indexableActionableDynamicQuery.setPerformActionMethod(
+			_indexerDocumentBuilder::getDocument);
 
-		batchIndexingActionable.performActions();
+		indexableActionableDynamicQuery.performActions();
 	}
 
 	private final IndexerDocumentBuilder _indexerDocumentBuilder;

@@ -41,6 +41,7 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.ScopeUtil;
 import com.liferay.portal.kernel.util.TreeMapBuilder;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
@@ -109,9 +110,12 @@ public class SettingsTestUtil {
 		else {
 			DLFileEntry dlFileEntry =
 				DLFileEntryLocalServiceUtil.
-					fetchDLFileEntryByExternalReferenceCode(
+					getDLFileEntryByExternalReferenceCode(
 						layout.getFaviconFileEntryERC(),
-						layout.getFaviconFileEntryGroupId());
+						ScopeUtil.getItemGroupId(
+							layout.getCompanyId(),
+							layout.getFaviconFileEntryScopeERC(),
+							layout.getGroupId()));
 
 			Assert.assertEquals(
 				dlFileEntry.getExternalReferenceCode(),
@@ -125,7 +129,7 @@ public class SettingsTestUtil {
 			}
 			else {
 				Group group =
-					GroupLocalServiceUtil.fetchGroupByExternalReferenceCode(
+					GroupLocalServiceUtil.getGroupByExternalReferenceCode(
 						scope.getExternalReferenceCode(),
 						layout.getCompanyId());
 
@@ -252,6 +256,10 @@ public class SettingsTestUtil {
 			Objects.deepEquals(
 				expectedSettings.getGlobalJSClientExtensions(),
 				actualSettings.getGlobalJSClientExtensions()));
+		Assert.assertTrue(
+			Objects.deepEquals(
+				expectedSettings.getIconImageURL(),
+				actualSettings.getIconImageURL()));
 		Assert.assertEquals(
 			expectedSettings.getJavascript(), actualSettings.getJavascript());
 		Assert.assertTrue(

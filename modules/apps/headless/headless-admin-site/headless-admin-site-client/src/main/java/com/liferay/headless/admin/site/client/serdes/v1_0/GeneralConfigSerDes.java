@@ -260,3 +260,4 @@ public class GeneralConfigSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:1886678178

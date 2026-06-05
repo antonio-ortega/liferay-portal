@@ -4,7 +4,7 @@
  */
 
 import {useCallback, useEffect, useState} from 'react';
-import {Liferay} from '~/services/liferay';
+import {getSecurityVulnerabilityAffectedVersions} from '~/services/liferay/rest/jira/Jira';
 
 const useJiraVersions = () => {
 	const [jiraVersions, setJiraVersions] = useState<string[] | undefined>(
@@ -16,12 +16,7 @@ const useJiraVersions = () => {
 		setLoading(true);
 
 		try {
-			const response: string[] =
-				await Liferay.OAuth2Client.FromUserAgentApplication(
-					'liferay-customer-etc-spring-boot-oaua'
-				)
-					.fetch('/jira/security-vulnerabilities/affected-versions')
-					.then((response: {json: () => any}) => response.json());
+			const response = await getSecurityVulnerabilityAffectedVersions();
 
 			setJiraVersions(response);
 		}

@@ -431,13 +431,9 @@ public class FacebookConnectStrutsAction implements StrutsAction {
 
 		Contact contact = user.getContact();
 
-		Calendar birthdayCal = CalendarFactoryUtil.getCalendar();
+		Calendar calendar = CalendarFactoryUtil.getCalendar();
 
-		birthdayCal.setTime(contact.getBirthday());
-
-		int birthdayMonth = birthdayCal.get(Calendar.MONTH);
-		int birthdayDay = birthdayCal.get(Calendar.DAY_OF_MONTH);
-		int birthdayYear = birthdayCal.get(Calendar.YEAR);
+		calendar.setTime(contact.getBirthday());
 
 		long[] groupIds = null;
 		long[] organizationIds = null;
@@ -461,11 +457,12 @@ public class FacebookConnectStrutsAction implements StrutsAction {
 			true, null, user.getLanguageId(), user.getTimeZoneId(),
 			user.getGreeting(), user.getComments(), firstName,
 			user.getMiddleName(), lastName, contact.getPrefixListTypeId(),
-			contact.getSuffixListTypeId(), male, birthdayMonth, birthdayDay,
-			birthdayYear, contact.getSmsSn(), contact.getFacebookSn(),
-			contact.getJabberSn(), contact.getSkypeSn(), contact.getTwitterSn(),
-			contact.getJobTitle(), groupIds, organizationIds, roleIds,
-			userGroupRoles, userGroupIds, serviceContext);
+			contact.getSuffixListTypeId(), male, calendar.get(Calendar.MONTH),
+			calendar.get(Calendar.DAY_OF_MONTH), calendar.get(Calendar.YEAR),
+			contact.getSmsSn(), contact.getFacebookSn(), contact.getJabberSn(),
+			contact.getSkypeSn(), contact.getTwitterSn(), contact.getJobTitle(),
+			groupIds, organizationIds, roleIds, userGroupRoles, userGroupIds,
+			serviceContext);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

@@ -11,6 +11,7 @@ import com.liferay.commerce.exception.CommerceOrderStatusException;
 import com.liferay.commerce.helper.CommerceWorkflowedModelHelper;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.model.CommerceOrderItem;
+import com.liferay.commerce.model.CommerceOrderItemModel;
 import com.liferay.commerce.model.CommerceShippingEngine;
 import com.liferay.commerce.model.CommerceShippingMethod;
 import com.liferay.commerce.model.CommerceShippingOption;
@@ -32,6 +33,7 @@ import com.liferay.headless.commerce.core.helper.ServiceContextHelper;
 import com.liferay.headless.commerce.delivery.cart.dto.v1_0.CartTransition;
 import com.liferay.headless.commerce.delivery.cart.resource.v1_0.CartTransitionResource;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ObjectValuePair;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -94,7 +96,11 @@ public class CartTransitionResourceImpl extends BaseCartTransitionResourceImpl {
 		if (inProgressCommerceOrderStatus.isTransitionCriteriaMet(
 				commerceOrder)) {
 
-			if (commerceOrder.isApproved()) {
+			boolean priceOnApplication = ListUtil.exists(
+				commerceOrder.getCommerceOrderItems(),
+				CommerceOrderItemModel::isPriceOnApplication);
+
+			if (commerceOrder.isApproved() && !priceOnApplication) {
 				transitionOVPs.add(new ObjectValuePair<>(0L, "checkout"));
 			}
 			else if (commerceOrder.isDraft()) {
@@ -124,11 +130,10 @@ public class CartTransitionResourceImpl extends BaseCartTransitionResourceImpl {
 							_getCommercePaymentMethodGroupRelId(commerceOrder));
 
 				if (((deliveryCommerceTermEntriesCount == 0) ||
-					 ((deliveryCommerceTermEntriesCount > 0) &&
-					  (commerceOrder.getDeliveryCommerceTermEntryId() > 0))) &&
+					 (commerceOrder.getDeliveryCommerceTermEntryId() > 0)) &&
 					((paymentCommerceTermEntriesCount == 0) ||
-					 ((paymentCommerceTermEntriesCount > 0) &&
-					  (commerceOrder.getPaymentCommerceTermEntryId() > 0)))) {
+					 (commerceOrder.getPaymentCommerceTermEntryId() > 0)) &&
+					!priceOnApplication) {
 
 					transitionOVPs.add(
 						new ObjectValuePair<>(0L, "quick-checkout"));

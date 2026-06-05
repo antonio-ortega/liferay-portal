@@ -326,3 +326,4 @@ public class MetaSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:276788924

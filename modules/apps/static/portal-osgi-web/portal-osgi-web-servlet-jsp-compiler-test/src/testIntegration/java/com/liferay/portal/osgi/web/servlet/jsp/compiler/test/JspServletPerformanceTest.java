@@ -12,6 +12,7 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.test.performance.PerformanceTimer;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.util.HtmlUtil;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.URLUtil;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
@@ -139,6 +140,7 @@ public class JspServletPerformanceTest {
 	private static InputStream _createBundle() throws Exception {
 		try (UnsyncByteArrayOutputStream unsyncByteArrayOutputStream =
 				new UnsyncByteArrayOutputStream();
+
 			JarOutputStream jarOutputStream = new JarOutputStream(
 				unsyncByteArrayOutputStream)) {
 
@@ -223,8 +225,8 @@ public class JspServletPerformanceTest {
 
 		URL url = new URL(
 			StringBundler.concat(
-				"http://localhost:8080/o", _WEB_CONTEXT_PATH, "/",
-				jspFileName));
+				"http://localhost:", PortalUtil.getPortalServerPort(false),
+				"/o", _WEB_CONTEXT_PATH, "/", jspFileName));
 
 		Assert.assertEquals(
 			jspFileName, HtmlUtil.stripHtml(URLUtil.toString(url)));

@@ -683,6 +683,31 @@ public class ObjectServiceUpgradeStepRegistrator
 			"10.25.1", "10.26.0",
 			UpgradeProcessFactory.dropColumns(
 				"ObjectDefinition", "enableLocalization"));
+
+		registry.register(
+			"10.26.0", "10.27.0",
+			UpgradeProcessFactory.addColumns("ObjectFolder", "status INTEGER"),
+			UpgradeProcessFactory.runSQL("update ObjectFolder set status = 0"));
+
+		registry.register(
+			"10.27.0", "11.0.0",
+			UpgradeProcessFactory.runSQL(
+				"update ObjectFieldSetting set name = 'showFilesInLibrary' " +
+					"where name = 'showFilesInDocumentsAndMedia'"),
+			UpgradeProcessFactory.runSQL(
+				"update ObjectFieldSetting set value = " +
+					"'userComputerToDocumentsAndMedia' where name = " +
+						"'fileSource' and value like 'userComputer'"));
+
+		registry.register(
+			"11.0.0", "12.0.0",
+			new com.liferay.object.internal.upgrade.v12_0_0.
+				ObjectFieldUpgradeProcess());
+
+		registry.register(
+			"12.0.0", "12.1.0",
+			new com.liferay.object.internal.upgrade.v12_1_0.
+				ObjectDefinitionSettingUpgradeProcess());
 	}
 
 	@Reference

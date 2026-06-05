@@ -25,9 +25,8 @@ import com.liferay.portal.search.engine.adapter.search.SearchSearchResponse;
 import com.liferay.portal.search.hits.SearchHit;
 import com.liferay.portal.search.hits.SearchHits;
 import com.liferay.portal.search.query.BooleanQuery;
-import com.liferay.portal.search.query.Queries;
+import com.liferay.portal.search.query.QueriesUtil;
 import com.liferay.portal.search.query.Query;
-import com.liferay.portal.search.script.Scripts;
 import com.liferay.portal.workflow.metrics.internal.petra.executor.WorkflowMetricsPortalExecutor;
 import com.liferay.portal.workflow.metrics.internal.search.index.util.WorkflowMetricsIndexerUtil;
 
@@ -150,7 +149,7 @@ public abstract class BaseWorkflowMetricsIndexer {
 
 		searchSearchRequest.setIndexNames(getIndexName(companyId));
 
-		BooleanQuery booleanQuery = queries.booleanQuery();
+		BooleanQuery booleanQuery = QueriesUtil.booleanQuery();
 
 		searchSearchRequest.setQuery(
 			booleanQuery.addFilterQueryClauses(filterQuery));
@@ -171,7 +170,7 @@ public abstract class BaseWorkflowMetricsIndexer {
 
 		for (SearchHit searchHit : searchHits.getSearchHits()) {
 			Document document = searchHit.getDocument();
-			DocumentBuilder documentBuilder = documentBuilderFactory.builder();
+			DocumentBuilder documentBuilder = DocumentBuilderFactory.builder();
 
 			documentBuilder.setString("uid", document.getString("uid"));
 
@@ -198,15 +197,6 @@ public abstract class BaseWorkflowMetricsIndexer {
 			searchEngineAdapter.execute(bulkDocumentRequest);
 		}
 	}
-
-	@Reference
-	protected DocumentBuilderFactory documentBuilderFactory;
-
-	@Reference
-	protected Queries queries;
-
-	@Reference
-	protected Scripts scripts;
 
 	@Reference
 	protected SearchCapabilities searchCapabilities;

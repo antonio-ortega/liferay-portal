@@ -37,6 +37,20 @@ public class AkismetEntryUtil {
 	 */
 
 	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(List)
+	 */
+	public static void cacheResult(List<AkismetEntry> akismetEntries) {
+		getPersistence().cacheResult(akismetEntries);
+	}
+
+	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(com.liferay.portal.kernel.model.BaseModel)
+	 */
+	public static void cacheResult(AkismetEntry akismetEntry) {
+		getPersistence().cacheResult(akismetEntry);
+	}
+
+	/**
 	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#clearCache()
 	 */
 	public static void clearCache() {
@@ -125,7 +139,7 @@ public class AkismetEntryUtil {
 	 * Returns a range of all the akismet entries where modifiedDate &lt; &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AkismetEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.akismet.model.impl.AkismetEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param modifiedDate the modified date
@@ -143,7 +157,7 @@ public class AkismetEntryUtil {
 	 * Returns an ordered range of all the akismet entries where modifiedDate &lt; &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AkismetEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.akismet.model.impl.AkismetEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param modifiedDate the modified date
@@ -164,7 +178,7 @@ public class AkismetEntryUtil {
 	 * Returns an ordered range of all the akismet entries where modifiedDate &lt; &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AkismetEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.akismet.model.impl.AkismetEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param modifiedDate the modified date
@@ -215,55 +229,6 @@ public class AkismetEntryUtil {
 	}
 
 	/**
-	 * Returns the last akismet entry in the ordered set where modifiedDate &lt; &#63;.
-	 *
-	 * @param modifiedDate the modified date
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching akismet entry
-	 * @throws NoSuchAkismetEntryException if a matching akismet entry could not be found
-	 */
-	public static AkismetEntry findByLtModifiedDate_Last(
-			Date modifiedDate,
-			OrderByComparator<AkismetEntry> orderByComparator)
-		throws com.liferay.akismet.exception.NoSuchAkismetEntryException {
-
-		return getPersistence().findByLtModifiedDate_Last(
-			modifiedDate, orderByComparator);
-	}
-
-	/**
-	 * Returns the last akismet entry in the ordered set where modifiedDate &lt; &#63;.
-	 *
-	 * @param modifiedDate the modified date
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching akismet entry, or <code>null</code> if a matching akismet entry could not be found
-	 */
-	public static AkismetEntry fetchByLtModifiedDate_Last(
-		Date modifiedDate, OrderByComparator<AkismetEntry> orderByComparator) {
-
-		return getPersistence().fetchByLtModifiedDate_Last(
-			modifiedDate, orderByComparator);
-	}
-
-	/**
-	 * Returns the akismet entries before and after the current akismet entry in the ordered set where modifiedDate &lt; &#63;.
-	 *
-	 * @param akismetEntryId the primary key of the current akismet entry
-	 * @param modifiedDate the modified date
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next akismet entry
-	 * @throws NoSuchAkismetEntryException if a akismet entry with the primary key could not be found
-	 */
-	public static AkismetEntry[] findByLtModifiedDate_PrevAndNext(
-			long akismetEntryId, Date modifiedDate,
-			OrderByComparator<AkismetEntry> orderByComparator)
-		throws com.liferay.akismet.exception.NoSuchAkismetEntryException {
-
-		return getPersistence().findByLtModifiedDate_PrevAndNext(
-			akismetEntryId, modifiedDate, orderByComparator);
-	}
-
-	/**
 	 * Removes all the akismet entries where modifiedDate &lt; &#63; from the database.
 	 *
 	 * @param modifiedDate the modified date
@@ -294,17 +259,6 @@ public class AkismetEntryUtil {
 		throws com.liferay.akismet.exception.NoSuchAkismetEntryException {
 
 		return getPersistence().findByC_C(classNameId, classPK);
-	}
-
-	/**
-	 * Returns the akismet entry where classNameId = &#63; and classPK = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
-	 *
-	 * @param classNameId the class name ID
-	 * @param classPK the class pk
-	 * @return the matching akismet entry, or <code>null</code> if a matching akismet entry could not be found
-	 */
-	public static AkismetEntry fetchByC_C(long classNameId, long classPK) {
-		return getPersistence().fetchByC_C(classNameId, classPK);
 	}
 
 	/**
@@ -344,24 +298,6 @@ public class AkismetEntryUtil {
 	 */
 	public static int countByC_C(long classNameId, long classPK) {
 		return getPersistence().countByC_C(classNameId, classPK);
-	}
-
-	/**
-	 * Caches the akismet entry in the entity cache if it is enabled.
-	 *
-	 * @param akismetEntry the akismet entry
-	 */
-	public static void cacheResult(AkismetEntry akismetEntry) {
-		getPersistence().cacheResult(akismetEntry);
-	}
-
-	/**
-	 * Caches the akismet entries in the entity cache if it is enabled.
-	 *
-	 * @param akismetEntries the akismet entries
-	 */
-	public static void cacheResult(List<AkismetEntry> akismetEntries) {
-		getPersistence().cacheResult(akismetEntries);
 	}
 
 	/**
@@ -415,82 +351,14 @@ public class AkismetEntryUtil {
 	}
 
 	/**
-	 * Returns all the akismet entries.
+	 * Returns the akismet entry where classNameId = &#63; and classPK = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
 	 *
-	 * @return the akismet entries
+	 * @param classNameId the class name ID
+	 * @param classPK the class pk
+	 * @return the matching akismet entry, or <code>null</code> if a matching akismet entry could not be found
 	 */
-	public static List<AkismetEntry> findAll() {
-		return getPersistence().findAll();
-	}
-
-	/**
-	 * Returns a range of all the akismet entries.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AkismetEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param start the lower bound of the range of akismet entries
-	 * @param end the upper bound of the range of akismet entries (not inclusive)
-	 * @return the range of akismet entries
-	 */
-	public static List<AkismetEntry> findAll(int start, int end) {
-		return getPersistence().findAll(start, end);
-	}
-
-	/**
-	 * Returns an ordered range of all the akismet entries.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AkismetEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param start the lower bound of the range of akismet entries
-	 * @param end the upper bound of the range of akismet entries (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of akismet entries
-	 */
-	public static List<AkismetEntry> findAll(
-		int start, int end, OrderByComparator<AkismetEntry> orderByComparator) {
-
-		return getPersistence().findAll(start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the akismet entries.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AkismetEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param start the lower bound of the range of akismet entries
-	 * @param end the upper bound of the range of akismet entries (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param useFinderCache whether to use the finder cache
-	 * @return the ordered range of akismet entries
-	 */
-	public static List<AkismetEntry> findAll(
-		int start, int end, OrderByComparator<AkismetEntry> orderByComparator,
-		boolean useFinderCache) {
-
-		return getPersistence().findAll(
-			start, end, orderByComparator, useFinderCache);
-	}
-
-	/**
-	 * Removes all the akismet entries from the database.
-	 */
-	public static void removeAll() {
-		getPersistence().removeAll();
-	}
-
-	/**
-	 * Returns the number of akismet entries.
-	 *
-	 * @return the number of akismet entries
-	 */
-	public static int countAll() {
-		return getPersistence().countAll();
+	public static AkismetEntry fetchByC_C(long classNameId, long classPK) {
+		return getPersistence().fetchByC_C(classNameId, classPK);
 	}
 
 	public static AkismetEntryPersistence getPersistence() {
@@ -504,3 +372,4 @@ public class AkismetEntryUtil {
 	private static volatile AkismetEntryPersistence _persistence;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:1823314970

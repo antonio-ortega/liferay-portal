@@ -14,12 +14,15 @@ import com.liferay.journal.constants.JournalArticleConstants;
 import com.liferay.journal.internal.util.JournalUtil;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.model.JournalArticleResource;
+import com.liferay.journal.model.JournalArticleTable;
 import com.liferay.journal.service.JournalArticleLocalService;
 import com.liferay.journal.service.JournalArticleResourceLocalService;
 import com.liferay.journal.service.JournalArticleService;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
+import com.liferay.layout.page.template.util.LayoutPageTemplateEntryUtil;
 import com.liferay.petra.function.transform.TransformUtil;
+import com.liferay.petra.sql.dsl.DSLQueryFactoryUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Property;
@@ -49,6 +52,7 @@ import com.liferay.site.provider.SitemapURLProvider;
 import com.liferay.site.provider.helper.SitemapURLProviderHelper;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -67,6 +71,36 @@ public class JournalArticleSitemapURLProvider implements SitemapURLProvider {
 	@Override
 	public String getClassName() {
 		return JournalArticle.class.getName();
+	}
+
+	@Override
+	public Date getLastModifiedDate(long companyId, long groupId)
+		throws PortalException {
+
+		List<Date> modifiedDates = _journalArticleLocalService.dslQuery(
+			DSLQueryFactoryUtil.select(
+				JournalArticleTable.INSTANCE.modifiedDate
+			).from(
+				JournalArticleTable.INSTANCE
+			).where(
+				JournalArticleTable.INSTANCE.groupId.eq(
+					groupId
+				).and(
+					JournalArticleTable.INSTANCE.classNameId.eq(0L)
+				).and(
+					JournalArticleTable.INSTANCE.modifiedDate.isNotNull()
+				)
+			).orderBy(
+				JournalArticleTable.INSTANCE.modifiedDate.descending()
+			).limit(
+				0, 1
+			));
+
+		if (modifiedDates.isEmpty()) {
+			return null;
+		}
+
+		return modifiedDates.get(0);
 	}
 
 	@Override
@@ -187,7 +221,8 @@ public class JournalArticleSitemapURLProvider implements SitemapURLProvider {
 						_journalArticleLocalService.
 							getArticlesClassPKsWithDefaultDisplayPage(
 								groupId,
-								layoutPageTemplateEntry.getClassTypeId()));
+								LayoutPageTemplateEntryUtil.getClassTypeId(
+									layoutPageTemplateEntry)));
 				}
 				else {
 					resourcePrimKeys.addAll(
@@ -331,8 +366,8 @@ public class JournalArticleSitemapURLProvider implements SitemapURLProvider {
 			for (String alternateURL : alternateURLs.values()) {
 				_sitemapManager.addURLElement(
 					element, alternateURL, null,
-					journalArticle.getModifiedDate(), articleURL,
-					alternateURLs);
+					journalArticle.getModifiedDate(), articleURL, alternateURLs,
+					articleLayout.getGroupId());
 			}
 
 			processedArticleIds.add(journalArticle.getArticleId());

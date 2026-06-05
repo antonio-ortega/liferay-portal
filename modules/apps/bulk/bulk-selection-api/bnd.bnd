@@ -1,6 +1,7 @@
 Bundle-Name: Liferay Bulk Selection API
 Bundle-SymbolicName: com.liferay.bulk.selection.api
-Bundle-Version: 5.1.1
+Bundle-Version: 5.2.1
 Export-Package:\
 	com.liferay.bulk.selection,\
-	com.liferay.bulk.selection.constants
+	com.liferay.bulk.selection.constants,\
+	com.liferay.bulk.selection.util

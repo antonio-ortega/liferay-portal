@@ -36,6 +36,20 @@ public class DepotEntryPinUtil {
 	 */
 
 	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(List)
+	 */
+	public static void cacheResult(List<DepotEntryPin> depotEntryPins) {
+		getPersistence().cacheResult(depotEntryPins);
+	}
+
+	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(com.liferay.portal.kernel.model.BaseModel)
+	 */
+	public static void cacheResult(DepotEntryPin depotEntryPin) {
+		getPersistence().cacheResult(depotEntryPin);
+	}
+
+	/**
 	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#clearCache()
 	 */
 	public static void clearCache() {
@@ -111,58 +125,10 @@ public class DepotEntryPinUtil {
 	}
 
 	/**
-	 * Returns all the depot entry pins where uuid = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @return the matching depot entry pins
-	 */
-	public static List<DepotEntryPin> findByUuid(String uuid) {
-		return getPersistence().findByUuid(uuid);
-	}
-
-	/**
-	 * Returns a range of all the depot entry pins where uuid = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>DepotEntryPinModelImpl</code>.
-	 * </p>
-	 *
-	 * @param uuid the uuid
-	 * @param start the lower bound of the range of depot entry pins
-	 * @param end the upper bound of the range of depot entry pins (not inclusive)
-	 * @return the range of matching depot entry pins
-	 */
-	public static List<DepotEntryPin> findByUuid(
-		String uuid, int start, int end) {
-
-		return getPersistence().findByUuid(uuid, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the depot entry pins where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>DepotEntryPinModelImpl</code>.
-	 * </p>
-	 *
-	 * @param uuid the uuid
-	 * @param start the lower bound of the range of depot entry pins
-	 * @param end the upper bound of the range of depot entry pins (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching depot entry pins
-	 */
-	public static List<DepotEntryPin> findByUuid(
-		String uuid, int start, int end,
-		OrderByComparator<DepotEntryPin> orderByComparator) {
-
-		return getPersistence().findByUuid(uuid, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the depot entry pins where uuid = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>DepotEntryPinModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.depot.model.impl.DepotEntryPinModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -210,52 +176,6 @@ public class DepotEntryPinUtil {
 	}
 
 	/**
-	 * Returns the last depot entry pin in the ordered set where uuid = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching depot entry pin
-	 * @throws NoSuchEntryPinException if a matching depot entry pin could not be found
-	 */
-	public static DepotEntryPin findByUuid_Last(
-			String uuid, OrderByComparator<DepotEntryPin> orderByComparator)
-		throws com.liferay.depot.exception.NoSuchEntryPinException {
-
-		return getPersistence().findByUuid_Last(uuid, orderByComparator);
-	}
-
-	/**
-	 * Returns the last depot entry pin in the ordered set where uuid = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching depot entry pin, or <code>null</code> if a matching depot entry pin could not be found
-	 */
-	public static DepotEntryPin fetchByUuid_Last(
-		String uuid, OrderByComparator<DepotEntryPin> orderByComparator) {
-
-		return getPersistence().fetchByUuid_Last(uuid, orderByComparator);
-	}
-
-	/**
-	 * Returns the depot entry pins before and after the current depot entry pin in the ordered set where uuid = &#63;.
-	 *
-	 * @param depotEntryPinId the primary key of the current depot entry pin
-	 * @param uuid the uuid
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next depot entry pin
-	 * @throws NoSuchEntryPinException if a depot entry pin with the primary key could not be found
-	 */
-	public static DepotEntryPin[] findByUuid_PrevAndNext(
-			long depotEntryPinId, String uuid,
-			OrderByComparator<DepotEntryPin> orderByComparator)
-		throws com.liferay.depot.exception.NoSuchEntryPinException {
-
-		return getPersistence().findByUuid_PrevAndNext(
-			depotEntryPinId, uuid, orderByComparator);
-	}
-
-	/**
 	 * Removes all the depot entry pins where uuid = &#63; from the database.
 	 *
 	 * @param uuid the uuid
@@ -286,17 +206,6 @@ public class DepotEntryPinUtil {
 		throws com.liferay.depot.exception.NoSuchEntryPinException {
 
 		return getPersistence().findByUUID_G(uuid, groupId);
-	}
-
-	/**
-	 * Returns the depot entry pin where uuid = &#63; and groupId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
-	 *
-	 * @param uuid the uuid
-	 * @param groupId the group ID
-	 * @return the matching depot entry pin, or <code>null</code> if a matching depot entry pin could not be found
-	 */
-	public static DepotEntryPin fetchByUUID_G(String uuid, long groupId) {
-		return getPersistence().fetchByUUID_G(uuid, groupId);
 	}
 
 	/**
@@ -338,64 +247,10 @@ public class DepotEntryPinUtil {
 	}
 
 	/**
-	 * Returns all the depot entry pins where uuid = &#63; and companyId = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @return the matching depot entry pins
-	 */
-	public static List<DepotEntryPin> findByUuid_C(
-		String uuid, long companyId) {
-
-		return getPersistence().findByUuid_C(uuid, companyId);
-	}
-
-	/**
-	 * Returns a range of all the depot entry pins where uuid = &#63; and companyId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>DepotEntryPinModelImpl</code>.
-	 * </p>
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param start the lower bound of the range of depot entry pins
-	 * @param end the upper bound of the range of depot entry pins (not inclusive)
-	 * @return the range of matching depot entry pins
-	 */
-	public static List<DepotEntryPin> findByUuid_C(
-		String uuid, long companyId, int start, int end) {
-
-		return getPersistence().findByUuid_C(uuid, companyId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the depot entry pins where uuid = &#63; and companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>DepotEntryPinModelImpl</code>.
-	 * </p>
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param start the lower bound of the range of depot entry pins
-	 * @param end the upper bound of the range of depot entry pins (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching depot entry pins
-	 */
-	public static List<DepotEntryPin> findByUuid_C(
-		String uuid, long companyId, int start, int end,
-		OrderByComparator<DepotEntryPin> orderByComparator) {
-
-		return getPersistence().findByUuid_C(
-			uuid, companyId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the depot entry pins where uuid = &#63; and companyId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>DepotEntryPinModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.depot.model.impl.DepotEntryPinModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -450,59 +305,6 @@ public class DepotEntryPinUtil {
 	}
 
 	/**
-	 * Returns the last depot entry pin in the ordered set where uuid = &#63; and companyId = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching depot entry pin
-	 * @throws NoSuchEntryPinException if a matching depot entry pin could not be found
-	 */
-	public static DepotEntryPin findByUuid_C_Last(
-			String uuid, long companyId,
-			OrderByComparator<DepotEntryPin> orderByComparator)
-		throws com.liferay.depot.exception.NoSuchEntryPinException {
-
-		return getPersistence().findByUuid_C_Last(
-			uuid, companyId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last depot entry pin in the ordered set where uuid = &#63; and companyId = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching depot entry pin, or <code>null</code> if a matching depot entry pin could not be found
-	 */
-	public static DepotEntryPin fetchByUuid_C_Last(
-		String uuid, long companyId,
-		OrderByComparator<DepotEntryPin> orderByComparator) {
-
-		return getPersistence().fetchByUuid_C_Last(
-			uuid, companyId, orderByComparator);
-	}
-
-	/**
-	 * Returns the depot entry pins before and after the current depot entry pin in the ordered set where uuid = &#63; and companyId = &#63;.
-	 *
-	 * @param depotEntryPinId the primary key of the current depot entry pin
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next depot entry pin
-	 * @throws NoSuchEntryPinException if a depot entry pin with the primary key could not be found
-	 */
-	public static DepotEntryPin[] findByUuid_C_PrevAndNext(
-			long depotEntryPinId, String uuid, long companyId,
-			OrderByComparator<DepotEntryPin> orderByComparator)
-		throws com.liferay.depot.exception.NoSuchEntryPinException {
-
-		return getPersistence().findByUuid_C_PrevAndNext(
-			depotEntryPinId, uuid, companyId, orderByComparator);
-	}
-
-	/**
 	 * Removes all the depot entry pins where uuid = &#63; and companyId = &#63; from the database.
 	 *
 	 * @param uuid the uuid
@@ -524,59 +326,10 @@ public class DepotEntryPinUtil {
 	}
 
 	/**
-	 * Returns all the depot entry pins where userId = &#63;.
-	 *
-	 * @param userId the user ID
-	 * @return the matching depot entry pins
-	 */
-	public static List<DepotEntryPin> findByUserId(long userId) {
-		return getPersistence().findByUserId(userId);
-	}
-
-	/**
-	 * Returns a range of all the depot entry pins where userId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>DepotEntryPinModelImpl</code>.
-	 * </p>
-	 *
-	 * @param userId the user ID
-	 * @param start the lower bound of the range of depot entry pins
-	 * @param end the upper bound of the range of depot entry pins (not inclusive)
-	 * @return the range of matching depot entry pins
-	 */
-	public static List<DepotEntryPin> findByUserId(
-		long userId, int start, int end) {
-
-		return getPersistence().findByUserId(userId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the depot entry pins where userId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>DepotEntryPinModelImpl</code>.
-	 * </p>
-	 *
-	 * @param userId the user ID
-	 * @param start the lower bound of the range of depot entry pins
-	 * @param end the upper bound of the range of depot entry pins (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching depot entry pins
-	 */
-	public static List<DepotEntryPin> findByUserId(
-		long userId, int start, int end,
-		OrderByComparator<DepotEntryPin> orderByComparator) {
-
-		return getPersistence().findByUserId(
-			userId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the depot entry pins where userId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>DepotEntryPinModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.depot.model.impl.DepotEntryPinModelImpl</code>.
 	 * </p>
 	 *
 	 * @param userId the user ID
@@ -624,52 +377,6 @@ public class DepotEntryPinUtil {
 	}
 
 	/**
-	 * Returns the last depot entry pin in the ordered set where userId = &#63;.
-	 *
-	 * @param userId the user ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching depot entry pin
-	 * @throws NoSuchEntryPinException if a matching depot entry pin could not be found
-	 */
-	public static DepotEntryPin findByUserId_Last(
-			long userId, OrderByComparator<DepotEntryPin> orderByComparator)
-		throws com.liferay.depot.exception.NoSuchEntryPinException {
-
-		return getPersistence().findByUserId_Last(userId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last depot entry pin in the ordered set where userId = &#63;.
-	 *
-	 * @param userId the user ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching depot entry pin, or <code>null</code> if a matching depot entry pin could not be found
-	 */
-	public static DepotEntryPin fetchByUserId_Last(
-		long userId, OrderByComparator<DepotEntryPin> orderByComparator) {
-
-		return getPersistence().fetchByUserId_Last(userId, orderByComparator);
-	}
-
-	/**
-	 * Returns the depot entry pins before and after the current depot entry pin in the ordered set where userId = &#63;.
-	 *
-	 * @param depotEntryPinId the primary key of the current depot entry pin
-	 * @param userId the user ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next depot entry pin
-	 * @throws NoSuchEntryPinException if a depot entry pin with the primary key could not be found
-	 */
-	public static DepotEntryPin[] findByUserId_PrevAndNext(
-			long depotEntryPinId, long userId,
-			OrderByComparator<DepotEntryPin> orderByComparator)
-		throws com.liferay.depot.exception.NoSuchEntryPinException {
-
-		return getPersistence().findByUserId_PrevAndNext(
-			depotEntryPinId, userId, orderByComparator);
-	}
-
-	/**
 	 * Removes all the depot entry pins where userId = &#63; from the database.
 	 *
 	 * @param userId the user ID
@@ -689,59 +396,10 @@ public class DepotEntryPinUtil {
 	}
 
 	/**
-	 * Returns all the depot entry pins where depotEntryId = &#63;.
-	 *
-	 * @param depotEntryId the depot entry ID
-	 * @return the matching depot entry pins
-	 */
-	public static List<DepotEntryPin> findByDepotEntryId(long depotEntryId) {
-		return getPersistence().findByDepotEntryId(depotEntryId);
-	}
-
-	/**
-	 * Returns a range of all the depot entry pins where depotEntryId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>DepotEntryPinModelImpl</code>.
-	 * </p>
-	 *
-	 * @param depotEntryId the depot entry ID
-	 * @param start the lower bound of the range of depot entry pins
-	 * @param end the upper bound of the range of depot entry pins (not inclusive)
-	 * @return the range of matching depot entry pins
-	 */
-	public static List<DepotEntryPin> findByDepotEntryId(
-		long depotEntryId, int start, int end) {
-
-		return getPersistence().findByDepotEntryId(depotEntryId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the depot entry pins where depotEntryId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>DepotEntryPinModelImpl</code>.
-	 * </p>
-	 *
-	 * @param depotEntryId the depot entry ID
-	 * @param start the lower bound of the range of depot entry pins
-	 * @param end the upper bound of the range of depot entry pins (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching depot entry pins
-	 */
-	public static List<DepotEntryPin> findByDepotEntryId(
-		long depotEntryId, int start, int end,
-		OrderByComparator<DepotEntryPin> orderByComparator) {
-
-		return getPersistence().findByDepotEntryId(
-			depotEntryId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the depot entry pins where depotEntryId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>DepotEntryPinModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.depot.model.impl.DepotEntryPinModelImpl</code>.
 	 * </p>
 	 *
 	 * @param depotEntryId the depot entry ID
@@ -792,55 +450,6 @@ public class DepotEntryPinUtil {
 	}
 
 	/**
-	 * Returns the last depot entry pin in the ordered set where depotEntryId = &#63;.
-	 *
-	 * @param depotEntryId the depot entry ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching depot entry pin
-	 * @throws NoSuchEntryPinException if a matching depot entry pin could not be found
-	 */
-	public static DepotEntryPin findByDepotEntryId_Last(
-			long depotEntryId,
-			OrderByComparator<DepotEntryPin> orderByComparator)
-		throws com.liferay.depot.exception.NoSuchEntryPinException {
-
-		return getPersistence().findByDepotEntryId_Last(
-			depotEntryId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last depot entry pin in the ordered set where depotEntryId = &#63;.
-	 *
-	 * @param depotEntryId the depot entry ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching depot entry pin, or <code>null</code> if a matching depot entry pin could not be found
-	 */
-	public static DepotEntryPin fetchByDepotEntryId_Last(
-		long depotEntryId, OrderByComparator<DepotEntryPin> orderByComparator) {
-
-		return getPersistence().fetchByDepotEntryId_Last(
-			depotEntryId, orderByComparator);
-	}
-
-	/**
-	 * Returns the depot entry pins before and after the current depot entry pin in the ordered set where depotEntryId = &#63;.
-	 *
-	 * @param depotEntryPinId the primary key of the current depot entry pin
-	 * @param depotEntryId the depot entry ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next depot entry pin
-	 * @throws NoSuchEntryPinException if a depot entry pin with the primary key could not be found
-	 */
-	public static DepotEntryPin[] findByDepotEntryId_PrevAndNext(
-			long depotEntryPinId, long depotEntryId,
-			OrderByComparator<DepotEntryPin> orderByComparator)
-		throws com.liferay.depot.exception.NoSuchEntryPinException {
-
-		return getPersistence().findByDepotEntryId_PrevAndNext(
-			depotEntryPinId, depotEntryId, orderByComparator);
-	}
-
-	/**
 	 * Removes all the depot entry pins where depotEntryId = &#63; from the database.
 	 *
 	 * @param depotEntryId the depot entry ID
@@ -871,17 +480,6 @@ public class DepotEntryPinUtil {
 		throws com.liferay.depot.exception.NoSuchEntryPinException {
 
 		return getPersistence().findByU_D(userId, depotEntryId);
-	}
-
-	/**
-	 * Returns the depot entry pin where userId = &#63; and depotEntryId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
-	 *
-	 * @param userId the user ID
-	 * @param depotEntryId the depot entry ID
-	 * @return the matching depot entry pin, or <code>null</code> if a matching depot entry pin could not be found
-	 */
-	public static DepotEntryPin fetchByU_D(long userId, long depotEntryId) {
-		return getPersistence().fetchByU_D(userId, depotEntryId);
 	}
 
 	/**
@@ -921,24 +519,6 @@ public class DepotEntryPinUtil {
 	 */
 	public static int countByU_D(long userId, long depotEntryId) {
 		return getPersistence().countByU_D(userId, depotEntryId);
-	}
-
-	/**
-	 * Caches the depot entry pin in the entity cache if it is enabled.
-	 *
-	 * @param depotEntryPin the depot entry pin
-	 */
-	public static void cacheResult(DepotEntryPin depotEntryPin) {
-		getPersistence().cacheResult(depotEntryPin);
-	}
-
-	/**
-	 * Caches the depot entry pins in the entity cache if it is enabled.
-	 *
-	 * @param depotEntryPins the depot entry pins
-	 */
-	public static void cacheResult(List<DepotEntryPin> depotEntryPins) {
-		getPersistence().cacheResult(depotEntryPins);
 	}
 
 	/**
@@ -992,83 +572,225 @@ public class DepotEntryPinUtil {
 	}
 
 	/**
-	 * Returns all the depot entry pins.
+	 * Returns the depot entry pin where uuid = &#63; and groupId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
 	 *
-	 * @return the depot entry pins
+	 * @param uuid the uuid
+	 * @param groupId the group ID
+	 * @return the matching depot entry pin, or <code>null</code> if a matching depot entry pin could not be found
 	 */
-	public static List<DepotEntryPin> findAll() {
-		return getPersistence().findAll();
+	public static DepotEntryPin fetchByUUID_G(String uuid, long groupId) {
+		return getPersistence().fetchByUUID_G(uuid, groupId);
 	}
 
 	/**
-	 * Returns a range of all the depot entry pins.
+	 * Returns the depot entry pin where userId = &#63; and depotEntryId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	 *
+	 * @param userId the user ID
+	 * @param depotEntryId the depot entry ID
+	 * @return the matching depot entry pin, or <code>null</code> if a matching depot entry pin could not be found
+	 */
+	public static DepotEntryPin fetchByU_D(long userId, long depotEntryId) {
+		return getPersistence().fetchByU_D(userId, depotEntryId);
+	}
+
+	/**
+	 * Returns all the depot entry pins where uuid = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @return the matching depot entry pins
+	 */
+	public static List<DepotEntryPin> findByUuid(String uuid) {
+		return getPersistence().findByUuid(uuid);
+	}
+
+	/**
+	 * Returns a range of all the depot entry pins where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>DepotEntryPinModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.depot.model.impl.DepotEntryPinModelImpl</code>.
 	 * </p>
 	 *
+	 * @param uuid the uuid
 	 * @param start the lower bound of the range of depot entry pins
 	 * @param end the upper bound of the range of depot entry pins (not inclusive)
-	 * @return the range of depot entry pins
+	 * @return the range of matching depot entry pins
 	 */
-	public static List<DepotEntryPin> findAll(int start, int end) {
-		return getPersistence().findAll(start, end);
+	public static List<DepotEntryPin> findByUuid(
+		String uuid, int start, int end) {
+
+		return getPersistence().findByUuid(uuid, start, end);
 	}
 
 	/**
-	 * Returns an ordered range of all the depot entry pins.
+	 * Returns an ordered range of all the depot entry pins where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>DepotEntryPinModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.depot.model.impl.DepotEntryPinModelImpl</code>.
 	 * </p>
 	 *
+	 * @param uuid the uuid
 	 * @param start the lower bound of the range of depot entry pins
 	 * @param end the upper bound of the range of depot entry pins (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of depot entry pins
+	 * @return the ordered range of matching depot entry pins
 	 */
-	public static List<DepotEntryPin> findAll(
-		int start, int end,
+	public static List<DepotEntryPin> findByUuid(
+		String uuid, int start, int end,
 		OrderByComparator<DepotEntryPin> orderByComparator) {
 
-		return getPersistence().findAll(start, end, orderByComparator);
+		return getPersistence().findByUuid(uuid, start, end, orderByComparator);
 	}
 
 	/**
-	 * Returns an ordered range of all the depot entry pins.
+	 * Returns all the depot entry pins where uuid = &#63; and companyId = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @return the matching depot entry pins
+	 */
+	public static List<DepotEntryPin> findByUuid_C(
+		String uuid, long companyId) {
+
+		return getPersistence().findByUuid_C(uuid, companyId);
+	}
+
+	/**
+	 * Returns a range of all the depot entry pins where uuid = &#63; and companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>DepotEntryPinModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.depot.model.impl.DepotEntryPinModelImpl</code>.
 	 * </p>
 	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of depot entry pins
+	 * @param end the upper bound of the range of depot entry pins (not inclusive)
+	 * @return the range of matching depot entry pins
+	 */
+	public static List<DepotEntryPin> findByUuid_C(
+		String uuid, long companyId, int start, int end) {
+
+		return getPersistence().findByUuid_C(uuid, companyId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the depot entry pins where uuid = &#63; and companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.depot.model.impl.DepotEntryPinModelImpl</code>.
+	 * </p>
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
 	 * @param start the lower bound of the range of depot entry pins
 	 * @param end the upper bound of the range of depot entry pins (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param useFinderCache whether to use the finder cache
-	 * @return the ordered range of depot entry pins
+	 * @return the ordered range of matching depot entry pins
 	 */
-	public static List<DepotEntryPin> findAll(
-		int start, int end, OrderByComparator<DepotEntryPin> orderByComparator,
-		boolean useFinderCache) {
+	public static List<DepotEntryPin> findByUuid_C(
+		String uuid, long companyId, int start, int end,
+		OrderByComparator<DepotEntryPin> orderByComparator) {
 
-		return getPersistence().findAll(
-			start, end, orderByComparator, useFinderCache);
+		return getPersistence().findByUuid_C(
+			uuid, companyId, start, end, orderByComparator);
 	}
 
 	/**
-	 * Removes all the depot entry pins from the database.
-	 */
-	public static void removeAll() {
-		getPersistence().removeAll();
-	}
-
-	/**
-	 * Returns the number of depot entry pins.
+	 * Returns all the depot entry pins where userId = &#63;.
 	 *
-	 * @return the number of depot entry pins
+	 * @param userId the user ID
+	 * @return the matching depot entry pins
 	 */
-	public static int countAll() {
-		return getPersistence().countAll();
+	public static List<DepotEntryPin> findByUserId(long userId) {
+		return getPersistence().findByUserId(userId);
+	}
+
+	/**
+	 * Returns a range of all the depot entry pins where userId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.depot.model.impl.DepotEntryPinModelImpl</code>.
+	 * </p>
+	 *
+	 * @param userId the user ID
+	 * @param start the lower bound of the range of depot entry pins
+	 * @param end the upper bound of the range of depot entry pins (not inclusive)
+	 * @return the range of matching depot entry pins
+	 */
+	public static List<DepotEntryPin> findByUserId(
+		long userId, int start, int end) {
+
+		return getPersistence().findByUserId(userId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the depot entry pins where userId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.depot.model.impl.DepotEntryPinModelImpl</code>.
+	 * </p>
+	 *
+	 * @param userId the user ID
+	 * @param start the lower bound of the range of depot entry pins
+	 * @param end the upper bound of the range of depot entry pins (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching depot entry pins
+	 */
+	public static List<DepotEntryPin> findByUserId(
+		long userId, int start, int end,
+		OrderByComparator<DepotEntryPin> orderByComparator) {
+
+		return getPersistence().findByUserId(
+			userId, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns all the depot entry pins where depotEntryId = &#63;.
+	 *
+	 * @param depotEntryId the depot entry ID
+	 * @return the matching depot entry pins
+	 */
+	public static List<DepotEntryPin> findByDepotEntryId(long depotEntryId) {
+		return getPersistence().findByDepotEntryId(depotEntryId);
+	}
+
+	/**
+	 * Returns a range of all the depot entry pins where depotEntryId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.depot.model.impl.DepotEntryPinModelImpl</code>.
+	 * </p>
+	 *
+	 * @param depotEntryId the depot entry ID
+	 * @param start the lower bound of the range of depot entry pins
+	 * @param end the upper bound of the range of depot entry pins (not inclusive)
+	 * @return the range of matching depot entry pins
+	 */
+	public static List<DepotEntryPin> findByDepotEntryId(
+		long depotEntryId, int start, int end) {
+
+		return getPersistence().findByDepotEntryId(depotEntryId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the depot entry pins where depotEntryId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.depot.model.impl.DepotEntryPinModelImpl</code>.
+	 * </p>
+	 *
+	 * @param depotEntryId the depot entry ID
+	 * @param start the lower bound of the range of depot entry pins
+	 * @param end the upper bound of the range of depot entry pins (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching depot entry pins
+	 */
+	public static List<DepotEntryPin> findByDepotEntryId(
+		long depotEntryId, int start, int end,
+		OrderByComparator<DepotEntryPin> orderByComparator) {
+
+		return getPersistence().findByDepotEntryId(
+			depotEntryId, start, end, orderByComparator);
 	}
 
 	public static DepotEntryPinPersistence getPersistence() {
@@ -1082,3 +804,4 @@ public class DepotEntryPinUtil {
 	private static volatile DepotEntryPinPersistence _persistence;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-1142547741

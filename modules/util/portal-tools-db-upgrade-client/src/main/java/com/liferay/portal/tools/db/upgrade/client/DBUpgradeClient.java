@@ -17,6 +17,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectOutputStream;
 
+import java.lang.management.ManagementFactory;
+import java.lang.management.RuntimeMXBean;
+
 import java.net.InetAddress;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -28,12 +31,19 @@ import java.nio.file.Paths;
 import java.security.CodeSource;
 import java.security.ProtectionDomain;
 
+import java.text.SimpleDateFormat;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
+import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -110,9 +120,16 @@ public class DBUpgradeClient {
 			if (logFile.exists()) {
 				String logFileName = logFile.getName();
 
+				SimpleDateFormat simpleDateFormat = new SimpleDateFormat(
+					"yyyyMMdd_HHmmss", Locale.US);
+
+				simpleDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+				String timestamp = simpleDateFormat.format(
+					new Date(logFile.lastModified()));
+
 				logFile.renameTo(
-					new File(
-						logDir, logFileName + "." + logFile.lastModified()));
+					new File(logDir, logFileName + "." + timestamp));
 
 				logFile = new File(logDir, logFileName);
 			}
@@ -206,9 +223,7 @@ public class DBUpgradeClient {
 
 		Map<String, String> environment = processBuilder.environment();
 
-		if (_isGTJDK8()) {
-			environment.put("JDK_JAVA_OPTIONS", _buildJDKJavaOptions());
-		}
+		environment.put("JDK_JAVA_OPTIONS", _buildJDKJavaOptions());
 
 		Process process = processBuilder.start();
 
@@ -216,8 +231,10 @@ public class DBUpgradeClient {
 
 		try (ObjectOutputStream bootstrapObjectOutputStream =
 				new ObjectOutputStream(process.getOutputStream());
+
 			InputStreamReader inputStreamReader = new InputStreamReader(
 				process.getInputStream());
+
 			BufferedReader bufferedReader = new BufferedReader(
 				inputStreamReader)) {
 
@@ -395,18 +412,30 @@ public class DBUpgradeClient {
 	}
 
 	private String _buildJDKJavaOptions() {
-		StringBuilder sb = new StringBuilder();
+		Set<String> jdkOptions = new LinkedHashSet<>(_reflectionOpens);
 
-		for (String reflectionOpen : _reflectionOpens) {
-			sb.append(reflectionOpen);
-			sb.append(' ');
+		RuntimeMXBean runtimeMXBean = ManagementFactory.getRuntimeMXBean();
+
+		List<String> inputArguments = runtimeMXBean.getInputArguments();
+
+		for (int i = 0; i < inputArguments.size(); i++) {
+			String inputArgument = inputArguments.get(i);
+
+			if (inputArgument.startsWith("--add-opens=")) {
+				jdkOptions.add(inputArgument);
+			}
+			else if (inputArgument.equals("--add-opens")) {
+				if ((i + 1) < inputArguments.size()) {
+					String nextInputArgument = inputArguments.get(i + 1);
+
+					jdkOptions.add(inputArgument + "=" + nextInputArgument);
+
+					i++;
+				}
+			}
 		}
 
-		if (!_reflectionOpens.isEmpty()) {
-			sb.setLength(sb.length() - 1);
-		}
-
-		return sb.toString();
+		return String.join(" ", jdkOptions);
 	}
 
 	private void _close(Closeable closeable) throws IOException {
@@ -508,19 +537,6 @@ public class DBUpgradeClient {
 
 	private boolean _isEmpty(String value) {
 		if ((value == null) || value.isEmpty()) {
-			return true;
-		}
-
-		return false;
-	}
-
-	private boolean _isGTJDK8() {
-		String javaVersion = System.getProperty("java.version");
-
-		int majorVersion = Integer.parseInt(
-			javaVersion.substring(0, javaVersion.indexOf('.')));
-
-		if (majorVersion > 8) {
 			return true;
 		}
 
@@ -783,19 +799,20 @@ public class DBUpgradeClient {
 				}
 			}
 
+			File dir = _appServer.getDir();
+
 			String appServerDirName = _requestDirName(
 				true,
 				new File(
 					_portalUpgradeExtProperties.getProperty("liferay.home")),
-				_appServer.getDir(
-				).getPath(),
+				dir.getPath(),
 				"Please enter your application server directory");
 
 			if (appServerDirName != null) {
 				_appServer.setDirName(appServerDirName);
-			}
 
-			File dir = _appServer.getDir();
+				dir = _appServer.getDir();
+			}
 
 			String extraLibDirNames = _requestDirNames(
 				false, dir, _appServer.getExtraLibDirNames(),
@@ -825,7 +842,6 @@ public class DBUpgradeClient {
 			}
 
 			_appServerProperties.setProperty("dir", dir.getCanonicalPath());
-
 			_appServerProperties.setProperty(
 				"extra.lib.dirs", _appServer.getExtraLibDirNames());
 			_appServerProperties.setProperty(

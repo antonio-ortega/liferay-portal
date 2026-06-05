@@ -5,12 +5,12 @@
 
 package com.liferay.portal.image;
 
+import com.liferay.petra.io.unsync.UnsyncByteArrayOutputStream;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.exception.ImageResolutionException;
 import com.liferay.portal.kernel.image.CMYKImageTool;
 import com.liferay.portal.kernel.image.ImageBag;
-import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayOutputStream;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Image;
@@ -288,6 +288,32 @@ public class ImageToolUtil {
 		return unsyncByteArrayOutputStream.toByteArray();
 	}
 
+	public static Image getDefaultCompanyGroupLogo() {
+		if (_defaultCompanyGroupLogo != null) {
+			return _defaultCompanyGroupLogo;
+		}
+
+		ClassLoader classLoader = ImageToolUtil.class.getClassLoader();
+
+		try {
+			InputStream inputStream = classLoader.getResourceAsStream(
+				PropsUtil.get(PropsKeys.IMAGE_DEFAULT_COMPANY_GROUP_LOGO));
+
+			if (inputStream == null) {
+				_log.error("Default company group logo is not available");
+			}
+
+			_defaultCompanyGroupLogo = getImage(inputStream);
+		}
+		catch (Exception exception) {
+			_log.error(
+				"Unable to configure the default company group logo: " +
+					exception.getMessage());
+		}
+
+		return _defaultCompanyGroupLogo;
+	}
+
 	public static Image getDefaultCompanyLogo() {
 		if (_defaultCompanyLogo != null) {
 			return _defaultCompanyLogo;
@@ -352,6 +378,32 @@ public class ImageToolUtil {
 		}
 
 		return _defaultCompanyLogo;
+	}
+
+	public static Image getDefaultLiferayLogo() {
+		if (_defaultLiferayLogo != null) {
+			return _defaultLiferayLogo;
+		}
+
+		ClassLoader classLoader = ImageToolUtil.class.getClassLoader();
+
+		try {
+			InputStream inputStream = classLoader.getResourceAsStream(
+				"com/liferay/portal/dependencies/liferay_logo.png");
+
+			if (inputStream == null) {
+				_log.error("Default liferay logo is not available");
+			}
+
+			_defaultLiferayLogo = getImage(inputStream);
+		}
+		catch (Exception exception) {
+			_log.error(
+				"Unable to configure the default liferay logo: " +
+					exception.getMessage());
+		}
+
+		return _defaultLiferayLogo;
 	}
 
 	public static Image getDefaultOrganizationLogo() {
@@ -964,7 +1016,9 @@ public class ImageToolUtil {
 
 	private static final Snapshot<CMYKImageTool> _cmykImageToolSnapshot =
 		new Snapshot<>(ImageToolUtil.class, CMYKImageTool.class);
+	private static Image _defaultCompanyGroupLogo;
 	private static Image _defaultCompanyLogo;
+	private static Image _defaultLiferayLogo;
 	private static Image _defaultOrganizationLogo;
 	private static Image _defaultSpacer;
 	private static Image _defaultUserFemalePortrait;

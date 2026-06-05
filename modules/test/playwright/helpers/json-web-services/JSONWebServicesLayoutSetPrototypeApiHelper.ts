@@ -7,6 +7,7 @@ import {liferayConfig} from '../../liferay.config';
 import {ApiHelpers} from '../ApiHelpers';
 
 export type LayoutSetPrototype = {
+	active: boolean;
 	companyId: string;
 	layoutSetPrototypeId: string;
 	nameCurrentValue: string;
@@ -79,7 +80,6 @@ export class JSONWebServicesLayoutSetPrototypeApiHelper {
 			'layoutsUpdateable',
 			layoutsUpdateable.toString()
 		);
-		urlSearchParams.append('readyForPropagation', booleanTrue.toString());
 
 		return this.apiHelpers.post(
 			`${url}${this.basePath}/add-layout-set-prototype`,

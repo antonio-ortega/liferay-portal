@@ -11,7 +11,11 @@ import {HTML5Backend} from 'react-dnd-html5-backend';
 
 import {FocusWithinProvider} from '../aria';
 import {ChildrenFunction, Collection, ICollectionProps} from './Collection';
-import {DragAndDropMessages, DragAndDropProvider} from './DragAndDrop';
+import {
+	DragAndDropMessages,
+	DragAndDropProvider,
+	Position,
+} from './DragAndDrop';
 import DragLayer from './DragLayer';
 import {Group} from './TreeViewGroup';
 import {Item, ItemStack} from './TreeViewItem';
@@ -42,6 +46,19 @@ interface ITreeViewProps<T extends Record<string, any>>
 	 * on the same page.
 	 */
 	dragAndDropContext?: Window & typeof globalThis;
+
+	/**
+	 * Flag changes the behavior of Drag and Drop functionality.
+	 * - single: allows dragging only one node.
+	 * - multiple: several nodes can be dragged at once.
+	 */
+
+	dragAndDropMode?: 'multiple' | 'single';
+
+	/**
+	 * Flag to control drag handler visibility.
+	 */
+	dragHandlerVisibility?: 'keyboard' | 'visible';
 
 	/**
 	 * Flag to expand the node's children when double-clicking the node.
@@ -76,15 +93,37 @@ interface ITreeViewProps<T extends Record<string, any>>
 	messages?: DragAndDropMessages;
 
 	/**
+	 * Callback called when the user activates an item with the Enter key.
+	 * When provided, it replaces the default Enter behavior (which otherwise
+	 * toggles selection). Use this to wire up application-specific actions
+	 * such as opening the item, navigating, or triggering a custom command.
+	 */
+	onItemActivate?: (item: T) => void;
+
+	/**
 	 * The callback is called whenever there is an item dragging over
 	 * another item.
 	 */
-	onItemHover?: (item: T, parentItem: T, index: MoveItemIndex) => boolean;
+	onItemHover?: (
+		items: T | Set<React.Key>,
+		parentItem: T,
+		index: MoveItemIndex,
+		position: Position
+	) => boolean;
+
+	/**
+	 * Callback is called when an item move is rejected.
+	 */
+	onItemInvalidMove?: () => void;
 
 	/**
 	 * Callback is called when an item is about to be moved elsewhere in the tree.
 	 */
-	onItemMove?: (item: T, parentItem: T, index: MoveItemIndex) => boolean;
+	onItemMove?: (
+		items: T | Set<React.Key>,
+		parentItem: T,
+		index: MoveItemIndex
+	) => boolean;
 
 	/**
 	 * When a tree is very large, loading items (nodes) asynchronously is preferred to
@@ -117,6 +156,11 @@ interface ITreeViewProps<T extends Record<string, any>>
 	 * Flag to indicate if the TreeView will show the expander in the hover in the Node.
 	 */
 	showExpanderOnHover?: boolean;
+
+	/**
+	 * Path to the spritemap that Icon should use when referencing symbols.
+	 */
+	spritemap?: string;
 }
 
 const focusableElements = ['.treeview-link[tabindex]'];
@@ -134,6 +178,8 @@ export function TreeView<T extends Record<string, any>>({
 	displayType = 'light',
 	dragAndDrop = false,
 	dragAndDropContext = window,
+	dragAndDropMode = 'single',
+	dragHandlerVisibility = 'visible',
 	expandDoubleClick = false,
 	expandedKeys,
 	expanderClassName,
@@ -145,7 +191,9 @@ export function TreeView<T extends Record<string, any>>({
 	messages,
 	nestedKey = 'children',
 	onExpandedChange,
+	onItemActivate,
 	onItemHover,
+	onItemInvalidMove,
 	onItemMove,
 	onItemsChange,
 	onLoadMore,
@@ -155,6 +203,7 @@ export function TreeView<T extends Record<string, any>>({
 	selectedKeys,
 	selectionHydrationMode = 'hydrate-first',
 	selectionMode = 'single',
+	spritemap,
 	showExpanderOnHover = true,
 	...otherProps
 }: ITreeViewProps<T>) {
@@ -185,12 +234,17 @@ export function TreeView<T extends Record<string, any>>({
 	const context = {
 		childrenRoot: childrenRootRef,
 		dragAndDrop,
+		dragAndDropMode,
+		dragHandlerVisibility,
 		expandDoubleClick,
 		expandOnCheck,
 		expanderClassName,
 		expanderIcons,
+		itemNameKey,
 		nestedKey,
+		onItemActivate,
 		onItemHover,
+		onItemInvalidMove,
 		onItemMove,
 		onLoadMore,
 		onRenameItem,
@@ -239,6 +293,7 @@ export function TreeView<T extends Record<string, any>>({
 						<TreeViewContext.Provider value={context}>
 							<DragAndDropProvider<T>
 								messages={messages}
+								mode={dragAndDropMode}
 								nestedKey={nestedKey}
 								onItemHover={onItemHover}
 								onItemMove={onItemMove}
@@ -252,7 +307,7 @@ export function TreeView<T extends Record<string, any>>({
 										{children}
 									</Collection>
 
-									<DragLayer itemNameKey={itemNameKey} />
+									<DragLayer spritemap={spritemap} />
 								</FocusWithinProvider>
 							</DragAndDropProvider>
 						</TreeViewContext.Provider>

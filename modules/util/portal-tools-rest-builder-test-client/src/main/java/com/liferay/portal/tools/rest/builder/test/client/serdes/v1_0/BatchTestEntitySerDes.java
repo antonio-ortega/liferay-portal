@@ -46,6 +46,16 @@ public class BatchTestEntitySerDes {
 
 		sb.append("{");
 
+		if (batchTestEntity.getAcceptAllLanguages() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"acceptAllLanguages\": ");
+
+			sb.append(batchTestEntity.getAcceptAllLanguages());
+		}
+
 		if (batchTestEntity.getCustomFields() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -148,6 +158,15 @@ public class BatchTestEntitySerDes {
 
 		Map<String, String> map = new TreeMap<>();
 
+		if (batchTestEntity.getAcceptAllLanguages() == null) {
+			map.put("acceptAllLanguages", null);
+		}
+		else {
+			map.put(
+				"acceptAllLanguages",
+				String.valueOf(batchTestEntity.getAcceptAllLanguages()));
+		}
+
 		if (batchTestEntity.getCustomFields() == null) {
 			map.put("customFields", null);
 		}
@@ -216,7 +235,10 @@ public class BatchTestEntitySerDes {
 
 		@Override
 		protected boolean parseMaps(String jsonParserFieldName) {
-			if (Objects.equals(jsonParserFieldName, "customFields")) {
+			if (Objects.equals(jsonParserFieldName, "acceptAllLanguages")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "customFields")) {
 				return false;
 			}
 			else if (Objects.equals(
@@ -247,7 +269,13 @@ public class BatchTestEntitySerDes {
 			BatchTestEntity batchTestEntity, String jsonParserFieldName,
 			Object jsonParserFieldValue) {
 
-			if (Objects.equals(jsonParserFieldName, "customFields")) {
+			if (Objects.equals(jsonParserFieldName, "acceptAllLanguages")) {
+				if (jsonParserFieldValue != null) {
+					batchTestEntity.setAcceptAllLanguages(
+						(Boolean)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "customFields")) {
 				if (jsonParserFieldValue != null) {
 					Object[] jsonParserFieldValues =
 						(Object[])jsonParserFieldValue;
@@ -383,3 +411,4 @@ public class BatchTestEntitySerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-527591277

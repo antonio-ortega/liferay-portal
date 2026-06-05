@@ -55,6 +55,16 @@ export const liferay = {
 		return documentPath;
 	},
 
+	getMissingEnvVars: () => {
+		const required = [
+			'LIFERAY_CONTENT_PATH',
+			'LIFERAY_HOST',
+			'LIFERAY_SPACE_ID',
+		];
+
+		return required.filter((key) => !process.env[key]);
+	},
+
 	getSupportedLanguages: () => {
 		return LIFERAY_LANGUAGES.split(',');
 	},

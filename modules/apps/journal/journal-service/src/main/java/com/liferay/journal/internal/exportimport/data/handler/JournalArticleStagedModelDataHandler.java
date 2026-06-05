@@ -16,7 +16,9 @@ import com.liferay.changeset.service.ChangesetCollectionLocalService;
 import com.liferay.changeset.service.ChangesetEntryLocalService;
 import com.liferay.document.library.kernel.exception.NoSuchFileException;
 import com.liferay.document.library.kernel.model.DLFileEntry;
+import com.liferay.document.library.kernel.model.DLFolder;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
+import com.liferay.document.library.kernel.service.DLFolderLocalService;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.model.DDMTemplate;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
@@ -86,7 +88,6 @@ import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.StreamUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.SubscriptionSender;
 import com.liferay.portal.kernel.util.Validator;
@@ -95,6 +96,7 @@ import com.liferay.portal.kernel.xml.Element;
 import com.liferay.portlet.documentlibrary.lar.FileEntryUtil;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 
 import java.util.Calendar;
@@ -870,7 +872,14 @@ public class JournalArticleStagedModelDataHandler
 						}
 					}
 					finally {
-						StreamUtil.cleanUp(true, inputStream);
+						try {
+							inputStream.close();
+						}
+						catch (IOException ioException) {
+							if (_log.isWarnEnabled()) {
+								_log.warn(ioException);
+							}
+						}
 					}
 				}
 			}
@@ -1162,6 +1171,10 @@ public class JournalArticleStagedModelDataHandler
 			finally {
 				ServiceContextThreadLocal.popServiceContext();
 			}
+
+			_renameDLFolder(
+				importedArticle.getGroupId(), article.getResourcePrimKey(),
+				importedArticle.getResourcePrimKey(), serviceContext);
 
 			portletDataContext.importClassedModel(article, importedArticle);
 		}
@@ -1536,6 +1549,59 @@ public class JournalArticleStagedModelDataHandler
 		return false;
 	}
 
+	private void _renameDLFolder(
+		long groupId, long existingResourcePrimKey, long newResourcePrimKey,
+		ServiceContext serviceContext) {
+
+		if (existingResourcePrimKey == newResourcePrimKey) {
+			return;
+		}
+
+		try {
+			DLFolder dlFolder = _dlFolderLocalService.fetchFolder(
+				groupId, JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+				JournalConstants.RESOURCE_NAME);
+
+			if (dlFolder == null) {
+				if (_log.isWarnEnabled()) {
+					_log.warn(
+						"Unable to get document library folder for group " +
+							groupId);
+				}
+
+				return;
+			}
+
+			DLFolder newDLFolder = _dlFolderLocalService.fetchFolder(
+				groupId, dlFolder.getFolderId(),
+				String.valueOf(newResourcePrimKey));
+
+			if (newDLFolder != null) {
+				return;
+			}
+
+			DLFolder existingDLFolder = _dlFolderLocalService.fetchFolder(
+				groupId, dlFolder.getFolderId(),
+				String.valueOf(existingResourcePrimKey));
+
+			if (existingDLFolder != null) {
+				_dlAppLocalService.updateFolder(
+					existingDLFolder.getFolderId(),
+					existingDLFolder.getParentFolderId(),
+					String.valueOf(newResourcePrimKey),
+					existingDLFolder.getDescription(), serviceContext);
+			}
+		}
+		catch (Exception exception) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(
+					"Unable to rename document library folder for article " +
+						newResourcePrimKey,
+					exception);
+			}
+		}
+	}
+
 	private void _sendUndeliveredUserNotificationEvents(
 		JournalArticle article, JournalArticle importedArticle,
 		ServiceContext serviceContext) {
@@ -1777,6 +1843,9 @@ public class JournalArticleStagedModelDataHandler
 
 	@Reference
 	private DLAppLocalService _dlAppLocalService;
+
+	@Reference
+	private DLFolderLocalService _dlFolderLocalService;
 
 	@Reference(target = "(content.processor.type=DLReferences)")
 	private ExportImportContentProcessor<String>

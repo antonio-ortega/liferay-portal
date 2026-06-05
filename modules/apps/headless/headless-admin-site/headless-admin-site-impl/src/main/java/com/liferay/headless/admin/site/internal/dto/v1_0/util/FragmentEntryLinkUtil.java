@@ -10,6 +10,9 @@ import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.processor.DefaultFragmentEntryProcessorContext;
 import com.liferay.fragment.processor.FragmentEntryProcessorRegistry;
 import com.liferay.layout.util.LayoutServiceContextHelperUtil;
+import com.liferay.portal.kernel.json.JSONFactoryUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -57,14 +60,10 @@ public class FragmentEntryLinkUtil {
 				return fragmentEntryLink.getHtml();
 			}
 
-			String editableValues = fragmentEntryLink.getEditableValues();
-
-			fragmentEntryLink.setEditableValues(null);
-
 			try {
 				return fragmentEntryProcessorRegistry.
 					processFragmentEntryLinkHTML(
-						fragmentEntryLink,
+						JSONFactoryUtil.createJSONObject(), fragmentEntryLink,
 						new DefaultFragmentEntryProcessorContext(
 							fragmentEntryLink.getCompanyId(),
 							httpServletRequest, httpServletResponse,
@@ -72,10 +71,17 @@ public class FragmentEntryLinkUtil {
 							FragmentEntryLinkConstants.EDIT,
 							fragmentEntryLink.getGroupId()));
 			}
-			finally {
-				fragmentEntryLink.setEditableValues(editableValues);
+			catch (Throwable throwable) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(throwable);
+				}
+
+				return fragmentEntryLink.getHtml();
 			}
 		}
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		FragmentEntryLinkUtil.class);
 
 }

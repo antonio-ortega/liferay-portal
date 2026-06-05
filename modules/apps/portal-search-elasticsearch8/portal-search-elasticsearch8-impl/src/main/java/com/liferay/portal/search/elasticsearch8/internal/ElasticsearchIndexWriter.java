@@ -15,12 +15,11 @@ import com.liferay.portal.kernel.search.BooleanQuery;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.IndexWriter;
-import com.liferay.portal.kernel.search.ParseException;
+import com.liferay.portal.kernel.search.MatchAllQuery;
+import com.liferay.portal.kernel.search.ReindexCacheThreadLocal;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.filter.BooleanFilter;
 import com.liferay.portal.kernel.search.filter.TermFilter;
-import com.liferay.portal.kernel.search.generic.BooleanQueryImpl;
-import com.liferay.portal.kernel.search.generic.MatchAllQuery;
 import com.liferay.portal.kernel.search.suggest.SpellCheckIndexWriter;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.util.PortalRunMode;
@@ -209,7 +208,7 @@ public class ElasticsearchIndexWriter extends BaseIndexWriter {
 
 		for (String indexName : _getIndexNames(searchContext)) {
 			try {
-				BooleanQuery booleanQuery = new BooleanQueryImpl();
+				BooleanQuery booleanQuery = new BooleanQuery();
 
 				booleanQuery.add(new MatchAllQuery(), BooleanClauseOccur.MUST);
 
@@ -231,9 +230,6 @@ public class ElasticsearchIndexWriter extends BaseIndexWriter {
 				}
 
 				_searchEngineAdapter.execute(deleteByQueryDocumentRequest);
-			}
-			catch (ParseException parseException) {
-				throw new SystemException(parseException);
 			}
 			catch (RuntimeException runtimeException) {
 				if (_elasticsearchConfigurationWrapper.logExceptionsOnly()) {
@@ -367,16 +363,21 @@ public class ElasticsearchIndexWriter extends BaseIndexWriter {
 			bulkDocumentRequest.setRefresh(true);
 		}
 
+		boolean fullMode = ReindexCacheThreadLocal.isFullMode();
+
 		for (String indexName : _getIndexNames(searchContext)) {
 			documents.forEach(
 				document -> {
-					DeleteDocumentRequest deleteDocumentRequest =
-						new DeleteDocumentRequest(indexName, document.getUID());
+					if (!fullMode) {
+						DeleteDocumentRequest deleteDocumentRequest =
+							new DeleteDocumentRequest(
+								indexName, document.getUID());
 
-					deleteDocumentRequest.setType(DocumentTypes.LIFERAY);
+						deleteDocumentRequest.setType(DocumentTypes.LIFERAY);
 
-					bulkDocumentRequest.addBulkableDocumentRequest(
-						deleteDocumentRequest);
+						bulkDocumentRequest.addBulkableDocumentRequest(
+							deleteDocumentRequest);
+					}
 
 					IndexDocumentRequest indexDocumentRequest =
 						new IndexDocumentRequest(indexName, document);
@@ -391,7 +392,9 @@ public class ElasticsearchIndexWriter extends BaseIndexWriter {
 		BulkDocumentResponse bulkDocumentResponse =
 			_searchEngineAdapter.execute(bulkDocumentRequest);
 
-		if (bulkDocumentResponse.hasErrors()) {
+		if ((bulkDocumentResponse != null) &&
+			bulkDocumentResponse.hasErrors()) {
+
 			if (_elasticsearchConfigurationWrapper.logExceptionsOnly()) {
 				_log.error("Bulk update failed");
 			}

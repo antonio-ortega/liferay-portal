@@ -34,6 +34,8 @@ import com.liferay.notification.constants.NotificationRecipientSettingConstants;
 import com.liferay.notification.constants.NotificationTemplateConstants;
 import com.liferay.notification.context.NotificationContext;
 import com.liferay.notification.model.NotificationQueueEntry;
+import com.liferay.notification.model.NotificationRecipient;
+import com.liferay.notification.model.NotificationRecipientSetting;
 import com.liferay.notification.model.NotificationTemplate;
 import com.liferay.notification.service.NotificationQueueEntryLocalService;
 import com.liferay.notification.service.NotificationRecipientLocalServiceUtil;
@@ -87,6 +89,8 @@ import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
+import com.liferay.portal.kernel.events.Action;
+import com.liferay.portal.kernel.events.LifecycleAction;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
@@ -99,7 +103,6 @@ import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.role.RoleConstants;
-import com.liferay.portal.kernel.security.auth.Authenticator;
 import com.liferay.portal.kernel.security.auth.CompanyInheritableThreadLocalCallable;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
@@ -141,6 +144,7 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.SystemProperties;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
+import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.kernel.workflow.WorkflowTask;
 import com.liferay.portal.kernel.workflow.WorkflowTaskManager;
@@ -159,6 +163,8 @@ import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.portal.test.rule.SynchronousMailTestRule;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.io.Closeable;
 import java.io.Serializable;
@@ -191,6 +197,9 @@ import org.junit.runner.RunWith;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
+
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
 
 /**
  * @author Brian Wing Shun Chan
@@ -385,15 +394,60 @@ public class ObjectActionLocalServiceTest {
 			notificationQueueEntries.toString(), 3,
 			notificationQueueEntries.size());
 
+		// User system object definition
+
+		ObjectDefinition userObjectDefinition =
+			_objectDefinitionLocalService.fetchObjectDefinitionByClassName(
+				TestPropsValues.getCompanyId(), User.class.getName());
+
+		// Add object action to send an email notification after adding a user
+
+		ObjectAction objectAction3 = _addNotificationTemplateObjectAction(
+			ObjectActionTriggerConstants.KEY_ON_AFTER_ADD, userObjectDefinition,
+			"[%USER_EMAILADDRESS%]");
+
+		User user = UserTestUtil.addUser();
+
+		notificationQueueEntries =
+			_notificationQueueEntryLocalService.getNotificationEntries(
+				NotificationConstants.TYPE_EMAIL,
+				NotificationQueueEntryConstants.STATUS_SENT);
+
+		Assert.assertEquals(
+			notificationQueueEntries.toString(), 4,
+			notificationQueueEntries.size());
+
+		NotificationQueueEntry notificationQueueEntry =
+			notificationQueueEntries.get(3);
+
+		NotificationRecipient notificationRecipient =
+			notificationQueueEntry.getNotificationRecipient();
+
+		for (NotificationRecipientSetting notificationRecipientSetting :
+				notificationRecipient.getNotificationRecipientSettings()) {
+
+			if (Objects.equals(
+					notificationRecipientSetting.getName(),
+					NotificationRecipientSettingConstants.NAME_TO)) {
+
+				Assert.assertEquals(
+					user.getEmailAddress(),
+					notificationRecipientSetting.getValue());
+			}
+		}
+
 		_notificationQueueEntryLocalService.deleteNotificationQueueEntry(
 			notificationQueueEntries.get(0));
 		_notificationQueueEntryLocalService.deleteNotificationQueueEntry(
 			notificationQueueEntries.get(1));
 		_notificationQueueEntryLocalService.deleteNotificationQueueEntry(
 			notificationQueueEntries.get(2));
+		_notificationQueueEntryLocalService.deleteNotificationQueueEntry(
+			notificationQueueEntries.get(3));
 
 		_objectActionLocalService.deleteObjectAction(objectAction1);
 		_objectActionLocalService.deleteObjectAction(objectAction2);
+		_objectActionLocalService.deleteObjectAction(objectAction3);
 	}
 
 	@Test
@@ -793,14 +847,22 @@ public class ObjectActionLocalServiceTest {
 			Assert.assertEquals(
 				"2023-06-01 06:42:08.0", MapUtil.getString(values, "time"));
 
+			_assertWebhookObjectAction(
+				"2000-12-25T00:00:00.000Z", "Peter", "White",
+				ObjectActionTriggerConstants.KEY_ON_AFTER_UPDATE,
+				_objectDefinition, "João", "o Discípulo Amado",
+				WorkflowConstants.STATUS_APPROVED);
+
 			// Execute standalone system action to update the current object
 			// entry
+
+			String firstName = RandomTestUtil.randomString();
 
 			objectEntry = _objectEntryLocalService.partialUpdateObjectEntry(
 				TestPropsValues.getUserId(), objectEntry.getObjectEntryId(),
 				objectEntry.getObjectEntryFolderId(),
 				HashMapBuilder.<String, Serializable>put(
-					"firstName", RandomTestUtil.randomString()
+					"firstName", firstName
 				).build(),
 				ServiceContextTestUtil.getServiceContext());
 
@@ -817,6 +879,12 @@ public class ObjectActionLocalServiceTest {
 				objectEntry.getObjectEntryId());
 
 			Assert.assertEquals("Jack", MapUtil.getString(values, "firstName"));
+
+			_assertWebhookObjectAction(
+				"2000-12-25T00:00:00.000Z", "Jack", "White",
+				ObjectActionTriggerConstants.KEY_ON_AFTER_UPDATE,
+				_objectDefinition, firstName, "White",
+				WorkflowConstants.STATUS_APPROVED);
 
 			// Delete object entry
 
@@ -1319,23 +1387,24 @@ public class ObjectActionLocalServiceTest {
 		Date expirationDate = cpDefinition.getExpirationDate();
 
 		_cpDefinitionLocalService.updateCPDefinition(
-			cpDefinition.getCPDefinitionId(), cpDefinition.getNameMap(),
-			cpDefinition.getShortDescriptionMap(),
-			cpDefinition.getDescriptionMap(), cpDefinition.getUrlTitleMap(),
-			cpDefinition.getMetaTitleMap(),
+			cpDefinition.getCPDefinitionId(), cpDefinition.getCPTaxCategoryId(),
+			cpDefinition.isAccountGroupFilterEnabled(),
+			cpDefinition.isChannelFilterEnabled(),
+			cpDefinition.getDDMStructureKey(), cpDefinition.getDepth(),
+			cpDefinition.getDescriptionMap(), displayDate.getDate(),
+			displayDate.getHours(), displayDate.getMinutes(),
+			displayDate.getMonth(), displayDate.getYear(),
+			expirationDate.getDate(), expirationDate.getHours(),
+			expirationDate.getMinutes(), expirationDate.getMonth(),
+			expirationDate.getYear(), true, cpDefinition.getHeight(),
+			cpDefinition.isIgnoreSKUCombinations(),
 			cpDefinition.getMetaDescriptionMap(),
-			cpDefinition.getMetaKeywordsMap(),
-			cpDefinition.isIgnoreSKUCombinations(), true, true, true,
-			cpDefinition.getShippingExtraPrice(), cpDefinition.getWidth(),
-			cpDefinition.getHeight(), cpDefinition.getDepth(),
-			cpDefinition.getWeight(), cpDefinition.getCPTaxCategoryId(),
-			cpDefinition.isTaxExempt(), cpDefinition.isTelcoOrElectronics(),
-			cpDefinition.getDDMStructureKey(), cpDefinition.isPublished(),
-			displayDate.getMonth(), displayDate.getDate(),
-			displayDate.getYear(), displayDate.getHours(),
-			displayDate.getMinutes(), expirationDate.getMonth(),
-			expirationDate.getDate(), expirationDate.getYear(),
-			expirationDate.getHours(), expirationDate.getMinutes(), true,
+			cpDefinition.getMetaKeywordsMap(), cpDefinition.getMetaTitleMap(),
+			cpDefinition.getNameMap(), true, cpDefinition.isPublished(), true,
+			true, cpDefinition.getShippingExtraPrice(),
+			cpDefinition.getShortDescriptionMap(), cpDefinition.isTaxExempt(),
+			cpDefinition.isTelcoOrElectronics(), cpDefinition.getUrlTitleMap(),
+			cpDefinition.getWeight(), cpDefinition.getWidth(),
 			ServiceContextTestUtil.getServiceContext());
 
 		Assert.assertEquals(
@@ -2027,11 +2096,12 @@ public class ObjectActionLocalServiceTest {
 
 		Assert.assertEquals(0, _argumentsList.size());
 
-		int authResult = _userLocalService.authenticateByUserId(
-			TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
-			TestPropsValues.USER_PASSWORD, null, null, null);
+		HttpServletRequest httpServletRequest = new MockHttpServletRequest();
 
-		Assert.assertEquals(Authenticator.SUCCESS, authResult);
+		httpServletRequest.setAttribute(
+			WebKeys.USER_ID, TestPropsValues.getUserId());
+
+		_loginPostAction.run(httpServletRequest, new MockHttpServletResponse());
 
 		Assert.assertEquals(1, _argumentsList.size());
 
@@ -2069,11 +2139,16 @@ public class ObjectActionLocalServiceTest {
 			JSONUtil.getValue(
 				payloadJSONObject, "JSONObject/modelUser", "Object/lastName"));
 
-		authResult = _userLocalService.authenticateByUserId(
-			TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
-			RandomTestUtil.randomString(), null, null, null);
+		httpServletRequest.setAttribute(
+			WebKeys.USER_ID, RandomTestUtil.randomLong());
 
-		Assert.assertEquals(Authenticator.FAILURE, authResult);
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				"com.liferay.user.internal.events.LoginPostAction",
+				LoggerTestUtil.DEBUG)) {
+
+			_loginPostAction.run(
+				httpServletRequest, new MockHttpServletResponse());
+		}
 
 		Assert.assertEquals(0, _argumentsList.size());
 
@@ -2085,6 +2160,7 @@ public class ObjectActionLocalServiceTest {
 		throws Exception {
 
 		_testExecuteObjectActionMultipleTimesInTheSameThreadWithACustomObjectDefinition();
+		_testExecuteObjectActionMultipleTimesInTheSameThreadWithAStandaloneObjectAction();
 		_testExecuteObjectActionMultipleTimesInTheSameThreadWithASystemObjectDefinition();
 	}
 
@@ -2773,7 +2849,8 @@ public class ObjectActionLocalServiceTest {
 							).name(
 								ObjectFieldSettingConstants.NAME_FILE_SOURCE
 							).value(
-								ObjectFieldSettingConstants.VALUE_USER_COMPUTER
+								ObjectFieldSettingConstants.
+									VALUE_USER_COMPUTER_TO_DOCS_AND_MEDIA
 							).build(),
 							new ObjectFieldSettingBuilder(
 							).name(
@@ -2994,7 +3071,7 @@ public class ObjectActionLocalServiceTest {
 			TestPropsValues.getUserId(),
 			objectDefinition.getObjectDefinitionId(), body,
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
-			RandomTestUtil.randomString());
+			RandomTestUtil.randomString(), "[%CURRENT_USER_EMAIL_ADDRESS%]");
 
 		_addObjectAction(
 			objectDefinition.getObjectDefinitionId(),
@@ -3228,7 +3305,7 @@ public class ObjectActionLocalServiceTest {
 
 	private NotificationTemplate _addNotificationTemplate(
 			long userId, long objectDefinitionId, String body,
-			String description, String name, String subject)
+			String description, String name, String subject, String to)
 		throws Exception {
 
 		NotificationTemplate notificationTemplate =
@@ -3269,8 +3346,7 @@ public class ObjectActionLocalServiceTest {
 						Collections.singletonMap(
 							LocaleUtil.US, "[%CURRENT_USER_FIRST_NAME%]")),
 				NotificationRecipientSettingUtil.
-					createNotificationRecipientSetting(
-						"to", "[%CURRENT_USER_EMAIL_ADDRESS%]")));
+					createNotificationRecipientSetting("to", to)));
 		notificationContext.setNotificationTemplate(notificationTemplate);
 		notificationContext.setType(NotificationConstants.TYPE_EMAIL);
 
@@ -3282,11 +3358,21 @@ public class ObjectActionLocalServiceTest {
 			String objectActionTriggerKey, ObjectDefinition objectDefinition)
 		throws Exception {
 
+		return _addNotificationTemplateObjectAction(
+			objectActionTriggerKey, objectDefinition,
+			"[%CURRENT_USER_EMAIL_ADDRESS%]");
+	}
+
+	private ObjectAction _addNotificationTemplateObjectAction(
+			String objectActionTriggerKey, ObjectDefinition objectDefinition,
+			String to)
+		throws Exception {
+
 		NotificationTemplate notificationTemplate = _addNotificationTemplate(
 			TestPropsValues.getUserId(),
 			objectDefinition.getObjectDefinitionId(),
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), RandomTestUtil.randomString());
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(), to);
 
 		return _addObjectAction(
 			objectDefinition.getObjectDefinitionId(),
@@ -3923,6 +4009,104 @@ public class ObjectActionLocalServiceTest {
 		_objectActionLocalService.deleteObjectAction(objectAction3);
 	}
 
+	private void _testExecuteObjectActionMultipleTimesInTheSameThreadWithAStandaloneObjectAction()
+		throws Exception {
+
+		ObjectDefinition objectDefinition =
+			ObjectDefinitionTestUtil.publishObjectDefinition(
+				Collections.singletonList(
+					ObjectFieldUtil.createObjectField(
+						ObjectFieldConstants.BUSINESS_TYPE_TEXT,
+						ObjectFieldConstants.DB_TYPE_STRING,
+						RandomTestUtil.randomString(), "firstName")));
+
+		ObjectAction objectAction = _addNotificationTemplateObjectAction(
+			ObjectActionTriggerConstants.KEY_STANDALONE, objectDefinition);
+
+		ObjectEntry objectEntry1 = ObjectEntryTestUtil.addObjectEntry(
+			0, objectDefinition.getObjectDefinitionId(),
+			HashMapBuilder.<String, Serializable>put(
+				"firstName", RandomTestUtil.randomString()
+			).build());
+		ObjectEntry objectEntry2 = ObjectEntryTestUtil.addObjectEntry(
+			0, objectDefinition.getObjectDefinitionId(),
+			HashMapBuilder.<String, Serializable>put(
+				"firstName", RandomTestUtil.randomString()
+			).build());
+		ObjectEntry objectEntry3 = ObjectEntryTestUtil.addObjectEntry(
+			0, objectDefinition.getObjectDefinitionId(),
+			HashMapBuilder.<String, Serializable>put(
+				"firstName", RandomTestUtil.randomString()
+			).build());
+
+		List<NotificationQueueEntry> notificationQueueEntries =
+			_notificationQueueEntryLocalService.getNotificationEntries(
+				NotificationConstants.TYPE_EMAIL,
+				NotificationQueueEntryConstants.STATUS_SENT);
+
+		int initialCount = notificationQueueEntries.size();
+
+		_objectActionEngine.executeObjectAction(
+			objectAction.getName(), ObjectActionTriggerConstants.KEY_STANDALONE,
+			objectDefinition.getObjectDefinitionId(),
+			JSONUtil.put(
+				"objectEntry",
+				HashMapBuilder.putAll(
+					objectEntry1.getModelAttributes()
+				).put(
+					"values", objectEntry1.getValues()
+				).build()),
+			TestPropsValues.getUserId());
+		_objectActionEngine.executeObjectAction(
+			objectAction.getName(), ObjectActionTriggerConstants.KEY_STANDALONE,
+			objectDefinition.getObjectDefinitionId(),
+			JSONUtil.put(
+				"objectEntry",
+				HashMapBuilder.putAll(
+					objectEntry2.getModelAttributes()
+				).put(
+					"values", objectEntry2.getValues()
+				).build()),
+			TestPropsValues.getUserId());
+		_objectActionEngine.executeObjectAction(
+			objectAction.getName(), ObjectActionTriggerConstants.KEY_STANDALONE,
+			objectDefinition.getObjectDefinitionId(),
+			JSONUtil.put(
+				"objectEntry",
+				HashMapBuilder.putAll(
+					objectEntry3.getModelAttributes()
+				).put(
+					"values", objectEntry3.getValues()
+				).build()),
+			TestPropsValues.getUserId());
+
+		notificationQueueEntries =
+			_notificationQueueEntryLocalService.getNotificationEntries(
+				NotificationConstants.TYPE_EMAIL,
+				NotificationQueueEntryConstants.STATUS_SENT);
+
+		Assert.assertEquals(
+			notificationQueueEntries.toString(), initialCount + 3,
+			notificationQueueEntries.size());
+
+		for (NotificationQueueEntry notificationQueueEntry :
+				notificationQueueEntries.subList(
+					initialCount, notificationQueueEntries.size())) {
+
+			_notificationQueueEntryLocalService.deleteNotificationQueueEntry(
+				notificationQueueEntry);
+		}
+
+		_objectEntryLocalService.deleteObjectEntry(objectEntry1);
+		_objectEntryLocalService.deleteObjectEntry(objectEntry2);
+		_objectEntryLocalService.deleteObjectEntry(objectEntry3);
+
+		_objectActionLocalService.deleteObjectAction(objectAction);
+
+		_objectDefinitionLocalService.deleteObjectDefinition(
+			objectDefinition.getObjectDefinitionId());
+	}
+
 	private void _testExecuteObjectActionMultipleTimesInTheSameThreadWithASystemObjectDefinition()
 		throws Exception {
 
@@ -4036,6 +4220,12 @@ public class ObjectActionLocalServiceTest {
 
 	@Inject
 	private JSONFactory _jsonFactory;
+
+	@Inject(
+		filter = "component.name=com.liferay.user.internal.events.LoginPostAction",
+		type = LifecycleAction.class
+	)
+	private Action _loginPostAction;
 
 	@Inject
 	private NotificationQueueEntryLocalService

@@ -452,3 +452,4 @@ public class MessageBoardAttachmentSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:1669581112

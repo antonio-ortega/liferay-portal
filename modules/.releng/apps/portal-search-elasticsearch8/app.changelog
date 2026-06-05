@@ -1,0 +1,65 @@
+#
+# Liferay App Version 1.0.0
+#
+
+app.artifacts-1.0.0=\
+	org.codehaus.stax2-4.2.1.jar
+
+app.change.log-1.0.0=LPD-65357 LPD-67964 LPD-76617 LPD-78414 LPD-79774 LPD-80700 
+
+app.git.id-1.0.0=b2933012f9d741080527fbdb70feced70c50996c
+
+#
+# Liferay App Version 1.0.1
+#
+
+app.artifacts-1.0.1=\
+	org.codehaus.stax2-4.2.1.jar
+
+app.change.log-1.0.1=LPD-65357 LPD-67964 LPD-76617 LPD-78414 LPD-79774 LPD-80700 
+
+app.git.id-1.0.1=ba175e181f922bcb068faaedd8399592a72e49e0
+
+#
+# Liferay App Version 1.0.2
+#
+
+app.artifacts-1.0.2=\
+	org.codehaus.stax2-4.2.1.jar
+
+app.change.log-1.0.2=LPD-65357 LPD-67964 LPD-76617 LPD-78414 LPD-79774 LPD-80700 LPD-80840 
+
+app.git.id-1.0.2=299e89b4c36a398602510ab34259296411d7693c
+
+#
+# Liferay App Version 1.0.3
+#
+
+app.artifacts-1.0.3=\
+	org.codehaus.stax2-4.2.1.jar
+
+app.change.log-1.0.3=LPD-65357 LPD-67964 LPD-76617 LPD-78414 LPD-79774 LPD-80700 LPD-80840 
+
+app.git.id-1.0.3=62fe09030c07ed0a461e95d54d1a1cfd193b1706
+
+#
+# Liferay App Version 1.0.4
+#
+
+app.artifacts-1.0.4=\
+	org.codehaus.stax2-4.2.1.jar
+
+app.change.log-1.0.4=LPD-65357 LPD-67964 LPD-76617 LPD-78414 LPD-79774 LPD-80700 LPD-80840 
+
+app.git.id-1.0.4=aeffd63428f18be7e763659bd6d25368349f80d9
+
+#
+# Liferay App Version 1.0.5
+#
+
+app.artifacts-1.0.5=\
+	org.codehaus.stax2-4.2.1.jar
+
+app.change.log-1.0.5=LPD-65357 LPD-67964 LPD-76617 LPD-78414 LPD-79774 LPD-80700 LPD-80840 
+
+app.git.id-1.0.5=e92152c30ff1957933864e3edeb2cef988eba803

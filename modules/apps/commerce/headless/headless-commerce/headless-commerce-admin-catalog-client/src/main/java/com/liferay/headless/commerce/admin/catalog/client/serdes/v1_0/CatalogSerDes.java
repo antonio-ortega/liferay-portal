@@ -458,3 +458,4 @@ public class CatalogSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1326183552

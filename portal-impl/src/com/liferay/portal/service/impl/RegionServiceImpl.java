@@ -5,7 +5,6 @@
 
 package com.liferay.portal.service.impl;
 
-import com.liferay.portal.kernel.bean.BeanReference;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.jsonwebservice.JSONWebService;
@@ -14,9 +13,8 @@ import com.liferay.portal.kernel.model.Region;
 import com.liferay.portal.kernel.search.BaseModelSearchResult;
 import com.liferay.portal.kernel.security.access.control.AccessControlled;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
-import com.liferay.portal.kernel.service.CountryService;
 import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.service.permission.PortalPermissionUtil;
+import com.liferay.portal.kernel.service.permission.CountryPermissionUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.service.base.RegionServiceBaseImpl;
 
@@ -30,21 +28,25 @@ public class RegionServiceImpl extends RegionServiceBaseImpl {
 
 	@Override
 	public Region addRegion(
-			long countryId, boolean active, String name, double position,
-			String regionCode, ServiceContext serviceContext)
+			String externalReferenceCode, long countryId, boolean active,
+			String name, double position, String regionCode,
+			ServiceContext serviceContext)
 		throws PortalException {
 
-		PortalPermissionUtil.check(
-			getPermissionChecker(), ActionKeys.MANAGE_COUNTRIES);
+		CountryPermissionUtil.check(
+			getPermissionChecker(), countryId, ActionKeys.UPDATE);
 
 		return regionLocalService.addRegion(
-			countryId, active, name, position, regionCode, serviceContext);
+			externalReferenceCode, countryId, active, name, position,
+			regionCode, serviceContext);
 	}
 
 	@Override
 	public void deleteRegion(long regionId) throws PortalException {
-		PortalPermissionUtil.check(
-			getPermissionChecker(), ActionKeys.MANAGE_COUNTRIES);
+		Region region = regionLocalService.getRegion(regionId);
+
+		CountryPermissionUtil.check(
+			getPermissionChecker(), region.getCountryId(), ActionKeys.UPDATE);
 
 		regionLocalService.deleteRegion(regionId);
 	}
@@ -60,6 +62,22 @@ public class RegionServiceImpl extends RegionServiceBaseImpl {
 	}
 
 	@Override
+	public Region fetchRegionByExternalReferenceCode(
+			String externalReferenceCode, long companyId)
+		throws PortalException {
+
+		Region region = regionLocalService.fetchRegionByExternalReferenceCode(
+			externalReferenceCode, companyId);
+
+		if (region != null) {
+			CountryPermissionUtil.check(
+				getPermissionChecker(), region.getCountryId(), ActionKeys.VIEW);
+		}
+
+		return region;
+	}
+
+	@Override
 	public Region getRegion(long regionId) throws PortalException {
 		return regionPersistence.findByPrimaryKey(regionId);
 	}
@@ -69,6 +87,20 @@ public class RegionServiceImpl extends RegionServiceBaseImpl {
 		throws PortalException {
 
 		return regionPersistence.findByC_R(countryId, regionCode);
+	}
+
+	@Override
+	public Region getRegionByExternalReferenceCode(
+			String externalReferenceCode, long companyId)
+		throws PortalException {
+
+		Region region = regionLocalService.getRegionByExternalReferenceCode(
+			externalReferenceCode, companyId);
+
+		CountryPermissionUtil.check(
+			getPermissionChecker(), region.getCountryId(), ActionKeys.VIEW);
+
+		return region;
 	}
 
 	@Override
@@ -145,26 +177,28 @@ public class RegionServiceImpl extends RegionServiceBaseImpl {
 	public Region updateActive(long regionId, boolean active)
 		throws PortalException {
 
-		PortalPermissionUtil.check(
-			getPermissionChecker(), ActionKeys.MANAGE_COUNTRIES);
+		Region region = regionLocalService.getRegion(regionId);
+
+		CountryPermissionUtil.check(
+			getPermissionChecker(), region.getCountryId(), ActionKeys.UPDATE);
 
 		return regionLocalService.updateActive(regionId, active);
 	}
 
 	@Override
 	public Region updateRegion(
-			long regionId, boolean active, String name, double position,
-			String regionCode)
+			String externalReferenceCode, long regionId, boolean active,
+			String name, double position, String regionCode)
 		throws PortalException {
 
-		PortalPermissionUtil.check(
-			getPermissionChecker(), ActionKeys.MANAGE_COUNTRIES);
+		Region region = regionLocalService.getRegion(regionId);
+
+		CountryPermissionUtil.check(
+			getPermissionChecker(), region.getCountryId(), ActionKeys.UPDATE);
 
 		return regionLocalService.updateRegion(
-			regionId, active, name, position, regionCode);
+			externalReferenceCode, regionId, active, name, position,
+			regionCode);
 	}
-
-	@BeanReference(type = CountryService.class)
-	private CountryService _countryService;
 
 }

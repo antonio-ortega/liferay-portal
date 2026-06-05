@@ -103,11 +103,19 @@ public class CommerceAvailabilityEstimateModelImpl
 	public static final String TABLE_SQL_DROP =
 		"drop table CommerceAvailabilityEstimate";
 
+	public static final String ENTITY_ALIAS = "commerceAvailabilityEstimate";
+
+	public static final String FILTER_PK_COLUMN_NAME =
+		"commerceAvailabilityEstimateId";
+
 	public static final String ORDER_BY_JPQL =
 		" ORDER BY commerceAvailabilityEstimate.title ASC";
 
 	public static final String ORDER_BY_SQL =
 		" ORDER BY CommerceAvailabilityEstimate.title ASC";
+
+	public static final String ORDER_BY_SQL_INLINE_DISTINCT =
+		" ORDER BY commerceAvailabilityEstimate.title ASC";
 
 	public static final String DATA_SOURCE = "liferayDataSource";
 
@@ -1152,3 +1160,4 @@ public class CommerceAvailabilityEstimateModelImpl
 	private CommerceAvailabilityEstimate _escapedModel;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:1989012644

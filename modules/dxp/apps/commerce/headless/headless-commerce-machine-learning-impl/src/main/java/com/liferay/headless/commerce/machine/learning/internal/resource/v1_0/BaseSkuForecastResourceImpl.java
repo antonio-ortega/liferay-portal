@@ -5,6 +5,7 @@
 
 package com.liferay.headless.commerce.machine.learning.internal.resource.v1_0;
 
+import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.headless.commerce.machine.learning.dto.v1_0.SkuForecast;
 import com.liferay.headless.commerce.machine.learning.resource.v1_0.SkuForecastResource;
 import com.liferay.petra.function.UnsafeBiConsumer;
@@ -72,7 +73,7 @@ public abstract class BaseSkuForecastResourceImpl
 	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-machine-learning/v1.0/skuForecasts/by-monthlyDemand'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
-		description = "Get the forecast points"
+		description = "Returns a page of monthly demand forecast points broken down by SKU. Calls SkuCommerceMLForecastManager.getMonthlyQuantitySkuCommerceMLForecasts in SkuForecastResourceImpl. Validation -- None (defaults to 3 forecast months and 8 history months from CommerceMLForecastConstants when omitted; forecastStartDate defaults to the current server date; the optional skus filter restricts the result to the supplied SKU strings, otherwise every trained SKU is returned). List query support -- None (no filter, search, or sort exposed). Side effects -- None (read-only). Naming caveat -- the operationId is published as getSkuForecastsByMonthlyRevenuePage for backward client compatibility but the response carries demand quantity, not revenue; consult the path (/by-monthlyDemand) and the SkuForecast.unit field (`quantity`) to confirm the response dimension."
 	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
@@ -202,6 +203,15 @@ public abstract class BaseSkuForecastResourceImpl
 			@Override
 			public Locale getPreferredLocale() {
 				return LocaleUtil.fromLanguageId(languageId);
+			}
+
+			@Override
+			public boolean isAcceptAllLanguages() {
+				if (ExportImportThreadLocal.isExportInProcess()) {
+					return true;
+				}
+
+				return AcceptLanguage.super.isAcceptAllLanguages();
 			}
 
 		};
@@ -778,3 +788,4 @@ public abstract class BaseSkuForecastResourceImpl
 		LogFactoryUtil.getLog(BaseSkuForecastResourceImpl.class);
 
 }
+// LIFERAY-REST-BUILDER-HASH:2145583805

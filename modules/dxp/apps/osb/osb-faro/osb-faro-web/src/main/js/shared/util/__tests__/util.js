@@ -1,8 +1,10 @@
 import {
 	formatStringToLowercase,
 	getAlignPosition,
+	getInitials,
 	getPercentage,
 	getRangeSelectorsFromQuery,
+	getSafeDecodedURIComponent,
 	getSafeDisplayValue,
 	getSafeRangeSelectors,
 	getSafeTouchpoint,
@@ -13,6 +15,30 @@ import {
 } from '../util';
 
 describe('util', () => {
+	describe('getSafeDecodedURIComponent', () => {
+		it('should decode a URI component', () => {
+			expect(getSafeDecodedURIComponent('test%20test')).toEqual(
+				'test test'
+			);
+		});
+
+		it('should return the original string if decoding fails', () => {
+			expect(getSafeDecodedURIComponent('%E0%A4%A')).toEqual('%E0%A4%A');
+		});
+
+		it('should return an empty string if value is undefined', () => {
+			expect(getSafeDecodedURIComponent(undefined)).toEqual('');
+		});
+
+		it('should return an empty string if value is null', () => {
+			expect(getSafeDecodedURIComponent(null)).toEqual('');
+		});
+
+		it('should return an empty string if value is not a string', () => {
+			expect(getSafeDecodedURIComponent(123)).toEqual('');
+		});
+	});
+
 	describe('formatStringToLowercase', () => {
 		it('should format a string to lowercase', () => {
 			const text = '   THIS IS A NOT LOWERCASE TEXT   ';
@@ -37,6 +63,28 @@ describe('util', () => {
 			expect(getAlignPosition(source, target, 'bottom')).toEqual(
 				'bottom'
 			);
+		});
+	});
+
+	describe('getInitials', () => {
+		it('should return uppercased initials for a full name', () => {
+			expect(getInitials('Adriano Interaminense')).toEqual('AI');
+		});
+
+		it('should cap the result at three initials', () => {
+			expect(getInitials('Foo Bar Baz Qux')).toEqual('FBB');
+		});
+
+		it('should return an empty string when name is undefined', () => {
+			expect(getInitials(undefined)).toEqual('');
+		});
+
+		it('should return an empty string when name is null', () => {
+			expect(getInitials(null)).toEqual('');
+		});
+
+		it('should return an empty string when no argument is provided', () => {
+			expect(getInitials()).toEqual('');
 		});
 	});
 

@@ -36,6 +36,24 @@ public class ContactsLayoutTemplateUtil {
 	 */
 
 	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(List)
+	 */
+	public static void cacheResult(
+		List<ContactsLayoutTemplate> contactsLayoutTemplates) {
+
+		getPersistence().cacheResult(contactsLayoutTemplates);
+	}
+
+	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(com.liferay.portal.kernel.model.BaseModel)
+	 */
+	public static void cacheResult(
+		ContactsLayoutTemplate contactsLayoutTemplate) {
+
+		getPersistence().cacheResult(contactsLayoutTemplate);
+	}
+
+	/**
 	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#clearCache()
 	 */
 	public static void clearCache() {
@@ -116,59 +134,10 @@ public class ContactsLayoutTemplateUtil {
 	}
 
 	/**
-	 * Returns all the contacts layout templates where groupId = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @return the matching contacts layout templates
-	 */
-	public static List<ContactsLayoutTemplate> findByGroupId(long groupId) {
-		return getPersistence().findByGroupId(groupId);
-	}
-
-	/**
-	 * Returns a range of all the contacts layout templates where groupId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>ContactsLayoutTemplateModelImpl</code>.
-	 * </p>
-	 *
-	 * @param groupId the group ID
-	 * @param start the lower bound of the range of contacts layout templates
-	 * @param end the upper bound of the range of contacts layout templates (not inclusive)
-	 * @return the range of matching contacts layout templates
-	 */
-	public static List<ContactsLayoutTemplate> findByGroupId(
-		long groupId, int start, int end) {
-
-		return getPersistence().findByGroupId(groupId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the contacts layout templates where groupId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>ContactsLayoutTemplateModelImpl</code>.
-	 * </p>
-	 *
-	 * @param groupId the group ID
-	 * @param start the lower bound of the range of contacts layout templates
-	 * @param end the upper bound of the range of contacts layout templates (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching contacts layout templates
-	 */
-	public static List<ContactsLayoutTemplate> findByGroupId(
-		long groupId, int start, int end,
-		OrderByComparator<ContactsLayoutTemplate> orderByComparator) {
-
-		return getPersistence().findByGroupId(
-			groupId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the contacts layout templates where groupId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>ContactsLayoutTemplateModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.osb.faro.contacts.model.impl.ContactsLayoutTemplateModelImpl</code>.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -220,56 +189,6 @@ public class ContactsLayoutTemplateUtil {
 	}
 
 	/**
-	 * Returns the last contacts layout template in the ordered set where groupId = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching contacts layout template
-	 * @throws NoSuchContactsLayoutTemplateException if a matching contacts layout template could not be found
-	 */
-	public static ContactsLayoutTemplate findByGroupId_Last(
-			long groupId,
-			OrderByComparator<ContactsLayoutTemplate> orderByComparator)
-		throws com.liferay.osb.faro.contacts.exception.
-			NoSuchContactsLayoutTemplateException {
-
-		return getPersistence().findByGroupId_Last(groupId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last contacts layout template in the ordered set where groupId = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching contacts layout template, or <code>null</code> if a matching contacts layout template could not be found
-	 */
-	public static ContactsLayoutTemplate fetchByGroupId_Last(
-		long groupId,
-		OrderByComparator<ContactsLayoutTemplate> orderByComparator) {
-
-		return getPersistence().fetchByGroupId_Last(groupId, orderByComparator);
-	}
-
-	/**
-	 * Returns the contacts layout templates before and after the current contacts layout template in the ordered set where groupId = &#63;.
-	 *
-	 * @param contactsLayoutTemplateId the primary key of the current contacts layout template
-	 * @param groupId the group ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next contacts layout template
-	 * @throws NoSuchContactsLayoutTemplateException if a contacts layout template with the primary key could not be found
-	 */
-	public static ContactsLayoutTemplate[] findByGroupId_PrevAndNext(
-			long contactsLayoutTemplateId, long groupId,
-			OrderByComparator<ContactsLayoutTemplate> orderByComparator)
-		throws com.liferay.osb.faro.contacts.exception.
-			NoSuchContactsLayoutTemplateException {
-
-		return getPersistence().findByGroupId_PrevAndNext(
-			contactsLayoutTemplateId, groupId, orderByComparator);
-	}
-
-	/**
 	 * Removes all the contacts layout templates where groupId = &#63; from the database.
 	 *
 	 * @param groupId the group ID
@@ -289,64 +208,10 @@ public class ContactsLayoutTemplateUtil {
 	}
 
 	/**
-	 * Returns all the contacts layout templates where groupId = &#63; and type = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param type the type
-	 * @return the matching contacts layout templates
-	 */
-	public static List<ContactsLayoutTemplate> findByG_T(
-		long groupId, int type) {
-
-		return getPersistence().findByG_T(groupId, type);
-	}
-
-	/**
-	 * Returns a range of all the contacts layout templates where groupId = &#63; and type = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>ContactsLayoutTemplateModelImpl</code>.
-	 * </p>
-	 *
-	 * @param groupId the group ID
-	 * @param type the type
-	 * @param start the lower bound of the range of contacts layout templates
-	 * @param end the upper bound of the range of contacts layout templates (not inclusive)
-	 * @return the range of matching contacts layout templates
-	 */
-	public static List<ContactsLayoutTemplate> findByG_T(
-		long groupId, int type, int start, int end) {
-
-		return getPersistence().findByG_T(groupId, type, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the contacts layout templates where groupId = &#63; and type = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>ContactsLayoutTemplateModelImpl</code>.
-	 * </p>
-	 *
-	 * @param groupId the group ID
-	 * @param type the type
-	 * @param start the lower bound of the range of contacts layout templates
-	 * @param end the upper bound of the range of contacts layout templates (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching contacts layout templates
-	 */
-	public static List<ContactsLayoutTemplate> findByG_T(
-		long groupId, int type, int start, int end,
-		OrderByComparator<ContactsLayoutTemplate> orderByComparator) {
-
-		return getPersistence().findByG_T(
-			groupId, type, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the contacts layout templates where groupId = &#63; and type = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>ContactsLayoutTemplateModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.osb.faro.contacts.model.impl.ContactsLayoutTemplateModelImpl</code>.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -402,61 +267,6 @@ public class ContactsLayoutTemplateUtil {
 	}
 
 	/**
-	 * Returns the last contacts layout template in the ordered set where groupId = &#63; and type = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param type the type
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching contacts layout template
-	 * @throws NoSuchContactsLayoutTemplateException if a matching contacts layout template could not be found
-	 */
-	public static ContactsLayoutTemplate findByG_T_Last(
-			long groupId, int type,
-			OrderByComparator<ContactsLayoutTemplate> orderByComparator)
-		throws com.liferay.osb.faro.contacts.exception.
-			NoSuchContactsLayoutTemplateException {
-
-		return getPersistence().findByG_T_Last(
-			groupId, type, orderByComparator);
-	}
-
-	/**
-	 * Returns the last contacts layout template in the ordered set where groupId = &#63; and type = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param type the type
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching contacts layout template, or <code>null</code> if a matching contacts layout template could not be found
-	 */
-	public static ContactsLayoutTemplate fetchByG_T_Last(
-		long groupId, int type,
-		OrderByComparator<ContactsLayoutTemplate> orderByComparator) {
-
-		return getPersistence().fetchByG_T_Last(
-			groupId, type, orderByComparator);
-	}
-
-	/**
-	 * Returns the contacts layout templates before and after the current contacts layout template in the ordered set where groupId = &#63; and type = &#63;.
-	 *
-	 * @param contactsLayoutTemplateId the primary key of the current contacts layout template
-	 * @param groupId the group ID
-	 * @param type the type
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next contacts layout template
-	 * @throws NoSuchContactsLayoutTemplateException if a contacts layout template with the primary key could not be found
-	 */
-	public static ContactsLayoutTemplate[] findByG_T_PrevAndNext(
-			long contactsLayoutTemplateId, long groupId, int type,
-			OrderByComparator<ContactsLayoutTemplate> orderByComparator)
-		throws com.liferay.osb.faro.contacts.exception.
-			NoSuchContactsLayoutTemplateException {
-
-		return getPersistence().findByG_T_PrevAndNext(
-			contactsLayoutTemplateId, groupId, type, orderByComparator);
-	}
-
-	/**
 	 * Removes all the contacts layout templates where groupId = &#63; and type = &#63; from the database.
 	 *
 	 * @param groupId the group ID
@@ -475,28 +285,6 @@ public class ContactsLayoutTemplateUtil {
 	 */
 	public static int countByG_T(long groupId, int type) {
 		return getPersistence().countByG_T(groupId, type);
-	}
-
-	/**
-	 * Caches the contacts layout template in the entity cache if it is enabled.
-	 *
-	 * @param contactsLayoutTemplate the contacts layout template
-	 */
-	public static void cacheResult(
-		ContactsLayoutTemplate contactsLayoutTemplate) {
-
-		getPersistence().cacheResult(contactsLayoutTemplate);
-	}
-
-	/**
-	 * Caches the contacts layout templates in the entity cache if it is enabled.
-	 *
-	 * @param contactsLayoutTemplates the contacts layout templates
-	 */
-	public static void cacheResult(
-		List<ContactsLayoutTemplate> contactsLayoutTemplates) {
-
-		getPersistence().cacheResult(contactsLayoutTemplates);
 	}
 
 	/**
@@ -557,84 +345,106 @@ public class ContactsLayoutTemplateUtil {
 	}
 
 	/**
-	 * Returns all the contacts layout templates.
+	 * Returns all the contacts layout templates where groupId = &#63;.
 	 *
-	 * @return the contacts layout templates
+	 * @param groupId the group ID
+	 * @return the matching contacts layout templates
 	 */
-	public static List<ContactsLayoutTemplate> findAll() {
-		return getPersistence().findAll();
+	public static List<ContactsLayoutTemplate> findByGroupId(long groupId) {
+		return getPersistence().findByGroupId(groupId);
 	}
 
 	/**
-	 * Returns a range of all the contacts layout templates.
+	 * Returns a range of all the contacts layout templates where groupId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>ContactsLayoutTemplateModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.osb.faro.contacts.model.impl.ContactsLayoutTemplateModelImpl</code>.
 	 * </p>
 	 *
+	 * @param groupId the group ID
 	 * @param start the lower bound of the range of contacts layout templates
 	 * @param end the upper bound of the range of contacts layout templates (not inclusive)
-	 * @return the range of contacts layout templates
+	 * @return the range of matching contacts layout templates
 	 */
-	public static List<ContactsLayoutTemplate> findAll(int start, int end) {
-		return getPersistence().findAll(start, end);
+	public static List<ContactsLayoutTemplate> findByGroupId(
+		long groupId, int start, int end) {
+
+		return getPersistence().findByGroupId(groupId, start, end);
 	}
 
 	/**
-	 * Returns an ordered range of all the contacts layout templates.
+	 * Returns an ordered range of all the contacts layout templates where groupId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>ContactsLayoutTemplateModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.osb.faro.contacts.model.impl.ContactsLayoutTemplateModelImpl</code>.
 	 * </p>
 	 *
+	 * @param groupId the group ID
 	 * @param start the lower bound of the range of contacts layout templates
 	 * @param end the upper bound of the range of contacts layout templates (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of contacts layout templates
+	 * @return the ordered range of matching contacts layout templates
 	 */
-	public static List<ContactsLayoutTemplate> findAll(
-		int start, int end,
+	public static List<ContactsLayoutTemplate> findByGroupId(
+		long groupId, int start, int end,
 		OrderByComparator<ContactsLayoutTemplate> orderByComparator) {
 
-		return getPersistence().findAll(start, end, orderByComparator);
+		return getPersistence().findByGroupId(
+			groupId, start, end, orderByComparator);
 	}
 
 	/**
-	 * Returns an ordered range of all the contacts layout templates.
+	 * Returns all the contacts layout templates where groupId = &#63; and type = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param type the type
+	 * @return the matching contacts layout templates
+	 */
+	public static List<ContactsLayoutTemplate> findByG_T(
+		long groupId, int type) {
+
+		return getPersistence().findByG_T(groupId, type);
+	}
+
+	/**
+	 * Returns a range of all the contacts layout templates where groupId = &#63; and type = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>ContactsLayoutTemplateModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.osb.faro.contacts.model.impl.ContactsLayoutTemplateModelImpl</code>.
 	 * </p>
 	 *
+	 * @param groupId the group ID
+	 * @param type the type
+	 * @param start the lower bound of the range of contacts layout templates
+	 * @param end the upper bound of the range of contacts layout templates (not inclusive)
+	 * @return the range of matching contacts layout templates
+	 */
+	public static List<ContactsLayoutTemplate> findByG_T(
+		long groupId, int type, int start, int end) {
+
+		return getPersistence().findByG_T(groupId, type, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the contacts layout templates where groupId = &#63; and type = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.osb.faro.contacts.model.impl.ContactsLayoutTemplateModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param type the type
 	 * @param start the lower bound of the range of contacts layout templates
 	 * @param end the upper bound of the range of contacts layout templates (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param useFinderCache whether to use the finder cache
-	 * @return the ordered range of contacts layout templates
+	 * @return the ordered range of matching contacts layout templates
 	 */
-	public static List<ContactsLayoutTemplate> findAll(
-		int start, int end,
-		OrderByComparator<ContactsLayoutTemplate> orderByComparator,
-		boolean useFinderCache) {
+	public static List<ContactsLayoutTemplate> findByG_T(
+		long groupId, int type, int start, int end,
+		OrderByComparator<ContactsLayoutTemplate> orderByComparator) {
 
-		return getPersistence().findAll(
-			start, end, orderByComparator, useFinderCache);
-	}
-
-	/**
-	 * Removes all the contacts layout templates from the database.
-	 */
-	public static void removeAll() {
-		getPersistence().removeAll();
-	}
-
-	/**
-	 * Returns the number of contacts layout templates.
-	 *
-	 * @return the number of contacts layout templates
-	 */
-	public static int countAll() {
-		return getPersistence().countAll();
+		return getPersistence().findByG_T(
+			groupId, type, start, end, orderByComparator);
 	}
 
 	public static ContactsLayoutTemplatePersistence getPersistence() {
@@ -650,3 +460,4 @@ public class ContactsLayoutTemplateUtil {
 	private static volatile ContactsLayoutTemplatePersistence _persistence;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-1687024953

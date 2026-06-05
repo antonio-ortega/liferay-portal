@@ -148,3 +148,4 @@ public interface ExportTaskResource {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-2011162634

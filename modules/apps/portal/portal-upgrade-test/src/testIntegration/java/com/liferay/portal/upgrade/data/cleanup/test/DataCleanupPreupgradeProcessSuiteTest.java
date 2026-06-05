@@ -60,6 +60,7 @@ public class DataCleanupPreupgradeProcessSuiteTest
 	@BeforeClass
 	public static void setUpClass() throws Exception {
 		try (Connection connection = DataAccess.getConnection();
+
 			PreparedStatement preparedStatement = connection.prepareStatement(
 				"select schemaVersion from Release_ where releaseId = ?")) {
 
@@ -68,7 +69,8 @@ public class DataCleanupPreupgradeProcessSuiteTest
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				resultSet.next();
 
-				_currentPortalSchemaVersion = resultSet.getString(1);
+				_currentPortalSchemaVersion = resultSet.getString(
+					"schemaVersion");
 
 				_updatePortalSchemaVersion(_currentPortalSchemaVersion + ".0");
 			}
@@ -241,6 +243,7 @@ public class DataCleanupPreupgradeProcessSuiteTest
 		throws Exception {
 
 		try (Connection connection = DataAccess.getConnection();
+
 			PreparedStatement preparedStatement = connection.prepareStatement(
 				"update Release_ set schemaVersion = ? where releaseId = ?")) {
 

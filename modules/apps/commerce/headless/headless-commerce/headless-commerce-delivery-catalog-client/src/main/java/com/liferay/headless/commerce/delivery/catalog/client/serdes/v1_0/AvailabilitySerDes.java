@@ -261,3 +261,4 @@ public class AvailabilitySerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:391496437

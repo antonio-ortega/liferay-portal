@@ -228,3 +228,4 @@ public class UserGroupBriefSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1553064500

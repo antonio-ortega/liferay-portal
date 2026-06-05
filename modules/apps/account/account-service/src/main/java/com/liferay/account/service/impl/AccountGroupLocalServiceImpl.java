@@ -13,6 +13,7 @@ import com.liferay.account.model.AccountGroupRel;
 import com.liferay.account.service.base.AccountGroupLocalServiceBaseImpl;
 import com.liferay.account.service.persistence.AccountGroupRelPersistence;
 import com.liferay.exportimport.kernel.empty.model.EmptyModelManager;
+import com.liferay.exportimport.kernel.empty.model.EmptyModelManagerUtil;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringPool;
@@ -88,7 +89,6 @@ public class AccountGroupLocalServiceImpl
 		accountGroup.setDescription(description);
 		accountGroup.setName(name);
 		accountGroup.setType(AccountConstants.ACCOUNT_GROUP_TYPE_STATIC);
-		accountGroup.setExpandoBridgeAttributes(serviceContext);
 
 		if (_emptyModelManager.isEmptyModel()) {
 			accountGroup.setStatus(WorkflowConstants.STATUS_EMPTY);
@@ -96,6 +96,8 @@ public class AccountGroupLocalServiceImpl
 		else {
 			accountGroup.setStatus(WorkflowConstants.STATUS_APPROVED);
 		}
+
+		accountGroup.setExpandoBridgeAttributes(serviceContext);
 
 		accountGroup = accountGroupPersistence.update(accountGroup);
 
@@ -353,11 +355,12 @@ public class AccountGroupLocalServiceImpl
 		accountGroup.setExternalReferenceCode(externalReferenceCode);
 		accountGroup.setDescription(description);
 		accountGroup.setName(name);
+		accountGroup.setStatus(
+			EmptyModelManagerUtil.solveEmptyModel(
+				externalReferenceCode, accountGroup.getModelClassName(),
+				accountGroup.getCompanyId(), 0, accountGroup.getStatus(),
+				() -> WorkflowConstants.STATUS_APPROVED));
 		accountGroup.setExpandoBridgeAttributes(serviceContext);
-
-		if (accountGroup.getStatus() == WorkflowConstants.STATUS_EMPTY) {
-			accountGroup.setStatus(WorkflowConstants.STATUS_APPROVED);
-		}
 
 		return accountGroupPersistence.update(accountGroup);
 	}

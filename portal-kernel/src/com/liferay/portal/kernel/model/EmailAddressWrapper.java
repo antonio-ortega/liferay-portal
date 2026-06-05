@@ -560,3 +560,4 @@ public class EmailAddressWrapper
 	}
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-452104728

@@ -52,18 +52,16 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
-import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.trash.TrashHandler;
 import com.liferay.portal.kernel.trash.TrashHandlerRegistryUtil;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
-import com.liferay.portal.kernel.util.GroupThreadLocal;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.KeyValuePair;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.ScopeUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
@@ -89,6 +87,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TimeZone;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -140,10 +139,17 @@ public class FragmentEntryProcessorHelperImpl
 			ClassPKInfoItemIdentifier classPKInfoItemIdentifier =
 				(ClassPKInfoItemIdentifier)infoItemIdentifier;
 
-			if (trashHandler.isInTrash(
-					classPKInfoItemIdentifier.getClassPK())) {
+			try {
+				if (trashHandler.isInTrash(
+						classPKInfoItemIdentifier.getClassPK())) {
 
-				return null;
+					return null;
+				}
+			}
+			catch (PortalException portalException) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(portalException);
+				}
 			}
 		}
 
@@ -180,8 +186,8 @@ public class FragmentEntryProcessorHelperImpl
 
 		return _getFileEntryId(
 			infoItemReference.getClassName(),
-			_getInfoItem(_getGroupId(0), infoItemReference), fieldName, 0,
-			locale);
+			_getInfoItem(ScopeUtil.getScopeGroupId(0), infoItemReference),
+			fieldName, 0, locale);
 	}
 
 	@Override
@@ -313,7 +319,7 @@ public class FragmentEntryProcessorHelperImpl
 			return _getFileEntryId(
 				className,
 				infoItemObjectProvider.getInfoItem(
-					_getGroupId(groupId), infoItemIdentifier),
+					ScopeUtil.getScopeGroupId(groupId), infoItemIdentifier),
 				fieldName, groupId, locale);
 		}
 		catch (NoSuchInfoItemException noSuchInfoItemException) {
@@ -591,11 +597,19 @@ public class FragmentEntryProcessorHelperImpl
 		if (value instanceof Date) {
 			Date date = (Date)value;
 
+			HttpServletRequest httpServletRequest =
+				fragmentEntryProcessorContext.getHttpServletRequest();
+
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)httpServletRequest.getAttribute(
+					WebKeys.THEME_DISPLAY);
+
 			return _getDateValue(
 				editableValueJSONObject, date,
 				_getShortTimeStylePattern(
 					fragmentEntryProcessorContext.getLocale()),
-				fragmentEntryProcessorContext.getLocale());
+				fragmentEntryProcessorContext.getLocale(),
+				themeDisplay.getTimeZone());
 		}
 		else if (value instanceof KeyLocalizedLabelPair) {
 			KeyLocalizedLabelPair keyLocalizedLabelPair =
@@ -638,6 +652,13 @@ public class FragmentEntryProcessorHelperImpl
 					}
 				}
 
+				HttpServletRequest httpServletRequest =
+					fragmentEntryProcessorContext.getHttpServletRequest();
+
+				ThemeDisplay themeDisplay =
+					(ThemeDisplay)httpServletRequest.getAttribute(
+						WebKeys.THEME_DISPLAY);
+
 				try {
 					DateFormat dateFormat =
 						DateFormatFactoryUtil.getSimpleDateFormat(
@@ -649,7 +670,8 @@ public class FragmentEntryProcessorHelperImpl
 						editableValueJSONObject, date,
 						_getShortTimeStylePattern(
 							fragmentEntryProcessorContext.getLocale()),
-						fragmentEntryProcessorContext.getLocale());
+						fragmentEntryProcessorContext.getLocale(),
+						themeDisplay.getTimeZone());
 				}
 				catch (ParseException parseException1) {
 					if (_log.isDebugEnabled()) {
@@ -666,7 +688,8 @@ public class FragmentEntryProcessorHelperImpl
 							dateFormat.parse(value.toString()),
 							_getDefaultPattern(
 								fragmentEntryProcessorContext.getLocale()),
-							fragmentEntryProcessorContext.getLocale());
+							fragmentEntryProcessorContext.getLocale(),
+							themeDisplay.getTimeZone());
 					}
 					catch (ParseException parseException2) {
 						if (_log.isDebugEnabled()) {
@@ -820,9 +843,9 @@ public class FragmentEntryProcessorHelperImpl
 			return 0;
 		}
 
-		long scopeGroupId = _getGroupId(groupId);
-
 		try {
+			long scopeGroupId = ScopeUtil.getScopeGroupId(groupId);
+
 			Object infoItem = infoItemObjectProvider.getInfoItem(
 				scopeGroupId, ercInfoItemIdentifier);
 
@@ -858,11 +881,11 @@ public class FragmentEntryProcessorHelperImpl
 
 	private String _getDateValue(
 		JSONObject editableValueJSONObject, Date date, String defaultPattern,
-		Locale locale) {
+		Locale locale, TimeZone timeZone) {
 
 		if (editableValueJSONObject == null) {
 			DateFormat dateFormat = DateFormatFactoryUtil.getSimpleDateFormat(
-				defaultPattern, locale);
+				defaultPattern, locale, timeZone);
 
 			return dateFormat.format(date);
 		}
@@ -872,7 +895,7 @@ public class FragmentEntryProcessorHelperImpl
 
 		if (configJSONObject == null) {
 			DateFormat dateFormat = DateFormatFactoryUtil.getSimpleDateFormat(
-				defaultPattern, locale);
+				defaultPattern, locale, timeZone);
 
 			return dateFormat.format(date);
 		}
@@ -882,7 +905,7 @@ public class FragmentEntryProcessorHelperImpl
 
 		if (dateFormatJSONObject == null) {
 			DateFormat dateFormat = DateFormatFactoryUtil.getSimpleDateFormat(
-				defaultPattern, locale);
+				defaultPattern, locale, timeZone);
 
 			return dateFormat.format(date);
 		}
@@ -897,14 +920,14 @@ public class FragmentEntryProcessorHelperImpl
 
 		if (Validator.isNull(pattern)) {
 			DateFormat dateFormat = DateFormatFactoryUtil.getSimpleDateFormat(
-				defaultPattern, locale);
+				defaultPattern, locale, timeZone);
 
 			return dateFormat.format(date);
 		}
 
 		try {
 			DateFormat dateFormat = DateFormatFactoryUtil.getSimpleDateFormat(
-				pattern, locale);
+				pattern, locale, timeZone);
 
 			return dateFormat.format(date);
 		}
@@ -914,7 +937,7 @@ public class FragmentEntryProcessorHelperImpl
 			}
 
 			DateFormat dateFormat = DateFormatFactoryUtil.getSimpleDateFormat(
-				defaultPattern, locale);
+				defaultPattern, locale, timeZone);
 
 			return dateFormat.format(date);
 		}
@@ -996,31 +1019,6 @@ public class FragmentEntryProcessorHelperImpl
 		WebImage webImage = (WebImage)value;
 
 		return _getFileEntryId(groupId, webImage.getInfoItemReference());
-	}
-
-	private long _getGroupId(long scopeGroupId) {
-		if (scopeGroupId > 0) {
-			return scopeGroupId;
-		}
-
-		ServiceContext serviceContext =
-			ServiceContextThreadLocal.getServiceContext();
-
-		if ((serviceContext != null) &&
-			(serviceContext.getScopeGroupId() > 0)) {
-
-			return serviceContext.getScopeGroupId();
-		}
-
-		Long groupId = GroupThreadLocal.getGroupId();
-
-		if (groupId != null) {
-			return groupId;
-		}
-
-		throw new IllegalStateException(
-			"Neither service context thread local nor group thread local are " +
-				"initialized");
 	}
 
 	private InfoCollectionTextFormatter<Object> _getInfoCollectionTextFormatter(

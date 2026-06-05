@@ -5,9 +5,11 @@
 
 package com.liferay.site.cmp.site.initializer.internal.fragment.renderer;
 
+import com.liferay.asset.kernel.service.AssetTagLocalService;
+import com.liferay.depot.service.DepotEntryLocalService;
 import com.liferay.fragment.renderer.FragmentRenderer;
 import com.liferay.object.service.ObjectDefinitionLocalService;
-import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.object.service.ObjectEntryService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.site.cmp.site.initializer.internal.display.context.ViewProjectsSectionDisplayContext;
@@ -43,11 +45,11 @@ public class ViewProjectsJSPSectionFragmentRenderer
 				WebKeys.THEME_DISPLAY);
 
 		return new ViewProjectsSectionDisplayContext(
-			httpServletRequest,
+			_assetTagLocalService, _depotEntryLocalService, httpServletRequest,
 			_objectDefinitionLocalService.
 				fetchObjectDefinitionByExternalReferenceCode(
 					"L_CMP_PROJECT", themeDisplay.getCompanyId()),
-			_userLocalService);
+			_objectEntryService);
 	}
 
 	@Override
@@ -56,9 +58,15 @@ public class ViewProjectsJSPSectionFragmentRenderer
 	}
 
 	@Reference
+	private AssetTagLocalService _assetTagLocalService;
+
+	@Reference
+	private DepotEntryLocalService _depotEntryLocalService;
+
+	@Reference
 	private ObjectDefinitionLocalService _objectDefinitionLocalService;
 
 	@Reference
-	private UserLocalService _userLocalService;
+	private ObjectEntryService _objectEntryService;
 
 }

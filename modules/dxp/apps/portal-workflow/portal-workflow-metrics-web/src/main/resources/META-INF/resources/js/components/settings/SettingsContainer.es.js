@@ -4,17 +4,12 @@
  */
 
 import React from 'react';
-import {Route, Switch} from 'react-router-dom';
+import {Outlet} from 'react-router';
 
 import {usePageTitle} from '../../shared/hooks/usePageTitle.es';
-import IndexesPage from './indexes-page/IndexesPage.es';
 
 export default function SettingsContainer() {
 	usePageTitle(Liferay.Language.get('settings'));
 
-	return (
-		<Switch>
-			<Route component={IndexesPage} exact path="/settings/indexes" />
-		</Switch>
-	);
+	return <Outlet />;
 }

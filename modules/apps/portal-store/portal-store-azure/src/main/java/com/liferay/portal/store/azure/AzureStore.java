@@ -33,6 +33,7 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.instance.PortalInstancePool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
@@ -100,55 +101,15 @@ public class AzureStore implements Store {
 	}
 
 	@Override
+	public void deleteDirectory(long companyId) {
+		_deleteBlob(companyId + StringPool.SLASH);
+	}
+
+	@Override
 	public void deleteDirectory(
 		long companyId, long repositoryId, String dirName) {
 
-		BlobBatchClient blobBatchClient = new BlobBatchClientBuilder(
-			_blobContainerClient.getServiceClient()
-		).buildClient();
-
-		ListBlobsOptions listBlobsOptions = new ListBlobsOptions();
-
-		listBlobsOptions.setMaxResultsPerPage(256);
-		listBlobsOptions.setPrefix(
-			_getPrefix(companyId, repositoryId, dirName));
-
-		PagedIterable<BlobItem> pagedIterable = _blobContainerClient.listBlobs(
-			listBlobsOptions, null);
-
-		for (PagedResponse<BlobItem> pagedResponse :
-				pagedIterable.iterableByPage()) {
-
-			BlobBatch blobBatch = blobBatchClient.getBlobBatch();
-
-			List<BlobItem> blobItems = pagedResponse.getValue();
-
-			List<Response<Void>> responses = new ArrayList<>(blobItems.size());
-
-			blobItems.forEach(
-				blobItem -> responses.add(
-					blobBatch.deleteBlob(
-						_blobContainerClient.getBlobContainerName(),
-						blobItem.getName())));
-
-			if (!blobItems.isEmpty()) {
-				blobBatchClient.submitBatchWithResponse(
-					blobBatch, false, null, Context.NONE);
-			}
-
-			for (Response<Void> response : responses) {
-				if (response.getStatusCode() < 400) {
-					continue;
-				}
-
-				HttpRequest httpRequest = response.getRequest();
-
-				_log.error(
-					StringBundler.concat(
-						"Unable to delete ", httpRequest.getUrl(),
-						" due to status code ", response.getStatusCode()));
-			}
-		}
+		_deleteBlob(_getPrefix(companyId, repositoryId, dirName));
 	}
 
 	@Override
@@ -281,6 +242,50 @@ public class AzureStore implements Store {
 		return blobClient.exists();
 	}
 
+	@Override
+	public void verifyCompanyStores() throws PortalException {
+		long[] companyIds = PortalInstancePool.getCompanyIds();
+
+		try {
+			PagedIterable<BlobItem> blobs =
+				_blobContainerClient.listBlobsByHierarchy(StringPool.BLANK);
+
+			for (BlobItem blobItem : blobs) {
+				if (!Boolean.TRUE.equals(blobItem.isPrefix())) {
+					continue;
+				}
+
+				String folderName = blobItem.getName();
+
+				if (folderName.endsWith(StringPool.SLASH)) {
+					folderName = folderName.substring(
+						0, folderName.length() - 1);
+				}
+
+				if (!Validator.isNumber(folderName)) {
+					continue;
+				}
+
+				long storeCompanyId = GetterUtil.getLong(folderName);
+
+				if (ArrayUtil.contains(companyIds, storeCompanyId)) {
+					continue;
+				}
+
+				if (_log.isWarnEnabled()) {
+					_log.warn(
+						StringBundler.concat(
+							"Manually remove unused store ", storeCompanyId,
+							" that belongs to company ", storeCompanyId,
+							" if it is no longer used anywhere else"));
+				}
+			}
+		}
+		catch (Exception exception) {
+			throw new PortalException(exception);
+		}
+	}
+
 	@Activate
 	@Modified
 	protected void activate(Map<String, Object> properties) {
@@ -337,6 +342,54 @@ public class AzureStore implements Store {
 	@Deactivate
 	protected void deactivate() {
 		_blobContainerClient = null;
+	}
+
+	private void _deleteBlob(String prefix) {
+		BlobBatchClient blobBatchClient = new BlobBatchClientBuilder(
+			_blobContainerClient.getServiceClient()
+		).buildClient();
+
+		ListBlobsOptions listBlobsOptions = new ListBlobsOptions();
+
+		listBlobsOptions.setMaxResultsPerPage(256);
+		listBlobsOptions.setPrefix(prefix);
+
+		PagedIterable<BlobItem> pagedIterable = _blobContainerClient.listBlobs(
+			listBlobsOptions, null);
+
+		for (PagedResponse<BlobItem> pagedResponse :
+				pagedIterable.iterableByPage()) {
+
+			BlobBatch blobBatch = blobBatchClient.getBlobBatch();
+
+			List<BlobItem> blobItems = pagedResponse.getValue();
+
+			List<Response<Void>> responses = new ArrayList<>(blobItems.size());
+
+			blobItems.forEach(
+				blobItem -> responses.add(
+					blobBatch.deleteBlob(
+						_blobContainerClient.getBlobContainerName(),
+						blobItem.getName())));
+
+			if (!blobItems.isEmpty()) {
+				blobBatchClient.submitBatchWithResponse(
+					blobBatch, false, null, Context.NONE);
+			}
+
+			for (Response<Void> response : responses) {
+				if (response.getStatusCode() < 400) {
+					continue;
+				}
+
+				HttpRequest httpRequest = response.getRequest();
+
+				_log.error(
+					StringBundler.concat(
+						"Unable to delete ", httpRequest.getUrl(),
+						" because of ", response.getStatusCode()));
+			}
+		}
 	}
 
 	private String _getAzurePath(

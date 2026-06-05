@@ -16,6 +16,7 @@ import com.liferay.headless.admin.user.dto.v1_0.Link;
 import com.liferay.headless.admin.user.dto.v1_0.SharedAsset;
 import com.liferay.headless.admin.user.internal.dto.v1_0.util.CreatorUtil;
 import com.liferay.object.constants.ObjectFieldConstants;
+import com.liferay.object.constants.ObjectFolderConstants;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntry;
 import com.liferay.object.model.ObjectEntryFolder;
@@ -26,13 +27,18 @@ import com.liferay.object.service.ObjectEntryLocalService;
 import com.liferay.object.service.ObjectEntryService;
 import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.petra.function.transform.TransformUtil;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.security.auth.GuestOrUserUtil;
+import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
+import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermissionRegistryUtil;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -50,7 +56,6 @@ import com.liferay.sharing.security.permission.SharingEntryAction;
 
 import java.io.Serializable;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -95,10 +100,26 @@ public class SharedAssetDTOConverter
 		return new SharedAsset() {
 			{
 				setActionIds(
-					() -> TransformUtil.transformToArray(
-						SharingEntryAction.getSharingEntryActions(
-							sharingEntry.getActionIds()),
-						SharingEntryAction::getActionId, String.class));
+					() -> {
+						String[] actionIds = TransformUtil.transformToArray(
+							SharingEntryAction.getSharingEntryActions(
+								sharingEntry.getActionIds()),
+							SharingEntryAction::getActionId, String.class);
+
+						if (!ArrayUtil.contains(
+								actionIds,
+								SharingEntryAction.UPDATE.getActionId()) &&
+							_hasUpdatePermission(
+								GuestOrUserUtil.getPermissionChecker(),
+								sharingEntry)) {
+
+							return ArrayUtil.append(
+								actionIds,
+								SharingEntryAction.UPDATE.getActionId());
+						}
+
+						return actionIds;
+					});
 				setAssetType(
 					() -> {
 						if (sharingEntryInterpreter == null) {
@@ -121,10 +142,7 @@ public class SharedAssetDTOConverter
 				setFile(
 					() -> NestedFieldsSupplier.supply(
 						"file",
-						fieldName -> _getFileEntry(
-							sharingEntry.getClassName(),
-							sharingEntry.getClassPK(),
-							sharingEntry.getCompanyId())));
+						fieldName -> _getFileEntry(sharingEntry.getClassPK())));
 				setFileTypeIcon(
 					() -> {
 						if (StringUtil.equals(
@@ -188,6 +206,46 @@ public class SharedAssetDTOConverter
 		};
 	}
 
+	private FileEntry _getFileEntry(long classPK) {
+		ObjectEntry objectEntry = _objectEntryLocalService.fetchObjectEntry(
+			classPK);
+
+		if (objectEntry == null) {
+			return null;
+		}
+
+		ObjectDefinition objectDefinition = objectEntry.getObjectDefinition();
+
+		if (!Objects.equals(
+				objectDefinition.getObjectFolderExternalReferenceCode(),
+				ObjectFolderConstants.EXTERNAL_REFERENCE_CODE_FILE_TYPES)) {
+
+			return null;
+		}
+
+		for (ObjectField objectField :
+				_objectFieldLocalService.getObjectFields(
+					objectDefinition.getObjectDefinitionId())) {
+
+			if (objectField.compareBusinessType(
+					ObjectFieldConstants.BUSINESS_TYPE_ATTACHMENT) &&
+				Objects.equals(objectField.getName(), "file")) {
+
+				Map<String, Serializable> values = objectEntry.getValues();
+
+				long fileEntryId = GetterUtil.getLong(values.get("file"));
+
+				if (fileEntryId != 0) {
+					return _getFileEntry(
+						fileEntryId, objectDefinition, objectEntry,
+						objectField);
+				}
+			}
+		}
+
+		return null;
+	}
+
 	private FileEntry _getFileEntry(
 		long fileEntryId, ObjectDefinition objectDefinition,
 		ObjectEntry objectEntry, ObjectField objectField) {
@@ -213,6 +271,21 @@ public class SharedAssetDTOConverter
 					_objectEntryService, objectField,
 					GuestOrUserUtil.getPermissionChecker(), _portal)));
 		fileEntry.setName(dlFileEntry::getFileName);
+		fileEntry.setPreviewURL(
+			() -> {
+				LiferayFileEntry liferayFileEntry = new LiferayFileEntry(
+					dlFileEntry);
+
+				String previewURL = _dlURLHelper.getPreviewURL(
+					liferayFileEntry, liferayFileEntry.getFileVersion(), null,
+					StringPool.BLANK);
+
+				if (Validator.isNull(previewURL)) {
+					return null;
+				}
+
+				return previewURL;
+			});
 		fileEntry.setThumbnailURL(
 			() -> {
 				String thumbnailURL = _dlURLHelper.getThumbnailSrc(
@@ -226,61 +299,6 @@ public class SharedAssetDTOConverter
 			});
 
 		return fileEntry;
-	}
-
-	private FileEntry _getFileEntry(
-		String className, long classPK, long companyId) {
-
-		ObjectDefinition cmsBasicDocumentObjectDefinition =
-			_objectDefinitionLocalService.
-				fetchObjectDefinitionByExternalReferenceCode(
-					"L_CMS_BASIC_DOCUMENT", companyId);
-
-		if ((cmsBasicDocumentObjectDefinition == null) ||
-			!Objects.equals(
-				className, cmsBasicDocumentObjectDefinition.getClassName())) {
-
-			return null;
-		}
-
-		ObjectEntry objectEntry = _objectEntryLocalService.fetchObjectEntry(
-			classPK);
-
-		if (objectEntry == null) {
-			return null;
-		}
-
-		ObjectDefinition objectDefinition =
-			_objectDefinitionLocalService.fetchObjectDefinition(
-				objectEntry.getObjectDefinitionId());
-
-		if (objectDefinition == null) {
-			return null;
-		}
-
-		List<ObjectField> objectFields =
-			_objectFieldLocalService.getObjectFields(
-				objectDefinition.getObjectDefinitionId());
-
-		for (ObjectField objectField : objectFields) {
-			if (objectField.compareBusinessType(
-					ObjectFieldConstants.BUSINESS_TYPE_ATTACHMENT)) {
-
-				Map<String, Serializable> values = objectEntry.getValues();
-
-				String objectFieldName = objectField.getName();
-
-				Serializable serializable = values.get(objectFieldName);
-
-				if (serializable instanceof Long) {
-					return _getFileEntry(
-						GetterUtil.getLong(serializable), objectDefinition,
-						objectEntry, objectField);
-				}
-			}
-		}
-
-		return null;
 	}
 
 	private String _getMimeType(SharingEntry sharingEntry) {
@@ -353,6 +371,27 @@ public class SharedAssetDTOConverter
 		}
 
 		return fileEntry.getMimeType();
+	}
+
+	private boolean _hasUpdatePermission(
+			PermissionChecker permissionChecker, SharingEntry sharingEntry)
+		throws PortalException {
+
+		if (permissionChecker == null) {
+			return false;
+		}
+
+		ModelResourcePermission<?> modelResourcePermission =
+			ModelResourcePermissionRegistryUtil.getModelResourcePermission(
+				sharingEntry.getClassName());
+
+		if (modelResourcePermission != null) {
+			return modelResourcePermission.contains(
+				permissionChecker, sharingEntry.getClassPK(),
+				SharingEntryAction.UPDATE.getActionId());
+		}
+
+		return false;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

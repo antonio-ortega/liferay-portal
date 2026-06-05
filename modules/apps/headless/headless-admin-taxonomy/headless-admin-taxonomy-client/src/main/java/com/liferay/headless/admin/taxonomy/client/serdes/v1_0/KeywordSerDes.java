@@ -579,3 +579,4 @@ public class KeywordSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-816825089

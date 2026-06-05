@@ -35,6 +35,7 @@ public class CPDefinitionLinkUpgradeProcess extends UpgradeProcess {
 	protected void doUpgrade() throws Exception {
 		try (PreparedStatement preparedStatement = connection.prepareStatement(
 				"select * from CPDefinitionLink");
+
 			ResultSet resultSet = preparedStatement.executeQuery()) {
 
 			while (resultSet.next()) {
@@ -75,7 +76,7 @@ public class CPDefinitionLinkUpgradeProcess extends UpgradeProcess {
 
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				if (resultSet.next()) {
-					return resultSet.getLong(1);
+					return resultSet.getLong("publishedCPDefinitionId");
 				}
 			}
 		}
@@ -92,7 +93,8 @@ public class CPDefinitionLinkUpgradeProcess extends UpgradeProcess {
 
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				if (resultSet.next()) {
-					String defaultLanguageId = resultSet.getString(1);
+					String defaultLanguageId = resultSet.getString(
+						"defaultLanguageId");
 
 					if (defaultLanguageId != null) {
 						return defaultLanguageId;

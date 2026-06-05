@@ -124,8 +124,6 @@ public interface LayoutSet extends LayoutSetModel, PersistedModel {
 
 	public boolean isLayoutSetPrototypeUpdateable();
 
-	public boolean isLayoutSetReadyForPropagation();
-
 	public boolean isLogo();
 
 	public void setCompanyFallbackVirtualHostname(
@@ -146,3 +144,4 @@ public interface LayoutSet extends LayoutSetModel, PersistedModel {
 		java.util.NavigableMap<String, String> virtualHostnames);
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:2100142105

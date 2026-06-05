@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 /**
  * @author Shuyang Zhou
@@ -30,15 +31,19 @@ public class TomcatCluster {
 		_clusterOwnerClass = clusterOwnerClass;
 
 		_elasticSearchNetworkHostAddresses = SystemBundleUtil.callService(
-			"com.liferay.portal.search.elasticsearch7.internal.connection." +
+			"com.liferay.portal.search.elasticsearch8.internal.connection." +
 				"ElasticsearchConnectionManager",
 			elasticsearchConnectionManager -> {
 				Object elasticsearchConnection = ReflectionTestUtil.invoke(
 					elasticsearchConnectionManager,
 					"getElasticsearchConnection", new Class<?>[0]);
 
-				return ReflectionTestUtil.getFieldValue(
-					elasticsearchConnection, "_networkHostAddresses");
+				Supplier<String[]> networkHostAddressesSupplier =
+					ReflectionTestUtil.getFieldValue(
+						elasticsearchConnection,
+						"_networkHostAddressesSupplier");
+
+				return networkHostAddressesSupplier.get();
 			});
 	}
 

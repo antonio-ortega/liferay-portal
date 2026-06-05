@@ -46,11 +46,6 @@
 		<td></td>
 	</tr>
 	<tr>
-		<td>DUPLICATED_ENTRY_VALUE</td>
-		<td>(//tbody//*[contains(text(),'${key_entry}')])[2]</td>
-		<td></td>
-	</tr>
-	<tr>
 		<td>ENTRY_COLUMN</td>
 		<td>//th[contains(.,'${key_column}')]</td>
 		<td></td>
@@ -132,12 +127,12 @@
 	</tr>
 	<tr>
 		<td>SEARCH_FIELD</td>
-		<td>//input[contains(@aria-label,'Search')]</td>
+		<td>//input[contains(@aria-label,'Search')][not(@data-qa-id='sideNavigationSearchInput')]</td>
 		<td></td>
 	</tr>
 	<tr>
 		<td>SEARCH_RELATIONSHIP_ENTRY</td>
-		<td>//input[contains(@placeholder,'Search')]</td>
+		<td>//input[contains(@placeholder,'Search')][not(@data-qa-id='sideNavigationSearchInput')]</td>
 		<td></td>
 	</tr>
 	<tr>

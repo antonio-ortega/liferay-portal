@@ -5,17 +5,19 @@
 
 package com.liferay.site.cms.site.initializer.internal.display.context;
 
+import com.liferay.depot.constants.DepotConstants;
+import com.liferay.depot.service.DepotEntryServiceUtil;
 import com.liferay.layout.constants.LayoutTypeSettingsConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalServiceUtil;
 import com.liferay.object.admin.rest.dto.v1_0.ObjectDefinition;
-import com.liferay.object.admin.rest.dto.v1_0.ObjectRelationship;
 import com.liferay.object.admin.rest.dto.v1_0.util.ObjectDefinitionUtil;
 import com.liferay.object.admin.rest.resource.v1_0.ObjectDefinitionResource;
+import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.constants.ObjectFolderConstants;
-import com.liferay.object.constants.ObjectRelationshipConstants;
+import com.liferay.object.field.business.type.ObjectFieldBusinessType;
+import com.liferay.object.field.business.type.ObjectFieldBusinessTypeRegistry;
 import com.liferay.object.service.ObjectRelationshipLocalServiceUtil;
-import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
@@ -33,10 +35,8 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.vulcan.dto.converter.DTOConverter;
-import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
-import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
+import com.liferay.site.cms.site.initializer.internal.util.DefaultLanguageLabelsUtil;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -44,7 +44,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * @author Eudaldo Alonso
@@ -52,14 +51,14 @@ import java.util.Objects;
 public class StructureBuilderDisplayContext {
 
 	public StructureBuilderDisplayContext(
-		DTOConverterRegistry dtoConverterRegistry,
 		HttpServletRequest httpServletRequest, JSONFactory jsonFactory,
-		ObjectDefinitionResource.Factory objectDefinitionResourceFactory) {
+		ObjectDefinitionResource.Factory objectDefinitionResourceFactory,
+		ObjectFieldBusinessTypeRegistry objectFieldBusinessTypeRegistry) {
 
-		_dtoConverterRegistry = dtoConverterRegistry;
 		_httpServletRequest = httpServletRequest;
 		_jsonFactory = jsonFactory;
 		_objectDefinitionResourceFactory = objectDefinitionResourceFactory;
+		_objectFieldBusinessTypeRegistry = objectFieldBusinessTypeRegistry;
 
 		_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
@@ -110,6 +109,8 @@ public class StructureBuilderDisplayContext {
 					return true;
 				}
 			).put(
+				"countries", _getCountries()
+			).put(
 				"editStructureDisplayPageURL",
 				() -> StringBundler.concat(
 					_themeDisplay.getPortalURL(), _themeDisplay.getPathMain(),
@@ -144,6 +145,27 @@ public class StructureBuilderDisplayContext {
 					_themeDisplay.getPortalURL(), _themeDisplay.getPathMain(),
 					"/cms/reset_translation_display_page")
 			).put(
+				"spaceExternalReferenceCode",
+				() -> {
+					List<Long> depotEntryGroupIds =
+						DepotEntryServiceUtil.getDepotEntryGroupIds(
+							_themeDisplay.getCompanyId(),
+							_themeDisplay.getUserId(),
+							DepotConstants.TYPE_SPACE);
+
+					for (Long groupId : depotEntryGroupIds) {
+						Group group = GroupLocalServiceUtil.fetchGroup(groupId);
+
+						if (group == null) {
+							continue;
+						}
+
+						return group.getExternalReferenceCode();
+					}
+
+					return null;
+				}
+			).put(
 				"structureBuilderURL",
 				() -> PortalUtil.getLayoutFullURL(
 					LayoutLocalServiceUtil.getLayoutByFriendlyURL(
@@ -152,26 +174,32 @@ public class StructureBuilderDisplayContext {
 					_themeDisplay)
 			)
 		).put(
+			"defaultLanguageLabels",
+			DefaultLanguageLabelsUtil.getDefaultLanguageLabelsJSONObject(
+				_themeDisplay, "boolean", "date", "date-and-time", "decimal",
+				"file", "long-text", "numeric", "repeatable-group", "rich-text",
+				"select-from-list", "select-related-content", "text", "title",
+				"upload")
+		).put(
 			"state",
 			JSONUtil.put(
 				"mainObjectDefinition",
 				_getObjectDefinitionJSONObject(_getObjectDefinition())
 			).put(
 				"objectDefinitions", _getObjectDefinitionsJSONObject()
-			).put(
-				"relatedContentObjectRelationships",
-				() -> {
-					ObjectDefinition objectDefinition = _getObjectDefinition();
-
-					if (objectDefinition != null) {
-						return _getRelatedContentObjectRelationships(
-							objectDefinition.getId());
-					}
-
-					return Collections.emptyList();
-				}
 			)
 		).build();
+	}
+
+	private List<Map<String, String>> _getCountries() {
+		ObjectFieldBusinessType phoneNumberObjectFieldBusinessType =
+			_objectFieldBusinessTypeRegistry.getObjectFieldBusinessType(
+				ObjectFieldConstants.BUSINESS_TYPE_PHONE_NUMBER);
+
+		Map<String, Object> renderingProperties =
+			phoneNumberObjectFieldBusinessType.getRenderingProperties();
+
+		return (List<Map<String, String>>)renderingProperties.get("countries");
 	}
 
 	private ObjectDefinition _getObjectDefinition() throws Exception {
@@ -294,47 +322,14 @@ public class StructureBuilderDisplayContext {
 		return _objectFolderExternalReferenceCode;
 	}
 
-	private List<ObjectRelationship> _getRelatedContentObjectRelationships(
-		long objectDefinitionId) {
-
-		DTOConverter
-			<com.liferay.object.model.ObjectRelationship, ObjectRelationship>
-				dtoConverter =
-					(DTOConverter
-						<com.liferay.object.model.ObjectRelationship,
-						 ObjectRelationship>)
-							 _dtoConverterRegistry.getDTOConverter(
-								 com.liferay.object.model.ObjectRelationship.
-									 class.getName());
-
-		return TransformUtil.transform(
-			ObjectRelationshipLocalServiceUtil.
-				getObjectRelationshipsByObjectDefinitionId2(
-					objectDefinitionId, false),
-			objectRelationship -> {
-				if (!Objects.equals(
-						objectRelationship.getType(),
-						ObjectRelationshipConstants.TYPE_ONE_TO_MANY)) {
-
-					return null;
-				}
-
-				return dtoConverter.toDTO(
-					new DefaultDTOConverterContext(
-						false, null, null, null, null,
-						_themeDisplay.getLocale(), null,
-						_themeDisplay.getUser()),
-					objectRelationship);
-			});
-	}
-
-	private final DTOConverterRegistry _dtoConverterRegistry;
 	private final HttpServletRequest _httpServletRequest;
 	private final JSONFactory _jsonFactory;
 	private ObjectDefinition _objectDefinition;
 	private final ObjectDefinitionResource.Factory
 		_objectDefinitionResourceFactory;
 	private List<ObjectDefinition> _objectDefinitions;
+	private final ObjectFieldBusinessTypeRegistry
+		_objectFieldBusinessTypeRegistry;
 	private String _objectFolderExternalReferenceCode;
 	private final ThemeDisplay _themeDisplay;
 

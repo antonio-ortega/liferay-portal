@@ -448,3 +448,4 @@ public interface ObjectRelationshipLocalService
 		throws PortalException;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:1607602875

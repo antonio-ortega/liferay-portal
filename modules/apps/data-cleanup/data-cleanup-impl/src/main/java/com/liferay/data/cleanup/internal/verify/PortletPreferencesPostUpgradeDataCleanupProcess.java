@@ -69,10 +69,11 @@ public class PortletPreferencesPostUpgradeDataCleanupProcess
 
 		try (PreparedStatement preparedStatement = _connection.prepareStatement(
 				"select id_, portletId from Portlet");
+
 			ResultSet resultSet = preparedStatement.executeQuery()) {
 
 			while (resultSet.next()) {
-				String portletId = resultSet.getString(2);
+				String portletId = resultSet.getString("portletId");
 
 				if ((!portletId.startsWith("com.liferay.") &&
 					 !portletId.startsWith("com_liferay_")) ||
@@ -82,9 +83,8 @@ public class PortletPreferencesPostUpgradeDataCleanupProcess
 				}
 
 				if (_deletePortlets) {
-					long id_ = resultSet.getLong(1);
-
-					_portletLocalService.deletePortlet(id_);
+					_portletLocalService.deletePortlet(
+						resultSet.getLong("id_"));
 				}
 
 				DataCleanupLoggingUtil.logDelete(

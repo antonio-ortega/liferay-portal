@@ -5,6 +5,7 @@
 
 package com.liferay.headless.commerce.admin.catalog.internal.resource.v1_0;
 
+import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.Diagram;
 import com.liferay.headless.commerce.admin.catalog.resource.v1_0.DiagramResource;
 import com.liferay.petra.function.UnsafeBiConsumer;
@@ -73,6 +74,9 @@ public abstract class BaseDiagramResourceImpl
 	 *
 	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/products/by-externalReferenceCode/{externalReferenceCode}/diagrams'  -u 'test@liferay.com:test'
 	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Returns the diagram setting attached to the product identified by external reference code. Calls CPDefinitionService.fetchCPDefinitionByCProductExternalReferenceCode + CSDiagramSettingService.getCSDiagramSettingByCPDefinitionId. Validation -- NoSuchCPDefinitionException -> 404 when product ERC not found; NoSuchCSDiagramSettingException -> 404 when no diagram setting exists."
+	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
@@ -105,6 +109,9 @@ public abstract class BaseDiagramResourceImpl
 	 *
 	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/products/{id}/diagrams'  -u 'test@liferay.com:test'
 	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Returns the diagram setting attached to the product identified by product id. Calls CPDefinitionService.fetchCPDefinitionByCProductId + CSDiagramSettingService.getCSDiagramSettingByCPDefinitionId. Validation -- NoSuchCPDefinitionException -> 404 when product id not found; NoSuchCSDiagramSettingException -> 404 when no diagram setting exists."
+	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
@@ -135,6 +142,9 @@ public abstract class BaseDiagramResourceImpl
 	 *
 	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/diagrams/{diagramId}' -d $'{"attachmentBase64": ___, "color": ___, "id": ___, "imageId": ___, "radius": ___, "type": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Partially updates the diagram setting identified by diagramId. Calls CSDiagramSettingService.getCSDiagramSetting + DiagramUtil.updateCSDiagramSetting. Validation -- NoSuchCSDiagramSettingException -> 404 when diagramId not found. Side effects -- Updates the diagram's image attachment and may replace the linked DL file entry."
+	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
@@ -167,6 +177,9 @@ public abstract class BaseDiagramResourceImpl
 	 *
 	 * curl -X 'POST' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/products/by-externalReferenceCode/{externalReferenceCode}/diagrams' -d $'{"attachmentBase64": ___, "color": ___, "id": ___, "imageId": ___, "radius": ___, "type": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Creates a diagram setting under the product identified by external reference code. Calls CPDefinitionService.fetchCPDefinitionByCProductExternalReferenceCode + DiagramUtil.addCSDiagramSetting. Validation -- NoSuchCPDefinitionException -> 404 when product ERC not found. Side effects -- Creates the diagram setting and links an attachment as the diagram image."
+	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
@@ -201,6 +214,9 @@ public abstract class BaseDiagramResourceImpl
 	 *
 	 * curl -X 'POST' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/products/{id}/diagrams' -d $'{"attachmentBase64": ___, "color": ___, "id": ___, "imageId": ___, "radius": ___, "type": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Creates a diagram setting under the product identified by product id. Calls CPDefinitionService.fetchCPDefinitionByCProductId + DiagramUtil.addCSDiagramSetting. Validation -- NoSuchCPDefinitionException -> 404 when product id not found. Side effects -- Creates the diagram setting and links an attachment as the diagram image."
+	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
@@ -380,6 +396,15 @@ public abstract class BaseDiagramResourceImpl
 			@Override
 			public Locale getPreferredLocale() {
 				return LocaleUtil.fromLanguageId(languageId);
+			}
+
+			@Override
+			public boolean isAcceptAllLanguages() {
+				if (ExportImportThreadLocal.isExportInProcess()) {
+					return true;
+				}
+
+				return AcceptLanguage.super.isAcceptAllLanguages();
 			}
 
 		};
@@ -981,3 +1006,4 @@ public abstract class BaseDiagramResourceImpl
 		LogFactoryUtil.getLog(BaseDiagramResourceImpl.class);
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1750204335

@@ -251,22 +251,21 @@ public class PriceListResourceImpl extends BasePriceListResourceImpl {
 		CommercePriceList commercePriceList =
 			_commercePriceListService.addOrUpdateCommercePriceList(
 				externalReferenceCode, commerceCatalog.getGroupId(), 0L,
-				commerceCurrency.getCode(),
+				GetterUtil.get(priceList.getParentPriceListId(), 0L),
+				GetterUtil.get(priceList.getCatalogBasePriceList(), false),
+				commerceCurrency.getCode(), displayDateConfig.getDay(),
+				displayDateConfig.getHour(), displayDateConfig.getMinute(),
+				displayDateConfig.getMonth(), displayDateConfig.getYear(),
+				expirationDateConfig.getDay(), expirationDateConfig.getHour(),
+				expirationDateConfig.getMinute(),
+				expirationDateConfig.getMonth(), expirationDateConfig.getYear(),
+				priceList.getName(),
 				GetterUtil.get(priceList.getNetPrice(), true),
+				GetterUtil.getBoolean(priceList.getNeverExpire(), true),
+				GetterUtil.get(priceList.getPriority(), 0D),
 				GetterUtil.get(
 					priceList.getTypeAsString(),
 					CommercePriceListConstants.TYPE_PRICE_LIST),
-				GetterUtil.get(priceList.getParentPriceListId(), 0L),
-				GetterUtil.get(priceList.getCatalogBasePriceList(), false),
-				priceList.getName(),
-				GetterUtil.get(priceList.getPriority(), 0D),
-				displayDateConfig.getMonth(), displayDateConfig.getDay(),
-				displayDateConfig.getYear(), displayDateConfig.getHour(),
-				displayDateConfig.getMinute(), expirationDateConfig.getMonth(),
-				expirationDateConfig.getDay(), expirationDateConfig.getYear(),
-				expirationDateConfig.getHour(),
-				expirationDateConfig.getMinute(),
-				GetterUtil.getBoolean(priceList.getNeverExpire(), true),
 				serviceContext);
 
 		// Expando
@@ -483,10 +482,10 @@ public class PriceListResourceImpl extends BasePriceListResourceImpl {
 							priceModifier.getExternalReferenceCode(),
 							GetterUtil.getLong(priceModifier.getId()),
 							commercePriceList.getGroupId(),
-							priceModifier.getTitle(), priceModifier.getTarget(),
 							commercePriceList.getCommercePriceListId(),
-							priceModifier.getModifierType(),
+							priceModifier.getTitle(), priceModifier.getTarget(),
 							priceModifier.getModifierAmount(),
+							priceModifier.getModifierType(),
 							GetterUtil.get(priceList.getPriority(), 0D),
 							GetterUtil.getBoolean(
 								priceModifier.getActive(), true),
@@ -597,22 +596,23 @@ public class PriceListResourceImpl extends BasePriceListResourceImpl {
 
 		commercePriceList = _commercePriceListService.updateCommercePriceList(
 			commercePriceList.getCommercePriceListId(),
-			commerceCurrency.getCode(),
-			GetterUtil.get(
-				priceList.getNetPrice(), commercePriceList.isNetPrice()),
 			GetterUtil.get(
 				priceList.getParentPriceListId(),
 				commercePriceList.getParentCommercePriceListId()),
+			commercePriceList.isCatalogBasePriceList(),
+			commerceCurrency.getCode(), displayDateConfig.getDay(),
+			displayDateConfig.getHour(), displayDateConfig.getMinute(),
+			displayDateConfig.getMonth(), displayDateConfig.getYear(),
+			expirationDateConfig.getDay(), expirationDateConfig.getHour(),
+			expirationDateConfig.getMinute(), expirationDateConfig.getMonth(),
+			expirationDateConfig.getYear(),
 			GetterUtil.get(priceList.getName(), commercePriceList.getName()),
 			GetterUtil.get(
-				priceList.getPriority(), commercePriceList.getPriority()),
-			displayDateConfig.getMonth(), displayDateConfig.getDay(),
-			displayDateConfig.getYear(), displayDateConfig.getHour(),
-			displayDateConfig.getMinute(), expirationDateConfig.getMonth(),
-			expirationDateConfig.getDay(), expirationDateConfig.getYear(),
-			expirationDateConfig.getHour(), expirationDateConfig.getMinute(),
+				priceList.getNetPrice(), commercePriceList.isNetPrice()),
 			GetterUtil.getBoolean(priceList.getNeverExpire(), true),
-			serviceContext);
+			GetterUtil.get(
+				priceList.getPriority(), commercePriceList.getPriority()),
+			commercePriceList.getType(), serviceContext);
 
 		// Expando
 

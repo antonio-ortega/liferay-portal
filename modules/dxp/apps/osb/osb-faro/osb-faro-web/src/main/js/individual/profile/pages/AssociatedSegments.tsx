@@ -1,5 +1,6 @@
 import * as API from 'shared/api';
 import AssociatedSegmentsList from 'contacts/components/AssociatedSegmentsList';
+import ClayIcon from '@clayui/icon';
 import ClayLink from '@clayui/link';
 import NoResultsDisplay from 'shared/components/NoResultsDisplay';
 import React, {useState} from 'react';
@@ -12,7 +13,18 @@ import {
 } from 'shared/util/pagination';
 import {EntityTypes, Sizes} from 'shared/util/constants';
 import {RootState} from 'shared/store';
+import {Routes, SEGMENTS, toRoute} from 'shared/util/router';
 import {useQueryPagination} from 'shared/hooks/useQueryPagination';
+
+interface IFetchAssociatedSegmentsArgs {
+	[key: string]: unknown;
+	delta: number;
+	groupId: string;
+	id: string;
+	orderIOMap?: unknown;
+	page: number;
+	query?: string;
+}
 
 const fetchAssociatedSegments = ({
 	delta,
@@ -22,7 +34,7 @@ const fetchAssociatedSegments = ({
 	page,
 	query,
 	...otherParams
-}) =>
+}: IFetchAssociatedSegmentsArgs) =>
 	API.individualSegment.search({
 		contactsEntityId: id,
 		contactsEntityType: EntityTypes.Individual,
@@ -65,14 +77,67 @@ const AssociatedSegments: React.FC<IAssociatedSegmentsProps> = ({
 
 	const [total, setTotal] = useState<number>(0);
 
-	const segmentsDataSourceFn = dataSourceParams =>
-		fetchAssociatedSegments({channelId, ...dataSourceParams}).then(
-			response => {
+	const segmentsDataSourceFn = (dataSourceParams: {[key: string]: any}) =>
+		fetchAssociatedSegments({
+			channelId,
+			groupId,
+			id,
+			...dataSourceParams
+		} as unknown as IFetchAssociatedSegmentsArgs).then(
+			(response: {total: number}) => {
 				setTotal(response.total);
 
 				return response;
 			}
 		);
+
+	const renderNoResults = () => (
+		<NoResultsDisplay
+			className='m-5'
+			description={
+				<>
+					{Liferay.Language.get(
+						'this-individual-does-not-belong-to-a-segment-create-one-to-get-started'
+					)}
+					<ClayLink
+						className='d-block'
+						href={URLConstants.CreateSegments}
+						key='DOCUMENTATION'
+						target='_blank'
+					>
+						{Liferay.Language.get('learn-more-about-segments')}
+						<ClayIcon
+							aria-label={Liferay.Language.get(
+								'learn-more-about-data-sources'
+							)}
+							className='ml-1'
+							fontSize={8}
+							symbol='shortcut'
+						/>
+					</ClayLink>
+				</>
+			}
+			icon={{
+				border: false,
+				size: Sizes.XXXLarge,
+				symbol: 'ac_satellite'
+			}}
+			title={Liferay.Language.get('there-are-no-segments-found')}
+		>
+			<ClayLink
+				button
+				className='button-root'
+				displayType='primary'
+				href={toRoute(Routes.CONTACTS_LIST_SEGMENT, {
+					channelId,
+					groupId,
+					type: SEGMENTS
+				})}
+			>
+				{Liferay.Language.get('create-segment')}
+			</ClayLink>
+		</NoResultsDisplay>
+	);
 
 	return (
 		<AssociatedSegmentsList
@@ -81,36 +146,7 @@ const AssociatedSegments: React.FC<IAssociatedSegmentsProps> = ({
 			delta={delta}
 			groupId={groupId}
 			id={id}
-			noResultsRenderer={() => (
-				<NoResultsDisplay
-					description={
-						<>
-							{Liferay.Language.get(
-								'create-a-segment-to-get-started'
-							)}
-
-							<ClayLink
-								className='d-block'
-								href={
-									URLConstants.IndividualProfilesDocumentSegments
-								}
-								key='DOCUMENTATION'
-								target='_blank'
-							>
-								{Liferay.Language.get(
-									'learn-more-about-segments'
-								)}
-							</ClayLink>
-						</>
-					}
-					icon={{
-						border: false,
-						size: Sizes.XXXLarge,
-						symbol: 'ac_satellite'
-					}}
-					title={Liferay.Language.get('there-are-no-segments-found')}
-				/>
-			)}
+			noResultsRenderer={renderNoResults}
 			orderIOMap={orderIOMap}
 			page={page}
 			query={query}

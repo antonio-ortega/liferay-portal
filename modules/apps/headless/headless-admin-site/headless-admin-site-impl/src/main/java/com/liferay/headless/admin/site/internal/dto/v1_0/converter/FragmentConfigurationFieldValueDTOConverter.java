@@ -29,6 +29,7 @@ import com.liferay.headless.admin.site.dto.v1_0.SelectFragmentConfigurationField
 import com.liferay.headless.admin.site.dto.v1_0.SiteMenuNavigationMenuValue;
 import com.liferay.headless.admin.site.dto.v1_0.SitePageURLValue;
 import com.liferay.headless.admin.site.dto.v1_0.SitePagesNavigationMenuValue;
+import com.liferay.headless.admin.site.dto.v1_0.TargetCollectionDisplayFragmentConfigurationFieldValue;
 import com.liferay.headless.admin.site.dto.v1_0.TemplateReference;
 import com.liferay.headless.admin.site.dto.v1_0.TextFragmentConfigurationFieldValue;
 import com.liferay.headless.admin.site.dto.v1_0.URLFragmentConfigurationFieldValue;
@@ -44,6 +45,7 @@ import com.liferay.headless.admin.site.internal.dto.v1_0.util.LayoutUtil;
 import com.liferay.headless.admin.site.internal.dto.v1_0.util.LocalizedValueUtil;
 import com.liferay.info.item.ERCInfoItemIdentifier;
 import com.liferay.info.item.InfoItemServiceRegistry;
+import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.Layout;
@@ -199,6 +201,21 @@ public class FragmentConfigurationFieldValueDTOConverter
 			return _getSelectFragmentConfigurationFieldValue(
 				fragmentConfigurationField,
 				fragmentFragmentConfigurationFieldValue);
+		}
+
+		if (Objects.equals(
+				type,
+				FragmentConfigurationFieldValue.Type.
+					TARGET_COLLECTION_DISPLAY)) {
+
+			if (!(fragmentFragmentConfigurationFieldValue instanceof
+					JSONArray)) {
+
+				return null;
+			}
+
+			return _getTargetCollectionDisplayFragmentConfigurationFieldValue(
+				(JSONArray)fragmentFragmentConfigurationFieldValue);
 		}
 
 		if (Objects.equals(type, FragmentConfigurationFieldValue.Type.TEXT)) {
@@ -482,8 +499,8 @@ public class FragmentConfigurationFieldValueDTOConverter
 		}
 		else {
 			colorPickerFragmentConfigurationFieldValue.setValue(
-				() -> GetterUtil.getString(
-					fragmentFragmentConfigurationFieldValue));
+				() -> Objects.toString(
+					fragmentFragmentConfigurationFieldValue, null));
 		}
 
 		return colorPickerFragmentConfigurationFieldValue;
@@ -656,8 +673,8 @@ public class FragmentConfigurationFieldValueDTOConverter
 		}
 		else {
 			lengthFragmentConfigurationFieldValue.setValue(
-				() -> GetterUtil.getString(
-					fragmentFragmentConfigurationFieldValue));
+				() -> Objects.toString(
+					fragmentFragmentConfigurationFieldValue, null));
 		}
 
 		return lengthFragmentConfigurationFieldValue;
@@ -773,8 +790,8 @@ public class FragmentConfigurationFieldValueDTOConverter
 		}
 		else {
 			selectFragmentConfigurationFieldValue.setValue(
-				() -> GetterUtil.getString(
-					fragmentFragmentConfigurationFieldValue));
+				() -> Objects.toString(
+					fragmentFragmentConfigurationFieldValue, null));
 		}
 
 		return selectFragmentConfigurationFieldValue;
@@ -886,6 +903,18 @@ public class FragmentConfigurationFieldValueDTOConverter
 	}
 
 	private FragmentConfigurationFieldValue
+		_getTargetCollectionDisplayFragmentConfigurationFieldValue(
+			JSONArray jsonArray) {
+
+		return new TargetCollectionDisplayFragmentConfigurationFieldValue() {
+			{
+				setType(() -> Type.TARGET_COLLECTION_DISPLAY);
+				setValue(() -> JSONUtil.toStringArray(jsonArray));
+			}
+		};
+	}
+
+	private FragmentConfigurationFieldValue
 		_getTextFragmentConfigurationFieldValue(
 			FragmentConfigurationField fragmentConfigurationField,
 			Object fragmentFragmentConfigurationFieldValue) {
@@ -907,8 +936,8 @@ public class FragmentConfigurationFieldValueDTOConverter
 		}
 		else {
 			textFragmentConfigurationFieldValue.setValue(
-				() -> GetterUtil.getString(
-					fragmentFragmentConfigurationFieldValue));
+				() -> Objects.toString(
+					fragmentFragmentConfigurationFieldValue, null));
 		}
 
 		return textFragmentConfigurationFieldValue;

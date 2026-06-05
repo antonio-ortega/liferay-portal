@@ -84,13 +84,9 @@ public class UserServiceWhenUpdatingUserTest {
 	private User _updateUser(User user) throws Exception {
 		Contact contact = user.getContact();
 
-		Calendar birthdayCal = CalendarFactoryUtil.getCalendar();
+		Calendar calendar = CalendarFactoryUtil.getCalendar();
 
-		birthdayCal.setTime(contact.getBirthday());
-
-		int birthdayMonth = birthdayCal.get(Calendar.MONTH);
-		int birthdayDay = birthdayCal.get(Calendar.DATE);
-		int birthdayYear = birthdayCal.get(Calendar.YEAR);
+		calendar.setTime(contact.getBirthday());
 
 		long[] groupIds = null;
 		long[] organizationIds = null;
@@ -106,8 +102,9 @@ public class UserServiceWhenUpdatingUserTest {
 			user.getTimeZoneId(), user.getGreeting(), user.getComments(),
 			contact.getFirstName(), contact.getMiddleName(),
 			contact.getLastName(), contact.getPrefixListTypeId(),
-			contact.getSuffixListTypeId(), contact.isMale(), birthdayMonth,
-			birthdayDay, birthdayYear, contact.getSmsSn(),
+			contact.getSuffixListTypeId(), contact.isMale(),
+			calendar.get(Calendar.MONTH), calendar.get(Calendar.DATE),
+			calendar.get(Calendar.YEAR), contact.getSmsSn(),
 			contact.getFacebookSn(), contact.getJabberSn(),
 			contact.getSkypeSn(), contact.getTwitterSn(), contact.getJobTitle(),
 			groupIds, organizationIds, roleIds, userGroupRoles, userGroupIds,

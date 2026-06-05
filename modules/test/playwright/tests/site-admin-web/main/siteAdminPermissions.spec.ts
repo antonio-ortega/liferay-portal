@@ -5,15 +5,19 @@
 
 import {expect, mergeTests} from '@playwright/test';
 
-import {apiHelpersTest} from '../../../fixtures/apiHelpersTest';
+import {dataApiHelpersTest} from '../../../fixtures/dataApiHelpersTest';
 import {loginTest} from '../../../fixtures/loginTest';
 import {TRole} from '../../../helpers/HeadlessAdminUserApiHelper';
 import getRandomString from '../../../utils/getRandomString';
-import {performUserSwitch, userData} from '../../../utils/performLogin';
+import {
+	performLoginViaApi,
+	performUserSwitch,
+	userData,
+} from '../../../utils/performLogin';
 import {sitesAdminPagesTest} from './fixtures/sitesAdminPagesTest';
 
 export const test = mergeTests(
-	apiHelpersTest,
+	dataApiHelpersTest,
 	loginTest(),
 	sitesAdminPagesTest
 );
@@ -23,32 +27,13 @@ let role: TRole;
 let site: Site;
 let user: TUserAccount;
 
-test.afterEach(async ({apiHelpers, page}) => {
-	await performUserSwitch(page, 'test');
+test.afterEach(async ({page}) => {
+	await performLoginViaApi({page, screenName: 'test'});
 
-	if (childSite) {
-		await apiHelpers.headlessSite.deleteSite(childSite.id);
-
-		childSite = null;
-	}
-
-	if (role) {
-		await apiHelpers.headlessAdminUser.deleteRole(role.id);
-
-		role = null;
-	}
-
-	if (site) {
-		await apiHelpers.headlessSite.deleteSite(site.id);
-
-		site = null;
-	}
-
-	if (user) {
-		await apiHelpers.headlessAdminUser.deleteUserAccount(Number(user.id));
-
-		user = null;
-	}
+	role = null;
+	childSite = null;
+	site = null;
+	user = null;
 });
 
 test('User can add site with Add Site permission', async ({
@@ -192,7 +177,7 @@ test('User can view site when a member of the site', async ({
 		user.id
 	);
 
-	site = await apiHelpers.headlessSite.createSite({
+	site = await apiHelpers.headlessAdminSite.postSite({
 		name: getRandomString(),
 	});
 
@@ -277,13 +262,13 @@ test('User can manage child site with Manage Subsites permission', async ({
 		user.id
 	);
 
-	site = await apiHelpers.headlessSite.createSite({
+	site = await apiHelpers.headlessAdminSite.postSite({
 		name: getRandomString(),
 	});
 
-	childSite = await apiHelpers.headlessSite.createSite({
+	childSite = await apiHelpers.headlessAdminSite.postSite({
 		name: getRandomString(),
-		parentSiteKey: site.name,
+		parentSiteExternalReferenceCode: site.externalReferenceCode,
 	});
 
 	const siteMemberRole =
@@ -377,7 +362,7 @@ test('User can go to site pages with Manage Pages permission', async ({
 		user.id
 	);
 
-	site = await apiHelpers.headlessSite.createSite({
+	site = await apiHelpers.headlessAdminSite.postSite({
 		name: getRandomString(),
 	});
 

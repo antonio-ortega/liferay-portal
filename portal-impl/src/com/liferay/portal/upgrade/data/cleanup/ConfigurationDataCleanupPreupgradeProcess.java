@@ -65,15 +65,14 @@ public class ConfigurationDataCleanupPreupgradeProcess
 
 				String configurationId = resultSet.getString("configurationId");
 
-				if (companyId > 0) {
-					if (!ArrayUtil.contains(companyIds, companyId) ||
-						(PropsValues.DATABASE_PARTITION_ENABLED &&
-						 (CompanyThreadLocal.getCompanyId() != companyId))) {
+				if ((companyId > 0) &&
+					(!ArrayUtil.contains(companyIds, companyId) ||
+					 (PropsValues.DATABASE_PARTITION_ENABLED &&
+					  (CompanyThreadLocal.getCompanyId() != companyId)))) {
 
-						_deleteConfiguration(
-							configurationId, dbInspector, "companyId",
-							"Company", companyId, preparedStatement2);
-					}
+					_deleteConfiguration(
+						configurationId, dbInspector, "companyId", "Company",
+						companyId, preparedStatement2);
 
 					continue;
 				}
@@ -96,6 +95,7 @@ public class ConfigurationDataCleanupPreupgradeProcess
 
 		try (PreparedStatement preparedStatement = connection.prepareStatement(
 				"select groupId from Group_");
+
 			ResultSet resultSet = preparedStatement.executeQuery()) {
 
 			while (resultSet.next()) {

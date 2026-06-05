@@ -379,6 +379,11 @@ public interface SegmentsExperienceLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<SegmentsExperience> getSegmentsExperiences(
+			long groupId, boolean active)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<SegmentsExperience> getSegmentsExperiences(
 		long groupId, long plid);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
@@ -401,6 +406,10 @@ public interface SegmentsExperienceLocalService
 		long groupId, String[] segmentsEntryERCs, String segmentsEntryScopeERC,
 		long plid, boolean active, int start, int end,
 		OrderByComparator<SegmentsExperience> orderByComparator);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<SegmentsExperience> getSegmentsExperiences(
+		long[] groupIds, boolean active);
 
 	/**
 	 * Returns all the segments experiences matching the UUID and company.
@@ -444,13 +453,13 @@ public interface SegmentsExperienceLocalService
 		long groupId, long plid, boolean active);
 
 	public SegmentsExperience updateSegmentsExperience(
-			long segmentsExperienceId, String segmentsEntryERC,
+			long userId, long segmentsExperienceId, String segmentsEntryERC,
 			String segmentsEntryScopeERC, Map<Locale, String> nameMap,
 			boolean active)
 		throws PortalException;
 
 	public SegmentsExperience updateSegmentsExperience(
-			long segmentsExperienceId, String segmentsEntryERC,
+			long userId, long segmentsExperienceId, String segmentsEntryERC,
 			String segmentsEntryScopeERC, Map<Locale, String> nameMap,
 			boolean active, UnicodeProperties typeSettingsUnicodeProperties)
 		throws PortalException;
@@ -470,11 +479,11 @@ public interface SegmentsExperienceLocalService
 		SegmentsExperience segmentsExperience);
 
 	public SegmentsExperience updateSegmentsExperienceActive(
-			long segmentsExperienceId, boolean active)
+			long userId, long segmentsExperienceId, boolean active)
 		throws PortalException;
 
 	public SegmentsExperience updateSegmentsExperiencePriority(
-			long segmentsExperienceId, int newPriority)
+			long userId, long segmentsExperienceId, int newPriority)
 		throws PortalException;
 
 	@Override
@@ -493,3 +502,4 @@ public interface SegmentsExperienceLocalService
 		throws E;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-1393386091

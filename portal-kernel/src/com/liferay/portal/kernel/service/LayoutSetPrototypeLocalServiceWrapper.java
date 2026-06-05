@@ -55,20 +55,6 @@ public class LayoutSetPrototypeLocalServiceWrapper
 			java.util.Map<java.util.Locale, String> nameMap,
 			java.util.Map<java.util.Locale, String> descriptionMap,
 			boolean active, boolean layoutsUpdateable,
-			boolean readyForPropagation, ServiceContext serviceContext)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		return _layoutSetPrototypeLocalService.addLayoutSetPrototype(
-			userId, companyId, nameMap, descriptionMap, active,
-			layoutsUpdateable, readyForPropagation, serviceContext);
-	}
-
-	@Override
-	public LayoutSetPrototype addLayoutSetPrototype(
-			long userId, long companyId,
-			java.util.Map<java.util.Locale, String> nameMap,
-			java.util.Map<java.util.Locale, String> descriptionMap,
-			boolean active, boolean layoutsUpdateable,
 			ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
@@ -450,20 +436,6 @@ public class LayoutSetPrototypeLocalServiceWrapper
 			java.util.Map<java.util.Locale, String> nameMap,
 			java.util.Map<java.util.Locale, String> descriptionMap,
 			boolean active, boolean layoutsUpdateable,
-			boolean readyForPropagation, ServiceContext serviceContext)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		return _layoutSetPrototypeLocalService.updateLayoutSetPrototype(
-			layoutSetPrototypeId, nameMap, descriptionMap, active,
-			layoutsUpdateable, readyForPropagation, serviceContext);
-	}
-
-	@Override
-	public LayoutSetPrototype updateLayoutSetPrototype(
-			long layoutSetPrototypeId,
-			java.util.Map<java.util.Locale, String> nameMap,
-			java.util.Map<java.util.Locale, String> descriptionMap,
-			boolean active, boolean layoutsUpdateable,
 			ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
@@ -521,3 +493,4 @@ public class LayoutSetPrototypeLocalServiceWrapper
 	private LayoutSetPrototypeLocalService _layoutSetPrototypeLocalService;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-1796530927

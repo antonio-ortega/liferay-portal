@@ -7,6 +7,8 @@ package com.liferay.fragment.web.internal.servlet.taglib.util;
 
 import com.liferay.fragment.model.FragmentCollection;
 import com.liferay.fragment.web.internal.display.context.FragmentDisplayContext;
+import com.liferay.portal.kernel.test.TestInfo;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import org.junit.Before;
@@ -36,46 +38,56 @@ public class FragmentCollectionActionDropdownItemsProviderTest
 	}
 
 	@Test
-	public void testGetActionDropdowns() {
+	@TestInfo("LPD-82487")
+	public void testGetActionDropdownItems() throws Exception {
 		setUpFragmentPermission(true);
 
-		_setUpFragmentCollection(false);
+		for (boolean exportable : new boolean[] {false, true}) {
+			String[] expectedLabels = {"edit", "import", "delete"};
 
-		FragmentCollectionActionDropdownItemsProvider
-			fragmentCollectionActionDropdownItemsProvider =
-				new FragmentCollectionActionDropdownItemsProvider(
-					_fragmentDisplayContext, httpServletRequest,
-					renderResponse);
+			if (exportable) {
+				expectedLabels = new String[] {
+					"edit", "export", "import", "delete"
+				};
+			}
 
-		assertDropdownItemsInCorrectOrder(
-			fragmentCollectionActionDropdownItemsProvider.
-				getActionDropdownItems(),
-			"edit", "export", "import", "delete");
+			for (boolean marketplace : new boolean[] {false, true}) {
+				_setUpFragmentCollection(exportable, marketplace);
+
+				FragmentCollectionActionDropdownItemsProvider
+					fragmentCollectionActionDropdownItemsProvider =
+						new FragmentCollectionActionDropdownItemsProvider(
+							_fragmentDisplayContext, httpServletRequest,
+							renderResponse);
+
+				assertDropdownItemsInCorrectOrder(
+					fragmentCollectionActionDropdownItemsProvider.
+						getActionDropdownItems(),
+					expectedLabels);
+			}
+		}
 	}
 
-	@Test
-	public void testGetActionDropdownsForMarketplaceFragmentCollection() {
-		setUpFragmentPermission(true);
+	private void _setUpFragmentCollection(
+			boolean exportable, boolean marketplace)
+		throws Exception {
 
-		_setUpFragmentCollection(true);
+		Mockito.when(
+			_fragmentCollection.getFragmentCollectionId()
+		).thenReturn(
+			RandomTestUtil.randomLong()
+		);
 
-		FragmentCollectionActionDropdownItemsProvider
-			fragmentCollectionActionDropdownItemsProvider =
-				new FragmentCollectionActionDropdownItemsProvider(
-					_fragmentDisplayContext, httpServletRequest,
-					renderResponse);
-
-		assertDropdownItemsInCorrectOrder(
-			fragmentCollectionActionDropdownItemsProvider.
-				getActionDropdownItems(),
-			"edit", "import", "delete");
-	}
-
-	private void _setUpFragmentCollection(boolean marketplace) {
 		Mockito.when(
 			_fragmentDisplayContext.getFragmentCollection()
 		).thenReturn(
 			_fragmentCollection
+		);
+
+		Mockito.when(
+			_fragmentCollection.isExportable()
+		).thenReturn(
+			exportable
 		);
 
 		Mockito.when(

@@ -15,14 +15,27 @@ import com.liferay.batch.engine.BatchEngineTaskExecuteStatus;
 import com.liferay.batch.engine.model.BatchEngineExportTask;
 import com.liferay.batch.engine.service.BatchEngineExportTaskLocalService;
 import com.liferay.blogs.model.BlogsEntry;
+import com.liferay.object.constants.ObjectFieldConstants;
+import com.liferay.object.field.util.ObjectFieldUtil;
+import com.liferay.object.model.ObjectDefinition;
+import com.liferay.object.model.ObjectField;
+import com.liferay.object.service.ObjectDefinitionLocalServiceUtil;
+import com.liferay.object.service.ObjectEntryLocalServiceUtil;
+import com.liferay.object.service.ObjectFieldLocalServiceUtil;
+import com.liferay.object.test.util.ObjectDefinitionTestUtil;
 import com.liferay.petra.io.unsync.UnsyncBufferedReader;
 import com.liferay.petra.string.CharPool;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
+import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.spring.orm.LastSessionRecorderHelper;
+import com.liferay.portal.kernel.spring.orm.LastSessionRecorderHelperUtil;
 import com.liferay.portal.kernel.test.AssertUtils;
+import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.TestInfo;
 import com.liferay.portal.kernel.test.rule.DataGuard;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.TransactionConfig;
@@ -41,6 +54,9 @@ import java.io.Serializable;
 
 import java.sql.Blob;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -49,6 +65,8 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.zip.ZipInputStream;
 
@@ -166,6 +184,43 @@ public class BatchEngineExportTaskExecutorTest
 		_assertExportedValues(
 			blogsEntries, fieldNames,
 			_readRowValuesList(_csvFilterFunction, batchEngineExportTask));
+	}
+
+	@Test
+	@TestInfo("LPD-85261")
+	public void testExportBlogPostingsToJSONFileWithDateCreatedFieldName()
+		throws Exception {
+
+		BlogsEntry blogsEntry = blogsEntryLocalService.addEntry(
+			user.getUserId(), "headline", "alternativeHeadline", null,
+			"articleBody", new Date(baseDate.getTime()), false, false, null,
+			null, null, null,
+			ServiceContextTestUtil.getServiceContext(
+				TestPropsValues.getCompanyId(), TestPropsValues.getGroupId(),
+				user.getUserId()));
+
+		_exportBlogPostings("JSON", Arrays.asList("dateCreated"), _parameters);
+
+		BatchEngineExportTask batchEngineExportTask =
+			_batchEngineExportTaskLocalService.getBatchEngineExportTask(
+				_batchEngineExportTask.getBatchEngineExportTaskId());
+
+		JSONArray jsonArray = JSONFactoryUtil.createJSONArray(
+			StringUtil.read(
+				_getZipInputStream(
+					_batchEngineExportTaskLocalService.openContentInputStream(
+						batchEngineExportTask.getBatchEngineExportTaskId()))));
+
+		JSONObject jsonObject = jsonArray.getJSONObject(initialCount);
+
+		DateFormat dateFormat = new SimpleDateFormat(
+			"yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+
+		dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+		Assert.assertEquals(
+			blogsEntry.getCreateDate(),
+			dateFormat.parse(jsonObject.getString("dateCreated")));
 	}
 
 	@Test
@@ -419,6 +474,49 @@ public class BatchEngineExportTaskExecutorTest
 				}));
 	}
 
+	@Test
+	public void testExportObjectEntriesLastSessionRecorderCount()
+		throws Exception {
+
+		ObjectDefinition objectDefinition = _addPublishedTestObjectDefinition(
+			100);
+
+		CountingLastSessionRecorderHelper countingLastSessionRecorderHelper =
+			new CountingLastSessionRecorderHelper();
+
+		LastSessionRecorderHelper originalLastSessionRecorderHelper =
+			ReflectionTestUtil.getAndSetFieldValue(
+				LastSessionRecorderHelperUtil.class,
+				"_lastSessionRecorderHelper",
+				countingLastSessionRecorderHelper);
+
+		try {
+			_batchEngineExportTask =
+				_batchEngineExportTaskLocalService.addBatchEngineExportTask(
+					null, user.getCompanyId(), user.getUserId(), null,
+					_OBJECT_ENTRY_ITEM_CLASS_NAME, "JSON",
+					BatchEngineTaskExecuteStatus.INITIAL.name(),
+					Arrays.asList("id", "name"),
+					HashMapBuilder.<String, Serializable>put(
+						"groupId", 0L
+					).put(
+						"objectDefinitionId",
+						objectDefinition.getObjectDefinitionId()
+					).build(),
+					objectDefinition.getName());
+
+			_batchEngineExportTaskExecutor.execute(_batchEngineExportTask);
+
+			Assert.assertTrue(countingLastSessionRecorderHelper.getCount() > 0);
+		}
+		finally {
+			ReflectionTestUtil.setFieldValue(
+				LastSessionRecorderHelperUtil.class,
+				"_lastSessionRecorderHelper",
+				originalLastSessionRecorderHelper);
+		}
+	}
+
 	public abstract class BlogPostingMixin {
 
 		@JsonProperty(access = JsonProperty.Access.READ_WRITE)
@@ -430,6 +528,45 @@ public class BatchEngineExportTaskExecutorTest
 		@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 		protected Date dateCreated;
 
+	}
+
+	private ObjectDefinition _addPublishedTestObjectDefinition(int entryCount)
+		throws Exception {
+
+		String objectName = "TestObject" + RandomTestUtil.randomString(8);
+
+		ObjectDefinition objectDefinition =
+			ObjectDefinitionTestUtil.addCustomObjectDefinition(
+				0, objectName,
+				Arrays.asList(
+					ObjectFieldUtil.createObjectField(
+						ObjectFieldConstants.BUSINESS_TYPE_TEXT,
+						ObjectFieldConstants.DB_TYPE_STRING, "name", "name")));
+
+		ObjectField nameObjectField =
+			ObjectFieldLocalServiceUtil.getObjectField(
+				objectDefinition.getObjectDefinitionId(), "name");
+
+		ObjectDefinitionLocalServiceUtil.updateTitleObjectFieldId(
+			objectDefinition.getObjectDefinitionId(),
+			nameObjectField.getObjectFieldId());
+
+		objectDefinition =
+			ObjectDefinitionLocalServiceUtil.publishCustomObjectDefinition(
+				user.getUserId(), objectDefinition.getObjectDefinitionId());
+
+		for (int i = 0; i < entryCount; i++) {
+			ObjectEntryLocalServiceUtil.addObjectEntry(
+				0, user.getUserId(), objectDefinition.getObjectDefinitionId(),
+				0, null,
+				HashMapBuilder.<String, Serializable>put(
+					"name", "test-object-" + i
+				).build(),
+				ServiceContextTestUtil.getServiceContext(
+					TestPropsValues.getCompanyId(), 0, user.getUserId()));
+		}
+
+		return objectDefinition;
 	}
 
 	private void _assertEmptyFieldNames(LogCapture logCapture) {
@@ -784,6 +921,9 @@ public class BatchEngineExportTaskExecutorTest
 			"com.liferay.batch.engine.internal." +
 				"BatchEngineExportTaskExecutorImpl";
 
+	private static final String _OBJECT_ENTRY_ITEM_CLASS_NAME =
+		"com.liferay.object.rest.dto.v1_0.ObjectEntry";
+
 	private static final ObjectMapper _objectMapper = new ObjectMapper();
 
 	private BatchEngineExportTask _batchEngineExportTask;
@@ -802,5 +942,26 @@ public class BatchEngineExportTaskExecutorTest
 	};
 
 	private Map<String, Serializable> _parameters;
+
+	private static class CountingLastSessionRecorderHelper
+		implements LastSessionRecorderHelper {
+
+		public int getCount() {
+			return _count.get();
+		}
+
+		@Override
+		public void syncLastSessionState() {
+			_count.incrementAndGet();
+		}
+
+		@Override
+		public void syncLastSessionState(boolean portalSessionOnly) {
+			_count.incrementAndGet();
+		}
+
+		private final AtomicInteger _count = new AtomicInteger();
+
+	}
 
 }

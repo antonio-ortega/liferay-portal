@@ -338,3 +338,4 @@ public interface CommerceOrderTypeRelLocalService
 		CommerceOrderTypeRel commerceOrderTypeRel);
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:1743951225

@@ -28,7 +28,7 @@ import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
-import com.liferay.portal.kernel.util.ScopeUtil;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
@@ -105,7 +105,7 @@ public class GetDataMVCResourceCommandTest {
 		themeDisplay.setPortalURL(_company.getPortalURL(_group.getGroupId()));
 		themeDisplay.setSecure(true);
 		themeDisplay.setServerName("localhost");
-		themeDisplay.setServerPort(8080);
+		themeDisplay.setServerPort(PortalUtil.getPortalServerPort(false));
 		themeDisplay.setSiteGroupId(_group.getGroupId());
 
 		mockHttpServletRequest.setAttribute(
@@ -114,7 +114,8 @@ public class GetDataMVCResourceCommandTest {
 		mockLiferayResourceRequest.setAttribute(
 			PortletServlet.PORTLET_SERVLET_REQUEST, mockHttpServletRequest);
 
-		String url = "http://localhost:8080";
+		String url =
+			"http://localhost:" + PortalUtil.getPortalServerPort(false);
 
 		mockLiferayResourceRequest.setParameter("backURL", url);
 
@@ -128,9 +129,7 @@ public class GetDataMVCResourceCommandTest {
 
 		SegmentsExperience segmentsExperience =
 			SegmentsTestUtil.addSegmentsExperience(
-				segmentsEntry.getExternalReferenceCode(),
-				ScopeUtil.getItemScopeExternalReferenceCode(
-					segmentsEntry.getGroupId(), _group.getGroupId()),
+				segmentsEntry.getExternalReferenceCode(), null,
 				layout.getPlid(),
 				ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
@@ -169,13 +168,14 @@ public class GetDataMVCResourceCommandTest {
 	@Inject
 	private static CompanyLocalService _companyLocalService;
 
-	@Inject
-	private static LayoutSetLocalService _layoutSetLocalService;
-
 	@DeleteAfterTestRun
 	private Group _group;
 
 	private Layout _layout;
+
+	@Inject
+	private LayoutSetLocalService _layoutSetLocalService;
+
 	private final Locale _locale = LocaleUtil.US;
 
 	@Inject(filter = "mvc.command.name=/segments_experiment/get_data")

@@ -7,6 +7,8 @@ package com.liferay.site.cms.site.initializer.internal.display.context.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.fragment.renderer.FragmentRenderer;
+import com.liferay.frontend.data.set.model.FDSActionDropdownItem;
+import com.liferay.frontend.data.set.test.util.FrontendDataSetTestUtil;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
 import com.liferay.object.constants.ObjectFolderConstants;
 import com.liferay.object.model.ObjectDefinition;
@@ -21,6 +23,7 @@ import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
+import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.Sync;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -34,6 +37,7 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.junit.Assert;
@@ -62,6 +66,16 @@ public class ViewSharedWithMeSectionDisplayContextTest
 		new AggregateTestRule(
 			new LiferayIntegrationTestRule(),
 			PermissionCheckerMethodTestRule.INSTANCE);
+
+	@Override
+	@Test
+	public void testGetAdditionalAPIURLParameters() throws Exception {
+		String apiURL = ReflectionTestUtil.invoke(
+			getSectionDisplayContext(getMockHttpServletRequest()), "getAPIURL",
+			new Class<?>[0]);
+
+		Assert.assertTrue(apiURL, apiURL.contains("sort=dateModified:desc"));
+	}
 
 	@Override
 	@Test
@@ -148,12 +162,66 @@ public class ViewSharedWithMeSectionDisplayContextTest
 				StringBundler.concat(
 					themeDisplay.getPortalURL(), themeDisplay.getPathMain(),
 					GroupConstants.CMS_FRIENDLY_URL,
-					"/edit_content_item?&p_l_mode=read&p_p_state=",
+					"/edit_content_item?p_l_mode=read&p_p_state=",
 					LiferayWindowState.POP_UP, "&redirect=",
 					themeDisplay.getURLCurrent(),
 					"&objectEntryId={embedded.id}")
 			).build(),
 			getAdditionalProps());
+	}
+
+	@Override
+	@Test
+	public void testGetCMSSectionFilterString() throws Exception {
+	}
+
+	@Override
+	@Test
+	public void testGetCreationMenu() throws Exception {
+	}
+
+	@Test
+	public void testGetFDSActionDropdownItems() throws Exception {
+		List<FDSActionDropdownItem> fdsActionDropdownItems =
+			getFDSActionDropdownItems();
+
+		Assert.assertEquals(
+			fdsActionDropdownItems.toString(), 9,
+			fdsActionDropdownItems.size());
+
+		FrontendDataSetTestUtil.assertFDSActionDropdownItem(
+			"view", "actionLink", "View", "get", fdsActionDropdownItems.get(0));
+		FrontendDataSetTestUtil.assertFDSActionDropdownItem(
+			"share", "share", "Share", "get", fdsActionDropdownItems.get(1));
+		FrontendDataSetTestUtil.assertFDSActionDropdownItem(
+			"view", "view-file", "View", null, fdsActionDropdownItems.get(2));
+		FrontendDataSetTestUtil.assertFDSActionDropdownItem(
+			"view", "view-content", "View", "get",
+			fdsActionDropdownItems.get(3));
+		FrontendDataSetTestUtil.assertFDSActionDropdownItem(
+			"pencil", "actionLinkEdit", "Edit", "get",
+			fdsActionDropdownItems.get(4));
+		FrontendDataSetTestUtil.assertFDSActionDropdownItem(
+			"download", "download", "Download", "get",
+			fdsActionDropdownItems.get(5));
+		FrontendDataSetTestUtil.assertFDSActionDropdownItem(
+			"view", "actionLinkFolder", "View Folder", "get",
+			HashMapBuilder.<String, Object>put(
+				"className", ObjectEntryFolder.class.getName()
+			).build(),
+			fdsActionDropdownItems.get(6));
+		FrontendDataSetTestUtil.assertFDSActionDropdownItem(
+			"pencil", "edit-folder", "Edit", "get",
+			HashMapBuilder.<String, Object>put(
+				"className", ObjectEntryFolder.class.getName()
+			).build(),
+			fdsActionDropdownItems.get(7));
+		FrontendDataSetTestUtil.assertFDSActionDropdownItem(
+			"download", "download-folder", "Download", "get",
+			HashMapBuilder.<String, Object>put(
+				"className", ObjectEntryFolder.class.getName()
+			).build(),
+			fdsActionDropdownItems.get(8));
 	}
 
 	@Override

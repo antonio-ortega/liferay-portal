@@ -24,12 +24,9 @@ import com.liferay.portal.search.highlight.FieldConfig;
 import com.liferay.portal.search.highlight.Highlight;
 import com.liferay.portal.search.internal.aggregation.AggregationsImpl;
 import com.liferay.portal.search.internal.filter.ComplexQueryPartBuilderFactoryImpl;
-import com.liferay.portal.search.internal.geolocation.GeoBuildersImpl;
 import com.liferay.portal.search.internal.highlight.FieldConfigBuilderFactoryImpl;
 import com.liferay.portal.search.internal.highlight.HighlightBuilderFactoryImpl;
-import com.liferay.portal.search.internal.query.QueriesImpl;
 import com.liferay.portal.search.internal.rescore.RescoreBuilderFactoryImpl;
-import com.liferay.portal.search.internal.script.ScriptsImpl;
 import com.liferay.portal.search.internal.searcher.SearchRequestBuilderFactoryImpl;
 import com.liferay.portal.search.internal.sort.SortsImpl;
 import com.liferay.portal.search.query.TermQuery;
@@ -112,23 +109,14 @@ public class SXPBlueprintSearchRequestEnhancerImplTest {
 			_sxpBlueprintSearchRequestEnhancerImpl,
 			"_fieldConfigBuilderFactory", new FieldConfigBuilderFactoryImpl());
 		ReflectionTestUtil.setFieldValue(
-			_sxpBlueprintSearchRequestEnhancerImpl, "_geoBuilders",
-			new GeoBuildersImpl());
-		ReflectionTestUtil.setFieldValue(
 			_sxpBlueprintSearchRequestEnhancerImpl, "_highlightBuilderFactory",
 			new HighlightBuilderFactoryImpl());
 		ReflectionTestUtil.setFieldValue(
 			_sxpBlueprintSearchRequestEnhancerImpl, "_jsonFactory",
 			new JSONFactoryImpl());
 		ReflectionTestUtil.setFieldValue(
-			_sxpBlueprintSearchRequestEnhancerImpl, "_queries",
-			new QueriesImpl());
-		ReflectionTestUtil.setFieldValue(
 			_sxpBlueprintSearchRequestEnhancerImpl, "_rescoreBuilderFactory",
 			new RescoreBuilderFactoryImpl());
-		ReflectionTestUtil.setFieldValue(
-			_sxpBlueprintSearchRequestEnhancerImpl, "_scripts",
-			new ScriptsImpl());
 		ReflectionTestUtil.setFieldValue(
 			_sxpBlueprintSearchRequestEnhancerImpl, "_sorts", new SortsImpl());
 

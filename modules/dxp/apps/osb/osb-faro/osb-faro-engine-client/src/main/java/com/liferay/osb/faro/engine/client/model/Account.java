@@ -6,91 +6,146 @@
 package com.liferay.osb.faro.engine.client.model;
 
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author Matthew Kong
  */
 public class Account {
 
-	public long getActivitiesCount() {
-		return _activitiesCount;
+	public String getAccountName() {
+		return _accountName;
 	}
 
-	public Map<String, String> getDataSourceAccountPKs() {
-		return _dataSourceAccountPKs;
+	public String getAccountType() {
+		return _accountType;
 	}
 
-	public Date getDateCreated() {
-		if (_dateCreated == null) {
-			return null;
-		}
-
-		return new Date(_dateCreated.getTime());
+	public Double getAnnualRevenue() {
+		return _annualRevenue;
 	}
 
-	public Date getDateModified() {
-		if (_dateModified == null) {
-			return null;
-		}
-
-		return new Date(_dateModified.getTime());
+	public String getCountry() {
+		return _country;
 	}
 
 	public String getId() {
 		return _id;
 	}
 
-	public long getIndividualCount() {
-		return _individualCount;
+	public String getIndustry() {
+		return _industry;
 	}
 
-	public Map<String, List<Field>> getOrganization() {
-		return _organization;
-	}
-
-	public void setActivitiesCount(long activitiesCount) {
-		_activitiesCount = activitiesCount;
-	}
-
-	public void setDataSourceAccountPKs(
-		Map<String, String> dataSourceAccountPKs) {
-
-		_dataSourceAccountPKs = dataSourceAccountPKs;
-	}
-
-	public void setDateCreated(Date dateCreated) {
-		if (dateCreated != null) {
-			_dateCreated = new Date(dateCreated.getTime());
+	public Date getLastActivityDate() {
+		if (_lastActivityDate == null) {
+			return null;
 		}
+
+		return new Date(_lastActivityDate.getTime());
 	}
 
-	public void setDateModified(Date dateModified) {
-		if (dateModified != null) {
-			_dateModified = new Date(dateModified.getTime());
+	public List<LifecycleStage> getLifecycleStages() {
+		return _lifecycleStages;
+	}
+
+	public Date getModifiedDate() {
+		if (_modifiedDate == null) {
+			return null;
 		}
+
+		return new Date(_modifiedDate.getTime());
+	}
+
+	public Integer getNumberOfEmployees() {
+		return _numberOfEmployees;
+	}
+
+	public String getWebsite() {
+		return _website;
+	}
+
+	public void setAccountName(String accountName) {
+		_accountName = accountName;
+	}
+
+	public void setAccountType(String accountType) {
+		_accountType = accountType;
+	}
+
+	public void setAnnualRevenue(Double annualRevenue) {
+		_annualRevenue = annualRevenue;
+	}
+
+	public void setCountry(String country) {
+		_country = country;
 	}
 
 	public void setId(String id) {
 		_id = id;
 	}
 
-	public void setIndividualCount(long individualCount) {
-		_individualCount = individualCount;
+	public void setIndustry(String industry) {
+		_industry = industry;
 	}
 
-	public void setOrganization(Map<String, List<Field>> organization) {
-		_organization = organization;
+	public void setLastActivityDate(Date lastActivityDate) {
+		if (lastActivityDate != null) {
+			_lastActivityDate = new Date(lastActivityDate.getTime());
+		}
 	}
 
-	private long _activitiesCount;
-	private Map<String, String> _dataSourceAccountPKs = new HashMap<>();
-	private Date _dateCreated;
-	private Date _dateModified;
+	public void setLifecycleStages(List<LifecycleStage> lifecycleStages) {
+		_lifecycleStages = lifecycleStages;
+	}
+
+	public void setModifiedDate(Date modifiedDate) {
+		if (modifiedDate != null) {
+			_modifiedDate = new Date(modifiedDate.getTime());
+		}
+	}
+
+	public void setNumberOfEmployees(Integer numberOfEmployees) {
+		_numberOfEmployees = numberOfEmployees;
+	}
+
+	public void setWebsite(String website) {
+		_website = website;
+	}
+
+	public static class LifecycleStage {
+
+		public String getLifecycleName() {
+			return _lifecycleName;
+		}
+
+		public String getStageType() {
+			return _stageType;
+		}
+
+		public void setLifecycleName(String lifecycleName) {
+			_lifecycleName = lifecycleName;
+		}
+
+		public void setStageType(String stageType) {
+			_stageType = stageType;
+		}
+
+		private String _lifecycleName;
+		private String _stageType;
+
+	}
+
+	private String _accountName;
+	private String _accountType;
+	private Double _annualRevenue;
+	private String _country;
 	private String _id;
-	private long _individualCount;
-	private Map<String, List<Field>> _organization = new HashMap<>();
+	private String _industry;
+	private Date _lastActivityDate;
+	private List<LifecycleStage> _lifecycleStages;
+	private Date _modifiedDate;
+	private Integer _numberOfEmployees;
+	private String _website;
 
 }

@@ -27,6 +27,8 @@ import java.io.IOException;
  */
 public interface PanelApp extends PanelEntry {
 
+	public String getIcon();
+
 	/**
 	 * Returns the number of notifications for the user.
 	 *

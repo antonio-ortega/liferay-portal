@@ -107,6 +107,7 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.template.TemplateConstants;
+import com.liferay.portal.kernel.test.TestInfo;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.CompanyTestUtil;
@@ -134,6 +135,8 @@ import com.liferay.portal.kernel.util.Tuple;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.kernel.xml.Document;
+import com.liferay.portal.kernel.xml.Element;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portlet.asset.util.AssetVocabularySettingsHelper;
@@ -185,6 +188,79 @@ public class JournalArticleLocalServiceTest {
 		_journalFolderFixture = new JournalFolderFixture(
 			_journalFolderLocalService);
 		_themeDisplay = _getThemeDisplay();
+	}
+
+	@Test
+	@TestInfo("LPD-84195")
+	public void testAddArticleDefaultValuesWithFieldSetAndMultipleLocales()
+		throws Exception {
+
+		DDMForm ddmForm = DDMFormTestUtil.createDDMForm(
+			DDMFormTestUtil.createAvailableLocales(
+				LocaleUtil.BRAZIL, LocaleUtil.US),
+			LocaleUtil.US);
+
+		ddmForm.setDefinitionSchemaVersion("2.0");
+
+		ddmForm.addDDMFormField(
+			DDMFormTestUtil.createLocalizedTextDDMFormField(
+				"name", false, false, LocaleUtil.BRAZIL, LocaleUtil.US));
+
+		DDMFormField fieldsetDDMFormField = new DDMFormField(
+			"Fieldset", "fieldset");
+
+		LocalizedValue fieldsetTip = new LocalizedValue(LocaleUtil.US);
+
+		fieldsetTip.addString(LocaleUtil.US, "Tip");
+
+		fieldsetDDMFormField.setTip(fieldsetTip);
+
+		ddmForm.addDDMFormField(fieldsetDDMFormField);
+
+		ddmForm.setAllowInvalidAvailableLocalesForProperty(true);
+
+		DDMStructure ddmStructure = DDMStructureTestUtil.addStructure(
+			_group.getGroupId(), JournalArticle.class.getName(), ddmForm);
+
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(_group.getGroupId());
+
+		String brContent = RandomTestUtil.randomString();
+		String enContent = RandomTestUtil.randomString();
+
+		String content = DDMStructureTestUtil.getSampleStructuredContent(
+			HashMapBuilder.put(
+				LocaleUtil.BRAZIL, brContent
+			).put(
+				LocaleUtil.US, enContent
+			).build(),
+			LocaleUtil.US.toString());
+
+		Assert.assertNotNull(
+			_journalArticleLocalService.addArticleDefaultValues(
+				serviceContext.getUserId(), serviceContext.getScopeGroupId(),
+				_classNameLocalService.getClassNameId(DDMStructure.class),
+				ddmStructure.getStructureId(),
+				HashMapBuilder.put(
+					LocaleUtil.US, RandomTestUtil.randomString()
+				).build(),
+				null, content, ddmStructure.getStructureId(), null, null, 0, 0,
+				0, 0, 0, 0, 0, 0, 0, 0, true, 0, 0, 0, 0, 0, true, true, false,
+				0, 0, null, null, serviceContext));
+
+		DDMStructure updatedDDMStructure =
+			_ddmStructureLocalService.getStructure(
+				ddmStructure.getStructureId());
+
+		LocalizedValue updatedNamePredefinedValue =
+			updatedDDMStructure.getDDMFormField(
+				"name"
+			).getPredefinedValue();
+
+		Assert.assertEquals(
+			brContent, updatedNamePredefinedValue.getString(LocaleUtil.BRAZIL));
+		Assert.assertEquals(
+			enContent, updatedNamePredefinedValue.getString(LocaleUtil.US));
 	}
 
 	@Test(expected = AssetCategoryException.class)
@@ -1475,7 +1551,7 @@ public class JournalArticleLocalServiceTest {
 			DisplayPageTemplateTestUtil.addDisplayPageTemplate(
 				_group.getGroupId(),
 				_portal.getClassNameId(JournalArticle.class.getName()),
-				journalArticle.getDDMStructureId(), true,
+				journalArticle.getDDMStructureKey(), true,
 				WorkflowConstants.STATUS_APPROVED);
 
 		_assetDisplayPageEntryLocalService.addAssetDisplayPageEntry(
@@ -1839,6 +1915,111 @@ public class JournalArticleLocalServiceTest {
 		_companyLocalService.deleteCompany(company);
 	}
 
+	@Test
+	public void testGetDocumentByLocaleReturnsDefaultLocaleForUnavailableLocale()
+		throws Exception {
+
+		String content = DDMStructureTestUtil.getSampleStructuredContent(
+			HashMapBuilder.put(
+				LocaleUtil.BRAZIL, RandomTestUtil.randomString()
+			).put(
+				LocaleUtil.US, RandomTestUtil.randomString()
+			).build(),
+			LocaleUtil.US.toString());
+
+		List<Element> rootDynamicElements = _getRootDynamicElements(
+			content, LocaleUtil.US, new String[] {"name"},
+			new Locale[] {LocaleUtil.BRAZIL, LocaleUtil.US}, LocaleUtil.FRANCE);
+
+		Assert.assertEquals(
+			rootDynamicElements.toString(), 1, rootDynamicElements.size());
+
+		_assertDynamicContentElementLanguageId(
+			rootDynamicElements.get(0), LocaleUtil.US);
+	}
+
+	@Test
+	public void testGetDocumentByLocaleReturnsDefaultLocaleWhenRequestingDefaultLocale()
+		throws Exception {
+
+		String content = DDMStructureTestUtil.getSampleStructuredContent(
+			HashMapBuilder.put(
+				LocaleUtil.BRAZIL, RandomTestUtil.randomString()
+			).put(
+				LocaleUtil.US, RandomTestUtil.randomString()
+			).build(),
+			LocaleUtil.US.toString());
+
+		List<Element> rootDynamicElements = _getRootDynamicElements(
+			content, LocaleUtil.US, new String[] {"name"},
+			new Locale[] {LocaleUtil.BRAZIL, LocaleUtil.US}, LocaleUtil.US);
+
+		Assert.assertEquals(
+			rootDynamicElements.toString(), 1, rootDynamicElements.size());
+
+		_assertDynamicContentElementLanguageId(
+			rootDynamicElements.get(0), LocaleUtil.US);
+	}
+
+	@Test
+	public void testGetDocumentByLocaleReturnsSingleLocaleForTranslatedContent()
+		throws Exception {
+
+		String content = DDMStructureTestUtil.getSampleStructuredContent(
+			HashMapBuilder.put(
+				LocaleUtil.BRAZIL, RandomTestUtil.randomString()
+			).put(
+				LocaleUtil.US, RandomTestUtil.randomString()
+			).build(),
+			LocaleUtil.US.toString());
+
+		List<Element> rootDynamicElements = _getRootDynamicElements(
+			content, LocaleUtil.US, new String[] {"name"},
+			new Locale[] {LocaleUtil.BRAZIL, LocaleUtil.US}, LocaleUtil.BRAZIL);
+
+		Assert.assertEquals(
+			rootDynamicElements.toString(), 1, rootDynamicElements.size());
+
+		_assertDynamicContentElementLanguageId(
+			rootDynamicElements.get(0), LocaleUtil.BRAZIL);
+	}
+
+	@Test
+	public void testGetDocumentByLocaleWithPartiallyTranslatedContent()
+		throws Exception {
+
+		String content = StringBundler.concat(
+			"<?xml version=\"1.0\"?>",
+			"<root available-locales=\"en_US,pt_BR,es_ES\" ",
+			"default-locale=\"en_US\">",
+			"<dynamic-element index-type=\"keyword\" name=\"field1\" ",
+			"type=\"text\"><dynamic-content language-id=\"en_US\">",
+			"<![CDATA[Field 1 EN]]></dynamic-content>",
+			"<dynamic-content language-id=\"pt_BR\">",
+			"<![CDATA[Campo 1 BR]]></dynamic-content>",
+			"<dynamic-content language-id=\"es_ES\">",
+			"<![CDATA[Campo 1 ES]]></dynamic-content></dynamic-element>",
+			"<dynamic-element index-type=\"keyword\" name=\"field2\" ",
+			"type=\"text\"><dynamic-content language-id=\"en_US\">",
+			"<![CDATA[Field 2 EN]]></dynamic-content>",
+			"<dynamic-content language-id=\"pt_BR\">",
+			"<![CDATA[Campo 2 BR]]></dynamic-content></dynamic-element>",
+			"</root>");
+
+		List<Element> rootDynamicElements = _getRootDynamicElements(
+			content, LocaleUtil.US, new String[] {"field1", "field2"},
+			new Locale[] {LocaleUtil.BRAZIL, LocaleUtil.SPAIN, LocaleUtil.US},
+			LocaleUtil.SPAIN);
+
+		Assert.assertEquals(
+			rootDynamicElements.toString(), 2, rootDynamicElements.size());
+
+		_assertDynamicContentElementLanguageId(
+			rootDynamicElements.get(0), LocaleUtil.SPAIN);
+		_assertDynamicContentElementLanguageId(
+			rootDynamicElements.get(1), LocaleUtil.US);
+	}
+
 	@Test(expected = PortalException.class)
 	public void testGetLatestArticleByExternalReferenceCodeWithStatus()
 		throws Exception {
@@ -2115,6 +2296,9 @@ public class JournalArticleLocalServiceTest {
 		Assert.assertEquals(
 			journalArticle.getResourcePrimKey(),
 			latestArticle.getResourcePrimKey());
+		Assert.assertEquals(
+			journalArticle.getExternalReferenceCode(),
+			latestArticle.getExternalReferenceCode());
 		Assert.assertTrue(
 			updatedJournalArticle.getVersion() < latestArticle.getVersion());
 		Assert.assertEquals(
@@ -2369,6 +2553,33 @@ public class JournalArticleLocalServiceTest {
 			false, true, ServiceContextTestUtil.getServiceContext());
 
 		Assert.assertEquals(date, journalArticle2.getDisplayDate());
+
+		calendar.add(Calendar.YEAR, 1);
+
+		Date futureDate = calendar.getTime();
+
+		journalArticle2 = JournalTestUtil.updateArticle(
+			journalArticle2.getUserId(), journalArticle2,
+			journalArticle2.getTitleMap(), journalArticle2.getContent(),
+			futureDate, false, true,
+			ServiceContextTestUtil.getServiceContext());
+
+		Assert.assertEquals(futureDate, journalArticle2.getDisplayDate());
+
+		journalArticle2 = _journalArticleLocalService.updateArticle(
+			journalArticle2.getUserId(), journalArticle2.getGroupId(),
+			journalArticle2.getFolderId(), journalArticle2.getArticleId(),
+			journalArticle2.getVersion(), journalArticle2.getTitleMap(),
+			journalArticle2.getDescriptionMap(), null,
+			journalArticle2.getContent(), journalArticle2.getDDMTemplateKey(),
+			journalArticle2.getLayoutUuid(), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, true,
+			0, 0, 0, 0, 0, true, journalArticle2.isIndexable(),
+			journalArticle2.isSmallImage(), 0,
+			journalArticle2.getSmallImageSource(),
+			journalArticle2.getSmallImageURL(), null, null, null,
+			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
+
+		Assert.assertEquals(futureDate, journalArticle2.getDisplayDate());
 	}
 
 	@Test
@@ -2505,6 +2716,23 @@ public class JournalArticleLocalServiceTest {
 		Assert.assertEquals(assetTagId, assetTag.getTagId());
 	}
 
+	private void _assertDynamicContentElementLanguageId(
+		Element dynamicElement, Locale locale) {
+
+		List<Element> dynamicContentElements = dynamicElement.elements(
+			"dynamic-content");
+
+		Assert.assertEquals(
+			dynamicContentElements.toString(), 1,
+			dynamicContentElements.size());
+
+		Element dymanicContentElement = dynamicContentElements.get(0);
+
+		Assert.assertEquals(
+			LocaleUtil.toLanguageId(locale),
+			dymanicContentElement.attributeValue("language-id"));
+	}
+
 	private Tuple _createJournalArticleWithPredefinedValues(long groupId)
 		throws Exception {
 
@@ -2599,6 +2827,37 @@ public class JournalArticleLocalServiceTest {
 			title, StringPool.SPACE, StringPool.OPEN_PARENTHESIS,
 			_language.get(LocaleUtil.getSiteDefault(), "copy"),
 			StringPool.CLOSE_PARENTHESIS);
+	}
+
+	private List<Element> _getRootDynamicElements(
+			String content, Locale defaultLocale, String[] ddmFields,
+			Locale[] locales, Locale requestedLocale)
+		throws Exception {
+
+		Set<Locale> availableLocales = DDMFormTestUtil.createAvailableLocales(
+			locales);
+
+		DDMForm ddmForm = DDMFormTestUtil.createDDMForm(
+			availableLocales, defaultLocale);
+
+		DDMFormTestUtil.addTextDDMFormFields(ddmForm, ddmFields);
+
+		DDMStructure ddmStructure = DDMStructureTestUtil.addStructure(
+			_group.getGroupId(), JournalArticle.class.getName(), ddmForm);
+
+		JournalArticle journalArticle =
+			JournalTestUtil.addArticleWithXMLContent(
+				_group.getGroupId(),
+				JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+				JournalArticleConstants.CLASS_NAME_ID_DEFAULT, content,
+				ddmStructure.getStructureKey(), null, defaultLocale);
+
+		Document document = journalArticle.getDocumentByLocale(
+			LocaleUtil.toLanguageId(requestedLocale));
+
+		Element rootElement = document.getRootElement();
+
+		return rootElement.elements("dynamic-element");
 	}
 
 	private ThemeDisplay _getThemeDisplay() throws Exception {
@@ -2828,12 +3087,6 @@ public class JournalArticleLocalServiceTest {
 		}
 	}
 
-	@Inject(
-		filter = "model.class.name=com.liferay.journal.model.JournalArticle"
-	)
-	private static ModelResourcePermission<JournalArticle>
-		_journalArticleModelResourcePermission;
-
 	@Inject
 	private AssetCategoryLocalService _assetCategoryLocalService;
 
@@ -2888,6 +3141,12 @@ public class JournalArticleLocalServiceTest {
 
 	@Inject
 	private JournalArticleLocalService _journalArticleLocalService;
+
+	@Inject(
+		filter = "model.class.name=com.liferay.journal.model.JournalArticle"
+	)
+	private ModelResourcePermission<JournalArticle>
+		_journalArticleModelResourcePermission;
 
 	@Inject
 	private JournalConverter _journalConverter;

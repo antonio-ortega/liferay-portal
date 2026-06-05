@@ -6,7 +6,12 @@
 import {dateUtils} from 'frontend-js-web';
 
 import {IAssetObjectEntry} from '../../../common/types/AssetType';
-import {ASSET_TYPE, ASSET_TYPE_ERC} from './constants';
+import {
+	ASSET_TYPE,
+	ASSET_TYPE_ERC,
+	L_CMS_CONTENT_STRUCTURES,
+	L_CMS_FILE_TYPES,
+} from './constants';
 
 export function formatDate(date: string): string {
 	return dateUtils.format(new Date(date), 'P p');
@@ -15,26 +20,28 @@ export function formatDate(date: string): string {
 export function getAssetType(objectEntry: IAssetObjectEntry): string {
 	const {
 		systemProperties: {
-			objectDefinitionBrief: {externalReferenceCode = ''} = {},
+			objectDefinitionBrief: {
+				objectFolderExternalReferenceCode:
+					objectFolderExternalReferenceCode = '',
+			} = {},
 		} = {},
 	} = objectEntry;
 
-	let type = ASSET_TYPE.FOLDER;
+	if (
+		objectFolderExternalReferenceCode ===
+			ASSET_TYPE_ERC.BASIC_WEB_CONTENT ||
+		objectFolderExternalReferenceCode === L_CMS_CONTENT_STRUCTURES
+	) {
+		return ASSET_TYPE.CONTENTS;
+	}
+	else if (
+		objectFolderExternalReferenceCode === ASSET_TYPE_ERC.BASIC_DOCUMENT ||
+		objectFolderExternalReferenceCode === L_CMS_FILE_TYPES
+	) {
+		return ASSET_TYPE.FILES;
+	}
 
-	if (externalReferenceCode === ASSET_TYPE_ERC.BASIC_DOCUMENT) {
-		type = ASSET_TYPE.FILES;
-	}
-	else if (externalReferenceCode === ASSET_TYPE_ERC.BASIC_WEB_CONTENT) {
-		type = ASSET_TYPE.CONTENTS;
-	}
-	else if (externalReferenceCode === ASSET_TYPE_ERC.BLOG) {
-		type = ASSET_TYPE.BLOGS;
-	}
-	else if (externalReferenceCode === ASSET_TYPE_ERC.EXTERNAL_VIDEO) {
-		type = ASSET_TYPE.FILES;
-	}
-
-	return type;
+	return ASSET_TYPE.FOLDER;
 }
 
 export function getAssetLanguages(

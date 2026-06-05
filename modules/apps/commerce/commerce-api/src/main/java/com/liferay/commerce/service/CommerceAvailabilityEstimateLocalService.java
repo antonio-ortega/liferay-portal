@@ -328,3 +328,4 @@ public interface CommerceAvailabilityEstimateLocalService
 		throws PortalException;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-862533868

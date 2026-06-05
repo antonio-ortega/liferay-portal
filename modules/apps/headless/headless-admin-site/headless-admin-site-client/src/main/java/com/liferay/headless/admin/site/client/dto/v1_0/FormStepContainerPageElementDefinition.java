@@ -26,30 +26,29 @@ public class FormStepContainerPageElementDefinition
 		return FormStepContainerPageElementDefinitionSerDes.toDTO(json);
 	}
 
-	public FragmentImage getBackgroundFragmentImage() {
-		return backgroundFragmentImage;
+	public BackgroundImageValue getBackgroundImageValue() {
+		return backgroundImageValue;
 	}
 
-	public void setBackgroundFragmentImage(
-		FragmentImage backgroundFragmentImage) {
+	public void setBackgroundImageValue(
+		BackgroundImageValue backgroundImageValue) {
 
-		this.backgroundFragmentImage = backgroundFragmentImage;
+		this.backgroundImageValue = backgroundImageValue;
 	}
 
-	public void setBackgroundFragmentImage(
-		UnsafeSupplier<FragmentImage, Exception>
-			backgroundFragmentImageUnsafeSupplier) {
+	public void setBackgroundImageValue(
+		UnsafeSupplier<BackgroundImageValue, Exception>
+			backgroundImageValueUnsafeSupplier) {
 
 		try {
-			backgroundFragmentImage =
-				backgroundFragmentImageUnsafeSupplier.get();
+			backgroundImageValue = backgroundImageValueUnsafeSupplier.get();
 		}
 		catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 	}
 
-	protected FragmentImage backgroundFragmentImage;
+	protected BackgroundImageValue backgroundImageValue;
 
 	public String[] getCssClasses() {
 		return cssClasses;
@@ -131,3 +130,4 @@ public class FormStepContainerPageElementDefinition
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1662438621

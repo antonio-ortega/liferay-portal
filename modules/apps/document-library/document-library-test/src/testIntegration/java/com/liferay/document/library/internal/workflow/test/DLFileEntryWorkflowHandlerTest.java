@@ -7,11 +7,14 @@ package com.liferay.document.library.internal.workflow.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.document.library.kernel.model.DLFileEntry;
+import com.liferay.document.library.kernel.model.DLFileEntryType;
 import com.liferay.document.library.kernel.model.DLFileEntryTypeConstants;
 import com.liferay.document.library.kernel.model.DLFileVersion;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.document.library.kernel.service.DLAppService;
 import com.liferay.document.library.kernel.service.DLFileEntryLocalService;
+import com.liferay.document.library.kernel.service.DLFileEntryTypeLocalService;
+import com.liferay.dynamic.data.mapping.kernel.DDMFormValues;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
@@ -103,6 +106,8 @@ public class DLFileEntryWorkflowHandlerTest {
 
 		_serviceContext.setRequest(httpServletRequest);
 
+		_serviceContext.setAttribute(DDMFormValues.class.getName(), null);
+
 		_addLayoutPageTemplateEntry();
 
 		FileEntry fileEntry = _addFileEntry(null, null);
@@ -122,6 +127,15 @@ public class DLFileEntryWorkflowHandlerTest {
 
 		Map<String, Serializable> approvedWorkflowContext =
 			workflowInstance.getWorkflowContext();
+
+		ServiceContext serviceContext =
+			(ServiceContext)approvedWorkflowContext.get(
+				WorkflowConstants.CONTEXT_SERVICE_CONTEXT);
+
+		Map<String, Serializable> attributes = serviceContext.getAttributes();
+
+		Assert.assertFalse(
+			attributes.containsKey(DDMFormValues.class.getName()));
 
 		Assert.assertNotEquals(
 			StringPool.BLANK,
@@ -287,12 +301,16 @@ public class DLFileEntryWorkflowHandlerTest {
 
 	private void _addLayoutPageTemplateEntry() throws Exception {
 		String name = StringUtil.randomString();
+		DLFileEntryType dlFileEntryType =
+			_dlFileEntryTypeLocalService.fetchDLFileEntryType(
+				DLFileEntryTypeConstants.FILE_ENTRY_TYPE_ID_BASIC_DOCUMENT);
 
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
 				null, TestPropsValues.getUserId(), _group.getGroupId(), 0,
 				name.toLowerCase(LocaleUtil.ROOT),
-				PortalUtil.getClassNameId(FileEntry.class.getName()), 0, name,
+				PortalUtil.getClassNameId(FileEntry.class.getName()),
+				dlFileEntryType.getFileEntryTypeKey(), name,
 				LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE, 0L, 0,
 				ServiceContextTestUtil.getServiceContext(
 					_group.getGroupId(), TestPropsValues.getUserId()));
@@ -369,7 +387,7 @@ public class DLFileEntryWorkflowHandlerTest {
 		themeDisplay.setRequest(new MockHttpServletRequest());
 		themeDisplay.setScopeGroupId(_group.getGroupId());
 		themeDisplay.setServerName("localhost");
-		themeDisplay.setServerPort(8080);
+		themeDisplay.setServerPort(PortalUtil.getPortalServerPort(false));
 		themeDisplay.setSiteGroupId(_group.getGroupId());
 		themeDisplay.setUser(TestPropsValues.getUser());
 
@@ -404,6 +422,9 @@ public class DLFileEntryWorkflowHandlerTest {
 
 	@Inject
 	private DLFileEntryLocalService _dlFileEntryLocalService;
+
+	@Inject
+	private DLFileEntryTypeLocalService _dlFileEntryTypeLocalService;
 
 	private Folder _folder;
 

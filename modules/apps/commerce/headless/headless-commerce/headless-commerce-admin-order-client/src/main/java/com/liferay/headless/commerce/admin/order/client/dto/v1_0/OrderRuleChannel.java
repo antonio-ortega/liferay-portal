@@ -214,3 +214,4 @@ public class OrderRuleChannel implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-618267186

@@ -1043,6 +1043,47 @@ public class TaxonomyCategory implements Serializable {
 	private Supplier<Long> _taxonomyVocabularyIdSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The UUID of the category."
+	)
+	public String getUuid() {
+		if (_uuidSupplier != null) {
+			uuid = _uuidSupplier.get();
+
+			_uuidSupplier = null;
+		}
+
+		return uuid;
+	}
+
+	public void setUuid(String uuid) {
+		this.uuid = uuid;
+
+		_uuidSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setUuid(UnsafeSupplier<String, Exception> uuidUnsafeSupplier) {
+		_uuidSupplier = () -> {
+			try {
+				return uuidUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(description = "The UUID of the category.")
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String uuid;
+
+	@JsonIgnore
+	private Supplier<String> _uuidSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "A write-only property that specifies the category's default permissions."
 	)
 	@JsonGetter("viewableBy")
@@ -1468,6 +1509,22 @@ public class TaxonomyCategory implements Serializable {
 			sb.append(taxonomyVocabularyId);
 		}
 
+		String uuid = getUuid();
+
+		if (uuid != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"uuid\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(uuid));
+
+			sb.append("\"");
+		}
+
 		ViewableBy viewableBy = getViewableBy();
 
 		if (viewableBy != null) {
@@ -1621,3 +1678,4 @@ public class TaxonomyCategory implements Serializable {
 	private Map<String, Serializable> _extendedProperties;
 
 }
+// LIFERAY-REST-BUILDER-HASH:764984963

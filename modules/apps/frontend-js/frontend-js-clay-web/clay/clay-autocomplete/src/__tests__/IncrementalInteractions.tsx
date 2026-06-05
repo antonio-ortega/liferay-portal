@@ -443,7 +443,7 @@ describe('Autocomplete incremental interactions', () => {
 			expect(input.value).toBe('twooo');
 			expect(getByRole('option').textContent).toBe(messages.notFound);
 
-			userEvent.keyboard('[Escape]');
+			userEvent.keyboard('{Escape}');
 
 			expect(input.value).toBe('two');
 			expect(queryByRole('listbox')).toBeFalsy();
@@ -598,7 +598,7 @@ describe('Autocomplete incremental interactions', () => {
 
 			expect(getByRole('listbox')).toBeDefined();
 
-			userEvent.keyboard('[Escape]');
+			userEvent.keyboard('{Escape}');
 
 			expect(input.value).toBe('');
 			expect(queryByRole('listbox')).toBeFalsy();
@@ -858,6 +858,53 @@ describe('Autocomplete incremental interactions', () => {
 					`${initialCount + step} items loaded.`
 				);
 			});
+		});
+	});
+
+	describe('keyboard arrows indicator', () => {
+		it('does not render the indicator by default', async () => {
+			const {getByRole} = render(
+				<ClayAutocomplete messages={messages}>
+					{['one', 'two', 'three'].map((item) => (
+						<ClayAutocomplete.Item key={item}>
+							{item}
+						</ClayAutocomplete.Item>
+					))}
+				</ClayAutocomplete>
+			);
+
+			await userEvent.type(getByRole('combobox'), 'o');
+
+			expect(
+				document.body.querySelector('.clay-keyboard-arrows-indicator')
+			).not.toBeInTheDocument();
+		});
+
+		it('renders the floating indicator alongside the input when enabled', async () => {
+			const {getByRole} = render(
+				<ClayAutocomplete
+					displayKeyboardArrowsIndicator
+					messages={messages}
+				>
+					{['one', 'two', 'three'].map((item) => (
+						<ClayAutocomplete.Item key={item}>
+							{item}
+						</ClayAutocomplete.Item>
+					))}
+				</ClayAutocomplete>
+			);
+
+			await userEvent.type(getByRole('combobox'), 'o');
+
+			const indicator = document.body.querySelector(
+				'.clay-keyboard-arrows-indicator'
+			);
+
+			expect(indicator).toBeInTheDocument();
+			expect(indicator).toHaveClass('clay-keyboard-arrows-vertical');
+			expect(indicator).toHaveClass(
+				'clay-keyboard-arrows-indicator-floating'
+			);
 		});
 	});
 });

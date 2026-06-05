@@ -1563,3 +1563,4 @@ public interface JournalArticleService extends BaseService {
 		throws PortalException;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:7901883

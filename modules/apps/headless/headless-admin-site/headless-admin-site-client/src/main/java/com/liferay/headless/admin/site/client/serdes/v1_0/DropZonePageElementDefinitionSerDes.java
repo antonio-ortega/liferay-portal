@@ -312,3 +312,4 @@ public class DropZonePageElementDefinitionSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-242410662

@@ -45,7 +45,9 @@ export interface IBulkActionTask {
 		};
 	};
 	id: number;
-	numberOfItems: number;
+	numberOfFailedItems: number;
+	numberOfItems: string | number;
+	numberOfSuccessfulItems: number;
 	taskResult: string;
 	totalCount: number;
 	type: keyof IBulkActionTaskType;
@@ -72,12 +74,14 @@ export interface IBulkActionTaskStarter {
 	get type(): string;
 }
 
-export interface IBulkActionTaskStarterDTO<
-	T extends keyof IBulkActionTaskType,
-> {
+export interface IBulkActionTaskStarterDTO<T extends keyof IBulkActionType> {
+	additionalData?: Record<string, any>;
 	apiURL?: string;
 	dataSetId?: string;
-	keyValues?: IBulkActionTaskType[T];
+	entryClassName?: string;
+	folderId?: string;
+	groupIds?: string;
+	keyValues?: IBulkActionType[T];
 	onCreateError?:
 		| ((response: RequestResult<IBulkActionTaskPage>) => void)
 		| null;
@@ -86,38 +90,94 @@ export interface IBulkActionTaskStarterDTO<
 		| null;
 	overrideDefaultErrorToast?: boolean;
 	overrideDefaultSuccessToast?: boolean;
+	resetSearch?: boolean;
 	selectedData: IBulkActionFDSData;
-	type: keyof IBulkActionTaskType;
+	type: keyof IBulkActionType;
 }
 
-export interface IBulkActionTaskType {
-	DefaultPermissionBulkAction: {
+export interface IBulkActionType {
+	AssignStructureDefaultWorkflowBulkSelectionAction: {
+		workflow?: string;
+	};
+	AssignToObjectBulkSelectionAction: {
+		className: string;
+		externalReferenceCode: string;
+		name: string;
+	};
+	CopyObjectBulkSelectionAction: {
+		objectEntryFolderId: number;
+	};
+	DefaultPermissionObjectBulkSelectionAction: {
 		defaultPermissions: string;
 		depotGroupId?: number;
 		roleKey?: string;
 		treePath?: string;
 	};
-	DeleteBulkAction: {};
+	DeleteObjectAssetVersionBulkSelectionAction: {
+		versions?: number[];
+	};
+	DeleteObjectBulkSelectionAction: {
+		className?: string;
+	};
 	DownloadBulkAction: {};
-	ExpireBulkAction: {};
-	KeywordBulkAction: {
-		append?: boolean;
-		keywordsToAdd?: string[];
-		keywordsToRemove?: string[];
+	DueDateObjectBulkSelectionAction: {
+		dueDate?: string;
 	};
-	MoveBulkAction: {
-		objectEntryFolderId: number;
-	};
-	PermissionBulkAction: {
-		configuration: string;
-		roleKey?: string;
-	};
-	ResetPermissionBulkAction: {};
-	TaxonomyCategoryBulkAction: {
+	DuplicateObjectBulkSelectionAction: {};
+	EditObjectCategoriesBulkSelectionAction: {
 		append?: boolean;
 		taxonomyCategoryIdsToAdd?: number[];
 		taxonomyCategoryIdsToRemove?: number[];
 	};
+	EditObjectTagsBulkSelectionAction: {
+		append?: boolean;
+		keywordsToAdd?: string[];
+		keywordsToRemove?: string[];
+	};
+	ExpireObjectBulkSelectionAction: {};
+	ExportTranslationBulkAction: {
+		sourceLanguageId: string;
+		targetLanguageIds: string[];
+		xliffMimeType: string;
+	};
+	MoveObjectBulkSelectionAction: {
+		objectEntryFolderId: number;
+	};
+	PermissionObjectBulkSelectionAction: {
+		configuration: string;
+		roleKey?: string;
+	};
+	ResetPermissionObjectBulkSelectionAction: {};
+	RestoreObjectBulkSelectionAction: {};
+	StatusObjectBulkSelectionAction: {
+		status?: string;
+	};
+	UpdateObjectValuesBulkSelectionAction: {
+		values?: Record<string, unknown>;
+	};
+}
+
+export interface IBulkActionTaskType {
+	AssignStructureDefaultWorkflowBulkSelectionAction: string;
+	AssignToObjectBulkSelectionAction: string;
+	CopyObjectBulkSelectionAction: string;
+	DefaultPermissionObjectBulkSelectionAction: string;
+	DeleteObjectAssetVersionBulkSelectionAction: string;
+	DeleteObjectBulkSelectionAction: string;
+	DeleteTaskBulkAction: string;
+	DownloadBulkAction: string;
+	DueDateObjectBulkSelectionAction: string;
+	DuplicateObjectBulkSelectionAction: string;
+	EditObjectCategoriesBulkSelectionAction: string;
+	EditObjectTagsBulkSelectionAction: string;
+	ExpireObjectBulkSelectionAction: string;
+	ExportTranslationBulkAction: string;
+	MoveObjectBulkSelectionAction: string;
+	PermissionObjectBulkSelectionAction: string;
+	ResetPermissionObjectBulkSelectionAction: string;
+	RestoreObjectBulkSelectionAction: string;
+	StatusObjectBulkSelectionAction: string;
+	UpdateObjectValuesBulkSelectionAction: string;
 }
 
 export type TBulkActionTaskDTO = {
@@ -127,5 +187,6 @@ export type TBulkActionTaskDTO = {
 		selectAll: IBulkActionFDSData['selectAll'];
 		[k: string]: any;
 	};
-	type: keyof IBulkActionTaskType;
-} & IBulkActionTaskType[keyof IBulkActionTaskType];
+	type: keyof IBulkActionType;
+	versions?: number[] | [];
+} & IBulkActionType[keyof IBulkActionType];

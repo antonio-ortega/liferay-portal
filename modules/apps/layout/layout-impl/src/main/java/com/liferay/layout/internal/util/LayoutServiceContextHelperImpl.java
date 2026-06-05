@@ -20,7 +20,6 @@ import com.liferay.portal.kernel.model.LayoutSet;
 import com.liferay.portal.kernel.model.LayoutTypePortlet;
 import com.liferay.portal.kernel.model.Theme;
 import com.liferay.portal.kernel.model.User;
-import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
@@ -156,27 +155,26 @@ public class LayoutServiceContextHelperImpl
 				ServletContextPool.get(_portal.getServletContextName())
 			).build();
 
-			_originalCompanyId = CompanyThreadLocal.getCompanyId();
 			_originalPermissionChecker =
 				PermissionThreadLocal.getPermissionChecker();
 			_originalName = PrincipalThreadLocal.getName();
 
-			_originalServiceContext =
+			ServiceContext originalServiceContext =
 				ServiceContextThreadLocal.getServiceContext();
 
-			if (_originalServiceContext == null) {
+			if (originalServiceContext == null) {
 				_httpServletRequest = _createMockHttpServletRequest();
 				_httpServletResponse = new DummyHttpServletResponse();
 				_originalHttpServletRequest = null;
 			}
 			else {
 				ThemeDisplay themeDisplay =
-					_originalServiceContext.getThemeDisplay();
+					originalServiceContext.getThemeDisplay();
 
-				if (_originalServiceContext.getRequest() != null) {
-					_httpServletRequest = _originalServiceContext.getRequest();
+				if (originalServiceContext.getRequest() != null) {
+					_httpServletRequest = originalServiceContext.getRequest();
 					_originalHttpServletRequest =
-						_originalServiceContext.getRequest();
+						originalServiceContext.getRequest();
 				}
 				else if ((themeDisplay != null) &&
 						 (themeDisplay.getRequest() != null)) {
@@ -189,9 +187,8 @@ public class LayoutServiceContextHelperImpl
 					_originalHttpServletRequest = null;
 				}
 
-				if (_originalServiceContext.getResponse() != null) {
-					_httpServletResponse =
-						_originalServiceContext.getResponse();
+				if (originalServiceContext.getResponse() != null) {
+					_httpServletResponse = originalServiceContext.getResponse();
 				}
 				else if ((themeDisplay != null) &&
 						 (themeDisplay.getResponse() != null)) {
@@ -256,12 +253,10 @@ public class LayoutServiceContextHelperImpl
 
 		@Override
 		public void close() {
-			CompanyThreadLocal.setCompanyId(_originalCompanyId);
 			PermissionThreadLocal.setPermissionChecker(
 				_originalPermissionChecker);
 			PrincipalThreadLocal.setName(_originalName, false);
-			ServiceContextThreadLocal.pushServiceContext(
-				_originalServiceContext);
+			ServiceContextThreadLocal.popServiceContext();
 
 			if (_originalHttpServletRequest == null) {
 				return;
@@ -322,7 +317,11 @@ public class LayoutServiceContextHelperImpl
 					}
 
 					public String getRequestURI() {
-						return StringPool.BLANK;
+						return StringPool.SLASH;
+					}
+
+					public String getScheme() {
+						return "http";
 					}
 
 					public ServletContext getServletContext() {
@@ -454,8 +453,6 @@ public class LayoutServiceContextHelperImpl
 		}
 
 		private void _setCompanyServiceContext() throws PortalException {
-			CompanyThreadLocal.setCompanyId(_company.getCompanyId());
-
 			PermissionThreadLocal.setPermissionChecker(_permissionChecker);
 
 			PrincipalThreadLocal.setName(_user.getUserId(), false);
@@ -542,10 +539,6 @@ public class LayoutServiceContextHelperImpl
 						return StringPool.BLANK;
 					}
 
-					public String[] getValueNames() {
-						return new String[0];
-					}
-
 					public boolean isNew() {
 						return true;
 					}
@@ -558,13 +551,11 @@ public class LayoutServiceContextHelperImpl
 				ProxyFactory.newDummyInstance(HttpSession.class));
 
 		private final Layout _layout;
-		private final long _originalCompanyId;
 		private final HttpServletRequest _originalHttpServletRequest;
 		private final Map<String, Object>
 			_originalHttpServletRequestAttributesMap;
 		private final String _originalName;
 		private final PermissionChecker _originalPermissionChecker;
-		private final ServiceContext _originalServiceContext;
 		private final PermissionChecker _permissionChecker;
 		private final User _user;
 

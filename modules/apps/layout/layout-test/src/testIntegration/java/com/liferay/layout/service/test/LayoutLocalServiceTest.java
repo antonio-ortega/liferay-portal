@@ -43,6 +43,7 @@ import com.liferay.portal.kernel.model.Theme;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ClassNameLocalServiceUtil;
 import com.liferay.portal.kernel.service.LayoutLocalService;
+import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.SystemEventLocalService;
@@ -59,6 +60,7 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.ScopeUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
@@ -224,6 +226,41 @@ public class LayoutLocalServiceTest {
 				draftLayout1.getExternalReferenceCode(), _group.getGroupId());
 
 		Assert.assertEquals(draftLayout1, draftLayout2);
+	}
+
+	@Test
+	@TestInfo("LPD-67894")
+	public void testAddEmptyLayout() throws Exception {
+		try {
+			_layoutLocalService.addLayout(
+				null, TestPropsValues.getUserId(), _group.getGroupId(), false,
+				LayoutConstants.DEFAULT_PARENT_LAYOUT_ID,
+				RandomTestUtil.randomString(), StringPool.BLANK,
+				StringPool.BLANK, LayoutConstants.TYPE_EMPTY, true,
+				StringPool.BLANK, _serviceContext);
+
+			Assert.fail();
+		}
+		catch (LayoutTypeException layoutTypeException) {
+			Assert.assertEquals(
+				LayoutTypeException.EMPTY, layoutTypeException.getType());
+		}
+
+		try (SafeCloseable safeCloseable =
+				LazyReferencingThreadLocal.setEnabledWithSafeCloseable(true)) {
+
+			_serviceContext.setAttribute(
+				"layout.instanceable.allowed", Boolean.TRUE);
+
+			Layout layout = LayoutLocalServiceUtil.addLayout(
+				null, TestPropsValues.getUserId(), _group.getGroupId(), false,
+				LayoutConstants.DEFAULT_PARENT_LAYOUT_ID,
+				RandomTestUtil.randomString(), StringPool.BLANK,
+				StringPool.BLANK, LayoutConstants.TYPE_EMPTY, true,
+				StringPool.BLANK, _serviceContext);
+
+			Assert.assertEquals(LayoutConstants.TYPE_EMPTY, layout.getType());
+		}
 	}
 
 	@Test(expected = DuplicateLayoutExternalReferenceCodeException.class)
@@ -514,7 +551,7 @@ public class LayoutLocalServiceTest {
 		try {
 			_layoutLocalService.getOrAddEmptyLayout(
 				RandomTestUtil.randomString(), TestPropsValues.getUserId(),
-				_group.getGroupId(), _serviceContext);
+				_group.getGroupId(), false, _serviceContext);
 
 			Assert.fail();
 		}
@@ -529,7 +566,7 @@ public class LayoutLocalServiceTest {
 
 			Layout layout = _layoutLocalService.getOrAddEmptyLayout(
 				RandomTestUtil.randomString(), TestPropsValues.getUserId(),
-				_group.getGroupId(), _serviceContext);
+				_group.getGroupId(), false, _serviceContext);
 
 			Assert.assertEquals(
 				WorkflowConstants.STATUS_EMPTY, layout.getStatus());
@@ -757,8 +794,9 @@ public class LayoutLocalServiceTest {
 		ContentLayoutTestUtil.addFragmentEntryLinkToLayout(
 			null, fragmentEntry.getCss(), fragmentEntry.getConfiguration(),
 			fragmentEntry.getExternalReferenceCode(),
-			fragmentEntry.getScopeERC(), fragmentEntry.getHtml(),
-			fragmentEntry.getJs(), draftLayout,
+			ScopeUtil.getItemScopeExternalReferenceCode(
+				fragmentEntry.getGroupId(), draftLayout.getGroupId()),
+			fragmentEntry.getHtml(), fragmentEntry.getJs(), draftLayout,
 			fragmentEntry.getFragmentEntryKey(),
 			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
 				draftLayout.getPlid()),
@@ -1103,7 +1141,7 @@ public class LayoutLocalServiceTest {
 
 			return _layoutLocalService.getOrAddEmptyLayout(
 				RandomTestUtil.randomString(), TestPropsValues.getUserId(),
-				_group.getGroupId(), _serviceContext);
+				_group.getGroupId(), false, _serviceContext);
 		}
 	}
 

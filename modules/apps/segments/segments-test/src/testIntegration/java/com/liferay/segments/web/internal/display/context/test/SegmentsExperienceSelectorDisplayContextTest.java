@@ -232,7 +232,7 @@ public class SegmentsExperienceSelectorDisplayContextTest {
 			_segmentsEntryLocalService.
 				fetchSegmentsEntryByExternalReferenceCode(
 					expectedSegmentsExperience.getSegmentsEntryERC(),
-					expectedSegmentsExperience.getSegmentsEntryGroupId());
+					_group.getGroupId());
 
 		Assert.assertNotNull(expectedSegmentsEntry);
 

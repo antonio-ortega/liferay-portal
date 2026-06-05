@@ -7,80 +7,128 @@ import {expect, mergeTests} from '@playwright/test';
 
 import {loginTest} from '../../../fixtures/loginTest';
 import {systemSettingsPageTest} from '../../../fixtures/systemSettingsPageTest';
-import {waitForAlert} from '../../../utils/waitForAlert';
+import {checkAccessibility} from '../../../utils/checkAccessibility';
 import {
 	clearConsentCookies,
-	resetCookieManagerConfiguration,
-} from './utils/cookieManagerAfterEach';
+	resetConsentManagerConfiguration,
+	updateConsentManagerConfiguration,
+} from './utils/consentManagerConfigurationHelper';
 
 export const test = mergeTests(loginTest(), systemSettingsPageTest);
 
 test.afterEach(async ({systemSettingsPage}) => {
-	await test.step('Reset Cookie Manager Configuration', async () => {
-		await resetCookieManagerConfiguration(systemSettingsPage);
+	await test.step('Reset Consent Manager Configuration', async () => {
+		await resetConsentManagerConfiguration(systemSettingsPage);
 	});
 
 	await test.step('Clear Consent Cookies if present', async () => {
-		await clearConsentCookies(systemSettingsPage);
+		await clearConsentCookies(systemSettingsPage.page);
 	});
 });
 
-test('LPD-30822 Cookie Banner Accessibility', async ({
-	page,
-	systemSettingsPage,
-}) => {
+test('LPD-30822 Cookie Banner Accessibility', async ({page}) => {
 	await test.step('Enable Third Party Cookies', async () => {
-		await systemSettingsPage.goToSystemSetting('Privacy', 'Cookie Manager');
-
-		await systemSettingsPage.page.waitForTimeout(1000);
-
-		const enabledButton = page.getByLabel('Enabled');
-
-		await enabledButton.waitFor({state: 'visible'});
-
-		const isChecked = await enabledButton.isChecked();
-
-		if (!isChecked) {
-			await enabledButton.click();
-		}
-
-		await expect(enabledButton).toBeChecked();
-
-		const updateButton = page.getByRole('button', {
-			name: 'Update',
+		await updateConsentManagerConfiguration(page, {
+			enabled: true,
+			forceReload: true,
 		});
-
-		const saveButton = page.getByRole('button', {
-			name: 'Save',
-		});
-
-		if (await saveButton.isVisible()) {
-			await saveButton.click();
-		}
-		else if (await updateButton.isVisible()) {
-			await updateButton.click();
-		}
-
-		await waitForAlert(page);
 	});
 
-	await test.step('Check aria-label, role, and paragraph', async () => {
+	await test.step('Check role, aria-modal, aria-labelledby, heading and paragraph', async () => {
 		await page.goto('/');
 
-		await page
-			.locator(
-				'#p_p_id_com_liferay_cookies_banner_web_portlet_CookiesBannerPortlet_'
-			)
-			.waitFor({state: 'visible'});
-
 		const cookiesBannerContainer = page.locator(
-			'//div[@role="dialog"][@aria-label="banner cookies"]'
+			'div[role="dialog"][aria-modal="true"]'
 		);
 
+		await cookiesBannerContainer.waitFor({state: 'visible'});
+
 		await expect(cookiesBannerContainer).toBeVisible();
+
+		await expect(cookiesBannerContainer).toHaveAttribute(
+			'aria-modal',
+			'true'
+		);
+		await expect(cookiesBannerContainer).toHaveAttribute('aria-labelledby');
+		await expect(cookiesBannerContainer).not.toHaveAttribute('aria-label');
+
+		const bannerTitle = cookiesBannerContainer.locator('h2');
+
+		await expect(bannerTitle).toBeVisible();
 
 		const paragraph = cookiesBannerContainer.locator('p.mb-0');
 
 		await expect(paragraph).toBeVisible();
+	});
+
+	await test.step('Run axe accessibility check on banner', async () => {
+		await checkAccessibility({
+			page,
+			selectors: ['div[role="dialog"][aria-modal="true"]'],
+			soft: false,
+		});
+	});
+});
+
+test('LPD-67788 Cookie Panel toggle switches have aria-labels', async ({
+	page,
+}) => {
+	await test.step('Enable Third Party Cookies', async () => {
+		await updateConsentManagerConfiguration(page, {
+			enabled: true,
+			forceReload: true,
+		});
+	});
+
+	await test.step('Open Configuration panel', async () => {
+		await page.goto('/');
+
+		await page
+			.locator('div[role="dialog"][aria-modal="true"]')
+			.waitFor({state: 'visible'});
+
+		const configButton = page.getByRole('button', {name: 'Configuration'});
+
+		await expect(configButton).toHaveAttribute(
+			'aria-label',
+			/configuration/i
+		);
+
+		await configButton.click();
+	});
+
+	await test.step('Verify toggle switches have non-empty aria-labels', async () => {
+		await page
+			.locator('[id="cookiesBannerConfiguration"]')
+			.waitFor({state: 'visible'});
+
+		const cookiesPanel = page.frameLocator(
+			'#cookiesBannerConfiguration iframe'
+		);
+
+		await cookiesPanel
+			.locator('.toggle-switch-check')
+			.first()
+			.waitFor({state: 'attached'});
+
+		const toggles = await cookiesPanel
+			.locator('.toggle-switch-check')
+			.all();
+
+		expect(toggles.length).toBeGreaterThan(0);
+
+		for (const toggle of toggles) {
+			const ariaLabel = await toggle.getAttribute('aria-label');
+
+			expect(ariaLabel).toBeTruthy();
+		}
+	});
+
+	await test.step('Run axe accessibility check on cookie panel', async () => {
+		await checkAccessibility({
+			page,
+			selectors: ['[id="cookiesBannerConfiguration"]'],
+			soft: false,
+		});
 	});
 });

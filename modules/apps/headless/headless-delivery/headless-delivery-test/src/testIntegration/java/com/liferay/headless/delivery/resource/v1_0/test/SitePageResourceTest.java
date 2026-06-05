@@ -93,6 +93,8 @@ import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.permission.LayoutPermission;
+import com.liferay.portal.kernel.servlet.ServletContextPool;
+import com.liferay.portal.kernel.servlet.taglib.DynamicInclude;
 import com.liferay.portal.kernel.test.TestInfo;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
@@ -106,12 +108,14 @@ import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleThreadLocal;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.test.log.LogCapture;
@@ -131,6 +135,11 @@ import com.liferay.segments.service.SegmentsExperienceLocalService;
 import com.liferay.segments.test.util.SegmentsTestUtil;
 
 import jakarta.portlet.PortletPreferences;
+
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import jakarta.ws.rs.core.MultivaluedHashMap;
 import jakarta.ws.rs.core.MultivaluedMap;
@@ -161,6 +170,11 @@ import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceRegistration;
 
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -306,6 +320,98 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 		Assert.assertTrue(pageHTML, pageHTML.contains("<body"));
 		Assert.assertTrue(pageHTML, pageHTML.contains("</body>"));
 		Assert.assertTrue(pageHTML, pageHTML.contains("</html>"));
+	}
+
+	@Test
+	@TestInfo("LPD-80347")
+	public void testGetSiteSitePageRenderedPageWithDynamicInclude()
+		throws Exception {
+
+		Layout layout = LayoutTestUtil.addTypeContentLayout(testGroup);
+
+		Layout draftLayout = layout.fetchDraftLayout();
+
+		ContentLayoutTestUtil.publishLayout(draftLayout, layout);
+
+		Bundle bundle = FrameworkUtil.getBundle(SitePageResourceTest.class);
+
+		BundleContext bundleContext = bundle.getBundleContext();
+
+		String dynamicIncludeContent =
+			"<!-- " + RandomTestUtil.randomString() + " -->";
+
+		DynamicInclude dynamicInclude = new DynamicInclude() {
+
+			@Override
+			public void include(
+				HttpServletRequest httpServletRequest,
+				HttpServletResponse httpServletResponse, String key) {
+
+				if (key.equals("/html/common/themes/bottom.jsp#pre")) {
+					ServletContext servletContext = ServletContextPool.get(
+						StringPool.BLANK);
+
+					if (servletContext == null) {
+						return;
+					}
+
+					RequestDispatcher requestDispatcher =
+						servletContext.getRequestDispatcher(
+							"/html/common/themes/body_top.jsp");
+
+					if (requestDispatcher == null) {
+						return;
+					}
+
+					try {
+						requestDispatcher.include(
+							httpServletRequest, httpServletResponse);
+					}
+					catch (Exception exception) {
+						throw new RuntimeException(exception);
+					}
+				}
+				else if (key.equals("/html/common/themes/top_head.jsp#post")) {
+					try {
+						httpServletResponse.getWriter(
+						).write(
+							dynamicIncludeContent
+						);
+					}
+					catch (Exception exception) {
+						throw new RuntimeException(exception);
+					}
+				}
+			}
+
+			@Override
+			public void register(
+				DynamicIncludeRegistry dynamicIncludeRegistry) {
+
+				dynamicIncludeRegistry.register(
+					"/html/common/themes/bottom.jsp#pre");
+				dynamicIncludeRegistry.register(
+					"/html/common/themes/top_head.jsp#post");
+			}
+
+		};
+
+		ServiceRegistration<DynamicInclude> serviceRegistration =
+			bundleContext.registerService(
+				DynamicInclude.class, dynamicInclude, null);
+
+		try {
+			String friendlyURL = layout.getFriendlyURL();
+
+			String pageHTML = sitePageResource.getSiteSitePageRenderedPage(
+				layout.getGroupId(), friendlyURL.substring(1));
+
+			Assert.assertTrue(
+				pageHTML, pageHTML.contains(dynamicIncludeContent));
+		}
+		finally {
+			serviceRegistration.unregister();
+		}
 	}
 
 	@Ignore
@@ -460,7 +566,8 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 		).authentication(
 			"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD
 		).endpoint(
-			testCompany.getVirtualHostname(), 8080, "http"
+			testCompany.getVirtualHostname(),
+			PortalUtil.getPortalServerPort(false), "http"
 		).locale(
 			LocaleUtil.SPAIN
 		).build();
@@ -598,7 +705,8 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 				public StringBuffer getRequestURL() {
 					return new StringBuffer(
 						StringBundler.concat(
-							"http://localhost:8080/o/v1.0/",
+							"http://localhost:",
+							PortalUtil.getPortalServerPort(false), "/o/v1.0/",
 							RandomTestUtil.randomString(), "/",
 							RandomTestUtil.randomString()));
 				}
@@ -630,7 +738,10 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 				@Override
 				public URI getBaseUri() {
 					return URI.create(
-						"http://localhost:8080/o/" + _applicationPath);
+						StringBundler.concat(
+							"http://localhost:",
+							PortalUtil.getPortalServerPort(false), "/o/",
+							_applicationPath));
 				}
 
 				@Override
@@ -700,8 +811,10 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 				@Override
 				public URI getRequestUri() {
 					return URI.create(
-						"http://localhost:8080/o/" + _applicationPath +
-							_resourcePath);
+						StringBundler.concat(
+							"http://localhost:",
+							PortalUtil.getPortalServerPort(false), "/o/",
+							_applicationPath, _resourcePath));
 				}
 
 				@Override
@@ -1532,8 +1645,8 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 		Assert.assertEquals(
 			dlFileEntry.getExternalReferenceCode(),
 			layout.getFaviconFileEntryERC());
-		Assert.assertEquals(
-			dlFileEntry.getGroupId(), layout.getFaviconFileEntryGroupId());
+		Assert.assertTrue(
+			Validator.isNull(layout.getFaviconFileEntryScopeERC()));
 	}
 
 	private void _testPostSiteSitePageSuccessPagePermissions()

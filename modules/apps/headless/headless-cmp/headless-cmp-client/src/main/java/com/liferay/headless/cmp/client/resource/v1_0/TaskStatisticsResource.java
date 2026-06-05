@@ -385,3 +385,4 @@ public interface TaskStatisticsResource {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1531989073

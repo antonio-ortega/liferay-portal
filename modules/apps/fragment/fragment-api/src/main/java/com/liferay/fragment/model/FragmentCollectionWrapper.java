@@ -387,6 +387,13 @@ public class FragmentCollectionWrapper
 		return model.hasResources();
 	}
 
+	@Override
+	public boolean isExportable()
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return model.isExportable();
+	}
+
 	/**
 	 * Returns <code>true</code> if this fragment collection is marketplace.
 	 *
@@ -630,3 +637,4 @@ public class FragmentCollectionWrapper
 	}
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-1414397000

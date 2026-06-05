@@ -45,7 +45,8 @@ public class HeadlessDisplayTag extends BaseDisplayTag {
 				_creationMenu = new CreationMenu();
 			}
 
-			_setFiltersJSONArray();
+			_filtersJSONArray = fdsSerializer.serializeFilters(
+				getFdsFilters(), getId(), getRequest());
 		}
 		catch (Exception exception) {
 			_log.error(exception);
@@ -331,11 +332,6 @@ public class HeadlessDisplayTag extends BaseDisplayTag {
 			).put(
 				"style", _validateDataAttribute(_style)
 			).build());
-	}
-
-	private void _setFiltersJSONArray() {
-		_filtersJSONArray = fdsSerializer.serializeFilters(
-			getFdsFilters(), getId(), getRequest());
 	}
 
 	private Object _validateDataAttribute(Object object) {

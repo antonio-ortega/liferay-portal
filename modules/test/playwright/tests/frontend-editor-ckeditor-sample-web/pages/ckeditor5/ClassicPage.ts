@@ -10,6 +10,7 @@ import {CKEditorSamplePageTab} from '../CKEditorSamplePage';
 export class ClassicPage implements CKEditorSamplePageTab {
 	readonly editable: Locator;
 	readonly itemSelectorFrame: FrameLocator;
+	readonly sourceEditable: Locator;
 	readonly toolbar: {
 		buttonLabels: Locator;
 		container: Locator;
@@ -20,6 +21,10 @@ export class ClassicPage implements CKEditorSamplePageTab {
 
 		this.itemSelectorFrame = page.frameLocator(
 			'iframe[title="Select Item"]'
+		);
+
+		this.sourceEditable = page.locator(
+			'.ck-source-editing-area > textarea'
 		);
 
 		const toolbarContainer = page.getByLabel('Editor toolbar');

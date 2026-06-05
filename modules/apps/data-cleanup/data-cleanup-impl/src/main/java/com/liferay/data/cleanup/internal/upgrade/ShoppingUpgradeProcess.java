@@ -72,10 +72,11 @@ public class ShoppingUpgradeProcess extends BaseUpgradeProcess {
 					StringBundler.concat(
 						"select ", type, "Id from ShoppingItem where ", type,
 						" = [$TRUE$]")));
+
 			ResultSet resultSet = preparedStatement.executeQuery()) {
 
 			while (resultSet.next()) {
-				_imageLocalService.deleteImage(resultSet.getLong(1));
+				_imageLocalService.deleteImage(resultSet.getLong(type + "Id"));
 			}
 		}
 	}

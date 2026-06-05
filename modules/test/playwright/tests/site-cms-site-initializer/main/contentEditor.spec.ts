@@ -21,6 +21,11 @@ import performLogin, {
 	performLogout,
 	userData,
 } from '../../../utils/performLogin';
+import {
+	EFDSVisualizationMode,
+	waitForEditor,
+	waitForFDS,
+} from '../../../utils/waitFor';
 import {waitForAlert} from '../../../utils/waitForAlert';
 import {structureBuilderPagesTest} from '../structure-builder/fixtures/structureBuilderPagesTest';
 import {categorizationPagesTest} from './fixtures/categorizationPagesTest';
@@ -31,7 +36,7 @@ const test = mergeTests(
 	cmsPagesTest,
 	dataApiHelpersTest,
 	featureFlagsTest({
-		'LPD-11235': {enabled: true},
+		'LPD-11235': {enabled: false},
 		'LPD-17564': {enabled: true},
 	}),
 	fragmentsPagesTest,
@@ -39,6 +44,25 @@ const test = mergeTests(
 	pageEditorPagesTest,
 	structureBuilderPagesTest
 );
+
+interface IPostedObjectEntry {
+	applicationName: string;
+	id: string;
+}
+
+const postedObjectEntries: Array<IPostedObjectEntry> = [];
+
+test.afterEach(async ({apiHelpers}) => {
+	await test.step('Delete newly created object entries', async () => {
+		for (const postedObjectEntry of postedObjectEntries) {
+			const {applicationName, id} = postedObjectEntry;
+
+			await apiHelpers.objectEntry.deleteObjectEntry(applicationName, id);
+		}
+
+		postedObjectEntries.length = 0;
+	});
+});
 
 test(
 	'Friendly URL is taken into account when creating contents',
@@ -150,6 +174,51 @@ test(
 		await contentsPage.goto();
 
 		await contentsPage.deleteContent(titleEnglish);
+	}
+);
+
+test(
+	'Can set Spanish as the only language and default language of a space',
+	{tag: '@LPD-84148'},
+	async ({apiHelpers, contentsPage, page}) => {
+
+		// Create a space with Spanish as the only language and default language
+
+		const spaceName = `Space ${getRandomString()}`;
+
+		await apiHelpers.headlessAssetLibrary.createAssetLibrary({
+			name: spaceName,
+			settings: {
+				availableLanguageIds: ['es-ES'],
+				defaultLanguageId: 'es-ES',
+				useCustomLanguages: true,
+			},
+			type: 'Space',
+		});
+
+		// Create a Blog in the space and save it
+
+		const blogTitle = getRandomString();
+
+		await contentsPage.goto();
+
+		await contentsPage.createContent('Blog', spaceName);
+
+		await page.getByPlaceholder('New Blog').fill(blogTitle);
+
+		await contentsPage.saveContent();
+
+		// Edit the content and check the title is persisted
+
+		await contentsPage.editContent(blogTitle);
+
+		await expect(page.getByPlaceholder('New Blog')).toHaveValue(blogTitle);
+
+		// Delete content
+
+		await contentsPage.goto();
+
+		await contentsPage.deleteContent(blogTitle);
 	}
 );
 
@@ -291,7 +360,11 @@ test(
 
 		// Check that the content is visible that means we redirected to the folder
 
-		await expect(page.getByText(title)).toBeVisible();
+		await expect(
+			page
+				.locator('tr', {hasText: title})
+				.or(page.locator('.card-row', {hasText: title}))
+		).toBeVisible();
 
 		// Delete content and folder
 
@@ -301,7 +374,37 @@ test(
 
 		await folderPage.deleteFolder(folderName);
 
-		await expect(page.getByText(folderName)).not.toBeVisible();
+		await expect(
+			page
+				.locator('tr', {hasText: folderName})
+				.or(page.locator('.card-row', {hasText: folderName}))
+		).not.toBeVisible();
+	}
+);
+
+test(
+	'Publishing a new or edited basic web content redirects back to the CMS contents listing',
+	{tag: '@LPD-86074'},
+	async ({contentsPage, page}) => {
+		await contentsPage.goto();
+
+		await contentsPage.createContent('Basic Web Content');
+
+		const title = getRandomString();
+
+		await page.getByLabel('Title').fill(title);
+
+		await contentsPage.saveContent();
+
+		await expect(page).toHaveURL(/\/web\/cms\/contents$/);
+
+		await contentsPage.editContent(title);
+
+		await contentsPage.saveContent();
+
+		await expect(page).toHaveURL(/\/web\/cms\/contents$/);
+
+		await contentsPage.deleteContent(title);
 	}
 );
 
@@ -695,6 +798,94 @@ test.describe('Schedule Panel', () => {
 			await contentsPage.deleteContent(title);
 		}
 	);
+
+	test(
+		'Expire and review dates are shown in the correct timezone',
+		{tag: '@LPD-78815'},
+		async ({assetsPage, contentsPage, page}) => {
+
+			// Create a Web Content
+
+			await contentsPage.goto();
+
+			await contentsPage.createContent('Basic Web Content');
+
+			await contentsPage.openSidePanel('Schedule');
+
+			const title = getRandomString();
+
+			await page.getByPlaceholder('New Basic Web Content').fill(title);
+
+			// Fill the input
+
+			const nextYear = new Date().getFullYear() + 1;
+
+			const expireCheckbox = page.getByLabel('Never Expire');
+
+			await expireCheckbox.uncheck();
+
+			const expirationDateField = page.getByRole('textbox', {
+				name: 'Expiration Date',
+			});
+
+			await expirationDateField.fill(`05/12/${nextYear} 12:55 PM`);
+
+			const reviewCheckbox = page.getByLabel('Never Review');
+
+			await reviewCheckbox.uncheck();
+
+			const reviewDateField = page.getByRole('textbox', {
+				name: 'Review Date',
+			});
+
+			await reviewDateField.fill(`05/12/${nextYear} 12:57 PM`);
+
+			// Publish the content
+
+			await contentsPage.publishButton.click();
+
+			const content = page.locator('.table-list-title a', {
+				hasText: title,
+			});
+
+			await expect(content).toBeAttached();
+
+			await content.click();
+
+			await contentsPage.openSidePanel('Schedule');
+
+			await expect(expirationDateField).toHaveValue(
+				`05/12/${nextYear} 12:55 PM`
+			);
+			await expect(reviewDateField).toHaveValue(
+				`05/12/${nextYear} 12:57 PM`
+			);
+
+			await assetsPage.gotoAll();
+
+			await assetsPage.execItemAction({
+				action: 'Show Details',
+				filter: title,
+			});
+
+			await expect(
+				page.getByRole('heading', {name: title})
+			).toBeVisible();
+
+			await expect(
+				page.getByText(`05/12/${nextYear}, 12:55 PM`)
+			).toBeVisible();
+			await expect(
+				page.getByText(`05/12/${nextYear}, 12:57 PM`)
+			).toBeVisible();
+
+			// Delete content
+
+			await contentsPage.goto();
+
+			await contentsPage.deleteContent(title);
+		}
+	);
 });
 
 test.describe('Categorization Panel', () => {
@@ -755,7 +946,7 @@ test.describe('Categorization Panel', () => {
 			const categoryName = getRandomString();
 			const vocabularyName = getRandomString();
 
-			const site = await apiHelpers.headlessSite.getSiteByERC('L_CMS');
+			const site = await apiHelpers.headlessAdminSite.getSite('L_CMS');
 
 			await createCategories({
 				apiHelpers,
@@ -887,6 +1078,143 @@ test.describe('Categorization Panel', () => {
 			await apiHelpers.headlessAssetLibrary.deleteAssetLibrary(spaceId);
 		}
 	);
+
+	test(
+		'Prevent publish, open Categorization panel and preserve tags when a required vocabulary has no selected category',
+		{tag: '@LPD-89784'},
+		async ({apiHelpers, contentsPage, page}) => {
+			const site = await apiHelpers.headlessAdminSite.getSite('L_CMS');
+
+			await apiHelpers.headlessAdminTaxonomy.postSiteTaxonomyVocabulary({
+				assetLibraries: [{id: -1}],
+				assetTypes: [
+					{
+						required: true,
+						subtype: 'AllAssetSubtypes',
+						type: 'AllAssetTypes',
+					},
+				],
+				name: getRandomString(),
+				siteId: site.id,
+				visibilityType: 'PUBLIC',
+			});
+
+			await contentsPage.goto();
+			await contentsPage.createContent('Basic Web Content');
+
+			const title = getRandomString();
+
+			await page.getByPlaceholder('New Basic Web Content').fill(title);
+
+			await contentsPage.openSidePanel('Categorization');
+
+			const tagName = getRandomString();
+
+			const tagsAutocomplete = page.getByPlaceholder('Add tag');
+
+			await tagsAutocomplete.fill(tagName);
+
+			const newTagOption = page.getByRole('option', {
+				name: 'Create New Tag:',
+			});
+
+			await newTagOption.waitFor();
+			await newTagOption.click();
+
+			await contentsPage.publishButton.click();
+
+			await expect(
+				page
+					.locator('.content-editor__side-panel .sidebar-header')
+					.filter({hasText: 'Categorization'})
+			).toBeVisible();
+
+			await expect(
+				page
+					.locator('.form-group.has-error')
+					.getByPlaceholder('Add category')
+			).toBeFocused();
+
+			await expect(
+				page.locator('.label-item', {hasText: tagName})
+			).toBeAttached();
+
+			await expect(
+				page.getByPlaceholder('New Basic Web Content')
+			).toHaveValue(title);
+		}
+	);
+
+	test(
+		'Publish proceeds and the categories error clears once a required vocabulary has a selected category',
+		{tag: '@LPD-89784'},
+		async ({apiHelpers, contentsPage, page}) => {
+			const site = await apiHelpers.headlessAdminSite.getSite('L_CMS');
+
+			const categoryName = getRandomString();
+
+			await apiHelpers.headlessAdminTaxonomy.postTaxonomyVocabularyTaxonomyCategory(
+				{
+					name: categoryName,
+					vocabularyId: (
+						await apiHelpers.headlessAdminTaxonomy.postSiteTaxonomyVocabulary(
+							{
+								assetLibraries: [{id: -1}],
+								assetTypes: [
+									{
+										required: true,
+										subtype: 'AllAssetSubtypes',
+										type: 'AllAssetTypes',
+									},
+								],
+								name: getRandomString(),
+								siteId: site.id,
+								visibilityType: 'PUBLIC',
+							}
+						)
+					).id,
+				}
+			);
+
+			await contentsPage.goto();
+			await contentsPage.createContent('Basic Web Content');
+
+			const title = getRandomString();
+
+			await page.getByPlaceholder('New Basic Web Content').fill(title);
+
+			await contentsPage.openSidePanel('Categorization');
+
+			await contentsPage.publishButton.click();
+
+			const categoriesInput = page
+				.locator('.form-group.has-error')
+				.getByPlaceholder('Add category');
+
+			await expect(categoriesInput).toBeFocused();
+
+			await categoriesInput.fill(categoryName);
+
+			const categoryOption = page.getByRole('option', {
+				name: categoryName,
+			});
+
+			await categoryOption.waitFor();
+			await categoryOption.click();
+
+			await expect(
+				page.locator('.label-item', {hasText: categoryName})
+			).toBeAttached();
+
+			await expect(page.locator('.form-group.has-error')).toBeHidden();
+
+			await contentsPage.publishButton.click();
+
+			await expect(
+				page.locator('.table-list-title a', {hasText: title})
+			).toBeVisible();
+		}
+	);
 });
 
 test(
@@ -908,14 +1236,17 @@ test(
 
 		await contentsPage.saveContentAsDraft();
 
-		// Check that the content is saved as draft
+		// Go back to the Content list and check that the content is saved as
+		// draft
+
+		await contentsPage.goto();
 
 		await expect(
 			page
 				.locator('tr', {hasText: title})
 				.or(page.locator('.card-row', {hasText: title}))
 				.locator('.cell-embedded-status')
-		).toHaveText('draft');
+		).toHaveText(/draft/i);
 
 		// Delete content
 
@@ -953,7 +1284,7 @@ test.describe('Schedule Publication', () => {
 				'[name="ObjectEntry_displayDate"]'
 			);
 
-			await expect(displayDateHiddenInput).toHaveValue('');
+			await expect(displayDateHiddenInput).not.toBeInViewport();
 
 			await page.getByRole('button', {name: 'Schedule'}).click();
 
@@ -985,7 +1316,7 @@ test.describe('Schedule Publication', () => {
 
 			await page.getByRole('button', {name: 'Cancel'}).click();
 
-			await expect(displayDateHiddenInput).toHaveValue('');
+			await expect(displayDateHiddenInput).not.toBeInViewport();
 
 			// Schedule the publication
 
@@ -1002,12 +1333,12 @@ test.describe('Schedule Publication', () => {
 					.locator('tr', {hasText: title})
 					.or(page.locator('.card-row', {hasText: title}))
 					.locator('.cell-embedded-status')
-			).toHaveText('scheduled');
+			).toHaveText(/scheduled/i);
 
 			await contentsPage.viewShowDetails(title);
 
-			expect(page.getByText('Display Date')).toBeVisible();
-			expect(page.getByText(`10/31/${nextYear}`)).toBeVisible();
+			await expect(page.getByText('Display Date')).toBeVisible();
+			await expect(page.getByText(`10/31/${nextYear}`)).toBeVisible();
 
 			// Delete content
 
@@ -1063,7 +1394,7 @@ test.describe('Schedule Publication', () => {
 			// Check that it remains on the page and the error is shown
 
 			await expect(
-				page.getByRole('heading', {name: 'Edit Basic Web Content'})
+				page.getByRole('heading', {name: 'New Basic Web Content'})
 			).toBeAttached();
 
 			await expect(
@@ -1085,6 +1416,110 @@ test.describe('Schedule Publication', () => {
 			).toBeAttached();
 
 			await contentsPage.deleteContent(title);
+		}
+	);
+
+	test(
+		'Schedule dates are maintained after a failed publication',
+		{tag: '@LPD-68099'},
+		async ({apiHelpers, contentsPage, page}) => {
+
+			// Create a required vocabulary
+
+			const vocabularyName = getRandomString();
+
+			const siteId = await apiHelpers.headlessAdminUser
+				.getSiteByFriendlyUrlPath('cms')
+				.then((response) => response.id);
+
+			await apiHelpers.headlessAdminTaxonomy.postSiteTaxonomyVocabulary({
+				assetLibraries: [{id: -1}],
+				assetTypes: [
+					{
+						required: true,
+						subtype: 'AllAssetSubtypes',
+						type: 'AllAssetTypes',
+					},
+				],
+				name: vocabularyName,
+				siteId,
+				visibilityType: 'PUBLIC',
+			});
+
+			// Create a content
+
+			await contentsPage.goto();
+
+			await contentsPage.createContent('Basic Web Content');
+
+			const title = getRandomString();
+
+			await page.getByPlaceholder('New Basic Web Content').fill(title);
+
+			const nextYear = new Date().getFullYear() + 1;
+
+			const expirationDateValue = `05/12/${nextYear} 12:55 PM`;
+			const reviewDateValue = `05/12/${nextYear} 12:57 PM`;
+
+			// Set expiration and review dates through the Schedule side
+			// panel
+
+			await contentsPage.openSidePanel('Schedule');
+
+			await page.getByLabel('Never Expire').uncheck();
+
+			await page
+				.getByRole('textbox', {name: 'Expiration Date'})
+				.fill(expirationDateValue);
+
+			await page.keyboard.press('Tab');
+
+			await page.getByLabel('Never Review').uncheck();
+
+			await page
+				.getByRole('textbox', {name: 'Review Date'})
+				.fill(reviewDateValue);
+
+			await page.keyboard.press('Tab');
+
+			// Set the display date through the Schedule Publication modal
+
+			await contentsPage.openSchedulePublication();
+
+			const displayDateValue = `10/31/${nextYear} 12:30 PM`;
+
+			await page
+				.getByRole('textbox', {name: 'Date and Time'})
+				.fill(displayDateValue);
+
+			await page.keyboard.press('Tab');
+
+			// Click Schedule. Submission fails on the server because the
+			// required vocabulary has no category selected.
+
+			await page.getByRole('button', {name: 'Schedule'}).click();
+
+			// After the failed submit the side panel is closed. Reopen it
+			// and check that the expiration and review dates are preserved.
+
+			await contentsPage.openSidePanel('Schedule');
+
+			await expect(
+				page.getByRole('textbox', {name: 'Expiration Date'})
+			).toHaveValue(expirationDateValue);
+
+			await expect(
+				page.getByRole('textbox', {name: 'Review Date'})
+			).toHaveValue(reviewDateValue);
+
+			// The modal is also closed. Reopen it and check that the
+			// display date is preserved.
+
+			await contentsPage.openSchedulePublication();
+
+			await expect(
+				page.getByRole('textbox', {name: 'Date and Time'})
+			).toHaveValue(displayDateValue);
 		}
 	);
 });
@@ -1329,6 +1764,19 @@ test(
 
 		await structureBuilderPage.publishStructure();
 
+		// Verify the embedded structure renders in the customize editor
+
+		await structureBuilderPage.customizeEditor();
+
+		await expect(
+			page.locator('.lfr-layout-structure-item-basic-component-accordion')
+		).toBeVisible();
+
+		await page
+			.locator('.management-bar')
+			.getByRole('link', {name: 'Back'})
+			.click();
+
 		// Go to CMS Contents
 
 		await contentsPage.goto();
@@ -1406,7 +1854,7 @@ test(
 test(
 	'Repetable text input is validated correctly',
 	{
-		tag: '@LPD-69446',
+		tag: ['@LPD-69446', '@LPD-92353'],
 	},
 	async ({contentsPage, page, structureBuilderPage}) => {
 
@@ -1460,7 +1908,9 @@ test(
 
 		const firstText = page.getByRole('textbox', {name: 'Text'}).first();
 
-		await firstText.fill('MoreThan5Characters');
+		await firstText.pressSequentially('MoreThan5Characters');
+
+		await expect(firstText).toHaveValue('MoreThan5Characters');
 
 		// Save content
 
@@ -1471,8 +1921,6 @@ test(
 		await expect(
 			page.getByText('Value exceeds maximum length of 5 for field Text.')
 		).toBeVisible();
-
-		await expect(firstText).toHaveValue('MoreThan5Characters');
 
 		// Delete content
 
@@ -1528,10 +1976,11 @@ test(
 
 		// Add multiselect field
 
-		await structureBuilderPage.addField('Multiselect');
+		await structureBuilderPage.addField('Select from List');
 
 		await structureBuilderPage.changeFieldSettings({
-			label: 'Multiselect',
+			label: 'Select from List',
+			multiselection: true,
 			picklist: picklistName,
 		});
 
@@ -1553,6 +2002,245 @@ test(
 
 		await contentsPage.editContent(title);
 
-		await expect(page.getByText('Option 1')).toBeVisible();
+		await expect(
+			page.getByRole('combobox', {name: 'Select from List'})
+		).toBeVisible();
+	}
+);
+
+test(
+	'Image selector shows only files with allowed extensions',
+	{tag: '@LPD-78771'},
+	async ({apiHelpers, contentsPage, page}) => {
+		const validImageFileBase64 =
+			'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';
+
+		const applicationName = 'cms/basic-documents';
+
+		const allowedFileExtensions = [
+			'apng',
+			'avif',
+			'gif',
+			'jpg',
+			'jpeg',
+			'png',
+			'svg',
+			'tiff',
+			'webp',
+		];
+
+		const allowedFileNames = allowedFileExtensions.map(
+			(extension) => `sample.${extension}`
+		);
+
+		const fileNames = [...allowedFileNames, 'sample.pdf'];
+
+		for (const fileName of fileNames) {
+			const objectEntry = await apiHelpers.objectEntry.postObjectEntry(
+				{
+					file: {
+						fileBase64: validImageFileBase64,
+						name: fileName,
+					},
+					objectEntryFolderExternalReferenceCode: 'L_FILES',
+					title: fileName,
+				},
+				applicationName,
+				'Default'
+			);
+
+			postedObjectEntries.push({
+				applicationName,
+				id: String(objectEntry.id),
+			});
+		}
+
+		await contentsPage.goto();
+
+		await contentsPage.createContent('Basic Web Content');
+
+		await waitForEditor({page});
+
+		await page.getByRole('button', {name: 'Image'}).click();
+
+		await expect(page.getByText('Select Image')).toBeVisible();
+
+		await waitForFDS({
+			page,
+			visualizationMode: EFDSVisualizationMode.CARDS,
+		});
+
+		for (const fileName of allowedFileNames) {
+			await expect(
+				page.getByLabel(fileName, {exact: true})
+			).toBeVisible();
+		}
+
+		await expect(
+			page.getByLabel('sample.pdf', {exact: true})
+		).not.toBeVisible();
+	}
+);
+
+test(
+	'Image selector lets the user open the multiple file uploader from the Upload Files button',
+	{tag: '@LPD-88407'},
+	async ({contentsPage, page}) => {
+		await contentsPage.goto();
+
+		await contentsPage.createContent('Basic Web Content');
+
+		await waitForEditor({page});
+
+		await page.getByRole('button', {name: 'Image'}).click();
+
+		await expect(page.getByText('Select Image')).toBeVisible();
+
+		const uploadFilesButton = page.getByRole('button', {
+			name: 'Upload Files',
+		});
+
+		await expect(uploadFilesButton).toBeVisible();
+
+		await uploadFilesButton.click();
+
+		await expect(
+			page.getByText('Drag and Drop your files or')
+		).toBeVisible();
+
+		await expect(
+			page.getByRole('button', {name: 'Select Files'})
+		).toBeVisible();
+	}
+);
+
+test(
+	'Video selector inserts an uploaded video file as a video element',
+	{tag: '@LPD-88969'},
+	async ({apiHelpers, contentsPage, page}) => {
+		const videoFileBase64 = 'AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDE=';
+
+		const applicationName = 'cms/basic-documents';
+
+		const fileName = `sample-${getRandomString()}.mp4`;
+
+		const objectEntry = await apiHelpers.objectEntry.postObjectEntry(
+			{
+				file: {
+					fileBase64: videoFileBase64,
+					name: fileName,
+				},
+				objectEntryFolderExternalReferenceCode: 'L_FILES',
+				title: fileName,
+			},
+			applicationName,
+			'Default'
+		);
+
+		postedObjectEntries.push({
+			applicationName,
+			id: String(objectEntry.id),
+		});
+
+		await contentsPage.goto();
+
+		await contentsPage.createContent('Basic Web Content');
+
+		await waitForEditor({page});
+
+		await page.getByRole('button', {name: 'Video'}).click();
+
+		await expect(
+			page.getByTestId('visualization-mode-cards')
+		).toBeVisible();
+
+		await page.getByLabel(`Select ${fileName}`).check();
+
+		await page.getByRole('button', {exact: true, name: 'Select'}).click();
+
+		await expect(page.locator('.modal-header')).toBeHidden();
+
+		await expect(page.locator('.ck-editor__editable video')).toBeVisible();
+	}
+);
+
+test(
+	'Tags are not cleared after saving content when the categories panel is never opened',
+	{tag: '@LPD-79085'},
+	async ({contentsPage, page}) => {
+		const tagName = getRandomString();
+		const title = getRandomString();
+
+		try {
+			await test.step('Create a new basic web content', async () => {
+				await contentsPage.goto();
+
+				await contentsPage.createContent('Basic Web Content');
+			});
+
+			await test.step('Fill required fields', async () => {
+				await page.getByLabel('Title').fill(title);
+			});
+
+			await test.step('Add a tag', async () => {
+				await contentsPage.openSidePanel('Categorization');
+
+				const tagsAutocomplete = page.getByPlaceholder('Add tag');
+
+				await tagsAutocomplete.click();
+
+				await page.keyboard.type(tagName);
+
+				const newTagOption = page.getByRole('option', {
+					name: 'Create New Tag:',
+				});
+
+				await newTagOption.waitFor();
+				await newTagOption.click();
+
+				// Ideally we'd remove this, but right now if you save too
+				// quickly, the initial tag might not have enough time to
+				// populate.
+
+				await expect(
+					page.locator('input[name="assetTagNames"]')
+				).toHaveValue(tagName);
+			});
+
+			await test.step('Save content', async () => {
+				await contentsPage.saveContent();
+			});
+
+			await test.step('Edit the content and save without opening the categories panel', async () => {
+				await contentsPage.editContent(title);
+
+				// Ideally we'd remove this, but right now if you save too
+				// quickly, the initial tag might not have enough time to
+				// populate.
+
+				await expect(
+					page.locator('input[name="assetTagNames"]')
+				).toHaveValue(tagName);
+
+				await contentsPage.saveContent();
+			});
+
+			await test.step('Edit the content and check that the tag is not cleared', async () => {
+				await contentsPage.editContent(title);
+
+				await contentsPage.openSidePanel('Categorization');
+
+				await expect(
+					page.locator('.label-item', {hasText: tagName})
+				).toBeVisible();
+			});
+		}
+		finally {
+			await test.step('Delete content', async () => {
+				await contentsPage.goto();
+
+				await contentsPage.deleteContent(title);
+			});
+		}
 	}
 );

@@ -36,6 +36,24 @@ public class PatcherProjectVersionUtil {
 	 */
 
 	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(List)
+	 */
+	public static void cacheResult(
+		List<PatcherProjectVersion> patcherProjectVersions) {
+
+		getPersistence().cacheResult(patcherProjectVersions);
+	}
+
+	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(com.liferay.portal.kernel.model.BaseModel)
+	 */
+	public static void cacheResult(
+		PatcherProjectVersion patcherProjectVersion) {
+
+		getPersistence().cacheResult(patcherProjectVersion);
+	}
+
+	/**
 	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#clearCache()
 	 */
 	public static void clearCache() {
@@ -114,63 +132,10 @@ public class PatcherProjectVersionUtil {
 	}
 
 	/**
-	 * Returns all the patcher project versions where patcherProductVersionId = &#63;.
-	 *
-	 * @param patcherProductVersionId the patcher product version ID
-	 * @return the matching patcher project versions
-	 */
-	public static List<PatcherProjectVersion> findByPatcherProductVersionId(
-		long patcherProductVersionId) {
-
-		return getPersistence().findByPatcherProductVersionId(
-			patcherProductVersionId);
-	}
-
-	/**
-	 * Returns a range of all the patcher project versions where patcherProductVersionId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>PatcherProjectVersionModelImpl</code>.
-	 * </p>
-	 *
-	 * @param patcherProductVersionId the patcher product version ID
-	 * @param start the lower bound of the range of patcher project versions
-	 * @param end the upper bound of the range of patcher project versions (not inclusive)
-	 * @return the range of matching patcher project versions
-	 */
-	public static List<PatcherProjectVersion> findByPatcherProductVersionId(
-		long patcherProductVersionId, int start, int end) {
-
-		return getPersistence().findByPatcherProductVersionId(
-			patcherProductVersionId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the patcher project versions where patcherProductVersionId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>PatcherProjectVersionModelImpl</code>.
-	 * </p>
-	 *
-	 * @param patcherProductVersionId the patcher product version ID
-	 * @param start the lower bound of the range of patcher project versions
-	 * @param end the upper bound of the range of patcher project versions (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching patcher project versions
-	 */
-	public static List<PatcherProjectVersion> findByPatcherProductVersionId(
-		long patcherProductVersionId, int start, int end,
-		OrderByComparator<PatcherProjectVersion> orderByComparator) {
-
-		return getPersistence().findByPatcherProductVersionId(
-			patcherProductVersionId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the patcher project versions where patcherProductVersionId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>PatcherProjectVersionModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.osb.patcher.model.impl.PatcherProjectVersionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param patcherProductVersionId the patcher product version ID
@@ -224,97 +189,10 @@ public class PatcherProjectVersionUtil {
 	}
 
 	/**
-	 * Returns the last patcher project version in the ordered set where patcherProductVersionId = &#63;.
-	 *
-	 * @param patcherProductVersionId the patcher product version ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching patcher project version
-	 * @throws NoSuchPatcherProjectVersionException if a matching patcher project version could not be found
-	 */
-	public static PatcherProjectVersion findByPatcherProductVersionId_Last(
-			long patcherProductVersionId,
-			OrderByComparator<PatcherProjectVersion> orderByComparator)
-		throws com.liferay.osb.patcher.exception.
-			NoSuchPatcherProjectVersionException {
-
-		return getPersistence().findByPatcherProductVersionId_Last(
-			patcherProductVersionId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last patcher project version in the ordered set where patcherProductVersionId = &#63;.
-	 *
-	 * @param patcherProductVersionId the patcher product version ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching patcher project version, or <code>null</code> if a matching patcher project version could not be found
-	 */
-	public static PatcherProjectVersion fetchByPatcherProductVersionId_Last(
-		long patcherProductVersionId,
-		OrderByComparator<PatcherProjectVersion> orderByComparator) {
-
-		return getPersistence().fetchByPatcherProductVersionId_Last(
-			patcherProductVersionId, orderByComparator);
-	}
-
-	/**
-	 * Returns the patcher project versions before and after the current patcher project version in the ordered set where patcherProductVersionId = &#63;.
-	 *
-	 * @param patcherProjectVersionId the primary key of the current patcher project version
-	 * @param patcherProductVersionId the patcher product version ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next patcher project version
-	 * @throws NoSuchPatcherProjectVersionException if a patcher project version with the primary key could not be found
-	 */
-	public static PatcherProjectVersion[]
-			findByPatcherProductVersionId_PrevAndNext(
-				long patcherProjectVersionId, long patcherProductVersionId,
-				OrderByComparator<PatcherProjectVersion> orderByComparator)
-		throws com.liferay.osb.patcher.exception.
-			NoSuchPatcherProjectVersionException {
-
-		return getPersistence().findByPatcherProductVersionId_PrevAndNext(
-			patcherProjectVersionId, patcherProductVersionId,
-			orderByComparator);
-	}
-
-	/**
-	 * Returns all the patcher project versions that the user has permission to view where patcherProductVersionId = &#63;.
-	 *
-	 * @param patcherProductVersionId the patcher product version ID
-	 * @return the matching patcher project versions that the user has permission to view
-	 */
-	public static List<PatcherProjectVersion>
-		filterFindByPatcherProductVersionId(long patcherProductVersionId) {
-
-		return getPersistence().filterFindByPatcherProductVersionId(
-			patcherProductVersionId);
-	}
-
-	/**
-	 * Returns a range of all the patcher project versions that the user has permission to view where patcherProductVersionId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>PatcherProjectVersionModelImpl</code>.
-	 * </p>
-	 *
-	 * @param patcherProductVersionId the patcher product version ID
-	 * @param start the lower bound of the range of patcher project versions
-	 * @param end the upper bound of the range of patcher project versions (not inclusive)
-	 * @return the range of matching patcher project versions that the user has permission to view
-	 */
-	public static List<PatcherProjectVersion>
-		filterFindByPatcherProductVersionId(
-			long patcherProductVersionId, int start, int end) {
-
-		return getPersistence().filterFindByPatcherProductVersionId(
-			patcherProductVersionId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the patcher project versions that the user has permissions to view where patcherProductVersionId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>PatcherProjectVersionModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.osb.patcher.model.impl.PatcherProjectVersionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param patcherProductVersionId the patcher product version ID
@@ -330,27 +208,6 @@ public class PatcherProjectVersionUtil {
 
 		return getPersistence().filterFindByPatcherProductVersionId(
 			patcherProductVersionId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns the patcher project versions before and after the current patcher project version in the ordered set of patcher project versions that the user has permission to view where patcherProductVersionId = &#63;.
-	 *
-	 * @param patcherProjectVersionId the primary key of the current patcher project version
-	 * @param patcherProductVersionId the patcher product version ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next patcher project version
-	 * @throws NoSuchPatcherProjectVersionException if a patcher project version with the primary key could not be found
-	 */
-	public static PatcherProjectVersion[]
-			filterFindByPatcherProductVersionId_PrevAndNext(
-				long patcherProjectVersionId, long patcherProductVersionId,
-				OrderByComparator<PatcherProjectVersion> orderByComparator)
-		throws com.liferay.osb.patcher.exception.
-			NoSuchPatcherProjectVersionException {
-
-		return getPersistence().filterFindByPatcherProductVersionId_PrevAndNext(
-			patcherProjectVersionId, patcherProductVersionId,
-			orderByComparator);
 	}
 
 	/**
@@ -392,63 +249,10 @@ public class PatcherProjectVersionUtil {
 	}
 
 	/**
-	 * Returns all the patcher project versions where rootPatcherProjectVersionId = &#63;.
-	 *
-	 * @param rootPatcherProjectVersionId the root patcher project version ID
-	 * @return the matching patcher project versions
-	 */
-	public static List<PatcherProjectVersion> findByRootPatcherProjectVersionId(
-		long rootPatcherProjectVersionId) {
-
-		return getPersistence().findByRootPatcherProjectVersionId(
-			rootPatcherProjectVersionId);
-	}
-
-	/**
-	 * Returns a range of all the patcher project versions where rootPatcherProjectVersionId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>PatcherProjectVersionModelImpl</code>.
-	 * </p>
-	 *
-	 * @param rootPatcherProjectVersionId the root patcher project version ID
-	 * @param start the lower bound of the range of patcher project versions
-	 * @param end the upper bound of the range of patcher project versions (not inclusive)
-	 * @return the range of matching patcher project versions
-	 */
-	public static List<PatcherProjectVersion> findByRootPatcherProjectVersionId(
-		long rootPatcherProjectVersionId, int start, int end) {
-
-		return getPersistence().findByRootPatcherProjectVersionId(
-			rootPatcherProjectVersionId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the patcher project versions where rootPatcherProjectVersionId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>PatcherProjectVersionModelImpl</code>.
-	 * </p>
-	 *
-	 * @param rootPatcherProjectVersionId the root patcher project version ID
-	 * @param start the lower bound of the range of patcher project versions
-	 * @param end the upper bound of the range of patcher project versions (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching patcher project versions
-	 */
-	public static List<PatcherProjectVersion> findByRootPatcherProjectVersionId(
-		long rootPatcherProjectVersionId, int start, int end,
-		OrderByComparator<PatcherProjectVersion> orderByComparator) {
-
-		return getPersistence().findByRootPatcherProjectVersionId(
-			rootPatcherProjectVersionId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the patcher project versions where rootPatcherProjectVersionId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>PatcherProjectVersionModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.osb.patcher.model.impl.PatcherProjectVersionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param rootPatcherProjectVersionId the root patcher project version ID
@@ -503,98 +307,10 @@ public class PatcherProjectVersionUtil {
 	}
 
 	/**
-	 * Returns the last patcher project version in the ordered set where rootPatcherProjectVersionId = &#63;.
-	 *
-	 * @param rootPatcherProjectVersionId the root patcher project version ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching patcher project version
-	 * @throws NoSuchPatcherProjectVersionException if a matching patcher project version could not be found
-	 */
-	public static PatcherProjectVersion findByRootPatcherProjectVersionId_Last(
-			long rootPatcherProjectVersionId,
-			OrderByComparator<PatcherProjectVersion> orderByComparator)
-		throws com.liferay.osb.patcher.exception.
-			NoSuchPatcherProjectVersionException {
-
-		return getPersistence().findByRootPatcherProjectVersionId_Last(
-			rootPatcherProjectVersionId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last patcher project version in the ordered set where rootPatcherProjectVersionId = &#63;.
-	 *
-	 * @param rootPatcherProjectVersionId the root patcher project version ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching patcher project version, or <code>null</code> if a matching patcher project version could not be found
-	 */
-	public static PatcherProjectVersion fetchByRootPatcherProjectVersionId_Last(
-		long rootPatcherProjectVersionId,
-		OrderByComparator<PatcherProjectVersion> orderByComparator) {
-
-		return getPersistence().fetchByRootPatcherProjectVersionId_Last(
-			rootPatcherProjectVersionId, orderByComparator);
-	}
-
-	/**
-	 * Returns the patcher project versions before and after the current patcher project version in the ordered set where rootPatcherProjectVersionId = &#63;.
-	 *
-	 * @param patcherProjectVersionId the primary key of the current patcher project version
-	 * @param rootPatcherProjectVersionId the root patcher project version ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next patcher project version
-	 * @throws NoSuchPatcherProjectVersionException if a patcher project version with the primary key could not be found
-	 */
-	public static PatcherProjectVersion[]
-			findByRootPatcherProjectVersionId_PrevAndNext(
-				long patcherProjectVersionId, long rootPatcherProjectVersionId,
-				OrderByComparator<PatcherProjectVersion> orderByComparator)
-		throws com.liferay.osb.patcher.exception.
-			NoSuchPatcherProjectVersionException {
-
-		return getPersistence().findByRootPatcherProjectVersionId_PrevAndNext(
-			patcherProjectVersionId, rootPatcherProjectVersionId,
-			orderByComparator);
-	}
-
-	/**
-	 * Returns all the patcher project versions that the user has permission to view where rootPatcherProjectVersionId = &#63;.
-	 *
-	 * @param rootPatcherProjectVersionId the root patcher project version ID
-	 * @return the matching patcher project versions that the user has permission to view
-	 */
-	public static List<PatcherProjectVersion>
-		filterFindByRootPatcherProjectVersionId(
-			long rootPatcherProjectVersionId) {
-
-		return getPersistence().filterFindByRootPatcherProjectVersionId(
-			rootPatcherProjectVersionId);
-	}
-
-	/**
-	 * Returns a range of all the patcher project versions that the user has permission to view where rootPatcherProjectVersionId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>PatcherProjectVersionModelImpl</code>.
-	 * </p>
-	 *
-	 * @param rootPatcherProjectVersionId the root patcher project version ID
-	 * @param start the lower bound of the range of patcher project versions
-	 * @param end the upper bound of the range of patcher project versions (not inclusive)
-	 * @return the range of matching patcher project versions that the user has permission to view
-	 */
-	public static List<PatcherProjectVersion>
-		filterFindByRootPatcherProjectVersionId(
-			long rootPatcherProjectVersionId, int start, int end) {
-
-		return getPersistence().filterFindByRootPatcherProjectVersionId(
-			rootPatcherProjectVersionId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the patcher project versions that the user has permissions to view where rootPatcherProjectVersionId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>PatcherProjectVersionModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.osb.patcher.model.impl.PatcherProjectVersionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param rootPatcherProjectVersionId the root patcher project version ID
@@ -610,28 +326,6 @@ public class PatcherProjectVersionUtil {
 
 		return getPersistence().filterFindByRootPatcherProjectVersionId(
 			rootPatcherProjectVersionId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns the patcher project versions before and after the current patcher project version in the ordered set of patcher project versions that the user has permission to view where rootPatcherProjectVersionId = &#63;.
-	 *
-	 * @param patcherProjectVersionId the primary key of the current patcher project version
-	 * @param rootPatcherProjectVersionId the root patcher project version ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next patcher project version
-	 * @throws NoSuchPatcherProjectVersionException if a patcher project version with the primary key could not be found
-	 */
-	public static PatcherProjectVersion[]
-			filterFindByRootPatcherProjectVersionId_PrevAndNext(
-				long patcherProjectVersionId, long rootPatcherProjectVersionId,
-				OrderByComparator<PatcherProjectVersion> orderByComparator)
-		throws com.liferay.osb.patcher.exception.
-			NoSuchPatcherProjectVersionException {
-
-		return getPersistence().
-			filterFindByRootPatcherProjectVersionId_PrevAndNext(
-				patcherProjectVersionId, rootPatcherProjectVersionId,
-				orderByComparator);
 	}
 
 	/**
@@ -687,16 +381,6 @@ public class PatcherProjectVersionUtil {
 	}
 
 	/**
-	 * Returns the patcher project version where committish = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
-	 *
-	 * @param committish the committish
-	 * @return the matching patcher project version, or <code>null</code> if a matching patcher project version could not be found
-	 */
-	public static PatcherProjectVersion fetchByCommittish(String committish) {
-		return getPersistence().fetchByCommittish(committish);
-	}
-
-	/**
 	 * Returns the patcher project version where committish = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
 	 *
 	 * @param committish the committish
@@ -747,16 +431,6 @@ public class PatcherProjectVersionUtil {
 	}
 
 	/**
-	 * Returns the patcher project version where name = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
-	 *
-	 * @param name the name
-	 * @return the matching patcher project version, or <code>null</code> if a matching patcher project version could not be found
-	 */
-	public static PatcherProjectVersion fetchByName(String name) {
-		return getPersistence().fetchByName(name);
-	}
-
-	/**
 	 * Returns the patcher project version where name = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
 	 *
 	 * @param name the name
@@ -793,69 +467,10 @@ public class PatcherProjectVersionUtil {
 	}
 
 	/**
-	 * Returns all the patcher project versions where patcherProductVersionId = &#63; and rootPatcherProjectVersionId = &#63;.
-	 *
-	 * @param patcherProductVersionId the patcher product version ID
-	 * @param rootPatcherProjectVersionId the root patcher project version ID
-	 * @return the matching patcher project versions
-	 */
-	public static List<PatcherProjectVersion> findByP_R(
-		long patcherProductVersionId, long rootPatcherProjectVersionId) {
-
-		return getPersistence().findByP_R(
-			patcherProductVersionId, rootPatcherProjectVersionId);
-	}
-
-	/**
-	 * Returns a range of all the patcher project versions where patcherProductVersionId = &#63; and rootPatcherProjectVersionId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>PatcherProjectVersionModelImpl</code>.
-	 * </p>
-	 *
-	 * @param patcherProductVersionId the patcher product version ID
-	 * @param rootPatcherProjectVersionId the root patcher project version ID
-	 * @param start the lower bound of the range of patcher project versions
-	 * @param end the upper bound of the range of patcher project versions (not inclusive)
-	 * @return the range of matching patcher project versions
-	 */
-	public static List<PatcherProjectVersion> findByP_R(
-		long patcherProductVersionId, long rootPatcherProjectVersionId,
-		int start, int end) {
-
-		return getPersistence().findByP_R(
-			patcherProductVersionId, rootPatcherProjectVersionId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the patcher project versions where patcherProductVersionId = &#63; and rootPatcherProjectVersionId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>PatcherProjectVersionModelImpl</code>.
-	 * </p>
-	 *
-	 * @param patcherProductVersionId the patcher product version ID
-	 * @param rootPatcherProjectVersionId the root patcher project version ID
-	 * @param start the lower bound of the range of patcher project versions
-	 * @param end the upper bound of the range of patcher project versions (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching patcher project versions
-	 */
-	public static List<PatcherProjectVersion> findByP_R(
-		long patcherProductVersionId, long rootPatcherProjectVersionId,
-		int start, int end,
-		OrderByComparator<PatcherProjectVersion> orderByComparator) {
-
-		return getPersistence().findByP_R(
-			patcherProductVersionId, rootPatcherProjectVersionId, start, end,
-			orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the patcher project versions where patcherProductVersionId = &#63; and rootPatcherProjectVersionId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>PatcherProjectVersionModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.osb.patcher.model.impl.PatcherProjectVersionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param patcherProductVersionId the patcher product version ID
@@ -915,104 +530,10 @@ public class PatcherProjectVersionUtil {
 	}
 
 	/**
-	 * Returns the last patcher project version in the ordered set where patcherProductVersionId = &#63; and rootPatcherProjectVersionId = &#63;.
-	 *
-	 * @param patcherProductVersionId the patcher product version ID
-	 * @param rootPatcherProjectVersionId the root patcher project version ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching patcher project version
-	 * @throws NoSuchPatcherProjectVersionException if a matching patcher project version could not be found
-	 */
-	public static PatcherProjectVersion findByP_R_Last(
-			long patcherProductVersionId, long rootPatcherProjectVersionId,
-			OrderByComparator<PatcherProjectVersion> orderByComparator)
-		throws com.liferay.osb.patcher.exception.
-			NoSuchPatcherProjectVersionException {
-
-		return getPersistence().findByP_R_Last(
-			patcherProductVersionId, rootPatcherProjectVersionId,
-			orderByComparator);
-	}
-
-	/**
-	 * Returns the last patcher project version in the ordered set where patcherProductVersionId = &#63; and rootPatcherProjectVersionId = &#63;.
-	 *
-	 * @param patcherProductVersionId the patcher product version ID
-	 * @param rootPatcherProjectVersionId the root patcher project version ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching patcher project version, or <code>null</code> if a matching patcher project version could not be found
-	 */
-	public static PatcherProjectVersion fetchByP_R_Last(
-		long patcherProductVersionId, long rootPatcherProjectVersionId,
-		OrderByComparator<PatcherProjectVersion> orderByComparator) {
-
-		return getPersistence().fetchByP_R_Last(
-			patcherProductVersionId, rootPatcherProjectVersionId,
-			orderByComparator);
-	}
-
-	/**
-	 * Returns the patcher project versions before and after the current patcher project version in the ordered set where patcherProductVersionId = &#63; and rootPatcherProjectVersionId = &#63;.
-	 *
-	 * @param patcherProjectVersionId the primary key of the current patcher project version
-	 * @param patcherProductVersionId the patcher product version ID
-	 * @param rootPatcherProjectVersionId the root patcher project version ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next patcher project version
-	 * @throws NoSuchPatcherProjectVersionException if a patcher project version with the primary key could not be found
-	 */
-	public static PatcherProjectVersion[] findByP_R_PrevAndNext(
-			long patcherProjectVersionId, long patcherProductVersionId,
-			long rootPatcherProjectVersionId,
-			OrderByComparator<PatcherProjectVersion> orderByComparator)
-		throws com.liferay.osb.patcher.exception.
-			NoSuchPatcherProjectVersionException {
-
-		return getPersistence().findByP_R_PrevAndNext(
-			patcherProjectVersionId, patcherProductVersionId,
-			rootPatcherProjectVersionId, orderByComparator);
-	}
-
-	/**
-	 * Returns all the patcher project versions that the user has permission to view where patcherProductVersionId = &#63; and rootPatcherProjectVersionId = &#63;.
-	 *
-	 * @param patcherProductVersionId the patcher product version ID
-	 * @param rootPatcherProjectVersionId the root patcher project version ID
-	 * @return the matching patcher project versions that the user has permission to view
-	 */
-	public static List<PatcherProjectVersion> filterFindByP_R(
-		long patcherProductVersionId, long rootPatcherProjectVersionId) {
-
-		return getPersistence().filterFindByP_R(
-			patcherProductVersionId, rootPatcherProjectVersionId);
-	}
-
-	/**
-	 * Returns a range of all the patcher project versions that the user has permission to view where patcherProductVersionId = &#63; and rootPatcherProjectVersionId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>PatcherProjectVersionModelImpl</code>.
-	 * </p>
-	 *
-	 * @param patcherProductVersionId the patcher product version ID
-	 * @param rootPatcherProjectVersionId the root patcher project version ID
-	 * @param start the lower bound of the range of patcher project versions
-	 * @param end the upper bound of the range of patcher project versions (not inclusive)
-	 * @return the range of matching patcher project versions that the user has permission to view
-	 */
-	public static List<PatcherProjectVersion> filterFindByP_R(
-		long patcherProductVersionId, long rootPatcherProjectVersionId,
-		int start, int end) {
-
-		return getPersistence().filterFindByP_R(
-			patcherProductVersionId, rootPatcherProjectVersionId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the patcher project versions that the user has permissions to view where patcherProductVersionId = &#63; and rootPatcherProjectVersionId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>PatcherProjectVersionModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.osb.patcher.model.impl.PatcherProjectVersionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param patcherProductVersionId the patcher product version ID
@@ -1030,28 +551,6 @@ public class PatcherProjectVersionUtil {
 		return getPersistence().filterFindByP_R(
 			patcherProductVersionId, rootPatcherProjectVersionId, start, end,
 			orderByComparator);
-	}
-
-	/**
-	 * Returns the patcher project versions before and after the current patcher project version in the ordered set of patcher project versions that the user has permission to view where patcherProductVersionId = &#63; and rootPatcherProjectVersionId = &#63;.
-	 *
-	 * @param patcherProjectVersionId the primary key of the current patcher project version
-	 * @param patcherProductVersionId the patcher product version ID
-	 * @param rootPatcherProjectVersionId the root patcher project version ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next patcher project version
-	 * @throws NoSuchPatcherProjectVersionException if a patcher project version with the primary key could not be found
-	 */
-	public static PatcherProjectVersion[] filterFindByP_R_PrevAndNext(
-			long patcherProjectVersionId, long patcherProductVersionId,
-			long rootPatcherProjectVersionId,
-			OrderByComparator<PatcherProjectVersion> orderByComparator)
-		throws com.liferay.osb.patcher.exception.
-			NoSuchPatcherProjectVersionException {
-
-		return getPersistence().filterFindByP_R_PrevAndNext(
-			patcherProjectVersionId, patcherProductVersionId,
-			rootPatcherProjectVersionId, orderByComparator);
 	}
 
 	/**
@@ -1096,68 +595,10 @@ public class PatcherProjectVersionUtil {
 	}
 
 	/**
-	 * Returns all the patcher project versions where patcherProductVersionId = &#63; and repositoryName = &#63;.
-	 *
-	 * @param patcherProductVersionId the patcher product version ID
-	 * @param repositoryName the repository name
-	 * @return the matching patcher project versions
-	 */
-	public static List<PatcherProjectVersion> findByP_RN(
-		long patcherProductVersionId, String repositoryName) {
-
-		return getPersistence().findByP_RN(
-			patcherProductVersionId, repositoryName);
-	}
-
-	/**
-	 * Returns a range of all the patcher project versions where patcherProductVersionId = &#63; and repositoryName = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>PatcherProjectVersionModelImpl</code>.
-	 * </p>
-	 *
-	 * @param patcherProductVersionId the patcher product version ID
-	 * @param repositoryName the repository name
-	 * @param start the lower bound of the range of patcher project versions
-	 * @param end the upper bound of the range of patcher project versions (not inclusive)
-	 * @return the range of matching patcher project versions
-	 */
-	public static List<PatcherProjectVersion> findByP_RN(
-		long patcherProductVersionId, String repositoryName, int start,
-		int end) {
-
-		return getPersistence().findByP_RN(
-			patcherProductVersionId, repositoryName, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the patcher project versions where patcherProductVersionId = &#63; and repositoryName = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>PatcherProjectVersionModelImpl</code>.
-	 * </p>
-	 *
-	 * @param patcherProductVersionId the patcher product version ID
-	 * @param repositoryName the repository name
-	 * @param start the lower bound of the range of patcher project versions
-	 * @param end the upper bound of the range of patcher project versions (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching patcher project versions
-	 */
-	public static List<PatcherProjectVersion> findByP_RN(
-		long patcherProductVersionId, String repositoryName, int start, int end,
-		OrderByComparator<PatcherProjectVersion> orderByComparator) {
-
-		return getPersistence().findByP_RN(
-			patcherProductVersionId, repositoryName, start, end,
-			orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the patcher project versions where patcherProductVersionId = &#63; and repositoryName = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>PatcherProjectVersionModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.osb.patcher.model.impl.PatcherProjectVersionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param patcherProductVersionId the patcher product version ID
@@ -1214,102 +655,10 @@ public class PatcherProjectVersionUtil {
 	}
 
 	/**
-	 * Returns the last patcher project version in the ordered set where patcherProductVersionId = &#63; and repositoryName = &#63;.
-	 *
-	 * @param patcherProductVersionId the patcher product version ID
-	 * @param repositoryName the repository name
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching patcher project version
-	 * @throws NoSuchPatcherProjectVersionException if a matching patcher project version could not be found
-	 */
-	public static PatcherProjectVersion findByP_RN_Last(
-			long patcherProductVersionId, String repositoryName,
-			OrderByComparator<PatcherProjectVersion> orderByComparator)
-		throws com.liferay.osb.patcher.exception.
-			NoSuchPatcherProjectVersionException {
-
-		return getPersistence().findByP_RN_Last(
-			patcherProductVersionId, repositoryName, orderByComparator);
-	}
-
-	/**
-	 * Returns the last patcher project version in the ordered set where patcherProductVersionId = &#63; and repositoryName = &#63;.
-	 *
-	 * @param patcherProductVersionId the patcher product version ID
-	 * @param repositoryName the repository name
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching patcher project version, or <code>null</code> if a matching patcher project version could not be found
-	 */
-	public static PatcherProjectVersion fetchByP_RN_Last(
-		long patcherProductVersionId, String repositoryName,
-		OrderByComparator<PatcherProjectVersion> orderByComparator) {
-
-		return getPersistence().fetchByP_RN_Last(
-			patcherProductVersionId, repositoryName, orderByComparator);
-	}
-
-	/**
-	 * Returns the patcher project versions before and after the current patcher project version in the ordered set where patcherProductVersionId = &#63; and repositoryName = &#63;.
-	 *
-	 * @param patcherProjectVersionId the primary key of the current patcher project version
-	 * @param patcherProductVersionId the patcher product version ID
-	 * @param repositoryName the repository name
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next patcher project version
-	 * @throws NoSuchPatcherProjectVersionException if a patcher project version with the primary key could not be found
-	 */
-	public static PatcherProjectVersion[] findByP_RN_PrevAndNext(
-			long patcherProjectVersionId, long patcherProductVersionId,
-			String repositoryName,
-			OrderByComparator<PatcherProjectVersion> orderByComparator)
-		throws com.liferay.osb.patcher.exception.
-			NoSuchPatcherProjectVersionException {
-
-		return getPersistence().findByP_RN_PrevAndNext(
-			patcherProjectVersionId, patcherProductVersionId, repositoryName,
-			orderByComparator);
-	}
-
-	/**
-	 * Returns all the patcher project versions that the user has permission to view where patcherProductVersionId = &#63; and repositoryName = &#63;.
-	 *
-	 * @param patcherProductVersionId the patcher product version ID
-	 * @param repositoryName the repository name
-	 * @return the matching patcher project versions that the user has permission to view
-	 */
-	public static List<PatcherProjectVersion> filterFindByP_RN(
-		long patcherProductVersionId, String repositoryName) {
-
-		return getPersistence().filterFindByP_RN(
-			patcherProductVersionId, repositoryName);
-	}
-
-	/**
-	 * Returns a range of all the patcher project versions that the user has permission to view where patcherProductVersionId = &#63; and repositoryName = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>PatcherProjectVersionModelImpl</code>.
-	 * </p>
-	 *
-	 * @param patcherProductVersionId the patcher product version ID
-	 * @param repositoryName the repository name
-	 * @param start the lower bound of the range of patcher project versions
-	 * @param end the upper bound of the range of patcher project versions (not inclusive)
-	 * @return the range of matching patcher project versions that the user has permission to view
-	 */
-	public static List<PatcherProjectVersion> filterFindByP_RN(
-		long patcherProductVersionId, String repositoryName, int start,
-		int end) {
-
-		return getPersistence().filterFindByP_RN(
-			patcherProductVersionId, repositoryName, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the patcher project versions that the user has permissions to view where patcherProductVersionId = &#63; and repositoryName = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>PatcherProjectVersionModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.osb.patcher.model.impl.PatcherProjectVersionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param patcherProductVersionId the patcher product version ID
@@ -1325,28 +674,6 @@ public class PatcherProjectVersionUtil {
 
 		return getPersistence().filterFindByP_RN(
 			patcherProductVersionId, repositoryName, start, end,
-			orderByComparator);
-	}
-
-	/**
-	 * Returns the patcher project versions before and after the current patcher project version in the ordered set of patcher project versions that the user has permission to view where patcherProductVersionId = &#63; and repositoryName = &#63;.
-	 *
-	 * @param patcherProjectVersionId the primary key of the current patcher project version
-	 * @param patcherProductVersionId the patcher product version ID
-	 * @param repositoryName the repository name
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next patcher project version
-	 * @throws NoSuchPatcherProjectVersionException if a patcher project version with the primary key could not be found
-	 */
-	public static PatcherProjectVersion[] filterFindByP_RN_PrevAndNext(
-			long patcherProjectVersionId, long patcherProductVersionId,
-			String repositoryName,
-			OrderByComparator<PatcherProjectVersion> orderByComparator)
-		throws com.liferay.osb.patcher.exception.
-			NoSuchPatcherProjectVersionException {
-
-		return getPersistence().filterFindByP_RN_PrevAndNext(
-			patcherProjectVersionId, patcherProductVersionId, repositoryName,
 			orderByComparator);
 	}
 
@@ -1388,28 +715,6 @@ public class PatcherProjectVersionUtil {
 
 		return getPersistence().filterCountByP_RN(
 			patcherProductVersionId, repositoryName);
-	}
-
-	/**
-	 * Caches the patcher project version in the entity cache if it is enabled.
-	 *
-	 * @param patcherProjectVersion the patcher project version
-	 */
-	public static void cacheResult(
-		PatcherProjectVersion patcherProjectVersion) {
-
-		getPersistence().cacheResult(patcherProjectVersion);
-	}
-
-	/**
-	 * Caches the patcher project versions in the entity cache if it is enabled.
-	 *
-	 * @param patcherProjectVersions the patcher project versions
-	 */
-	public static void cacheResult(
-		List<PatcherProjectVersion> patcherProjectVersions) {
-
-		getPersistence().cacheResult(patcherProjectVersions);
 	}
 
 	/**
@@ -1470,84 +775,383 @@ public class PatcherProjectVersionUtil {
 	}
 
 	/**
-	 * Returns all the patcher project versions.
+	 * Returns the patcher project version where committish = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
 	 *
-	 * @return the patcher project versions
+	 * @param committish the committish
+	 * @return the matching patcher project version, or <code>null</code> if a matching patcher project version could not be found
 	 */
-	public static List<PatcherProjectVersion> findAll() {
-		return getPersistence().findAll();
+	public static PatcherProjectVersion fetchByCommittish(String committish) {
+		return getPersistence().fetchByCommittish(committish);
 	}
 
 	/**
-	 * Returns a range of all the patcher project versions.
+	 * Returns the patcher project version where name = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	 *
+	 * @param name the name
+	 * @return the matching patcher project version, or <code>null</code> if a matching patcher project version could not be found
+	 */
+	public static PatcherProjectVersion fetchByName(String name) {
+		return getPersistence().fetchByName(name);
+	}
+
+	/**
+	 * Returns all the patcher project versions where patcherProductVersionId = &#63;.
+	 *
+	 * @param patcherProductVersionId the patcher product version ID
+	 * @return the matching patcher project versions
+	 */
+	public static List<PatcherProjectVersion> findByPatcherProductVersionId(
+		long patcherProductVersionId) {
+
+		return getPersistence().findByPatcherProductVersionId(
+			patcherProductVersionId);
+	}
+
+	/**
+	 * Returns a range of all the patcher project versions where patcherProductVersionId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>PatcherProjectVersionModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.osb.patcher.model.impl.PatcherProjectVersionModelImpl</code>.
 	 * </p>
 	 *
+	 * @param patcherProductVersionId the patcher product version ID
 	 * @param start the lower bound of the range of patcher project versions
 	 * @param end the upper bound of the range of patcher project versions (not inclusive)
-	 * @return the range of patcher project versions
+	 * @return the range of matching patcher project versions
 	 */
-	public static List<PatcherProjectVersion> findAll(int start, int end) {
-		return getPersistence().findAll(start, end);
+	public static List<PatcherProjectVersion> findByPatcherProductVersionId(
+		long patcherProductVersionId, int start, int end) {
+
+		return getPersistence().findByPatcherProductVersionId(
+			patcherProductVersionId, start, end);
 	}
 
 	/**
-	 * Returns an ordered range of all the patcher project versions.
+	 * Returns an ordered range of all the patcher project versions where patcherProductVersionId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>PatcherProjectVersionModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.osb.patcher.model.impl.PatcherProjectVersionModelImpl</code>.
 	 * </p>
 	 *
+	 * @param patcherProductVersionId the patcher product version ID
 	 * @param start the lower bound of the range of patcher project versions
 	 * @param end the upper bound of the range of patcher project versions (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of patcher project versions
+	 * @return the ordered range of matching patcher project versions
 	 */
-	public static List<PatcherProjectVersion> findAll(
+	public static List<PatcherProjectVersion> findByPatcherProductVersionId(
+		long patcherProductVersionId, int start, int end,
+		OrderByComparator<PatcherProjectVersion> orderByComparator) {
+
+		return getPersistence().findByPatcherProductVersionId(
+			patcherProductVersionId, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns all the patcher project versions that the user has permission to view where patcherProductVersionId = &#63;.
+	 *
+	 * @param patcherProductVersionId the patcher product version ID
+	 * @return the matching patcher project versions that the user has permission to view
+	 */
+	public static List<PatcherProjectVersion>
+		filterFindByPatcherProductVersionId(long patcherProductVersionId) {
+
+		return getPersistence().filterFindByPatcherProductVersionId(
+			patcherProductVersionId);
+	}
+
+	/**
+	 * Returns a range of all the patcher project versions that the user has permission to view where patcherProductVersionId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.osb.patcher.model.impl.PatcherProjectVersionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param patcherProductVersionId the patcher product version ID
+	 * @param start the lower bound of the range of patcher project versions
+	 * @param end the upper bound of the range of patcher project versions (not inclusive)
+	 * @return the range of matching patcher project versions that the user has permission to view
+	 */
+	public static List<PatcherProjectVersion>
+		filterFindByPatcherProductVersionId(
+			long patcherProductVersionId, int start, int end) {
+
+		return getPersistence().filterFindByPatcherProductVersionId(
+			patcherProductVersionId, start, end);
+	}
+
+	/**
+	 * Returns all the patcher project versions where rootPatcherProjectVersionId = &#63;.
+	 *
+	 * @param rootPatcherProjectVersionId the root patcher project version ID
+	 * @return the matching patcher project versions
+	 */
+	public static List<PatcherProjectVersion> findByRootPatcherProjectVersionId(
+		long rootPatcherProjectVersionId) {
+
+		return getPersistence().findByRootPatcherProjectVersionId(
+			rootPatcherProjectVersionId);
+	}
+
+	/**
+	 * Returns a range of all the patcher project versions where rootPatcherProjectVersionId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.osb.patcher.model.impl.PatcherProjectVersionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param rootPatcherProjectVersionId the root patcher project version ID
+	 * @param start the lower bound of the range of patcher project versions
+	 * @param end the upper bound of the range of patcher project versions (not inclusive)
+	 * @return the range of matching patcher project versions
+	 */
+	public static List<PatcherProjectVersion> findByRootPatcherProjectVersionId(
+		long rootPatcherProjectVersionId, int start, int end) {
+
+		return getPersistence().findByRootPatcherProjectVersionId(
+			rootPatcherProjectVersionId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the patcher project versions where rootPatcherProjectVersionId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.osb.patcher.model.impl.PatcherProjectVersionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param rootPatcherProjectVersionId the root patcher project version ID
+	 * @param start the lower bound of the range of patcher project versions
+	 * @param end the upper bound of the range of patcher project versions (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching patcher project versions
+	 */
+	public static List<PatcherProjectVersion> findByRootPatcherProjectVersionId(
+		long rootPatcherProjectVersionId, int start, int end,
+		OrderByComparator<PatcherProjectVersion> orderByComparator) {
+
+		return getPersistence().findByRootPatcherProjectVersionId(
+			rootPatcherProjectVersionId, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns all the patcher project versions that the user has permission to view where rootPatcherProjectVersionId = &#63;.
+	 *
+	 * @param rootPatcherProjectVersionId the root patcher project version ID
+	 * @return the matching patcher project versions that the user has permission to view
+	 */
+	public static List<PatcherProjectVersion>
+		filterFindByRootPatcherProjectVersionId(
+			long rootPatcherProjectVersionId) {
+
+		return getPersistence().filterFindByRootPatcherProjectVersionId(
+			rootPatcherProjectVersionId);
+	}
+
+	/**
+	 * Returns a range of all the patcher project versions that the user has permission to view where rootPatcherProjectVersionId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.osb.patcher.model.impl.PatcherProjectVersionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param rootPatcherProjectVersionId the root patcher project version ID
+	 * @param start the lower bound of the range of patcher project versions
+	 * @param end the upper bound of the range of patcher project versions (not inclusive)
+	 * @return the range of matching patcher project versions that the user has permission to view
+	 */
+	public static List<PatcherProjectVersion>
+		filterFindByRootPatcherProjectVersionId(
+			long rootPatcherProjectVersionId, int start, int end) {
+
+		return getPersistence().filterFindByRootPatcherProjectVersionId(
+			rootPatcherProjectVersionId, start, end);
+	}
+
+	/**
+	 * Returns all the patcher project versions where patcherProductVersionId = &#63; and rootPatcherProjectVersionId = &#63;.
+	 *
+	 * @param patcherProductVersionId the patcher product version ID
+	 * @param rootPatcherProjectVersionId the root patcher project version ID
+	 * @return the matching patcher project versions
+	 */
+	public static List<PatcherProjectVersion> findByP_R(
+		long patcherProductVersionId, long rootPatcherProjectVersionId) {
+
+		return getPersistence().findByP_R(
+			patcherProductVersionId, rootPatcherProjectVersionId);
+	}
+
+	/**
+	 * Returns a range of all the patcher project versions where patcherProductVersionId = &#63; and rootPatcherProjectVersionId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.osb.patcher.model.impl.PatcherProjectVersionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param patcherProductVersionId the patcher product version ID
+	 * @param rootPatcherProjectVersionId the root patcher project version ID
+	 * @param start the lower bound of the range of patcher project versions
+	 * @param end the upper bound of the range of patcher project versions (not inclusive)
+	 * @return the range of matching patcher project versions
+	 */
+	public static List<PatcherProjectVersion> findByP_R(
+		long patcherProductVersionId, long rootPatcherProjectVersionId,
+		int start, int end) {
+
+		return getPersistence().findByP_R(
+			patcherProductVersionId, rootPatcherProjectVersionId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the patcher project versions where patcherProductVersionId = &#63; and rootPatcherProjectVersionId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.osb.patcher.model.impl.PatcherProjectVersionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param patcherProductVersionId the patcher product version ID
+	 * @param rootPatcherProjectVersionId the root patcher project version ID
+	 * @param start the lower bound of the range of patcher project versions
+	 * @param end the upper bound of the range of patcher project versions (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching patcher project versions
+	 */
+	public static List<PatcherProjectVersion> findByP_R(
+		long patcherProductVersionId, long rootPatcherProjectVersionId,
 		int start, int end,
 		OrderByComparator<PatcherProjectVersion> orderByComparator) {
 
-		return getPersistence().findAll(start, end, orderByComparator);
+		return getPersistence().findByP_R(
+			patcherProductVersionId, rootPatcherProjectVersionId, start, end,
+			orderByComparator);
 	}
 
 	/**
-	 * Returns an ordered range of all the patcher project versions.
+	 * Returns all the patcher project versions that the user has permission to view where patcherProductVersionId = &#63; and rootPatcherProjectVersionId = &#63;.
+	 *
+	 * @param patcherProductVersionId the patcher product version ID
+	 * @param rootPatcherProjectVersionId the root patcher project version ID
+	 * @return the matching patcher project versions that the user has permission to view
+	 */
+	public static List<PatcherProjectVersion> filterFindByP_R(
+		long patcherProductVersionId, long rootPatcherProjectVersionId) {
+
+		return getPersistence().filterFindByP_R(
+			patcherProductVersionId, rootPatcherProjectVersionId);
+	}
+
+	/**
+	 * Returns a range of all the patcher project versions that the user has permission to view where patcherProductVersionId = &#63; and rootPatcherProjectVersionId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>PatcherProjectVersionModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.osb.patcher.model.impl.PatcherProjectVersionModelImpl</code>.
 	 * </p>
 	 *
+	 * @param patcherProductVersionId the patcher product version ID
+	 * @param rootPatcherProjectVersionId the root patcher project version ID
+	 * @param start the lower bound of the range of patcher project versions
+	 * @param end the upper bound of the range of patcher project versions (not inclusive)
+	 * @return the range of matching patcher project versions that the user has permission to view
+	 */
+	public static List<PatcherProjectVersion> filterFindByP_R(
+		long patcherProductVersionId, long rootPatcherProjectVersionId,
+		int start, int end) {
+
+		return getPersistence().filterFindByP_R(
+			patcherProductVersionId, rootPatcherProjectVersionId, start, end);
+	}
+
+	/**
+	 * Returns all the patcher project versions where patcherProductVersionId = &#63; and repositoryName = &#63;.
+	 *
+	 * @param patcherProductVersionId the patcher product version ID
+	 * @param repositoryName the repository name
+	 * @return the matching patcher project versions
+	 */
+	public static List<PatcherProjectVersion> findByP_RN(
+		long patcherProductVersionId, String repositoryName) {
+
+		return getPersistence().findByP_RN(
+			patcherProductVersionId, repositoryName);
+	}
+
+	/**
+	 * Returns a range of all the patcher project versions where patcherProductVersionId = &#63; and repositoryName = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.osb.patcher.model.impl.PatcherProjectVersionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param patcherProductVersionId the patcher product version ID
+	 * @param repositoryName the repository name
+	 * @param start the lower bound of the range of patcher project versions
+	 * @param end the upper bound of the range of patcher project versions (not inclusive)
+	 * @return the range of matching patcher project versions
+	 */
+	public static List<PatcherProjectVersion> findByP_RN(
+		long patcherProductVersionId, String repositoryName, int start,
+		int end) {
+
+		return getPersistence().findByP_RN(
+			patcherProductVersionId, repositoryName, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the patcher project versions where patcherProductVersionId = &#63; and repositoryName = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.osb.patcher.model.impl.PatcherProjectVersionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param patcherProductVersionId the patcher product version ID
+	 * @param repositoryName the repository name
 	 * @param start the lower bound of the range of patcher project versions
 	 * @param end the upper bound of the range of patcher project versions (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param useFinderCache whether to use the finder cache
-	 * @return the ordered range of patcher project versions
+	 * @return the ordered range of matching patcher project versions
 	 */
-	public static List<PatcherProjectVersion> findAll(
-		int start, int end,
-		OrderByComparator<PatcherProjectVersion> orderByComparator,
-		boolean useFinderCache) {
+	public static List<PatcherProjectVersion> findByP_RN(
+		long patcherProductVersionId, String repositoryName, int start, int end,
+		OrderByComparator<PatcherProjectVersion> orderByComparator) {
 
-		return getPersistence().findAll(
-			start, end, orderByComparator, useFinderCache);
+		return getPersistence().findByP_RN(
+			patcherProductVersionId, repositoryName, start, end,
+			orderByComparator);
 	}
 
 	/**
-	 * Removes all the patcher project versions from the database.
-	 */
-	public static void removeAll() {
-		getPersistence().removeAll();
-	}
-
-	/**
-	 * Returns the number of patcher project versions.
+	 * Returns all the patcher project versions that the user has permission to view where patcherProductVersionId = &#63; and repositoryName = &#63;.
 	 *
-	 * @return the number of patcher project versions
+	 * @param patcherProductVersionId the patcher product version ID
+	 * @param repositoryName the repository name
+	 * @return the matching patcher project versions that the user has permission to view
 	 */
-	public static int countAll() {
-		return getPersistence().countAll();
+	public static List<PatcherProjectVersion> filterFindByP_RN(
+		long patcherProductVersionId, String repositoryName) {
+
+		return getPersistence().filterFindByP_RN(
+			patcherProductVersionId, repositoryName);
+	}
+
+	/**
+	 * Returns a range of all the patcher project versions that the user has permission to view where patcherProductVersionId = &#63; and repositoryName = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.osb.patcher.model.impl.PatcherProjectVersionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param patcherProductVersionId the patcher product version ID
+	 * @param repositoryName the repository name
+	 * @param start the lower bound of the range of patcher project versions
+	 * @param end the upper bound of the range of patcher project versions (not inclusive)
+	 * @return the range of matching patcher project versions that the user has permission to view
+	 */
+	public static List<PatcherProjectVersion> filterFindByP_RN(
+		long patcherProductVersionId, String repositoryName, int start,
+		int end) {
+
+		return getPersistence().filterFindByP_RN(
+			patcherProductVersionId, repositoryName, start, end);
 	}
 
 	public static PatcherProjectVersionPersistence getPersistence() {
@@ -1563,3 +1167,4 @@ public class PatcherProjectVersionUtil {
 	private static volatile PatcherProjectVersionPersistence _persistence;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:1379602770

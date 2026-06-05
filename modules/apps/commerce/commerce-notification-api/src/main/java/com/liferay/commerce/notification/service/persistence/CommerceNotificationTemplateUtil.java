@@ -38,6 +38,24 @@ public class CommerceNotificationTemplateUtil {
 	 */
 
 	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(List)
+	 */
+	public static void cacheResult(
+		List<CommerceNotificationTemplate> commerceNotificationTemplates) {
+
+		getPersistence().cacheResult(commerceNotificationTemplates);
+	}
+
+	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(com.liferay.portal.kernel.model.BaseModel)
+	 */
+	public static void cacheResult(
+		CommerceNotificationTemplate commerceNotificationTemplate) {
+
+		getPersistence().cacheResult(commerceNotificationTemplate);
+	}
+
+	/**
 	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#clearCache()
 	 */
 	public static void clearCache() {
@@ -119,58 +137,10 @@ public class CommerceNotificationTemplateUtil {
 	}
 
 	/**
-	 * Returns all the commerce notification templates where uuid = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @return the matching commerce notification templates
-	 */
-	public static List<CommerceNotificationTemplate> findByUuid(String uuid) {
-		return getPersistence().findByUuid(uuid);
-	}
-
-	/**
-	 * Returns a range of all the commerce notification templates where uuid = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CommerceNotificationTemplateModelImpl</code>.
-	 * </p>
-	 *
-	 * @param uuid the uuid
-	 * @param start the lower bound of the range of commerce notification templates
-	 * @param end the upper bound of the range of commerce notification templates (not inclusive)
-	 * @return the range of matching commerce notification templates
-	 */
-	public static List<CommerceNotificationTemplate> findByUuid(
-		String uuid, int start, int end) {
-
-		return getPersistence().findByUuid(uuid, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the commerce notification templates where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CommerceNotificationTemplateModelImpl</code>.
-	 * </p>
-	 *
-	 * @param uuid the uuid
-	 * @param start the lower bound of the range of commerce notification templates
-	 * @param end the upper bound of the range of commerce notification templates (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching commerce notification templates
-	 */
-	public static List<CommerceNotificationTemplate> findByUuid(
-		String uuid, int start, int end,
-		OrderByComparator<CommerceNotificationTemplate> orderByComparator) {
-
-		return getPersistence().findByUuid(uuid, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the commerce notification templates where uuid = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CommerceNotificationTemplateModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.notification.model.impl.CommerceNotificationTemplateModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -221,56 +191,6 @@ public class CommerceNotificationTemplateUtil {
 	}
 
 	/**
-	 * Returns the last commerce notification template in the ordered set where uuid = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching commerce notification template
-	 * @throws NoSuchNotificationTemplateException if a matching commerce notification template could not be found
-	 */
-	public static CommerceNotificationTemplate findByUuid_Last(
-			String uuid,
-			OrderByComparator<CommerceNotificationTemplate> orderByComparator)
-		throws com.liferay.commerce.notification.exception.
-			NoSuchNotificationTemplateException {
-
-		return getPersistence().findByUuid_Last(uuid, orderByComparator);
-	}
-
-	/**
-	 * Returns the last commerce notification template in the ordered set where uuid = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching commerce notification template, or <code>null</code> if a matching commerce notification template could not be found
-	 */
-	public static CommerceNotificationTemplate fetchByUuid_Last(
-		String uuid,
-		OrderByComparator<CommerceNotificationTemplate> orderByComparator) {
-
-		return getPersistence().fetchByUuid_Last(uuid, orderByComparator);
-	}
-
-	/**
-	 * Returns the commerce notification templates before and after the current commerce notification template in the ordered set where uuid = &#63;.
-	 *
-	 * @param commerceNotificationTemplateId the primary key of the current commerce notification template
-	 * @param uuid the uuid
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next commerce notification template
-	 * @throws NoSuchNotificationTemplateException if a commerce notification template with the primary key could not be found
-	 */
-	public static CommerceNotificationTemplate[] findByUuid_PrevAndNext(
-			long commerceNotificationTemplateId, String uuid,
-			OrderByComparator<CommerceNotificationTemplate> orderByComparator)
-		throws com.liferay.commerce.notification.exception.
-			NoSuchNotificationTemplateException {
-
-		return getPersistence().findByUuid_PrevAndNext(
-			commerceNotificationTemplateId, uuid, orderByComparator);
-	}
-
-	/**
 	 * Removes all the commerce notification templates where uuid = &#63; from the database.
 	 *
 	 * @param uuid the uuid
@@ -303,19 +223,6 @@ public class CommerceNotificationTemplateUtil {
 			NoSuchNotificationTemplateException {
 
 		return getPersistence().findByUUID_G(uuid, groupId);
-	}
-
-	/**
-	 * Returns the commerce notification template where uuid = &#63; and groupId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
-	 *
-	 * @param uuid the uuid
-	 * @param groupId the group ID
-	 * @return the matching commerce notification template, or <code>null</code> if a matching commerce notification template could not be found
-	 */
-	public static CommerceNotificationTemplate fetchByUUID_G(
-		String uuid, long groupId) {
-
-		return getPersistence().fetchByUUID_G(uuid, groupId);
 	}
 
 	/**
@@ -359,64 +266,10 @@ public class CommerceNotificationTemplateUtil {
 	}
 
 	/**
-	 * Returns all the commerce notification templates where uuid = &#63; and companyId = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @return the matching commerce notification templates
-	 */
-	public static List<CommerceNotificationTemplate> findByUuid_C(
-		String uuid, long companyId) {
-
-		return getPersistence().findByUuid_C(uuid, companyId);
-	}
-
-	/**
-	 * Returns a range of all the commerce notification templates where uuid = &#63; and companyId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CommerceNotificationTemplateModelImpl</code>.
-	 * </p>
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param start the lower bound of the range of commerce notification templates
-	 * @param end the upper bound of the range of commerce notification templates (not inclusive)
-	 * @return the range of matching commerce notification templates
-	 */
-	public static List<CommerceNotificationTemplate> findByUuid_C(
-		String uuid, long companyId, int start, int end) {
-
-		return getPersistence().findByUuid_C(uuid, companyId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the commerce notification templates where uuid = &#63; and companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CommerceNotificationTemplateModelImpl</code>.
-	 * </p>
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param start the lower bound of the range of commerce notification templates
-	 * @param end the upper bound of the range of commerce notification templates (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching commerce notification templates
-	 */
-	public static List<CommerceNotificationTemplate> findByUuid_C(
-		String uuid, long companyId, int start, int end,
-		OrderByComparator<CommerceNotificationTemplate> orderByComparator) {
-
-		return getPersistence().findByUuid_C(
-			uuid, companyId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the commerce notification templates where uuid = &#63; and companyId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CommerceNotificationTemplateModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.notification.model.impl.CommerceNotificationTemplateModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -472,61 +325,6 @@ public class CommerceNotificationTemplateUtil {
 	}
 
 	/**
-	 * Returns the last commerce notification template in the ordered set where uuid = &#63; and companyId = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching commerce notification template
-	 * @throws NoSuchNotificationTemplateException if a matching commerce notification template could not be found
-	 */
-	public static CommerceNotificationTemplate findByUuid_C_Last(
-			String uuid, long companyId,
-			OrderByComparator<CommerceNotificationTemplate> orderByComparator)
-		throws com.liferay.commerce.notification.exception.
-			NoSuchNotificationTemplateException {
-
-		return getPersistence().findByUuid_C_Last(
-			uuid, companyId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last commerce notification template in the ordered set where uuid = &#63; and companyId = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching commerce notification template, or <code>null</code> if a matching commerce notification template could not be found
-	 */
-	public static CommerceNotificationTemplate fetchByUuid_C_Last(
-		String uuid, long companyId,
-		OrderByComparator<CommerceNotificationTemplate> orderByComparator) {
-
-		return getPersistence().fetchByUuid_C_Last(
-			uuid, companyId, orderByComparator);
-	}
-
-	/**
-	 * Returns the commerce notification templates before and after the current commerce notification template in the ordered set where uuid = &#63; and companyId = &#63;.
-	 *
-	 * @param commerceNotificationTemplateId the primary key of the current commerce notification template
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next commerce notification template
-	 * @throws NoSuchNotificationTemplateException if a commerce notification template with the primary key could not be found
-	 */
-	public static CommerceNotificationTemplate[] findByUuid_C_PrevAndNext(
-			long commerceNotificationTemplateId, String uuid, long companyId,
-			OrderByComparator<CommerceNotificationTemplate> orderByComparator)
-		throws com.liferay.commerce.notification.exception.
-			NoSuchNotificationTemplateException {
-
-		return getPersistence().findByUuid_C_PrevAndNext(
-			commerceNotificationTemplateId, uuid, companyId, orderByComparator);
-	}
-
-	/**
 	 * Removes all the commerce notification templates where uuid = &#63; and companyId = &#63; from the database.
 	 *
 	 * @param uuid the uuid
@@ -548,61 +346,10 @@ public class CommerceNotificationTemplateUtil {
 	}
 
 	/**
-	 * Returns all the commerce notification templates where groupId = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @return the matching commerce notification templates
-	 */
-	public static List<CommerceNotificationTemplate> findByGroupId(
-		long groupId) {
-
-		return getPersistence().findByGroupId(groupId);
-	}
-
-	/**
-	 * Returns a range of all the commerce notification templates where groupId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CommerceNotificationTemplateModelImpl</code>.
-	 * </p>
-	 *
-	 * @param groupId the group ID
-	 * @param start the lower bound of the range of commerce notification templates
-	 * @param end the upper bound of the range of commerce notification templates (not inclusive)
-	 * @return the range of matching commerce notification templates
-	 */
-	public static List<CommerceNotificationTemplate> findByGroupId(
-		long groupId, int start, int end) {
-
-		return getPersistence().findByGroupId(groupId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the commerce notification templates where groupId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CommerceNotificationTemplateModelImpl</code>.
-	 * </p>
-	 *
-	 * @param groupId the group ID
-	 * @param start the lower bound of the range of commerce notification templates
-	 * @param end the upper bound of the range of commerce notification templates (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching commerce notification templates
-	 */
-	public static List<CommerceNotificationTemplate> findByGroupId(
-		long groupId, int start, int end,
-		OrderByComparator<CommerceNotificationTemplate> orderByComparator) {
-
-		return getPersistence().findByGroupId(
-			groupId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the commerce notification templates where groupId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CommerceNotificationTemplateModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.notification.model.impl.CommerceNotificationTemplateModelImpl</code>.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -654,90 +401,10 @@ public class CommerceNotificationTemplateUtil {
 	}
 
 	/**
-	 * Returns the last commerce notification template in the ordered set where groupId = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching commerce notification template
-	 * @throws NoSuchNotificationTemplateException if a matching commerce notification template could not be found
-	 */
-	public static CommerceNotificationTemplate findByGroupId_Last(
-			long groupId,
-			OrderByComparator<CommerceNotificationTemplate> orderByComparator)
-		throws com.liferay.commerce.notification.exception.
-			NoSuchNotificationTemplateException {
-
-		return getPersistence().findByGroupId_Last(groupId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last commerce notification template in the ordered set where groupId = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching commerce notification template, or <code>null</code> if a matching commerce notification template could not be found
-	 */
-	public static CommerceNotificationTemplate fetchByGroupId_Last(
-		long groupId,
-		OrderByComparator<CommerceNotificationTemplate> orderByComparator) {
-
-		return getPersistence().fetchByGroupId_Last(groupId, orderByComparator);
-	}
-
-	/**
-	 * Returns the commerce notification templates before and after the current commerce notification template in the ordered set where groupId = &#63;.
-	 *
-	 * @param commerceNotificationTemplateId the primary key of the current commerce notification template
-	 * @param groupId the group ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next commerce notification template
-	 * @throws NoSuchNotificationTemplateException if a commerce notification template with the primary key could not be found
-	 */
-	public static CommerceNotificationTemplate[] findByGroupId_PrevAndNext(
-			long commerceNotificationTemplateId, long groupId,
-			OrderByComparator<CommerceNotificationTemplate> orderByComparator)
-		throws com.liferay.commerce.notification.exception.
-			NoSuchNotificationTemplateException {
-
-		return getPersistence().findByGroupId_PrevAndNext(
-			commerceNotificationTemplateId, groupId, orderByComparator);
-	}
-
-	/**
-	 * Returns all the commerce notification templates that the user has permission to view where groupId = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @return the matching commerce notification templates that the user has permission to view
-	 */
-	public static List<CommerceNotificationTemplate> filterFindByGroupId(
-		long groupId) {
-
-		return getPersistence().filterFindByGroupId(groupId);
-	}
-
-	/**
-	 * Returns a range of all the commerce notification templates that the user has permission to view where groupId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CommerceNotificationTemplateModelImpl</code>.
-	 * </p>
-	 *
-	 * @param groupId the group ID
-	 * @param start the lower bound of the range of commerce notification templates
-	 * @param end the upper bound of the range of commerce notification templates (not inclusive)
-	 * @return the range of matching commerce notification templates that the user has permission to view
-	 */
-	public static List<CommerceNotificationTemplate> filterFindByGroupId(
-		long groupId, int start, int end) {
-
-		return getPersistence().filterFindByGroupId(groupId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the commerce notification templates that the user has permissions to view where groupId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CommerceNotificationTemplateModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.notification.model.impl.CommerceNotificationTemplateModelImpl</code>.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -752,27 +419,6 @@ public class CommerceNotificationTemplateUtil {
 
 		return getPersistence().filterFindByGroupId(
 			groupId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns the commerce notification templates before and after the current commerce notification template in the ordered set of commerce notification templates that the user has permission to view where groupId = &#63;.
-	 *
-	 * @param commerceNotificationTemplateId the primary key of the current commerce notification template
-	 * @param groupId the group ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next commerce notification template
-	 * @throws NoSuchNotificationTemplateException if a commerce notification template with the primary key could not be found
-	 */
-	public static CommerceNotificationTemplate[]
-			filterFindByGroupId_PrevAndNext(
-				long commerceNotificationTemplateId, long groupId,
-				OrderByComparator<CommerceNotificationTemplate>
-					orderByComparator)
-		throws com.liferay.commerce.notification.exception.
-			NoSuchNotificationTemplateException {
-
-		return getPersistence().filterFindByGroupId_PrevAndNext(
-			commerceNotificationTemplateId, groupId, orderByComparator);
 	}
 
 	/**
@@ -805,64 +451,10 @@ public class CommerceNotificationTemplateUtil {
 	}
 
 	/**
-	 * Returns all the commerce notification templates where groupId = &#63; and enabled = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param enabled the enabled
-	 * @return the matching commerce notification templates
-	 */
-	public static List<CommerceNotificationTemplate> findByG_E(
-		long groupId, boolean enabled) {
-
-		return getPersistence().findByG_E(groupId, enabled);
-	}
-
-	/**
-	 * Returns a range of all the commerce notification templates where groupId = &#63; and enabled = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CommerceNotificationTemplateModelImpl</code>.
-	 * </p>
-	 *
-	 * @param groupId the group ID
-	 * @param enabled the enabled
-	 * @param start the lower bound of the range of commerce notification templates
-	 * @param end the upper bound of the range of commerce notification templates (not inclusive)
-	 * @return the range of matching commerce notification templates
-	 */
-	public static List<CommerceNotificationTemplate> findByG_E(
-		long groupId, boolean enabled, int start, int end) {
-
-		return getPersistence().findByG_E(groupId, enabled, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the commerce notification templates where groupId = &#63; and enabled = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CommerceNotificationTemplateModelImpl</code>.
-	 * </p>
-	 *
-	 * @param groupId the group ID
-	 * @param enabled the enabled
-	 * @param start the lower bound of the range of commerce notification templates
-	 * @param end the upper bound of the range of commerce notification templates (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching commerce notification templates
-	 */
-	public static List<CommerceNotificationTemplate> findByG_E(
-		long groupId, boolean enabled, int start, int end,
-		OrderByComparator<CommerceNotificationTemplate> orderByComparator) {
-
-		return getPersistence().findByG_E(
-			groupId, enabled, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the commerce notification templates where groupId = &#63; and enabled = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CommerceNotificationTemplateModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.notification.model.impl.CommerceNotificationTemplateModelImpl</code>.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -918,98 +510,10 @@ public class CommerceNotificationTemplateUtil {
 	}
 
 	/**
-	 * Returns the last commerce notification template in the ordered set where groupId = &#63; and enabled = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param enabled the enabled
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching commerce notification template
-	 * @throws NoSuchNotificationTemplateException if a matching commerce notification template could not be found
-	 */
-	public static CommerceNotificationTemplate findByG_E_Last(
-			long groupId, boolean enabled,
-			OrderByComparator<CommerceNotificationTemplate> orderByComparator)
-		throws com.liferay.commerce.notification.exception.
-			NoSuchNotificationTemplateException {
-
-		return getPersistence().findByG_E_Last(
-			groupId, enabled, orderByComparator);
-	}
-
-	/**
-	 * Returns the last commerce notification template in the ordered set where groupId = &#63; and enabled = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param enabled the enabled
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching commerce notification template, or <code>null</code> if a matching commerce notification template could not be found
-	 */
-	public static CommerceNotificationTemplate fetchByG_E_Last(
-		long groupId, boolean enabled,
-		OrderByComparator<CommerceNotificationTemplate> orderByComparator) {
-
-		return getPersistence().fetchByG_E_Last(
-			groupId, enabled, orderByComparator);
-	}
-
-	/**
-	 * Returns the commerce notification templates before and after the current commerce notification template in the ordered set where groupId = &#63; and enabled = &#63;.
-	 *
-	 * @param commerceNotificationTemplateId the primary key of the current commerce notification template
-	 * @param groupId the group ID
-	 * @param enabled the enabled
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next commerce notification template
-	 * @throws NoSuchNotificationTemplateException if a commerce notification template with the primary key could not be found
-	 */
-	public static CommerceNotificationTemplate[] findByG_E_PrevAndNext(
-			long commerceNotificationTemplateId, long groupId, boolean enabled,
-			OrderByComparator<CommerceNotificationTemplate> orderByComparator)
-		throws com.liferay.commerce.notification.exception.
-			NoSuchNotificationTemplateException {
-
-		return getPersistence().findByG_E_PrevAndNext(
-			commerceNotificationTemplateId, groupId, enabled,
-			orderByComparator);
-	}
-
-	/**
-	 * Returns all the commerce notification templates that the user has permission to view where groupId = &#63; and enabled = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param enabled the enabled
-	 * @return the matching commerce notification templates that the user has permission to view
-	 */
-	public static List<CommerceNotificationTemplate> filterFindByG_E(
-		long groupId, boolean enabled) {
-
-		return getPersistence().filterFindByG_E(groupId, enabled);
-	}
-
-	/**
-	 * Returns a range of all the commerce notification templates that the user has permission to view where groupId = &#63; and enabled = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CommerceNotificationTemplateModelImpl</code>.
-	 * </p>
-	 *
-	 * @param groupId the group ID
-	 * @param enabled the enabled
-	 * @param start the lower bound of the range of commerce notification templates
-	 * @param end the upper bound of the range of commerce notification templates (not inclusive)
-	 * @return the range of matching commerce notification templates that the user has permission to view
-	 */
-	public static List<CommerceNotificationTemplate> filterFindByG_E(
-		long groupId, boolean enabled, int start, int end) {
-
-		return getPersistence().filterFindByG_E(groupId, enabled, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the commerce notification templates that the user has permissions to view where groupId = &#63; and enabled = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CommerceNotificationTemplateModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.notification.model.impl.CommerceNotificationTemplateModelImpl</code>.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -1025,27 +529,6 @@ public class CommerceNotificationTemplateUtil {
 
 		return getPersistence().filterFindByG_E(
 			groupId, enabled, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns the commerce notification templates before and after the current commerce notification template in the ordered set of commerce notification templates that the user has permission to view where groupId = &#63; and enabled = &#63;.
-	 *
-	 * @param commerceNotificationTemplateId the primary key of the current commerce notification template
-	 * @param groupId the group ID
-	 * @param enabled the enabled
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next commerce notification template
-	 * @throws NoSuchNotificationTemplateException if a commerce notification template with the primary key could not be found
-	 */
-	public static CommerceNotificationTemplate[] filterFindByG_E_PrevAndNext(
-			long commerceNotificationTemplateId, long groupId, boolean enabled,
-			OrderByComparator<CommerceNotificationTemplate> orderByComparator)
-		throws com.liferay.commerce.notification.exception.
-			NoSuchNotificationTemplateException {
-
-		return getPersistence().filterFindByG_E_PrevAndNext(
-			commerceNotificationTemplateId, groupId, enabled,
-			orderByComparator);
 	}
 
 	/**
@@ -1081,67 +564,10 @@ public class CommerceNotificationTemplateUtil {
 	}
 
 	/**
-	 * Returns all the commerce notification templates where groupId = &#63; and type = &#63; and enabled = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param type the type
-	 * @param enabled the enabled
-	 * @return the matching commerce notification templates
-	 */
-	public static List<CommerceNotificationTemplate> findByG_T_E(
-		long groupId, String type, boolean enabled) {
-
-		return getPersistence().findByG_T_E(groupId, type, enabled);
-	}
-
-	/**
-	 * Returns a range of all the commerce notification templates where groupId = &#63; and type = &#63; and enabled = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CommerceNotificationTemplateModelImpl</code>.
-	 * </p>
-	 *
-	 * @param groupId the group ID
-	 * @param type the type
-	 * @param enabled the enabled
-	 * @param start the lower bound of the range of commerce notification templates
-	 * @param end the upper bound of the range of commerce notification templates (not inclusive)
-	 * @return the range of matching commerce notification templates
-	 */
-	public static List<CommerceNotificationTemplate> findByG_T_E(
-		long groupId, String type, boolean enabled, int start, int end) {
-
-		return getPersistence().findByG_T_E(groupId, type, enabled, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the commerce notification templates where groupId = &#63; and type = &#63; and enabled = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CommerceNotificationTemplateModelImpl</code>.
-	 * </p>
-	 *
-	 * @param groupId the group ID
-	 * @param type the type
-	 * @param enabled the enabled
-	 * @param start the lower bound of the range of commerce notification templates
-	 * @param end the upper bound of the range of commerce notification templates (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching commerce notification templates
-	 */
-	public static List<CommerceNotificationTemplate> findByG_T_E(
-		long groupId, String type, boolean enabled, int start, int end,
-		OrderByComparator<CommerceNotificationTemplate> orderByComparator) {
-
-		return getPersistence().findByG_T_E(
-			groupId, type, enabled, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the commerce notification templates where groupId = &#63; and type = &#63; and enabled = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CommerceNotificationTemplateModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.notification.model.impl.CommerceNotificationTemplateModelImpl</code>.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -1201,105 +627,10 @@ public class CommerceNotificationTemplateUtil {
 	}
 
 	/**
-	 * Returns the last commerce notification template in the ordered set where groupId = &#63; and type = &#63; and enabled = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param type the type
-	 * @param enabled the enabled
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching commerce notification template
-	 * @throws NoSuchNotificationTemplateException if a matching commerce notification template could not be found
-	 */
-	public static CommerceNotificationTemplate findByG_T_E_Last(
-			long groupId, String type, boolean enabled,
-			OrderByComparator<CommerceNotificationTemplate> orderByComparator)
-		throws com.liferay.commerce.notification.exception.
-			NoSuchNotificationTemplateException {
-
-		return getPersistence().findByG_T_E_Last(
-			groupId, type, enabled, orderByComparator);
-	}
-
-	/**
-	 * Returns the last commerce notification template in the ordered set where groupId = &#63; and type = &#63; and enabled = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param type the type
-	 * @param enabled the enabled
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching commerce notification template, or <code>null</code> if a matching commerce notification template could not be found
-	 */
-	public static CommerceNotificationTemplate fetchByG_T_E_Last(
-		long groupId, String type, boolean enabled,
-		OrderByComparator<CommerceNotificationTemplate> orderByComparator) {
-
-		return getPersistence().fetchByG_T_E_Last(
-			groupId, type, enabled, orderByComparator);
-	}
-
-	/**
-	 * Returns the commerce notification templates before and after the current commerce notification template in the ordered set where groupId = &#63; and type = &#63; and enabled = &#63;.
-	 *
-	 * @param commerceNotificationTemplateId the primary key of the current commerce notification template
-	 * @param groupId the group ID
-	 * @param type the type
-	 * @param enabled the enabled
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next commerce notification template
-	 * @throws NoSuchNotificationTemplateException if a commerce notification template with the primary key could not be found
-	 */
-	public static CommerceNotificationTemplate[] findByG_T_E_PrevAndNext(
-			long commerceNotificationTemplateId, long groupId, String type,
-			boolean enabled,
-			OrderByComparator<CommerceNotificationTemplate> orderByComparator)
-		throws com.liferay.commerce.notification.exception.
-			NoSuchNotificationTemplateException {
-
-		return getPersistence().findByG_T_E_PrevAndNext(
-			commerceNotificationTemplateId, groupId, type, enabled,
-			orderByComparator);
-	}
-
-	/**
-	 * Returns all the commerce notification templates that the user has permission to view where groupId = &#63; and type = &#63; and enabled = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param type the type
-	 * @param enabled the enabled
-	 * @return the matching commerce notification templates that the user has permission to view
-	 */
-	public static List<CommerceNotificationTemplate> filterFindByG_T_E(
-		long groupId, String type, boolean enabled) {
-
-		return getPersistence().filterFindByG_T_E(groupId, type, enabled);
-	}
-
-	/**
-	 * Returns a range of all the commerce notification templates that the user has permission to view where groupId = &#63; and type = &#63; and enabled = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CommerceNotificationTemplateModelImpl</code>.
-	 * </p>
-	 *
-	 * @param groupId the group ID
-	 * @param type the type
-	 * @param enabled the enabled
-	 * @param start the lower bound of the range of commerce notification templates
-	 * @param end the upper bound of the range of commerce notification templates (not inclusive)
-	 * @return the range of matching commerce notification templates that the user has permission to view
-	 */
-	public static List<CommerceNotificationTemplate> filterFindByG_T_E(
-		long groupId, String type, boolean enabled, int start, int end) {
-
-		return getPersistence().filterFindByG_T_E(
-			groupId, type, enabled, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the commerce notification templates that the user has permissions to view where groupId = &#63; and type = &#63; and enabled = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CommerceNotificationTemplateModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.notification.model.impl.CommerceNotificationTemplateModelImpl</code>.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -1316,29 +647,6 @@ public class CommerceNotificationTemplateUtil {
 
 		return getPersistence().filterFindByG_T_E(
 			groupId, type, enabled, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns the commerce notification templates before and after the current commerce notification template in the ordered set of commerce notification templates that the user has permission to view where groupId = &#63; and type = &#63; and enabled = &#63;.
-	 *
-	 * @param commerceNotificationTemplateId the primary key of the current commerce notification template
-	 * @param groupId the group ID
-	 * @param type the type
-	 * @param enabled the enabled
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next commerce notification template
-	 * @throws NoSuchNotificationTemplateException if a commerce notification template with the primary key could not be found
-	 */
-	public static CommerceNotificationTemplate[] filterFindByG_T_E_PrevAndNext(
-			long commerceNotificationTemplateId, long groupId, String type,
-			boolean enabled,
-			OrderByComparator<CommerceNotificationTemplate> orderByComparator)
-		throws com.liferay.commerce.notification.exception.
-			NoSuchNotificationTemplateException {
-
-		return getPersistence().filterFindByG_T_E_PrevAndNext(
-			commerceNotificationTemplateId, groupId, type, enabled,
-			orderByComparator);
 	}
 
 	/**
@@ -1378,28 +686,6 @@ public class CommerceNotificationTemplateUtil {
 		long groupId, String type, boolean enabled) {
 
 		return getPersistence().filterCountByG_T_E(groupId, type, enabled);
-	}
-
-	/**
-	 * Caches the commerce notification template in the entity cache if it is enabled.
-	 *
-	 * @param commerceNotificationTemplate the commerce notification template
-	 */
-	public static void cacheResult(
-		CommerceNotificationTemplate commerceNotificationTemplate) {
-
-		getPersistence().cacheResult(commerceNotificationTemplate);
-	}
-
-	/**
-	 * Caches the commerce notification templates in the entity cache if it is enabled.
-	 *
-	 * @param commerceNotificationTemplates the commerce notification templates
-	 */
-	public static void cacheResult(
-		List<CommerceNotificationTemplate> commerceNotificationTemplates) {
-
-		getPersistence().cacheResult(commerceNotificationTemplates);
 	}
 
 	/**
@@ -1465,86 +751,377 @@ public class CommerceNotificationTemplateUtil {
 	}
 
 	/**
-	 * Returns all the commerce notification templates.
+	 * Returns the commerce notification template where uuid = &#63; and groupId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
 	 *
-	 * @return the commerce notification templates
+	 * @param uuid the uuid
+	 * @param groupId the group ID
+	 * @return the matching commerce notification template, or <code>null</code> if a matching commerce notification template could not be found
 	 */
-	public static List<CommerceNotificationTemplate> findAll() {
-		return getPersistence().findAll();
+	public static CommerceNotificationTemplate fetchByUUID_G(
+		String uuid, long groupId) {
+
+		return getPersistence().fetchByUUID_G(uuid, groupId);
 	}
 
 	/**
-	 * Returns a range of all the commerce notification templates.
+	 * Returns all the commerce notification templates where uuid = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @return the matching commerce notification templates
+	 */
+	public static List<CommerceNotificationTemplate> findByUuid(String uuid) {
+		return getPersistence().findByUuid(uuid);
+	}
+
+	/**
+	 * Returns a range of all the commerce notification templates where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CommerceNotificationTemplateModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.notification.model.impl.CommerceNotificationTemplateModelImpl</code>.
 	 * </p>
 	 *
+	 * @param uuid the uuid
 	 * @param start the lower bound of the range of commerce notification templates
 	 * @param end the upper bound of the range of commerce notification templates (not inclusive)
-	 * @return the range of commerce notification templates
+	 * @return the range of matching commerce notification templates
 	 */
-	public static List<CommerceNotificationTemplate> findAll(
-		int start, int end) {
+	public static List<CommerceNotificationTemplate> findByUuid(
+		String uuid, int start, int end) {
 
-		return getPersistence().findAll(start, end);
+		return getPersistence().findByUuid(uuid, start, end);
 	}
 
 	/**
-	 * Returns an ordered range of all the commerce notification templates.
+	 * Returns an ordered range of all the commerce notification templates where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CommerceNotificationTemplateModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.notification.model.impl.CommerceNotificationTemplateModelImpl</code>.
 	 * </p>
 	 *
+	 * @param uuid the uuid
 	 * @param start the lower bound of the range of commerce notification templates
 	 * @param end the upper bound of the range of commerce notification templates (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of commerce notification templates
+	 * @return the ordered range of matching commerce notification templates
 	 */
-	public static List<CommerceNotificationTemplate> findAll(
-		int start, int end,
+	public static List<CommerceNotificationTemplate> findByUuid(
+		String uuid, int start, int end,
 		OrderByComparator<CommerceNotificationTemplate> orderByComparator) {
 
-		return getPersistence().findAll(start, end, orderByComparator);
+		return getPersistence().findByUuid(uuid, start, end, orderByComparator);
 	}
 
 	/**
-	 * Returns an ordered range of all the commerce notification templates.
+	 * Returns all the commerce notification templates where uuid = &#63; and companyId = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @return the matching commerce notification templates
+	 */
+	public static List<CommerceNotificationTemplate> findByUuid_C(
+		String uuid, long companyId) {
+
+		return getPersistence().findByUuid_C(uuid, companyId);
+	}
+
+	/**
+	 * Returns a range of all the commerce notification templates where uuid = &#63; and companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CommerceNotificationTemplateModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.notification.model.impl.CommerceNotificationTemplateModelImpl</code>.
 	 * </p>
 	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of commerce notification templates
+	 * @param end the upper bound of the range of commerce notification templates (not inclusive)
+	 * @return the range of matching commerce notification templates
+	 */
+	public static List<CommerceNotificationTemplate> findByUuid_C(
+		String uuid, long companyId, int start, int end) {
+
+		return getPersistence().findByUuid_C(uuid, companyId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the commerce notification templates where uuid = &#63; and companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.notification.model.impl.CommerceNotificationTemplateModelImpl</code>.
+	 * </p>
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
 	 * @param start the lower bound of the range of commerce notification templates
 	 * @param end the upper bound of the range of commerce notification templates (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param useFinderCache whether to use the finder cache
-	 * @return the ordered range of commerce notification templates
+	 * @return the ordered range of matching commerce notification templates
 	 */
-	public static List<CommerceNotificationTemplate> findAll(
-		int start, int end,
-		OrderByComparator<CommerceNotificationTemplate> orderByComparator,
-		boolean useFinderCache) {
+	public static List<CommerceNotificationTemplate> findByUuid_C(
+		String uuid, long companyId, int start, int end,
+		OrderByComparator<CommerceNotificationTemplate> orderByComparator) {
 
-		return getPersistence().findAll(
-			start, end, orderByComparator, useFinderCache);
+		return getPersistence().findByUuid_C(
+			uuid, companyId, start, end, orderByComparator);
 	}
 
 	/**
-	 * Removes all the commerce notification templates from the database.
-	 */
-	public static void removeAll() {
-		getPersistence().removeAll();
-	}
-
-	/**
-	 * Returns the number of commerce notification templates.
+	 * Returns all the commerce notification templates where groupId = &#63;.
 	 *
-	 * @return the number of commerce notification templates
+	 * @param groupId the group ID
+	 * @return the matching commerce notification templates
 	 */
-	public static int countAll() {
-		return getPersistence().countAll();
+	public static List<CommerceNotificationTemplate> findByGroupId(
+		long groupId) {
+
+		return getPersistence().findByGroupId(groupId);
+	}
+
+	/**
+	 * Returns a range of all the commerce notification templates where groupId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.notification.model.impl.CommerceNotificationTemplateModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param start the lower bound of the range of commerce notification templates
+	 * @param end the upper bound of the range of commerce notification templates (not inclusive)
+	 * @return the range of matching commerce notification templates
+	 */
+	public static List<CommerceNotificationTemplate> findByGroupId(
+		long groupId, int start, int end) {
+
+		return getPersistence().findByGroupId(groupId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the commerce notification templates where groupId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.notification.model.impl.CommerceNotificationTemplateModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param start the lower bound of the range of commerce notification templates
+	 * @param end the upper bound of the range of commerce notification templates (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching commerce notification templates
+	 */
+	public static List<CommerceNotificationTemplate> findByGroupId(
+		long groupId, int start, int end,
+		OrderByComparator<CommerceNotificationTemplate> orderByComparator) {
+
+		return getPersistence().findByGroupId(
+			groupId, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns all the commerce notification templates that the user has permission to view where groupId = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @return the matching commerce notification templates that the user has permission to view
+	 */
+	public static List<CommerceNotificationTemplate> filterFindByGroupId(
+		long groupId) {
+
+		return getPersistence().filterFindByGroupId(groupId);
+	}
+
+	/**
+	 * Returns a range of all the commerce notification templates that the user has permission to view where groupId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.notification.model.impl.CommerceNotificationTemplateModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param start the lower bound of the range of commerce notification templates
+	 * @param end the upper bound of the range of commerce notification templates (not inclusive)
+	 * @return the range of matching commerce notification templates that the user has permission to view
+	 */
+	public static List<CommerceNotificationTemplate> filterFindByGroupId(
+		long groupId, int start, int end) {
+
+		return getPersistence().filterFindByGroupId(groupId, start, end);
+	}
+
+	/**
+	 * Returns all the commerce notification templates where groupId = &#63; and enabled = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param enabled the enabled
+	 * @return the matching commerce notification templates
+	 */
+	public static List<CommerceNotificationTemplate> findByG_E(
+		long groupId, boolean enabled) {
+
+		return getPersistence().findByG_E(groupId, enabled);
+	}
+
+	/**
+	 * Returns a range of all the commerce notification templates where groupId = &#63; and enabled = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.notification.model.impl.CommerceNotificationTemplateModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param enabled the enabled
+	 * @param start the lower bound of the range of commerce notification templates
+	 * @param end the upper bound of the range of commerce notification templates (not inclusive)
+	 * @return the range of matching commerce notification templates
+	 */
+	public static List<CommerceNotificationTemplate> findByG_E(
+		long groupId, boolean enabled, int start, int end) {
+
+		return getPersistence().findByG_E(groupId, enabled, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the commerce notification templates where groupId = &#63; and enabled = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.notification.model.impl.CommerceNotificationTemplateModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param enabled the enabled
+	 * @param start the lower bound of the range of commerce notification templates
+	 * @param end the upper bound of the range of commerce notification templates (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching commerce notification templates
+	 */
+	public static List<CommerceNotificationTemplate> findByG_E(
+		long groupId, boolean enabled, int start, int end,
+		OrderByComparator<CommerceNotificationTemplate> orderByComparator) {
+
+		return getPersistence().findByG_E(
+			groupId, enabled, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns all the commerce notification templates that the user has permission to view where groupId = &#63; and enabled = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param enabled the enabled
+	 * @return the matching commerce notification templates that the user has permission to view
+	 */
+	public static List<CommerceNotificationTemplate> filterFindByG_E(
+		long groupId, boolean enabled) {
+
+		return getPersistence().filterFindByG_E(groupId, enabled);
+	}
+
+	/**
+	 * Returns a range of all the commerce notification templates that the user has permission to view where groupId = &#63; and enabled = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.notification.model.impl.CommerceNotificationTemplateModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param enabled the enabled
+	 * @param start the lower bound of the range of commerce notification templates
+	 * @param end the upper bound of the range of commerce notification templates (not inclusive)
+	 * @return the range of matching commerce notification templates that the user has permission to view
+	 */
+	public static List<CommerceNotificationTemplate> filterFindByG_E(
+		long groupId, boolean enabled, int start, int end) {
+
+		return getPersistence().filterFindByG_E(groupId, enabled, start, end);
+	}
+
+	/**
+	 * Returns all the commerce notification templates where groupId = &#63; and type = &#63; and enabled = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param type the type
+	 * @param enabled the enabled
+	 * @return the matching commerce notification templates
+	 */
+	public static List<CommerceNotificationTemplate> findByG_T_E(
+		long groupId, String type, boolean enabled) {
+
+		return getPersistence().findByG_T_E(groupId, type, enabled);
+	}
+
+	/**
+	 * Returns a range of all the commerce notification templates where groupId = &#63; and type = &#63; and enabled = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.notification.model.impl.CommerceNotificationTemplateModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param type the type
+	 * @param enabled the enabled
+	 * @param start the lower bound of the range of commerce notification templates
+	 * @param end the upper bound of the range of commerce notification templates (not inclusive)
+	 * @return the range of matching commerce notification templates
+	 */
+	public static List<CommerceNotificationTemplate> findByG_T_E(
+		long groupId, String type, boolean enabled, int start, int end) {
+
+		return getPersistence().findByG_T_E(groupId, type, enabled, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the commerce notification templates where groupId = &#63; and type = &#63; and enabled = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.notification.model.impl.CommerceNotificationTemplateModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param type the type
+	 * @param enabled the enabled
+	 * @param start the lower bound of the range of commerce notification templates
+	 * @param end the upper bound of the range of commerce notification templates (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching commerce notification templates
+	 */
+	public static List<CommerceNotificationTemplate> findByG_T_E(
+		long groupId, String type, boolean enabled, int start, int end,
+		OrderByComparator<CommerceNotificationTemplate> orderByComparator) {
+
+		return getPersistence().findByG_T_E(
+			groupId, type, enabled, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns all the commerce notification templates that the user has permission to view where groupId = &#63; and type = &#63; and enabled = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param type the type
+	 * @param enabled the enabled
+	 * @return the matching commerce notification templates that the user has permission to view
+	 */
+	public static List<CommerceNotificationTemplate> filterFindByG_T_E(
+		long groupId, String type, boolean enabled) {
+
+		return getPersistence().filterFindByG_T_E(groupId, type, enabled);
+	}
+
+	/**
+	 * Returns a range of all the commerce notification templates that the user has permission to view where groupId = &#63; and type = &#63; and enabled = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.notification.model.impl.CommerceNotificationTemplateModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param type the type
+	 * @param enabled the enabled
+	 * @param start the lower bound of the range of commerce notification templates
+	 * @param end the upper bound of the range of commerce notification templates (not inclusive)
+	 * @return the range of matching commerce notification templates that the user has permission to view
+	 */
+	public static List<CommerceNotificationTemplate> filterFindByG_T_E(
+		long groupId, String type, boolean enabled, int start, int end) {
+
+		return getPersistence().filterFindByG_T_E(
+			groupId, type, enabled, start, end);
 	}
 
 	public static CommerceNotificationTemplatePersistence getPersistence() {
@@ -1561,3 +1138,4 @@ public class CommerceNotificationTemplateUtil {
 		_persistence;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-1407176132

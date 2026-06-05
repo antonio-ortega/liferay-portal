@@ -1234,3 +1234,4 @@ public interface WikiPageAttachmentResource {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1389598265

@@ -266,3 +266,4 @@ public class ClientExtensionSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:283588457

@@ -77,3 +77,4 @@ public class DSEnvelopeSignatureURL implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-2076915738

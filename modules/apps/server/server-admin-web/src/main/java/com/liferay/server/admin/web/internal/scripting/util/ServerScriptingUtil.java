@@ -6,10 +6,10 @@
 package com.liferay.server.admin.web.internal.scripting.util;
 
 import com.liferay.petra.io.unsync.UnsyncPrintWriter;
+import com.liferay.petra.io.unsync.UnsyncStringReader;
 import com.liferay.petra.io.unsync.UnsyncStringWriter;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.scripting.ScriptingException;
@@ -73,13 +73,13 @@ public class ServerScriptingUtil {
 			Map<String, Object> inputObjects, String script)
 		throws Exception {
 
-		Class<?> clazz = ServerScriptingUtil.class;
-
 		Thread currentThread = Thread.currentThread();
 
 		GroovyShell groovyShell = new GroovyShell(
 			AggregateClassLoader.getAggregateClassLoader(
-				clazz.getClassLoader(), currentThread.getContextClassLoader()));
+				GroovyShell.class.getClassLoader(),
+				ServerScriptingUtil.class.getClassLoader(),
+				currentThread.getContextClassLoader()));
 
 		Script compiledScript = groovyShell.parse(script);
 

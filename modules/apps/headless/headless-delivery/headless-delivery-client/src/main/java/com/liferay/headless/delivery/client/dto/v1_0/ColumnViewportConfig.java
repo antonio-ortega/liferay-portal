@@ -123,3 +123,4 @@ public class ColumnViewportConfig implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-535647325

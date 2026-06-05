@@ -26,11 +26,16 @@ import com.liferay.petra.sql.dsl.query.GroupByStep;
 import com.liferay.petra.sql.dsl.query.JoinStep;
 import com.liferay.petra.sql.dsl.spi.ast.DefaultASTNodeListener;
 import com.liferay.portal.dao.orm.common.SQLTransformer;
+import com.liferay.portal.kernel.cache.PortalCache;
+import com.liferay.portal.kernel.cache.PortalCacheHelperUtil;
+import com.liferay.portal.kernel.cache.PortalCacheManagerNames;
+import com.liferay.portal.kernel.dao.db.DB;
+import com.liferay.portal.kernel.dao.db.DBManagerUtil;
+import com.liferay.portal.kernel.dao.db.DBType;
 import com.liferay.portal.kernel.dao.orm.ORMException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.persistence.BasePersistence;
-import com.liferay.portal.kernel.util.LRUMap;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import java.sql.Connection;
@@ -39,9 +44,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import java.util.AbstractMap;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -50,12 +55,13 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -68,55 +74,75 @@ public class CTClosureFactoryImpl implements CTClosureFactory {
 
 	@Override
 	public void clearCache(long ctCollectionId) {
-		_ctClosuresMap.remove(ctCollectionId);
+		_ctClosuresPortalCache.remove(ctCollectionId);
 	}
 
 	@Override
 	public CTClosure create(long ctCollectionId) {
-		return create(ctCollectionId, Collections.emptySet());
+		return create(ctCollectionId, 0);
 	}
 
 	@Override
 	public CTClosure create(long ctCollectionId, long classNameId) {
-		return create(ctCollectionId, Collections.singleton(classNameId));
-	}
+		Map<Long, CTClosure> ctClosures = _ctClosuresPortalCache.get(
+			ctCollectionId);
 
-	@Override
-	public CTClosure create(long ctCollectionId, Set<Long> classNameIds) {
-		Map<Set<Long>, CTClosure> ctClosures = _ctClosuresMap.computeIfAbsent(
-			ctCollectionId, key -> new LRUMap<>(5));
+		if (ctClosures == null) {
+			ctClosures = new ConcurrentHashMap<>();
 
-		CTClosure ctClosure = ctClosures.get(classNameIds);
+			_ctClosuresPortalCache.put(ctCollectionId, ctClosures);
+		}
+
+		CTClosure ctClosure = ctClosures.get(classNameId);
 
 		if (ctClosure != null) {
 			return ctClosure;
 		}
 
-		Map<Long, TableReferenceInfo<?>> combinedTableReferenceInfos = null;
+		Map<Long, TableReferenceInfo<?>> combinedTableReferenceInfos;
 
-		if (classNameIds.isEmpty()) {
+		if (classNameId > 0) {
 			combinedTableReferenceInfos =
-				_tableReferenceDefinitionManager.
-					getCombinedTableReferenceInfos();
+				_tableReferenceDefinitionManager.getCombinedTableReferenceInfos(
+					classNameId);
 		}
 		else {
 			combinedTableReferenceInfos =
-				_tableReferenceDefinitionManager.getCombinedTableReferenceInfos(
-					classNameIds);
+				_tableReferenceDefinitionManager.
+					getCombinedTableReferenceInfos();
 		}
 
 		ctClosure = new CTClosureImpl(
 			ctCollectionId,
 			_buildClosureMap(
-				ctCollectionId, classNameIds, combinedTableReferenceInfos));
+				ctCollectionId, classNameId, combinedTableReferenceInfos));
 
-		ctClosures.put(classNameIds, ctClosure);
+		ctClosures.put(classNameId, ctClosure);
 
 		return ctClosure;
 	}
 
+	@Activate
+	protected void activate() {
+		_ctClosuresPortalCache = PortalCacheHelperUtil.getPortalCache(
+			PortalCacheManagerNames.SINGLE_VM, _CT_CLOSURES_PORTAL_CACHE_NAME);
+
+		DB db = DBManagerUtil.getDB();
+
+		DBType dbType = db.getDBType();
+
+		_oracle = dbType == DBType.ORACLE;
+
+		if (dbType == DBType.SQLSERVER) {
+			_sqlParameterLimit = _SQL_SERVER_PARAMETER_LIMIT;
+		}
+		else {
+			_sqlParameterLimit = _SQL_PLACEHOLDER_LIMIT;
+		}
+	}
+
 	private Map<Node, Collection<Node>> _buildClosureMap(
-		long ctCollectionId, Set<Long> classNameIds,
+		long ctCollectionId, long classNameId,
 		Map<Long, TableReferenceInfo<?>> combinedTableReferenceInfos) {
 
 		CTCollection ctCollection = _ctCollectionPersistence.fetchByPrimaryKey(
@@ -133,7 +159,7 @@ public class CTClosureFactoryImpl implements CTClosureFactory {
 		Collection<Node> nodes = new LinkedHashSet<>();
 
 		for (CTEntry ctEntry : ctEntries) {
-			if (!classNameIds.isEmpty() &&
+			if ((classNameId > 0) &&
 				!combinedTableReferenceInfos.containsKey(
 					ctEntry.getModelClassNameId())) {
 
@@ -152,10 +178,10 @@ public class CTClosureFactoryImpl implements CTClosureFactory {
 
 		Map<Node, Collection<Edge>> edgeMap = new LinkedHashMap<>();
 
-		Queue<Map.Entry<Long, List<Long>>> queue = new LinkedList<>(
+		ArrayDeque<Map.Entry<Long, List<Long>>> queue = new ArrayDeque<>(
 			map.entrySet());
 
-		while (queue.size() > 0) {
+		while (!queue.isEmpty()) {
 			Map.Entry<Long, List<Long>> queueEntry = queue.poll();
 
 			long childClassNameId = queueEntry.getKey();
@@ -196,9 +222,7 @@ public class CTClosureFactoryImpl implements CTClosureFactory {
 					_tableReferenceDefinitionManager.getClassNameId(
 						entry.getKey());
 
-				if (!classNameIds.isEmpty() &&
-					!map.containsKey(parentClassNameId)) {
-
+				if ((classNameId > 0) && !map.containsKey(parentClassNameId)) {
 					continue;
 				}
 
@@ -208,7 +232,7 @@ public class CTClosureFactoryImpl implements CTClosureFactory {
 				int i = 0;
 
 				while (i < childPrimaryKeysArray.length) {
-					int batchSize = _SQL_PLACEHOLDER_LIMIT;
+					int batchSize = _sqlParameterLimit;
 
 					if ((i + batchSize) > childPrimaryKeysArray.length) {
 						batchSize = childPrimaryKeysArray.length - i;
@@ -222,7 +246,7 @@ public class CTClosureFactoryImpl implements CTClosureFactory {
 
 					List<Long> newParentPrimaryKeys = _collectParentPrimaryKeys(
 						childClassNameId, batchChildPrimaryKeys, ctCollectionId,
-						entry, edgeMap, nodes, parentClassNameId, classNameIds,
+						entry, edgeMap, nodes, parentClassNameId, classNameId,
 						parentTableReferenceInfo);
 
 					if (newParentPrimaryKeys != null) {
@@ -243,7 +267,7 @@ public class CTClosureFactoryImpl implements CTClosureFactory {
 		long childClassNameId, Long[] childPrimaryKeys, long ctCollectionId,
 		Map.Entry<Table<?>, List<TableJoinHolder>> entry,
 		Map<Node, Collection<Edge>> edgeMap, Collection<Node> nodes,
-		long parentClassNameId, Set<Long> classNameIds,
+		long parentClassNameId, long classNameId,
 		TableReferenceInfo<?> parentTableReferenceInfo) {
 
 		List<Long> newParentPrimaryKeys = null;
@@ -251,7 +275,7 @@ public class CTClosureFactoryImpl implements CTClosureFactory {
 		int i = 0;
 
 		while (i < childPrimaryKeys.length) {
-			int batchSize = _SQL_SERVER_PARAMETER_LIMIT;
+			int batchSize = _sqlParameterLimit;
 
 			if ((i + batchSize) > childPrimaryKeys.length) {
 				batchSize = childPrimaryKeys.length - i;
@@ -267,17 +291,17 @@ public class CTClosureFactoryImpl implements CTClosureFactory {
 
 			try (Connection connection = _getConnection(
 					parentTableReferenceInfo);
+
 				PreparedStatement preparedStatement = _getPreparedStatement(
 					connection, dslQuery);
+
 				ResultSet resultSet = preparedStatement.executeQuery()) {
 
 				while (resultSet.next()) {
 					Node parentNode = new Node(
 						parentClassNameId, resultSet.getLong(1));
 
-					if (!classNameIds.isEmpty() &&
-						!nodes.contains(parentNode)) {
-
+					if ((classNameId > 0) && !nodes.contains(parentNode)) {
 						continue;
 					}
 
@@ -295,7 +319,7 @@ public class CTClosureFactoryImpl implements CTClosureFactory {
 					}
 
 					Collection<Edge> edges = edgeMap.computeIfAbsent(
-						parentNode, key -> new LinkedList<>());
+						parentNode, key -> new ArrayList<>());
 
 					edges.add(new Edge(parentNode, childNode));
 				}
@@ -350,6 +374,10 @@ public class CTClosureFactoryImpl implements CTClosureFactory {
 
 	private Predicate _getChildPKColumnPredicate(
 		Column<?, Long> childPKColumn, Long[] childPrimaryKeysArray) {
+
+		if (!_oracle) {
+			return childPKColumn.in(childPrimaryKeysArray);
+		}
 
 		Predicate predicate = null;
 
@@ -500,6 +528,9 @@ public class CTClosureFactoryImpl implements CTClosureFactory {
 		return preparedStatement;
 	}
 
+	private static final String _CT_CLOSURES_PORTAL_CACHE_NAME =
+		CTClosureFactoryImpl.class.getName() + "._ctClosuresPortalCache";
+
 	private static final int _ORACLE_IN_CLAUSE_LIMIT = 1000;
 
 	private static final int _SQL_PLACEHOLDER_LIMIT = 65533;
@@ -509,14 +540,16 @@ public class CTClosureFactoryImpl implements CTClosureFactory {
 	private static final Log _log = LogFactoryUtil.getLog(
 		CTClosureFactoryImpl.class);
 
-	private final Map<Long, Map<Set<Long>, CTClosure>> _ctClosuresMap =
-		new LRUMap<>(10);
+	private PortalCache<Long, Map<Long, CTClosure>> _ctClosuresPortalCache;
 
 	@Reference
 	private CTCollectionPersistence _ctCollectionPersistence;
 
 	@Reference
 	private CTEntryLocalService _ctEntryLocalService;
+
+	private boolean _oracle;
+	private int _sqlParameterLimit;
 
 	@Reference
 	private TableReferenceDefinitionManager _tableReferenceDefinitionManager;

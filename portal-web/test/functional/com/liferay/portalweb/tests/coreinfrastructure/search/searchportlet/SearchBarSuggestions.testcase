@@ -3,7 +3,7 @@ definition {
 
 	property browser.chrome.version = "139.0";
 	property portal.release = "true";
-	property portal.suite.search.engine = "elasticsearch7,opensearch2";
+	property portal.suite.search.engine = "elasticsearch8,opensearch2";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Web Search";
 
@@ -754,8 +754,6 @@ definition {
 		Blueprints.openBlueprintsAdmin();
 
 		Blueprints.createBlueprint(title = "Test Blueprint");
-
-		Navigator.gotoNavNested(navNested = "Query Settings");
 
 		Check.checkNotVisible(
 			locator1 = "Radio#ANY",

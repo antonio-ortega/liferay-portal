@@ -289,3 +289,4 @@ public class ShippingOptionSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:1893954829

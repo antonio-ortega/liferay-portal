@@ -178,6 +178,60 @@ export async function configureBuyerUserForSite(
 	return user;
 }
 
+export async function configureOrderManagerUserForSite(
+	account: TAccount,
+	apiHelpers: DataApiHelpers,
+	isOrderAdministrator: boolean,
+	site: Site,
+	userEmail: any
+) {
+	const user =
+		await apiHelpers.headlessAdminUser.getUserAccountByEmailAddress(
+			userEmail
+		);
+
+	const rolesResponse = await apiHelpers.headlessAdminUser.getAccountRoles(
+		account.id
+	);
+
+	const accountRoleBuyer = rolesResponse?.items?.filter((role) => {
+		return role.name === 'Order Manager';
+	});
+
+	await apiHelpers.headlessAdminUser.assignAccountRoles(
+		account.externalReferenceCode,
+		accountRoleBuyer[0].id,
+		user.emailAddress
+	);
+
+	const siteRole =
+		await apiHelpers.headlessAdminUser.getRoleByName('Site Member');
+
+	await apiHelpers.headlessAdminUser.assignUserToSite(
+		siteRole.id,
+		site.id,
+		user.id
+	);
+	await apiHelpers.headlessAdminUser.assignUserToAccountByEmailAddress(
+		account.id,
+		[user.emailAddress]
+	);
+
+	if (isOrderAdministrator) {
+		const orderAdministratorRole =
+			await apiHelpers.headlessAdminUser.getRoleByName(
+				'Order Administrator'
+			);
+
+		await apiHelpers.headlessAdminUser.assignUserToRole(
+			orderAdministratorRole.externalReferenceCode,
+			user.id
+		);
+	}
+
+	return user;
+}
+
 export async function configureOperationsManagerUserForSite(
 	account: TAccount,
 	apiHelpers: DataApiHelpers,
@@ -232,13 +286,13 @@ export async function configureOperationsManagerUserForSite(
 				scope: 1,
 			},
 			{
-				actionIds: ['MANAGE_INVENTORY'],
+				actionIds: ['VIEW_INVENTORIES'],
 				primaryKey: companyId,
 				resourceName: 'com.liferay.commerce.inventory',
 				scope: 1,
 			},
 			{
-				actionIds: ['VIEW'],
+				actionIds: ['DELETE', 'PERMISSIONS', 'UPDATE', 'VIEW'],
 				primaryKey: companyId,
 				resourceName:
 					'com.liferay.commerce.inventory.model.CommerceInventoryWarehouse',
@@ -262,13 +316,20 @@ export async function configureOperationsManagerUserForSite(
 				scope: 1,
 			},
 			{
-				actionIds: ['MANAGE_COMMERCE_PRODUCT_MEASUREMENT_UNITS'],
+				actionIds: [
+					'ADD_COMMERCE_PRODUCT_MEASUREMENT_UNIT',
+					'VIEW_COMMERCE_PRODUCT_MEASUREMENT_UNITS',
+				],
 				primaryKey: companyId,
 				resourceName: 'com.liferay.commerce.product',
 				scope: 1,
 			},
 			{
-				actionIds: ['MANAGE_ALL_ACCOUNTS', 'MANAGE_COMMERCE_SHIPMENTS'],
+				actionIds: [
+					'ADD_COMMERCE_SHIPMENT',
+					'MANAGE_ALL_ACCOUNTS',
+					'VIEW_COMMERCE_SHIPMENTS',
+				],
 				primaryKey: companyId,
 				resourceName: 'com.liferay.commerce.shipment',
 				scope: 1,
@@ -290,6 +351,13 @@ export async function configureOperationsManagerUserForSite(
 				primaryKey: companyId,
 				resourceName:
 					'com.liferay.commerce.product.model.CommerceChannel',
+				scope: 1,
+			},
+			{
+				actionIds: ['VIEW'],
+				primaryKey: companyId,
+				resourceName:
+					'com.liferay.commerce.product.model.CPMeasurementUnit',
 				scope: 1,
 			},
 			...additionalPermissions,
@@ -321,11 +389,9 @@ export async function completedVirtualOrderItemSetUp(
 	apiHelpers: DataApiHelpers,
 	orderItemQuantity: number
 ) {
-	const site = await apiHelpers.headlessSite.createSite({
+	const site = await apiHelpers.headlessAdminSite.postSite({
 		name: getRandomString(),
 	});
-
-	apiHelpers.data.push({id: site.id, type: 'site'});
 
 	const channel = await apiHelpers.headlessCommerceAdminChannel.postChannel({
 		name: getRandomString(),
@@ -424,13 +490,11 @@ export async function initializerSetUp(
 	catalogName = catalogName || siteName;
 	channelName = channelName || siteName;
 
-	const site = await apiHelpers.headlessSite.createSite({
+	const site = await apiHelpers.headlessAdminSite.postSite({
 		name: siteName,
 		templateKey,
 		templateType: 'site-initializer',
 	});
-
-	apiHelpers.data.push({id: site.id, type: 'site'});
 
 	const channels =
 		await apiHelpers.headlessCommerceAdminChannel.getChannelsPage(
@@ -444,17 +508,22 @@ export async function initializerSetUp(
 			catalogName
 		);
 
-	apiHelpers.data.push({id: catalogs.items[0].id, type: 'catalog'});
+	if (catalogs.items?.length) {
+		apiHelpers.data.push({id: catalogs.items[0].id, type: 'catalog'});
 
-	const products =
-		await apiHelpers.headlessCommerceAdminCatalog.getProductsPage(100, '');
+		const products =
+			await apiHelpers.headlessCommerceAdminCatalog.getProductsPage(
+				100,
+				''
+			);
 
-	for (let i = 0; i < products.totalCount; i++) {
-		if (products.items[i].catalogId === catalogs.items[0].id) {
-			apiHelpers.data.push({
-				id: products.items[i].productId,
-				type: 'product',
-			});
+		for (let i = 0; i < products.totalCount; i++) {
+			if (products.items[i].catalogId === catalogs.items[0].id) {
+				apiHelpers.data.push({
+					id: products.items[i].productId,
+					type: 'product',
+				});
+			}
 		}
 	}
 
@@ -524,7 +593,9 @@ export async function guestCheckoutSetUp(
 	});
 
 	await productMenuPagesButton.click();
-	await page.locator('[aria-label="Select All Items on the Page"]').click();
+	await page
+		.getByRole('checkbox', {name: 'Select All Items on the Page'})
+		.click();
 	await page.getByRole('button', {name: 'Permissions'}).click();
 
 	const guestActionViewCheckbox = page
@@ -582,4 +653,255 @@ export async function miniumSetUp(
 		null,
 		siteName
 	);
+}
+
+export async function createAccountWithBuyerUser(
+	apiHelpers: DataApiHelpers,
+	siteId: number | string,
+	options?: {
+		accountName?: string;
+		userEmailAddress?: string;
+		userFirstName?: string;
+		userLastName?: string;
+		userScreenName?: string;
+	}
+) {
+	const randomSuffix = getRandomString();
+	const accountName =
+		options?.accountName || `Commerce Account ${randomSuffix}`;
+	const userScreenName = options?.userScreenName || `buyer${randomSuffix}`;
+	const userEmailAddress =
+		options?.userEmailAddress || `${userScreenName}@liferay.com`;
+	const userFirstName = options?.userFirstName || `Buyer${randomSuffix}`;
+	const userLastName = options?.userLastName || 'User';
+
+	const account = await apiHelpers.headlessAdminUser.postAccount({
+		name: accountName,
+		type: 'business',
+	});
+
+	const buyerUser = await apiHelpers.headlessAdminUser.postUserAccount({
+		alternateName: userScreenName,
+		emailAddress: userEmailAddress,
+		familyName: userLastName,
+		givenName: userFirstName,
+	});
+
+	await apiHelpers.headlessAdminUser.assignUserToAccountByEmailAddress(
+		account.id,
+		[buyerUser.emailAddress]
+	);
+
+	const rolesResponse = await apiHelpers.headlessAdminUser.getAccountRoles(
+		account.id
+	);
+
+	const buyerRole = rolesResponse?.items?.find(
+		(role: {name: string}) => role.name === 'Buyer'
+	);
+
+	if (buyerRole) {
+		await apiHelpers.headlessAdminUser.assignAccountRoles(
+			account.externalReferenceCode,
+			buyerRole.id,
+			buyerUser.emailAddress
+		);
+	}
+
+	const siteRole =
+		await apiHelpers.headlessAdminUser.getRoleByName('Site Member');
+
+	await apiHelpers.headlessAdminUser.assignUserToSite(
+		siteRole.id,
+		siteId,
+		buyerUser.id
+	);
+
+	userData[buyerUser.alternateName] = {
+		name: buyerUser.givenName,
+		password: 'test',
+		surname: buyerUser.familyName,
+	};
+
+	return {account, buyerUser};
+}
+
+export async function createAccountWithSupplierUser(
+	apiHelpers: DataApiHelpers,
+	siteId: number | string,
+	options?: {
+		accountName?: string;
+		userEmailAddress?: string;
+		userFirstName?: string;
+		userLastName?: string;
+		userScreenName?: string;
+	}
+) {
+	const randomSuffix = getRandomString();
+	const accountName =
+		options?.accountName || `Supplier Account ${randomSuffix}`;
+	const userScreenName = options?.userScreenName || `supplier${randomSuffix}`;
+	const userEmailAddress =
+		options?.userEmailAddress || `${userScreenName}@liferay.com`;
+	const userFirstName = options?.userFirstName || `Supplier${randomSuffix}`;
+	const userLastName = options?.userLastName || 'User';
+
+	const account = await apiHelpers.headlessAdminUser.postAccount({
+		name: accountName,
+		type: 'supplier',
+	});
+
+	const supplierUser = await apiHelpers.headlessAdminUser.postUserAccount({
+		alternateName: userScreenName,
+		emailAddress: userEmailAddress,
+		familyName: userLastName,
+		givenName: userFirstName,
+	});
+
+	await apiHelpers.headlessAdminUser.assignUserToAccountByEmailAddress(
+		account.id,
+		[supplierUser.emailAddress]
+	);
+
+	const rolesResponse = await apiHelpers.headlessAdminUser.getAccountRoles(
+		account.id
+	);
+
+	const supplierRole = rolesResponse?.items?.find(
+		(role: {name: string}) => role.name === 'Account Supplier'
+	);
+
+	if (supplierRole) {
+		await apiHelpers.headlessAdminUser.assignAccountRoles(
+			account.externalReferenceCode,
+			supplierRole.id,
+			supplierUser.emailAddress
+		);
+	}
+
+	const siteRole =
+		await apiHelpers.headlessAdminUser.getRoleByName('Site Member');
+
+	await apiHelpers.headlessAdminUser.assignUserToSite(
+		siteRole.id,
+		siteId,
+		supplierUser.id
+	);
+
+	userData[supplierUser.alternateName] = {
+		name: supplierUser.givenName,
+		password: 'test',
+		surname: supplierUser.familyName,
+	};
+
+	return {account, supplierUser};
+}
+
+export async function createChannelAccountManagerUser(
+	apiHelpers: DataApiHelpers,
+	{
+		accountEntryActionIds = [],
+		companyId,
+		organizationActionIds = [],
+		siteId,
+	}: {
+		accountEntryActionIds?: string[];
+		companyId: string;
+		organizationActionIds?: string[];
+		siteId: number | string;
+	}
+) {
+	const rolePermissions = [];
+
+	if (accountEntryActionIds.length) {
+		rolePermissions.push({
+			actionIds: accountEntryActionIds,
+			primaryKey: companyId,
+			resourceName: 'com.liferay.account.model.AccountEntry',
+			scope: 1,
+		});
+	}
+
+	if (organizationActionIds.length) {
+		rolePermissions.push({
+			actionIds: organizationActionIds,
+			primaryKey: companyId,
+			resourceName: 'com.liferay.portal.kernel.model.Organization',
+			scope: 1,
+		});
+	}
+
+	const role = await apiHelpers.headlessAdminUser.postRole({
+		name: 'Test Channel Account Manager ' + getRandomString(),
+		rolePermissions,
+	});
+
+	const user = await apiHelpers.headlessAdminUser.postUserAccount();
+
+	userData[user.alternateName] = {
+		name: user.givenName,
+		password: 'test',
+		surname: user.familyName,
+	};
+
+	await apiHelpers.headlessAdminUser.assignUserToRole(
+		role.externalReferenceCode,
+		user.id
+	);
+
+	const siteMemberRole =
+		await apiHelpers.headlessAdminUser.getRoleByName('Site Member');
+
+	await apiHelpers.headlessAdminUser.assignUserToSite(
+		siteMemberRole.id,
+		siteId,
+		user.id
+	);
+
+	return {role, user};
+}
+
+export async function createSalesAgentUser(
+	apiHelpers: DataApiHelpers,
+	{
+		accountId,
+		siteId,
+	}: {
+		accountId?: number;
+		siteId: number | string;
+	}
+) {
+	const salesAgentRole =
+		await apiHelpers.headlessAdminUser.getRoleByName('Sales Agent');
+
+	const user = await apiHelpers.headlessAdminUser.postUserAccount();
+
+	userData[user.alternateName] = {
+		name: user.givenName,
+		password: 'test',
+		surname: user.familyName,
+	};
+
+	await apiHelpers.headlessAdminUser.assignUserToRole(
+		salesAgentRole.externalReferenceCode,
+		user.id
+	);
+
+	const siteRole =
+		await apiHelpers.headlessAdminUser.getRoleByName('Site Member');
+
+	await apiHelpers.headlessAdminUser.assignUserToSite(
+		siteRole.id,
+		siteId,
+		user.id
+	);
+
+	if (accountId) {
+		await apiHelpers.headlessAdminUser.assignUserToAccountByEmailAddress(
+			accountId,
+			[user.emailAddress]
+		);
+	}
+
+	return user;
 }

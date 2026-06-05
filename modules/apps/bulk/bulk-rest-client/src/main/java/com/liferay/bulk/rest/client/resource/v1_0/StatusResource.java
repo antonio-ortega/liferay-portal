@@ -255,3 +255,4 @@ public interface StatusResource {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1327059752

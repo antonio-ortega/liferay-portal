@@ -388,3 +388,4 @@ public interface CommercePriceListCommerceAccountGroupRelLocalService
 		throws E;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:680564134

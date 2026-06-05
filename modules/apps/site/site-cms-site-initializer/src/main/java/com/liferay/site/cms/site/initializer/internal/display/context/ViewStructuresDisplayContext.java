@@ -6,6 +6,7 @@
 package com.liferay.site.cms.site.initializer.internal.display.context;
 
 import com.liferay.frontend.data.set.model.FDSActionDropdownItem;
+import com.liferay.frontend.data.set.model.FDSActionDropdownItemBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenuBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
@@ -13,7 +14,6 @@ import com.liferay.object.constants.ObjectFolderConstants;
 import com.liferay.object.constants.ObjectPortletKeys;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.petra.string.StringBundler;
-import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONUtil;
@@ -28,13 +28,13 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.site.cms.site.initializer.internal.util.ActionUtil;
+import com.liferay.site.cms.site.initializer.internal.util.ExportImportUtil;
 
 import jakarta.portlet.ActionRequest;
 import jakarta.portlet.PortletRequest;
 
 import jakarta.servlet.http.HttpServletRequest;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -59,12 +59,21 @@ public class ViewStructuresDisplayContext {
 			ObjectFolderConstants.EXTERNAL_REFERENCE_CODE_FILE_TYPES, "')");
 	}
 
-	public Map<String, Object> getBreadcrumbProps() throws PortalException {
+	public Map<String, Object> getBreadcrumbProps() {
 		JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
 
 		_addBreadcrumbItem(jsonArray, false, null, _getLayoutName());
 
 		return HashMapBuilder.<String, Object>put(
+			"actionItems",
+			JSONUtil.putAll(
+				ExportImportUtil.getExportActionItemJSONObject(
+					_httpServletRequest, ObjectPortletKeys.OBJECT_DEFINITIONS,
+					"export-content-structures", _themeDisplay),
+				ExportImportUtil.getImportActionItemJSONObject(
+					_httpServletRequest, ObjectPortletKeys.OBJECT_DEFINITIONS,
+					"import-content-structures", _themeDisplay))
+		).put(
 			"breadcrumbItems", jsonArray
 		).put(
 			"hideSpace", true
@@ -72,7 +81,22 @@ public class ViewStructuresDisplayContext {
 	}
 
 	public List<DropdownItem> getBulkActionDropdownItems() {
-		return Collections.emptyList();
+		return List.of(
+			FDSActionDropdownItemBuilder.setHighlighted(
+				true
+			).setHref(
+				"#"
+			).setIcon(
+				"workflow"
+			).setLabel(
+				LanguageUtil.get(_httpServletRequest, "assign-default-workflow")
+			).setModalSize(
+				"lg"
+			).setTarget(
+				"modal"
+			).build(
+				"assign-default-workflow"
+			));
 	}
 
 	public CreationMenu getCreationMenu() {

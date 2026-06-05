@@ -11,11 +11,19 @@ import com.liferay.cookies.banner.web.internal.constants.CookiesBannerWebKeys;
 import com.liferay.cookies.banner.web.internal.display.context.CookiesPreferenceHandlingConfigurationDisplayContext;
 import com.liferay.cookies.configuration.CookiesConfigurationProvider;
 import com.liferay.cookies.configuration.CookiesPreferenceHandlingConfiguration;
+import com.liferay.counter.kernel.service.CounterLocalService;
+import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClassDefinition;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.model.Image;
+import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.service.ImageLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
@@ -28,7 +36,6 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 
-import java.util.Date;
 import java.util.Map;
 
 import org.osgi.service.component.annotations.Component;
@@ -50,22 +57,97 @@ public class CookiesPreferenceHandlingConfigurationFormRenderer
 	public Map<String, Object> getRequestParameters(
 		HttpServletRequest httpServletRequest) {
 
+		if (!ParamUtil.getBoolean(httpServletRequest, "enabled")) {
+			return Map.of("active", false, "enabled", false);
+		}
+
+		long companyId = _portal.getCompanyId(httpServletRequest);
+
+		long customFloatingIconImageId =
+			_cookiesConfigurationProvider.
+				getCookiesPreferenceHandlingCustomFloatingIconImageId(
+					_scope, companyId);
+
+		long fileEntryId = ParamUtil.getLong(httpServletRequest, "fileEntryId");
+
+		try {
+			if (ParamUtil.getBoolean(httpServletRequest, "deleteLogo")) {
+				_imageLocalService.deleteImage(customFloatingIconImageId);
+
+				customFloatingIconImageId = 0;
+			}
+			else if (fileEntryId > 0) {
+				FileEntry fileEntry = _dlAppLocalService.getFileEntry(
+					fileEntryId);
+
+				byte[] bytes = FileUtil.getBytes(fileEntry.getContentStream());
+
+				Image image = null;
+
+				if (customFloatingIconImageId > 0) {
+					image = _imageLocalService.moveImage(
+						customFloatingIconImageId, bytes);
+				}
+				else {
+					image = _imageLocalService.updateImage(
+						companyId, _counterLocalService.increment(), bytes);
+				}
+
+				customFloatingIconImageId = image.getImageId();
+			}
+		}
+		catch (IOException | PortalException exception) {
+			throw new RuntimeException(exception);
+		}
+
 		return HashMapBuilder.<String, Object>put(
-			"consentRenewalPeriod",
-			ParamUtil.getInteger(httpServletRequest, "consentRenewalPeriod")
+			"active", ParamUtil.getBoolean(httpServletRequest, "active")
 		).put(
-			"enabled", ParamUtil.getBoolean(httpServletRequest, "enabled")
+			"consentRenewalPeriod",
+			ParamUtil.getInteger(httpServletRequest, "consentRenewalPeriod", 12)
+		).put(
+			"consentRenewalPeriodTimeUnit",
+			ParamUtil.getString(
+				httpServletRequest, "consentRenewalPeriodTimeUnit", "months")
+		).put(
+			"customFloatingIconImageId", customFloatingIconImageId
+		).put(
+			"dissentRenewalPeriod",
+			ParamUtil.getInteger(httpServletRequest, "dissentRenewalPeriod", 12)
+		).put(
+			"dissentRenewalPeriodTimeUnit",
+			ParamUtil.getString(
+				httpServletRequest, "dissentRenewalPeriodTimeUnit", "months")
+		).put(
+			"enabled", true
 		).put(
 			"explicitConsentMode",
 			ParamUtil.getBoolean(httpServletRequest, "explicitConsentMode")
 		).put(
+			"floatingIcon",
+			ParamUtil.getString(httpServletRequest, "floatingIcon", "cookie")
+		).put(
+			"floatingIconEnabled",
+			ParamUtil.getBoolean(httpServletRequest, "floatingIconEnabled")
+		).put(
+			"globalPrivacyControlEnabled",
+			ParamUtil.getBoolean(
+				httpServletRequest, "globalPrivacyControlEnabled")
+		).put(
 			"modifiedDate",
 			() -> {
-				Date now = new Date();
+				long modifiedDate = ParamUtil.getLong(
+					httpServletRequest, "modifiedDate");
 
-				return ParamUtil.getLong(
-					httpServletRequest, "modifiedDate", now.getTime());
+				if (modifiedDate <= 0) {
+					return null;
+				}
+
+				return modifiedDate;
 			}
+		).put(
+			"storeConsent",
+			ParamUtil.getBoolean(httpServletRequest, "storeConsent")
 		).build();
 	}
 
@@ -104,32 +186,35 @@ public class CookiesPreferenceHandlingConfigurationFormRenderer
 				JavaConstants.JAKARTA_PORTLET_REQUEST));
 
 		if (portletId.equals(ConfigurationAdminPortletKeys.INSTANCE_SETTINGS)) {
-			httpServletRequest.setAttribute(
-				CookiesBannerWebKeys.
-					COOKIES_PREFERENCE_HANDLING_CONFIGURATION_DISPLAY_CONTEXT,
-				new CookiesPreferenceHandlingConfigurationDisplayContext(
-					_cookiesConfigurationProvider,
-					ExtendedObjectClassDefinition.Scope.COMPANY,
-					themeDisplay.getCompanyId()));
-		}
-		else if (portletId.equals(
-					ConfigurationAdminPortletKeys.SITE_SETTINGS)) {
+			_scope = ExtendedObjectClassDefinition.Scope.COMPANY;
 
 			httpServletRequest.setAttribute(
 				CookiesBannerWebKeys.
 					COOKIES_PREFERENCE_HANDLING_CONFIGURATION_DISPLAY_CONTEXT,
 				new CookiesPreferenceHandlingConfigurationDisplayContext(
-					_cookiesConfigurationProvider,
-					ExtendedObjectClassDefinition.Scope.GROUP,
-					themeDisplay.getScopeGroupId()));
+					_cookiesConfigurationProvider, _scope,
+					themeDisplay.getCompanyId()));
 		}
-		else {
+		else if (portletId.equals(
+					ConfigurationAdminPortletKeys.SITE_SETTINGS)) {
+
+			_scope = ExtendedObjectClassDefinition.Scope.GROUP;
+
 			httpServletRequest.setAttribute(
 				CookiesBannerWebKeys.
 					COOKIES_PREFERENCE_HANDLING_CONFIGURATION_DISPLAY_CONTEXT,
 				new CookiesPreferenceHandlingConfigurationDisplayContext(
-					_cookiesConfigurationProvider,
-					ExtendedObjectClassDefinition.Scope.SYSTEM, 0L));
+					_cookiesConfigurationProvider, _scope,
+					themeDisplay.getScopeGroupId()));
+		}
+		else {
+			_scope = ExtendedObjectClassDefinition.Scope.SYSTEM;
+
+			httpServletRequest.setAttribute(
+				CookiesBannerWebKeys.
+					COOKIES_PREFERENCE_HANDLING_CONFIGURATION_DISPLAY_CONTEXT,
+				new CookiesPreferenceHandlingConfigurationDisplayContext(
+					_cookiesConfigurationProvider, _scope, 0L));
 		}
 
 		requestDispatcher.include(httpServletRequest, httpServletResponse);
@@ -137,6 +222,20 @@ public class CookiesPreferenceHandlingConfigurationFormRenderer
 
 	@Reference
 	private CookiesConfigurationProvider _cookiesConfigurationProvider;
+
+	@Reference
+	private CounterLocalService _counterLocalService;
+
+	@Reference
+	private DLAppLocalService _dlAppLocalService;
+
+	@Reference
+	private ImageLocalService _imageLocalService;
+
+	@Reference
+	private Portal _portal;
+
+	private ExtendedObjectClassDefinition.Scope _scope;
 
 	@Reference(
 		target = "(osgi.web.symbolicname=com.liferay.cookies.banner.web)"

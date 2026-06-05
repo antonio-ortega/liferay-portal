@@ -43,7 +43,6 @@ CommerceOrderImporterType commerceOrderImporterType = commerceOrderContentDispla
 				%>'
 				dataProviderKey="<%= CommerceOrderFDSNames.PREVIEW_ORDER_ITEMS %>"
 				id="<%= CommerceOrderFDSNames.PREVIEW_ORDER_ITEMS %>"
-				itemsPerPage="<%= 10 %>"
 				showManagementBar="<%= false %>"
 				showSearch="<%= false %>"
 				style="fluid"
@@ -56,6 +55,12 @@ CommerceOrderImporterType commerceOrderImporterType = commerceOrderContentDispla
 			<aui:button cssClass="btn-lg" href="<%= redirect %>" type="cancel" />
 		</aui:button-row>
 	</aui:form>
+
+	<div class="hide p-4 text-center" id="<portlet:namespace />loadingContainer">
+		<span aria-hidden="true" class="loading-animation"></span>
+
+		<p><liferay-ui:message key="importing-order-items.-please-do-not-close-this-tab" /></p>
+	</div>
 
 	<liferay-frontend:component
 		module="{preview} from commerce-order-content-web"

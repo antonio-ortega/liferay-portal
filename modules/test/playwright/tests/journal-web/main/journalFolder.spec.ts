@@ -6,17 +6,76 @@
 import {expect, mergeTests} from '@playwright/test';
 
 import {apiHelpersTest} from '../../../fixtures/apiHelpersTest';
+import {dataApiHelpersTest} from '../../../fixtures/dataApiHelpersTest';
 import {isolatedSiteTest} from '../../../fixtures/isolatedSiteTest';
 import {loginTest} from '../../../fixtures/loginTest';
+import {productMenuPageTest} from '../../../fixtures/productMenuPageTest';
 import getRandomString from '../../../utils/getRandomString';
 import {openFieldset} from '../../../utils/openFieldset';
+import {performUserSwitch, userData} from '../../../utils/performLogin';
+import createSiteTemplate from '../../layout-set-prototype-web/main/utils/createSiteTemplate';
 import {journalPagesTest} from './fixtures/journalPagesTest';
 
 const test = mergeTests(
 	apiHelpersTest,
+	dataApiHelpersTest,
 	loginTest(),
 	isolatedSiteTest,
-	journalPagesTest
+	journalPagesTest,
+	productMenuPageTest
+);
+
+test(
+	'Workflow configuration should not be visible for journal folders in Site Templates',
+	{tag: '@LPD-82511'},
+	async ({
+		apiHelpers,
+		journalEditFolderPage,
+		journalPage,
+		page,
+		productMenuPage,
+	}) => {
+		const siteTemplateName: string = 'Template-' + getRandomString();
+
+		const layoutSetPrototype = await createSiteTemplate({
+			apiHelpers,
+			page,
+			productMenuPage,
+			templateName: siteTemplateName,
+		});
+
+		apiHelpers.data.push({
+			id: layoutSetPrototype.layoutSetPrototypeId,
+			type: 'layoutSetPrototype',
+		});
+
+		await journalPage.goto(
+			'/template-' + layoutSetPrototype.layoutSetPrototypeId
+		);
+		await journalPage.goToCreateFolder();
+
+		const title = getRandomString();
+		await journalEditFolderPage.title.fill(title);
+
+		await page.getByRole('button', {name: 'Save'}).click();
+
+		await journalEditFolderPage.editFolder(title);
+
+		await page.waitForURL(/edit_folder/);
+
+		await openFieldset(page, 'Structure Restrictions');
+
+		await expect(page.getByText('Inherit allowed structures')).toBeHidden();
+		await expect(page.getByText('Set the allowed structures')).toBeHidden();
+		await expect(
+			page.getByText('Set the default workflow for')
+		).toBeHidden();
+
+		await expect(
+			page.getByText('Use structure restrictions of')
+		).toBeVisible();
+		await expect(page.getByText('Define specific structure')).toBeVisible();
+	}
 );
 
 test(
@@ -25,11 +84,46 @@ test(
 	async ({apiHelpers, journalEditFolderPage, journalPage, page, site}) => {
 		const testUser = await apiHelpers.headlessAdminUser.postUserAccount();
 
-		const role =
+		userData[testUser.alternateName] = {
+			name: testUser.givenName,
+			password: 'test',
+			surname: testUser.familyName,
+		};
+
+		const company =
+			await apiHelpers.jsonWebServicesCompany.getCompanyByWebId(
+				'liferay.com'
+			);
+
+		const journalViewerRole = await apiHelpers.headlessAdminUser.postRole({
+			name: 'JournalViewer-' + getRandomString(),
+			rolePermissions: [
+				{
+					actionIds: ['VIEW'],
+					primaryKey: String(company.companyId),
+					resourceName: 'com.liferay.journal',
+					scope: 1,
+				},
+				{
+					actionIds: ['ACCESS_IN_CONTROL_PANEL'],
+					primaryKey: String(company.companyId),
+					resourceName:
+						'com_liferay_journal_web_portlet_JournalPortlet',
+					scope: 1,
+				},
+			],
+		});
+
+		await apiHelpers.headlessAdminUser.assignUserToRole(
+			journalViewerRole.externalReferenceCode,
+			testUser.id
+		);
+
+		const siteMemberRole =
 			await apiHelpers.headlessAdminUser.getRoleByName('Site Member');
 
 		await apiHelpers.headlessAdminUser.assignUserToSite(
-			String(role.id),
+			String(siteMemberRole.id),
 			site.id,
 			testUser.id
 		);
@@ -60,12 +154,16 @@ test(
 
 		await page.waitForURL(/edit_folder/);
 
-		const doAsUserIdURL = `${page.url()}&doAsUserId=${testUser.id}`;
+		const editFolderURL = page.url();
 
-		await page.goto(doAsUserIdURL);
+		await performUserSwitch(page, testUser.alternateName);
+
+		await page.goto(editFolderURL);
 
 		await expect(journalEditFolderPage.title).toBeDisabled();
 		await expect(journalEditFolderPage.structureRestricions).toBeVisible();
+
+		await performUserSwitch(page, 'test');
 
 		await journalPage.goto(site.friendlyUrlPath);
 		await journalEditFolderPage.gotToPermission(title);
@@ -82,9 +180,14 @@ test(
 
 		await permissionIframe.getByRole('button', {name: 'Save'}).click();
 
-		await page.getByLabel('Close', {exact: true}).click();
+		await page
+			.getByRole('dialog', {name: 'Permissions'})
+			.getByLabel('Close')
+			.click();
 
-		await page.goto(doAsUserIdURL);
+		await performUserSwitch(page, testUser.alternateName);
+
+		await page.goto(editFolderURL);
 
 		await expect(journalEditFolderPage.title).toBeEnabled();
 		await expect(journalEditFolderPage.structureRestricions).toBeHidden();

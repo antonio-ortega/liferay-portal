@@ -19,7 +19,7 @@ import VersionService from '../services/VersionService';
 const MAX_LIST_SIZE = 10;
 
 const VersionsTabContent = () => {
-	const {actions, asset}: IAssetTypeInfoPanelContext = useContext(
+	const {actions, asset, dataSetId}: IAssetTypeInfoPanelContext = useContext(
 		AssetTypeInfoPanelContext
 	);
 
@@ -29,9 +29,13 @@ const VersionsTabContent = () => {
 	}>({count: 0, items: []});
 
 	const getAssetVersions = useCallback(async () => {
-		setAssetVersions({count: 0, items: []});
+		const href = actions?.versions?.href;
 
-		const href: string = actions?.versions?.href || '';
+		if (!href) {
+			return;
+		}
+
+		setAssetVersions({count: 0, items: []});
 
 		try {
 			const {data, error} = await VersionService.getObjectEntryVersions(
@@ -65,8 +69,10 @@ const VersionsTabContent = () => {
 				<List>
 					<AssetVersionsListItem
 						{...assetVersions}
+						dataSetId={dataSetId}
 						file={asset?.file}
 						getAssetVersions={getAssetVersions}
+						objectEntryTitle={asset?.title}
 					/>
 				</List>
 			)}

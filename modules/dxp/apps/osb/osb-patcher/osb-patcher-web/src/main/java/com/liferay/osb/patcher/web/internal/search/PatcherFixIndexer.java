@@ -13,9 +13,6 @@ import com.liferay.osb.patcher.service.PatcherProjectVersionLocalService;
 import com.liferay.osb.patcher.util.PatcherUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
-import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.BaseIndexer;
 import com.liferay.portal.kernel.search.BooleanClauseOccur;
 import com.liferay.portal.kernel.search.BooleanQuery;
@@ -194,33 +191,11 @@ public class PatcherFixIndexer extends BaseIndexer<PatcherFix> {
 	}
 
 	@Override
-	protected void doReindex(String[] ids) throws Exception {
-		long companyId = GetterUtil.getLong(ids[0]);
+	protected IndexableActionableDynamicQuery
+		getIndexableActionableDynamicQuery() {
 
-		IndexableActionableDynamicQuery indexableActionableDynamicQuery =
-			_patcherFixLocalService.getIndexableActionableDynamicQuery();
-
-		indexableActionableDynamicQuery.setCompanyId(companyId);
-		indexableActionableDynamicQuery.setPerformActionMethod(
-			(PatcherFix patcherFix) -> {
-				try {
-					indexableActionableDynamicQuery.addDocuments(
-						getDocument(patcherFix));
-				}
-				catch (PortalException portalException) {
-					if (_log.isWarnEnabled()) {
-						_log.warn(
-							"Unable to index patcher fix " + patcherFix,
-							portalException);
-					}
-				}
-			});
-
-		indexableActionableDynamicQuery.performActions();
+		return _patcherFixLocalService.getIndexableActionableDynamicQuery();
 	}
-
-	private static final Log _log = LogFactoryUtil.getLog(
-		PatcherFixIndexer.class);
 
 	@Reference
 	private IndexWriterHelper _indexWriterHelper;

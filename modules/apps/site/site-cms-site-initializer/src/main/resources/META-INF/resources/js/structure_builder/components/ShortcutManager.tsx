@@ -9,13 +9,19 @@ import {useEffect, useMemo} from 'react';
 import {useCache, useStaleCache} from '../contexts/CacheContext';
 import {useSelector, useStateDispatch} from '../contexts/StateContext';
 import selectState from '../selectors/selectState';
-import {deleteSelection} from '../utils/deleteSelection';
 import findChild from '../utils/findChild';
+import handleAddRepeatableGroup from '../utils/handleAddRepeatableGroup';
+import handleDeleteChildren from '../utils/handleDeleteChildren';
+import handlePaste from '../utils/handlePaste';
+import handlePublishStructure from '../utils/handlePublishStructure';
+import handleSaveStructure from '../utils/handleSaveStructure';
+import handleUngroupRepeatableGroup from '../utils/handleUngroupRepeatableGroup';
+import isCopyable from '../utils/isCopyable';
+import isLocked from '../utils/isLocked';
 import isReferenced from '../utils/isReferenced';
 import isRenamable from '../utils/isRenamable';
+import openHelpModal from '../utils/openHelpModal';
 import openReferencedStructureModal from '../utils/openReferencedStructureModal';
-import {publishStructure} from '../utils/publishStructure';
-import {saveStructure} from '../utils/saveStructure';
 import {useValidate} from '../utils/validation';
 
 type Combo = string;
@@ -28,7 +34,7 @@ type Shortcut = {
 export default function ShortcutManager() {
 	const state = useSelector(selectState);
 
-	const {publishedChildren, selection, structure} = state;
+	const {clipboard, publishedChildren, selection, structure} = state;
 
 	const staleCache = useStaleCache();
 	const dispatch = useStateDispatch();
@@ -36,6 +42,8 @@ export default function ShortcutManager() {
 
 	const {data: objectDefinitions, status: objectDefinitionsStatus} =
 		useCache('object-definitions');
+
+	const {data: spaces} = useCache('spaces');
 
 	const shortcuts = useMemo(() => {
 		const map: Map<Combo, Shortcut> = new Map();
@@ -50,11 +58,9 @@ export default function ShortcutManager() {
 
 				const [uuid] = selection;
 
-				const item = findChild({root: structure, uuid})!;
-
 				if (
-					isReferenced({item, root: structure}) ||
-					('locked' in item && item.locked)
+					isReferenced({root: structure, uuid}) ||
+					isLocked({root: structure, uuid})
 				) {
 					return false;
 				}
@@ -62,7 +68,37 @@ export default function ShortcutManager() {
 				return true;
 			},
 			handler: () =>
-				dispatch({type: 'duplicate-child', uuid: selection[0]}),
+				dispatch({type: 'duplicate-children', uuids: [selection[0]]}),
+		});
+
+		// Copy children
+
+		const getCopyableUuids = () =>
+			selection.filter((uuid) => isCopyable({root: structure, uuid}));
+
+		map.set('Ctrl+C', {
+			enabled: () => Boolean(getCopyableUuids().length),
+			handler: () =>
+				dispatch({type: 'copy-children', uuids: getCopyableUuids()}),
+		});
+
+		// Paste children
+
+		map.set('Ctrl+V', {
+			enabled: () =>
+				Boolean(clipboard?.items.length) && selection.length === 1,
+			handler: () => {
+				const [targetUuid] = selection;
+
+				if (targetUuid) {
+					handlePaste({
+						clipboard,
+						dispatch,
+						structure,
+						targetUuid,
+					});
+				}
+			},
 		});
 
 		// Rename item
@@ -90,11 +126,11 @@ export default function ShortcutManager() {
 		const deleteShortcut: Shortcut = {
 			enabled: () => Boolean(selection.length),
 			handler: () =>
-				deleteSelection({
+				handleDeleteChildren({
 					dispatch,
 					publishedChildren,
-					selection,
 					structure,
+					uuids: selection,
 				}),
 		};
 
@@ -109,6 +145,7 @@ export default function ShortcutManager() {
 				openReferencedStructureModal({
 					dispatch,
 					objectDefinitions,
+					parentUuid: structure.uuid,
 					status: objectDefinitionsStatus,
 					structure,
 				}),
@@ -118,7 +155,13 @@ export default function ShortcutManager() {
 
 		map.set('Ctrl+G', {
 			enabled: () => Boolean(selection.length),
-			handler: () => dispatch({type: 'add-repeatable-group'}),
+			handler: () =>
+				handleAddRepeatableGroup({
+					dispatch,
+					publishedChildren,
+					structure,
+					uuids: selection,
+				}),
 		});
 
 		// Ungroup repeatable group
@@ -134,7 +177,7 @@ export default function ShortcutManager() {
 				const item = findChild({root: structure, uuid})!;
 
 				if (
-					isReferenced({item, root: structure}) ||
+					isReferenced({root: structure, uuid}) ||
 					item.type !== 'repeatable-group'
 				) {
 					return false;
@@ -142,7 +185,12 @@ export default function ShortcutManager() {
 
 				return true;
 			},
-			handler: () => dispatch({type: 'ungroup', uuid: selection[0]}),
+			handler: () =>
+				handleUngroupRepeatableGroup({
+					dispatch,
+					publishedChildren,
+					uuid: selection[0],
+				}),
 		});
 
 		// Save structure
@@ -150,7 +198,7 @@ export default function ShortcutManager() {
 		map.set('Ctrl+S', {
 			enabled: () => structure.status !== 'published',
 			handler: () =>
-				saveStructure({
+				handleSaveStructure({
 					dispatch,
 					state,
 					validate,
@@ -162,22 +210,33 @@ export default function ShortcutManager() {
 		map.set('Ctrl+P', {
 			enabled: () => true,
 			handler: () =>
-				publishStructure({
+				handlePublishStructure({
 					dispatch,
+					objectDefinitions,
 					showExperienceLink: true,
+					spaces,
 					staleCache,
 					state,
 					validate,
 				}),
 		});
 
+		// Open help and shortcuts modal
+
+		map.set('Shift+?', {
+			enabled: () => true,
+			handler: () => openHelpModal(),
+		});
+
 		return map;
 	}, [
+		clipboard,
 		dispatch,
 		objectDefinitions,
 		objectDefinitionsStatus,
 		publishedChildren,
 		selection,
+		spaces,
 		staleCache,
 		state,
 		structure,
@@ -225,7 +284,12 @@ function getCombo(event: KeyboardEvent): Combo {
 		keys.push('Shift');
 	}
 
-	keys.push(event.code.replace('Key', ''));
+	if (event.key === '?') {
+		keys.push('?');
+	}
+	else {
+		keys.push(event.code.replace('Key', ''));
+	}
 
 	return keys.join('+');
 }

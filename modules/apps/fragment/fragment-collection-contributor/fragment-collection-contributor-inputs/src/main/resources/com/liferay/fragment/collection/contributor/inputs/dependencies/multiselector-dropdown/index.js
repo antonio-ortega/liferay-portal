@@ -1,6 +1,6 @@
 // Constants
 
-const DEFAULT_LOCALE = themeDisplay.getDefaultLanguageId();
+const DEFAULT_LOCALE = input.attributes.defaultLanguageId;
 const IS_RTL = document.documentElement.classList.contains('rtl');
 
 // DOM elements
@@ -91,8 +91,9 @@ async function main() {
 
 	if (input.localizable) {
 		const {onChange} = registerLocalizedInput({
+			availableLanguageIds: input.attributes.availableLanguageIds,
 			customLocaleChangeHandler: true,
-			defaultLanguageId: themeDisplay.getDefaultLanguageId(),
+			defaultLanguageId: input.attributes.defaultLanguageId,
 			hasMultipleValues: true,
 			initialValues: input.valueI18n,
 			inputElement,
@@ -141,7 +142,7 @@ async function main() {
 
 	else {
 		registerUnlocalizedInput({
-			defaultLanguageId: themeDisplay.getDefaultLanguageId(),
+			defaultLanguageId: input.attributes.defaultLanguageId,
 			inputElement,
 			readOnlyInputLabel: document.getElementById(
 				`${fragmentElementId}-read-only-label`
@@ -237,8 +238,10 @@ async function main() {
 			.then((response) => response.json())
 			.then((result) => {
 				return result.items.map((entry) => {
+					const finalEntry = entry.embedded || entry;
+
 					let label =
-						entry[input.attributes.relationshipLabelFieldName];
+						finalEntry[input.attributes.relationshipLabelFieldName];
 
 					if (Array.isArray(label)) {
 						label = label.map((label) => label.name).join(', ');
@@ -250,7 +253,9 @@ async function main() {
 					return {
 						label,
 						value: String(
-							entry[input.attributes.relationshipValueFieldName]
+							finalEntry[
+								input.attributes.relationshipValueFieldName
+							]
 						),
 					};
 				});
@@ -376,11 +381,13 @@ async function main() {
 	function renderLabels() {
 		labelContainer.innerHTML = '';
 
-		if (selection.size) {
-			inputElement.removeAttribute('required');
-		}
-		else {
-			inputElement.setAttribute('required', '');
+		if (input.required) {
+			if (selection.size) {
+				inputElement.removeAttribute('required');
+			}
+			else {
+				inputElement.setAttribute('required', '');
+			}
 		}
 
 		if (!options.length) {

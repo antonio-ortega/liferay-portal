@@ -24,7 +24,7 @@ import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.search.query.BooleanQuery;
-import com.liferay.portal.search.query.Queries;
+import com.liferay.portal.search.query.QueriesUtil;
 import com.liferay.portal.search.searcher.SearchRequestBuilder;
 import com.liferay.portal.search.searcher.SearchRequestBuilderFactory;
 import com.liferay.portal.search.searcher.SearchResponse;
@@ -245,13 +245,13 @@ public class UserGroupCascadeReindexUsersTest {
 	}
 
 	protected SearchResponse searchUsersInGroup(Group group) {
-		BooleanQuery booleanQuery = _queries.booleanQuery();
+		BooleanQuery booleanQuery = QueriesUtil.booleanQuery();
 
 		booleanQuery.addMustQueryClauses(
-			_queries.term(Field.GROUP_ID, group.getGroupId()));
+			QueriesUtil.term(Field.GROUP_ID, group.getGroupId()));
 
 		booleanQuery.addMustNotQueryClauses(
-			_queries.term(Field.USER_ID, getTestUserId()));
+			QueriesUtil.term(Field.USER_ID, getTestUserId()));
 
 		return _searcher.search(
 			getSearchRequestBuilder(
@@ -278,7 +278,7 @@ public class UserGroupCascadeReindexUsersTest {
 			).modelIndexerClasses(
 				User.class
 			).query(
-				_queries.term("userGroupIds", userGroup.getUserGroupId())
+				QueriesUtil.term("userGroupIds", userGroup.getUserGroupId())
 			).build());
 	}
 
@@ -323,28 +323,26 @@ public class UserGroupCascadeReindexUsersTest {
 
 	private static final boolean _STRESS_MODE_10_MIN_TO_RUN_ALL_TESTS = false;
 
-	@Inject(filter = "indexer.class.name=com.liferay.portal.kernel.model.User")
-	private static Indexer<User> _indexer;
-
-	@Inject
-	private static OrganizationLocalService _organizationLocalService;
-
-	@Inject
-	private static Queries _queries;
-
-	@Inject
-	private static Searcher _searcher;
-
-	@Inject
-	private static SearchRequestBuilderFactory _searchRequestBuilderFactory;
-
-	@Inject
-	private static UserGroupLocalService _userGroupLocalService;
-
-	@Inject
-	private static UserLocalService _userLocalService;
-
 	private int _groupsCount;
+
+	@Inject(filter = "indexer.class.name=com.liferay.portal.kernel.model.User")
+	private Indexer<User> _indexer;
+
+	@Inject
+	private OrganizationLocalService _organizationLocalService;
+
+	@Inject
+	private Searcher _searcher;
+
+	@Inject
+	private SearchRequestBuilderFactory _searchRequestBuilderFactory;
+
+	@Inject
+	private UserGroupLocalService _userGroupLocalService;
+
+	@Inject
+	private UserLocalService _userLocalService;
+
 	private int _usersCount;
 
 }

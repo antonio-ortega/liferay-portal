@@ -15,6 +15,7 @@ import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.HttpUtil;
 import com.liferay.portal.kernel.util.MapUtil;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.Time;
 
@@ -52,8 +53,16 @@ public class HTTPTestUtil {
 			String body, String endpoint, Http.Method httpMethod)
 		throws Exception {
 
+		return invokeToInputStream(body, endpoint, null, httpMethod);
+	}
+
+	public static InputStream invokeToInputStream(
+			String body, String endpoint, Map<String, String> headers,
+			Http.Method httpMethod)
+		throws Exception {
+
 		Http.Options options = _getHttpOptions(
-			body, endpoint, null, httpMethod);
+			body, endpoint, headers, httpMethod);
 
 		return HttpUtil.URLtoInputStream(options);
 	}
@@ -196,7 +205,8 @@ public class HTTPTestUtil {
 		return options;
 	}
 
-	private static String _baseURL = "http://localhost:8080";
+	private static String _baseURL =
+		"http://localhost:" + PortalUtil.getPortalServerPort(false);
 	private static String _credentials =
 		"test@liferay.com:" + PropsValues.DEFAULT_ADMIN_PASSWORD;
 	private static boolean _modulePath = true;

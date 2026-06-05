@@ -16,11 +16,9 @@ import {
 	TRadio,
 	TTextArea,
 } from '../../helpers/CustomFieldTypesHelper';
-import {ApplicationsMenuPage} from '../product-navigation-applications-menu/ApplicationsMenuPage';
 import {ViewAttributesPage} from './ViewAttributesPage';
 
 export class AddCustomFieldPage {
-	readonly applicationsMenuPage: ApplicationsMenuPage;
 	readonly fieldNameField: Locator;
 	readonly hiddenToggle: Locator;
 	readonly localizeFieldNameToggle: Locator;
@@ -31,7 +29,6 @@ export class AddCustomFieldPage {
 	readonly visibleWithUpdateToggle: Locator;
 
 	constructor(page: Page) {
-		this.applicationsMenuPage = new ApplicationsMenuPage(page);
 		this.fieldNameField = page.getByText('Field Name Required');
 		this.hiddenToggle = page.getByLabel('Hidden');
 		this.localizeFieldNameToggle = page.getByLabel('Localize Field Name');
@@ -132,7 +129,7 @@ export class AddCustomFieldPage {
 
 		await this.saveButton.click();
 		await expect(await this.successMessage).toBeVisible();
-		await this.page.getByLabel('Close').click();
+		await this.page.locator('.alert').getByLabel('Close').click();
 	}
 
 	private async _populateCommonFields(customField: TCustomField) {

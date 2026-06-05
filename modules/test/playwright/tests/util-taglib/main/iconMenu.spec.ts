@@ -17,6 +17,34 @@ export const test = mergeTests(
 );
 
 test(
+	'Check dropdown menu has show',
+	{tag: '@LPD-64072'},
+	async ({page, samplePage}) => {
+		await test.step('Select Logo Selector link', async () => {
+			await samplePage.selectTab(TabName.ICON_MENU);
+		});
+
+		const buttonMenuTrigger = page.getByRole('button', {
+			name: 'Sample Add',
+		});
+
+		await buttonMenuTrigger.waitFor({state: 'visible'});
+
+		await buttonMenuTrigger.click();
+
+		const locator = page.locator('div.open.show.lfr-icon-menu-open');
+
+		await page.addLocatorHandler(locator, async () => {
+			await expect(locator).toBeVisible();
+
+			await expect(
+				page.locator('.dropdown.lfr-icon-menu.open')
+			).toBeVisible();
+		});
+	}
+);
+
+test(
 	'Overlay is removed from DOM after menu is closed',
 	{
 		tag: '@LPD-53924',

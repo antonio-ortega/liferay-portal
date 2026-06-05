@@ -19,6 +19,7 @@ import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.InfrastructureUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.tools.db.migration.importer.DBCopyTablesProcess;
 import com.liferay.portal.tools.db.migration.importer.jdbc.AutoBatchPreparedStatementUtil;
 
@@ -75,6 +76,10 @@ public class DBCopyTablesProcessTest {
 
 	@AfterClass
 	public static void tearDownClass() throws Exception {
+		if (System.getProperty("database.postgresql.driver") == null) {
+			return;
+		}
+
 		AutoBatchPreparedStatementUtil.stop();
 
 		DataSourceFactoryUtil.destroyDataSource(_targetDataSource);
@@ -92,7 +97,8 @@ public class DBCopyTablesProcessTest {
 	@Test
 	public void testBigDecimalColumn() throws Exception {
 		_testColumnTypeOf(
-			"BIGDECIMAL", RandomTestUtil::nextDouble, GetterUtil::getDouble);
+			Function.identity(), GetterUtil::getDouble, "BIGDECIMAL",
+			RandomTestUtil::nextDouble);
 	}
 
 	@Test
@@ -112,6 +118,7 @@ public class DBCopyTablesProcessTest {
 		int total = 0;
 
 		try (Connection connection = _targetDataSource.getConnection();
+
 			PreparedStatement preparedStatement = connection.prepareStatement(
 				"select testColumn from " + _targetTableName +
 					" order by id ASC")) {
@@ -132,31 +139,44 @@ public class DBCopyTablesProcessTest {
 	@Test
 	public void testBooleanColumn() throws Exception {
 		_testColumnTypeOf(
-			"BOOLEAN", RandomTestUtil::randomBoolean, Function.identity());
+			Function.identity(), Function.identity(), "BOOLEAN",
+			RandomTestUtil::randomBoolean);
 	}
 
 	@Test
 	public void testDateColumn() throws Exception {
 		_testColumnTypeOf(
-			"DATE", RandomTestUtil::nextTimestamp, Function.identity());
+			Function.identity(), Function.identity(), "DATE",
+			RandomTestUtil::nextTimestamp);
 	}
 
 	@Test
 	public void testDoubleColumn() throws Exception {
 		_testColumnTypeOf(
-			"DOUBLE", RandomTestUtil::nextDouble, GetterUtil::getDouble);
+			Function.identity(), GetterUtil::getDouble, "DOUBLE",
+			RandomTestUtil::nextDouble);
 	}
 
 	@Test
 	public void testIntegerColumn() throws Exception {
 		_testColumnTypeOf(
-			"INTEGER", RandomTestUtil::nextInt, Function.identity());
+			Function.identity(), Function.identity(), "INTEGER",
+			RandomTestUtil::nextInt);
 	}
 
 	@Test
 	public void testLongColumn() throws Exception {
 		_testColumnTypeOf(
-			"LONG", RandomTestUtil::nextLong, Function.identity());
+			Function.identity(), Function.identity(), "LONG",
+			RandomTestUtil::nextLong);
+	}
+
+	@Test
+	public void testNullChar() throws Exception {
+		_testColumnTypeOf(
+			object -> StringUtil.removeSubstring(
+				(String)object, StringPool.NULL_CHAR),
+			Function.identity(), "VARCHAR(20)", () -> "Test\\u0000Test");
 	}
 
 	@Test
@@ -176,6 +196,7 @@ public class DBCopyTablesProcessTest {
 		int total = 0;
 
 		try (Connection connection = _targetDataSource.getConnection();
+
 			PreparedStatement preparedStatement = connection.prepareStatement(
 				"select testColumn from " + _targetTableName +
 					" order by id ASC")) {
@@ -183,7 +204,8 @@ public class DBCopyTablesProcessTest {
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				while (resultSet.next()) {
 					Assert.assertArrayEquals(
-						(byte[])values[total++], resultSet.getBytes(1));
+						(byte[])values[total++],
+						resultSet.getBytes("testColumn"));
 				}
 			}
 		}
@@ -194,29 +216,33 @@ public class DBCopyTablesProcessTest {
 	@Test
 	public void testStringColumn() throws Exception {
 		_testColumnTypeOf(
-			"STRING", RandomTestUtil::randomString, Function.identity());
+			Function.identity(), Function.identity(), "STRING",
+			RandomTestUtil::randomString);
 	}
 
 	@Test
 	public void testTextColumn() throws Exception {
 		_testColumnTypeOf(
-			"TEXT", RandomTestUtil::randomString, Function.identity());
+			Function.identity(), Function.identity(), "TEXT",
+			RandomTestUtil::randomString);
 	}
 
 	@Test
 	public void testVarcharColumn() throws Exception {
 		_testColumnTypeOf(
-			"VARCHAR(10)", () -> RandomTestUtil.randomString(10),
-			Function.identity());
+			Function.identity(), Function.identity(), "VARCHAR(10)",
+			() -> RandomTestUtil.randomString(10));
 	}
 
 	private void _assertValues(
-			Object[] expectedValues, Function<Object, Object> function)
+			Function<Object, Object> expectedFunction, Object[] expectedValues,
+			Function<Object, Object> getFunction)
 		throws Exception {
 
 		int total = 0;
 
 		try (Connection connection = _targetDataSource.getConnection();
+
 			PreparedStatement preparedStatement = connection.prepareStatement(
 				"select testColumn from " + _targetTableName +
 					" order by id ASC")) {
@@ -224,8 +250,8 @@ public class DBCopyTablesProcessTest {
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				while (resultSet.next()) {
 					Assert.assertEquals(
-						expectedValues[total++],
-						function.apply(resultSet.getObject(1)));
+						expectedFunction.apply(expectedValues[total++]),
+						getFunction.apply(resultSet.getObject("testColumn")));
 				}
 			}
 		}
@@ -274,6 +300,7 @@ public class DBCopyTablesProcessTest {
 
 	private void _insertValues(Object[] values) throws Exception {
 		try (Connection connection = DataAccess.getConnection();
+
 			PreparedStatement preparedStatement =
 				com.liferay.portal.kernel.dao.jdbc.
 					AutoBatchPreparedStatementUtil.autoBatch(
@@ -301,8 +328,9 @@ public class DBCopyTablesProcessTest {
 	}
 
 	private void _testColumnTypeOf(
-			String type, Supplier<Object> valueSupplier,
-			Function<Object, Object> getFunction)
+			Function<Object, Object> expectedFunction,
+			Function<Object, Object> getFunction, String type,
+			Supplier<Object> valueSupplier)
 		throws Exception {
 
 		_createTable(type);
@@ -317,7 +345,7 @@ public class DBCopyTablesProcessTest {
 
 		_copyTable();
 
-		_assertValues(values, getFunction);
+		_assertValues(expectedFunction, values, getFunction);
 	}
 
 	private static final int _TABLE_SIZE = 5000;

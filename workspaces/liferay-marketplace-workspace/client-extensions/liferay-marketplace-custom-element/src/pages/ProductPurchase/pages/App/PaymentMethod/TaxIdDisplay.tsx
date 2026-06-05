@@ -11,16 +11,16 @@ import i18n from '../../../../../i18n';
 import {useProductPurchaseOutletContext} from '../../../ProductPurchaseOutlet';
 import {productPurchaseStore} from '../../../store/AppPurchaseStore';
 
-const TaxIdDisplay = () => {
+const TaxId = () => {
 	const {selectedAccount} = useProductPurchaseOutletContext();
 
-	const contextTaxId = useSelector(
+	const taxId = useSelector(
 		productPurchaseStore,
 		({context}) => context.payment.taxId
 	);
 
 	return (
-		<Section label={i18n.translate('vat-id')}>
+		<Section label={i18n.translate('tax-vat-id')}>
 			<Input
 				defaultValue={selectedAccount.taxId}
 				disabled={!!selectedAccount?.taxId}
@@ -30,11 +30,12 @@ const TaxIdDisplay = () => {
 						type: 'setAccountTaxId',
 					});
 				}}
+				placeholder={i18n.translate('enter-your-vat-id')}
 				required
-				value={contextTaxId}
+				value={taxId}
 			/>
 		</Section>
 	);
 };
 
-export default TaxIdDisplay;
+export default TaxId;

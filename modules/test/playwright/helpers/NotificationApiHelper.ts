@@ -11,11 +11,14 @@ type EmailNotificationRecipients = {
 };
 
 type TNotificationTemplate = {
+	body?: {
+		[key: string]: string;
+	};
 	editorType: string;
 	id?: number;
 	name: string;
 	recipientType: string;
-	recipients?: TRecipient[];
+	recipients?: TRecipient[] | TTermRecipient[];
 	subject: {
 		[key: string]: string;
 	};
@@ -29,6 +32,10 @@ type TRecipient = {
 	};
 	to: LocalizedValue<string> | EmailNotificationRecipients[];
 	toType: string;
+};
+
+type TTermRecipient = {
+	term: string;
 };
 
 export class NotificationApiHelper {

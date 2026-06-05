@@ -5,12 +5,16 @@
 
 package com.liferay.ai.hub.internal.assistant.handler;
 
+import dev.langchain4j.guardrail.InputGuardrail;
+import dev.langchain4j.guardrail.OutputGuardrail;
 import dev.langchain4j.invocation.InvocationParameters;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.vertexai.gemini.VertexAiGeminiStreamingChatModel;
-import dev.langchain4j.rag.content.retriever.ContentRetriever;
+import dev.langchain4j.observability.api.listener.AiServiceListener;
+import dev.langchain4j.rag.RetrievalAugmentor;
 import dev.langchain4j.service.tool.ToolProvider;
 
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -24,11 +28,14 @@ public class AssistantHandlerContext {
 	}
 
 	public AssistantHandlerContext(AssistantHandlerContext.Builder builder) {
-		_contentRetriever = builder._contentRetriever;
+		_aiServiceListeners = builder._aiServiceListeners;
+		_inputGuardrails = builder._inputGuardrails;
 		_invocationParameters = builder._invocationParameters;
 		_memoryId = builder._memoryId;
 		_onCompleteResponseConsumer = builder._onCompleteResponseConsumer;
 		_onErrorConsumer = builder._onErrorConsumer;
+		_outputGuardrails = builder._outputGuardrails;
+		_retrievalAugmentor = builder._retrievalAugmentor;
 		_systemMessageProviderFunction = builder._systemMessageProviderFunction;
 		_tools = builder._tools;
 		_toolProvider = builder._toolProvider;
@@ -37,8 +44,12 @@ public class AssistantHandlerContext {
 			builder._vertexAiGeminiStreamingChatModel;
 	}
 
-	public ContentRetriever getContentRetriever() {
-		return _contentRetriever;
+	public List<AiServiceListener<?>> getAiServiceListeners() {
+		return _aiServiceListeners;
+	}
+
+	public List<InputGuardrail> getInputGuardrails() {
+		return _inputGuardrails;
 	}
 
 	public InvocationParameters getInvocationParameters() {
@@ -55,6 +66,14 @@ public class AssistantHandlerContext {
 
 	public Consumer<Throwable> getOnErrorConsumer() {
 		return _onErrorConsumer;
+	}
+
+	public List<OutputGuardrail> getOutputGuardrails() {
+		return _outputGuardrails;
+	}
+
+	public RetrievalAugmentor getRetrievalAugmentor() {
+		return _retrievalAugmentor;
 	}
 
 	public Function<Object, String> getSystemMessageProviderFunction() {
@@ -81,12 +100,20 @@ public class AssistantHandlerContext {
 
 	public static class Builder {
 
+		public Builder aiServiceListeners(
+			List<AiServiceListener<?>> aiServiceListeners) {
+
+			_aiServiceListeners = aiServiceListeners;
+
+			return this;
+		}
+
 		public AssistantHandlerContext build() {
 			return new AssistantHandlerContext(this);
 		}
 
-		public Builder contentRetriever(ContentRetriever contentRetriever) {
-			_contentRetriever = contentRetriever;
+		public Builder inputGuardrails(List<InputGuardrail> inputGuardrails) {
+			_inputGuardrails = inputGuardrails;
 
 			return this;
 		}
@@ -115,6 +142,22 @@ public class AssistantHandlerContext {
 
 		public Builder onErrorConsumer(Consumer<Throwable> onErrorConsumer) {
 			_onErrorConsumer = onErrorConsumer;
+
+			return this;
+		}
+
+		public Builder outputGuardrails(
+			List<OutputGuardrail> outputGuardrails) {
+
+			_outputGuardrails = outputGuardrails;
+
+			return this;
+		}
+
+		public Builder retrievalAugmentor(
+			RetrievalAugmentor retrievalAugmentor) {
+
+			_retrievalAugmentor = retrievalAugmentor;
 
 			return this;
 		}
@@ -156,11 +199,14 @@ public class AssistantHandlerContext {
 			return this;
 		}
 
-		private ContentRetriever _contentRetriever;
+		private List<AiServiceListener<?>> _aiServiceListeners;
+		private List<InputGuardrail> _inputGuardrails;
 		private InvocationParameters _invocationParameters;
 		private String _memoryId;
 		private Consumer<ChatResponse> _onCompleteResponseConsumer;
 		private Consumer<Throwable> _onErrorConsumer;
+		private List<OutputGuardrail> _outputGuardrails;
+		private RetrievalAugmentor _retrievalAugmentor;
 		private Function<Object, String> _systemMessageProviderFunction;
 		private ToolProvider _toolProvider;
 		private Object[] _tools = new Object[0];
@@ -170,11 +216,14 @@ public class AssistantHandlerContext {
 
 	}
 
-	private final ContentRetriever _contentRetriever;
+	private final List<AiServiceListener<?>> _aiServiceListeners;
+	private final List<InputGuardrail> _inputGuardrails;
 	private final InvocationParameters _invocationParameters;
 	private final String _memoryId;
 	private final Consumer<ChatResponse> _onCompleteResponseConsumer;
 	private final Consumer<Throwable> _onErrorConsumer;
+	private final List<OutputGuardrail> _outputGuardrails;
+	private final RetrievalAugmentor _retrievalAugmentor;
 	private final Function<Object, String> _systemMessageProviderFunction;
 	private final ToolProvider _toolProvider;
 	private final Object[] _tools;

@@ -626,3 +626,4 @@ public interface OrderTransitionResource {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1488137564

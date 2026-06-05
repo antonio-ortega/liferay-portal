@@ -323,3 +323,4 @@ public class ParameterSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-992383969

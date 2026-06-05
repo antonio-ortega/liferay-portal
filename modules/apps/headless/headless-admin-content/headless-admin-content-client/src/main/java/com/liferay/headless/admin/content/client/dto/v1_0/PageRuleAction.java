@@ -116,3 +116,4 @@ public class PageRuleAction implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1469263427

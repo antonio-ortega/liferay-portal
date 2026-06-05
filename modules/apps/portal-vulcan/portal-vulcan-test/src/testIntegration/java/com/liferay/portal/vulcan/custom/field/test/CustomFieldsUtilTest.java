@@ -21,6 +21,7 @@ import com.liferay.exportimport.report.model.ExportImportReportEntry;
 import com.liferay.exportimport.report.service.ExportImportReportEntryLocalService;
 import com.liferay.exportimport.test.rule.LazyReferencing;
 import com.liferay.exportimport.test.rule.LazyReferencingTestRule;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.User;
@@ -2270,6 +2271,8 @@ public class CustomFieldsUtilTest {
 		ExportImportThreadLocal.setExportImportConfigurationId(
 			exportImportConfigurationId);
 
+		ExportImportThreadLocal.setLayoutImportInProcess(true);
+
 		int initialExpandoColumnsCount =
 			_expandoColumnLocalService.getColumnsCount(
 				TestPropsValues.getCompanyId(),
@@ -2326,6 +2329,8 @@ public class CustomFieldsUtilTest {
 
 		ExportImportThreadLocal.setExportImportConfigurationId(
 			exportImportConfigurationId);
+
+		ExportImportThreadLocal.setLayoutImportInProcess(true);
 
 		int initialExpandoColumnsCount =
 			_expandoColumnLocalService.getColumnsCount(
@@ -2726,8 +2731,8 @@ public class CustomFieldsUtilTest {
 				TestPropsValues.getCompanyId(), exportImportConfigurationId);
 
 		Assert.assertEquals(
-			exportImportReportEntries.toString(),
-			exportImportReportEntries.size(), 21);
+			exportImportReportEntries.toString(), 21,
+			exportImportReportEntries.size());
 
 		ExportImportReportEntry exportImportReportEntry =
 			exportImportReportEntries.get(0);
@@ -2745,7 +2750,12 @@ public class CustomFieldsUtilTest {
 		Assert.assertEquals(
 			exportImportConfigurationId,
 			exportImportReportEntry.getExportImportConfigurationId());
-		Assert.assertNull(exportImportReportEntry.getErrorMessage());
+		Assert.assertEquals(
+			StringBundler.concat(
+				"The ", ExpandoColumn.class.getName(),
+				" with external reference code ", randomName1,
+				" was not found. An empty shell was created."),
+			exportImportReportEntry.getErrorMessage());
 		Assert.assertNull(exportImportReportEntry.getErrorStacktrace());
 		Assert.assertEquals(
 			ExpandoColumn.class.getName(),

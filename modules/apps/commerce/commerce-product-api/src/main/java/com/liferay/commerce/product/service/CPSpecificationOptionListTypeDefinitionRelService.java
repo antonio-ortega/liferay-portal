@@ -59,3 +59,4 @@ public interface CPSpecificationOptionListTypeDefinitionRelService
 	public String getOSGiServiceIdentifier();
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-115402406

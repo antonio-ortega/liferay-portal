@@ -9,16 +9,24 @@ import {dataApiHelpersTest} from '../../../fixtures/dataApiHelpersTest';
 import {featureFlagsTest} from '../../../fixtures/featureFlagsTest';
 import {loginTest} from '../../../fixtures/loginTest';
 import {getRandomInt} from '../../../utils/getRandomInt';
-import {PORTLET_URLS} from '../../../utils/portletUrls';
 import {waitForAlert} from '../../../utils/waitForAlert';
 import {cmsPagesTest} from './fixtures/cmsPagesTest';
 import {DefaultPermissionsPage} from './pages/DefaultPermissionsPage';
 import {PermissionsPage} from './pages/PermissionsPage';
+import {
+	clickMenuItem,
+	createSpace,
+	deleteSpace,
+	getTableRowByText,
+	goToAllSpaces,
+	handleClickMenuItem,
+} from './utils/permissions';
 
 const test = mergeTests(
 	cmsPagesTest,
 	dataApiHelpersTest,
 	featureFlagsTest({
+		'LPD-11235': {enabled: false},
 		'LPD-17564': {enabled: true},
 	}),
 	loginTest()
@@ -31,9 +39,16 @@ type VerifyPermissionsOptions = {
 	permissions: Array<{action: string; checked: boolean; role: string}>;
 };
 
-async function checkModalHeader(heading: string, menuitem: string, page) {
+async function checkModalHeader(
+	heading: string,
+	menuitem: string,
+	page,
+	objectName?: string
+) {
 	await expect(async () => {
-		await page.getByRole('button', {exact: true, name: 'Actions'}).click();
+		await (await getTableRowByText(page, objectName))
+			.getByRole('button', {name: 'Actions'})
+			.click();
 
 		await handleClickMenuItem(menuitem, page);
 
@@ -49,92 +64,11 @@ async function checkModalHeader(heading: string, menuitem: string, page) {
 	}).toPass({timeout: 5000});
 }
 
-async function clickMenuItem(menuitem: string, page, objectName?: string) {
-	await expect(async () => {
-		if (!objectName) {
-			await page.getByLabel('Actions').click();
-
-			await page
-				.getByRole('menuitem', {
-					exact: true,
-					name: menuitem,
-				})
-				.click({timeout: 1000});
-		}
-		else {
-			await (await getTableRowByText(page, objectName))
-				.getByRole('button', {name: 'Actions'})
-				.click();
-
-			await handleClickMenuItem(menuitem, page);
-		}
-	}).toPass();
-}
-
 async function closeInfoAlert(page) {
 	await page
 		.locator('.alert-info')
 		.getByRole('button', {name: 'Close'})
 		.click();
-}
-
-async function createSpace(page, spaceName: string) {
-	await page.getByLabel('Add Space').first().click();
-	await page.getByLabel('Space Name').fill(spaceName);
-	await page.getByRole('button', {name: 'Continue'}).click();
-	await page.getByRole('button', {name: 'Continue'}).click();
-}
-
-async function deleteSpace(page, spaceName: string) {
-	await expect(async () => {
-		await clickMenuItem('Delete', page, spaceName);
-
-		await page.getByRole('button', {name: 'Delete'}).click();
-	}).toPass({timeout: 5000});
-
-	await waitForAlert(page, `${spaceName} was successfully deleted.`);
-}
-
-async function getTableRowByText(page, text: string) {
-	return page.locator('table.table tbody tr', {hasText: text}).first();
-}
-
-async function goToAllSpaces(page) {
-	await expect(async () => {
-		await page.goto(PORTLET_URLS.cmsAllSpaces);
-
-		await expect(
-			page.getByRole('heading', {exact: true, name: 'All Spaces'})
-		).toBeVisible();
-	}).toPass({timeout: 10000});
-}
-
-async function handleClickMenuItem(menuitem: string, page) {
-	await expect(async () => {
-		if (menuitem.includes('Permissions')) {
-			await page
-				.getByRole('menuitem', {
-					exact: true,
-					name: 'Permissions',
-				})
-				.click({timeout: 1000});
-
-			await page
-				.getByRole('menuitem', {
-					exact: true,
-					name: menuitem,
-				})
-				.click({timeout: 1000});
-		}
-		else {
-			await page
-				.getByRole('menuitem', {
-					exact: true,
-					name: menuitem,
-				})
-				.click({timeout: 1000});
-		}
-	}).toPass({timeout: 5000});
 }
 
 async function resetPermissions(page, folderName?: string) {
@@ -727,6 +661,11 @@ test(
 
 			await contentsPage.saveContent();
 
+			await waitForAlert(
+				page,
+				`Success:${contentName} was published successfully.`
+			);
+
 			await clickMenuItem('Permissions', page, contentName);
 
 			let childContentPermissions = [
@@ -801,13 +740,7 @@ test(
 test(
 	'Display only relevant permission tabs based on the section',
 	{tag: '@LPD-67530'},
-	async ({
-		assetsPage,
-		contentsPage,
-		defaultPermissionsPage,
-		filesPage,
-		page,
-	}) => {
+	async ({contentsPage, defaultPermissionsPage, filesPage, page}) => {
 		const spaceName = 'Space' + getRandomInt();
 
 		await goToAllSpaces(page);
@@ -846,7 +779,6 @@ test(
 			await defaultPermissionsPage.permissionsModalCancelButton.click();
 
 			await filesPage.goto();
-			await filesPage.changeVisualizationMode('Table');
 
 			const folderName3 = 'Folder' + getRandomInt();
 			const folderName4 = 'Folder' + getRandomInt();
@@ -854,7 +786,7 @@ test(
 			await filesPage.createFolder(folderName3, spaceName);
 			await filesPage.createFolder(folderName4, spaceName);
 
-			await assetsPage.changeVisualizationMode('Table');
+			await filesPage.changeVisualizationMode('Table');
 
 			await tickCheckBoxes(page, [folderName3, folderName4]);
 
@@ -919,21 +851,29 @@ test(
 				page.getByRole('link', {name: folderName}).first()
 			).toBeVisible();
 
-			await checkModalHeader('Permissions', 'Permissions', page);
+			await checkModalHeader(
+				'Permissions',
+				'Permissions',
+				page,
+				folderName
+			);
 			await checkModalHeader(
 				'Edit Default Permissions',
 				'Default Permissions',
-				page
+				page,
+				folderName
 			);
 			await checkModalHeader(
 				'Edit Default Permissions',
 				'Edit and Propagate Default Permissions',
-				page
+				page,
+				folderName
 			);
 			await checkModalHeader(
 				'Confirm Reset to Default Permissions',
 				'Reset to Default Permissions',
-				page
+				page,
+				folderName
 			);
 		}
 		finally {

@@ -41,6 +41,7 @@ import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.odata.entity.EntityField;
@@ -113,7 +114,8 @@ public abstract class BasePageSpecificationResourceTestCase {
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
 		).endpoint(
-			testCompany.getVirtualHostname(), 8080, "http"
+			testCompany.getVirtualHostname(),
+			PortalUtil.getPortalServerPort(false), "http"
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -123,7 +125,8 @@ public abstract class BasePageSpecificationResourceTestCase {
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
 		).endpoint(
-			testCompany.getVirtualHostname(), 8080, "http"
+			testCompany.getVirtualHostname(),
+			PortalUtil.getPortalServerPort(false), "http"
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -187,6 +190,8 @@ public abstract class BasePageSpecificationResourceTestCase {
 		PageSpecification pageSpecification = randomPageSpecification();
 
 		pageSpecification.setExternalReferenceCode(regex);
+		pageSpecification.setSiteTemplatePageSpecificationExternalReferenceCode(
+			regex);
 
 		String json = PageSpecificationSerDes.toJSON(pageSpecification);
 
@@ -196,6 +201,10 @@ public abstract class BasePageSpecificationResourceTestCase {
 
 		Assert.assertEquals(
 			regex, pageSpecification.getExternalReferenceCode());
+		Assert.assertEquals(
+			regex,
+			pageSpecification.
+				getSiteTemplatePageSpecificationExternalReferenceCode());
 	}
 
 	@Test
@@ -933,9 +942,9 @@ public abstract class BasePageSpecificationResourceTestCase {
 				{
 					externalReferenceCode = StringUtil.toLowerCase(
 						RandomTestUtil.randomString());
-					draftContentPageSpecificationExternalReferenceCode =
-						StringUtil.toLowerCase(RandomTestUtil.randomString());
 					siteTemplatePageSpecificationExternalReferenceCode =
+						StringUtil.toLowerCase(RandomTestUtil.randomString());
+					draftContentPageSpecificationExternalReferenceCode =
 						StringUtil.toLowerCase(RandomTestUtil.randomString());
 
 					type = Type.create("ContentPageSpecification");
@@ -952,6 +961,8 @@ public abstract class BasePageSpecificationResourceTestCase {
 				{
 					externalReferenceCode = StringUtil.toLowerCase(
 						RandomTestUtil.randomString());
+					siteTemplatePageSpecificationExternalReferenceCode =
+						StringUtil.toLowerCase(RandomTestUtil.randomString());
 
 					type = Type.create("EmbeddedPageSpecification");
 				}
@@ -967,6 +978,8 @@ public abstract class BasePageSpecificationResourceTestCase {
 				{
 					externalReferenceCode = StringUtil.toLowerCase(
 						RandomTestUtil.randomString());
+					siteTemplatePageSpecificationExternalReferenceCode =
+						StringUtil.toLowerCase(RandomTestUtil.randomString());
 
 					type = Type.create("LinkToPagePageSpecification");
 				}
@@ -982,6 +995,8 @@ public abstract class BasePageSpecificationResourceTestCase {
 				{
 					externalReferenceCode = StringUtil.toLowerCase(
 						RandomTestUtil.randomString());
+					siteTemplatePageSpecificationExternalReferenceCode =
+						StringUtil.toLowerCase(RandomTestUtil.randomString());
 
 					type = Type.create("LinkToURLPageSpecification");
 				}
@@ -997,6 +1012,8 @@ public abstract class BasePageSpecificationResourceTestCase {
 				{
 					externalReferenceCode = StringUtil.toLowerCase(
 						RandomTestUtil.randomString());
+					siteTemplatePageSpecificationExternalReferenceCode =
+						StringUtil.toLowerCase(RandomTestUtil.randomString());
 
 					type = Type.create("PageSetPageSpecification");
 				}
@@ -1106,7 +1123,8 @@ public abstract class BasePageSpecificationResourceTestCase {
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
 		).endpoint(
-			testCompany.getVirtualHostname(), 8080, "http"
+			testCompany.getVirtualHostname(),
+			PortalUtil.getPortalServerPort(false), "http"
 		).parameters(
 			parameters
 		).build();
@@ -1236,6 +1254,20 @@ public abstract class BasePageSpecificationResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"siteTemplatePageSpecificationExternalReferenceCode",
+					additionalAssertFieldName)) {
+
+				if (pageSpecification.
+						getSiteTemplatePageSpecificationExternalReferenceCode() ==
+							null) {
+
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("status", additionalAssertFieldName)) {
 				if (pageSpecification.getStatus() == null) {
 					valid = false;
@@ -1298,24 +1330,6 @@ public abstract class BasePageSpecificationResourceTestCase {
 				continue;
 			}
 
-			if (Objects.equals(
-					"siteTemplatePageSpecificationExternalReferenceCode",
-					additionalAssertFieldName)) {
-
-				if (!(pageSpecification instanceof ContentPageSpecification)) {
-					continue;
-				}
-
-				if (((ContentPageSpecification)pageSpecification).
-						getSiteTemplatePageSpecificationExternalReferenceCode() ==
-							null) {
-
-					valid = false;
-				}
-
-				continue;
-			}
-
 			if (Objects.equals("settings", additionalAssertFieldName)) {
 				if (!(pageSpecification instanceof WidgetPageSpecification)) {
 					continue;
@@ -1323,24 +1337,6 @@ public abstract class BasePageSpecificationResourceTestCase {
 
 				if (((WidgetPageSpecification)pageSpecification).
 						getSettings() == null) {
-
-					valid = false;
-				}
-
-				continue;
-			}
-
-			if (Objects.equals(
-					"siteTemplatePageSpecificationExternalReferenceCode",
-					additionalAssertFieldName)) {
-
-				if (!(pageSpecification instanceof WidgetPageSpecification)) {
-					continue;
-				}
-
-				if (((WidgetPageSpecification)pageSpecification).
-						getSiteTemplatePageSpecificationExternalReferenceCode() ==
-							null) {
 
 					valid = false;
 				}
@@ -1511,6 +1507,22 @@ public abstract class BasePageSpecificationResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"siteTemplatePageSpecificationExternalReferenceCode",
+					additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						pageSpecification1.
+							getSiteTemplatePageSpecificationExternalReferenceCode(),
+						pageSpecification2.
+							getSiteTemplatePageSpecificationExternalReferenceCode())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("status", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						pageSpecification1.getStatus(),
@@ -1593,28 +1605,6 @@ public abstract class BasePageSpecificationResourceTestCase {
 				continue;
 			}
 
-			if (Objects.equals(
-					"siteTemplatePageSpecificationExternalReferenceCode",
-					additionalAssertFieldName)) {
-
-				if (!(pageSpecification1 instanceof ContentPageSpecification) ||
-					!(pageSpecification2 instanceof ContentPageSpecification)) {
-
-					continue;
-				}
-
-				if (!Objects.deepEquals(
-						((ContentPageSpecification)pageSpecification1).
-							getSiteTemplatePageSpecificationExternalReferenceCode(),
-						((ContentPageSpecification)pageSpecification2).
-							getSiteTemplatePageSpecificationExternalReferenceCode())) {
-
-					return false;
-				}
-
-				continue;
-			}
-
 			if (Objects.equals("settings", additionalAssertFieldName)) {
 				if (!(pageSpecification1 instanceof WidgetPageSpecification) ||
 					!(pageSpecification2 instanceof WidgetPageSpecification)) {
@@ -1627,28 +1617,6 @@ public abstract class BasePageSpecificationResourceTestCase {
 							getSettings(),
 						((WidgetPageSpecification)pageSpecification2).
 							getSettings())) {
-
-					return false;
-				}
-
-				continue;
-			}
-
-			if (Objects.equals(
-					"siteTemplatePageSpecificationExternalReferenceCode",
-					additionalAssertFieldName)) {
-
-				if (!(pageSpecification1 instanceof WidgetPageSpecification) ||
-					!(pageSpecification2 instanceof WidgetPageSpecification)) {
-
-					continue;
-				}
-
-				if (!Objects.deepEquals(
-						((WidgetPageSpecification)pageSpecification1).
-							getSiteTemplatePageSpecificationExternalReferenceCode(),
-						((WidgetPageSpecification)pageSpecification2).
-							getSiteTemplatePageSpecificationExternalReferenceCode())) {
 
 					return false;
 				}
@@ -1836,6 +1804,56 @@ public abstract class BasePageSpecificationResourceTestCase {
 			return sb.toString();
 		}
 
+		if (entityFieldName.equals(
+				"siteTemplatePageSpecificationExternalReferenceCode")) {
+
+			Object object =
+				pageSpecification.
+					getSiteTemplatePageSpecificationExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
+
+			return sb.toString();
+		}
+
 		if (entityFieldName.equals("status")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
@@ -1859,7 +1877,9 @@ public abstract class BasePageSpecificationResourceTestCase {
 			).toString(),
 			"application/json");
 		httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
-		httpInvoker.path("http://localhost:8080/o/graphql");
+		httpInvoker.path(
+			"http://localhost:" + PortalUtil.getPortalServerPort(false) +
+				"/o/graphql");
 		httpInvoker.userNameAndPassword(
 			"test@liferay.com:" + PropsValues.DEFAULT_ADMIN_PASSWORD);
 
@@ -1896,12 +1916,12 @@ public abstract class BasePageSpecificationResourceTestCase {
 
 				pageSpecification.setExternalReferenceCode(
 					StringUtil.toLowerCase(RandomTestUtil.randomString()));
+				pageSpecification.
+					setSiteTemplatePageSpecificationExternalReferenceCode(
+						StringUtil.toLowerCase(RandomTestUtil.randomString()));
 
 				pageSpecification.
 					setDraftContentPageSpecificationExternalReferenceCode(
-						StringUtil.toLowerCase(RandomTestUtil.randomString()));
-				pageSpecification.
-					setSiteTemplatePageSpecificationExternalReferenceCode(
 						StringUtil.toLowerCase(RandomTestUtil.randomString()));
 
 				pageSpecification.setType(
@@ -1915,6 +1935,9 @@ public abstract class BasePageSpecificationResourceTestCase {
 
 				pageSpecification.setExternalReferenceCode(
 					StringUtil.toLowerCase(RandomTestUtil.randomString()));
+				pageSpecification.
+					setSiteTemplatePageSpecificationExternalReferenceCode(
+						StringUtil.toLowerCase(RandomTestUtil.randomString()));
 
 				pageSpecification.setType(
 					PageSpecification.Type.create("EmbeddedPageSpecification"));
@@ -1927,6 +1950,9 @@ public abstract class BasePageSpecificationResourceTestCase {
 
 				pageSpecification.setExternalReferenceCode(
 					StringUtil.toLowerCase(RandomTestUtil.randomString()));
+				pageSpecification.
+					setSiteTemplatePageSpecificationExternalReferenceCode(
+						StringUtil.toLowerCase(RandomTestUtil.randomString()));
 
 				pageSpecification.setType(
 					PageSpecification.Type.create(
@@ -1940,6 +1966,9 @@ public abstract class BasePageSpecificationResourceTestCase {
 
 				pageSpecification.setExternalReferenceCode(
 					StringUtil.toLowerCase(RandomTestUtil.randomString()));
+				pageSpecification.
+					setSiteTemplatePageSpecificationExternalReferenceCode(
+						StringUtil.toLowerCase(RandomTestUtil.randomString()));
 
 				pageSpecification.setType(
 					PageSpecification.Type.create(
@@ -1953,6 +1982,9 @@ public abstract class BasePageSpecificationResourceTestCase {
 
 				pageSpecification.setExternalReferenceCode(
 					StringUtil.toLowerCase(RandomTestUtil.randomString()));
+				pageSpecification.
+					setSiteTemplatePageSpecificationExternalReferenceCode(
+						StringUtil.toLowerCase(RandomTestUtil.randomString()));
 
 				pageSpecification.setType(
 					PageSpecification.Type.create("PageSetPageSpecification"));
@@ -1965,7 +1997,6 @@ public abstract class BasePageSpecificationResourceTestCase {
 
 				pageSpecification.setExternalReferenceCode(
 					StringUtil.toLowerCase(RandomTestUtil.randomString()));
-
 				pageSpecification.
 					setSiteTemplatePageSpecificationExternalReferenceCode(
 						StringUtil.toLowerCase(RandomTestUtil.randomString()));
@@ -2231,3 +2262,4 @@ public abstract class BasePageSpecificationResourceTestCase {
 			_pageSpecificationResource;
 
 }
+// LIFERAY-REST-BUILDER-HASH:-612524761

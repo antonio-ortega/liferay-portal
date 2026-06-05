@@ -308,3 +308,4 @@ public interface CommerceAddressRestrictionLocalService
 		CommerceAddressRestriction commerceAddressRestriction);
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:1567159425

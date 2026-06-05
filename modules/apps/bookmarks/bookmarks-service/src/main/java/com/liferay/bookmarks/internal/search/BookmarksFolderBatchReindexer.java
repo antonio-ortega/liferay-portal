@@ -6,9 +6,9 @@
 package com.liferay.bookmarks.internal.search;
 
 import com.liferay.bookmarks.model.BookmarksFolder;
+import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
-import com.liferay.portal.search.batch.BatchIndexingActionable;
 import com.liferay.portal.search.indexer.IndexerDocumentBuilder;
 import com.liferay.portal.search.indexer.IndexerWriter;
 
@@ -26,23 +26,21 @@ public class BookmarksFolderBatchReindexer {
 	}
 
 	public void reindex(long folderId, long companyId) {
-		BatchIndexingActionable batchIndexingActionable =
-			_indexerWriter.getBatchIndexingActionable();
+		IndexableActionableDynamicQuery indexableActionableDynamicQuery =
+			_indexerWriter.getIndexableActionableDynamicQuery();
 
-		batchIndexingActionable.setAddCriteriaMethod(
+		indexableActionableDynamicQuery.setAddCriteriaMethod(
 			dynamicQuery -> {
 				Property folderIdProperty = PropertyFactoryUtil.forName(
 					"folderId");
 
 				dynamicQuery.add(folderIdProperty.eq(folderId));
 			});
-		batchIndexingActionable.setCompanyId(companyId);
-		batchIndexingActionable.setPerformActionMethod(
-			(BookmarksFolder bookmarksFolder) ->
-				batchIndexingActionable.addDocuments(
-					_indexerDocumentBuilder.getDocument(bookmarksFolder)));
+		indexableActionableDynamicQuery.setCompanyId(companyId);
+		indexableActionableDynamicQuery.setPerformActionMethod(
+			_indexerDocumentBuilder::getDocument);
 
-		batchIndexingActionable.performActions();
+		indexableActionableDynamicQuery.performActions();
 	}
 
 	private final IndexerDocumentBuilder _indexerDocumentBuilder;

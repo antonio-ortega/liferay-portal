@@ -64,12 +64,15 @@ export type Structure = {
 	id?: number;
 	label: Liferay.Language.LocalizedValue<string>;
 	name: string;
+	path: string;
 	spaces: Spaces;
 	status: Status;
 	system: boolean;
-	type?: 'L_CMS_CONTENT_STRUCTURES' | 'L_CMS_FILE_TYPES';
+	type: StructureType;
 	uuid: Uuid;
 	workflows: Workflows;
 };
+
+export type StructureType = 'L_CMS_CONTENT_STRUCTURES' | 'L_CMS_FILE_TYPES';
 
 export type Structures = Map<Structure['erc'], Structure>;

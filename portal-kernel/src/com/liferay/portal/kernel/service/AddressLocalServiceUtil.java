@@ -469,3 +469,4 @@ public class AddressLocalServiceUtil {
 	private static volatile AddressLocalService _service;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-670040602

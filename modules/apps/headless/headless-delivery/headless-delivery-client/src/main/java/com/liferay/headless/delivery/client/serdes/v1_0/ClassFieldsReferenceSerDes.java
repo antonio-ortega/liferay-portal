@@ -254,3 +254,4 @@ public class ClassFieldsReferenceSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:729575084

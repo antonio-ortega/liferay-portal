@@ -5,11 +5,9 @@
 
 package com.liferay.layout.page.template.internal.search;
 
-import com.liferay.layout.page.template.internal.search.spi.model.index.contributor.LayoutPageTemplateCollectionModelIndexerWriterContributor;
 import com.liferay.layout.page.template.model.LayoutPageTemplateCollection;
 import com.liferay.layout.page.template.service.LayoutPageTemplateCollectionLocalService;
 import com.liferay.portal.kernel.search.Field;
-import com.liferay.portal.search.batch.DynamicQueryBatchIndexingActionableFactory;
 import com.liferay.portal.search.spi.model.index.contributor.ModelIndexerWriterContributor;
 import com.liferay.portal.search.spi.model.registrar.ModelSearchConfigurator;
 
@@ -46,15 +44,10 @@ public class LayoutPageTemplateCollectionModelSearchConfigurator
 
 	@Activate
 	protected void activate() {
-		_modelIndexWriterContributor =
-			new LayoutPageTemplateCollectionModelIndexerWriterContributor(
-				_dynamicQueryBatchIndexingActionableFactory,
-				_layoutPageTemplateCollectionLocalService);
+		_modelIndexWriterContributor = new ModelIndexerWriterContributor<>(
+			_layoutPageTemplateCollectionLocalService::
+				getIndexableActionableDynamicQuery);
 	}
-
-	@Reference
-	private DynamicQueryBatchIndexingActionableFactory
-		_dynamicQueryBatchIndexingActionableFactory;
 
 	@Reference
 	private LayoutPageTemplateCollectionLocalService

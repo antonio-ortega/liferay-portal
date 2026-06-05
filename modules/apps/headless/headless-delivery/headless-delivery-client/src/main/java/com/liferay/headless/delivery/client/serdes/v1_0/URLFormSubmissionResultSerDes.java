@@ -204,3 +204,4 @@ public class URLFormSubmissionResultSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:1136227413

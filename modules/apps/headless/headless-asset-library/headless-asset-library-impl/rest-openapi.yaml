@@ -25,6 +25,11 @@ components:
                         $ref: "#/components/schemas/ConnectedSite"
                     readOnly: true
                     type: array
+                creator:
+                    $ref: "#/components/schemas/Creator"
+                    description:
+                        The user who created the asset library.
+                    readOnly: true
                 creatorUserId:
                     description:
                         The asset library's creator user ID.
@@ -56,6 +61,10 @@ components:
                 externalReferenceCode:
                     description:
                         The asset library's external reference code.
+                    type: string
+                friendlyURL:
+                    description:
+                        The asset library's friendly URL.
                     type: string
                 id:
                     description:
@@ -104,7 +113,7 @@ components:
                     type: integer
                 type:
                     default: AssetLibrary
-                    enum: [AssetLibrary, Project, Space]
+                    enum: [AssetLibrary, DesignLibrary, Project, Space]
                     type: string
                 userAccounts:
                     description:
@@ -163,6 +172,66 @@ components:
                 searchable:
                     default: true
                     type: boolean
+                type:
+                    enum: [Site, SiteTemplate]
+                    readOnly: true
+                    type: string
+            type: object
+        Creator:
+            description:
+                Represents the user who created/authored the content. Properties follow the
+                [creator](https://schema.org/creator) specification.
+            properties:
+                additionalName:
+                    description:
+                        The user's additional name, which can be used as a middle name.
+                    readOnly: true
+                    type: string
+                contentType:
+                    # @review
+                    description:
+                        The type of the content.
+                    readOnly: true
+                    type: string
+                externalReferenceCode:
+                    description:
+                        The user's external reference code.
+                    example: AB-34098-789-N
+                    readOnly: true
+                    type: string
+                familyName:
+                    description:
+                        The user's surname (last name).
+                    readOnly: true
+                    type: string
+                givenName:
+                    description:
+                        The user's first name.
+                    readOnly: true
+                    type: string
+                id:
+                    description:
+                        The user's ID.
+                    format: int64
+                    readOnly: true
+                    type: integer
+                image:
+                    description:
+                        A relative URL to the user's profile image.
+                    format: uri
+                    readOnly: true
+                    type: string
+                name:
+                    description:
+                        The user's full name.
+                    readOnly: true
+                    type: string
+                profileURL:
+                    description:
+                        A relative URL to the user's profile.
+                    format: uri
+                    readOnly: true
+                    type: string
             type: object
         MimeTypeLimit:
             description:
@@ -306,7 +375,7 @@ components:
 info:
     description:
         "A Java client JAR is available for use with the group ID 'com.liferay', artifact ID
-        'com.liferay.headless.asset.library.client', and version '1.0.12'."
+        'com.liferay.headless.asset.library.client', and version '1.0.15'."
     license:
         name: Apache 2.0
         url: http://www.apache.org/licenses/LICENSE-2.0.html
@@ -745,6 +814,54 @@ paths:
                     description:
                         default response
             tags: ["AssetLibrary"]
+    "/asset-libraries/{assetLibraryExternalReferenceCode}/roles":
+        get:
+            description:
+                Get the asset library scoped roles that can be assigned to its members. Accessible to any asset library
+                administrator or member.
+            operationId: getAssetLibraryRolesPage
+            parameters:
+                -   in: path
+                    name: assetLibraryExternalReferenceCode
+                    required: true
+                    schema:
+                        type: string
+                -   in: query
+                    name: fields
+                    schema:
+                        type: string
+                -   in: query
+                    name: nestedFields
+                    schema:
+                        type: string
+                -   in: query
+                    name: page
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    schema:
+                        type: integer
+                -   in: query
+                    name: restrictFields
+                    schema:
+                        type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Role"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Role"
+                                type: array
+                    description:
+                        default response
+            tags: ["Role"]
     "/asset-libraries/{assetLibraryExternalReferenceCode}/user-accounts":
         get:
             description:

@@ -8,7 +8,7 @@ package com.liferay.oauth.client.admin.web.internal.application.list;
 import com.liferay.application.list.BasePanelApp;
 import com.liferay.application.list.PanelApp;
 import com.liferay.application.list.constants.PanelCategoryKeys;
-import com.liferay.oauth.client.admin.web.internal.constants.OAuthClientAdminPortletKeys;
+import com.liferay.oauth.client.constants.OAuthClientAdminPortletKeys;
 import com.liferay.portal.kernel.model.Portlet;
 
 import org.osgi.service.component.annotations.Component;
@@ -25,6 +25,11 @@ import org.osgi.service.component.annotations.Reference;
 	service = PanelApp.class
 )
 public class OAuthClientAdminPanelApp extends BasePanelApp {
+
+	@Override
+	public String getIcon() {
+		return "shield-check";
+	}
 
 	@Override
 	public Portlet getPortlet() {

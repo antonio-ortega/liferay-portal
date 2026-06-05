@@ -84,3 +84,4 @@ public class FragmentDropZonePageElementDefinition
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-791909505

@@ -6,6 +6,7 @@
 import {FrameLocator, Page, expect, mergeTests} from '@playwright/test';
 
 import {dataApiHelpersTest} from '../../../fixtures/dataApiHelpersTest';
+import {featureFlagsTest} from '../../../fixtures/featureFlagsTest';
 import {formsPagesTest} from '../../../fixtures/formsPagesTest';
 import {loginTest} from '../../../fixtures/loginTest';
 import {getRandomInt} from '../../../utils/getRandomInt';
@@ -13,7 +14,14 @@ import performLoginViaApi, {performLogout} from '../../../utils/performLogin';
 import {waitForAlert} from '../../../utils/waitForAlert';
 import {deleteItems} from './utils/deleteItems';
 
-export const test = mergeTests(dataApiHelpersTest, loginTest(), formsPagesTest);
+export const test = mergeTests(
+	dataApiHelpersTest,
+	featureFlagsTest({
+		'LPD-11235': {enabled: true},
+	}),
+	loginTest(),
+	formsPagesTest
+);
 
 test.afterEach(async ({formsPage}) => {
 	await formsPage.goTo();
@@ -134,6 +142,65 @@ test.describe('Manage fields through Form Preview page', () => {
 
 		await expect(
 			newTabPage.getByLabel('Text Field', {exact: true})
+		).toHaveCount(2);
+	});
+
+	test('Duplicating fieldset with required fields only takes one click', async ({
+		formBuilderPage,
+		formBuilderSidePanelPage,
+		page,
+	}) => {
+		await formBuilderPage.goToNew();
+
+		await formBuilderSidePanelPage.addFieldByDoubleClick('Text');
+
+		await formBuilderSidePanelPage.requiredFieldToggleSwitch.click();
+
+		await formBuilderSidePanelPage.clickAdvancedTab();
+
+		const textFieldReference1 =
+			await formBuilderSidePanelPage.getFieldReference();
+
+		await formBuilderSidePanelPage.backButton.click();
+
+		await formBuilderSidePanelPage.addFieldByDoubleClick('Text');
+
+		await formBuilderSidePanelPage.requiredFieldToggleSwitch.click();
+
+		await formBuilderSidePanelPage.clickAdvancedTab();
+
+		const textFieldReference2 =
+			await formBuilderSidePanelPage.getFieldReference();
+
+		await formBuilderSidePanelPage.dragAndDropField(
+			textFieldReference2,
+			textFieldReference1
+		);
+
+		await page
+			.locator('label.text-uppercase', {hasText: 'Fields Group'})
+			.click();
+
+		await formBuilderSidePanelPage.clickBasicTab();
+
+		await formBuilderSidePanelPage.repeatableFieldToggleSwitch.click();
+
+		const newTabPage = await formBuilderPage.openPreviewForm();
+
+		await newTabPage.getByRole('textbox').last().click();
+
+		await newTabPage
+			.getByRole('button', {
+				name: 'Add Duplicate Field Fields Group',
+			})
+			.click();
+
+		await expect(
+			newTabPage.getByText('This field is required.')
+		).toBeVisible();
+
+		await expect(
+			newTabPage.getByLabel('Fields Group', {exact: true})
 		).toHaveCount(2);
 	});
 

@@ -134,3 +134,4 @@ public interface StrategyResource {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:867729005

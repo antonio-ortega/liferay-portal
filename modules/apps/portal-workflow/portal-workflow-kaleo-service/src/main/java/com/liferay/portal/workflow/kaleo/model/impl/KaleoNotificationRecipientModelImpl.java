@@ -109,6 +109,8 @@ public class KaleoNotificationRecipientModelImpl
 	public static final String TABLE_SQL_DROP =
 		"drop table KaleoNotificationRecipient";
 
+	public static final String ENTITY_ALIAS = "kaleoNotificationRecipient";
+
 	public static final String ORDER_BY_JPQL =
 		" ORDER BY kaleoNotificationRecipient.kaleoNotificationRecipientId ASC";
 
@@ -1342,3 +1344,4 @@ public class KaleoNotificationRecipientModelImpl
 	private KaleoNotificationRecipient _escapedModel;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:897693494

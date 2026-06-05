@@ -6,7 +6,6 @@
 import {APIResponse, expect as baseExpect, mergeTests} from '@playwright/test';
 
 import {apiHelpersTest} from '../../../fixtures/apiHelpersTest';
-import {applicationsMenuPageTest} from '../../../fixtures/applicationsMenuPageTest';
 import {featureFlagsTest} from '../../../fixtures/featureFlagsTest';
 import {isolatedSiteTest} from '../../../fixtures/isolatedSiteTest';
 import {loginTest} from '../../../fixtures/loginTest';
@@ -44,15 +43,12 @@ const translateNameAndMetadataFields = async (
 	);
 	await fillAndClickOutside(
 		page,
-		page
-			.frameLocator(':text("Description")+div iframe')
-			.getByRole('textbox')
+		page.getByText('Description Rich Text Editor').getByRole('textbox')
 	);
 };
 
 const baseTest = mergeTests(
 	apiHelpersTest,
-	applicationsMenuPageTest,
 	isolatedSiteTest,
 	journalPagesTest,
 	loginTest(),
@@ -81,12 +77,17 @@ const assetPublisherDeprecationTest = mergeTests(
 	})
 );
 
-const ckeditor4Test = mergeTests(baseTest);
+const ckeditor4Test = mergeTests(
+	baseTest,
+	featureFlagsTest({
+		'LPD-11235': {enabled: true},
+	})
+);
 
 const ckeditor5Test = mergeTests(
 	baseTest,
 	featureFlagsTest({
-		'LPD-11235': {enabled: true},
+		'LPD-11235': {enabled: false},
 	})
 );
 
@@ -291,7 +292,6 @@ baseTest(
 	{
 		tag: '@LPD-66008',
 	},
-
 	async ({apiHelpers, journalEditArticlePage, page, site}) => {
 		const structureName = 'Test Structure';
 
@@ -1463,9 +1463,8 @@ baseTest(
 
 		await expect(
 			page
-				.getByLabel('Content', {exact: true})
-				.locator('iframe[title="editor"]')
-				.contentFrame()
+				.getByTestId('content')
+				.getByRole('textbox', {name: 'Rich Text Editor'})
 				.getByText(catalanContent)
 		).toBeVisible();
 	}
@@ -2197,13 +2196,15 @@ ckeditor5Test(
 		);
 
 		await ckeditor5Test.step(
-			'Change article in source editing',
+			'Change article in source editing and then switch to wyswyg view',
 			async () => {
 				await sourceButton.click();
 
 				await sourceTextarea.fill(
 					'<a href="#" onclick="alert()">foo</a><script>alert()</script>'
 				);
+
+				await sourceButton.click();
 			}
 		);
 
@@ -2632,7 +2633,7 @@ baseTest(
 );
 
 baseTest(
-	'Publish button is not disabled when validating custom structures required fields',
+	'Publish and Schedule button is not disabled and shows validation error for custom structures required fields',
 	{
 		tag: '@LPD-75537',
 	},
@@ -2661,11 +2662,37 @@ baseTest(
 
 		await journalEditArticlePage.fillTitle(title);
 
-		await journalEditArticlePage.publishArticle(true);
+		await baseTest.step(
+			'Publish button is not disabled and shows validation error',
+			async () => {
+				await journalEditArticlePage.publishArticle(true);
 
-		await expect(journalEditArticlePage.publishButton).not.toBeDisabled();
+				await expect(
+					journalEditArticlePage.publishButton
+				).not.toBeDisabled();
+				await expect(
+					page.getByText('This field is required.')
+				).toBeVisible();
+			}
+		);
 
-		await expect(page.getByText('This field is required.')).toBeVisible();
+		await baseTest.step(
+			'Schedule Publication button shows validation error',
+			async () => {
+				await clickAndExpectToBeVisible({
+					autoClick: true,
+					target: page.getByRole('menuitem', {
+						name: 'Schedule Publication',
+					}),
+					trigger: journalEditArticlePage.publishDropdown,
+				});
+
+				await expect(page.locator('.modal-dialog')).not.toBeVisible();
+				await expect(
+					page.getByText('This field is required.')
+				).toBeVisible();
+			}
+		);
 	}
 );
 
@@ -2785,5 +2812,36 @@ baseTest(
 				}).toPass();
 			}
 		);
+	}
+);
+
+baseTest(
+	'Display Page Preview button is disabled when draft does not exist',
+	{
+		tag: '@LPD-77694',
+	},
+	async ({journalEditArticlePage, page, site}) => {
+		page.on('dialog', (dialog) => dialog.accept());
+
+		await journalEditArticlePage.goto({siteUrl: site.friendlyUrlPath});
+
+		const title = getRandomString();
+
+		await journalEditArticlePage.content.waitFor();
+
+		await journalEditArticlePage.fillTitle(title);
+
+		await journalEditArticlePage.content.waitFor();
+
+		await journalEditArticlePage.openFieldSet(
+			'Display Page',
+			'displayPage'
+		);
+
+		await journalEditArticlePage.previewButton.waitFor();
+
+		await journalEditArticlePage.previewButton.scrollIntoViewIfNeeded();
+
+		await expect(journalEditArticlePage.previewButton).toBeDisabled();
 	}
 );

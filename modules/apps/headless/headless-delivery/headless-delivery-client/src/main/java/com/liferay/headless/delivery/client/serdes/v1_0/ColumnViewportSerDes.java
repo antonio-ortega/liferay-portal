@@ -236,3 +236,4 @@ public class ColumnViewportSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-2084876800

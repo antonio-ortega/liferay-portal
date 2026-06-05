@@ -8,6 +8,7 @@ package com.liferay.headless.admin.site.internal.dto.v1_0.converter;
 import com.liferay.headless.admin.site.dto.v1_0.ItemExternalReference;
 import com.liferay.headless.admin.site.dto.v1_0.PageElement;
 import com.liferay.headless.admin.site.dto.v1_0.PageExperience;
+import com.liferay.headless.admin.site.internal.dto.v1_0.util.InfoFormUtil;
 import com.liferay.headless.admin.site.internal.dto.v1_0.util.ItemScopeUtil;
 import com.liferay.layout.page.template.model.LayoutPageTemplateStructureRel;
 import com.liferay.layout.util.structure.LayoutStructure;
@@ -63,7 +64,8 @@ public class PageExperienceDTOConverter
 						true, segmentsExperience.getNameMap()));
 				setPageElements(
 					() -> _getPageElements(
-						dtoConverterContext, layoutPageTemplateStructureRel));
+						dtoConverterContext, layoutPageTemplateStructureRel,
+						layout.getPlid()));
 				setPageSpecificationExternalReferenceCode(
 					layout::getExternalReferenceCode);
 				setPriority(segmentsExperience::getPriority);
@@ -80,8 +82,9 @@ public class PageExperienceDTOConverter
 									segmentsExperience::getSegmentsEntryERC);
 								setScope(
 									() -> ItemScopeUtil.getItemScope(
+										layout.getCompanyId(),
 										segmentsExperience.
-											getSegmentsEntryGroupId(),
+											getSegmentsEntryScopeERC(),
 										layout.getGroupId()));
 							}
 						};
@@ -93,7 +96,8 @@ public class PageExperienceDTOConverter
 
 	private PageElement[] _getPageElements(
 		DTOConverterContext dtoConverterContext,
-		LayoutPageTemplateStructureRel layoutPageTemplateStructureRel) {
+		LayoutPageTemplateStructureRel layoutPageTemplateStructureRel,
+		long layoutPlid) {
 
 		LayoutStructure layoutStructure = LayoutStructure.of(
 			layoutPageTemplateStructureRel.getData());
@@ -103,6 +107,10 @@ public class PageExperienceDTOConverter
 
 		dtoConverterContext.setAttribute(
 			"companyId", layoutPageTemplateStructureRel.getCompanyId());
+		dtoConverterContext.setAttribute(
+			"displayPageTemplateInfoForm",
+			InfoFormUtil.getDisplayPageTemplateInfoForm(layoutPlid));
+		dtoConverterContext.setAttribute("layoutPlid", layoutPlid);
 		dtoConverterContext.setAttribute(
 			"scopeGroupId", layoutPageTemplateStructureRel.getGroupId());
 

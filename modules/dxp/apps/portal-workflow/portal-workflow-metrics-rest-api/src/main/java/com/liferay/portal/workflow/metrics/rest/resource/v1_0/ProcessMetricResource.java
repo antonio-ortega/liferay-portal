@@ -157,3 +157,4 @@ public interface ProcessMetricResource {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:675429992

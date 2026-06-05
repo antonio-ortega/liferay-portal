@@ -425,3 +425,4 @@ public class WarehouseOrderTypeSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1610347034

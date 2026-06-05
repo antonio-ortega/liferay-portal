@@ -18,14 +18,11 @@ interface IMemberCellProps {
 }
 
 const MemberCell: React.FC<IMemberCellProps> = ({className, data, routeFn}) => {
-	const {
-		name,
-		properties: {email, emailAddress}
-	} = data;
+	const {name, properties: {email, emailAddress} = {}} = data;
 
 	const resolvedEmail = email || emailAddress;
 
-	const anonymous = isBlank(resolvedEmail);
+	const anonymous = isBlank(resolvedEmail || '');
 
 	return (
 		<td className={getCN('name-cell-root', className)}>

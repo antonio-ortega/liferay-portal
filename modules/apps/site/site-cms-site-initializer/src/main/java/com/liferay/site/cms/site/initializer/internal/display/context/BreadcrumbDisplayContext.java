@@ -6,6 +6,8 @@
 package com.liferay.site.cms.site.initializer.internal.display.context;
 
 import com.liferay.depot.model.DepotEntry;
+import com.liferay.depot.model.DepotEntryPin;
+import com.liferay.depot.service.DepotEntryPinLocalService;
 import com.liferay.exportimport.constants.ExportImportPortletKeys;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.string.StringBundler;
@@ -20,10 +22,12 @@ import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -41,15 +45,22 @@ import java.util.Map;
 
 /**
  * @author Marco Galluzzi
+ * @author Roberto Díaz
  */
 public class BreadcrumbDisplayContext {
 
 	public BreadcrumbDisplayContext(
-		long groupId, GroupLocalService groupLocalService,
+		ModelResourcePermission<DepotEntry> depotEntryModelResourcePermission,
+		DepotEntryPinLocalService depotEntryPinLocalService, long groupId,
+		GroupLocalService groupLocalService,
+		ModelResourcePermission<Group> groupModelResourcePermission,
 		HttpServletRequest httpServletRequest, String size) {
 
+		_depotEntryModelResourcePermission = depotEntryModelResourcePermission;
+		_depotEntryPinLocalService = depotEntryPinLocalService;
 		_groupId = groupId;
 		_groupLocalService = groupLocalService;
+		_groupModelResourcePermission = groupModelResourcePermission;
 		_httpServletRequest = httpServletRequest;
 		_size = GetterUtil.get(size, CMSSpaceConstants.SPACE_STICKER_LG);
 
@@ -76,6 +87,67 @@ public class BreadcrumbDisplayContext {
 					if (permissionChecker.hasPermission(
 							group, DepotEntry.class.getName(),
 							group.getClassPK(), ActionKeys.UPDATE)) {
+
+						DepotEntryPin depotEntryPin =
+							_depotEntryPinLocalService.fetchGroupDepotEntryPin(
+								_groupId, _themeDisplay.getUserId());
+
+						if (depotEntryPin == null) {
+							unsafeConsumer.accept(
+								JSONUtil.put(
+									"href",
+									StringBundler.concat(
+										"/o/headless-asset-library/v1.0",
+										"/asset-libraries/",
+										group.getExternalReferenceCode(),
+										"/pins")
+								).put(
+									"label",
+									LanguageUtil.get(
+										_httpServletRequest,
+										"pin-to-product-menu")
+								).put(
+									"redirect", _themeDisplay.getURLCurrent()
+								).put(
+									"successMessage",
+									LanguageUtil.get(
+										_httpServletRequest,
+										"the-space-has-been-successfully-" +
+											"pinned-to-the-product-menu")
+								).put(
+									"symbolLeft", "pin"
+								).put(
+									"target", "asyncPut"
+								));
+						}
+						else {
+							unsafeConsumer.accept(
+								JSONUtil.put(
+									"href",
+									StringBundler.concat(
+										"/o/headless-asset-library/v1.0",
+										"/asset-libraries/",
+										group.getExternalReferenceCode(),
+										"/pins")
+								).put(
+									"label",
+									LanguageUtil.get(
+										_httpServletRequest,
+										"unpin-from-product-menu")
+								).put(
+									"redirect", _themeDisplay.getURLCurrent()
+								).put(
+									"successMessage",
+									LanguageUtil.get(
+										_httpServletRequest,
+										"the-space-has-been-successfully-" +
+											"unpinned-from-the-product-menu")
+								).put(
+									"symbolLeft", "unpin"
+								).put(
+									"target", "asyncDelete"
+								));
+						}
 
 						unsafeConsumer.accept(
 							JSONUtil.put(
@@ -112,6 +184,69 @@ public class BreadcrumbDisplayContext {
 								LanguageUtil.get(_httpServletRequest, "import")
 							).put(
 								"symbolLeft", "import"
+							));
+					}
+
+					if (permissionChecker.hasPermission(
+							group, DepotEntry.class.getName(),
+							group.getClassPK(), ActionKeys.VIEW)) {
+
+						unsafeConsumer.accept(
+							JSONUtil.put(
+								"href", StringPool.BLANK
+							).put(
+								"label",
+								LanguageUtil.get(
+									_httpServletRequest, "view-members")
+							).put(
+								"manageMembersData",
+								HashMapBuilder.<String, Object>put(
+									"assetLibraryCreatorUserId",
+									_themeDisplay.getUserId()
+								).put(
+									"externalReferenceCode",
+									group.getExternalReferenceCode()
+								).put(
+									"hasAssignMembersPermission",
+									_groupModelResourcePermission.contains(
+										permissionChecker, group.getGroupId(),
+										ActionKeys.ASSIGN_MEMBERS)
+								).put(
+									"title",
+									LanguageUtil.get(
+										_httpServletRequest, "all-members")
+								).build()
+							).put(
+								"redirect", _themeDisplay.getURLCurrent()
+							).put(
+								"symbolLeft", "users"
+							).put(
+								"target", "manageMembersModal"
+							));
+						unsafeConsumer.accept(
+							JSONUtil.put(
+								"href", StringPool.BLANK
+							).put(
+								"label",
+								LanguageUtil.get(
+									_httpServletRequest, "view-connected-sites")
+							).put(
+								"manageConnectedSitesData",
+								HashMapBuilder.<String, Object>put(
+									"externalReferenceCode",
+									group.getExternalReferenceCode()
+								).put(
+									"hasConnectSitesPermission",
+									_depotEntryModelResourcePermission.contains(
+										permissionChecker, group.getClassPK(),
+										ActionKeys.UPDATE)
+								).build()
+							).put(
+								"redirect", _themeDisplay.getURLCurrent()
+							).put(
+								"symbolLeft", "globe"
+							).put(
+								"target", "manageConnectedSitesModal"
 							));
 					}
 
@@ -157,6 +292,32 @@ public class BreadcrumbDisplayContext {
 								"label",
 								LanguageUtil.get(
 									_httpServletRequest, "default-permissions")
+							).put(
+								"symbolLeft", "password-policies"
+							).put(
+								"target", "defaultPermissionsModal"
+							));
+						unsafeConsumer.accept(
+							JSONUtil.put(
+								"defaultPermissionAdditionalProps",
+								HashMapBuilder.putAll(
+									PermissionUtil.
+										getDefaultPermissionAdditionalProps(
+											true, _httpServletRequest,
+											_themeDisplay)
+								).put(
+									"classExternalReferenceCode",
+									group.getExternalReferenceCode()
+								).put(
+									"className", DepotEntry.class.getName()
+								).build()
+							).put(
+								"href", StringPool.BLANK
+							).put(
+								"label",
+								LanguageUtil.get(
+									_httpServletRequest,
+									"edit-and-propagate-default-permissions")
 							).put(
 								"symbolLeft", "password-policies"
 							).put(
@@ -239,7 +400,10 @@ public class BreadcrumbDisplayContext {
 			_httpServletRequest, _getGroup(), portletId, 0, 0,
 			PortletRequest.RENDER_PHASE);
 
-		return portletURL.toString();
+		return HttpComponentsUtil.addParameter(
+			portletURL.toString(),
+			PortalUtil.getPortletNamespace(portletId) + "backURL",
+			_themeDisplay.getURLCurrent());
 	}
 
 	private Group _getGroup() throws Exception {
@@ -262,8 +426,12 @@ public class BreadcrumbDisplayContext {
 		return jsonArray;
 	}
 
+	private final ModelResourcePermission<DepotEntry>
+		_depotEntryModelResourcePermission;
+	private final DepotEntryPinLocalService _depotEntryPinLocalService;
 	private final long _groupId;
 	private final GroupLocalService _groupLocalService;
+	private final ModelResourcePermission<Group> _groupModelResourcePermission;
 	private final HttpServletRequest _httpServletRequest;
 	private final String _size;
 	private final ThemeDisplay _themeDisplay;

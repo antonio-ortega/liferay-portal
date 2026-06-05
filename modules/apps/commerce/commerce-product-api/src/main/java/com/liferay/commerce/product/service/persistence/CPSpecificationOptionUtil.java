@@ -36,6 +36,24 @@ public class CPSpecificationOptionUtil {
 	 */
 
 	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(List)
+	 */
+	public static void cacheResult(
+		List<CPSpecificationOption> cpSpecificationOptions) {
+
+		getPersistence().cacheResult(cpSpecificationOptions);
+	}
+
+	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(com.liferay.portal.kernel.model.BaseModel)
+	 */
+	public static void cacheResult(
+		CPSpecificationOption cpSpecificationOption) {
+
+		getPersistence().cacheResult(cpSpecificationOption);
+	}
+
+	/**
 	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#clearCache()
 	 */
 	public static void clearCache() {
@@ -114,58 +132,10 @@ public class CPSpecificationOptionUtil {
 	}
 
 	/**
-	 * Returns all the cp specification options where uuid = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @return the matching cp specification options
-	 */
-	public static List<CPSpecificationOption> findByUuid(String uuid) {
-		return getPersistence().findByUuid(uuid);
-	}
-
-	/**
-	 * Returns a range of all the cp specification options where uuid = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPSpecificationOptionModelImpl</code>.
-	 * </p>
-	 *
-	 * @param uuid the uuid
-	 * @param start the lower bound of the range of cp specification options
-	 * @param end the upper bound of the range of cp specification options (not inclusive)
-	 * @return the range of matching cp specification options
-	 */
-	public static List<CPSpecificationOption> findByUuid(
-		String uuid, int start, int end) {
-
-		return getPersistence().findByUuid(uuid, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the cp specification options where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPSpecificationOptionModelImpl</code>.
-	 * </p>
-	 *
-	 * @param uuid the uuid
-	 * @param start the lower bound of the range of cp specification options
-	 * @param end the upper bound of the range of cp specification options (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching cp specification options
-	 */
-	public static List<CPSpecificationOption> findByUuid(
-		String uuid, int start, int end,
-		OrderByComparator<CPSpecificationOption> orderByComparator) {
-
-		return getPersistence().findByUuid(uuid, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the cp specification options where uuid = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPSpecificationOptionModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.product.model.impl.CPSpecificationOptionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -216,88 +186,10 @@ public class CPSpecificationOptionUtil {
 	}
 
 	/**
-	 * Returns the last cp specification option in the ordered set where uuid = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching cp specification option
-	 * @throws NoSuchCPSpecificationOptionException if a matching cp specification option could not be found
-	 */
-	public static CPSpecificationOption findByUuid_Last(
-			String uuid,
-			OrderByComparator<CPSpecificationOption> orderByComparator)
-		throws com.liferay.commerce.product.exception.
-			NoSuchCPSpecificationOptionException {
-
-		return getPersistence().findByUuid_Last(uuid, orderByComparator);
-	}
-
-	/**
-	 * Returns the last cp specification option in the ordered set where uuid = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching cp specification option, or <code>null</code> if a matching cp specification option could not be found
-	 */
-	public static CPSpecificationOption fetchByUuid_Last(
-		String uuid,
-		OrderByComparator<CPSpecificationOption> orderByComparator) {
-
-		return getPersistence().fetchByUuid_Last(uuid, orderByComparator);
-	}
-
-	/**
-	 * Returns the cp specification options before and after the current cp specification option in the ordered set where uuid = &#63;.
-	 *
-	 * @param CPSpecificationOptionId the primary key of the current cp specification option
-	 * @param uuid the uuid
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next cp specification option
-	 * @throws NoSuchCPSpecificationOptionException if a cp specification option with the primary key could not be found
-	 */
-	public static CPSpecificationOption[] findByUuid_PrevAndNext(
-			long CPSpecificationOptionId, String uuid,
-			OrderByComparator<CPSpecificationOption> orderByComparator)
-		throws com.liferay.commerce.product.exception.
-			NoSuchCPSpecificationOptionException {
-
-		return getPersistence().findByUuid_PrevAndNext(
-			CPSpecificationOptionId, uuid, orderByComparator);
-	}
-
-	/**
-	 * Returns all the cp specification options that the user has permission to view where uuid = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @return the matching cp specification options that the user has permission to view
-	 */
-	public static List<CPSpecificationOption> filterFindByUuid(String uuid) {
-		return getPersistence().filterFindByUuid(uuid);
-	}
-
-	/**
-	 * Returns a range of all the cp specification options that the user has permission to view where uuid = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPSpecificationOptionModelImpl</code>.
-	 * </p>
-	 *
-	 * @param uuid the uuid
-	 * @param start the lower bound of the range of cp specification options
-	 * @param end the upper bound of the range of cp specification options (not inclusive)
-	 * @return the range of matching cp specification options that the user has permission to view
-	 */
-	public static List<CPSpecificationOption> filterFindByUuid(
-		String uuid, int start, int end) {
-
-		return getPersistence().filterFindByUuid(uuid, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the cp specification options that the user has permissions to view where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPSpecificationOptionModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.product.model.impl.CPSpecificationOptionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -312,25 +204,6 @@ public class CPSpecificationOptionUtil {
 
 		return getPersistence().filterFindByUuid(
 			uuid, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns the cp specification options before and after the current cp specification option in the ordered set of cp specification options that the user has permission to view where uuid = &#63;.
-	 *
-	 * @param CPSpecificationOptionId the primary key of the current cp specification option
-	 * @param uuid the uuid
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next cp specification option
-	 * @throws NoSuchCPSpecificationOptionException if a cp specification option with the primary key could not be found
-	 */
-	public static CPSpecificationOption[] filterFindByUuid_PrevAndNext(
-			long CPSpecificationOptionId, String uuid,
-			OrderByComparator<CPSpecificationOption> orderByComparator)
-		throws com.liferay.commerce.product.exception.
-			NoSuchCPSpecificationOptionException {
-
-		return getPersistence().filterFindByUuid_PrevAndNext(
-			CPSpecificationOptionId, uuid, orderByComparator);
 	}
 
 	/**
@@ -363,64 +236,10 @@ public class CPSpecificationOptionUtil {
 	}
 
 	/**
-	 * Returns all the cp specification options where uuid = &#63; and companyId = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @return the matching cp specification options
-	 */
-	public static List<CPSpecificationOption> findByUuid_C(
-		String uuid, long companyId) {
-
-		return getPersistence().findByUuid_C(uuid, companyId);
-	}
-
-	/**
-	 * Returns a range of all the cp specification options where uuid = &#63; and companyId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPSpecificationOptionModelImpl</code>.
-	 * </p>
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param start the lower bound of the range of cp specification options
-	 * @param end the upper bound of the range of cp specification options (not inclusive)
-	 * @return the range of matching cp specification options
-	 */
-	public static List<CPSpecificationOption> findByUuid_C(
-		String uuid, long companyId, int start, int end) {
-
-		return getPersistence().findByUuid_C(uuid, companyId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the cp specification options where uuid = &#63; and companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPSpecificationOptionModelImpl</code>.
-	 * </p>
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param start the lower bound of the range of cp specification options
-	 * @param end the upper bound of the range of cp specification options (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching cp specification options
-	 */
-	public static List<CPSpecificationOption> findByUuid_C(
-		String uuid, long companyId, int start, int end,
-		OrderByComparator<CPSpecificationOption> orderByComparator) {
-
-		return getPersistence().findByUuid_C(
-			uuid, companyId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the cp specification options where uuid = &#63; and companyId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPSpecificationOptionModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.product.model.impl.CPSpecificationOptionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -476,97 +295,10 @@ public class CPSpecificationOptionUtil {
 	}
 
 	/**
-	 * Returns the last cp specification option in the ordered set where uuid = &#63; and companyId = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching cp specification option
-	 * @throws NoSuchCPSpecificationOptionException if a matching cp specification option could not be found
-	 */
-	public static CPSpecificationOption findByUuid_C_Last(
-			String uuid, long companyId,
-			OrderByComparator<CPSpecificationOption> orderByComparator)
-		throws com.liferay.commerce.product.exception.
-			NoSuchCPSpecificationOptionException {
-
-		return getPersistence().findByUuid_C_Last(
-			uuid, companyId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last cp specification option in the ordered set where uuid = &#63; and companyId = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching cp specification option, or <code>null</code> if a matching cp specification option could not be found
-	 */
-	public static CPSpecificationOption fetchByUuid_C_Last(
-		String uuid, long companyId,
-		OrderByComparator<CPSpecificationOption> orderByComparator) {
-
-		return getPersistence().fetchByUuid_C_Last(
-			uuid, companyId, orderByComparator);
-	}
-
-	/**
-	 * Returns the cp specification options before and after the current cp specification option in the ordered set where uuid = &#63; and companyId = &#63;.
-	 *
-	 * @param CPSpecificationOptionId the primary key of the current cp specification option
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next cp specification option
-	 * @throws NoSuchCPSpecificationOptionException if a cp specification option with the primary key could not be found
-	 */
-	public static CPSpecificationOption[] findByUuid_C_PrevAndNext(
-			long CPSpecificationOptionId, String uuid, long companyId,
-			OrderByComparator<CPSpecificationOption> orderByComparator)
-		throws com.liferay.commerce.product.exception.
-			NoSuchCPSpecificationOptionException {
-
-		return getPersistence().findByUuid_C_PrevAndNext(
-			CPSpecificationOptionId, uuid, companyId, orderByComparator);
-	}
-
-	/**
-	 * Returns all the cp specification options that the user has permission to view where uuid = &#63; and companyId = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @return the matching cp specification options that the user has permission to view
-	 */
-	public static List<CPSpecificationOption> filterFindByUuid_C(
-		String uuid, long companyId) {
-
-		return getPersistence().filterFindByUuid_C(uuid, companyId);
-	}
-
-	/**
-	 * Returns a range of all the cp specification options that the user has permission to view where uuid = &#63; and companyId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPSpecificationOptionModelImpl</code>.
-	 * </p>
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param start the lower bound of the range of cp specification options
-	 * @param end the upper bound of the range of cp specification options (not inclusive)
-	 * @return the range of matching cp specification options that the user has permission to view
-	 */
-	public static List<CPSpecificationOption> filterFindByUuid_C(
-		String uuid, long companyId, int start, int end) {
-
-		return getPersistence().filterFindByUuid_C(uuid, companyId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the cp specification options that the user has permissions to view where uuid = &#63; and companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPSpecificationOptionModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.product.model.impl.CPSpecificationOptionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -582,26 +314,6 @@ public class CPSpecificationOptionUtil {
 
 		return getPersistence().filterFindByUuid_C(
 			uuid, companyId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns the cp specification options before and after the current cp specification option in the ordered set of cp specification options that the user has permission to view where uuid = &#63; and companyId = &#63;.
-	 *
-	 * @param CPSpecificationOptionId the primary key of the current cp specification option
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next cp specification option
-	 * @throws NoSuchCPSpecificationOptionException if a cp specification option with the primary key could not be found
-	 */
-	public static CPSpecificationOption[] filterFindByUuid_C_PrevAndNext(
-			long CPSpecificationOptionId, String uuid, long companyId,
-			OrderByComparator<CPSpecificationOption> orderByComparator)
-		throws com.liferay.commerce.product.exception.
-			NoSuchCPSpecificationOptionException {
-
-		return getPersistence().filterFindByUuid_C_PrevAndNext(
-			CPSpecificationOptionId, uuid, companyId, orderByComparator);
 	}
 
 	/**
@@ -637,59 +349,10 @@ public class CPSpecificationOptionUtil {
 	}
 
 	/**
-	 * Returns all the cp specification options where companyId = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @return the matching cp specification options
-	 */
-	public static List<CPSpecificationOption> findByCompanyId(long companyId) {
-		return getPersistence().findByCompanyId(companyId);
-	}
-
-	/**
-	 * Returns a range of all the cp specification options where companyId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPSpecificationOptionModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param start the lower bound of the range of cp specification options
-	 * @param end the upper bound of the range of cp specification options (not inclusive)
-	 * @return the range of matching cp specification options
-	 */
-	public static List<CPSpecificationOption> findByCompanyId(
-		long companyId, int start, int end) {
-
-		return getPersistence().findByCompanyId(companyId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the cp specification options where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPSpecificationOptionModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param start the lower bound of the range of cp specification options
-	 * @param end the upper bound of the range of cp specification options (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching cp specification options
-	 */
-	public static List<CPSpecificationOption> findByCompanyId(
-		long companyId, int start, int end,
-		OrderByComparator<CPSpecificationOption> orderByComparator) {
-
-		return getPersistence().findByCompanyId(
-			companyId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the cp specification options where companyId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPSpecificationOptionModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.product.model.impl.CPSpecificationOptionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -742,92 +405,10 @@ public class CPSpecificationOptionUtil {
 	}
 
 	/**
-	 * Returns the last cp specification option in the ordered set where companyId = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching cp specification option
-	 * @throws NoSuchCPSpecificationOptionException if a matching cp specification option could not be found
-	 */
-	public static CPSpecificationOption findByCompanyId_Last(
-			long companyId,
-			OrderByComparator<CPSpecificationOption> orderByComparator)
-		throws com.liferay.commerce.product.exception.
-			NoSuchCPSpecificationOptionException {
-
-		return getPersistence().findByCompanyId_Last(
-			companyId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last cp specification option in the ordered set where companyId = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching cp specification option, or <code>null</code> if a matching cp specification option could not be found
-	 */
-	public static CPSpecificationOption fetchByCompanyId_Last(
-		long companyId,
-		OrderByComparator<CPSpecificationOption> orderByComparator) {
-
-		return getPersistence().fetchByCompanyId_Last(
-			companyId, orderByComparator);
-	}
-
-	/**
-	 * Returns the cp specification options before and after the current cp specification option in the ordered set where companyId = &#63;.
-	 *
-	 * @param CPSpecificationOptionId the primary key of the current cp specification option
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next cp specification option
-	 * @throws NoSuchCPSpecificationOptionException if a cp specification option with the primary key could not be found
-	 */
-	public static CPSpecificationOption[] findByCompanyId_PrevAndNext(
-			long CPSpecificationOptionId, long companyId,
-			OrderByComparator<CPSpecificationOption> orderByComparator)
-		throws com.liferay.commerce.product.exception.
-			NoSuchCPSpecificationOptionException {
-
-		return getPersistence().findByCompanyId_PrevAndNext(
-			CPSpecificationOptionId, companyId, orderByComparator);
-	}
-
-	/**
-	 * Returns all the cp specification options that the user has permission to view where companyId = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @return the matching cp specification options that the user has permission to view
-	 */
-	public static List<CPSpecificationOption> filterFindByCompanyId(
-		long companyId) {
-
-		return getPersistence().filterFindByCompanyId(companyId);
-	}
-
-	/**
-	 * Returns a range of all the cp specification options that the user has permission to view where companyId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPSpecificationOptionModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param start the lower bound of the range of cp specification options
-	 * @param end the upper bound of the range of cp specification options (not inclusive)
-	 * @return the range of matching cp specification options that the user has permission to view
-	 */
-	public static List<CPSpecificationOption> filterFindByCompanyId(
-		long companyId, int start, int end) {
-
-		return getPersistence().filterFindByCompanyId(companyId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the cp specification options that the user has permissions to view where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPSpecificationOptionModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.product.model.impl.CPSpecificationOptionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -842,25 +423,6 @@ public class CPSpecificationOptionUtil {
 
 		return getPersistence().filterFindByCompanyId(
 			companyId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns the cp specification options before and after the current cp specification option in the ordered set of cp specification options that the user has permission to view where companyId = &#63;.
-	 *
-	 * @param CPSpecificationOptionId the primary key of the current cp specification option
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next cp specification option
-	 * @throws NoSuchCPSpecificationOptionException if a cp specification option with the primary key could not be found
-	 */
-	public static CPSpecificationOption[] filterFindByCompanyId_PrevAndNext(
-			long CPSpecificationOptionId, long companyId,
-			OrderByComparator<CPSpecificationOption> orderByComparator)
-		throws com.liferay.commerce.product.exception.
-			NoSuchCPSpecificationOptionException {
-
-		return getPersistence().filterFindByCompanyId_PrevAndNext(
-			CPSpecificationOptionId, companyId, orderByComparator);
 	}
 
 	/**
@@ -893,62 +455,10 @@ public class CPSpecificationOptionUtil {
 	}
 
 	/**
-	 * Returns all the cp specification options where CPOptionCategoryId = &#63;.
-	 *
-	 * @param CPOptionCategoryId the cp option category ID
-	 * @return the matching cp specification options
-	 */
-	public static List<CPSpecificationOption> findByCPOptionCategoryId(
-		long CPOptionCategoryId) {
-
-		return getPersistence().findByCPOptionCategoryId(CPOptionCategoryId);
-	}
-
-	/**
-	 * Returns a range of all the cp specification options where CPOptionCategoryId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPSpecificationOptionModelImpl</code>.
-	 * </p>
-	 *
-	 * @param CPOptionCategoryId the cp option category ID
-	 * @param start the lower bound of the range of cp specification options
-	 * @param end the upper bound of the range of cp specification options (not inclusive)
-	 * @return the range of matching cp specification options
-	 */
-	public static List<CPSpecificationOption> findByCPOptionCategoryId(
-		long CPOptionCategoryId, int start, int end) {
-
-		return getPersistence().findByCPOptionCategoryId(
-			CPOptionCategoryId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the cp specification options where CPOptionCategoryId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPSpecificationOptionModelImpl</code>.
-	 * </p>
-	 *
-	 * @param CPOptionCategoryId the cp option category ID
-	 * @param start the lower bound of the range of cp specification options
-	 * @param end the upper bound of the range of cp specification options (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching cp specification options
-	 */
-	public static List<CPSpecificationOption> findByCPOptionCategoryId(
-		long CPOptionCategoryId, int start, int end,
-		OrderByComparator<CPSpecificationOption> orderByComparator) {
-
-		return getPersistence().findByCPOptionCategoryId(
-			CPOptionCategoryId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the cp specification options where CPOptionCategoryId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPSpecificationOptionModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.product.model.impl.CPSpecificationOptionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param CPOptionCategoryId the cp option category ID
@@ -1001,94 +511,10 @@ public class CPSpecificationOptionUtil {
 	}
 
 	/**
-	 * Returns the last cp specification option in the ordered set where CPOptionCategoryId = &#63;.
-	 *
-	 * @param CPOptionCategoryId the cp option category ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching cp specification option
-	 * @throws NoSuchCPSpecificationOptionException if a matching cp specification option could not be found
-	 */
-	public static CPSpecificationOption findByCPOptionCategoryId_Last(
-			long CPOptionCategoryId,
-			OrderByComparator<CPSpecificationOption> orderByComparator)
-		throws com.liferay.commerce.product.exception.
-			NoSuchCPSpecificationOptionException {
-
-		return getPersistence().findByCPOptionCategoryId_Last(
-			CPOptionCategoryId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last cp specification option in the ordered set where CPOptionCategoryId = &#63;.
-	 *
-	 * @param CPOptionCategoryId the cp option category ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching cp specification option, or <code>null</code> if a matching cp specification option could not be found
-	 */
-	public static CPSpecificationOption fetchByCPOptionCategoryId_Last(
-		long CPOptionCategoryId,
-		OrderByComparator<CPSpecificationOption> orderByComparator) {
-
-		return getPersistence().fetchByCPOptionCategoryId_Last(
-			CPOptionCategoryId, orderByComparator);
-	}
-
-	/**
-	 * Returns the cp specification options before and after the current cp specification option in the ordered set where CPOptionCategoryId = &#63;.
-	 *
-	 * @param CPSpecificationOptionId the primary key of the current cp specification option
-	 * @param CPOptionCategoryId the cp option category ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next cp specification option
-	 * @throws NoSuchCPSpecificationOptionException if a cp specification option with the primary key could not be found
-	 */
-	public static CPSpecificationOption[] findByCPOptionCategoryId_PrevAndNext(
-			long CPSpecificationOptionId, long CPOptionCategoryId,
-			OrderByComparator<CPSpecificationOption> orderByComparator)
-		throws com.liferay.commerce.product.exception.
-			NoSuchCPSpecificationOptionException {
-
-		return getPersistence().findByCPOptionCategoryId_PrevAndNext(
-			CPSpecificationOptionId, CPOptionCategoryId, orderByComparator);
-	}
-
-	/**
-	 * Returns all the cp specification options that the user has permission to view where CPOptionCategoryId = &#63;.
-	 *
-	 * @param CPOptionCategoryId the cp option category ID
-	 * @return the matching cp specification options that the user has permission to view
-	 */
-	public static List<CPSpecificationOption> filterFindByCPOptionCategoryId(
-		long CPOptionCategoryId) {
-
-		return getPersistence().filterFindByCPOptionCategoryId(
-			CPOptionCategoryId);
-	}
-
-	/**
-	 * Returns a range of all the cp specification options that the user has permission to view where CPOptionCategoryId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPSpecificationOptionModelImpl</code>.
-	 * </p>
-	 *
-	 * @param CPOptionCategoryId the cp option category ID
-	 * @param start the lower bound of the range of cp specification options
-	 * @param end the upper bound of the range of cp specification options (not inclusive)
-	 * @return the range of matching cp specification options that the user has permission to view
-	 */
-	public static List<CPSpecificationOption> filterFindByCPOptionCategoryId(
-		long CPOptionCategoryId, int start, int end) {
-
-		return getPersistence().filterFindByCPOptionCategoryId(
-			CPOptionCategoryId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the cp specification options that the user has permissions to view where CPOptionCategoryId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPSpecificationOptionModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.product.model.impl.CPSpecificationOptionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param CPOptionCategoryId the cp option category ID
@@ -1103,26 +529,6 @@ public class CPSpecificationOptionUtil {
 
 		return getPersistence().filterFindByCPOptionCategoryId(
 			CPOptionCategoryId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns the cp specification options before and after the current cp specification option in the ordered set of cp specification options that the user has permission to view where CPOptionCategoryId = &#63;.
-	 *
-	 * @param CPSpecificationOptionId the primary key of the current cp specification option
-	 * @param CPOptionCategoryId the cp option category ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next cp specification option
-	 * @throws NoSuchCPSpecificationOptionException if a cp specification option with the primary key could not be found
-	 */
-	public static CPSpecificationOption[]
-			filterFindByCPOptionCategoryId_PrevAndNext(
-				long CPSpecificationOptionId, long CPOptionCategoryId,
-				OrderByComparator<CPSpecificationOption> orderByComparator)
-		throws com.liferay.commerce.product.exception.
-			NoSuchCPSpecificationOptionException {
-
-		return getPersistence().filterFindByCPOptionCategoryId_PrevAndNext(
-			CPSpecificationOptionId, CPOptionCategoryId, orderByComparator);
 	}
 
 	/**
@@ -1168,17 +574,6 @@ public class CPSpecificationOptionUtil {
 			NoSuchCPSpecificationOptionException {
 
 		return getPersistence().findByC_K(companyId, key);
-	}
-
-	/**
-	 * Returns the cp specification option where companyId = &#63; and key = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
-	 *
-	 * @param companyId the company ID
-	 * @param key the key
-	 * @return the matching cp specification option, or <code>null</code> if a matching cp specification option could not be found
-	 */
-	public static CPSpecificationOption fetchByC_K(long companyId, String key) {
-		return getPersistence().fetchByC_K(companyId, key);
 	}
 
 	/**
@@ -1237,19 +632,6 @@ public class CPSpecificationOptionUtil {
 	}
 
 	/**
-	 * Returns the cp specification option where externalReferenceCode = &#63; and companyId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
-	 *
-	 * @param externalReferenceCode the external reference code
-	 * @param companyId the company ID
-	 * @return the matching cp specification option, or <code>null</code> if a matching cp specification option could not be found
-	 */
-	public static CPSpecificationOption fetchByERC_C(
-		String externalReferenceCode, long companyId) {
-
-		return getPersistence().fetchByERC_C(externalReferenceCode, companyId);
-	}
-
-	/**
 	 * Returns the cp specification option where externalReferenceCode = &#63; and companyId = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
 	 *
 	 * @param externalReferenceCode the external reference code
@@ -1290,28 +672,6 @@ public class CPSpecificationOptionUtil {
 		String externalReferenceCode, long companyId) {
 
 		return getPersistence().countByERC_C(externalReferenceCode, companyId);
-	}
-
-	/**
-	 * Caches the cp specification option in the entity cache if it is enabled.
-	 *
-	 * @param cpSpecificationOption the cp specification option
-	 */
-	public static void cacheResult(
-		CPSpecificationOption cpSpecificationOption) {
-
-		getPersistence().cacheResult(cpSpecificationOption);
-	}
-
-	/**
-	 * Caches the cp specification options in the entity cache if it is enabled.
-	 *
-	 * @param cpSpecificationOptions the cp specification options
-	 */
-	public static void cacheResult(
-		List<CPSpecificationOption> cpSpecificationOptions) {
-
-		getPersistence().cacheResult(cpSpecificationOptions);
 	}
 
 	/**
@@ -1372,84 +732,352 @@ public class CPSpecificationOptionUtil {
 	}
 
 	/**
-	 * Returns all the cp specification options.
+	 * Returns the cp specification option where companyId = &#63; and key = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
 	 *
-	 * @return the cp specification options
+	 * @param companyId the company ID
+	 * @param key the key
+	 * @return the matching cp specification option, or <code>null</code> if a matching cp specification option could not be found
 	 */
-	public static List<CPSpecificationOption> findAll() {
-		return getPersistence().findAll();
+	public static CPSpecificationOption fetchByC_K(long companyId, String key) {
+		return getPersistence().fetchByC_K(companyId, key);
 	}
 
 	/**
-	 * Returns a range of all the cp specification options.
+	 * Returns the cp specification option where externalReferenceCode = &#63; and companyId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	 *
+	 * @param externalReferenceCode the external reference code
+	 * @param companyId the company ID
+	 * @return the matching cp specification option, or <code>null</code> if a matching cp specification option could not be found
+	 */
+	public static CPSpecificationOption fetchByERC_C(
+		String externalReferenceCode, long companyId) {
+
+		return getPersistence().fetchByERC_C(externalReferenceCode, companyId);
+	}
+
+	/**
+	 * Returns all the cp specification options where uuid = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @return the matching cp specification options
+	 */
+	public static List<CPSpecificationOption> findByUuid(String uuid) {
+		return getPersistence().findByUuid(uuid);
+	}
+
+	/**
+	 * Returns a range of all the cp specification options where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPSpecificationOptionModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.product.model.impl.CPSpecificationOptionModelImpl</code>.
 	 * </p>
 	 *
+	 * @param uuid the uuid
 	 * @param start the lower bound of the range of cp specification options
 	 * @param end the upper bound of the range of cp specification options (not inclusive)
-	 * @return the range of cp specification options
+	 * @return the range of matching cp specification options
 	 */
-	public static List<CPSpecificationOption> findAll(int start, int end) {
-		return getPersistence().findAll(start, end);
+	public static List<CPSpecificationOption> findByUuid(
+		String uuid, int start, int end) {
+
+		return getPersistence().findByUuid(uuid, start, end);
 	}
 
 	/**
-	 * Returns an ordered range of all the cp specification options.
+	 * Returns an ordered range of all the cp specification options where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPSpecificationOptionModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.product.model.impl.CPSpecificationOptionModelImpl</code>.
 	 * </p>
 	 *
+	 * @param uuid the uuid
 	 * @param start the lower bound of the range of cp specification options
 	 * @param end the upper bound of the range of cp specification options (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of cp specification options
+	 * @return the ordered range of matching cp specification options
 	 */
-	public static List<CPSpecificationOption> findAll(
-		int start, int end,
+	public static List<CPSpecificationOption> findByUuid(
+		String uuid, int start, int end,
 		OrderByComparator<CPSpecificationOption> orderByComparator) {
 
-		return getPersistence().findAll(start, end, orderByComparator);
+		return getPersistence().findByUuid(uuid, start, end, orderByComparator);
 	}
 
 	/**
-	 * Returns an ordered range of all the cp specification options.
+	 * Returns all the cp specification options that the user has permission to view where uuid = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @return the matching cp specification options that the user has permission to view
+	 */
+	public static List<CPSpecificationOption> filterFindByUuid(String uuid) {
+		return getPersistence().filterFindByUuid(uuid);
+	}
+
+	/**
+	 * Returns a range of all the cp specification options that the user has permission to view where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPSpecificationOptionModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.product.model.impl.CPSpecificationOptionModelImpl</code>.
 	 * </p>
 	 *
+	 * @param uuid the uuid
+	 * @param start the lower bound of the range of cp specification options
+	 * @param end the upper bound of the range of cp specification options (not inclusive)
+	 * @return the range of matching cp specification options that the user has permission to view
+	 */
+	public static List<CPSpecificationOption> filterFindByUuid(
+		String uuid, int start, int end) {
+
+		return getPersistence().filterFindByUuid(uuid, start, end);
+	}
+
+	/**
+	 * Returns all the cp specification options where uuid = &#63; and companyId = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @return the matching cp specification options
+	 */
+	public static List<CPSpecificationOption> findByUuid_C(
+		String uuid, long companyId) {
+
+		return getPersistence().findByUuid_C(uuid, companyId);
+	}
+
+	/**
+	 * Returns a range of all the cp specification options where uuid = &#63; and companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.product.model.impl.CPSpecificationOptionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of cp specification options
+	 * @param end the upper bound of the range of cp specification options (not inclusive)
+	 * @return the range of matching cp specification options
+	 */
+	public static List<CPSpecificationOption> findByUuid_C(
+		String uuid, long companyId, int start, int end) {
+
+		return getPersistence().findByUuid_C(uuid, companyId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the cp specification options where uuid = &#63; and companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.product.model.impl.CPSpecificationOptionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
 	 * @param start the lower bound of the range of cp specification options
 	 * @param end the upper bound of the range of cp specification options (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param useFinderCache whether to use the finder cache
-	 * @return the ordered range of cp specification options
+	 * @return the ordered range of matching cp specification options
 	 */
-	public static List<CPSpecificationOption> findAll(
-		int start, int end,
-		OrderByComparator<CPSpecificationOption> orderByComparator,
-		boolean useFinderCache) {
+	public static List<CPSpecificationOption> findByUuid_C(
+		String uuid, long companyId, int start, int end,
+		OrderByComparator<CPSpecificationOption> orderByComparator) {
 
-		return getPersistence().findAll(
-			start, end, orderByComparator, useFinderCache);
+		return getPersistence().findByUuid_C(
+			uuid, companyId, start, end, orderByComparator);
 	}
 
 	/**
-	 * Removes all the cp specification options from the database.
-	 */
-	public static void removeAll() {
-		getPersistence().removeAll();
-	}
-
-	/**
-	 * Returns the number of cp specification options.
+	 * Returns all the cp specification options that the user has permission to view where uuid = &#63; and companyId = &#63;.
 	 *
-	 * @return the number of cp specification options
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @return the matching cp specification options that the user has permission to view
 	 */
-	public static int countAll() {
-		return getPersistence().countAll();
+	public static List<CPSpecificationOption> filterFindByUuid_C(
+		String uuid, long companyId) {
+
+		return getPersistence().filterFindByUuid_C(uuid, companyId);
+	}
+
+	/**
+	 * Returns a range of all the cp specification options that the user has permission to view where uuid = &#63; and companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.product.model.impl.CPSpecificationOptionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of cp specification options
+	 * @param end the upper bound of the range of cp specification options (not inclusive)
+	 * @return the range of matching cp specification options that the user has permission to view
+	 */
+	public static List<CPSpecificationOption> filterFindByUuid_C(
+		String uuid, long companyId, int start, int end) {
+
+		return getPersistence().filterFindByUuid_C(uuid, companyId, start, end);
+	}
+
+	/**
+	 * Returns all the cp specification options where companyId = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @return the matching cp specification options
+	 */
+	public static List<CPSpecificationOption> findByCompanyId(long companyId) {
+		return getPersistence().findByCompanyId(companyId);
+	}
+
+	/**
+	 * Returns a range of all the cp specification options where companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.product.model.impl.CPSpecificationOptionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of cp specification options
+	 * @param end the upper bound of the range of cp specification options (not inclusive)
+	 * @return the range of matching cp specification options
+	 */
+	public static List<CPSpecificationOption> findByCompanyId(
+		long companyId, int start, int end) {
+
+		return getPersistence().findByCompanyId(companyId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the cp specification options where companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.product.model.impl.CPSpecificationOptionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of cp specification options
+	 * @param end the upper bound of the range of cp specification options (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching cp specification options
+	 */
+	public static List<CPSpecificationOption> findByCompanyId(
+		long companyId, int start, int end,
+		OrderByComparator<CPSpecificationOption> orderByComparator) {
+
+		return getPersistence().findByCompanyId(
+			companyId, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns all the cp specification options that the user has permission to view where companyId = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @return the matching cp specification options that the user has permission to view
+	 */
+	public static List<CPSpecificationOption> filterFindByCompanyId(
+		long companyId) {
+
+		return getPersistence().filterFindByCompanyId(companyId);
+	}
+
+	/**
+	 * Returns a range of all the cp specification options that the user has permission to view where companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.product.model.impl.CPSpecificationOptionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of cp specification options
+	 * @param end the upper bound of the range of cp specification options (not inclusive)
+	 * @return the range of matching cp specification options that the user has permission to view
+	 */
+	public static List<CPSpecificationOption> filterFindByCompanyId(
+		long companyId, int start, int end) {
+
+		return getPersistence().filterFindByCompanyId(companyId, start, end);
+	}
+
+	/**
+	 * Returns all the cp specification options where CPOptionCategoryId = &#63;.
+	 *
+	 * @param CPOptionCategoryId the cp option category ID
+	 * @return the matching cp specification options
+	 */
+	public static List<CPSpecificationOption> findByCPOptionCategoryId(
+		long CPOptionCategoryId) {
+
+		return getPersistence().findByCPOptionCategoryId(CPOptionCategoryId);
+	}
+
+	/**
+	 * Returns a range of all the cp specification options where CPOptionCategoryId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.product.model.impl.CPSpecificationOptionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param CPOptionCategoryId the cp option category ID
+	 * @param start the lower bound of the range of cp specification options
+	 * @param end the upper bound of the range of cp specification options (not inclusive)
+	 * @return the range of matching cp specification options
+	 */
+	public static List<CPSpecificationOption> findByCPOptionCategoryId(
+		long CPOptionCategoryId, int start, int end) {
+
+		return getPersistence().findByCPOptionCategoryId(
+			CPOptionCategoryId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the cp specification options where CPOptionCategoryId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.product.model.impl.CPSpecificationOptionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param CPOptionCategoryId the cp option category ID
+	 * @param start the lower bound of the range of cp specification options
+	 * @param end the upper bound of the range of cp specification options (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching cp specification options
+	 */
+	public static List<CPSpecificationOption> findByCPOptionCategoryId(
+		long CPOptionCategoryId, int start, int end,
+		OrderByComparator<CPSpecificationOption> orderByComparator) {
+
+		return getPersistence().findByCPOptionCategoryId(
+			CPOptionCategoryId, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns all the cp specification options that the user has permission to view where CPOptionCategoryId = &#63;.
+	 *
+	 * @param CPOptionCategoryId the cp option category ID
+	 * @return the matching cp specification options that the user has permission to view
+	 */
+	public static List<CPSpecificationOption> filterFindByCPOptionCategoryId(
+		long CPOptionCategoryId) {
+
+		return getPersistence().filterFindByCPOptionCategoryId(
+			CPOptionCategoryId);
+	}
+
+	/**
+	 * Returns a range of all the cp specification options that the user has permission to view where CPOptionCategoryId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.product.model.impl.CPSpecificationOptionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param CPOptionCategoryId the cp option category ID
+	 * @param start the lower bound of the range of cp specification options
+	 * @param end the upper bound of the range of cp specification options (not inclusive)
+	 * @return the range of matching cp specification options that the user has permission to view
+	 */
+	public static List<CPSpecificationOption> filterFindByCPOptionCategoryId(
+		long CPOptionCategoryId, int start, int end) {
+
+		return getPersistence().filterFindByCPOptionCategoryId(
+			CPOptionCategoryId, start, end);
 	}
 
 	public static CPSpecificationOptionPersistence getPersistence() {
@@ -1465,3 +1093,4 @@ public class CPSpecificationOptionUtil {
 	private static volatile CPSpecificationOptionPersistence _persistence;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-386199402

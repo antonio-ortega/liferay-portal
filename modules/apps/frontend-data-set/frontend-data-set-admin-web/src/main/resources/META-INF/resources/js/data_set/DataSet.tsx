@@ -16,7 +16,8 @@ import React, {useEffect, useState} from 'react';
 
 import {DEFAULT_FETCH_HEADERS} from '../utils/constants';
 import getDataSetResourceURL from '../utils/getDataSetResourceURL';
-import getFields from '../utils/getFields';
+import getFields, {getFilterableFields} from '../utils/getFields';
+import getOpenApiData from '../utils/getOpenApiData';
 import openDefaultFailureToast from '../utils/openDefaultFailureToast';
 import {IDataSet, IFieldTreeItem} from '../utils/types';
 import Actions from './actions/Actions';
@@ -64,6 +65,8 @@ export interface IDataSetSectionProps {
 	dataSet: IDataSet;
 	fieldTreeItems: Array<IFieldTreeItem>;
 	filterClientExtensionRenderers: IClientExtensionRenderer[];
+	filterableFieldTreeItems: Array<IFieldTreeItem>;
+	manageUserViewsURL: string;
 	namespace: string;
 	onActiveSectionChange: (section: number) => void;
 	onDataSetUpdate: (data: IDataSet) => void;
@@ -81,6 +84,7 @@ const DataSet = ({
 	fdsViewId,
 	filterClientExtensionRenderers,
 	learnResources,
+	manageUserViewsURL,
 	namespace,
 	resolvedRESTSchemas = [],
 	restApplications,
@@ -94,6 +98,7 @@ const DataSet = ({
 	fdsViewId: string;
 	filterClientExtensionRenderers: IClientExtensionRenderer[];
 	learnResources: ILearnResourceContext;
+	manageUserViewsURL: string;
 	namespace: string;
 	resolvedRESTSchemas: string[];
 	restApplications: string[];
@@ -106,6 +111,9 @@ const DataSet = ({
 	const [fieldTreeItems, setFieldTreeItems] = useState<Array<IFieldTreeItem>>(
 		[]
 	);
+	const [filterableFieldTreeItems, setFilterableFieldTreeItems] = useState<
+		Array<IFieldTreeItem>
+	>([]);
 	const [loading, setLoading] = useState(true);
 
 	useEffect(() => {
@@ -125,11 +133,21 @@ const DataSet = ({
 
 				const {restApplication, restSchema} = responseJSON;
 
-				getFields({restApplication, restSchema}).then((fields) => {
-					setFieldTreeItems(fields);
+				getOpenApiData({restApplication, restSchema}).then(
+					(oApiData) => {
+						if (!oApiData) {
+							return;
+						}
 
-					setLoading(false);
-				});
+						setFieldTreeItems(getFields(oApiData));
+
+						setFilterableFieldTreeItems(
+							getFilterableFields(oApiData)
+						);
+
+						setLoading(false);
+					}
+				);
 			}
 			else {
 				openDefaultFailureToast();
@@ -143,7 +161,7 @@ const DataSet = ({
 
 	return (
 		<LearnResourcesContext.Provider value={learnResources}>
-			<div className="cadmin fds-view">
+			<div className="cadmin fds-admin">
 				<ClayNavigationBar
 					triggerLabel={NAVIGATION_BAR_ITEMS[activeIndex].label}
 				>
@@ -173,6 +191,8 @@ const DataSet = ({
 							filterClientExtensionRenderers={
 								filterClientExtensionRenderers
 							}
+							filterableFieldTreeItems={filterableFieldTreeItems}
+							manageUserViewsURL={manageUserViewsURL}
 							namespace={namespace}
 							onActiveSectionChange={(tab) => setActiveIndex(tab)}
 							onDataSetUpdate={(updatedDataSet) => {

@@ -84,12 +84,12 @@ public class AccountChannelEntryResourceTest
 			AccountConstants.ACCOUNT_ENTRY_TYPE_BUSINESS, 10, serviceContext);
 
 		_country = CountryLocalServiceUtil.addCountry(
-			"XY", "XYZ", true, true, null, RandomTestUtil.randomString(),
+			null, "XY", "XYZ", true, true, null, RandomTestUtil.randomString(),
 			RandomTestUtil.randomString(), RandomTestUtil.randomDouble(), true,
 			false, false, serviceContext);
 
 		_region = RegionLocalServiceUtil.addRegion(
-			_country.getCountryId(), true, RandomTestUtil.randomString(),
+			null, _country.getCountryId(), true, RandomTestUtil.randomString(),
 			RandomTestUtil.randomDouble(), RandomTestUtil.randomString(),
 			serviceContext);
 
@@ -143,10 +143,10 @@ public class AccountChannelEntryResourceTest
 		_commercePriceList =
 			CommercePriceListLocalServiceUtil.addCommercePriceList(
 				RandomTestUtil.randomString(), _user.getUserId(),
-				testGroup.getGroupId(), _commerceCurrency.getCode(), true,
-				CommercePriceListConstants.TYPE_PRICE_LIST, 0, true,
-				RandomTestUtil.randomString(), 1000, 1, 1, 2022, 12, 0, 0, 0, 0,
-				0, 0, true, serviceContext);
+				testGroup.getGroupId(), 0, true, _commerceCurrency.getCode(), 1,
+				12, 0, 1, 2022, 0, 0, 0, 0, 0, RandomTestUtil.randomString(),
+				true, true, 1000, CommercePriceListConstants.TYPE_PRICE_LIST,
+				serviceContext);
 		_commerceUser = UserLocalServiceUtil.addUser(
 			_user.getUserId(), testCompany.getCompanyId(), true,
 			StringPool.BLANK, StringPool.BLANK, true,

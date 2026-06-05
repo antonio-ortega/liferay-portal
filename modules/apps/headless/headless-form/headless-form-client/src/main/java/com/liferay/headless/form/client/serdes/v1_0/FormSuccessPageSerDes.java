@@ -316,3 +316,4 @@ public class FormSuccessPageSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1967386821

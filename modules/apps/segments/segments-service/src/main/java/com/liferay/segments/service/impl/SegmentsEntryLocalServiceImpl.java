@@ -7,13 +7,18 @@ package com.liferay.segments.service.impl;
 
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.messaging.Message;
 import com.liferay.portal.kernel.messaging.MessageBus;
+import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.search.BaseModelSearchResult;
+import com.liferay.portal.kernel.search.BooleanClause;
+import com.liferay.portal.kernel.search.BooleanClauseOccur;
+import com.liferay.portal.kernel.search.BooleanQuery;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Hits;
@@ -21,6 +26,7 @@ import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
+import com.liferay.portal.kernel.search.ParseException;
 import com.liferay.portal.kernel.search.QueryConfig;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.SearchException;
@@ -36,7 +42,6 @@ import com.liferay.portal.kernel.util.GroupThreadLocal;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.ScopeUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.segments.constants.SegmentsEntryConstants;
@@ -203,18 +208,17 @@ public class SegmentsEntryLocalServiceImpl
 		// Segments entry
 
 		if (!GroupThreadLocal.isDeleteInProcess()) {
-			int count = _segmentsExperiencePersistence.countBySEERC_SESERC(
-				segmentsEntry.getExternalReferenceCode(),
-				ScopeUtil.getItemScopeExternalReferenceCode(
-					segmentsEntry.getGroupId(), 0));
+			int count = _segmentsExperiencePersistence.countByG_SEERC_SESERC(
+				segmentsEntry.getGroupId(),
+				segmentsEntry.getExternalReferenceCode(), null);
 
 			if (count == 0) {
-				count = _segmentsExperiencePersistence.countByG_SEERC_SESERC(
-					segmentsEntry.getGroupId(),
+				Group group = _groupLocalService.getGroup(
+					segmentsEntry.getGroupId());
+
+				count = _segmentsExperiencePersistence.countBySEERC_SESERC(
 					segmentsEntry.getExternalReferenceCode(),
-					ScopeUtil.getItemScopeExternalReferenceCode(
-						segmentsEntry.getGroupId(),
-						segmentsEntry.getGroupId()));
+					group.getExternalReferenceCode());
 			}
 
 			if (count > 0) {
@@ -323,12 +327,20 @@ public class SegmentsEntryLocalServiceImpl
 
 	@Override
 	public List<SegmentsEntry> getSegmentsEntries(
-		long groupId, String source, int start, int end,
+		long groupId, String[] sources, int start, int end,
 		OrderByComparator<SegmentsEntry> orderByComparator) {
 
 		return segmentsEntryPersistence.findByG_SRC(
-			_portal.getCurrentAndAncestorSiteGroupIds(groupId), source, start,
+			_portal.getCurrentAndAncestorSiteGroupIds(groupId), sources, start,
 			end, orderByComparator);
+	}
+
+	@Override
+	public List<SegmentsEntry> getSegmentsEntries(
+		long[] groupIds, boolean active, String[] sources) {
+
+		return segmentsEntryPersistence.findByG_A_SRC(
+			groupIds, active, sources);
 	}
 
 	@Override
@@ -352,6 +364,12 @@ public class SegmentsEntryLocalServiceImpl
 	public int getSegmentsEntriesCount(long groupId) {
 		return segmentsEntryPersistence.countByGroupId(
 			_portal.getCurrentAndAncestorSiteGroupIds(groupId));
+	}
+
+	@Override
+	public int getSegmentsEntriesCount(long groupId, String[] sources) {
+		return segmentsEntryPersistence.countByG_SRC(
+			_portal.getCurrentAndAncestorSiteGroupIds(groupId), sources);
 	}
 
 	@Override
@@ -429,8 +447,9 @@ public class SegmentsEntryLocalServiceImpl
 	}
 
 	private SearchContext _buildSearchContext(
-		long companyId, long groupId, String keywords,
-		LinkedHashMap<String, Object> params, int start, int end, Sort sort) {
+			long companyId, long groupId, String keywords,
+			LinkedHashMap<String, Object> params, int start, int end, Sort sort)
+		throws ParseException {
 
 		SearchContext searchContext = new SearchContext();
 
@@ -449,6 +468,22 @@ public class SegmentsEntryLocalServiceImpl
 		attributes.put("params", params);
 
 		searchContext.setAttributes(attributes);
+
+		if (!FeatureFlagManagerUtil.isEnabled(
+				CompanyConstants.SYSTEM, "LPD-78863")) {
+
+			BooleanQuery booleanQuery = new BooleanQuery();
+
+			booleanQuery.addTerm(
+				"source",
+				StringUtil.toLowerCase(
+					SegmentsEntryConstants.SOURCE_ASAH_FARO_BACKEND));
+
+			searchContext.setBooleanClauses(
+				new BooleanClause[] {
+					new BooleanClause<>(booleanQuery, BooleanClauseOccur.MUST)
+				});
+		}
 
 		searchContext.setCompanyId(companyId);
 		searchContext.setEnd(end);

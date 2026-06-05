@@ -414,3 +414,4 @@ public interface DEDataDefinitionFieldLinkLocalService
 		throws E;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:427665624

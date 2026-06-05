@@ -12,7 +12,6 @@ import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.service.FragmentEntryLinkLocalService;
-import com.liferay.fragment.service.persistence.FragmentEntryLinkFinder;
 import com.liferay.fragment.service.persistence.FragmentEntryLinkPersistence;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
@@ -658,9 +657,6 @@ public abstract class FragmentEntryLinkLocalServiceBaseImpl
 	protected FragmentEntryLinkPersistence fragmentEntryLinkPersistence;
 
 	@Reference
-	protected FragmentEntryLinkFinder fragmentEntryLinkFinder;
-
-	@Reference
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
 
@@ -668,3 +664,4 @@ public abstract class FragmentEntryLinkLocalServiceBaseImpl
 		FragmentEntryLinkLocalServiceBaseImpl.class);
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-173673707

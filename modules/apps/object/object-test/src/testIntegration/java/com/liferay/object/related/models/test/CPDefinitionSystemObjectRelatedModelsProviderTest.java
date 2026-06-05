@@ -58,9 +58,10 @@ public class CPDefinitionSystemObjectRelatedModelsProviderTest
 
 		_cpDefinitionLocalService.updateCPDefinitionLocalization(
 			cpDefinition1, cpDefinition1.getDefaultLanguageId(),
-			"CP" + RandomTestUtil.randomString(), RandomTestUtil.randomString(),
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), RandomTestUtil.randomString());
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
+			"CP" + RandomTestUtil.randomString(),
+			RandomTestUtil.randomString());
 
 		CPDefinition cpDefinition2 =
 			CPDefinitionLocalServiceUtil.getCProductCPDefinition(
@@ -68,9 +69,10 @@ public class CPDefinitionSystemObjectRelatedModelsProviderTest
 
 		_cpDefinitionLocalService.updateCPDefinitionLocalization(
 			cpDefinition2, cpDefinition2.getDefaultLanguageId(),
-			"CP" + RandomTestUtil.randomString(), RandomTestUtil.randomString(),
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), RandomTestUtil.randomString());
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
+			"CP" + RandomTestUtil.randomString(),
+			RandomTestUtil.randomString());
 
 		_objectDefinition = ObjectDefinitionTestUtil.publishObjectDefinition();
 		_systemObjectDefinition = getSystemObjectDefinition();
@@ -157,7 +159,7 @@ public class CPDefinitionSystemObjectRelatedModelsProviderTest
 	@Override
 	protected Object fetchBaseModel(long primaryKey) {
 		return _cpDefinitionLocalService.fetchCPDefinitionByCProductId(
-			primaryKey);
+			primaryKey, false);
 	}
 
 	@Override

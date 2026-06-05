@@ -5,24 +5,28 @@
 
 package com.liferay.portal.search.elasticsearch8.internal.logging;
 
+import co.elastic.clients.elasticsearch._types.ElasticsearchException;
+
 import com.liferay.portal.kernel.search.BooleanClauseOccur;
+import com.liferay.portal.kernel.search.BooleanQuery;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Query;
-import com.liferay.portal.kernel.search.generic.BooleanQueryImpl;
-import com.liferay.portal.kernel.search.generic.TermQueryImpl;
-import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.search.TermQuery;
 import com.liferay.portal.search.elasticsearch8.internal.ElasticsearchIndexSearcher;
 import com.liferay.portal.search.elasticsearch8.internal.connection.ElasticsearchConnectionFixture;
 import com.liferay.portal.search.elasticsearch8.internal.connection.ElasticsearchFixture;
 import com.liferay.portal.search.elasticsearch8.internal.indexing.LiferayElasticsearchIndexingFixtureFactory;
-import com.liferay.portal.search.test.rule.logging.ExpectedLogMethodTestRule;
 import com.liferay.portal.search.test.util.indexing.BaseIndexingTestCase;
 import com.liferay.portal.search.test.util.indexing.IndexingFixture;
-import com.liferay.portal.search.test.util.logging.ExpectedLog;
+import com.liferay.portal.test.log.LogCapture;
+import com.liferay.portal.test.log.LogEntry;
+import com.liferay.portal.test.log.LoggerTestUtil;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.Collections;
+import java.util.List;
 
+import org.junit.Assert;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -35,28 +39,31 @@ public class ElasticsearchIndexSearcherLogExceptionsOnlyTest
 
 	@ClassRule
 	@Rule
-	public static final AggregateTestRule aggregateTestRule =
-		new AggregateTestRule(
-			ExpectedLogMethodTestRule.INSTANCE, LiferayUnitTestRule.INSTANCE);
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
-	@ExpectedLog(
-		expectedClass = ElasticsearchIndexSearcher.class,
-		expectedLevel = ExpectedLog.Level.WARNING,
-		expectedLog = "all shards failed"
-	)
 	@Test
 	public void testExceptionOnlyLoggedWhenQueryMalformedSearch() {
-		search(createSearchContext(), getMalformedQuery());
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				ElasticsearchIndexSearcher.class.getName(),
+				LoggerTestUtil.ERROR)) {
+
+			search(createSearchContext(), getMalformedQuery());
+
+			_assertLogCapture(logCapture);
+		}
 	}
 
-	@ExpectedLog(
-		expectedClass = ElasticsearchIndexSearcher.class,
-		expectedLevel = ExpectedLog.Level.WARNING,
-		expectedLog = "all shards failed"
-	)
 	@Test
 	public void testExceptionOnlyLoggedWhenQueryMalformedSearchCount() {
-		searchCount(createSearchContext(), getMalformedQuery());
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				ElasticsearchIndexSearcher.class.getName(),
+				LoggerTestUtil.ERROR)) {
+
+			searchCount(createSearchContext(), getMalformedQuery());
+
+			_assertLogCapture(logCapture);
+		}
 	}
 
 	protected ElasticsearchConnectionFixture
@@ -79,13 +86,31 @@ public class ElasticsearchIndexSearcherLogExceptionsOnlyTest
 	}
 
 	protected Query getMalformedQuery() {
-		BooleanQueryImpl booleanQueryImpl = new BooleanQueryImpl();
+		BooleanQuery booleanQuery = new BooleanQuery();
 
-		booleanQueryImpl.add(
-			new TermQueryImpl(Field.EXPIRATION_DATE, "text"),
+		booleanQuery.add(
+			new TermQuery(Field.EXPIRATION_DATE, "text"),
 			BooleanClauseOccur.MUST);
 
-		return booleanQueryImpl;
+		return booleanQuery;
+	}
+
+	private void _assertLogCapture(LogCapture logCapture) {
+		List<LogEntry> logEntries = logCapture.getLogEntries();
+
+		Assert.assertEquals(logEntries.toString(), 1, logEntries.size());
+
+		LogEntry logEntry = logEntries.get(0);
+
+		Assert.assertEquals(LoggerTestUtil.ERROR, logEntry.getPriority());
+
+		Throwable throwable = logEntry.getThrowable();
+
+		Assert.assertEquals(
+			"[es/search] failed: [search_phase_execution_exception] all " +
+				"shards failed",
+			throwable.getMessage());
+		Assert.assertSame(ElasticsearchException.class, throwable.getClass());
 	}
 
 }

@@ -80,8 +80,8 @@ boolean limitToOneSubmissionPerUser = DDMFormInstanceSubmissionLimitStatusUtil.i
 					pageTitle = LanguageUtil.get(request, "this-form-is-no-longer-available");
 				}
 				else if (showSuccessPage) {
-					pageDescription = ddmFormDisplayContext.getSuccessPageDescription(displayLocale);
-					pageTitle = ddmFormDisplayContext.getSuccessPageTitle(displayLocale);
+					pageDescription = ddmFormDisplayContext.getSuccessPageDescription();
+					pageTitle = ddmFormDisplayContext.getSuccessPageTitle();
 				}
 				else {
 					Map<String, String> limitToOneSubmissionPerUserMap = ddmFormDisplayContext.getLimitToOneSubmissionPerUserMap();
@@ -125,11 +125,13 @@ boolean limitToOneSubmissionPerUser = DDMFormInstanceSubmissionLimitStatusUtil.i
 
 						<%
 						String redirectURL = ddmFormDisplayContext.getRedirectURL();
+
+						if (Validator.isNull(redirectURL)) {
+							redirectURL = ParamUtil.getString(request, "redirect", currentURL);
+						}
 						%>
 
-						<c:if test="<%= Validator.isNull(redirectURL) %>">
-							<aui:input name="redirect" type="hidden" value='<%= ParamUtil.getString(request, "redirect", currentURL) %>' />
-						</c:if>
+						<aui:input name="redirect" type="hidden" value="<%= redirectURL %>" />
 
 						<aui:input name="groupId" type="hidden" value="<%= formInstance.getGroupId() %>" />
 						<aui:input name="formInstanceId" type="hidden" value="<%= formInstance.getFormInstanceId() %>" />
@@ -369,6 +371,14 @@ boolean limitToOneSubmissionPerUser = DDMFormInstanceSubmissionLimitStatusUtil.i
 							Liferay.Util.fetch('<%= autoSaveFormInstanceRecordURL.toString() %>', {
 								body: data,
 								method: 'POST',
+							}).catch(function () {
+								clearInterval(window.<portlet:namespace />intervalId);
+
+								Liferay.Util.openToast({
+									message:
+										'<%= UnicodeLanguageUtil.get(request, "autosave-error") %>',
+									type: 'warning',
+								});
 							});
 						}
 

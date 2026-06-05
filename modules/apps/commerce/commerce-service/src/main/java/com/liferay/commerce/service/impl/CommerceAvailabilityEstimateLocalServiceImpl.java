@@ -10,8 +10,10 @@ import com.liferay.commerce.service.CPDAvailabilityEstimateLocalService;
 import com.liferay.commerce.service.base.CommerceAvailabilityEstimateLocalServiceBaseImpl;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.service.ResourceLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
@@ -40,6 +42,8 @@ public class CommerceAvailabilityEstimateLocalServiceImpl
 			ServiceContext serviceContext)
 		throws PortalException {
 
+		// Commerce availability estimate
+
 		User user = _userLocalService.getUser(serviceContext.getUserId());
 
 		long commerceAvailabilityEstimateId = counterLocalService.increment();
@@ -54,8 +58,16 @@ public class CommerceAvailabilityEstimateLocalServiceImpl
 		commerceAvailabilityEstimate.setTitleMap(titleMap);
 		commerceAvailabilityEstimate.setPriority(priority);
 
-		return commerceAvailabilityEstimatePersistence.update(
-			commerceAvailabilityEstimate);
+		commerceAvailabilityEstimate =
+			commerceAvailabilityEstimatePersistence.update(
+				commerceAvailabilityEstimate);
+
+		// Resources
+
+		_resourceLocalService.addModelResources(
+			commerceAvailabilityEstimate, serviceContext);
+
+		return commerceAvailabilityEstimate;
 	}
 
 	@Override
@@ -64,12 +76,17 @@ public class CommerceAvailabilityEstimateLocalServiceImpl
 			CommerceAvailabilityEstimate commerceAvailabilityEstimate)
 		throws PortalException {
 
-		// Commerce availability range
+		// Commerce availability estimate
 
 		commerceAvailabilityEstimatePersistence.remove(
 			commerceAvailabilityEstimate);
 
-		// Commerce product definition availability ranges
+		// Resources
+
+		_resourceLocalService.deleteResource(
+			commerceAvailabilityEstimate, ResourceConstants.SCOPE_INDIVIDUAL);
+
+		// Commerce product definition availability estimates
 
 		_cpdAvailabilityEstimateLocalService.deleteCPDAvailabilityEstimates(
 			commerceAvailabilityEstimate.getCommerceAvailabilityEstimateId());
@@ -141,6 +158,9 @@ public class CommerceAvailabilityEstimateLocalServiceImpl
 	@Reference
 	private CPDAvailabilityEstimateLocalService
 		_cpdAvailabilityEstimateLocalService;
+
+	@Reference
+	private ResourceLocalService _resourceLocalService;
 
 	@Reference
 	private UserLocalService _userLocalService;

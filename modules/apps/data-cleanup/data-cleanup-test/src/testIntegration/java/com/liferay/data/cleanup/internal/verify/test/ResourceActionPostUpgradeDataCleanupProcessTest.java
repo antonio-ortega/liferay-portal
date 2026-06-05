@@ -7,6 +7,7 @@ package com.liferay.data.cleanup.internal.verify.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.ResourceAction;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.Role;
@@ -18,6 +19,7 @@ import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.test.log.LoggerTestUtil;
 import com.liferay.portal.test.rule.Inject;
 
 import java.sql.Connection;
@@ -181,7 +183,39 @@ public class ResourceActionPostUpgradeDataCleanupProcessTest
 					ResourceConstants.SCOPE_COMPANY,
 					String.valueOf(CompanyThreadLocal.getCompanyId()),
 					role.getRoleId(), resourceActionActionId);
-			});
+			},
+			getPostUpgradeDataCleanupProcessClassName(), LoggerTestUtil.DEBUG);
+	}
+
+	@Test
+	public void testResourceActionWithBlankNameIsIgnored() throws Exception {
+		AtomicReference<ResourceAction> resourceActionAtomicReference =
+			new AtomicReference<>();
+		String resourceActionActionId = "VIEW";
+		String resourceActionName = StringPool.BLANK;
+
+		test(
+			logCapture -> {
+				List<String> messages = logCapture.getMessages();
+
+				Assert.assertTrue(messages.toString(), messages.isEmpty());
+
+				ResourceAction resourceAction =
+					_resourceActionLocalService.fetchResourceAction(
+						resourceActionAtomicReference.get(
+						).getResourceActionId());
+
+				Assert.assertNotNull(resourceAction);
+			},
+			() -> {
+				if (resourceActionAtomicReference.get() != null) {
+					_resourceActionLocalService.deleteResourceAction(
+						resourceActionAtomicReference.get());
+				}
+			},
+			() -> resourceActionAtomicReference.set(
+				_resourceActionLocalService.addResourceAction(
+					resourceActionName, resourceActionActionId, 1)));
 	}
 
 	@Test

@@ -477,6 +477,10 @@ export const iconsData = [
 		name: 'arrow-xor',
 	},
 	{
+		aliases: ['key', 'keyboard', 'navigation'],
+		name: 'arrows-all',
+	},
+	{
 		aliases: ['*', 'mandatory', 'required'],
 		name: 'asterisk',
 	},
@@ -521,6 +525,10 @@ export const iconsData = [
 		name: 'blogs',
 	},
 	{
+		aliases: ['architecture', 'map', 'schema'],
+		name: 'blue-print',
+	},
+	{
 		aliases: ['editor', 'style', 'texts'],
 		name: 'bold',
 	},
@@ -543,6 +551,10 @@ export const iconsData = [
 	{
 		aliases: [''],
 		name: 'books',
+	},
+	{
+		aliases: ['assets', 'design library', 'palette'],
+		name: 'books-brush',
 	},
 	{
 		aliases: ['line', 'stroke', 'dashed', 'solid'],
@@ -575,6 +587,10 @@ export const iconsData = [
 	{
 		aliases: ['box', 'grid', 'rectangle', 'squares'],
 		name: 'button',
+	},
+	{
+		aliases: ['adjust', 'estimator', 'tax'],
+		name: 'calculator',
 	},
 	{
 		aliases: ['agenda', 'date', 'days', 'picker', 'time'],
@@ -1209,6 +1225,10 @@ export const iconsData = [
 		name: 'key',
 	},
 	{
+		aliases: ['edit', 'multitask', 'preview'],
+		name: 'layout-new-window',
+	},
+	{
 		aliases: [''],
 		name: 'liferay-ac',
 	},
@@ -1275,6 +1295,14 @@ export const iconsData = [
 	{
 		aliases: ['shop', 'store'],
 		name: 'marketplace',
+	},
+	{
+		aliases: ['approval', 'ranking', 'reward'],
+		name: 'medal',
+	},
+	{
+		aliases: ['announcement', 'event', 'notification'],
+		name: 'megaphone',
 	},
 	{
 		aliases: [''],
@@ -1501,12 +1529,24 @@ export const iconsData = [
 		name: 'polls',
 	},
 	{
+		aliases: ['pricing', 'tariff', 'tier'],
+		name: 'price-list',
+	},
+	{
 		aliases: ['cash', 'discount', 'dollar', 'money', 'offer'],
 		name: 'price-tag',
 	},
 	{
 		aliases: ['paper'],
 		name: 'print',
+	},
+	{
+		aliases: ['flow designer', 'logic mapper', 'state machine'],
+		name: 'process-builder',
+	},
+	{
+		aliases: ['customizer', 'model selection', 'variants'],
+		name: 'product-configuration',
 	},
 	{
 		aliases: ['list', 'navigation', 'sidebar'],
@@ -1521,8 +1561,20 @@ export const iconsData = [
 		name: 'product-menu',
 	},
 	{
+		aliases: ['catalog', 'inventory', 'packages'],
+		name: 'products',
+	},
+	{
 		aliases: ['arrows', 'circle', 'multiplication', 'publish'],
 		name: 'propagation',
+	},
+	{
+		aliases: ['content', 'digital assets', 'postings'],
+		name: 'publications',
+	},
+	{
+		aliases: ['connection', 'extension', 'piece'],
+		name: 'puzzle',
 	},
 	{
 		aliases: ['help', 'mark'],
@@ -1595,6 +1647,10 @@ export const iconsData = [
 	{
 		aliases: ['back', 'history', 'time'],
 		name: 'restore',
+	},
+	{
+		aliases: ['boost', 'launch', 'promote'],
+		name: 'rocket',
 	},
 	{
 		aliases: ['pivot', 'spin', 'move', 'turn'],
@@ -1813,6 +1869,10 @@ export const iconsData = [
 		name: 'strikethrough',
 	},
 	{
+		aliases: ['entry', 'posting', 'request'],
+		name: 'submission',
+	},
+	{
 		aliases: ['editor', 'style', 'text'],
 		name: 'subscript',
 	},
@@ -1827,6 +1887,10 @@ export const iconsData = [
 	{
 		aliases: ['editor', 'style', 'text'],
 		name: 'superscript',
+	},
+	{
+		aliases: ['aliases', 'keywords', 'similar'],
+		name: 'synonyms',
 	},
 	{
 		aliases: ['column', 'grid', 'row'],

@@ -446,3 +446,4 @@ public class PageFormStepContainerDefinitionSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-710077279

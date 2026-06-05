@@ -96,10 +96,6 @@ export class WidgetPagePage {
 		}
 
 		await expect(async () => {
-			if ((await item.getAttribute('class')).includes('disabled')) {
-				return;
-			}
-
 			const addButton = item
 				.getByRole('button', {name: 'Add Content'})
 				.first();
@@ -143,11 +139,18 @@ export class WidgetPagePage {
 		});
 	}
 
-	async dragPortlet(portletName: string, target: Locator) {
-		const topper = this.page.locator(
-			'.portlet-journal-content .portlet-topper',
-			{hasText: portletName}
-		);
+	async dragPortlet({
+		portletName,
+		target,
+		topperSelector = '.portlet-journal-content .portlet-topper',
+	}: {
+		portletName: string;
+		target: Locator;
+		topperSelector?: string;
+	}) {
+		const topper = this.page.locator(topperSelector, {
+			hasText: portletName,
+		});
 
 		const targetRect = await target.evaluate((element) =>
 			element.getBoundingClientRect()
@@ -168,6 +171,10 @@ export class WidgetPagePage {
 			.waitFor({state: 'visible'});
 
 		await this.page.mouse.up();
+
+		await expect(
+			this.page.locator('.sortable-layout-drag-indicator')
+		).toBeHidden();
 	}
 
 	async goto(
@@ -217,17 +224,17 @@ export class WidgetPagePage {
 	}
 
 	async toggleControls(state: 'visible' | 'hidden') {
-		const isOpen = await this.toggleControlsButton
-			.locator('svg')
-			.evaluate((element) =>
-				element.classList.contains('lexicon-icon-view')
-			);
+		const body = this.page.locator('body');
 
-		if (
-			(state === 'visible' && !isOpen) ||
-			(state === 'hidden' && isOpen)
-		) {
-			await this.toggleControlsButton.click();
-		}
+		const targetClass =
+			state === 'visible' ? 'controls-visible' : 'controls-hidden';
+
+		await expect(async () => {
+			await this.toggleControlsButton.click({timeout: 2000});
+
+			await expect(body).toHaveClass(new RegExp(`\\b${targetClass}\\b`), {
+				timeout: 3000,
+			});
+		}).toPass();
 	}
 }

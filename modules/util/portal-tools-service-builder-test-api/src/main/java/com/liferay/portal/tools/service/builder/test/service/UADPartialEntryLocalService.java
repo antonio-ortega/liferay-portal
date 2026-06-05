@@ -267,3 +267,4 @@ public interface UADPartialEntryLocalService
 		UADPartialEntry uadPartialEntry);
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:958734367

@@ -316,3 +316,4 @@ public class TermSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-504107248

@@ -1,24 +1,24 @@
 {
 	"dependencies": {
-		"@clayui/alert": "*",
-		"@clayui/button": "*",
-		"@clayui/card": "*",
-		"@clayui/drop-down": "*",
-		"@clayui/empty-state": "*",
-		"@clayui/form": "*",
-		"@clayui/icon": "*",
-		"@clayui/label": "*",
-		"@clayui/link": "*",
-		"@clayui/loading-indicator": "*",
-		"@clayui/management-toolbar": "*",
-		"@clayui/modal": "*",
-		"@clayui/navigation-bar": "*",
-		"@clayui/pagination-bar": "*",
-		"@clayui/popover": "*",
-		"@clayui/sticker": "*",
-		"@clayui/tabs": "*",
-		"@clayui/tooltip": "*",
-		"@clayui/upper-toolbar": "*",
+		"@clayui/alert": "^3.163.0",
+		"@clayui/button": "^3.163.0",
+		"@clayui/card": "^3.163.0",
+		"@clayui/drop-down": "^3.163.0",
+		"@clayui/empty-state": "^3.163.0",
+		"@clayui/form": "^3.163.0",
+		"@clayui/icon": "^3.163.0",
+		"@clayui/label": "^3.163.0",
+		"@clayui/link": "^3.163.0",
+		"@clayui/loading-indicator": "^3.163.0",
+		"@clayui/management-toolbar": "^3.163.0",
+		"@clayui/modal": "^3.163.0",
+		"@clayui/navigation-bar": "^3.163.0",
+		"@clayui/pagination-bar": "^3.163.0",
+		"@clayui/popover": "^3.163.0",
+		"@clayui/sticker": "^3.163.0",
+		"@clayui/tabs": "^3.163.0",
+		"@clayui/tooltip": "^3.163.0",
+		"@clayui/upper-toolbar": "^3.163.0",
 		"@liferay/flags-taglib": "*",
 		"@liferay/frontend-js-react-web": "*",
 		"asset-taglib": "*",
@@ -34,7 +34,7 @@
 		"react": "18.2.0",
 		"react-dom": "18.2.0",
 		"react-helmet": "^6.1.0",
-		"react-router": "7.9.6"
+		"react-router": "7.13.0"
 	},
 	"jest": {
 		"setupFiles": [
@@ -53,5 +53,5 @@
 		"format": "node-scripts format",
 		"test": "node-scripts test"
 	},
-	"version": "2.0.143"
+	"version": "2.0.146"
 }

@@ -5,6 +5,7 @@
 
 package com.liferay.headless.commerce.delivery.catalog.internal.resource.v1_0;
 
+import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.Pin;
 import com.liferay.headless.commerce.delivery.catalog.resource.v1_0.PinResource;
 import com.liferay.petra.function.UnsafeBiConsumer;
@@ -70,6 +71,9 @@ public abstract class BasePinResourceImpl
 	 *
 	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-delivery-catalog/v1.0/channels/by-externalReferenceCode/{channelExternalReferenceCode}/products/by-externalReferenceCode/{productExternalReferenceCode}/pins'  -u 'test@liferay.com:test'
 	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "External-reference-code variant of getChannelProductPinsPage. Resolves both the CommerceChannel and the CProduct through their getByExternalReferenceCode lookups and delegates to the numeric handler. Validation -- NoSuchModelException -> 404 when either ERC is missing. List query support -- pagination only (search and sort declared on the base but not wired); filterable fields -- none."
+	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
@@ -140,6 +144,9 @@ public abstract class BasePinResourceImpl
 	 *
 	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-delivery-catalog/v1.0/channels/{channelId}/products/{productId}/pins'  -u 'test@liferay.com:test'
 	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Lists CSDiagramPin coordinates for /channels/{channelId}/products/{productId}/pins. Resolves the active CPDefinition, the channel, and the effective account via AccountUtil; enforces CommerceProductViewPermission. Pages CSDiagramPinLocalService.getCSDiagramPins by CPDefinitionId. Validation -- NoSuchCPDefinitionException -> 404 when the productId does not resolve to an active CPDefinition; PrincipalException -> 403 when the caller lacks VIEW permission on the product. List query support -- pagination only (search and sort declared on the base but not wired); filterable fields -- none."
+	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
@@ -274,6 +281,15 @@ public abstract class BasePinResourceImpl
 			@Override
 			public Locale getPreferredLocale() {
 				return LocaleUtil.fromLanguageId(languageId);
+			}
+
+			@Override
+			public boolean isAcceptAllLanguages() {
+				if (ExportImportThreadLocal.isExportInProcess()) {
+					return true;
+				}
+
+				return AcceptLanguage.super.isAcceptAllLanguages();
 			}
 
 		};
@@ -847,3 +863,4 @@ public abstract class BasePinResourceImpl
 		LogFactoryUtil.getLog(BasePinResourceImpl.class);
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1479295704

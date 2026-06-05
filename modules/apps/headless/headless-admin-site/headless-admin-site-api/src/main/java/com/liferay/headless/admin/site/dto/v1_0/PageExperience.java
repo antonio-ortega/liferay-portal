@@ -227,50 +227,6 @@ public class PageExperience implements Serializable {
 	private Supplier<PageElement[]> _pageElementsSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
-		description = "The page rules in the experience."
-	)
-	@Valid
-	public PageRule[] getPageRules() {
-		if (_pageRulesSupplier != null) {
-			pageRules = _pageRulesSupplier.get();
-
-			_pageRulesSupplier = null;
-		}
-
-		return pageRules;
-	}
-
-	public void setPageRules(PageRule[] pageRules) {
-		this.pageRules = pageRules;
-
-		_pageRulesSupplier = null;
-	}
-
-	@JsonIgnore
-	public void setPageRules(
-		UnsafeSupplier<PageRule[], Exception> pageRulesUnsafeSupplier) {
-
-		_pageRulesSupplier = () -> {
-			try {
-				return pageRulesUnsafeSupplier.get();
-			}
-			catch (RuntimeException runtimeException) {
-				throw runtimeException;
-			}
-			catch (Exception exception) {
-				throw new RuntimeException(exception);
-			}
-		};
-	}
-
-	@GraphQLField(description = "The page rules in the experience.")
-	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	protected PageRule[] pageRules;
-
-	@JsonIgnore
-	private Supplier<PageRule[]> _pageRulesSupplier;
-
-	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The page specification's external reference code."
 	)
 	public String getPageSpecificationExternalReferenceCode() {
@@ -551,28 +507,6 @@ public class PageExperience implements Serializable {
 			sb.append("]");
 		}
 
-		PageRule[] pageRules = getPageRules();
-
-		if (pageRules != null) {
-			if (sb.length() > 1) {
-				sb.append(", ");
-			}
-
-			sb.append("\"pageRules\": ");
-
-			sb.append("[");
-
-			for (int i = 0; i < pageRules.length; i++) {
-				sb.append(String.valueOf(pageRules[i]));
-
-				if ((i + 1) < pageRules.length) {
-					sb.append(", ");
-				}
-			}
-
-			sb.append("]");
-		}
-
 		String pageSpecificationExternalReferenceCode =
 			getPageSpecificationExternalReferenceCode();
 
@@ -732,3 +666,4 @@ public class PageExperience implements Serializable {
 	private Map<String, Serializable> _extendedProperties;
 
 }
+// LIFERAY-REST-BUILDER-HASH:207145047

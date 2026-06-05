@@ -695,3 +695,4 @@ public interface DDLRecordLocalService
 		throws E;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-1731574472

@@ -35,15 +35,17 @@ public class BuildDataFactory {
 	public static TopLevelBuildData newTopLevelBuildData(
 		String runID, String jobName, String buildURL) {
 
-		if (jobName.contains("test-portal-testsuite-upstream-controller") ||
-			jobName.contains("test-portal-upstream-controller")) {
+		if (jobName.startsWith("archive-binaries-cache") ||
+			jobName.contains("portal") ||
+			jobName.contains("root-cause-analysis-tool") ||
+			jobName.equals("test-poshi-release")) {
 
-			return new PortalTestSuiteUpstreamControllerBuildData(
-				runID, jobName, buildURL);
-		}
-		else if (jobName.contains("portal") ||
-				 jobName.contains("root-cause-analysis-tool") ||
-				 jobName.equals("test-poshi-release")) {
+			if (jobName.contains("test-portal-testsuite-upstream-controller") ||
+				jobName.contains("test-portal-upstream-controller")) {
+
+				return new ControllerPortalTopLevelBuildData(
+					runID, jobName, buildURL);
+			}
 
 			return new PortalTopLevelBuildData(runID, jobName, buildURL);
 		}

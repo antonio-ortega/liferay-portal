@@ -129,6 +129,16 @@ public class SettingsSerDes {
 			sb.append("]");
 		}
 
+		if (settings.getIconImageURL() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"iconImageURL\": ");
+
+			sb.append(String.valueOf(settings.getIconImageURL()));
+		}
+
 		if (settings.getJavascript() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -269,6 +279,13 @@ public class SettingsSerDes {
 				String.valueOf(settings.getGlobalJSClientExtensions()));
 		}
 
+		if (settings.getIconImageURL() == null) {
+			map.put("iconImageURL", null);
+		}
+		else {
+			map.put("iconImageURL", String.valueOf(settings.getIconImageURL()));
+		}
+
 		if (settings.getJavascript() == null) {
 			map.put("javascript", null);
 		}
@@ -361,6 +378,9 @@ public class SettingsSerDes {
 			else if (Objects.equals(
 						jsonParserFieldName, "globalJSClientExtensions")) {
 
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "iconImageURL")) {
 				return false;
 			}
 			else if (Objects.equals(jsonParserFieldName, "javascript")) {
@@ -461,6 +481,12 @@ public class SettingsSerDes {
 
 					settings.setGlobalJSClientExtensions(
 						globalJSClientExtensionsArray);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "iconImageURL")) {
+				if (jsonParserFieldValue != null) {
+					settings.setIconImageURL(
+						IconImageURLSerDes.toDTO((String)jsonParserFieldValue));
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "javascript")) {
@@ -598,3 +624,4 @@ public class SettingsSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:1324514337

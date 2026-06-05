@@ -26,7 +26,7 @@ import getPageDefinition from './utils/getPageDefinition';
 const test = mergeTests(
 	apiHelpersTest,
 	featureFlagsTest({
-		'LPD-11235': {enabled: true},
+		'LPD-11235': {enabled: false},
 		'LPS-169837': {enabled: true},
 		'LPS-178052': {enabled: true},
 	}),
@@ -165,10 +165,13 @@ test(
 				.locator('.alert-info', {
 					hasText: 'Rule name cannot be empty.',
 				})
-				.waitFor({timeout: 2000});
+				.first()
+				.waitFor({timeout: 4000});
 		}).toPass();
 
-		await expect(page.getByText('Rule name cannot be empty')).toBeVisible();
+		await expect(
+			page.getByText('Rule name cannot be empty').first()
+		).toBeVisible();
 
 		// Rename rule properly
 

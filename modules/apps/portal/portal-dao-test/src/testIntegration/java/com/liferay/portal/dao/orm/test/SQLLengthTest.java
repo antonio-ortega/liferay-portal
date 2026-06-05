@@ -55,14 +55,16 @@ public class SQLLengthTest {
 	@Test
 	public void testLength() throws Exception {
 		try (Connection connection = DataAccess.getConnection();
+
 			PreparedStatement preparedStatement = connection.prepareStatement(
 				SQLTransformer.transform(
-					"select LENGTH(data) from SQLLengthTest"));
+					"select LENGTH(data) as dataLength from SQLLengthTest"));
+
 			ResultSet resultSet = preparedStatement.executeQuery()) {
 
 			Assert.assertTrue(resultSet.next());
 
-			Assert.assertEquals(11, resultSet.getInt(1));
+			Assert.assertEquals(11, resultSet.getInt("dataLength"));
 
 			Assert.assertFalse(resultSet.next());
 		}

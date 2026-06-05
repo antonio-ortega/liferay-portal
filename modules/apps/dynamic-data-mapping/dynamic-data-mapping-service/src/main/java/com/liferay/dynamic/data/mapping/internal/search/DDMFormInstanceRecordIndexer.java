@@ -20,7 +20,6 @@ import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
-import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -234,10 +233,42 @@ public class DDMFormInstanceRecordIndexer
 	}
 
 	@Override
-	protected void doReindex(String[] ids) throws Exception {
-		long companyId = GetterUtil.getLong(ids[0]);
+	protected IndexableActionableDynamicQuery
+		getIndexableActionableDynamicQuery() {
 
-		_reindexFormInstanceRecords(companyId);
+		IndexableActionableDynamicQuery indexableActionableDynamicQuery =
+			ddmFormInstanceRecordLocalService.
+				getIndexableActionableDynamicQuery();
+
+		indexableActionableDynamicQuery.setAddCriteriaMethod(
+			dynamicQuery -> {
+				Property formInstanceRecordIdProperty =
+					PropertyFactoryUtil.forName("formInstanceRecordId");
+
+				DynamicQuery ddmFormInstanceRecordVersionDynamicQuery =
+					ddmFormInstanceRecordVersionLocalService.dynamicQuery();
+
+				ddmFormInstanceRecordVersionDynamicQuery.setProjection(
+					ProjectionFactoryUtil.property("formInstanceRecordId"));
+
+				dynamicQuery.add(
+					formInstanceRecordIdProperty.in(
+						ddmFormInstanceRecordVersionDynamicQuery));
+
+				Property formInstanceProperty = PropertyFactoryUtil.forName(
+					"formInstanceId");
+
+				DynamicQuery ddmFormInstanceDynamicQuery =
+					ddmFormInstanceLocalService.dynamicQuery();
+
+				ddmFormInstanceDynamicQuery.setProjection(
+					ProjectionFactoryUtil.property("formInstanceId"));
+
+				dynamicQuery.add(
+					formInstanceProperty.in(ddmFormInstanceDynamicQuery));
+			});
+
+		return indexableActionableDynamicQuery;
 	}
 
 	protected ClassNameLocalService classNameLocalService;
@@ -314,61 +345,6 @@ public class DDMFormInstanceRecordIndexer
 		}
 
 		return StringPool.BLANK;
-	}
-
-	private void _reindexFormInstanceRecords(long companyId) throws Exception {
-		IndexableActionableDynamicQuery indexableActionableDynamicQuery =
-			ddmFormInstanceRecordLocalService.
-				getIndexableActionableDynamicQuery();
-
-		indexableActionableDynamicQuery.setAddCriteriaMethod(
-			dynamicQuery -> {
-				Property formInstanceRecordIdProperty =
-					PropertyFactoryUtil.forName("formInstanceRecordId");
-
-				DynamicQuery ddmFormInstanceRecordVersionDynamicQuery =
-					ddmFormInstanceRecordVersionLocalService.dynamicQuery();
-
-				ddmFormInstanceRecordVersionDynamicQuery.setProjection(
-					ProjectionFactoryUtil.property("formInstanceRecordId"));
-
-				dynamicQuery.add(
-					formInstanceRecordIdProperty.in(
-						ddmFormInstanceRecordVersionDynamicQuery));
-
-				Property formInstanceProperty = PropertyFactoryUtil.forName(
-					"formInstanceId");
-
-				DynamicQuery ddmFormInstanceDynamicQuery =
-					ddmFormInstanceLocalService.dynamicQuery();
-
-				ddmFormInstanceDynamicQuery.setProjection(
-					ProjectionFactoryUtil.property("formInstanceId"));
-
-				dynamicQuery.add(
-					formInstanceProperty.in(ddmFormInstanceDynamicQuery));
-			});
-		indexableActionableDynamicQuery.setCompanyId(companyId);
-		indexableActionableDynamicQuery.setPerformActionMethod(
-			(DDMFormInstanceRecord ddmFormInstanceRecord) -> {
-				try {
-					Document document = getDocument(ddmFormInstanceRecord);
-
-					if (document != null) {
-						indexableActionableDynamicQuery.addDocuments(document);
-					}
-				}
-				catch (PortalException portalException) {
-					if (_log.isWarnEnabled()) {
-						_log.warn(
-							"Unable to index form instance record " +
-								ddmFormInstanceRecord.getFormInstanceRecordId(),
-							portalException);
-					}
-				}
-			});
-
-		indexableActionableDynamicQuery.performActions();
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

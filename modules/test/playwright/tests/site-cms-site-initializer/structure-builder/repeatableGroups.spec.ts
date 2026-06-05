@@ -78,7 +78,9 @@ test(
 		// Assert correct label style
 
 		await expect(
-			page.locator('.label-success', {hasText: 'Repeatable Group'})
+			page.locator('.label-inverse-success', {
+				hasText: 'Repeatable Group',
+			})
 		).toBeVisible();
 
 		// Check groups are persisted
@@ -108,10 +110,18 @@ test(
 			label: 'Repeatable Group 3',
 		});
 
-		await structureBuilderPage.clickFieldAction(
+		// Assert keyboard behavior
+
+		await structureBuilderPage.selectFields([
 			{label: 'Repeatable Group 3'},
-			'Ungroup'
-		);
+		]);
+
+		await page
+			.getByRole('treeitem', {name: 'Repeatable Group 3'})
+			.getByRole('button', {name: 'Field Options'})
+			.click();
+
+		await page.getByRole('menuitem', {name: 'Ungroup'}).press('Enter');
 
 		await expect(
 			page.locator('.treeview-link', {hasText: 'Repeatable Group 2'})
@@ -151,7 +161,7 @@ test(
 
 		await structureBuilderPage.createRepeatableGroup({
 			fields: [{label: 'Numeric'}, {label: 'Boolean'}],
-			label: 'Repeatable Group 0',
+			label: 'Group 0',
 		});
 
 		await structureBuilderPage.deleteFields([{label: 'Boolean'}]);
@@ -183,15 +193,13 @@ test(
 
 		// Delete the group
 
-		await structureBuilderPage.deleteFields([
-			{label: 'Repeatable Group 0'},
-		]);
+		await structureBuilderPage.deleteFields([{label: 'Group 0'}]);
 
 		// Create repeatable group with two of them
 
 		await structureBuilderPage.createRepeatableGroup({
 			fields: [{label: 'Text'}, {label: 'Date'}],
-			label: 'Repeatable Group 1',
+			label: 'Group 1',
 		});
 
 		// Check a group can't be created with fields that have different parent
@@ -226,8 +234,6 @@ test(
 
 		// Check a group can't be created with system fields
 
-		await structureBuilderPage.publishStructure();
-
 		await structureBuilderPage.selectFields([
 			{label: 'Title'},
 			{label: 'Decimal'},
@@ -256,14 +262,65 @@ test(
 			trigger: page.locator('.modal-footer').getByText('Done'),
 		});
 
-		// Check we can't ungroup the published group
+		// Check we can create a group with published fields by confirming action
 
 		await structureBuilderPage.publishStructure();
+
+		await structureBuilderPage.clickFieldAction(
+			{label: 'Decimal'},
+			'Create Repeatable Group'
+		);
+
+		await page
+			.getByText(
+				'Creating a repeatable group with published fields will permanently delete existing field data after publishing the structure.'
+			)
+			.waitFor();
+
+		await clickAndExpectToBeHidden({
+			target: page.getByText(
+				'The repeatable group cannot be created because one or more fields of the selection are system fields.'
+			),
+			trigger: page
+				.locator('.modal-footer')
+				.getByText('Create Repeatable Group'),
+		});
+
+		await expect(
+			page.locator('.treeview-link', {
+				hasText: 'Repeatable Group',
+			})
+		).toBeVisible();
+
+		// Publish and check we can't ungroup the published group
+
+		await expect(async () => {
+			await structureBuilderPage.publishButton.click({timeout: 1000});
+
+			await expect(
+				page.getByText(
+					'You have made changes to the content structure that may impact existing stored data once published'
+				)
+			).toBeVisible({timeout: 2000});
+
+			await page
+				.locator('.modal-footer')
+				.getByText('Publish')
+				.click({timeout: 1000});
+
+			await waitForAlert(page, 'published successfully', {
+				timeout: 10000,
+			});
+
+			await page
+				.locator('.modal-footer')
+				.waitFor({state: 'hidden', timeout: 5000});
+		}).toPass();
 
 		await structureBuilderPage.editStructure(id);
 
 		await structureBuilderPage.clickFieldAction(
-			{label: 'Repeatable Group 1'},
+			{label: 'Group 1'},
 			'Ungroup'
 		);
 
@@ -337,7 +394,9 @@ test(
 			await structureBuilderPage.publishButton.click({timeout: 1000});
 
 			await expect(
-				page.getByText('You removed one or more fields')
+				page.getByText(
+					'You have made changes to the content structure that may impact existing stored data once published'
+				)
 			).toBeVisible({timeout: 2000});
 
 			await page
@@ -348,6 +407,10 @@ test(
 			await waitForAlert(page, 'published successfully', {
 				timeout: 5000,
 			});
+
+			await page
+				.locator('.modal-footer')
+				.waitFor({state: 'hidden', timeout: 5000});
 		}).toPass();
 
 		await structureBuilderPage.publishStructure();
@@ -359,10 +422,14 @@ test(
 				'CMS Structure Repeatable Groups'
 			);
 
-			await expect(page.getByText(group1Label)).toBeVisible();
+			await expect(
+				page.getByRole('button', {name: group1Label})
+			).toBeVisible();
 		}).toPass();
 
-		await expect(page.getByText(group2Label)).not.toBeVisible();
+		await expect(
+			page.getByRole('button', {name: group2Label})
+		).not.toBeVisible();
 
 		// Now go to Structures admin, delete the structure and check
 		// the other object definition was also deleted
@@ -416,7 +483,9 @@ test(
 				.first()
 				.waitFor({timeout: 1000});
 
-			await expect(page.getByText(group1Label)).not.toBeVisible({
+			await expect(
+				page.getByRole('button', {name: group1Label})
+			).not.toBeVisible({
 				timeout: 1000,
 			});
 		}).toPass();

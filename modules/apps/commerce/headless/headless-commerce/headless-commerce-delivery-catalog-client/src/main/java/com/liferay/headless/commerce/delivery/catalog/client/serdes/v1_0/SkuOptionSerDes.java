@@ -549,3 +549,4 @@ public class SkuOptionSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1193693900

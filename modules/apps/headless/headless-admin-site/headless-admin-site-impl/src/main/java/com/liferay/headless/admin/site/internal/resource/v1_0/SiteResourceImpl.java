@@ -13,20 +13,20 @@ import com.liferay.headless.admin.site.dto.v1_0.Site;
 import com.liferay.headless.admin.site.resource.v1_0.SiteResource;
 import com.liferay.layout.util.LayoutServiceContextHelper;
 import com.liferay.petra.function.UnsafeFunction;
-import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.events.ServicePreAction;
 import com.liferay.portal.events.ThemeServicePreAction;
 import com.liferay.portal.kernel.change.tracking.CTAware;
+import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.NoSuchGroupException;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.exception.RequiredGroupException;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.lazy.referencing.LazyReferencingThreadLocal;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.LayoutSetPrototype;
-import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
@@ -45,6 +45,7 @@ import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PropsKeys;
@@ -72,7 +73,7 @@ import java.io.File;
 import java.io.Serializable;
 
 import java.util.Collection;
-import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
@@ -93,12 +94,6 @@ public class SiteResourceImpl extends BaseSiteResourceImpl {
 
 	@Override
 	public void deleteSite(String externalReferenceCode) throws Exception {
-		if (!FeatureFlagManagerUtil.isEnabled(
-				contextCompany.getCompanyId(), "LPD-41306")) {
-
-			throw new UnsupportedOperationException();
-		}
-
 		Group group = _groupLocalService.fetchGroupByExternalReferenceCode(
 			externalReferenceCode, contextCompany.getCompanyId());
 
@@ -116,8 +111,6 @@ public class SiteResourceImpl extends BaseSiteResourceImpl {
 		throws Exception {
 
 		if (!FeatureFlagManagerUtil.isEnabled(
-				contextCompany.getCompanyId(), "LPD-41306") ||
-			!FeatureFlagManagerUtil.isEnabled(
 				contextCompany.getCompanyId(), "LPD-19870")) {
 
 			throw new UnsupportedOperationException();
@@ -148,12 +141,6 @@ public class SiteResourceImpl extends BaseSiteResourceImpl {
 	public Site postSiteSiteInitializer(MultipartBody multipartBody)
 		throws Exception {
 
-		if (!FeatureFlagManagerUtil.isEnabled(
-				contextCompany.getCompanyId(), "LPD-41306")) {
-
-			throw new UnsupportedOperationException();
-		}
-
 		Site site = multipartBody.getValueAsInstance("site", Site.class);
 
 		return putSiteSiteInitializer(
@@ -161,15 +148,50 @@ public class SiteResourceImpl extends BaseSiteResourceImpl {
 	}
 
 	@Override
+	public void putSiteActivate(String siteExternalReferenceCode)
+		throws Exception {
+
+		Group group = _groupLocalService.getGroupByExternalReferenceCode(
+			siteExternalReferenceCode, contextCompany.getCompanyId());
+
+		GroupPermissionUtil.check(
+			PermissionThreadLocal.getPermissionChecker(), group,
+			ActionKeys.UPDATE);
+
+		if (!group.isActive()) {
+			group.setActive(true);
+
+			_groupLocalService.updateGroup(group);
+		}
+	}
+
+	@Override
+	public void putSiteDeactivate(String siteExternalReferenceCode)
+		throws Exception {
+
+		Group group = _groupLocalService.getGroupByExternalReferenceCode(
+			siteExternalReferenceCode, contextCompany.getCompanyId());
+
+		GroupPermissionUtil.check(
+			PermissionThreadLocal.getPermissionChecker(), group,
+			ActionKeys.UPDATE);
+
+		if (group.isCompany() || group.isControlPanel() || group.isGuest()) {
+			throw new RequiredGroupException.MustNotDeactivateSystemGroup(
+				siteExternalReferenceCode);
+		}
+
+		if (group.isActive()) {
+			group.setActive(false);
+
+			_groupLocalService.updateGroup(group);
+		}
+	}
+
+	@Override
 	public Site putSiteSiteInitializer(
 			String externalReferenceCode, MultipartBody multipartBody)
 		throws Exception {
-
-		if (!FeatureFlagManagerUtil.isEnabled(
-				contextCompany.getCompanyId(), "LPD-41306")) {
-
-			throw new UnsupportedOperationException();
-		}
 
 		Group group = _groupLocalService.fetchGroupByExternalReferenceCode(
 			externalReferenceCode, contextCompany.getCompanyId());
@@ -192,8 +214,6 @@ public class SiteResourceImpl extends BaseSiteResourceImpl {
 
 			group = _updateGroup(
 				group, multipartBody.getValueAsInstance("site", Site.class));
-
-			return _toSite(group);
 		}
 
 		PermissionChecker permissionChecker =
@@ -208,10 +228,7 @@ public class SiteResourceImpl extends BaseSiteResourceImpl {
 
 		tempFile.delete();
 
-		try (SafeCloseable safeCloseable =
-				CompanyThreadLocal.setCompanyIdWithSafeCloseable(
-					contextCompany.getCompanyId())) {
-
+		try {
 			PermissionThreadLocal.setPermissionChecker(
 				PermissionCheckerFactoryUtil.create(contextUser));
 			PrincipalThreadLocal.setName(contextUser.getUserId());
@@ -283,16 +300,9 @@ public class SiteResourceImpl extends BaseSiteResourceImpl {
 
 	@Override
 	protected Site doGetSite(String externalReferenceCode) throws Exception {
-		if (!FeatureFlagManagerUtil.isEnabled(
-				contextCompany.getCompanyId(), "LPD-41306")) {
-
-			throw new UnsupportedOperationException();
-		}
-
-		Group group = _groupLocalService.getGroupByExternalReferenceCode(
-			externalReferenceCode, contextCompany.getCompanyId());
-
-		return _toSite(group);
+		return _toSite(
+			_groupService.getGroupByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId()));
 	}
 
 	@Override
@@ -300,17 +310,13 @@ public class SiteResourceImpl extends BaseSiteResourceImpl {
 			Boolean active, String search, Pagination pagination)
 		throws Exception {
 
-		if (!FeatureFlagManagerUtil.isEnabled(
-				contextCompany.getCompanyId(), "LPD-41306")) {
-
-			throw new UnsupportedOperationException();
-		}
-
 		long[] classNameIds = {
 			_portal.getClassNameId(Company.class.getName()),
 			_portal.getClassNameId(Group.class.getName())
 		};
-		LinkedHashMap<String, Object> params =
+
+		List<Group> groups = _groupService.search(
+			contextCompany.getCompanyId(), classNameIds, search, null,
 			LinkedHashMapBuilder.<String, Object>put(
 				"active",
 				() -> {
@@ -322,7 +328,9 @@ public class SiteResourceImpl extends BaseSiteResourceImpl {
 				}
 			).put(
 				"site", true
-			).build();
+			).build(),
+			true, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+			new GroupNameComparator());
 
 		return Page.of(
 			HashMapBuilder.put(
@@ -341,24 +349,15 @@ public class SiteResourceImpl extends BaseSiteResourceImpl {
 					null)
 			).build(),
 			transform(
-				_groupService.search(
-					contextCompany.getCompanyId(), classNameIds, search, null,
-					params, true, pagination.getStartPosition(),
-					pagination.getEndPosition(), new GroupNameComparator()),
+				ListUtil.subList(
+					groups, pagination.getStartPosition(),
+					pagination.getEndPosition()),
 				this::_toSite),
-			pagination,
-			_groupService.searchCount(
-				contextCompany.getCompanyId(), classNameIds, search, params));
+			pagination, groups.size());
 	}
 
 	@Override
 	protected Site doPostSite(Site site) throws Exception {
-		if (!FeatureFlagManagerUtil.isEnabled(
-				contextCompany.getCompanyId(), "LPD-41306")) {
-
-			throw new UnsupportedOperationException();
-		}
-
 		Group group = _addGroup(site.getExternalReferenceCode(), site);
 
 		return _toSite(group);
@@ -367,12 +366,6 @@ public class SiteResourceImpl extends BaseSiteResourceImpl {
 	@Override
 	protected Site doPutSite(String siteExternalReferenceCode, Site site)
 		throws Exception {
-
-		if (!FeatureFlagManagerUtil.isEnabled(
-				contextCompany.getCompanyId(), "LPD-41306")) {
-
-			throw new UnsupportedOperationException();
-		}
 
 		if (site.getExternalReferenceCode() == null) {
 			site.setExternalReferenceCode(() -> siteExternalReferenceCode);
@@ -504,8 +497,8 @@ public class SiteResourceImpl extends BaseSiteResourceImpl {
 			_getTypeSettings(site, null),
 			_isManualMembership(site.getManualMembership()),
 			_getMembershipRestriction(site.getMembershipRestriction()),
-			_getFriendlyUrlPath(site), true, false, _isActive(site.getActive()),
-			serviceContext);
+			_getFriendlyUrlPath(null, site), true, false,
+			_isActive(site.getActive()), serviceContext);
 
 		LiveUsers.joinGroup(
 			contextCompany.getCompanyId(), group.getGroupId(),
@@ -548,8 +541,12 @@ public class SiteResourceImpl extends BaseSiteResourceImpl {
 		).build();
 	}
 
-	private String _getFriendlyUrlPath(Site site) {
+	private String _getFriendlyUrlPath(Group group, Site site) {
 		String friendlyUrlPath = site.getFriendlyUrlPath();
+
+		if (Validator.isNull(friendlyUrlPath) && (group != null)) {
+			friendlyUrlPath = group.getFriendlyURL();
+		}
 
 		if (Validator.isNotNull(friendlyUrlPath) &&
 			!friendlyUrlPath.startsWith(StringPool.SLASH)) {
@@ -1048,7 +1045,15 @@ public class SiteResourceImpl extends BaseSiteResourceImpl {
 				_layoutServiceContextHelper.getServiceContextAutoCloseable(
 					contextCompany, contextUser)) {
 
-			Group updatedGroup = _groupLocalService.updateGroup(
+			if ((group.isCompany() || group.isControlPanel() ||
+				 group.isGuest()) &&
+				(site.getActive() == false)) {
+
+				throw new RequiredGroupException.MustNotDeactivateSystemGroup(
+					site.getExternalReferenceCode());
+			}
+
+			Group updatedGroup = _groupService.updateGroup(
 				group.getGroupId(),
 				_getParentGroupId(
 					group, site.getParentSiteExternalReferenceCode()),
@@ -1057,8 +1062,8 @@ public class SiteResourceImpl extends BaseSiteResourceImpl {
 				_getTypeSettings(site, group.getTypeSettingsProperties()),
 				_isManualMembership(site.getManualMembership()),
 				_getMembershipRestriction(site.getMembershipRestriction()),
-				_getFriendlyUrlPath(site), false, _isActive(site.getActive()),
-				_getServiceContext());
+				_getFriendlyUrlPath(group, site), false,
+				_isActive(site.getActive()), _getServiceContext());
 
 			LiveUsers.joinGroup(
 				contextCompany.getCompanyId(), updatedGroup.getGroupId(),

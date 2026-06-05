@@ -144,7 +144,10 @@ function onInputChange() {
 	const file = fileInput.files[0];
 
 	showPreview(file, file?.name);
-	fileInput.setAttribute('name', input.name);
+
+	if (!input.localizable) {
+		fileInput.setAttribute('name', input.name);
+	}
 
 	hiddenFileInput.setAttribute('name', '');
 	hiddenFileInput.value = '';
@@ -196,7 +199,7 @@ else {
 		selectFileEvent = onSelectFile;
 	}
 
-	const defaultLanguageId = themeDisplay.getDefaultLanguageId();
+	const defaultLanguageId = input.attributes.defaultLanguageId;
 	const inputElement = fileInput;
 
 	let currentLanguageId = defaultLanguageId;
@@ -261,6 +264,7 @@ else {
 				}
 
 				const {onChange} = registerLocalizedInput({
+					availableLanguageIds: input.attributes.availableLanguageIds,
 					changeTextDirection: false,
 					customLocaleChangeHandler: true,
 					defaultLanguageId,

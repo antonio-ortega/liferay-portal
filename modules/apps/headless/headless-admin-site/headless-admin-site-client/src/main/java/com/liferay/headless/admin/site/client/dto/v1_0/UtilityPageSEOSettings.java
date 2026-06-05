@@ -103,3 +103,4 @@ public class UtilityPageSEOSettings implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:779995592

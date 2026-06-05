@@ -459,15 +459,7 @@ public class SitesImpl implements Sites {
 			return false;
 		}
 
-		UnicodeProperties layoutSetPrototypeSettingsUnicodeProperties =
-			layoutSetPrototype.getSettingsProperties();
-
-		boolean readyForPropagation = GetterUtil.getBoolean(
-			layoutSetPrototypeSettingsUnicodeProperties.getProperty(
-				"readyForPropagation"),
-			true);
-
-		if (!readyForPropagation && !(lastMergeTime == 0)) {
+		if (lastMergeTime != 0) {
 			return false;
 		}
 

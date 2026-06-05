@@ -495,3 +495,4 @@ public class SEOSettingsSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:689960336

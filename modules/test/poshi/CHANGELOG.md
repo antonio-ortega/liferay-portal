@@ -1,5 +1,23 @@
 # Poshi Runner Change Log
 
+## 1.0.500
+
+### WebDriver
+
+* [POSHI-713](https://liferay.atlassian.net/browse/POSHI-715) - Add method to rename file
+
+## 1.0.499
+
+### WebDriver
+
+* [POSHI-713](https://liferay.atlassian.net/browse/POSHI-713) - Add selenium session timeout to chrome options
+
+## 1.0.498
+
+### WebDriver
+
+* [POSHI-711](https://liferay.atlassian.net/browse/POSHI-711) - Create property to set RemoteWebDriver timeouts
+
 ## 1.0.495
 
 ### Other

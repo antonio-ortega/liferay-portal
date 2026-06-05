@@ -7,6 +7,8 @@ package com.liferay.portal.kernel.frontend.hashed.files;
 
 import com.liferay.portal.kernel.module.service.Snapshot;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.net.URL;
 
 import java.util.function.BiConsumer;
@@ -16,11 +18,31 @@ import java.util.function.BiConsumer;
  */
 public class HashedFilesRegistryUtil {
 
-	public static void forEach(BiConsumer<String, String> biConsumer) {
+	public static void forEachHashedFileURI(
+		BiConsumer<String, String> biConsumer) {
+
 		HashedFilesRegistry hashedFilesRegistry =
 			_hashedFilesRegistrySnapshot.get();
 
-		hashedFilesRegistry.forEach(biConsumer);
+		hashedFilesRegistry.forEachHashedFileURI(biConsumer);
+	}
+
+	public static void forEachServletContextHash(
+		BiConsumer<String, String> biConsumer) {
+
+		HashedFilesRegistry hashedFilesRegistry =
+			_hashedFilesRegistrySnapshot.get();
+
+		hashedFilesRegistry.forEachServletContextHash(biConsumer);
+	}
+
+	public static CachingStrategy getCachingStrategy(
+		HttpServletRequest httpServletRequest) {
+
+		HashedFilesRegistry hashedFilesRegistry =
+			_hashedFilesRegistrySnapshot.get();
+
+		return hashedFilesRegistry.getCachingStrategy(httpServletRequest);
 	}
 
 	public static String getHashedFileURI(String unhashedFileURI) {

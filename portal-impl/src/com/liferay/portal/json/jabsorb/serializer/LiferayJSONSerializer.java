@@ -12,11 +12,15 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 
 import java.util.HashMap;
+import java.util.NoSuchElementException;
+import java.util.Objects;
 
 import org.jabsorb.JSONSerializer;
 import org.jabsorb.serializer.Serializer;
 import org.jabsorb.serializer.UnmarshallException;
 
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
@@ -48,7 +52,34 @@ public class LiferayJSONSerializer extends JSONSerializer {
 			return null;
 		}
 
-		if (object instanceof JSONObject) {
+		if (object instanceof JSONArray jsonArray) {
+			if (jsonArray.isEmpty()) {
+				return super.getClassFromHint(object);
+			}
+
+			try {
+				if (!Objects.equals(
+						getClassFromHint(jsonArray.get(0)), Integer.class)) {
+
+					return super.getClassFromHint(object);
+				}
+
+				for (int i = 1; i < jsonArray.length(); i++) {
+					if (Objects.equals(
+							getClassFromHint(jsonArray.get(i)), Long.class)) {
+
+						return Long[].class;
+					}
+				}
+
+				return Integer[].class;
+			}
+			catch (JSONException jsonException) {
+				throw new NoSuchElementException(
+					jsonException.getMessage(), jsonException);
+			}
+		}
+		else if (object instanceof JSONObject) {
 			String className = StringPool.BLANK;
 
 			try {

@@ -36,6 +36,24 @@ public class AssetCategoryPropertyUtil {
 	 */
 
 	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(List)
+	 */
+	public static void cacheResult(
+		List<AssetCategoryProperty> assetCategoryProperties) {
+
+		getPersistence().cacheResult(assetCategoryProperties);
+	}
+
+	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(com.liferay.portal.kernel.model.BaseModel)
+	 */
+	public static void cacheResult(
+		AssetCategoryProperty assetCategoryProperty) {
+
+		getPersistence().cacheResult(assetCategoryProperty);
+	}
+
+	/**
 	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#clearCache()
 	 */
 	public static void clearCache() {
@@ -114,59 +132,10 @@ public class AssetCategoryPropertyUtil {
 	}
 
 	/**
-	 * Returns all the asset category properties where companyId = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @return the matching asset category properties
-	 */
-	public static List<AssetCategoryProperty> findByCompanyId(long companyId) {
-		return getPersistence().findByCompanyId(companyId);
-	}
-
-	/**
-	 * Returns a range of all the asset category properties where companyId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetCategoryPropertyModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param start the lower bound of the range of asset category properties
-	 * @param end the upper bound of the range of asset category properties (not inclusive)
-	 * @return the range of matching asset category properties
-	 */
-	public static List<AssetCategoryProperty> findByCompanyId(
-		long companyId, int start, int end) {
-
-		return getPersistence().findByCompanyId(companyId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the asset category properties where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetCategoryPropertyModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param start the lower bound of the range of asset category properties
-	 * @param end the upper bound of the range of asset category properties (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching asset category properties
-	 */
-	public static List<AssetCategoryProperty> findByCompanyId(
-		long companyId, int start, int end,
-		OrderByComparator<AssetCategoryProperty> orderByComparator) {
-
-		return getPersistence().findByCompanyId(
-			companyId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the asset category properties where companyId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetCategoryPropertyModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.asset.category.property.model.impl.AssetCategoryPropertyModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -219,58 +188,6 @@ public class AssetCategoryPropertyUtil {
 	}
 
 	/**
-	 * Returns the last asset category property in the ordered set where companyId = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching asset category property
-	 * @throws NoSuchCategoryPropertyException if a matching asset category property could not be found
-	 */
-	public static AssetCategoryProperty findByCompanyId_Last(
-			long companyId,
-			OrderByComparator<AssetCategoryProperty> orderByComparator)
-		throws com.liferay.asset.category.property.exception.
-			NoSuchCategoryPropertyException {
-
-		return getPersistence().findByCompanyId_Last(
-			companyId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last asset category property in the ordered set where companyId = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching asset category property, or <code>null</code> if a matching asset category property could not be found
-	 */
-	public static AssetCategoryProperty fetchByCompanyId_Last(
-		long companyId,
-		OrderByComparator<AssetCategoryProperty> orderByComparator) {
-
-		return getPersistence().fetchByCompanyId_Last(
-			companyId, orderByComparator);
-	}
-
-	/**
-	 * Returns the asset category properties before and after the current asset category property in the ordered set where companyId = &#63;.
-	 *
-	 * @param categoryPropertyId the primary key of the current asset category property
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next asset category property
-	 * @throws NoSuchCategoryPropertyException if a asset category property with the primary key could not be found
-	 */
-	public static AssetCategoryProperty[] findByCompanyId_PrevAndNext(
-			long categoryPropertyId, long companyId,
-			OrderByComparator<AssetCategoryProperty> orderByComparator)
-		throws com.liferay.asset.category.property.exception.
-			NoSuchCategoryPropertyException {
-
-		return getPersistence().findByCompanyId_PrevAndNext(
-			categoryPropertyId, companyId, orderByComparator);
-	}
-
-	/**
 	 * Removes all the asset category properties where companyId = &#63; from the database.
 	 *
 	 * @param companyId the company ID
@@ -290,61 +207,10 @@ public class AssetCategoryPropertyUtil {
 	}
 
 	/**
-	 * Returns all the asset category properties where categoryId = &#63;.
-	 *
-	 * @param categoryId the category ID
-	 * @return the matching asset category properties
-	 */
-	public static List<AssetCategoryProperty> findByCategoryId(
-		long categoryId) {
-
-		return getPersistence().findByCategoryId(categoryId);
-	}
-
-	/**
-	 * Returns a range of all the asset category properties where categoryId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetCategoryPropertyModelImpl</code>.
-	 * </p>
-	 *
-	 * @param categoryId the category ID
-	 * @param start the lower bound of the range of asset category properties
-	 * @param end the upper bound of the range of asset category properties (not inclusive)
-	 * @return the range of matching asset category properties
-	 */
-	public static List<AssetCategoryProperty> findByCategoryId(
-		long categoryId, int start, int end) {
-
-		return getPersistence().findByCategoryId(categoryId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the asset category properties where categoryId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetCategoryPropertyModelImpl</code>.
-	 * </p>
-	 *
-	 * @param categoryId the category ID
-	 * @param start the lower bound of the range of asset category properties
-	 * @param end the upper bound of the range of asset category properties (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching asset category properties
-	 */
-	public static List<AssetCategoryProperty> findByCategoryId(
-		long categoryId, int start, int end,
-		OrderByComparator<AssetCategoryProperty> orderByComparator) {
-
-		return getPersistence().findByCategoryId(
-			categoryId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the asset category properties where categoryId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetCategoryPropertyModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.asset.category.property.model.impl.AssetCategoryPropertyModelImpl</code>.
 	 * </p>
 	 *
 	 * @param categoryId the category ID
@@ -397,58 +263,6 @@ public class AssetCategoryPropertyUtil {
 	}
 
 	/**
-	 * Returns the last asset category property in the ordered set where categoryId = &#63;.
-	 *
-	 * @param categoryId the category ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching asset category property
-	 * @throws NoSuchCategoryPropertyException if a matching asset category property could not be found
-	 */
-	public static AssetCategoryProperty findByCategoryId_Last(
-			long categoryId,
-			OrderByComparator<AssetCategoryProperty> orderByComparator)
-		throws com.liferay.asset.category.property.exception.
-			NoSuchCategoryPropertyException {
-
-		return getPersistence().findByCategoryId_Last(
-			categoryId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last asset category property in the ordered set where categoryId = &#63;.
-	 *
-	 * @param categoryId the category ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching asset category property, or <code>null</code> if a matching asset category property could not be found
-	 */
-	public static AssetCategoryProperty fetchByCategoryId_Last(
-		long categoryId,
-		OrderByComparator<AssetCategoryProperty> orderByComparator) {
-
-		return getPersistence().fetchByCategoryId_Last(
-			categoryId, orderByComparator);
-	}
-
-	/**
-	 * Returns the asset category properties before and after the current asset category property in the ordered set where categoryId = &#63;.
-	 *
-	 * @param categoryPropertyId the primary key of the current asset category property
-	 * @param categoryId the category ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next asset category property
-	 * @throws NoSuchCategoryPropertyException if a asset category property with the primary key could not be found
-	 */
-	public static AssetCategoryProperty[] findByCategoryId_PrevAndNext(
-			long categoryPropertyId, long categoryId,
-			OrderByComparator<AssetCategoryProperty> orderByComparator)
-		throws com.liferay.asset.category.property.exception.
-			NoSuchCategoryPropertyException {
-
-		return getPersistence().findByCategoryId_PrevAndNext(
-			categoryPropertyId, categoryId, orderByComparator);
-	}
-
-	/**
 	 * Removes all the asset category properties where categoryId = &#63; from the database.
 	 *
 	 * @param categoryId the category ID
@@ -468,64 +282,10 @@ public class AssetCategoryPropertyUtil {
 	}
 
 	/**
-	 * Returns all the asset category properties where companyId = &#63; and key = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param key the key
-	 * @return the matching asset category properties
-	 */
-	public static List<AssetCategoryProperty> findByC_K(
-		long companyId, String key) {
-
-		return getPersistence().findByC_K(companyId, key);
-	}
-
-	/**
-	 * Returns a range of all the asset category properties where companyId = &#63; and key = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetCategoryPropertyModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param key the key
-	 * @param start the lower bound of the range of asset category properties
-	 * @param end the upper bound of the range of asset category properties (not inclusive)
-	 * @return the range of matching asset category properties
-	 */
-	public static List<AssetCategoryProperty> findByC_K(
-		long companyId, String key, int start, int end) {
-
-		return getPersistence().findByC_K(companyId, key, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the asset category properties where companyId = &#63; and key = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetCategoryPropertyModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param key the key
-	 * @param start the lower bound of the range of asset category properties
-	 * @param end the upper bound of the range of asset category properties (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching asset category properties
-	 */
-	public static List<AssetCategoryProperty> findByC_K(
-		long companyId, String key, int start, int end,
-		OrderByComparator<AssetCategoryProperty> orderByComparator) {
-
-		return getPersistence().findByC_K(
-			companyId, key, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the asset category properties where companyId = &#63; and key = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetCategoryPropertyModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.asset.category.property.model.impl.AssetCategoryPropertyModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -581,61 +341,6 @@ public class AssetCategoryPropertyUtil {
 	}
 
 	/**
-	 * Returns the last asset category property in the ordered set where companyId = &#63; and key = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param key the key
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching asset category property
-	 * @throws NoSuchCategoryPropertyException if a matching asset category property could not be found
-	 */
-	public static AssetCategoryProperty findByC_K_Last(
-			long companyId, String key,
-			OrderByComparator<AssetCategoryProperty> orderByComparator)
-		throws com.liferay.asset.category.property.exception.
-			NoSuchCategoryPropertyException {
-
-		return getPersistence().findByC_K_Last(
-			companyId, key, orderByComparator);
-	}
-
-	/**
-	 * Returns the last asset category property in the ordered set where companyId = &#63; and key = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param key the key
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching asset category property, or <code>null</code> if a matching asset category property could not be found
-	 */
-	public static AssetCategoryProperty fetchByC_K_Last(
-		long companyId, String key,
-		OrderByComparator<AssetCategoryProperty> orderByComparator) {
-
-		return getPersistence().fetchByC_K_Last(
-			companyId, key, orderByComparator);
-	}
-
-	/**
-	 * Returns the asset category properties before and after the current asset category property in the ordered set where companyId = &#63; and key = &#63;.
-	 *
-	 * @param categoryPropertyId the primary key of the current asset category property
-	 * @param companyId the company ID
-	 * @param key the key
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next asset category property
-	 * @throws NoSuchCategoryPropertyException if a asset category property with the primary key could not be found
-	 */
-	public static AssetCategoryProperty[] findByC_K_PrevAndNext(
-			long categoryPropertyId, long companyId, String key,
-			OrderByComparator<AssetCategoryProperty> orderByComparator)
-		throws com.liferay.asset.category.property.exception.
-			NoSuchCategoryPropertyException {
-
-		return getPersistence().findByC_K_PrevAndNext(
-			categoryPropertyId, companyId, key, orderByComparator);
-	}
-
-	/**
 	 * Removes all the asset category properties where companyId = &#63; and key = &#63; from the database.
 	 *
 	 * @param companyId the company ID
@@ -669,19 +374,6 @@ public class AssetCategoryPropertyUtil {
 			NoSuchCategoryPropertyException {
 
 		return getPersistence().findByCA_K(categoryId, key);
-	}
-
-	/**
-	 * Returns the asset category property where categoryId = &#63; and key = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
-	 *
-	 * @param categoryId the category ID
-	 * @param key the key
-	 * @return the matching asset category property, or <code>null</code> if a matching asset category property could not be found
-	 */
-	public static AssetCategoryProperty fetchByCA_K(
-		long categoryId, String key) {
-
-		return getPersistence().fetchByCA_K(categoryId, key);
 	}
 
 	/**
@@ -741,19 +433,6 @@ public class AssetCategoryPropertyUtil {
 	}
 
 	/**
-	 * Returns the asset category property where externalReferenceCode = &#63; and companyId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
-	 *
-	 * @param externalReferenceCode the external reference code
-	 * @param companyId the company ID
-	 * @return the matching asset category property, or <code>null</code> if a matching asset category property could not be found
-	 */
-	public static AssetCategoryProperty fetchByERC_C(
-		String externalReferenceCode, long companyId) {
-
-		return getPersistence().fetchByERC_C(externalReferenceCode, companyId);
-	}
-
-	/**
 	 * Returns the asset category property where externalReferenceCode = &#63; and companyId = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
 	 *
 	 * @param externalReferenceCode the external reference code
@@ -794,28 +473,6 @@ public class AssetCategoryPropertyUtil {
 		String externalReferenceCode, long companyId) {
 
 		return getPersistence().countByERC_C(externalReferenceCode, companyId);
-	}
-
-	/**
-	 * Caches the asset category property in the entity cache if it is enabled.
-	 *
-	 * @param assetCategoryProperty the asset category property
-	 */
-	public static void cacheResult(
-		AssetCategoryProperty assetCategoryProperty) {
-
-		getPersistence().cacheResult(assetCategoryProperty);
-	}
-
-	/**
-	 * Caches the asset category properties in the entity cache if it is enabled.
-	 *
-	 * @param assetCategoryProperties the asset category properties
-	 */
-	public static void cacheResult(
-		List<AssetCategoryProperty> assetCategoryProperties) {
-
-		getPersistence().cacheResult(assetCategoryProperties);
 	}
 
 	/**
@@ -876,84 +533,183 @@ public class AssetCategoryPropertyUtil {
 	}
 
 	/**
-	 * Returns all the asset category properties.
+	 * Returns the asset category property where categoryId = &#63; and key = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
 	 *
-	 * @return the asset category properties
+	 * @param categoryId the category ID
+	 * @param key the key
+	 * @return the matching asset category property, or <code>null</code> if a matching asset category property could not be found
 	 */
-	public static List<AssetCategoryProperty> findAll() {
-		return getPersistence().findAll();
+	public static AssetCategoryProperty fetchByCA_K(
+		long categoryId, String key) {
+
+		return getPersistence().fetchByCA_K(categoryId, key);
 	}
 
 	/**
-	 * Returns a range of all the asset category properties.
+	 * Returns the asset category property where externalReferenceCode = &#63; and companyId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	 *
+	 * @param externalReferenceCode the external reference code
+	 * @param companyId the company ID
+	 * @return the matching asset category property, or <code>null</code> if a matching asset category property could not be found
+	 */
+	public static AssetCategoryProperty fetchByERC_C(
+		String externalReferenceCode, long companyId) {
+
+		return getPersistence().fetchByERC_C(externalReferenceCode, companyId);
+	}
+
+	/**
+	 * Returns all the asset category properties where companyId = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @return the matching asset category properties
+	 */
+	public static List<AssetCategoryProperty> findByCompanyId(long companyId) {
+		return getPersistence().findByCompanyId(companyId);
+	}
+
+	/**
+	 * Returns a range of all the asset category properties where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetCategoryPropertyModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.asset.category.property.model.impl.AssetCategoryPropertyModelImpl</code>.
 	 * </p>
 	 *
+	 * @param companyId the company ID
 	 * @param start the lower bound of the range of asset category properties
 	 * @param end the upper bound of the range of asset category properties (not inclusive)
-	 * @return the range of asset category properties
+	 * @return the range of matching asset category properties
 	 */
-	public static List<AssetCategoryProperty> findAll(int start, int end) {
-		return getPersistence().findAll(start, end);
+	public static List<AssetCategoryProperty> findByCompanyId(
+		long companyId, int start, int end) {
+
+		return getPersistence().findByCompanyId(companyId, start, end);
 	}
 
 	/**
-	 * Returns an ordered range of all the asset category properties.
+	 * Returns an ordered range of all the asset category properties where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetCategoryPropertyModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.asset.category.property.model.impl.AssetCategoryPropertyModelImpl</code>.
 	 * </p>
 	 *
+	 * @param companyId the company ID
 	 * @param start the lower bound of the range of asset category properties
 	 * @param end the upper bound of the range of asset category properties (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of asset category properties
+	 * @return the ordered range of matching asset category properties
 	 */
-	public static List<AssetCategoryProperty> findAll(
-		int start, int end,
+	public static List<AssetCategoryProperty> findByCompanyId(
+		long companyId, int start, int end,
 		OrderByComparator<AssetCategoryProperty> orderByComparator) {
 
-		return getPersistence().findAll(start, end, orderByComparator);
+		return getPersistence().findByCompanyId(
+			companyId, start, end, orderByComparator);
 	}
 
 	/**
-	 * Returns an ordered range of all the asset category properties.
+	 * Returns all the asset category properties where categoryId = &#63;.
+	 *
+	 * @param categoryId the category ID
+	 * @return the matching asset category properties
+	 */
+	public static List<AssetCategoryProperty> findByCategoryId(
+		long categoryId) {
+
+		return getPersistence().findByCategoryId(categoryId);
+	}
+
+	/**
+	 * Returns a range of all the asset category properties where categoryId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetCategoryPropertyModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.asset.category.property.model.impl.AssetCategoryPropertyModelImpl</code>.
 	 * </p>
 	 *
+	 * @param categoryId the category ID
+	 * @param start the lower bound of the range of asset category properties
+	 * @param end the upper bound of the range of asset category properties (not inclusive)
+	 * @return the range of matching asset category properties
+	 */
+	public static List<AssetCategoryProperty> findByCategoryId(
+		long categoryId, int start, int end) {
+
+		return getPersistence().findByCategoryId(categoryId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the asset category properties where categoryId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.asset.category.property.model.impl.AssetCategoryPropertyModelImpl</code>.
+	 * </p>
+	 *
+	 * @param categoryId the category ID
 	 * @param start the lower bound of the range of asset category properties
 	 * @param end the upper bound of the range of asset category properties (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param useFinderCache whether to use the finder cache
-	 * @return the ordered range of asset category properties
+	 * @return the ordered range of matching asset category properties
 	 */
-	public static List<AssetCategoryProperty> findAll(
-		int start, int end,
-		OrderByComparator<AssetCategoryProperty> orderByComparator,
-		boolean useFinderCache) {
+	public static List<AssetCategoryProperty> findByCategoryId(
+		long categoryId, int start, int end,
+		OrderByComparator<AssetCategoryProperty> orderByComparator) {
 
-		return getPersistence().findAll(
-			start, end, orderByComparator, useFinderCache);
+		return getPersistence().findByCategoryId(
+			categoryId, start, end, orderByComparator);
 	}
 
 	/**
-	 * Removes all the asset category properties from the database.
-	 */
-	public static void removeAll() {
-		getPersistence().removeAll();
-	}
-
-	/**
-	 * Returns the number of asset category properties.
+	 * Returns all the asset category properties where companyId = &#63; and key = &#63;.
 	 *
-	 * @return the number of asset category properties
+	 * @param companyId the company ID
+	 * @param key the key
+	 * @return the matching asset category properties
 	 */
-	public static int countAll() {
-		return getPersistence().countAll();
+	public static List<AssetCategoryProperty> findByC_K(
+		long companyId, String key) {
+
+		return getPersistence().findByC_K(companyId, key);
+	}
+
+	/**
+	 * Returns a range of all the asset category properties where companyId = &#63; and key = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.asset.category.property.model.impl.AssetCategoryPropertyModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param key the key
+	 * @param start the lower bound of the range of asset category properties
+	 * @param end the upper bound of the range of asset category properties (not inclusive)
+	 * @return the range of matching asset category properties
+	 */
+	public static List<AssetCategoryProperty> findByC_K(
+		long companyId, String key, int start, int end) {
+
+		return getPersistence().findByC_K(companyId, key, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the asset category properties where companyId = &#63; and key = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.asset.category.property.model.impl.AssetCategoryPropertyModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param key the key
+	 * @param start the lower bound of the range of asset category properties
+	 * @param end the upper bound of the range of asset category properties (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching asset category properties
+	 */
+	public static List<AssetCategoryProperty> findByC_K(
+		long companyId, String key, int start, int end,
+		OrderByComparator<AssetCategoryProperty> orderByComparator) {
+
+		return getPersistence().findByC_K(
+			companyId, key, start, end, orderByComparator);
 	}
 
 	public static AssetCategoryPropertyPersistence getPersistence() {
@@ -969,3 +725,4 @@ public class AssetCategoryPropertyUtil {
 	private static volatile AssetCategoryPropertyPersistence _persistence;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-767475822

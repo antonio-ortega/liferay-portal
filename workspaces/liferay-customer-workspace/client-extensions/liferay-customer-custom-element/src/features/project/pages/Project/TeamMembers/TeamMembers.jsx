@@ -6,29 +6,34 @@
 import {useQuery} from '@apollo/client';
 import {useEffect} from 'react';
 import {useOutletContext} from 'react-router-dom';
-import {useAppPropertiesContext} from '~/contexts/AppPropertiesContext';
-import SearchBuilder from '~/lib/SearchBuilder';
 import IncidentContactCard from '~/features/project/containers/IncidentContactCard';
-import i18n from '~/utils/I18n';
+import {PRODUCT_TYPES} from '~/features/project/utils/constants';
 import useCurrentKoroneikiAccount from '~/hooks/useCurrentKoroneikiAccount';
+import useHasPaaSExperience from '~/hooks/useHasPaaSExperience';
+import SearchBuilder from '~/lib/SearchBuilder';
 import {getAccountSubscriptionGroups} from '~/services/liferay/graphql/queries';
+import i18n from '~/utils/I18n';
+
 import ManageProductUsers from './components/ManageProductUsers/ManageProductUsers';
 import TeamMembersTable from './components/TeamMembersTable/TeamMembersTable';
 
 const targetProducts = [
 	'Analytics Cloud',
-	'Liferay Cloud'
+	'Liferay Cloud',
+	PRODUCT_TYPES.dxpCloud,
 ];
 
 const TeamMembers = () => {
 	const {setHasSideMenu} = useOutletContext();
-	const {data: dataCurrentKoroneikiAccount, loading: loadingCurrentKoroneikiAccount} = useCurrentKoroneikiAccount();
-	const koroneikiAccount = dataCurrentKoroneikiAccount?.koroneikiAccountByExternalReferenceCode;
-	const {featureFlags} = useAppPropertiesContext();
+	const {
+		data: dataCurrentKoroneikiAccount,
+		loading: loadingCurrentKoroneikiAccount,
+	} = useCurrentKoroneikiAccount();
+	const koroneikiAccount =
+		dataCurrentKoroneikiAccount?.koroneikiAccountByExternalReferenceCode;
 
-	const {data: dataSubscriptionGroups, loading: loadingSubscriptionGroups} = useQuery(
-		getAccountSubscriptionGroups,
-		{
+	const {data: dataSubscriptionGroups, loading: loadingSubscriptionGroups} =
+		useQuery(getAccountSubscriptionGroups, {
 			skip: loadingCurrentKoroneikiAccount,
 			variables: {
 				filter: new SearchBuilder()
@@ -37,14 +42,13 @@ const TeamMembers = () => {
 					.eq('hasActivation', true)
 					.build(),
 			},
-		}
-	);
+		});
 
 	const accountSubscriptionGroups =
 		dataSubscriptionGroups?.c?.accountSubscriptionGroups?.items;
 
 	const accountSubscriptionGroupsNames = accountSubscriptionGroups?.map(
-		(group) => group?.name
+		(group) => group?.activationProductName
 	);
 
 	const hasActiveProduct = accountSubscriptionGroups?.some(
@@ -52,6 +56,10 @@ const TeamMembers = () => {
 			targetProducts?.includes(item?.name) &&
 			item?.hasActivation &&
 			item?.activationStatus === 'Active'
+	);
+
+	const hasPaaSExperience = useHasPaaSExperience(
+		koroneikiAccount?.accountKey
 	);
 
 	const loading = loadingCurrentKoroneikiAccount || loadingSubscriptionGroups;
@@ -81,15 +89,15 @@ const TeamMembers = () => {
 					loading={loading}
 				/>
 
-				{featureFlags.includes('LPS-159127') &&
-					hasActiveProduct && (
-						<IncidentContactCard
-							accountSubscriptionGroupsNames={accountSubscriptionGroupsNames}
-							hasActiveProduct={hasActiveProduct}
-							koroneikiAccount={koroneikiAccount}
-							loading={loading}
-						/>
-					)}
+				{hasActiveProduct && (
+					<IncidentContactCard
+						accountSubscriptionGroupsNames={
+							accountSubscriptionGroupsNames
+						}
+						hasActiveProduct={hasActiveProduct}
+						hasPaaSExperience={hasPaaSExperience}
+					/>
+				)}
 			</div>
 		</>
 	);

@@ -373,3 +373,4 @@ public class NodeMetricSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:401705332

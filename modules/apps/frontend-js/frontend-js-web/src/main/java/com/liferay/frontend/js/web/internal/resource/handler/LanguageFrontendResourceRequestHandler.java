@@ -8,7 +8,7 @@ package com.liferay.frontend.js.web.internal.resource.handler;
 import com.liferay.frontend.js.web.internal.configuration.FrontendCachingConfiguration;
 import com.liferay.frontend.js.web.internal.resource.FrontendResource;
 import com.liferay.frontend.js.web.internal.resource.LanguageFrontendResource;
-import com.liferay.frontend.js.web.internal.util.FrontendJsWebUtil;
+import com.liferay.frontend.js.web.internal.util.FrontendJSWebUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
@@ -55,7 +55,7 @@ public class LanguageFrontendResourceRequestHandler
 		String requestURI = httpServletRequest.getRequestURI();
 
 		if (requestURI.startsWith(
-				FrontendJsWebUtil.getPortalContextPath(_portal) +
+				FrontendJSWebUtil.getPortalContextPath(_portal) +
 					LANGUAGE_URI_PREFIX) &&
 			requestURI.endsWith("/all.js")) {
 
@@ -71,7 +71,7 @@ public class LanguageFrontendResourceRequestHandler
 
 		String requestURI = httpServletRequest.getRequestURI();
 
-		String portalContextPath = FrontendJsWebUtil.getPortalContextPath(
+		String portalContextPath = FrontendJSWebUtil.getPortalContextPath(
 			_portal);
 
 		requestURI = requestURI.substring(
@@ -79,9 +79,37 @@ public class LanguageFrontendResourceRequestHandler
 
 		String[] requestURIParts = requestURI.split(StringPool.SLASH);
 
-		if ((requestURIParts.length != 3) ||
-			!Objects.equals(requestURIParts[2], "all.js")) {
+		if ((requestURIParts.length != 3) && (requestURIParts.length != 4)) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(
+					"Invalid request " + httpServletRequest.getRequestURI());
+			}
 
+			return null;
+		}
+
+		String servletContextPath = requestURIParts[1];
+
+		String allJS = requestURIParts[2];
+
+		// LPD-83084
+
+		if (requestURIParts.length == 4) {
+			servletContextPath = requestURIParts[2];
+			allJS = requestURIParts[3];
+
+			if (!Objects.equals(requestURIParts[0], requestURIParts[1])) {
+				if (_log.isWarnEnabled()) {
+					_log.warn(
+						"Invalid request " +
+							httpServletRequest.getRequestURI());
+				}
+
+				return null;
+			}
+		}
+
+		if (!Objects.equals(allJS, "all.js")) {
 			if (_log.isWarnEnabled()) {
 				_log.warn(
 					"Invalid request " + httpServletRequest.getRequestURI());
@@ -93,7 +121,7 @@ public class LanguageFrontendResourceRequestHandler
 		URL url = _hashedFilesRegistry.getResource(
 			StringBundler.concat(
 				portalContextPath, Portal.PATH_MODULE, StringPool.SLASH,
-				requestURIParts[1], "/language.json"));
+				servletContextPath, "/language.json"));
 
 		if (url == null) {
 			if (_log.isWarnEnabled()) {
@@ -105,7 +133,7 @@ public class LanguageFrontendResourceRequestHandler
 		}
 
 		FrontendCachingConfiguration frontendCachingConfiguration =
-			FrontendJsWebUtil.getFrontendCachingConfiguration(
+			FrontendJSWebUtil.getFrontendCachingConfiguration(
 				_portal.getCompanyId(httpServletRequest),
 				_configurationProvider);
 

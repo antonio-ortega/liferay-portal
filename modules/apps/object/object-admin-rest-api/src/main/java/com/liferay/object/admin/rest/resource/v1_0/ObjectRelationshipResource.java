@@ -200,3 +200,4 @@ public interface ObjectRelationshipResource {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-2042884163

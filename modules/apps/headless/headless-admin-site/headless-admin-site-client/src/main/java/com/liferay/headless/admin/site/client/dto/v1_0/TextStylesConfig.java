@@ -388,3 +388,4 @@ public class TextStylesConfig implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1944674530

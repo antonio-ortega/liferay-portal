@@ -36,6 +36,24 @@ public class AssetDisplayPageEntryUtil {
 	 */
 
 	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(List)
+	 */
+	public static void cacheResult(
+		List<AssetDisplayPageEntry> assetDisplayPageEntries) {
+
+		getPersistence().cacheResult(assetDisplayPageEntries);
+	}
+
+	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(com.liferay.portal.kernel.model.BaseModel)
+	 */
+	public static void cacheResult(
+		AssetDisplayPageEntry assetDisplayPageEntry) {
+
+		getPersistence().cacheResult(assetDisplayPageEntry);
+	}
+
+	/**
 	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#clearCache()
 	 */
 	public static void clearCache() {
@@ -114,58 +132,10 @@ public class AssetDisplayPageEntryUtil {
 	}
 
 	/**
-	 * Returns all the asset display page entries where uuid = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @return the matching asset display page entries
-	 */
-	public static List<AssetDisplayPageEntry> findByUuid(String uuid) {
-		return getPersistence().findByUuid(uuid);
-	}
-
-	/**
-	 * Returns a range of all the asset display page entries where uuid = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetDisplayPageEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param uuid the uuid
-	 * @param start the lower bound of the range of asset display page entries
-	 * @param end the upper bound of the range of asset display page entries (not inclusive)
-	 * @return the range of matching asset display page entries
-	 */
-	public static List<AssetDisplayPageEntry> findByUuid(
-		String uuid, int start, int end) {
-
-		return getPersistence().findByUuid(uuid, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the asset display page entries where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetDisplayPageEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param uuid the uuid
-	 * @param start the lower bound of the range of asset display page entries
-	 * @param end the upper bound of the range of asset display page entries (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching asset display page entries
-	 */
-	public static List<AssetDisplayPageEntry> findByUuid(
-		String uuid, int start, int end,
-		OrderByComparator<AssetDisplayPageEntry> orderByComparator) {
-
-		return getPersistence().findByUuid(uuid, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the asset display page entries where uuid = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetDisplayPageEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.asset.display.page.model.impl.AssetDisplayPageEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -216,56 +186,6 @@ public class AssetDisplayPageEntryUtil {
 	}
 
 	/**
-	 * Returns the last asset display page entry in the ordered set where uuid = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching asset display page entry
-	 * @throws NoSuchDisplayPageEntryException if a matching asset display page entry could not be found
-	 */
-	public static AssetDisplayPageEntry findByUuid_Last(
-			String uuid,
-			OrderByComparator<AssetDisplayPageEntry> orderByComparator)
-		throws com.liferay.asset.display.page.exception.
-			NoSuchDisplayPageEntryException {
-
-		return getPersistence().findByUuid_Last(uuid, orderByComparator);
-	}
-
-	/**
-	 * Returns the last asset display page entry in the ordered set where uuid = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching asset display page entry, or <code>null</code> if a matching asset display page entry could not be found
-	 */
-	public static AssetDisplayPageEntry fetchByUuid_Last(
-		String uuid,
-		OrderByComparator<AssetDisplayPageEntry> orderByComparator) {
-
-		return getPersistence().fetchByUuid_Last(uuid, orderByComparator);
-	}
-
-	/**
-	 * Returns the asset display page entries before and after the current asset display page entry in the ordered set where uuid = &#63;.
-	 *
-	 * @param assetDisplayPageEntryId the primary key of the current asset display page entry
-	 * @param uuid the uuid
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next asset display page entry
-	 * @throws NoSuchDisplayPageEntryException if a asset display page entry with the primary key could not be found
-	 */
-	public static AssetDisplayPageEntry[] findByUuid_PrevAndNext(
-			long assetDisplayPageEntryId, String uuid,
-			OrderByComparator<AssetDisplayPageEntry> orderByComparator)
-		throws com.liferay.asset.display.page.exception.
-			NoSuchDisplayPageEntryException {
-
-		return getPersistence().findByUuid_PrevAndNext(
-			assetDisplayPageEntryId, uuid, orderByComparator);
-	}
-
-	/**
 	 * Removes all the asset display page entries where uuid = &#63; from the database.
 	 *
 	 * @param uuid the uuid
@@ -297,19 +217,6 @@ public class AssetDisplayPageEntryUtil {
 			NoSuchDisplayPageEntryException {
 
 		return getPersistence().findByUUID_G(uuid, groupId);
-	}
-
-	/**
-	 * Returns the asset display page entry where uuid = &#63; and groupId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
-	 *
-	 * @param uuid the uuid
-	 * @param groupId the group ID
-	 * @return the matching asset display page entry, or <code>null</code> if a matching asset display page entry could not be found
-	 */
-	public static AssetDisplayPageEntry fetchByUUID_G(
-		String uuid, long groupId) {
-
-		return getPersistence().fetchByUUID_G(uuid, groupId);
 	}
 
 	/**
@@ -353,64 +260,10 @@ public class AssetDisplayPageEntryUtil {
 	}
 
 	/**
-	 * Returns all the asset display page entries where uuid = &#63; and companyId = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @return the matching asset display page entries
-	 */
-	public static List<AssetDisplayPageEntry> findByUuid_C(
-		String uuid, long companyId) {
-
-		return getPersistence().findByUuid_C(uuid, companyId);
-	}
-
-	/**
-	 * Returns a range of all the asset display page entries where uuid = &#63; and companyId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetDisplayPageEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param start the lower bound of the range of asset display page entries
-	 * @param end the upper bound of the range of asset display page entries (not inclusive)
-	 * @return the range of matching asset display page entries
-	 */
-	public static List<AssetDisplayPageEntry> findByUuid_C(
-		String uuid, long companyId, int start, int end) {
-
-		return getPersistence().findByUuid_C(uuid, companyId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the asset display page entries where uuid = &#63; and companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetDisplayPageEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param start the lower bound of the range of asset display page entries
-	 * @param end the upper bound of the range of asset display page entries (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching asset display page entries
-	 */
-	public static List<AssetDisplayPageEntry> findByUuid_C(
-		String uuid, long companyId, int start, int end,
-		OrderByComparator<AssetDisplayPageEntry> orderByComparator) {
-
-		return getPersistence().findByUuid_C(
-			uuid, companyId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the asset display page entries where uuid = &#63; and companyId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetDisplayPageEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.asset.display.page.model.impl.AssetDisplayPageEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -466,61 +319,6 @@ public class AssetDisplayPageEntryUtil {
 	}
 
 	/**
-	 * Returns the last asset display page entry in the ordered set where uuid = &#63; and companyId = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching asset display page entry
-	 * @throws NoSuchDisplayPageEntryException if a matching asset display page entry could not be found
-	 */
-	public static AssetDisplayPageEntry findByUuid_C_Last(
-			String uuid, long companyId,
-			OrderByComparator<AssetDisplayPageEntry> orderByComparator)
-		throws com.liferay.asset.display.page.exception.
-			NoSuchDisplayPageEntryException {
-
-		return getPersistence().findByUuid_C_Last(
-			uuid, companyId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last asset display page entry in the ordered set where uuid = &#63; and companyId = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching asset display page entry, or <code>null</code> if a matching asset display page entry could not be found
-	 */
-	public static AssetDisplayPageEntry fetchByUuid_C_Last(
-		String uuid, long companyId,
-		OrderByComparator<AssetDisplayPageEntry> orderByComparator) {
-
-		return getPersistence().fetchByUuid_C_Last(
-			uuid, companyId, orderByComparator);
-	}
-
-	/**
-	 * Returns the asset display page entries before and after the current asset display page entry in the ordered set where uuid = &#63; and companyId = &#63;.
-	 *
-	 * @param assetDisplayPageEntryId the primary key of the current asset display page entry
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next asset display page entry
-	 * @throws NoSuchDisplayPageEntryException if a asset display page entry with the primary key could not be found
-	 */
-	public static AssetDisplayPageEntry[] findByUuid_C_PrevAndNext(
-			long assetDisplayPageEntryId, String uuid, long companyId,
-			OrderByComparator<AssetDisplayPageEntry> orderByComparator)
-		throws com.liferay.asset.display.page.exception.
-			NoSuchDisplayPageEntryException {
-
-		return getPersistence().findByUuid_C_PrevAndNext(
-			assetDisplayPageEntryId, uuid, companyId, orderByComparator);
-	}
-
-	/**
 	 * Removes all the asset display page entries where uuid = &#63; and companyId = &#63; from the database.
 	 *
 	 * @param uuid the uuid
@@ -542,59 +340,10 @@ public class AssetDisplayPageEntryUtil {
 	}
 
 	/**
-	 * Returns all the asset display page entries where groupId = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @return the matching asset display page entries
-	 */
-	public static List<AssetDisplayPageEntry> findByGroupId(long groupId) {
-		return getPersistence().findByGroupId(groupId);
-	}
-
-	/**
-	 * Returns a range of all the asset display page entries where groupId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetDisplayPageEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param groupId the group ID
-	 * @param start the lower bound of the range of asset display page entries
-	 * @param end the upper bound of the range of asset display page entries (not inclusive)
-	 * @return the range of matching asset display page entries
-	 */
-	public static List<AssetDisplayPageEntry> findByGroupId(
-		long groupId, int start, int end) {
-
-		return getPersistence().findByGroupId(groupId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the asset display page entries where groupId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetDisplayPageEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param groupId the group ID
-	 * @param start the lower bound of the range of asset display page entries
-	 * @param end the upper bound of the range of asset display page entries (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching asset display page entries
-	 */
-	public static List<AssetDisplayPageEntry> findByGroupId(
-		long groupId, int start, int end,
-		OrderByComparator<AssetDisplayPageEntry> orderByComparator) {
-
-		return getPersistence().findByGroupId(
-			groupId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the asset display page entries where groupId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetDisplayPageEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.asset.display.page.model.impl.AssetDisplayPageEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -646,56 +395,6 @@ public class AssetDisplayPageEntryUtil {
 	}
 
 	/**
-	 * Returns the last asset display page entry in the ordered set where groupId = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching asset display page entry
-	 * @throws NoSuchDisplayPageEntryException if a matching asset display page entry could not be found
-	 */
-	public static AssetDisplayPageEntry findByGroupId_Last(
-			long groupId,
-			OrderByComparator<AssetDisplayPageEntry> orderByComparator)
-		throws com.liferay.asset.display.page.exception.
-			NoSuchDisplayPageEntryException {
-
-		return getPersistence().findByGroupId_Last(groupId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last asset display page entry in the ordered set where groupId = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching asset display page entry, or <code>null</code> if a matching asset display page entry could not be found
-	 */
-	public static AssetDisplayPageEntry fetchByGroupId_Last(
-		long groupId,
-		OrderByComparator<AssetDisplayPageEntry> orderByComparator) {
-
-		return getPersistence().fetchByGroupId_Last(groupId, orderByComparator);
-	}
-
-	/**
-	 * Returns the asset display page entries before and after the current asset display page entry in the ordered set where groupId = &#63;.
-	 *
-	 * @param assetDisplayPageEntryId the primary key of the current asset display page entry
-	 * @param groupId the group ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next asset display page entry
-	 * @throws NoSuchDisplayPageEntryException if a asset display page entry with the primary key could not be found
-	 */
-	public static AssetDisplayPageEntry[] findByGroupId_PrevAndNext(
-			long assetDisplayPageEntryId, long groupId,
-			OrderByComparator<AssetDisplayPageEntry> orderByComparator)
-		throws com.liferay.asset.display.page.exception.
-			NoSuchDisplayPageEntryException {
-
-		return getPersistence().findByGroupId_PrevAndNext(
-			assetDisplayPageEntryId, groupId, orderByComparator);
-	}
-
-	/**
 	 * Removes all the asset display page entries where groupId = &#63; from the database.
 	 *
 	 * @param groupId the group ID
@@ -715,63 +414,10 @@ public class AssetDisplayPageEntryUtil {
 	}
 
 	/**
-	 * Returns all the asset display page entries where layoutPageTemplateEntryId = &#63;.
-	 *
-	 * @param layoutPageTemplateEntryId the layout page template entry ID
-	 * @return the matching asset display page entries
-	 */
-	public static List<AssetDisplayPageEntry> findByLayoutPageTemplateEntryId(
-		long layoutPageTemplateEntryId) {
-
-		return getPersistence().findByLayoutPageTemplateEntryId(
-			layoutPageTemplateEntryId);
-	}
-
-	/**
-	 * Returns a range of all the asset display page entries where layoutPageTemplateEntryId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetDisplayPageEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param layoutPageTemplateEntryId the layout page template entry ID
-	 * @param start the lower bound of the range of asset display page entries
-	 * @param end the upper bound of the range of asset display page entries (not inclusive)
-	 * @return the range of matching asset display page entries
-	 */
-	public static List<AssetDisplayPageEntry> findByLayoutPageTemplateEntryId(
-		long layoutPageTemplateEntryId, int start, int end) {
-
-		return getPersistence().findByLayoutPageTemplateEntryId(
-			layoutPageTemplateEntryId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the asset display page entries where layoutPageTemplateEntryId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetDisplayPageEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param layoutPageTemplateEntryId the layout page template entry ID
-	 * @param start the lower bound of the range of asset display page entries
-	 * @param end the upper bound of the range of asset display page entries (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching asset display page entries
-	 */
-	public static List<AssetDisplayPageEntry> findByLayoutPageTemplateEntryId(
-		long layoutPageTemplateEntryId, int start, int end,
-		OrderByComparator<AssetDisplayPageEntry> orderByComparator) {
-
-		return getPersistence().findByLayoutPageTemplateEntryId(
-			layoutPageTemplateEntryId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the asset display page entries where layoutPageTemplateEntryId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetDisplayPageEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.asset.display.page.model.impl.AssetDisplayPageEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param layoutPageTemplateEntryId the layout page template entry ID
@@ -825,60 +471,6 @@ public class AssetDisplayPageEntryUtil {
 	}
 
 	/**
-	 * Returns the last asset display page entry in the ordered set where layoutPageTemplateEntryId = &#63;.
-	 *
-	 * @param layoutPageTemplateEntryId the layout page template entry ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching asset display page entry
-	 * @throws NoSuchDisplayPageEntryException if a matching asset display page entry could not be found
-	 */
-	public static AssetDisplayPageEntry findByLayoutPageTemplateEntryId_Last(
-			long layoutPageTemplateEntryId,
-			OrderByComparator<AssetDisplayPageEntry> orderByComparator)
-		throws com.liferay.asset.display.page.exception.
-			NoSuchDisplayPageEntryException {
-
-		return getPersistence().findByLayoutPageTemplateEntryId_Last(
-			layoutPageTemplateEntryId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last asset display page entry in the ordered set where layoutPageTemplateEntryId = &#63;.
-	 *
-	 * @param layoutPageTemplateEntryId the layout page template entry ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching asset display page entry, or <code>null</code> if a matching asset display page entry could not be found
-	 */
-	public static AssetDisplayPageEntry fetchByLayoutPageTemplateEntryId_Last(
-		long layoutPageTemplateEntryId,
-		OrderByComparator<AssetDisplayPageEntry> orderByComparator) {
-
-		return getPersistence().fetchByLayoutPageTemplateEntryId_Last(
-			layoutPageTemplateEntryId, orderByComparator);
-	}
-
-	/**
-	 * Returns the asset display page entries before and after the current asset display page entry in the ordered set where layoutPageTemplateEntryId = &#63;.
-	 *
-	 * @param assetDisplayPageEntryId the primary key of the current asset display page entry
-	 * @param layoutPageTemplateEntryId the layout page template entry ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next asset display page entry
-	 * @throws NoSuchDisplayPageEntryException if a asset display page entry with the primary key could not be found
-	 */
-	public static AssetDisplayPageEntry[]
-			findByLayoutPageTemplateEntryId_PrevAndNext(
-				long assetDisplayPageEntryId, long layoutPageTemplateEntryId,
-				OrderByComparator<AssetDisplayPageEntry> orderByComparator)
-		throws com.liferay.asset.display.page.exception.
-			NoSuchDisplayPageEntryException {
-
-		return getPersistence().findByLayoutPageTemplateEntryId_PrevAndNext(
-			assetDisplayPageEntryId, layoutPageTemplateEntryId,
-			orderByComparator);
-	}
-
-	/**
 	 * Removes all the asset display page entries where layoutPageTemplateEntryId = &#63; from the database.
 	 *
 	 * @param layoutPageTemplateEntryId the layout page template entry ID
@@ -904,64 +496,10 @@ public class AssetDisplayPageEntryUtil {
 	}
 
 	/**
-	 * Returns all the asset display page entries where groupId = &#63; and classNameId = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param classNameId the class name ID
-	 * @return the matching asset display page entries
-	 */
-	public static List<AssetDisplayPageEntry> findByG_CN(
-		long groupId, long classNameId) {
-
-		return getPersistence().findByG_CN(groupId, classNameId);
-	}
-
-	/**
-	 * Returns a range of all the asset display page entries where groupId = &#63; and classNameId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetDisplayPageEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param groupId the group ID
-	 * @param classNameId the class name ID
-	 * @param start the lower bound of the range of asset display page entries
-	 * @param end the upper bound of the range of asset display page entries (not inclusive)
-	 * @return the range of matching asset display page entries
-	 */
-	public static List<AssetDisplayPageEntry> findByG_CN(
-		long groupId, long classNameId, int start, int end) {
-
-		return getPersistence().findByG_CN(groupId, classNameId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the asset display page entries where groupId = &#63; and classNameId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetDisplayPageEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param groupId the group ID
-	 * @param classNameId the class name ID
-	 * @param start the lower bound of the range of asset display page entries
-	 * @param end the upper bound of the range of asset display page entries (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching asset display page entries
-	 */
-	public static List<AssetDisplayPageEntry> findByG_CN(
-		long groupId, long classNameId, int start, int end,
-		OrderByComparator<AssetDisplayPageEntry> orderByComparator) {
-
-		return getPersistence().findByG_CN(
-			groupId, classNameId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the asset display page entries where groupId = &#63; and classNameId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetDisplayPageEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.asset.display.page.model.impl.AssetDisplayPageEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -1018,61 +556,6 @@ public class AssetDisplayPageEntryUtil {
 	}
 
 	/**
-	 * Returns the last asset display page entry in the ordered set where groupId = &#63; and classNameId = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param classNameId the class name ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching asset display page entry
-	 * @throws NoSuchDisplayPageEntryException if a matching asset display page entry could not be found
-	 */
-	public static AssetDisplayPageEntry findByG_CN_Last(
-			long groupId, long classNameId,
-			OrderByComparator<AssetDisplayPageEntry> orderByComparator)
-		throws com.liferay.asset.display.page.exception.
-			NoSuchDisplayPageEntryException {
-
-		return getPersistence().findByG_CN_Last(
-			groupId, classNameId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last asset display page entry in the ordered set where groupId = &#63; and classNameId = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param classNameId the class name ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching asset display page entry, or <code>null</code> if a matching asset display page entry could not be found
-	 */
-	public static AssetDisplayPageEntry fetchByG_CN_Last(
-		long groupId, long classNameId,
-		OrderByComparator<AssetDisplayPageEntry> orderByComparator) {
-
-		return getPersistence().fetchByG_CN_Last(
-			groupId, classNameId, orderByComparator);
-	}
-
-	/**
-	 * Returns the asset display page entries before and after the current asset display page entry in the ordered set where groupId = &#63; and classNameId = &#63;.
-	 *
-	 * @param assetDisplayPageEntryId the primary key of the current asset display page entry
-	 * @param groupId the group ID
-	 * @param classNameId the class name ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next asset display page entry
-	 * @throws NoSuchDisplayPageEntryException if a asset display page entry with the primary key could not be found
-	 */
-	public static AssetDisplayPageEntry[] findByG_CN_PrevAndNext(
-			long assetDisplayPageEntryId, long groupId, long classNameId,
-			OrderByComparator<AssetDisplayPageEntry> orderByComparator)
-		throws com.liferay.asset.display.page.exception.
-			NoSuchDisplayPageEntryException {
-
-		return getPersistence().findByG_CN_PrevAndNext(
-			assetDisplayPageEntryId, groupId, classNameId, orderByComparator);
-	}
-
-	/**
 	 * Removes all the asset display page entries where groupId = &#63; and classNameId = &#63; from the database.
 	 *
 	 * @param groupId the group ID
@@ -1108,20 +591,6 @@ public class AssetDisplayPageEntryUtil {
 			NoSuchDisplayPageEntryException {
 
 		return getPersistence().findByG_C_C(groupId, classNameId, classPK);
-	}
-
-	/**
-	 * Returns the asset display page entry where groupId = &#63; and classNameId = &#63; and classPK = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
-	 *
-	 * @param groupId the group ID
-	 * @param classNameId the class name ID
-	 * @param classPK the class pk
-	 * @return the matching asset display page entry, or <code>null</code> if a matching asset display page entry could not be found
-	 */
-	public static AssetDisplayPageEntry fetchByG_C_C(
-		long groupId, long classNameId, long classPK) {
-
-		return getPersistence().fetchByG_C_C(groupId, classNameId, classPK);
 	}
 
 	/**
@@ -1168,28 +637,6 @@ public class AssetDisplayPageEntryUtil {
 		long groupId, long classNameId, long classPK) {
 
 		return getPersistence().countByG_C_C(groupId, classNameId, classPK);
-	}
-
-	/**
-	 * Caches the asset display page entry in the entity cache if it is enabled.
-	 *
-	 * @param assetDisplayPageEntry the asset display page entry
-	 */
-	public static void cacheResult(
-		AssetDisplayPageEntry assetDisplayPageEntry) {
-
-		getPersistence().cacheResult(assetDisplayPageEntry);
-	}
-
-	/**
-	 * Caches the asset display page entries in the entity cache if it is enabled.
-	 *
-	 * @param assetDisplayPageEntries the asset display page entries
-	 */
-	public static void cacheResult(
-		List<AssetDisplayPageEntry> assetDisplayPageEntries) {
-
-		getPersistence().cacheResult(assetDisplayPageEntries);
 	}
 
 	/**
@@ -1250,84 +697,288 @@ public class AssetDisplayPageEntryUtil {
 	}
 
 	/**
-	 * Returns all the asset display page entries.
+	 * Returns the asset display page entry where uuid = &#63; and groupId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
 	 *
-	 * @return the asset display page entries
+	 * @param uuid the uuid
+	 * @param groupId the group ID
+	 * @return the matching asset display page entry, or <code>null</code> if a matching asset display page entry could not be found
 	 */
-	public static List<AssetDisplayPageEntry> findAll() {
-		return getPersistence().findAll();
+	public static AssetDisplayPageEntry fetchByUUID_G(
+		String uuid, long groupId) {
+
+		return getPersistence().fetchByUUID_G(uuid, groupId);
 	}
 
 	/**
-	 * Returns a range of all the asset display page entries.
+	 * Returns the asset display page entry where groupId = &#63; and classNameId = &#63; and classPK = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	 *
+	 * @param groupId the group ID
+	 * @param classNameId the class name ID
+	 * @param classPK the class pk
+	 * @return the matching asset display page entry, or <code>null</code> if a matching asset display page entry could not be found
+	 */
+	public static AssetDisplayPageEntry fetchByG_C_C(
+		long groupId, long classNameId, long classPK) {
+
+		return getPersistence().fetchByG_C_C(groupId, classNameId, classPK);
+	}
+
+	/**
+	 * Returns all the asset display page entries where uuid = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @return the matching asset display page entries
+	 */
+	public static List<AssetDisplayPageEntry> findByUuid(String uuid) {
+		return getPersistence().findByUuid(uuid);
+	}
+
+	/**
+	 * Returns a range of all the asset display page entries where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetDisplayPageEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.asset.display.page.model.impl.AssetDisplayPageEntryModelImpl</code>.
 	 * </p>
 	 *
+	 * @param uuid the uuid
 	 * @param start the lower bound of the range of asset display page entries
 	 * @param end the upper bound of the range of asset display page entries (not inclusive)
-	 * @return the range of asset display page entries
+	 * @return the range of matching asset display page entries
 	 */
-	public static List<AssetDisplayPageEntry> findAll(int start, int end) {
-		return getPersistence().findAll(start, end);
+	public static List<AssetDisplayPageEntry> findByUuid(
+		String uuid, int start, int end) {
+
+		return getPersistence().findByUuid(uuid, start, end);
 	}
 
 	/**
-	 * Returns an ordered range of all the asset display page entries.
+	 * Returns an ordered range of all the asset display page entries where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetDisplayPageEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.asset.display.page.model.impl.AssetDisplayPageEntryModelImpl</code>.
 	 * </p>
 	 *
+	 * @param uuid the uuid
 	 * @param start the lower bound of the range of asset display page entries
 	 * @param end the upper bound of the range of asset display page entries (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of asset display page entries
+	 * @return the ordered range of matching asset display page entries
 	 */
-	public static List<AssetDisplayPageEntry> findAll(
-		int start, int end,
+	public static List<AssetDisplayPageEntry> findByUuid(
+		String uuid, int start, int end,
 		OrderByComparator<AssetDisplayPageEntry> orderByComparator) {
 
-		return getPersistence().findAll(start, end, orderByComparator);
+		return getPersistence().findByUuid(uuid, start, end, orderByComparator);
 	}
 
 	/**
-	 * Returns an ordered range of all the asset display page entries.
+	 * Returns all the asset display page entries where uuid = &#63; and companyId = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @return the matching asset display page entries
+	 */
+	public static List<AssetDisplayPageEntry> findByUuid_C(
+		String uuid, long companyId) {
+
+		return getPersistence().findByUuid_C(uuid, companyId);
+	}
+
+	/**
+	 * Returns a range of all the asset display page entries where uuid = &#63; and companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetDisplayPageEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.asset.display.page.model.impl.AssetDisplayPageEntryModelImpl</code>.
 	 * </p>
 	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of asset display page entries
+	 * @param end the upper bound of the range of asset display page entries (not inclusive)
+	 * @return the range of matching asset display page entries
+	 */
+	public static List<AssetDisplayPageEntry> findByUuid_C(
+		String uuid, long companyId, int start, int end) {
+
+		return getPersistence().findByUuid_C(uuid, companyId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the asset display page entries where uuid = &#63; and companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.asset.display.page.model.impl.AssetDisplayPageEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
 	 * @param start the lower bound of the range of asset display page entries
 	 * @param end the upper bound of the range of asset display page entries (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param useFinderCache whether to use the finder cache
-	 * @return the ordered range of asset display page entries
+	 * @return the ordered range of matching asset display page entries
 	 */
-	public static List<AssetDisplayPageEntry> findAll(
-		int start, int end,
-		OrderByComparator<AssetDisplayPageEntry> orderByComparator,
-		boolean useFinderCache) {
+	public static List<AssetDisplayPageEntry> findByUuid_C(
+		String uuid, long companyId, int start, int end,
+		OrderByComparator<AssetDisplayPageEntry> orderByComparator) {
 
-		return getPersistence().findAll(
-			start, end, orderByComparator, useFinderCache);
+		return getPersistence().findByUuid_C(
+			uuid, companyId, start, end, orderByComparator);
 	}
 
 	/**
-	 * Removes all the asset display page entries from the database.
-	 */
-	public static void removeAll() {
-		getPersistence().removeAll();
-	}
-
-	/**
-	 * Returns the number of asset display page entries.
+	 * Returns all the asset display page entries where groupId = &#63;.
 	 *
-	 * @return the number of asset display page entries
+	 * @param groupId the group ID
+	 * @return the matching asset display page entries
 	 */
-	public static int countAll() {
-		return getPersistence().countAll();
+	public static List<AssetDisplayPageEntry> findByGroupId(long groupId) {
+		return getPersistence().findByGroupId(groupId);
+	}
+
+	/**
+	 * Returns a range of all the asset display page entries where groupId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.asset.display.page.model.impl.AssetDisplayPageEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param start the lower bound of the range of asset display page entries
+	 * @param end the upper bound of the range of asset display page entries (not inclusive)
+	 * @return the range of matching asset display page entries
+	 */
+	public static List<AssetDisplayPageEntry> findByGroupId(
+		long groupId, int start, int end) {
+
+		return getPersistence().findByGroupId(groupId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the asset display page entries where groupId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.asset.display.page.model.impl.AssetDisplayPageEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param start the lower bound of the range of asset display page entries
+	 * @param end the upper bound of the range of asset display page entries (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching asset display page entries
+	 */
+	public static List<AssetDisplayPageEntry> findByGroupId(
+		long groupId, int start, int end,
+		OrderByComparator<AssetDisplayPageEntry> orderByComparator) {
+
+		return getPersistence().findByGroupId(
+			groupId, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns all the asset display page entries where layoutPageTemplateEntryId = &#63;.
+	 *
+	 * @param layoutPageTemplateEntryId the layout page template entry ID
+	 * @return the matching asset display page entries
+	 */
+	public static List<AssetDisplayPageEntry> findByLayoutPageTemplateEntryId(
+		long layoutPageTemplateEntryId) {
+
+		return getPersistence().findByLayoutPageTemplateEntryId(
+			layoutPageTemplateEntryId);
+	}
+
+	/**
+	 * Returns a range of all the asset display page entries where layoutPageTemplateEntryId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.asset.display.page.model.impl.AssetDisplayPageEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param layoutPageTemplateEntryId the layout page template entry ID
+	 * @param start the lower bound of the range of asset display page entries
+	 * @param end the upper bound of the range of asset display page entries (not inclusive)
+	 * @return the range of matching asset display page entries
+	 */
+	public static List<AssetDisplayPageEntry> findByLayoutPageTemplateEntryId(
+		long layoutPageTemplateEntryId, int start, int end) {
+
+		return getPersistence().findByLayoutPageTemplateEntryId(
+			layoutPageTemplateEntryId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the asset display page entries where layoutPageTemplateEntryId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.asset.display.page.model.impl.AssetDisplayPageEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param layoutPageTemplateEntryId the layout page template entry ID
+	 * @param start the lower bound of the range of asset display page entries
+	 * @param end the upper bound of the range of asset display page entries (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching asset display page entries
+	 */
+	public static List<AssetDisplayPageEntry> findByLayoutPageTemplateEntryId(
+		long layoutPageTemplateEntryId, int start, int end,
+		OrderByComparator<AssetDisplayPageEntry> orderByComparator) {
+
+		return getPersistence().findByLayoutPageTemplateEntryId(
+			layoutPageTemplateEntryId, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns all the asset display page entries where groupId = &#63; and classNameId = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param classNameId the class name ID
+	 * @return the matching asset display page entries
+	 */
+	public static List<AssetDisplayPageEntry> findByG_CN(
+		long groupId, long classNameId) {
+
+		return getPersistence().findByG_CN(groupId, classNameId);
+	}
+
+	/**
+	 * Returns a range of all the asset display page entries where groupId = &#63; and classNameId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.asset.display.page.model.impl.AssetDisplayPageEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param classNameId the class name ID
+	 * @param start the lower bound of the range of asset display page entries
+	 * @param end the upper bound of the range of asset display page entries (not inclusive)
+	 * @return the range of matching asset display page entries
+	 */
+	public static List<AssetDisplayPageEntry> findByG_CN(
+		long groupId, long classNameId, int start, int end) {
+
+		return getPersistence().findByG_CN(groupId, classNameId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the asset display page entries where groupId = &#63; and classNameId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.asset.display.page.model.impl.AssetDisplayPageEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param classNameId the class name ID
+	 * @param start the lower bound of the range of asset display page entries
+	 * @param end the upper bound of the range of asset display page entries (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching asset display page entries
+	 */
+	public static List<AssetDisplayPageEntry> findByG_CN(
+		long groupId, long classNameId, int start, int end,
+		OrderByComparator<AssetDisplayPageEntry> orderByComparator) {
+
+		return getPersistence().findByG_CN(
+			groupId, classNameId, start, end, orderByComparator);
 	}
 
 	public static AssetDisplayPageEntryPersistence getPersistence() {
@@ -1343,3 +994,4 @@ public class AssetDisplayPageEntryUtil {
 	private static volatile AssetDisplayPageEntryPersistence _persistence;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:189168528

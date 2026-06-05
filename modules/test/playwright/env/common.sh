@@ -7,9 +7,9 @@ function cluster_set_up {
 
 	local slave_home="${LIFERAY_HOME}-${1}"
 
-	cp "${CURRENT_DIR_NAME}/com.liferay.portal.search.elasticsearch7.configuration.ElasticsearchConfiguration.config" "${slave_home}/osgi/configs"
+	cp "${CURRENT_DIR_NAME}/com.liferay.portal.search.elasticsearch8.configuration.ElasticsearchConfiguration.config" "${slave_home}/osgi/configs"
 
-	sed -i "s/%LIFERAY_DOCKER_NETWORK_NAME%/${LIFERAY_DOCKER_NETWORK_NAME}/g" "${slave_home}/osgi/configs/com.liferay.portal.search.elasticsearch7.configuration.ElasticsearchConfiguration.config"
+	sed -i "s/%LIFERAY_DOCKER_NETWORK_NAME%/${LIFERAY_DOCKER_NETWORK_NAME}/g" "${slave_home}/osgi/configs/com.liferay.portal.search.elasticsearch8.configuration.ElasticsearchConfiguration.config"
 
 	rm -fr "${slave_home}/data"
 
@@ -300,7 +300,7 @@ function get_app_server_dir {
 }
 
 function get_client_extension_dir {
-	local clients_extension_name=${1}
+	local client_extension_name=${1}
 
 	local client_extension_dir=$(find ${_PORTAL_PROJECT_DIR}/workspaces -type d | grep "${client_extension_name}$" | grep -v .releng | grep -v .npmscripts | grep -v dist | grep -v node_modules)
 
@@ -330,7 +330,7 @@ function get_client_extension_dirs {
 	then
 		for client_extension_name in $(cat ${client_extensions_list_file})
 		do
-			client_extension_dirs+=($(get_client_extension_dir))
+			client_extension_dirs+=($(get_client_extension_dir ${client_extension_name}))
 		done
 	fi
 

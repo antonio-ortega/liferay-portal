@@ -3,23 +3,28 @@
 		"externalReferenceCode": "AIHUBPRIMARYNAVIGATION",
 		"menuItems": [
 			{
-				"friendlyURL": "/ai-tasks",
-				"order": 0,
-				"title": "AI Tasks",
-				"type": "layout"
-			},
-			{
+				"externalReferenceCode": "AIHUBPRIMARYNAVIGATION1",
 				"friendlyURL": "/home",
-				"order": 0,
-				"title": "Home",
+				"privateLayout": false,
 				"type": "layout"
 			},
 			{
-				"openInNewTab": true,
-				"order": 2,
-				"title": "Liferay",
-				"type": "url",
-				"url": "https://www.liferay.com"
+				"externalReferenceCode": "AIHUBPRIMARYNAVIGATION2",
+				"friendlyURL": "/agent-builder",
+				"privateLayout": false,
+				"type": "layout"
+			},
+			{
+				"externalReferenceCode": "AIHUBPRIMARYNAVIGATION3",
+				"friendlyURL": "/chatbots",
+				"privateLayout": false,
+				"type": "layout"
+			},
+			{
+				"externalReferenceCode": "AIHUBPRIMARYNAVIGATION4",
+				"friendlyURL": "/account-management",
+				"privateLayout": false,
+				"type": "layout"
 			}
 		],
 		"name": "AI Hub Navigation Menu"

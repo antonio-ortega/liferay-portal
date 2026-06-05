@@ -1597,3 +1597,4 @@ public interface UserService extends BaseService {
 		throws PortalException;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-1445615454

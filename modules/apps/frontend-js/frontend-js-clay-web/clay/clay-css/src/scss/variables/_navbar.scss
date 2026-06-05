@@ -9,7 +9,7 @@ $navbar-nav-link-padding-x: 0.5rem !default;
 
 $navbar-title-font-size: 1.25rem !default; // 20px
 $navbar-title-font-weight: $font-weight-semi-bold !default;
-$navbar-title-margin-bottom: 0 !default;
+$navbar-title-margin-bottom: 0rem !default;
 $navbar-title-text-transform: null !default;
 
 $navbar-text-truncate-spacer-right: 1.5625rem !default; // 25px
@@ -36,7 +36,10 @@ $navbar-brand-font-size: $font-size-lg !default;
 // Compute the navbar-brand padding-y so the navbar-brand will have the same height as navbar-text and nav-link
 // This is a string so we don't get nested calcs in `$navbar-brand-height` and `$navbar-brand-padding-y`
 
-$nav-link-height: '#{$font-size-base} * #{$line-height-base} + #{$nav-link-padding-y} * 2' !default;
+$nav-link-height: calc(
+	#{$font-size-base} * #{$line-height-base} + #{$nav-link-padding-y} * 2
+) !default;
+
 $navbar-brand-height: calc(
 	#{$navbar-brand-font-size} * #{$line-height-base}
 ) !default;
@@ -62,16 +65,17 @@ $navbar-underline: map-deep-merge(
 		navbar-toggler-link: (
 			after: (
 				background-color: $navbar-underline-active-bg,
-				bottom: math-sign($navbar-padding-y),
+				bottom: calc(#{$navbar-padding-y} * -1),
 				content: '',
 				display: block,
 				height: 0.1875rem,
-				left: 0,
+				left: 0rem,
 				position: absolute,
-				right: 0,
+				right: 0rem,
 				width: auto,
 			),
 		),
+
 		media-breakpoint-up: (
 			md: (
 				navbar-expand-md: (
@@ -82,13 +86,13 @@ $navbar-underline: map-deep-merge(
 									after: (
 										background-color:
 											$navbar-underline-active-bg,
-										bottom: math-sign($navbar-padding-y),
+										bottom: calc(#{$navbar-padding-y} * -1),
 										content: '',
 										display: block,
 										height: 0.1875rem,
-										left: 0,
+										left: 0rem,
 										position: absolute,
-										right: 0,
+										right: 0rem,
 										width: auto,
 									),
 								),
@@ -117,6 +121,7 @@ $navbar-dark-brand-color: $navbar-dark-active-color !default;
 $navbar-dark-brand-hover-color: $navbar-dark-active-color !default;
 
 $navbar-dark-toggler-border-color: rgba($white, 0.1) !default;
+
 $navbar-dark-toggler-icon-bg: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='30' height='30' viewBox='0 0 30 30'><path stroke='#{$navbar-dark-color}' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/></svg>") !default;
 
 // Navbar Light
@@ -134,4 +139,5 @@ $navbar-light-brand-color: $navbar-light-active-color !default;
 $navbar-light-brand-hover-color: $navbar-light-active-color !default;
 
 $navbar-light-toggler-border-color: rgba($black, 0.1) !default;
+
 $navbar-light-toggler-icon-bg: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='30' height='30' viewBox='0 0 30 30'><path stroke='#{$navbar-light-color}' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/></svg>") !default;

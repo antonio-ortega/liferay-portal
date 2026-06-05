@@ -212,3 +212,4 @@ public class SitePageActionExecutionResultSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-554359656

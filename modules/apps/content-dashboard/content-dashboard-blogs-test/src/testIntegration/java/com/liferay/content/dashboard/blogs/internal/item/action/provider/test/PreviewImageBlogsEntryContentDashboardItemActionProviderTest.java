@@ -17,6 +17,7 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
+import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.UserLocalService;
@@ -73,9 +74,6 @@ public class PreviewImageBlogsEntryContentDashboardItemActionProviderTest {
 
 	@Test
 	public void testGetContentDashboardItemAction() throws Exception {
-		ServiceContext originalServiceContext =
-			ServiceContextThreadLocal.getServiceContext();
-
 		try {
 			FileEntry fileEntry = _getTempFileEntry(
 				TestPropsValues.getUserId(), RandomTestUtil.randomString(),
@@ -119,8 +117,7 @@ public class PreviewImageBlogsEntryContentDashboardItemActionProviderTest {
 				contentDashboardItemAction.getURL());
 		}
 		finally {
-			ServiceContextThreadLocal.pushServiceContext(
-				originalServiceContext);
+			ServiceContextThreadLocal.popServiceContext();
 		}
 	}
 
@@ -139,9 +136,6 @@ public class PreviewImageBlogsEntryContentDashboardItemActionProviderTest {
 
 	@Test
 	public void testIsShow() throws Exception {
-		ServiceContext originalServiceContext =
-			ServiceContextThreadLocal.getServiceContext();
-
 		try {
 			FileEntry fileEntry = _getTempFileEntry(
 				TestPropsValues.getUserId(), RandomTestUtil.randomString(),
@@ -180,8 +174,7 @@ public class PreviewImageBlogsEntryContentDashboardItemActionProviderTest {
 					blogsEntry, mockHttpServletRequest));
 		}
 		finally {
-			ServiceContextThreadLocal.pushServiceContext(
-				originalServiceContext);
+			ServiceContextThreadLocal.popServiceContext();
 		}
 	}
 
@@ -239,6 +232,8 @@ public class PreviewImageBlogsEntryContentDashboardItemActionProviderTest {
 
 		ThemeDisplay themeDisplay = new ThemeDisplay();
 
+		themeDisplay.setCompany(
+			_companyLocalService.getCompany(TestPropsValues.getCompanyId()));
 		themeDisplay.setPermissionChecker(
 			PermissionCheckerFactoryUtil.create(TestPropsValues.getUser()));
 		themeDisplay.setRequest(httpServletRequest);
@@ -250,6 +245,9 @@ public class PreviewImageBlogsEntryContentDashboardItemActionProviderTest {
 
 	@Inject
 	private BlogsEntryLocalService _blogsEntryLocalService;
+
+	@Inject
+	private CompanyLocalService _companyLocalService;
 
 	@Inject(
 		filter = "component.name=com.liferay.content.dashboard.blogs.internal.item.action.provider.PreviewImageBlogsEntryContentDashboardItemActionProvider"

@@ -8,9 +8,6 @@ package com.liferay.osb.patcher.web.internal.search;
 import com.liferay.osb.patcher.model.PatcherProductVersion;
 import com.liferay.osb.patcher.service.PatcherProductVersionLocalService;
 import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
-import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.BaseIndexer;
 import com.liferay.portal.kernel.search.BooleanQuery;
 import com.liferay.portal.kernel.search.Document;
@@ -114,35 +111,12 @@ public class PatcherProductVersionIndexer
 	}
 
 	@Override
-	protected void doReindex(String[] ids) throws Exception {
-		long companyId = GetterUtil.getLong(ids[0]);
+	protected IndexableActionableDynamicQuery
+		getIndexableActionableDynamicQuery() {
 
-		IndexableActionableDynamicQuery indexableActionableDynamicQuery =
-			_patcherProductVersionLocalService.
-				getIndexableActionableDynamicQuery();
-
-		indexableActionableDynamicQuery.setCompanyId(companyId);
-		indexableActionableDynamicQuery.setPerformActionMethod(
-			(PatcherProductVersion patcherProductVersion) -> {
-				try {
-					indexableActionableDynamicQuery.addDocuments(
-						getDocument(patcherProductVersion));
-				}
-				catch (PortalException portalException) {
-					if (_log.isWarnEnabled()) {
-						_log.warn(
-							"Unable to index patcher product version " +
-								patcherProductVersion,
-							portalException);
-					}
-				}
-			});
-
-		indexableActionableDynamicQuery.performActions();
+		return _patcherProductVersionLocalService.
+			getIndexableActionableDynamicQuery();
 	}
-
-	private static final Log _log = LogFactoryUtil.getLog(
-		PatcherProductVersionIndexer.class);
 
 	@Reference
 	private IndexWriterHelper _indexWriterHelper;

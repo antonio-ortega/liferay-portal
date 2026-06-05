@@ -21,6 +21,7 @@ import com.liferay.dynamic.data.mapping.model.DDMFormInstanceVersion;
 import com.liferay.dynamic.data.mapping.model.DDMFormLayout;
 import com.liferay.dynamic.data.mapping.model.DDMFormSuccessPageSettings;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
+import com.liferay.dynamic.data.mapping.model.LocalizedValue;
 import com.liferay.dynamic.data.mapping.model.impl.DDMFormInstanceImpl;
 import com.liferay.dynamic.data.mapping.render.DDMFormFieldRenderingContext;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceLocalService;
@@ -32,6 +33,7 @@ import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
 import com.liferay.dynamic.data.mapping.storage.DDMStorageAdapterRegistry;
 import com.liferay.dynamic.data.mapping.storage.constants.FieldConstants;
 import com.liferay.dynamic.data.mapping.test.util.DDMFormTestUtil;
+import com.liferay.dynamic.data.mapping.test.util.DDMFormValuesTestUtil;
 import com.liferay.dynamic.data.mapping.util.DDMFormValuesMerger;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.json.JSONFactoryImpl;
@@ -554,6 +556,22 @@ public class DDMFormDisplayContextTest {
 	}
 
 	@Test
+	public void testGetRedirectURL() throws Exception {
+		String redirectURL =
+			"http://localhost:" + PortalUtil.getPortalServerPort(false) +
+				"/page";
+
+		_mockDDMFormInstance(_mockDDMFormInstanceSettings(redirectURL));
+
+		DDMFormDisplayContext ddmFormDisplayContext = Mockito.spy(
+			_createDDMFormDisplayContext());
+
+		Assert.assertEquals(
+			redirectURL + "?doAsUserId=1234",
+			ddmFormDisplayContext.getRedirectURL());
+	}
+
+	@Test
 	public void testGetSubmitLabel() throws Exception {
 		_mockDDMFormInstance(Mockito.mock(DDMFormInstanceSettings.class));
 
@@ -585,6 +603,58 @@ public class DDMFormDisplayContextTest {
 
 		Assert.assertEquals(
 			submitLabel, ddmFormDisplayContext.getSubmitLabel());
+	}
+
+	@Test
+	public void testGetSuccessPage() throws Exception {
+		DDMFormSuccessPageSettings ddmFormSuccessPageSettings = Mockito.mock(
+			DDMFormSuccessPageSettings.class);
+
+		String enValue = RandomTestUtil.randomString();
+		String ptValue = RandomTestUtil.randomString();
+
+		LocalizedValue localizedValue =
+			DDMFormValuesTestUtil.createLocalizedValue(
+				enValue, ptValue, LocaleUtil.SPAIN);
+
+		Mockito.when(
+			ddmFormSuccessPageSettings.getBody()
+		).thenReturn(
+			localizedValue
+		);
+
+		Mockito.when(
+			ddmFormSuccessPageSettings.getTitle()
+		).thenReturn(
+			localizedValue
+		);
+
+		MockRenderRequest mockRenderRequest = new MockRenderRequest();
+
+		mockRenderRequest.addPreferredLocale(LocaleUtil.US);
+		mockRenderRequest.setAttribute(
+			WebKeys.THEME_DISPLAY, _mockThemeDisplay(false));
+
+		DDMFormDisplayContext ddmFormDisplayContext = Mockito.spy(
+			_createDDMFormDisplayContext(mockRenderRequest));
+
+		Mockito.doReturn(
+			ddmFormSuccessPageSettings
+		).when(
+			ddmFormDisplayContext
+		).getDDMFormSuccessPageSettings();
+
+		Assert.assertEquals(
+			enValue, ddmFormDisplayContext.getSuccessPageDescription());
+		Assert.assertEquals(
+			enValue, ddmFormDisplayContext.getSuccessPageTitle());
+
+		mockRenderRequest.addPreferredLocale(LocaleUtil.BRAZIL);
+
+		Assert.assertEquals(
+			ptValue, ddmFormDisplayContext.getSuccessPageDescription());
+		Assert.assertEquals(
+			ptValue, ddmFormDisplayContext.getSuccessPageTitle());
 	}
 
 	@Test
@@ -763,16 +833,10 @@ public class DDMFormDisplayContextTest {
 
 	@Test
 	public void testIsShowSuccessPageWithRedirectURL() throws Exception {
-		DDMFormInstanceSettings ddmFormInstanceSettings = Mockito.mock(
-			DDMFormInstanceSettings.class);
-
-		Mockito.when(
-			ddmFormInstanceSettings.redirectURL()
-		).thenReturn(
-			"http://localhost:8080/web/forms/shared/-/form/123"
-		);
-
-		_mockDDMFormInstance(ddmFormInstanceSettings);
+		_mockDDMFormInstance(
+			_mockDDMFormInstanceSettings(
+				"http://localhost:" + PortalUtil.getPortalServerPort(false) +
+					"/web/forms/shared/-/form/123"));
 
 		RenderRequest renderRequest = _mockRenderRequest();
 
@@ -967,6 +1031,21 @@ public class DDMFormDisplayContextTest {
 		return ddmFormInstance;
 	}
 
+	private DDMFormInstanceSettings _mockDDMFormInstanceSettings(
+		String redirectURL) {
+
+		DDMFormInstanceSettings ddmFormInstanceSettings = Mockito.mock(
+			DDMFormInstanceSettings.class);
+
+		Mockito.when(
+			ddmFormInstanceSettings.redirectURL()
+		).thenReturn(
+			redirectURL
+		);
+
+		return ddmFormInstanceSettings;
+	}
+
 	private DDMFormInstanceSettings
 			_mockDDMFormInstanceSettingsAutosaveWithNonguestUser()
 		throws Exception {
@@ -1082,7 +1161,8 @@ public class DDMFormDisplayContextTest {
 		Mockito.when(
 			themeDisplay.getURLCurrent()
 		).thenReturn(
-			"http://localhost:8080/web/forms/shared?form=123"
+			"http://localhost:" + PortalUtil.getPortalServerPort(false) +
+				"/web/forms/shared?form=123"
 		);
 
 		User user = Mockito.mock(User.class);
@@ -1185,6 +1265,13 @@ public class DDMFormDisplayContextTest {
 		Portal portal = Mockito.mock(Portal.class);
 
 		portalUtil.setPortal(portal);
+
+		Mockito.when(
+			portal.addPreservedParameters(
+				Mockito.any(ThemeDisplay.class), Mockito.anyString())
+		).thenAnswer(
+			invocation -> invocation.getArgument(1) + "?doAsUserId=1234"
+		);
 
 		Mockito.when(
 			portal.getHttpServletRequest(Mockito.any(RenderRequest.class))

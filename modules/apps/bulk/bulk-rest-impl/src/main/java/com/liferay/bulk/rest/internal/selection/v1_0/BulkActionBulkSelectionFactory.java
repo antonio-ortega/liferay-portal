@@ -7,16 +7,19 @@ package com.liferay.bulk.rest.internal.selection.v1_0;
 
 import com.liferay.bulk.rest.dto.v1_0.BulkAction;
 import com.liferay.bulk.rest.dto.v1_0.BulkActionItem;
-import com.liferay.bulk.rest.dto.v1_0.DefaultPermissionBulkAction;
+import com.liferay.bulk.rest.dto.v1_0.DefaultPermissionObjectBulkSelectionAction;
+import com.liferay.bulk.rest.dto.v1_0.DeleteObjectAssetVersionBulkSelectionAction;
 import com.liferay.bulk.rest.dto.v1_0.SelectionScope;
 import com.liferay.bulk.selection.BulkSelection;
 import com.liferay.bulk.selection.BulkSelectionFactory;
 import com.liferay.bulk.selection.BulkSelectionFactoryRegistry;
 import com.liferay.object.model.ObjectDefinition;
+import com.liferay.object.model.ObjectEntry;
 import com.liferay.object.model.ObjectEntryFolder;
 import com.liferay.object.rest.filter.factory.FilterFactory;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectEntryLocalService;
+import com.liferay.object.service.ObjectEntryVersionLocalService;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.sql.dsl.expression.Predicate;
@@ -29,16 +32,14 @@ import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.search.BooleanClause;
-import com.liferay.portal.kernel.search.BooleanClauseFactoryUtil;
 import com.liferay.portal.kernel.search.BooleanClauseOccur;
 import com.liferay.portal.kernel.search.BooleanQuery;
 import com.liferay.portal.kernel.search.Field;
+import com.liferay.portal.kernel.search.MatchAllQuery;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.BooleanFilter;
 import com.liferay.portal.kernel.search.filter.Filter;
-import com.liferay.portal.kernel.search.generic.BooleanQueryImpl;
-import com.liferay.portal.kernel.search.generic.MatchAllQuery;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -64,6 +65,7 @@ import jakarta.validation.ValidationException;
 import java.io.Serializable;
 
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * @author Andrea Sbarra
@@ -200,6 +202,14 @@ public class BulkActionBulkSelectionFactory {
 			return this;
 		}
 
+		public Builder objectEntryVersionLocalService(
+			ObjectEntryVersionLocalService objectEntryVersionLocalService) {
+
+			_objectEntryVersionLocalService = objectEntryVersionLocalService;
+
+			return this;
+		}
+
 		public Builder scope(String scope) {
 			_scope = scope;
 
@@ -252,6 +262,7 @@ public class BulkActionBulkSelectionFactory {
 		private Localization _localization;
 		private ObjectDefinitionLocalService _objectDefinitionLocalService;
 		private ObjectEntryLocalService _objectEntryLocalService;
+		private ObjectEntryVersionLocalService _objectEntryVersionLocalService;
 		private String _scope;
 		private String _search;
 		private Searcher _searcher;
@@ -277,6 +288,8 @@ public class BulkActionBulkSelectionFactory {
 		_localization = builder._localization;
 		_objectDefinitionLocalService = builder._objectDefinitionLocalService;
 		_objectEntryLocalService = builder._objectEntryLocalService;
+		_objectEntryVersionLocalService =
+			builder._objectEntryVersionLocalService;
 		_scope = builder._scope;
 		_search = builder._search;
 		_searchRequestBuilderFactory = builder._searchRequestBuilderFactory;
@@ -289,7 +302,7 @@ public class BulkActionBulkSelectionFactory {
 		UnsafeConsumer<BooleanQuery, Exception> booleanQueryUnsafeConsumer,
 		Filter filter) {
 
-		BooleanQuery booleanQuery = new BooleanQueryImpl() {
+		BooleanQuery booleanQuery = new BooleanQuery() {
 			{
 				add(new MatchAllQuery(), BooleanClauseOccur.MUST);
 
@@ -306,8 +319,7 @@ public class BulkActionBulkSelectionFactory {
 		try {
 			booleanQueryUnsafeConsumer.accept(booleanQuery);
 
-			return BooleanClauseFactoryUtil.create(
-				booleanQuery, BooleanClauseOccur.MUST.getName());
+			return new BooleanClause<>(booleanQuery, BooleanClauseOccur.MUST);
 		}
 		catch (Exception exception) {
 			throw new RuntimeException(exception);
@@ -343,25 +355,31 @@ public class BulkActionBulkSelectionFactory {
 	}
 
 	private String[] _getRowIds() throws PortalException {
-		if (BulkAction.Type.DEFAULT_PERMISSION_BULK_ACTION.equals(
-				_bulkAction.getType())) {
+		if (BulkAction.Type.DEFAULT_PERMISSION_OBJECT_BULK_SELECTION_ACTION.
+				equals(_bulkAction.getType())) {
 
-			DefaultPermissionBulkAction defaultPermissionBulkAction =
-				(DefaultPermissionBulkAction)_bulkAction;
+			DefaultPermissionObjectBulkSelectionAction
+				defaultPermissionObjectBulkSelectionAction =
+					(DefaultPermissionObjectBulkSelectionAction)_bulkAction;
 
 			String filterString = StringBundler.concat(
 				"(className eq '", ObjectEntryFolder.class.getName(),
 				"') and ");
 
-			if (Validator.isNull(defaultPermissionBulkAction.getTreePath())) {
+			if (Validator.isNull(
+					defaultPermissionObjectBulkSelectionAction.getTreePath())) {
+
 				filterString = StringBundler.concat(
 					filterString, "(depotGroupId eq ",
-					defaultPermissionBulkAction.getDepotGroupId(), ")");
+					defaultPermissionObjectBulkSelectionAction.
+						getDepotGroupId(),
+					")");
 			}
 			else {
 				filterString = StringBundler.concat(
 					filterString, "(startswith(treePath, '",
-					defaultPermissionBulkAction.getTreePath(), "'))");
+					defaultPermissionObjectBulkSelectionAction.getTreePath(),
+					"'))");
 			}
 
 			ObjectDefinition objectDefinition =
@@ -381,6 +399,32 @@ public class BulkActionBulkSelectionFactory {
 					objectDefinition.getClassName() + StringPool.SPACE +
 						primaryKey,
 				String.class);
+		}
+		else if (BulkAction.Type.
+					DELETE_OBJECT_ASSET_VERSION_BULK_SELECTION_ACTION.equals(
+						_bulkAction.getType())) {
+
+			DeleteObjectAssetVersionBulkSelectionAction
+				deleteAssetVersionBulkAction =
+					(DeleteObjectAssetVersionBulkSelectionAction)_bulkAction;
+
+			if (!Objects.equals(
+					deleteAssetVersionBulkAction.getClassName(),
+					ObjectEntry.class.getName())) {
+
+				throw new UnsupportedOperationException();
+			}
+
+			ObjectEntry objectEntry = _objectEntryLocalService.getObjectEntry(
+				deleteAssetVersionBulkAction.getClassPK());
+
+			ObjectDefinition objectDefinition =
+				objectEntry.getObjectDefinition();
+
+			return new String[] {
+				objectDefinition.getClassName() + StringPool.SPACE +
+					objectEntry.getObjectEntryId()
+			};
 		}
 
 		SearchRequestBody searchRequestBody = new SearchRequestBody();
@@ -459,8 +503,8 @@ public class BulkActionBulkSelectionFactory {
 			return new String[0];
 		}
 
-		if (!BulkAction.Type.DEFAULT_PERMISSION_BULK_ACTION.equals(
-				_bulkAction.getType())) {
+		if (!BulkAction.Type.DEFAULT_PERMISSION_OBJECT_BULK_SELECTION_ACTION.
+				equals(_bulkAction.getType())) {
 
 			return TransformUtil.transform(
 				bulkActionItems,
@@ -599,22 +643,25 @@ public class BulkActionBulkSelectionFactory {
 			selectAll = GetterUtil.getBoolean(selectionScope.getSelectAll());
 		}
 
-		if (BulkAction.Type.DEFAULT_PERMISSION_BULK_ACTION.equals(
-				_bulkAction.getType())) {
+		if (BulkAction.Type.DEFAULT_PERMISSION_OBJECT_BULK_SELECTION_ACTION.
+				equals(_bulkAction.getType())) {
 
 			if (selectAll &&
 				ArrayUtil.isEmpty(_bulkAction.getBulkActionItems())) {
 
-				DefaultPermissionBulkAction defaultPermissionBulkAction =
-					(DefaultPermissionBulkAction)_bulkAction;
+				DefaultPermissionObjectBulkSelectionAction
+					defaultPermissionObjectBulkSelectionAction =
+						(DefaultPermissionObjectBulkSelectionAction)_bulkAction;
 
 				long depotGroupId = GetterUtil.getLong(
-					defaultPermissionBulkAction.getDepotGroupId());
+					defaultPermissionObjectBulkSelectionAction.
+						getDepotGroupId());
 
 				if ((depotGroupId == 0) &&
 					Validator.isNull(
 						GetterUtil.getString(
-							defaultPermissionBulkAction.getTreePath()))) {
+							defaultPermissionObjectBulkSelectionAction.
+								getTreePath()))) {
 
 					throw new ValidationException();
 				}
@@ -644,6 +691,8 @@ public class BulkActionBulkSelectionFactory {
 	private final Localization _localization;
 	private final ObjectDefinitionLocalService _objectDefinitionLocalService;
 	private final ObjectEntryLocalService _objectEntryLocalService;
+	private final ObjectEntryVersionLocalService
+		_objectEntryVersionLocalService;
 	private final String _scope;
 	private final String _search;
 	private final Searcher _searcher;

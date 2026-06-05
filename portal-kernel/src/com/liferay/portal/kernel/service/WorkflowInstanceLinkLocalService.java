@@ -361,3 +361,4 @@ public interface WorkflowInstanceLinkLocalService
 		throws E;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-1383708270

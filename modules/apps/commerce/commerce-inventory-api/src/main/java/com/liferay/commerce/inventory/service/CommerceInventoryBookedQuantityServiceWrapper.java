@@ -36,7 +36,7 @@ public class CommerceInventoryBookedQuantityServiceWrapper
 				getCommerceInventoryBookedQuantities(
 					long companyId, String sku, String unitOfMeasureKey,
 					int start, int end)
-			throws com.liferay.portal.kernel.security.auth.PrincipalException {
+			throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _commerceInventoryBookedQuantityService.
 			getCommerceInventoryBookedQuantities(
@@ -59,7 +59,7 @@ public class CommerceInventoryBookedQuantityServiceWrapper
 	@Override
 	public int getCommerceInventoryBookedQuantitiesCount(
 			long companyId, String sku, String unitOfMeasureKey)
-		throws com.liferay.portal.kernel.security.auth.PrincipalException {
+		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _commerceInventoryBookedQuantityService.
 			getCommerceInventoryBookedQuantitiesCount(
@@ -106,3 +106,4 @@ public class CommerceInventoryBookedQuantityServiceWrapper
 		_commerceInventoryBookedQuantityService;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-1435463247

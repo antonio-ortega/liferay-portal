@@ -19,8 +19,13 @@ import com.liferay.commerce.payment.model.CommercePaymentMethodGroupRel;
 import com.liferay.commerce.payment.service.CommercePaymentMethodGroupRelLocalService;
 import com.liferay.commerce.payment.test.util.TestCommercePaymentMethod;
 import com.liferay.commerce.product.constants.CommerceChannelAccountEntryRelConstants;
+import com.liferay.commerce.product.model.CPConfigurationEntry;
+import com.liferay.commerce.product.model.CPConfigurationList;
+import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPInstance;
 import com.liferay.commerce.product.model.CommerceChannel;
+import com.liferay.commerce.product.service.CPConfigurationEntryLocalService;
+import com.liferay.commerce.product.service.CPConfigurationListLocalService;
 import com.liferay.commerce.product.service.CommerceChannelAccountEntryRelLocalService;
 import com.liferay.commerce.product.test.util.CPTestUtil;
 import com.liferay.commerce.service.CommerceAddressLocalService;
@@ -54,10 +59,13 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
+
+import java.io.ByteArrayInputStream;
 
 import java.math.BigDecimal;
 
@@ -112,11 +120,12 @@ public class CommerceOrderLocalServiceTest {
 			_serviceContext);
 
 		Country country = _countryLocalService.addCountry(
-			"ZZ", "ZZZ", true, true, null, RandomTestUtil.randomString(), "000",
-			RandomTestUtil.randomDouble(), true, false, false, _serviceContext);
+			null, "ZZ", "ZZZ", true, true, null, RandomTestUtil.randomString(),
+			"000", RandomTestUtil.randomDouble(), true, false, false,
+			_serviceContext);
 
 		Region region = _regionLocalService.addRegion(
-			country.getCountryId(), true, RandomTestUtil.randomString(),
+			null, country.getCountryId(), true, RandomTestUtil.randomString(),
 			RandomTestUtil.randomDouble(), "ZZ", _serviceContext);
 
 		CommerceAddress commerceAddress =
@@ -295,14 +304,12 @@ public class CommerceOrderLocalServiceTest {
 				_accountEntry.getAccountEntryId(), _commerceCurrency.getCode(),
 				0);
 
-		Class<?> clazz = getClass();
-
 		FileEntry fileEntry1 =
 			_commerceOrderLocalService.addAttachmentFileEntry(
 				RandomTestUtil.randomString(), _user.getUserId(),
 				commerceOrder.getCommerceOrderId(),
 				RandomTestUtil.randomString(),
-				clazz.getResourceAsStream("dependencies/attachment.txt"));
+				new ByteArrayInputStream("Liferay".getBytes()));
 
 		LocalRepository localRepository = commerceOrder.getLocalRepository();
 
@@ -330,6 +337,52 @@ public class CommerceOrderLocalServiceTest {
 	}
 
 	@Test
+	public void testAddCommerceOrderWithCPConfigurationEntryShippable()
+		throws Exception {
+
+		_accountEntry = CommerceAccountTestUtil.addBusinessAccountEntry(
+			_user.getUserId(), RandomTestUtil.randomString(),
+			RandomTestUtil.randomString() + "@liferay.com",
+			RandomTestUtil.randomString(), new long[] {_user.getUserId()}, null,
+			_serviceContext);
+
+		CommerceOrder commerceOrder = CommerceTestUtil.addB2BCommerceOrder(
+			_group.getGroupId(), _user.getUserId(),
+			_accountEntry.getAccountEntryId(),
+			_commerceCurrency.getCommerceCurrencyId());
+
+		CPInstance cpInstance = CPTestUtil.addCPInstanceWithRandomSku(
+			_group.getGroupId(), BigDecimal.valueOf(34.90));
+
+		CPDefinition cpDefinition = cpInstance.getCPDefinition();
+
+		CPConfigurationList masterCPConfigurationList =
+			cpDefinition.getMasterCPConfigurationList();
+
+		CPConfigurationEntry cpConfigurationEntry =
+			_cpConfigurationEntryLocalService.fetchCPConfigurationEntry(
+				_portal.getClassNameId(CPDefinition.class),
+				cpDefinition.getCPDefinitionId(),
+				masterCPConfigurationList.getCPConfigurationListId());
+
+		cpConfigurationEntry.setShippable(false);
+
+		cpConfigurationEntry =
+			_cpConfigurationEntryLocalService.updateCPConfigurationEntry(
+				cpConfigurationEntry);
+
+		CommerceTestUtil.addCommerceOrderItem(
+			commerceOrder.getCommerceOrderId(), cpInstance.getCPInstanceId(),
+			BigDecimal.ONE);
+
+		commerceOrder = _commerceOrderLocalService.getCommerceOrder(
+			commerceOrder.getCommerceOrderId());
+
+		Assert.assertEquals(
+			cpConfigurationEntry.isShippable(), commerceOrder.isShippable());
+	}
+
+	@Test
 	public void testDeleteCommerceOrderAttachment() throws Exception {
 		frutillaRule.scenario(
 			"Delete an attachment from an order"
@@ -352,12 +405,10 @@ public class CommerceOrderLocalServiceTest {
 				_accountEntry.getAccountEntryId(), _commerceCurrency.getCode(),
 				0);
 
-		Class<?> clazz = getClass();
-
 		FileEntry fileEntry = _commerceOrderLocalService.addAttachmentFileEntry(
 			RandomTestUtil.randomString(), _user.getUserId(),
 			commerceOrder.getCommerceOrderId(), RandomTestUtil.randomString(),
-			clazz.getResourceAsStream("dependencies/attachment.txt"));
+			new ByteArrayInputStream("Liferay".getBytes()));
 
 		LocalRepository localRepository = commerceOrder.getLocalRepository();
 
@@ -478,7 +529,16 @@ public class CommerceOrderLocalServiceTest {
 	@Inject
 	private CountryLocalService _countryLocalService;
 
+	@Inject
+	private CPConfigurationEntryLocalService _cpConfigurationEntryLocalService;
+
+	@Inject
+	private CPConfigurationListLocalService _cpConfigurationListLocalService;
+
 	private Group _group;
+
+	@Inject
+	private Portal _portal;
 
 	@Inject
 	private RegionLocalService _regionLocalService;

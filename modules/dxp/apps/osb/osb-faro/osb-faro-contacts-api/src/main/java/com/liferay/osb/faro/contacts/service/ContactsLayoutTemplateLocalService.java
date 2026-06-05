@@ -282,3 +282,4 @@ public interface ContactsLayoutTemplateLocalService
 		throws PortalException;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:1312589788

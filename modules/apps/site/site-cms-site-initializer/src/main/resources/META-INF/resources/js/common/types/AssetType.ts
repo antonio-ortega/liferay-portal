@@ -4,10 +4,12 @@
  */
 
 import {MimeTypes} from '../components/AssetIcon';
+import {AssetStatus} from '../utils/constants';
 import {SharingPermission} from './SharingPermission';
 
 export interface IAssetFile {
 	alternativeText?: string;
+	extension?: string;
 	externalReferenceCode: string;
 	id: number;
 	link: {
@@ -15,11 +17,14 @@ export interface IAssetFile {
 		label: string;
 	};
 	metadata?: {
+		aspectRatio?: string;
 		numberOfPages?: number;
+		resolution?: string;
 	};
 	mimeType?: string | MimeTypes;
 	name: string;
 	previewURL: string;
+	size?: string;
 	thumbnailURL: string;
 }
 
@@ -66,7 +71,7 @@ export interface IAssetObjectEntry {
 	scopeKey: string;
 	status: {
 		code: number;
-		label: string;
+		label: AssetStatus;
 		label_i18n: string;
 	};
 	systemProperties: IAssetObjectDefinitionBrief & IAssetScope & IAssetVersion;
@@ -74,6 +79,7 @@ export interface IAssetObjectEntry {
 	taxonomyCategoryIds: number[];
 	title: string;
 	title_i18n: any;
+	videoURL?: string;
 }
 
 export interface IAssetObjectDefinitionBrief {
@@ -98,6 +104,12 @@ export interface IAssetVersion {
 	};
 }
 
+export interface IBreadcrumbItem {
+	active?: boolean;
+	href?: string;
+	label: string;
+}
+
 export interface ISearchAssetObjectEntry {
 	actionIds?: SharingPermission[];
 	actions: IAssetObjectEntry['actions'];
@@ -107,6 +119,9 @@ export interface ISearchAssetObjectEntry {
 	embedded: IAssetObjectEntry;
 	entryClassName: string;
 	score: number;
+	systemProperties?: IAssetObjectDefinitionBrief &
+		IAssetScope &
+		IAssetVersion;
 	title: string;
 }
 

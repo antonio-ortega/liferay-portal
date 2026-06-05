@@ -6,12 +6,14 @@
 package com.liferay.object.info.field.converter;
 
 import com.liferay.dynamic.data.mapping.expression.DDMExpressionFactory;
+import com.liferay.info.constants.InfoDisplayWebKeys;
 import com.liferay.info.field.InfoField;
 import com.liferay.info.field.type.FileInfoFieldType;
 import com.liferay.info.field.type.LongTextInfoFieldType;
 import com.liferay.info.field.type.MultiselectInfoFieldType;
 import com.liferay.info.field.type.NumberInfoFieldType;
 import com.liferay.info.field.type.OptionInfoFieldType;
+import com.liferay.info.field.type.PhoneNumberInfoFieldType;
 import com.liferay.info.field.type.RelationshipInfoFieldType;
 import com.liferay.info.field.type.SelectInfoFieldType;
 import com.liferay.info.field.type.TextInfoFieldType;
@@ -23,7 +25,9 @@ import com.liferay.list.type.model.ListTypeEntry;
 import com.liferay.list.type.service.ListTypeEntryLocalService;
 import com.liferay.object.configuration.ObjectConfiguration;
 import com.liferay.object.constants.ObjectFieldConstants;
+import com.liferay.object.constants.ObjectFieldSettingConstants;
 import com.liferay.object.constants.ObjectFieldValidationConstants;
+import com.liferay.object.constants.ObjectRelationshipConstants;
 import com.liferay.object.field.setting.util.ObjectFieldSettingUtil;
 import com.liferay.object.field.util.ObjectFieldUtil;
 import com.liferay.object.info.field.type.util.ObjectFieldInfoFieldTypeUtil;
@@ -50,6 +54,7 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -101,6 +106,26 @@ public class ObjectFieldInfoFieldConverter {
 		_portal = portal;
 		_restContextPathResolverRegistry = restContextPathResolverRegistry;
 		_userLocalService = userLocalService;
+	}
+
+	public InfoField<?> addRelationshipInfoFieldAttributes(
+		InfoField.FinalStep finalStep, ObjectRelationship objectRelationship) {
+
+		return finalStep.attribute(
+			RelationshipInfoFieldType.INHERITANCE, objectRelationship.isEdge()
+		).attribute(
+			RelationshipInfoFieldType.LABEL_FIELD_NAME,
+			_getRelationshipLabelFieldName(objectRelationship)
+		).attribute(
+			RelationshipInfoFieldType.MULTIPLE,
+			objectRelationship.compareType(
+				ObjectRelationshipConstants.TYPE_MANY_TO_MANY)
+		).attribute(
+			RelationshipInfoFieldType.URL,
+			_getRelationshipURL(objectRelationship)
+		).attribute(
+			RelationshipInfoFieldType.VALUE_FIELD_NAME, "id"
+		).build();
 	}
 
 	public InfoField<?> getInfoField(
@@ -219,6 +244,21 @@ public class ObjectFieldInfoFieldConverter {
 		}
 		else if (Objects.equals(
 					objectField.getBusinessType(),
+					ObjectFieldConstants.BUSINESS_TYPE_PHONE_NUMBER)) {
+
+			finalStep.attribute(
+				PhoneNumberInfoFieldType.COUNTRY,
+				ObjectFieldSettingUtil.getValue(
+					ObjectFieldSettingConstants.NAME_COUNTRY, objectField)
+			).attribute(
+				PhoneNumberInfoFieldType.COUNTRY_SOURCE,
+				ObjectFieldSettingUtil.getValue(
+					ObjectFieldSettingConstants.NAME_COUNTRY_SOURCE,
+					objectField)
+			);
+		}
+		else if (Objects.equals(
+					objectField.getBusinessType(),
 					ObjectFieldConstants.BUSINESS_TYPE_PICKLIST)) {
 
 			finalStep.attribute(
@@ -249,14 +289,13 @@ public class ObjectFieldInfoFieldConverter {
 					objectField.getBusinessType(),
 					ObjectFieldConstants.BUSINESS_TYPE_RELATIONSHIP)) {
 
-			finalStep.attribute(
-				RelationshipInfoFieldType.LABEL_FIELD_NAME,
-				_getRelationshipLabelFieldName(objectField)
-			).attribute(
-				RelationshipInfoFieldType.URL, _getRelationshipURL(objectField)
-			).attribute(
-				RelationshipInfoFieldType.VALUE_FIELD_NAME, "id"
-			);
+			ObjectRelationship objectRelationship =
+				_objectRelationshipLocalService.
+					fetchObjectRelationshipByObjectFieldId2(
+						objectField.getObjectFieldId());
+
+			return addRelationshipInfoFieldAttributes(
+				finalStep, objectRelationship);
 		}
 		else if (Objects.equals(
 					objectField.getBusinessType(),
@@ -272,7 +311,8 @@ public class ObjectFieldInfoFieldConverter {
 	private String _getAcceptedFileExtensions(ObjectField objectField) {
 		ObjectFieldSetting acceptedFileExtensionsObjectFieldSetting =
 			_objectFieldSettingLocalService.fetchObjectFieldSetting(
-				objectField.getObjectFieldId(), "acceptedFileExtensions");
+				objectField.getObjectFieldId(),
+				ObjectFieldSettingConstants.NAME_ACCEPTED_FILE_EXTENSIONS);
 
 		if (acceptedFileExtensionsObjectFieldSetting == null) {
 			return StringPool.BLANK;
@@ -286,21 +326,43 @@ public class ObjectFieldInfoFieldConverter {
 
 		ObjectFieldSetting objectFieldSetting =
 			_objectFieldSettingLocalService.fetchObjectFieldSetting(
-				objectField.getObjectFieldId(), "fileSource");
+				objectField.getObjectFieldId(),
+				ObjectFieldSettingConstants.NAME_FILE_SOURCE);
 
 		if (objectFieldSetting == null) {
 			return null;
 		}
 
 		if (Objects.equals(
-				objectFieldSetting.getValue(), "documentsAndMedia")) {
+				objectFieldSetting.getValue(),
+				ObjectFieldSettingConstants.VALUE_CMS_BASIC_DOCUMENT) ||
+			Objects.equals(
+				objectFieldSetting.getValue(),
+				ObjectFieldSettingConstants.VALUE_DOCS_AND_MEDIA)) {
 
 			return FileInfoFieldType.FileSourceType.DOCUMENTS_AND_MEDIA;
 		}
 		else if (Objects.equals(
-					objectFieldSetting.getValue(), "userComputer")) {
+					objectFieldSetting.getValue(),
+					ObjectFieldSettingConstants.
+						VALUE_USER_COMPUTER_TO_CMS_BASIC_DOCUMENT) ||
+				 Objects.equals(
+					 objectFieldSetting.getValue(),
+					 ObjectFieldSettingConstants.
+						 VALUE_USER_COMPUTER_TO_DOCS_AND_MEDIA)) {
 
 			return FileInfoFieldType.FileSourceType.USER_COMPUTER;
+		}
+
+		return null;
+	}
+
+	private Group _getGroup(ServiceContext serviceContext) {
+		try {
+			return serviceContext.getScopeGroup();
+		}
+		catch (Exception exception) {
+			_log.error(exception);
 		}
 
 		return null;
@@ -329,7 +391,8 @@ public class ObjectFieldInfoFieldConverter {
 	private long _getMaximumFileSize(ObjectField objectField) {
 		ObjectFieldSetting objectFieldSetting =
 			_objectFieldSettingLocalService.fetchObjectFieldSetting(
-				objectField.getObjectFieldId(), "maximumFileSize");
+				objectField.getObjectFieldId(),
+				ObjectFieldSettingConstants.NAME_MAX_FILE_SIZE);
 
 		long maximumFileSizeForGuestUsers =
 			_objectConfiguration.maximumFileSizeForGuestUsers();
@@ -353,7 +416,8 @@ public class ObjectFieldInfoFieldConverter {
 	private long _getMaxLength(ObjectField objectField, long defaultMaxLength) {
 		ObjectFieldSetting objectFieldSetting =
 			_objectFieldSettingLocalService.fetchObjectFieldSetting(
-				objectField.getObjectFieldId(), "maxLength");
+				objectField.getObjectFieldId(),
+				ObjectFieldSettingConstants.NAME_MAX_LENGTH);
 
 		if (objectFieldSetting == null) {
 			return defaultMaxLength;
@@ -389,6 +453,25 @@ public class ObjectFieldInfoFieldConverter {
 		}
 
 		return (ObjectEntry)layoutDisplayPageObjectProvider.getDisplayObject();
+	}
+
+	private long _getObjectEntryGroupId(ServiceContext serviceContext) {
+		HttpServletRequest httpServletRequest = serviceContext.getRequest();
+
+		if (httpServletRequest == null) {
+			return 0;
+		}
+
+		Object infoItem = httpServletRequest.getAttribute(
+			InfoDisplayWebKeys.INFO_ITEM);
+
+		if (!(infoItem instanceof ObjectEntry)) {
+			return 0;
+		}
+
+		ObjectEntry objectEntry = (ObjectEntry)infoItem;
+
+		return objectEntry.getGroupId();
 	}
 
 	private List<OptionInfoFieldType> _getOptionInfoFieldTypes(
@@ -454,15 +537,23 @@ public class ObjectFieldInfoFieldConverter {
 				listTypeEntry.getKey()));
 	}
 
-	private String _getRelationshipLabelFieldName(ObjectField objectField) {
-		ObjectRelationship objectRelationship =
-			_objectRelationshipLocalService.
-				fetchObjectRelationshipByObjectFieldId2(
-					objectField.getObjectFieldId());
+	private String _getRelationshipLabelFieldName(
+		ObjectRelationship objectRelationship) {
 
-		ObjectDefinition relatedObjectDefinition =
-			_objectDefinitionLocalService.fetchObjectDefinition(
-				objectRelationship.getObjectDefinitionId1());
+		ObjectDefinition relatedObjectDefinition = null;
+
+		if (objectRelationship.compareType(
+				ObjectRelationshipConstants.TYPE_MANY_TO_MANY)) {
+
+			relatedObjectDefinition =
+				_objectDefinitionLocalService.fetchObjectDefinition(
+					objectRelationship.getObjectDefinitionId2());
+		}
+		else {
+			relatedObjectDefinition =
+				_objectDefinitionLocalService.fetchObjectDefinition(
+					objectRelationship.getObjectDefinitionId1());
+		}
 
 		if (relatedObjectDefinition == null) {
 			return "id";
@@ -485,7 +576,7 @@ public class ObjectFieldInfoFieldConverter {
 		return titleObjectField.getName();
 	}
 
-	private String _getRelationshipURL(ObjectField objectField) {
+	private String _getRelationshipURL(ObjectRelationship objectRelationship) {
 		ServiceContext serviceContext =
 			ServiceContextThreadLocal.getServiceContext();
 
@@ -493,14 +584,20 @@ public class ObjectFieldInfoFieldConverter {
 			return StringPool.BLANK;
 		}
 
-		ObjectRelationship objectRelationship =
-			_objectRelationshipLocalService.
-				fetchObjectRelationshipByObjectFieldId2(
-					objectField.getObjectFieldId());
+		ObjectDefinition relatedObjectDefinition = null;
 
-		ObjectDefinition relatedObjectDefinition =
-			_objectDefinitionLocalService.fetchObjectDefinition(
-				objectRelationship.getObjectDefinitionId1());
+		if (objectRelationship.compareType(
+				ObjectRelationshipConstants.TYPE_MANY_TO_MANY)) {
+
+			relatedObjectDefinition =
+				_objectDefinitionLocalService.fetchObjectDefinition(
+					objectRelationship.getObjectDefinitionId2());
+		}
+		else {
+			relatedObjectDefinition =
+				_objectDefinitionLocalService.fetchObjectDefinition(
+					objectRelationship.getObjectDefinitionId1());
+		}
 
 		if (relatedObjectDefinition == null) {
 			return StringPool.BLANK;
@@ -510,8 +607,21 @@ public class ObjectFieldInfoFieldConverter {
 			_restContextPathResolverRegistry.getRESTContextPathResolver(
 				relatedObjectDefinition.getClassName());
 
-		String restContextPath = restContextPathResolver.getRESTContextPath(
-			_getGroupId(serviceContext.getRequest(), relatedObjectDefinition));
+		String restContextPath = null;
+
+		Group group = _getGroup(serviceContext);
+
+		if ((group != null) && group.isCMS()) {
+			long groupId = _getObjectEntryGroupId(serviceContext);
+
+			restContextPath = restContextPathResolver.getRESTContextPath(
+				groupId);
+		}
+		else {
+			restContextPath = restContextPathResolver.getRESTContextPath(
+				_getGroupId(
+					serviceContext.getRequest(), relatedObjectDefinition));
+		}
 
 		return _portal.getPortalURL(serviceContext.getRequest()) +
 			_portal.getPathContext() + restContextPath;

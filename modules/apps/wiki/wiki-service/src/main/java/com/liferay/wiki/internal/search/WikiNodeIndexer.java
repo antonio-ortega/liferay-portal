@@ -8,9 +8,6 @@ package com.liferay.wiki.internal.search;
 import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
-import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.BaseIndexer;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
@@ -20,7 +17,6 @@ import com.liferay.portal.kernel.search.Summary;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.search.model.uid.UIDFactory;
 import com.liferay.trash.TrashHelper;
@@ -77,8 +73,6 @@ public class WikiNodeIndexer extends BaseIndexer<WikiNode> {
 	protected Document doGetDocument(WikiNode wikiNode) throws Exception {
 		Document document = getBaseModelDocument(CLASS_NAME, wikiNode);
 
-		uidFactory.setUID(wikiNode, document);
-
 		document.addText(Field.DESCRIPTION, wikiNode.getDescription());
 
 		String title = wikiNode.getName();
@@ -88,6 +82,8 @@ public class WikiNodeIndexer extends BaseIndexer<WikiNode> {
 		}
 
 		document.addText(Field.TITLE, title);
+
+		document.addKeyword(Field.UID, uidFactory.getUID(wikiNode));
 
 		return document;
 	}
@@ -107,13 +103,6 @@ public class WikiNodeIndexer extends BaseIndexer<WikiNode> {
 	}
 
 	@Override
-	protected void doReindex(String[] ids) throws Exception {
-		long companyId = GetterUtil.getLong(ids[0]);
-
-		_reindexEntries(companyId);
-	}
-
-	@Override
 	protected void doReindex(WikiNode wikiNode) throws Exception {
 		Document document = getDocument(wikiNode);
 
@@ -126,16 +115,10 @@ public class WikiNodeIndexer extends BaseIndexer<WikiNode> {
 		_indexWriterHelper.updateDocument(wikiNode.getCompanyId(), document);
 	}
 
-	@Reference
-	protected UIDFactory uidFactory;
+	@Override
+	protected IndexableActionableDynamicQuery
+		getIndexableActionableDynamicQuery() {
 
-	private void _deleteDocument(WikiNode wikiNode) throws Exception {
-		_indexWriterHelper.deleteDocument(
-			wikiNode.getCompanyId(), uidFactory.getUID(wikiNode),
-			isCommitImmediately());
-	}
-
-	private void _reindexEntries(long companyId) throws Exception {
 		IndexableActionableDynamicQuery indexableActionableDynamicQuery =
 			_wikiNodeLocalService.getIndexableActionableDynamicQuery();
 
@@ -146,27 +129,18 @@ public class WikiNodeIndexer extends BaseIndexer<WikiNode> {
 				dynamicQuery.add(
 					property.eq(WorkflowConstants.STATUS_APPROVED));
 			});
-		indexableActionableDynamicQuery.setCompanyId(companyId);
-		indexableActionableDynamicQuery.setPerformActionMethod(
-			(WikiNode node) -> {
-				try {
-					indexableActionableDynamicQuery.addDocuments(
-						getDocument(node));
-				}
-				catch (PortalException portalException) {
-					if (_log.isWarnEnabled()) {
-						_log.warn(
-							"Unable to index wiki node " + node.getNodeId(),
-							portalException);
-					}
-				}
-			});
 
-		indexableActionableDynamicQuery.performActions();
+		return indexableActionableDynamicQuery;
 	}
 
-	private static final Log _log = LogFactoryUtil.getLog(
-		WikiNodeIndexer.class);
+	@Reference
+	protected UIDFactory uidFactory;
+
+	private void _deleteDocument(WikiNode wikiNode) throws Exception {
+		_indexWriterHelper.deleteDocument(
+			wikiNode.getCompanyId(), uidFactory.getUID(wikiNode),
+			isCommitImmediately());
+	}
 
 	@Reference
 	private IndexWriterHelper _indexWriterHelper;

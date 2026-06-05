@@ -12,9 +12,9 @@ import filterConstants from '../../shared/components/filter/util/filterConstants
 import {
 	getCapitalizedFilterKey,
 	mergeItemsArray,
-	replaceHistory,
 } from '../../shared/components/filter/util/filterUtil.es';
 import {parse, stringify} from '../../shared/components/router/queryString.es';
+import {getPathname} from '../../shared/components/router/routerUtil.es';
 import {useFilter} from '../../shared/hooks/useFilter.es';
 import {useRouter} from '../../shared/hooks/useRouter.es';
 import {useRouterParams} from '../../shared/hooks/useRouterParams.es';
@@ -65,7 +65,7 @@ export default function TimeRangeFilter({
 	);
 
 	const prefixedFilterKey = getCapitalizedFilterKey(prefixKey, filterKey);
-	const routerProps = useRouter();
+	const {location, navigate, path, routeParams} = useRouter();
 
 	const dateEnd = filters[dateEndKey];
 	const dateStart = filters[dateStartKey];
@@ -109,7 +109,7 @@ export default function TimeRangeFilter({
 
 	const handleSelectFilter = (filter) => {
 		const filterValue = {[prefixedFilterKey]: [filter.key]};
-		const query = parse(routerProps.location.search);
+		const query = parse(location.search);
 
 		if (!options.withoutRouteParams) {
 			query.filters = {
@@ -119,7 +119,11 @@ export default function TimeRangeFilter({
 				...filterValue,
 			};
 
-			replaceHistory(stringify(query), routerProps);
+			const pathname = path
+				? getPathname({...routeParams, page: 1}, path)
+				: location.pathname;
+
+			navigate({pathname, search: stringify(query)}, {replace: true});
 		}
 		else {
 			dispatch(filterValue);

@@ -4,24 +4,26 @@
  */
 
 import {ClayButtonWithIcon} from '@clayui/button';
-import ClayColorPicker from '@clayui/color-picker';
-import ClayForm, {ClayInput} from '@clayui/form';
+import ClayForm from '@clayui/form';
 import ClayIcon from '@clayui/icon';
+import {useIsFirstRender} from '@clayui/shared';
 import {useIsMounted} from '@liferay/frontend-js-react-web';
 import classNames from 'classnames';
-import {useId} from 'frontend-js-components-web';
-import React, {KeyboardEvent, useMemo, useRef, useState} from 'react';
+import React, {
+	KeyboardEvent,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from 'react';
 
 import {
 	useDeleteStyleError,
 	useSetStyleError,
 	useStyleErrors,
 } from '../../contexts/StyleErrorsContext';
-import {
-	Color,
-	ColorCategoryMap,
-	DropdownColorPicker,
-} from './DropdownColorPicker';
+import {Color, ColorCategoryMap, Field, Token} from '../../types/ColorPicker';
+import ColorPickerField from './ColorPickerField';
 import {parseColorValue} from './parseColorValue';
 
 import './ColorPicker.scss';
@@ -38,31 +40,6 @@ function usePropsFirst<T>(value: T, {forceProp = false}) {
 	}
 
 	return [nextValue, setNextValue] as const;
-}
-
-export interface Token {
-	editorType: string;
-	label: string;
-	name: string;
-	tokenCategoryLabel: string;
-	tokenSetLabel: string;
-	value: string;
-}
-
-export interface Field {
-	cssProperty?: string;
-	dataType?: string;
-	defaultValue?: string;
-	description?: string;
-	icon?: string;
-	inherited?: boolean;
-	label: string;
-	name: string;
-	type?: string;
-	typeOptions?: {
-		showLengthField?: boolean;
-	};
-	value?: string;
 }
 
 interface Props {
@@ -93,22 +70,19 @@ export default function ColorPicker({
 	value,
 }: Props) {
 	const colors: ColorCategoryMap = {};
-	const inputId = useId();
 	const deleteStyleError = useDeleteStyleError();
+	const dropdownColorPickerRef = useRef<HTMLButtonElement>(null);
+	const isFirstRender = useIsFirstRender();
 	const setStyleError = useSetStyleError();
 	const styleErrors = useStyleErrors();
 
-	const [activeDropdownColorPicker, setActiveDropdownColorPicker] =
-		useState(false);
 	const [activeColorPicker, setActiveColorPicker] = useState(false);
 	const [clearedValue, setClearedValue] = useState(false);
 	const [color, setColor] = usePropsFirst(
 		tokenValues[value]?.value || value || defaultTokenValue,
 		{forceProp: clearedValue}
 	);
-	const colorButtonRef = useRef(null);
 	const [customColors, setCustomColors] = useState([value || '']);
-	const inputRef = useRef<HTMLInputElement>(null);
 	const isMounted = useIsMounted();
 
 	const debouncedOnValueSelect = useMemo(() => {
@@ -204,17 +178,19 @@ export default function ColorPicker({
 			value = defaultTokenValue;
 		}
 
-		if (value.toLowerCase() === target.value.toLowerCase()) {
+		const hexValue = normalizeHexColor(value);
+
+		if (hexValue.toLowerCase() === target.value.toLowerCase()) {
 			return;
 		}
 
 		if (!target.value) {
-			setColor(value);
+			setColor(hexValue);
 
 			return;
 		}
 
-		if (target.value !== value) {
+		if (target.value !== hexValue) {
 			const token = tokenColorValues.find(
 				(token) =>
 					token.label.toLowerCase() === target.value.toLowerCase()
@@ -258,13 +234,13 @@ export default function ColorPicker({
 		}
 	};
 
-	const onChangeInput = ({target: {value}}: {target: HTMLInputElement}) => {
+	const onChangeInput = (color: string) => {
 		if (error.value) {
 			setError({label: null, value: null});
 			deleteStyleError(field.name, activeItemId);
 		}
 
-		setColor(value);
+		setColor(`#${color}`);
 	};
 
 	const onKeyDownInput = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -273,6 +249,12 @@ export default function ColorPicker({
 		}
 	};
 
+	useEffect(() => {
+		if (!isFirstRender && tokenLabel) {
+			dropdownColorPickerRef.current?.focus();
+		}
+	}, [tokenLabel, isFirstRender]);
+
 	return (
 		<ClayForm.Group aria-label={field.label} small>
 			<label className={classNames({'sr-only': !showLabel})}>
@@ -280,140 +262,68 @@ export default function ColorPicker({
 			</label>
 
 			<div
-				className={classNames('layout__color-picker', {
+				className={classNames('layout__color-picker rounded', {
 					'custom': !tokenLabel,
 					'has-error': error.value,
-					'hovered': activeColorPicker || activeDropdownColorPicker,
+					'hovered': activeColorPicker,
 				})}
 			>
-				{tokenLabel ? (
-					<DropdownColorPicker
-						active={activeDropdownColorPicker}
-						colors={colors}
-						fieldLabel={showLabel ? null : field.label}
-						inherited={!value && field.inherited}
-						label={tokenLabel}
-						onSetActive={setActiveDropdownColorPicker}
-						onValueChange={({label, name, value}) =>
-							onSetValue({label, name, value})
+				<ColorPickerField
+					active={activeColorPicker}
+					colors={customColors}
+					colorsFromStylebook={colors}
+					inherited={!value && !!field.inherited}
+					onActiveChange={setActiveColorPicker}
+					onBlurInput={onBlurInput}
+					onChange={onChangeInput}
+					onClickColorPalette={({label, name, value}) => {
+						onSetValue({label, name, value});
+
+						if (error.value) {
+							setError({
+								label: null,
+								value: null,
+							});
+
+							deleteStyleError(field.name);
 						}
-						small
-						value={color || defaultTokenValue}
-					/>
-				) : (
-					<ClayInput.Group>
-						<ClayInput.GroupItem
-							prepend
-							ref={colorButtonRef}
-							shrink
-						>
-							<ClayColorPicker
-								active={activeColorPicker}
-								colors={customColors}
-								dropDownContainerProps={{
-									className: 'cadmin',
-								}}
-								onActiveChange={setActiveColorPicker}
-								onChange={(color: String) => {
-									debouncedOnValueSelect(
-										field.name,
-										`#${color}`
-									);
-									setColor(`#${color}`);
+					}}
+					onColorChangeEditor={(color: string) => {
+						debouncedOnValueSelect(field.name, color);
+					}}
+					onColorsChange={setCustomColors}
+					onKeyDown={onKeyDownInput}
+					tokenLabel={tokenLabel}
+					tokenValue={color || defaultTokenValue}
+					value={error.value || normalizeHexColor(color)}
+				/>
 
-									if (error.value) {
-										setError({
-											label: null,
-											value: null,
-										});
-										deleteStyleError(field.name);
-									}
-								}}
-								onColorsChange={setCustomColors}
-								showHex={false}
-								showPalette={false}
-								value={
-									error.value ? '' : color?.replace('#', '')
-								}
-							/>
-						</ClayInput.GroupItem>
+				{tokenLabel && canDetachTokenValues && (
+					<ClayButtonWithIcon
+						aria-label={Liferay.Language.get('detach-style')}
+						className="border-0 flex-shrink-0 layout__color-picker__action-button mb-0 ml-1"
+						displayType="secondary"
+						onClick={() => {
+							if (tokenValues[value]) {
+								setCustomColors([
+									tokenValues[value].value.replace('#', ''),
+								]);
 
-						<ClayInput.GroupItem append>
-							<ClayInput
-								aria-invalid={Boolean(error.label)}
-								aria-label={Liferay.Language.get('color')}
-								className="layout__color-picker__input"
-								id={inputId}
-								onBlur={onBlurInput}
-								onChange={onChangeInput}
-								onKeyDown={onKeyDownInput}
-								ref={inputRef}
-								sizing="sm"
-								value={
-									error.value ||
-									(color?.startsWith('#')
-										? color.toUpperCase()
-										: color)
-								}
-							/>
-						</ClayInput.GroupItem>
-					</ClayInput.Group>
-				)}
-
-				{tokenLabel ? (
-					canDetachTokenValues && (
-						<ClayButtonWithIcon
-							aria-label={Liferay.Language.get('detach-style')}
-							className="border-0 flex-shrink-0 layout__color-picker__action-button mb-0 ml-2"
-							displayType="secondary"
-							onClick={() => {
-								if (tokenValues[value]) {
-									setCustomColors([
-										tokenValues[value].value.replace(
-											'#',
-											''
-										),
-									]);
-
-									onSetValue({
-										value: tokenValues[value].value,
-									});
-								}
-								else {
-									setCustomColors(
-										defaultTokenValue
-											? [defaultTokenValue]
-											: []
-									);
-
-									onSetValue({value: defaultTokenValue});
-								}
-							}}
-							size="sm"
-							symbol="chain-broken"
-							title={Liferay.Language.get('detach-style')}
-						/>
-					)
-				) : (
-					<DropdownColorPicker
-						active={activeDropdownColorPicker}
-						colors={colors}
-						fieldLabel={showLabel ? null : field.label}
-						onSetActive={setActiveDropdownColorPicker}
-						onValueChange={({label, name, value}) => {
-							onSetValue({label, name, value});
-
-							if (error.value) {
-								setError({
-									label: null,
-									value: null,
+								onSetValue({
+									value: tokenValues[value].value,
 								});
-								deleteStyleError(field.name);
+							}
+							else {
+								setCustomColors(
+									defaultTokenValue ? [defaultTokenValue] : []
+								);
+
+								onSetValue({value: defaultTokenValue});
 							}
 						}}
-						showSelector={false}
-						small
-						value={color}
+						size="sm"
+						symbol="chain-broken"
+						title={Liferay.Language.get('detach-style')}
 					/>
 				)}
 
@@ -457,4 +367,10 @@ export default function ColorPicker({
 			) : null}
 		</ClayForm.Group>
 	);
+}
+
+function normalizeHexColor(color: string) {
+	return color?.startsWith('#')
+		? color.replace('#', '').toUpperCase()
+		: color;
 }

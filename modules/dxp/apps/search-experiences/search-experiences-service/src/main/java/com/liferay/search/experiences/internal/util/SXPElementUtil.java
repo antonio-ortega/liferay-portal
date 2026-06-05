@@ -7,11 +7,11 @@ package com.liferay.search.experiences.internal.util;
 
 import com.liferay.petra.string.CharPool;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.PortalRunMode;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.URLUtil;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -52,7 +53,7 @@ public class SXPElementUtil {
 		}
 
 		for (SXPElement sxpElement : _getOrCreateSXPElements()) {
-			if ((!FeatureFlagManagerUtil.isEnabled("LPS-122920") &&
+			if ((!PortalRunMode.isTestMode() &&
 				 Objects.equals(
 					 sxpElement.getExternalReferenceCode(),
 					 "RESCORE_BY_TEXT_EMBEDDING")) ||
@@ -62,31 +63,27 @@ public class SXPElementUtil {
 				continue;
 			}
 
+			Map<String, String> descriptionMap =
+				sxpElement.getDescription_i18n();
+			Map<String, String> titleMap = sxpElement.getTitle_i18n();
+
 			User user = company.getGuestUser();
 
+			long userId = user.getUserId();
+
 			sxpElementLocalService.addSXPElement(
-				sxpElement.getExternalReferenceCode(), user.getUserId(),
-				LocalizedMapUtil.getLocalizedMap(
-					sxpElement.getDescription_i18n(), true),
+				sxpElement.getExternalReferenceCode(), userId,
+				LocalizedMapUtil.getLocalizedMap(descriptionMap, true),
 				String.valueOf(sxpElement.getElementDefinition()),
-				sxpElement.getDescription_i18n(
-				).get(
-					LocaleUtil.US.toString()
-				),
-				sxpElement.getTitle_i18n(
-				).get(
-					LocaleUtil.US.toString()
-				),
-				true, _SCHEMA_VERSION,
-				LocalizedMapUtil.getLocalizedMap(
-					sxpElement.getTitle_i18n(), true),
-				0,
+				descriptionMap.get(LocaleUtil.US.toString()),
+				titleMap.get(LocaleUtil.US.toString()), true, _SCHEMA_VERSION,
+				LocalizedMapUtil.getLocalizedMap(titleMap, true), 0,
 				new ServiceContext() {
 					{
 						setAddGuestPermissions(true);
 						setCompanyId(company.getCompanyId());
 						setScopeGroupId(company.getGroupId());
-						setUserId(user.getUserId());
+						setUserId(userId);
 					}
 				});
 		}

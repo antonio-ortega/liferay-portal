@@ -5,9 +5,8 @@
 
 import {render} from '@liferay/frontend-js-react-web';
 
-import DetachedItemSelectorModal, {
-	TDetachedItemSelectorModal,
-} from './DetachedItemSelectorModal';
+import DetachedItemSelectorModal from './DetachedItemSelectorModal';
+import {TDetachedItemSelectorModal} from './types';
 
 /**
  * This utility enables item selector to be rendered from any JS context.
@@ -21,9 +20,6 @@ export default function openItemSelectorModal<T>(
 	// See: https://github.com/liferay/clay/blob/master/packages/clay-shared/src/Portal.tsx
 
 	return render(
-
-		// @ts-ignore
-
 		DetachedItemSelectorModal,
 		props,
 		document.createElement('div')

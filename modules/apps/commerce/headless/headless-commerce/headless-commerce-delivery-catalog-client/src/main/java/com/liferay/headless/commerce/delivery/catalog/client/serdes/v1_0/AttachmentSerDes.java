@@ -692,3 +692,4 @@ public class AttachmentSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1687473181

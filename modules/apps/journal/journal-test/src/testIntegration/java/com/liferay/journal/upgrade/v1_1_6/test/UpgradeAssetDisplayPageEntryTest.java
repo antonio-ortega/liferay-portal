@@ -128,6 +128,7 @@ public class UpgradeAssetDisplayPageEntryTest {
 		throws Exception {
 
 		try (Connection connection = DataAccess.getConnection();
+
 			PreparedStatement preparedStatement = connection.prepareStatement(
 				StringBundler.concat(
 					"insert into AssetEntry (entryId, groupId, companyId, ",
@@ -151,6 +152,7 @@ public class UpgradeAssetDisplayPageEntryTest {
 		throws Exception {
 
 		try (Connection connection = DataAccess.getConnection();
+
 			PreparedStatement preparedStatement = connection.prepareStatement(
 				StringBundler.concat(
 					"insert into JournalArticle (uuid_, id_, resourcePrimKey, ",
@@ -459,11 +461,6 @@ public class UpgradeAssetDisplayPageEntryTest {
 		"com.liferay.journal.internal.upgrade.v1_1_6." +
 			"AssetDisplayPageEntryUpgradeProcess";
 
-	@Inject(
-		filter = "(&(component.name=com.liferay.journal.internal.upgrade.registry.JournalServiceUpgradeStepRegistrator))"
-	)
-	private static UpgradeStepRegistrator _upgradeStepRegistrator;
-
 	private UpgradeProcess _assetDisplayPageEntryUpgradeProcess;
 	private final Map<Long, String> _assetEntryClassUuids = new HashMap<>();
 	private long _classNameIdJournalArticle;
@@ -475,5 +472,10 @@ public class UpgradeAssetDisplayPageEntryTest {
 	private List<Group> _groups = new ArrayList<>();
 
 	private Timestamp _timestamp;
+
+	@Inject(
+		filter = "(&(component.name=com.liferay.journal.internal.upgrade.registry.JournalServiceUpgradeStepRegistrator))"
+	)
+	private UpgradeStepRegistrator _upgradeStepRegistrator;
 
 }

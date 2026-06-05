@@ -87,22 +87,36 @@ public final class DLValidatorImpl implements DLValidator {
 			_min(
 				_getGlobalMaxAllowableSize(companyId, groupId),
 				_min(
-					_dlSizeLimitConfigurationHelper.getCompanyMimeTypeSizeLimit(
-						companyId, mimeType),
-					_dlSizeLimitConfigurationHelper.getGroupMimeTypeSizeLimit(
-						groupId, mimeType))));
+					_dlSizeLimitConfigurationHelper.getSystemMimeTypeSizeLimit(
+						mimeType),
+					_min(
+						_dlSizeLimitConfigurationHelper.
+							getCompanyMimeTypeSizeLimit(companyId, mimeType),
+						_dlSizeLimitConfigurationHelper.
+							getGroupMimeTypeSizeLimit(
+								companyId, groupId, mimeType)))));
 	}
 
 	@Override
 	public Map<String, Long> getMimeTypeSizeLimit(long groupId) {
+		long companyId = _getCompanyId(groupId);
+
 		Map<String, Long> mimeTypeSizeLimit = new HashMap<>(
-			_dlSizeLimitConfigurationHelper.getGroupMimeTypeSizeLimit(groupId));
+			_dlSizeLimitConfigurationHelper.getGroupMimeTypeSizeLimit(
+				companyId, groupId));
 
 		Map<String, Long> companyMimeTypeSizeLimit =
 			_dlSizeLimitConfigurationHelper.getCompanyMimeTypeSizeLimit(
-				_getCompanyId(groupId));
+				companyId);
 
 		companyMimeTypeSizeLimit.forEach(
+			(key, value) -> mimeTypeSizeLimit.merge(
+				key, value, (value1, value2) -> _min(value1, value2)));
+
+		Map<String, Long> systemMimeTypeSizeLimit =
+			_dlSizeLimitConfigurationHelper.getSystemMimeTypeSizeLimit();
+
+		systemMimeTypeSizeLimit.forEach(
 			(key, value) -> mimeTypeSizeLimit.merge(
 				key, value, (value1, value2) -> _min(value1, value2)));
 
@@ -384,9 +398,12 @@ public final class DLValidatorImpl implements DLValidator {
 		return _min(
 			_uploadServletRequestConfigurationProvider.getMaxSize(),
 			_min(
-				_dlSizeLimitConfigurationHelper.getCompanyFileMaxSize(
-					companyId),
-				_dlSizeLimitConfigurationHelper.getGroupFileMaxSize(groupId)));
+				_dlSizeLimitConfigurationHelper.getSystemFileMaxSize(),
+				_min(
+					_dlSizeLimitConfigurationHelper.getCompanyFileMaxSize(
+						companyId),
+					_dlSizeLimitConfigurationHelper.getGroupFileMaxSize(
+						companyId, groupId))));
 	}
 
 	private long _min(long a, long b) {

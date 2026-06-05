@@ -25,12 +25,14 @@ import performLogin, {
 import {PORTLET_URLS} from '../../../utils/portletUrls';
 import getBasicWebContentStructureId from '../../../utils/structured-content/getBasicWebContentStructureId';
 import {blogsPagesTest} from '../../blogs-web/main/fixtures/blogsPagesTest';
+import {generateObjectEntryValues} from '../../object-web/utils/generateObjectEntry';
 
 export const test = mergeTests(
 	apiHelpersTest,
 	blogsPagesTest,
 	dataApiHelpersTest,
 	featureFlagsTest({
+		'LPD-11235': {enabled: true},
 		'LPS-178052': {enabled: true},
 	}),
 	isolatedSiteTest,
@@ -92,66 +94,17 @@ test.afterEach(
 	}
 );
 
-test('send user back to my workflow tasks page after assign another user to review', async ({
-	apiHelpers,
+test('approve or reject modal appear even after doing a comment on the comments section', async ({
 	blogsEditBlogEntryPage,
 	blogsPage,
 	configurationTabPage,
-	diagramViewPage,
 	page,
-	processBuilderPage,
 	workflowTaskDetailsPage,
 	workflowTasksPage,
 }) => {
-	const user = await apiHelpers.headlessAdminUser.postUserAccount({
-		familyName: '<script>alert(0);</script>',
-	});
-
-	userData[user.alternateName] = {
-		name: user.givenName,
-		password: 'test',
-		surname: '&lt;script&gt;alert(0);&lt;/script&gt;',
-	};
-
-	const role =
-		await apiHelpers.headlessAdminUser.getRoleByName('Administrator');
-
-	await apiHelpers.headlessAdminUser.assignUserToRole(
-		role.externalReferenceCode,
-		user.id
-	);
-
-	await performLogout(page);
-
-	await performLogin(page, user.alternateName);
-
-	workflowDefinitionName = 'Workflow Definition' + getRandomString();
-
-	workflowXMLDefinition = readFileSync(
-		__dirname +
-			'/dependencies/administrator-role-assignments-workflow-definition.xml',
-		'utf-8'
-	);
-
-	const workflowDefinition =
-		await apiHelpers.headlessAdminWorkflow.postWorkflowDefinitionSave(
-			workflowDefinitionName,
-			{content: workflowXMLDefinition}
-		);
-
-	workflowDefinitionId = workflowDefinition.id;
-
-	await processBuilderPage.goto();
-
-	await processBuilderPage.clickWorkflowDefinitionName(
-		workflowDefinitionName
-	);
-
-	await diagramViewPage.publishWorkflowDefinition();
-
-	await diagramViewPage.goBack();
-
 	await configurationTabPage.goTo();
+
+	workflowDefinitionName = 'Single Approver';
 
 	assetType = 'Blogs Entry';
 
@@ -172,33 +125,29 @@ test('send user back to my workflow tasks page after assign another user to revi
 		title: blogTitle,
 	});
 
-	await performLogout(page);
-
-	await performLogin(page, 'test');
-
-	page.on('dialog', async (dialog) => {
-		dialog.accept();
-
-		expect(dialog.message(), 'This alert should not be shown').toBeNull();
-	});
-
 	await workflowTasksPage.goToAssignedToMyRoles();
+
+	await workflowTasksPage.assignToMe(blogTitle);
 
 	await workflowTaskDetailsPage.selectAsset(blogTitle);
 
-	await page.waitForTimeout(3000);
+	await page.waitForLoadState('networkidle');
+
+	await workflowTaskDetailsPage.addComment('This is a comment');
 
 	await workflowTaskDetailsPage.reviewActionMenu.click();
 
-	await workflowTaskDetailsPage.assignToMenuItem.click();
+	await workflowTaskDetailsPage.approveMenuItem.click();
 
-	await page.waitForLoadState('networkidle');
+	await expect(page.getByRole('heading', {name: 'Approve'})).toBeVisible();
 
-	await workflowTaskDetailsPage.selectAssignee(user.id.toString());
+	await workflowTaskDetailsPage.cancelButton.click();
 
-	await workflowTaskDetailsPage.assigneeDoneButton.click();
+	await workflowTaskDetailsPage.reviewActionMenu.click();
 
-	await expect(workflowTasksPage.assignedToMyRolesLink).toBeVisible();
+	await workflowTaskDetailsPage.rejectMenuItem.click();
+
+	await expect(page.getByRole('heading', {name: 'Reject'})).toBeVisible();
 });
 
 test('logged user must be able to see workflow task at least from a read-only perspective', async ({
@@ -333,17 +282,158 @@ test('logged user must be able to see workflow task at least from a read-only pe
 	await performUserSwitch(page, defaultUser.alternateName);
 });
 
-test('approve or reject modal appear even after doing a comment on the comments section', async ({
-	blogsEditBlogEntryPage,
-	blogsPage,
+test('logged user must not see workflow task if they do not have the necessary permission', async ({
+	apiHelpers,
 	configurationTabPage,
+	diagramViewPage,
 	page,
+	processBuilderPage,
 	workflowTaskDetailsPage,
 	workflowTasksPage,
 }) => {
+	const user =
+		await apiHelpers.headlessAdminUser.getUserAccountByEmailAddress(
+			'demo.unprivileged@liferay.com'
+		);
+
+	demoUserId = user.id;
+
+	const defaultUser =
+		await apiHelpers.headlessAdminUser.getUserAccountByEmailAddress(
+			'test@liferay.com'
+		);
+
+	const objectDefinition =
+		await apiHelpers.objectAdmin.postRandomObjectDefinition({
+			scope: 'site',
+			status: {code: 0},
+			titleObjectFieldName: 'textField',
+		});
+
+	apiHelpers.data.push({
+		id: objectDefinition.id,
+		type: 'objectDefinition',
+	});
+
+	workflowDefinitionName = 'WorkflowDefinition' + getRandomInt();
+	workflowXMLDefinition = readFileSync(
+		__dirname +
+			'/dependencies/administrator-role-assignments-workflow-definition.xml',
+		'utf-8'
+	);
+
+	const workflowDefinition =
+		await apiHelpers.headlessAdminWorkflow.postWorkflowDefinitionSave(
+			workflowDefinitionName,
+			{content: workflowXMLDefinition}
+		);
+
+	workflowDefinitionId = workflowDefinition.id;
+
+	await processBuilderPage.goto();
+
+	await processBuilderPage.clickWorkflowDefinitionName(
+		workflowDefinitionName
+	);
+
+	await diagramViewPage.publishWorkflowDefinition();
+
 	await configurationTabPage.goTo();
 
-	workflowDefinitionName = 'Single Approver';
+	await configurationTabPage.assignWorkflowToAssetType(
+		workflowDefinitionName,
+		objectDefinition.name
+	);
+
+	const {objectEntry} = await generateObjectEntryValues({
+		objectFields: objectDefinition.objectFields,
+	});
+
+	const applicationName = 'c/' + objectDefinition.name.toLowerCase() + 's';
+
+	await apiHelpers.objectEntry.postObjectEntry(
+		{textField: objectEntry.textField},
+		applicationName,
+		'Guest'
+	);
+
+	await workflowTasksPage.goToAssignedToMyRoles();
+
+	await workflowTaskDetailsPage.selectAsset(String(objectEntry.textField));
+
+	await page.waitForLoadState('networkidle');
+
+	const url = page.url();
+
+	await performUserSwitch(page, user.alternateName);
+
+	await page.goto(`${url}`);
+
+	await expect(page.getByText('Close Error:An unexpected')).toBeVisible();
+
+	await performUserSwitch(page, defaultUser.alternateName);
+});
+
+test('send user back to my workflow tasks page after assign another user to review', async ({
+	apiHelpers,
+	blogsEditBlogEntryPage,
+	blogsPage,
+	configurationTabPage,
+	diagramViewPage,
+	page,
+	processBuilderPage,
+	workflowTaskDetailsPage,
+	workflowTasksPage,
+}) => {
+	const user = await apiHelpers.headlessAdminUser.postUserAccount({
+		familyName: '<script>alert(0);</script>',
+	});
+
+	userData[user.alternateName] = {
+		name: user.givenName,
+		password: 'test',
+		surname: '&lt;script&gt;alert(0);&lt;/script&gt;',
+	};
+
+	const role =
+		await apiHelpers.headlessAdminUser.getRoleByName('Administrator');
+
+	await apiHelpers.headlessAdminUser.assignUserToRole(
+		role.externalReferenceCode,
+		user.id
+	);
+
+	await performLogout(page);
+
+	await performLogin(page, user.alternateName);
+
+	workflowDefinitionName = 'Workflow Definition' + getRandomString();
+
+	workflowXMLDefinition = readFileSync(
+		__dirname +
+			'/dependencies/administrator-role-assignments-workflow-definition.xml',
+		'utf-8'
+	);
+
+	const workflowDefinition =
+		await apiHelpers.headlessAdminWorkflow.postWorkflowDefinitionSave(
+			workflowDefinitionName,
+			{content: workflowXMLDefinition}
+		);
+
+	workflowDefinitionId = workflowDefinition.id;
+
+	await processBuilderPage.goto();
+
+	await processBuilderPage.clickWorkflowDefinitionName(
+		workflowDefinitionName
+	);
+
+	await diagramViewPage.publishWorkflowDefinition();
+
+	await diagramViewPage.goBack();
+
+	await configurationTabPage.goTo();
 
 	assetType = 'Blogs Entry';
 
@@ -364,29 +454,33 @@ test('approve or reject modal appear even after doing a comment on the comments 
 		title: blogTitle,
 	});
 
-	await workflowTasksPage.goToAssignedToMyRoles();
+	await performLogout(page);
 
-	await workflowTasksPage.assignToMe(blogTitle);
+	await performLogin(page, 'test');
+
+	page.on('dialog', async (dialog) => {
+		dialog.accept();
+
+		expect(dialog.message(), 'This alert should not be shown').toBeNull();
+	});
+
+	await workflowTasksPage.goToAssignedToMyRoles();
 
 	await workflowTaskDetailsPage.selectAsset(blogTitle);
 
+	await page.waitForTimeout(3000);
+
+	await workflowTaskDetailsPage.reviewActionMenu.click();
+
+	await workflowTaskDetailsPage.assignToMenuItem.click();
+
 	await page.waitForLoadState('networkidle');
 
-	await workflowTaskDetailsPage.addComment('This is a comment');
+	await workflowTaskDetailsPage.selectAssignee(user.id.toString());
 
-	await workflowTaskDetailsPage.reviewActionMenu.click();
+	await workflowTaskDetailsPage.assigneeDoneButton.click();
 
-	await workflowTaskDetailsPage.approveMenuItem.click();
-
-	await expect(page.getByRole('heading', {name: 'Approve'})).toBeVisible();
-
-	await workflowTaskDetailsPage.cancelButton.click();
-
-	await workflowTaskDetailsPage.reviewActionMenu.click();
-
-	await workflowTaskDetailsPage.rejectMenuItem.click();
-
-	await expect(page.getByRole('heading', {name: 'Reject'})).toBeVisible();
+	await expect(workflowTasksPage.assignedToMyRolesLink).toBeVisible();
 });
 
 test('verify that the user can order the results inside Assigned to My Roles by Due Date', async ({
@@ -447,6 +541,8 @@ test('verify that the user can order the results inside Assigned to My Roles by 
 
 		await workflowTasksPage.updateDueDate(webContent1.title, '10/02');
 
+		await workflowTasksPage.goToAssignedToMyRoles();
+
 		await workflowTasksPage.updateDueDate(webContent2.title, '09/01');
 
 		await page.getByLabel('Order').click();
@@ -454,6 +550,8 @@ test('verify that the user can order the results inside Assigned to My Roles by 
 		await page.getByRole('menuitem', {name: 'Due Date'}).click();
 
 		await page.waitForLoadState('networkidle');
+
+		await workflowTasksPage.goToAssignedToMyRoles();
 
 		const rowWebContent1 = page.getByRole('row', {name: webContent1.title});
 
@@ -469,3 +567,57 @@ test('verify that the user can order the results inside Assigned to My Roles by 
 		expect(webContent2Index).toBeLessThan(webContent1Index);
 	});
 });
+
+test(
+	'workflow status is pending when a message board thread is submitted for workflow',
+	{tag: '@LRQA-69694'},
+	async ({
+		messageBoardsEditThreadPage,
+		messageBoardsPage,
+		page,
+		site,
+		workflowPage,
+		workflowTaskDetailsPage,
+		workflowTasksPage,
+	}) => {
+		await workflowPage.goto(site.friendlyUrlPath);
+
+		await workflowPage.changeWorkflow(
+			'Message Boards Message',
+			'Single Approver'
+		);
+
+		const threadBody = getRandomString();
+
+		const threadSubject = getRandomString();
+
+		await messageBoardsPage.goto(site.friendlyUrlPath);
+
+		await messageBoardsEditThreadPage.publishNewThreadForWorkflow(
+			threadSubject,
+			threadBody
+		);
+
+		await page.waitForLoadState('networkidle');
+
+		await workflowTasksPage.goToAssignedToMyRoles();
+
+		const row = page.getByRole('row', {name: threadSubject});
+
+		await expect(row).toBeVisible();
+
+		await expect(row.getByText('Message Boards Message')).toBeVisible();
+
+		await expect(row.getByText('Review')).toBeVisible();
+
+		await workflowTaskDetailsPage.selectAsset(threadSubject);
+
+		const newTabPagePromise = page.waitForEvent('popup');
+
+		await page.getByRole('link', {exact: true, name: 'View'}).click();
+
+		const newTabPage = await newTabPagePromise;
+
+		await expect(newTabPage.getByText('Pending')).toBeVisible();
+	}
+);

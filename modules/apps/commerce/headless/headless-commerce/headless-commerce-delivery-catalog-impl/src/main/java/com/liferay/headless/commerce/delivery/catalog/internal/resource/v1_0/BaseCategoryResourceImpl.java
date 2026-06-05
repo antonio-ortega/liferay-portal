@@ -5,6 +5,7 @@
 
 package com.liferay.headless.commerce.delivery.catalog.internal.resource.v1_0;
 
+import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.Category;
 import com.liferay.headless.commerce.delivery.catalog.resource.v1_0.CategoryResource;
 import com.liferay.petra.function.UnsafeBiConsumer;
@@ -71,7 +72,7 @@ public abstract class BaseCategoryResourceImpl
 	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-delivery-catalog/v1.0/channels/{channelId}/products/{productId}/categories'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
-		description = "Gets a list of Category related to a Product."
+		description = "Lists AssetCategory entries tagged on the product under /channels/{channelId}/products/{productId}/categories. Resolves the active CPDefinition through CPDefinitionLocalService.fetchCPDefinitionByCProductId and calls AssetCategoryService.getCategories using the CPDefinition classNameId and primary key. Exposed as the `categories` field of the Product DTO. Validation -- NoSuchCPDefinitionException -> 404 when the productId does not resolve to an active CPDefinition. List query support -- pagination only; filterable fields -- none."
 	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
@@ -189,6 +190,15 @@ public abstract class BaseCategoryResourceImpl
 			@Override
 			public Locale getPreferredLocale() {
 				return LocaleUtil.fromLanguageId(languageId);
+			}
+
+			@Override
+			public boolean isAcceptAllLanguages() {
+				if (ExportImportThreadLocal.isExportInProcess()) {
+					return true;
+				}
+
+				return AcceptLanguage.super.isAcceptAllLanguages();
 			}
 
 		};
@@ -764,3 +774,4 @@ public abstract class BaseCategoryResourceImpl
 		LogFactoryUtil.getLog(BaseCategoryResourceImpl.class);
 
 }
+// LIFERAY-REST-BUILDER-HASH:1401739160

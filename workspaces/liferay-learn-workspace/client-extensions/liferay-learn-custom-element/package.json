@@ -1,8 +1,8 @@
 {
 	"dependencies": {
-		"@clayui/layout": "*",
-		"@clayui/tooltip": "*",
-		"axios": "^1.8.4",
+		"@clayui/layout": "^3.159.0",
+		"@clayui/tooltip": "^3.159.0",
+		"axios": "1.8.4",
 		"react": "^18.2.0",
 		"react-dom": "^18.2.0"
 	},

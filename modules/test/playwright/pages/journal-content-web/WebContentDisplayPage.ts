@@ -14,6 +14,7 @@ export class WebContentDisplayPage {
 
 	readonly app: Locator;
 	readonly configurationFrame: FrameLocator;
+	readonly configurationFrameChangeButton: Locator;
 	readonly configurationFrameSelectButton: Locator;
 	readonly configurationOption: Locator;
 	readonly scopeTab: Locator;
@@ -38,9 +39,16 @@ export class WebContentDisplayPage {
 		this.configurationFrame = page.frameLocator(
 			'iframe[title*="Configuration"]'
 		);
+		this.webContentDisplayConfig = page.frameLocator(
+			'iframe[title*="Web Content Display"]'
+		);
 
 		this.app = page.getByTestId('app-loaded');
 
+		this.configurationFrameChangeButton = this.configurationFrame.getByRole(
+			'button',
+			{name: 'Change'}
+		);
 		this.configurationFrameSelectButton = this.configurationFrame.getByRole(
 			'button',
 			{
@@ -54,27 +62,26 @@ export class WebContentDisplayPage {
 		this.scopeOptions = this.configurationFrame.locator(
 			'[id="_com_liferay_portlet_configuration_web_portlet_PortletConfigurationPortlet_scope"]'
 		);
-		this.saveButton = page
-			.frameLocator('iframe[title*="Web Content Display"]')
-			.getByRole('button', {
-				name: 'Save',
-			});
+		this.saveButton = this.webContentDisplayConfig.getByRole('button', {
+			name: 'Save',
+		});
 		this.scopeTab = this.configurationFrame.getByRole('link', {
 			name: 'Scope Deprecated',
 		});
 		this.selectButton = this.app.getByRole('button', {
 			name: 'Select',
 		});
-		this.selectWebContentButton = page
-			.frameLocator('iframe[title*="Web Content Display"]')
-			.getByRole('button', {name: 'Select'});
+		this.selectWebContentButton = this.webContentDisplayConfig.getByRole(
+			'button',
+			{name: 'Select'}
+		);
 		this.selectWebContentInConfigurationFrame =
 			this.configurationFrame.frameLocator(
 				'iframe[title="Select Web Content"]'
 			);
-		this.selectWebContentFrame = page
-			.frameLocator('iframe[title*="Web Content Display"]')
-			.frameLocator('iframe[title="Select Web Content"]');
+		this.selectWebContentFrame = this.webContentDisplayConfig.frameLocator(
+			'iframe[title="Select Web Content"]'
+		);
 		this.uiElementsPage = new UIElementsPage(page);
 		this.webContentDisplay = page
 			.getByText('Select web content to make it visible')
@@ -89,12 +96,15 @@ export class WebContentDisplayPage {
 		this.webContentDisplayConfig = page.frameLocator(
 			'iframe[title*="Web Content Display"]'
 		);
-		this.webContentDisplayContent = page.locator(
-			'[id^="portlet_com_liferay_journal_content_web_portlet_JournalContentPortlet_INSTANCE"]'
-		);
+		this.webContentDisplayContent = page
+			.locator(
+				'[id^="portlet_com_liferay_journal_content_web_portlet_JournalContentPortlet_INSTANCE"]'
+			)
+			.filter({hasText: 'Select web content to make it visible'})
+			.first();
 		this.webContentDisplayOptionsContent =
 			this.webContentDisplayContent.getByLabel('Options');
-		this.webContentDisplayOptionsWidget = page
+		this.webContentDisplayOptionsWidget = this.webContentDisplayContent
 			.locator(
 				'[id^="portlet-topper-toolbar_com_liferay_journal_content_web_portlet_JournalContentPortlet_INSTANCE_"]'
 			)
@@ -113,7 +123,7 @@ export class WebContentDisplayPage {
 	}
 
 	async goToConfiguration() {
-		await this.webContentDisplay.waitFor({state: 'visible'});
+		await this.webContentDisplay.waitFor();
 		await this.webContentDisplayContent.hover();
 		await this.webContentDisplayContent.click();
 
@@ -124,17 +134,16 @@ export class WebContentDisplayPage {
 		await this.configurationOption.click();
 	}
 
-	async addWebContentWithDisplay(
-		options: {pageType?: 'content' | 'widget'; webContentName?: string} = {
-			pageType: 'content',
-			webContentName: '',
-		}
-	) {
-		await this.webContentDisplay.waitFor({state: 'visible'});
+	async addWebContentWithDisplay({
+		pageType = 'content',
+		webContentName,
+	}: {
+		pageType?: 'content' | 'widget';
+		webContentName?: string;
+	} = {}) {
+		await this.webContentDisplay.waitFor();
 		await this.webContentDisplayContent.hover();
 		await this.webContentDisplayContent.click();
-
-		const {pageType, webContentName} = options;
 
 		if (pageType === 'widget') {
 			await this.page
@@ -158,19 +167,22 @@ export class WebContentDisplayPage {
 			.getByText('Success:The application was added to the page.')
 			.waitFor({state: 'hidden'});
 
-		await this.configurationFrameSelectButton.waitFor({state: 'visible'});
 		await this.configurationFrameSelectButton.click();
 
 		if (webContentName) {
 			await this.selectWebContentInConfigurationFrame
-				.getByText(webContentName)
-				.waitFor({state: 'visible'});
-			await this.selectWebContentInConfigurationFrame
-				.getByText(webContentName)
+				.getByText(webContentName, {exact: true})
 				.hover();
-			await this.selectWebContentInConfigurationFrame
-				.getByText(webContentName)
-				.click();
+
+			// Wait for the Item Selector's nested iframe to resolve the selection
+
+			await clickAndExpectToBeVisible({
+				target: this.configurationFrameChangeButton,
+				trigger: this.selectWebContentInConfigurationFrame.getByText(
+					webContentName,
+					{exact: true}
+				),
+			});
 		}
 		else {
 			await this.webContentDisplayOptionsContent.click();
@@ -182,27 +194,20 @@ export class WebContentDisplayPage {
 				.getByText('Success:The application was added to the page.')
 				.waitFor({state: 'hidden'});
 
-			await this.selectWebContentButton.waitFor({state: 'visible'});
 			await this.selectWebContentButton.click();
-			await this.webContentToSelect.waitFor({state: 'visible'});
-			await this.webContentToSelect.hover();
-			await this.webContentToSelect.click();
 
-			if (!this.saveButton.isVisible) {
-				await this.webContentToSelect.click();
-			}
+			await clickAndExpectToBeVisible({
+				autoClick: true,
+				target: this.saveButton,
+				trigger: this.webContentToSelect,
+			});
 
-			if (!this.saveButton.isVisible) {
-				await this.webContentToSelect.click();
-			}
-
-			await this.saveButton.click();
 			await this.uiElementsPage.closeClickable.click();
 
 			await this.page
 				.locator('header')
 				.filter({hasText: 'Web Content Display'})
-				.waitFor({state: 'visible'});
+				.waitFor();
 		}
 
 		await this.saveConfigurationFrameOptions();
@@ -217,14 +222,14 @@ export class WebContentDisplayPage {
 		await this.webContentDisplayAddButton.click();
 		await this.page
 			.getByText('Success:The application was added to the page.')
-			.waitFor({state: 'visible'});
+			.waitFor();
 		await this.page
 			.getByText('Success:The application was added to the page.')
 			.waitFor({state: 'hidden'});
 		await this.page
 			.getByRole('heading', {name: 'Web Content Display'})
 			.hover();
-		await this.selectButton.waitFor({state: 'visible'});
+
 		await clickAndExpectToBeVisible({
 			target: this.selectWebContentButton,
 			trigger: this.selectButton,
@@ -233,11 +238,11 @@ export class WebContentDisplayPage {
 			target: this.webContentToSelect.getByText(webContentName),
 			trigger: this.selectWebContentButton,
 		});
-		await this.webContentToSelect.getByText(webContentName).hover();
-		await this.webContentToSelect.getByText(webContentName).click();
-		if (!this.saveButton.isVisible) {
-			await this.webContentToSelect.getByLabel(webContentName).click();
-		}
+		await clickAndExpectToBeVisible({
+			target: this.saveButton,
+			trigger: this.webContentToSelect.getByLabel(webContentName),
+		});
+
 		await this.saveButton.click();
 	}
 
@@ -255,6 +260,7 @@ export class WebContentDisplayPage {
 				'[id^="portlet_com_liferay_journal_content_web_portlet_JournalContentPortlet_INSTANCE_"] header'
 			)
 			.filter({hasText: 'Web Content Display'})
-			.waitFor({state: 'visible'});
+			.first()
+			.waitFor();
 	}
 }

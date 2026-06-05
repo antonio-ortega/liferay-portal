@@ -8,6 +8,23 @@ import {createRoot} from 'react-dom/client';
 
 import App from './js/App.es';
 
+globalThis.MonacoEnvironment = {
+	getWorkerUrl(_workerId, label) {
+		const basePath =
+			document
+				.querySelector('script[src*="headless-discovery-web-min"]')
+				?.src?.replace(/[^/]+$/, '') || '';
+
+		const workerFile =
+			{
+				graphql: 'graphql.worker.js',
+				json: 'json.worker.js',
+			}[label] || 'editor.worker.js';
+
+		return `${basePath}${workerFile}`;
+	},
+};
+
 /* Bug with SwaggerUI: https://github.com/agoncal/swagger-ui-angular6/issues/2 */
 
 /* eslint-disable-next-line no-undef */

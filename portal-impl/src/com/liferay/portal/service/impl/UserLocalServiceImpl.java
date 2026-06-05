@@ -29,6 +29,7 @@ import com.liferay.portal.kernel.cache.PortalCacheManagerNames;
 import com.liferay.portal.kernel.cache.PortalCacheMapSynchronizeUtil;
 import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
+import com.liferay.portal.kernel.dao.jdbc.AutoBatchPreparedStatementUtil;
 import com.liferay.portal.kernel.dao.orm.EntityCache;
 import com.liferay.portal.kernel.dao.orm.EntityCacheUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
@@ -63,9 +64,6 @@ import com.liferay.portal.kernel.instance.PortalInstancePool;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.messaging.DestinationNames;
-import com.liferay.portal.kernel.messaging.Message;
-import com.liferay.portal.kernel.messaging.MessageBus;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.model.Contact;
@@ -4861,7 +4859,6 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 			user.setMiddleName(middleName);
 			user.setLastName(lastName);
 			user.setJobTitle(jobTitle);
-			user.setExpandoBridgeAttributes(serviceContext);
 
 			Date birthday = getBirthday(
 				birthdayMonth, birthdayDay, birthdayYear);
@@ -4888,6 +4885,7 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 		}
 
 		user.setStatus(WorkflowConstants.STATUS_DRAFT);
+		user.setExpandoBridgeAttributes(serviceContext);
 
 		user = userPersistence.update(user, serviceContext);
 
@@ -6103,8 +6101,6 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 		if (authResult == Authenticator.SUCCESS) {
 			try {
 				user = _checkPasswordPolicy(user);
-
-				sendUserLoginMessage(companyId, user.getUserId());
 			}
 			catch (PortalException portalException) {
 				handleAuthenticationFailure(
@@ -6160,10 +6156,16 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 		attributes.put("city", city);
 		attributes.put("country", country);
 		attributes.put("emailAddress", emailAddress);
-		attributes.put("firstName", firstName);
-		attributes.put("fullName", fullName);
-		attributes.put("lastName", lastName);
-		attributes.put("middleName", middleName);
+
+		Locale locale = LocaleUtil.getMostRelevantLocale();
+
+		attributes.put(
+			"firstName_" + LocaleUtil.toLanguageId(locale), firstName);
+		attributes.put("fullName_" + LocaleUtil.toLanguageId(locale), fullName);
+		attributes.put("lastName_" + LocaleUtil.toLanguageId(locale), lastName);
+		attributes.put(
+			"middleName_" + LocaleUtil.toLanguageId(locale), middleName);
+
 		attributes.put("params", params);
 		attributes.put("region", region);
 		attributes.put("screenName", screenName);
@@ -6444,6 +6446,7 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 			else if (!key.equals(Field.GROUP_ID) &&
 					 !key.equals("accountEntryIds") &&
 					 !key.equals("emailAddressDomains") &&
+					 !key.equals("inheritUsersGroups") &&
 					 !key.equals("types") && !key.equals("usersGroups") &&
 					 !key.equals("usersOrgs") &&
 					 !key.equals("usersOrgsCount") &&
@@ -6799,24 +6802,6 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 		}
 		catch (PortalException portalException) {
 			ReflectionUtil.throwException(portalException);
-		}
-	}
-
-	protected void sendUserLoginMessage(long companyId, long userId) {
-		try {
-			MessageBus messageBus = _messageBusSnapshot.get();
-
-			Message message = new Message();
-
-			message.put("companyId", companyId);
-			message.put("userId", userId);
-
-			messageBus.sendMessage(DestinationNames.USER_LOGIN, message);
-		}
-		catch (Exception exception) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(exception);
-			}
 		}
 	}
 
@@ -7528,10 +7513,12 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 	private void _updateLastLogin(Connection connection, List<User> users)
 		throws SQLException {
 
-		try (PreparedStatement preparedStatement = connection.prepareStatement(
-				CustomSQLUtil.get(
-					UserLocalServiceImpl.class.getName() +
-						".updateLastLogin"))) {
+		try (PreparedStatement preparedStatement =
+				AutoBatchPreparedStatementUtil.autoBatch(
+					connection,
+					CustomSQLUtil.get(
+						UserLocalServiceImpl.class.getName() +
+							".updateLastLogin"))) {
 
 			for (User user : users) {
 				preparedStatement.setTimestamp(
@@ -7626,8 +7613,6 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 	private static final Log _log = LogFactoryUtil.getLog(
 		UserLocalServiceImpl.class);
 
-	private static final Snapshot<MessageBus> _messageBusSnapshot =
-		new Snapshot<>(UserLocalServiceImpl.class, MessageBus.class);
 	private static final TransactionConfig _transactionConfig =
 		TransactionConfig.Factory.create(
 			Propagation.SUPPORTS, new Class<?>[] {Exception.class});

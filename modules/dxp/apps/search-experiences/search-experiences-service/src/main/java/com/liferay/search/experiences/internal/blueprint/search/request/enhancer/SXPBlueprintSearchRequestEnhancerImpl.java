@@ -23,12 +23,9 @@ import com.liferay.portal.search.asset.AssetSubtypeIdentifierBuilder;
 import com.liferay.portal.search.collapse.CollapseBuilderFactory;
 import com.liferay.portal.search.collapse.InnerHitBuilderFactory;
 import com.liferay.portal.search.filter.ComplexQueryPartBuilderFactory;
-import com.liferay.portal.search.geolocation.GeoBuilders;
 import com.liferay.portal.search.highlight.FieldConfigBuilderFactory;
 import com.liferay.portal.search.highlight.HighlightBuilderFactory;
-import com.liferay.portal.search.query.Queries;
 import com.liferay.portal.search.rescore.RescoreBuilderFactory;
-import com.liferay.portal.search.script.Scripts;
 import com.liferay.portal.search.searcher.SearchRequestBuilder;
 import com.liferay.portal.search.significance.SignificanceHeuristics;
 import com.liferay.portal.search.sort.Sorts;
@@ -115,22 +112,22 @@ public class SXPBlueprintSearchRequestEnhancerImpl
 		HighlightConverter highlightConverter = new HighlightConverter(
 			_fieldConfigBuilderFactory, _highlightBuilderFactory);
 
-		QueryConverter queryConverter = new QueryConverter(_queries);
-		ScriptConverter scriptConverter = new ScriptConverter(_scripts);
+		QueryConverter queryConverter = new QueryConverter();
+		ScriptConverter scriptConverter = new ScriptConverter();
 
 		SortConverter sortConverter = new SortConverter(
-			_geoBuilders, queryConverter, scriptConverter, _sorts);
+			queryConverter, scriptConverter, _sorts);
 
 		_sxpSearchRequestBodyContributors = Arrays.asList(
 			new AdvancedSXPSearchRequestBodyContributor(
 				_collapseBuilderFactory, _innerHitBuilderFactory,
 				sortConverter),
 			new AggsSXPSearchRequestBodyContributor(
-				_aggregations, _geoBuilders, highlightConverter, queryConverter,
+				_aggregations, highlightConverter, queryConverter,
 				scriptConverter, _significanceHeuristics, _sorts),
 			new GeneralSXPSearchRequestBodyContributor(
-				_assetSubtypeIdentifierBuilder, _complexQueryPartBuilderFactory,
-				_queries),
+				_assetSubtypeIdentifierBuilder,
+				_complexQueryPartBuilderFactory),
 			new HighlightSXPSearchRequestBodyContributor(highlightConverter),
 			new QuerySXPSearchRequestBodyContributor(
 				_complexQueryPartBuilderFactory, queryConverter,
@@ -546,9 +543,6 @@ public class SXPBlueprintSearchRequestEnhancerImpl
 	private FieldConfigBuilderFactory _fieldConfigBuilderFactory;
 
 	@Reference
-	private GeoBuilders _geoBuilders;
-
-	@Reference
 	private HighlightBuilderFactory _highlightBuilderFactory;
 
 	@Reference
@@ -558,13 +552,7 @@ public class SXPBlueprintSearchRequestEnhancerImpl
 	private JSONFactory _jsonFactory;
 
 	@Reference
-	private Queries _queries;
-
-	@Reference
 	private RescoreBuilderFactory _rescoreBuilderFactory;
-
-	@Reference
-	private Scripts _scripts;
 
 	@Reference
 	private SignificanceHeuristics _significanceHeuristics;

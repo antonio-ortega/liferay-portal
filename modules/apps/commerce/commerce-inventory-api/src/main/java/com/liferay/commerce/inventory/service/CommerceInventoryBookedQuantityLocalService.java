@@ -361,3 +361,4 @@ public interface CommerceInventoryBookedQuantityLocalService
 		throws PortalException;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:23544000

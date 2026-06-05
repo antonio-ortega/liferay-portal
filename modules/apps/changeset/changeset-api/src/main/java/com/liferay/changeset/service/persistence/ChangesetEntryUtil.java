@@ -36,6 +36,20 @@ public class ChangesetEntryUtil {
 	 */
 
 	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(List)
+	 */
+	public static void cacheResult(List<ChangesetEntry> changesetEntries) {
+		getPersistence().cacheResult(changesetEntries);
+	}
+
+	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(com.liferay.portal.kernel.model.BaseModel)
+	 */
+	public static void cacheResult(ChangesetEntry changesetEntry) {
+		getPersistence().cacheResult(changesetEntry);
+	}
+
+	/**
 	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#clearCache()
 	 */
 	public static void clearCache() {
@@ -111,59 +125,10 @@ public class ChangesetEntryUtil {
 	}
 
 	/**
-	 * Returns all the changeset entries where groupId = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @return the matching changeset entries
-	 */
-	public static List<ChangesetEntry> findByGroupId(long groupId) {
-		return getPersistence().findByGroupId(groupId);
-	}
-
-	/**
-	 * Returns a range of all the changeset entries where groupId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>ChangesetEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param groupId the group ID
-	 * @param start the lower bound of the range of changeset entries
-	 * @param end the upper bound of the range of changeset entries (not inclusive)
-	 * @return the range of matching changeset entries
-	 */
-	public static List<ChangesetEntry> findByGroupId(
-		long groupId, int start, int end) {
-
-		return getPersistence().findByGroupId(groupId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the changeset entries where groupId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>ChangesetEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param groupId the group ID
-	 * @param start the lower bound of the range of changeset entries
-	 * @param end the upper bound of the range of changeset entries (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching changeset entries
-	 */
-	public static List<ChangesetEntry> findByGroupId(
-		long groupId, int start, int end,
-		OrderByComparator<ChangesetEntry> orderByComparator) {
-
-		return getPersistence().findByGroupId(
-			groupId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the changeset entries where groupId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>ChangesetEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.changeset.model.impl.ChangesetEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -212,52 +177,6 @@ public class ChangesetEntryUtil {
 	}
 
 	/**
-	 * Returns the last changeset entry in the ordered set where groupId = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching changeset entry
-	 * @throws NoSuchEntryException if a matching changeset entry could not be found
-	 */
-	public static ChangesetEntry findByGroupId_Last(
-			long groupId, OrderByComparator<ChangesetEntry> orderByComparator)
-		throws com.liferay.changeset.exception.NoSuchEntryException {
-
-		return getPersistence().findByGroupId_Last(groupId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last changeset entry in the ordered set where groupId = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching changeset entry, or <code>null</code> if a matching changeset entry could not be found
-	 */
-	public static ChangesetEntry fetchByGroupId_Last(
-		long groupId, OrderByComparator<ChangesetEntry> orderByComparator) {
-
-		return getPersistence().fetchByGroupId_Last(groupId, orderByComparator);
-	}
-
-	/**
-	 * Returns the changeset entries before and after the current changeset entry in the ordered set where groupId = &#63;.
-	 *
-	 * @param changesetEntryId the primary key of the current changeset entry
-	 * @param groupId the group ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next changeset entry
-	 * @throws NoSuchEntryException if a changeset entry with the primary key could not be found
-	 */
-	public static ChangesetEntry[] findByGroupId_PrevAndNext(
-			long changesetEntryId, long groupId,
-			OrderByComparator<ChangesetEntry> orderByComparator)
-		throws com.liferay.changeset.exception.NoSuchEntryException {
-
-		return getPersistence().findByGroupId_PrevAndNext(
-			changesetEntryId, groupId, orderByComparator);
-	}
-
-	/**
 	 * Removes all the changeset entries where groupId = &#63; from the database.
 	 *
 	 * @param groupId the group ID
@@ -277,59 +196,10 @@ public class ChangesetEntryUtil {
 	}
 
 	/**
-	 * Returns all the changeset entries where companyId = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @return the matching changeset entries
-	 */
-	public static List<ChangesetEntry> findByCompanyId(long companyId) {
-		return getPersistence().findByCompanyId(companyId);
-	}
-
-	/**
-	 * Returns a range of all the changeset entries where companyId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>ChangesetEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param start the lower bound of the range of changeset entries
-	 * @param end the upper bound of the range of changeset entries (not inclusive)
-	 * @return the range of matching changeset entries
-	 */
-	public static List<ChangesetEntry> findByCompanyId(
-		long companyId, int start, int end) {
-
-		return getPersistence().findByCompanyId(companyId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the changeset entries where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>ChangesetEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param start the lower bound of the range of changeset entries
-	 * @param end the upper bound of the range of changeset entries (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching changeset entries
-	 */
-	public static List<ChangesetEntry> findByCompanyId(
-		long companyId, int start, int end,
-		OrderByComparator<ChangesetEntry> orderByComparator) {
-
-		return getPersistence().findByCompanyId(
-			companyId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the changeset entries where companyId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>ChangesetEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.changeset.model.impl.ChangesetEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -379,54 +249,6 @@ public class ChangesetEntryUtil {
 	}
 
 	/**
-	 * Returns the last changeset entry in the ordered set where companyId = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching changeset entry
-	 * @throws NoSuchEntryException if a matching changeset entry could not be found
-	 */
-	public static ChangesetEntry findByCompanyId_Last(
-			long companyId, OrderByComparator<ChangesetEntry> orderByComparator)
-		throws com.liferay.changeset.exception.NoSuchEntryException {
-
-		return getPersistence().findByCompanyId_Last(
-			companyId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last changeset entry in the ordered set where companyId = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching changeset entry, or <code>null</code> if a matching changeset entry could not be found
-	 */
-	public static ChangesetEntry fetchByCompanyId_Last(
-		long companyId, OrderByComparator<ChangesetEntry> orderByComparator) {
-
-		return getPersistence().fetchByCompanyId_Last(
-			companyId, orderByComparator);
-	}
-
-	/**
-	 * Returns the changeset entries before and after the current changeset entry in the ordered set where companyId = &#63;.
-	 *
-	 * @param changesetEntryId the primary key of the current changeset entry
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next changeset entry
-	 * @throws NoSuchEntryException if a changeset entry with the primary key could not be found
-	 */
-	public static ChangesetEntry[] findByCompanyId_PrevAndNext(
-			long changesetEntryId, long companyId,
-			OrderByComparator<ChangesetEntry> orderByComparator)
-		throws com.liferay.changeset.exception.NoSuchEntryException {
-
-		return getPersistence().findByCompanyId_PrevAndNext(
-			changesetEntryId, companyId, orderByComparator);
-	}
-
-	/**
 	 * Removes all the changeset entries where companyId = &#63; from the database.
 	 *
 	 * @param companyId the company ID
@@ -446,63 +268,10 @@ public class ChangesetEntryUtil {
 	}
 
 	/**
-	 * Returns all the changeset entries where changesetCollectionId = &#63;.
-	 *
-	 * @param changesetCollectionId the changeset collection ID
-	 * @return the matching changeset entries
-	 */
-	public static List<ChangesetEntry> findByChangesetCollectionId(
-		long changesetCollectionId) {
-
-		return getPersistence().findByChangesetCollectionId(
-			changesetCollectionId);
-	}
-
-	/**
-	 * Returns a range of all the changeset entries where changesetCollectionId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>ChangesetEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param changesetCollectionId the changeset collection ID
-	 * @param start the lower bound of the range of changeset entries
-	 * @param end the upper bound of the range of changeset entries (not inclusive)
-	 * @return the range of matching changeset entries
-	 */
-	public static List<ChangesetEntry> findByChangesetCollectionId(
-		long changesetCollectionId, int start, int end) {
-
-		return getPersistence().findByChangesetCollectionId(
-			changesetCollectionId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the changeset entries where changesetCollectionId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>ChangesetEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param changesetCollectionId the changeset collection ID
-	 * @param start the lower bound of the range of changeset entries
-	 * @param end the upper bound of the range of changeset entries (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching changeset entries
-	 */
-	public static List<ChangesetEntry> findByChangesetCollectionId(
-		long changesetCollectionId, int start, int end,
-		OrderByComparator<ChangesetEntry> orderByComparator) {
-
-		return getPersistence().findByChangesetCollectionId(
-			changesetCollectionId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the changeset entries where changesetCollectionId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>ChangesetEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.changeset.model.impl.ChangesetEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param changesetCollectionId the changeset collection ID
@@ -555,56 +324,6 @@ public class ChangesetEntryUtil {
 	}
 
 	/**
-	 * Returns the last changeset entry in the ordered set where changesetCollectionId = &#63;.
-	 *
-	 * @param changesetCollectionId the changeset collection ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching changeset entry
-	 * @throws NoSuchEntryException if a matching changeset entry could not be found
-	 */
-	public static ChangesetEntry findByChangesetCollectionId_Last(
-			long changesetCollectionId,
-			OrderByComparator<ChangesetEntry> orderByComparator)
-		throws com.liferay.changeset.exception.NoSuchEntryException {
-
-		return getPersistence().findByChangesetCollectionId_Last(
-			changesetCollectionId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last changeset entry in the ordered set where changesetCollectionId = &#63;.
-	 *
-	 * @param changesetCollectionId the changeset collection ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching changeset entry, or <code>null</code> if a matching changeset entry could not be found
-	 */
-	public static ChangesetEntry fetchByChangesetCollectionId_Last(
-		long changesetCollectionId,
-		OrderByComparator<ChangesetEntry> orderByComparator) {
-
-		return getPersistence().fetchByChangesetCollectionId_Last(
-			changesetCollectionId, orderByComparator);
-	}
-
-	/**
-	 * Returns the changeset entries before and after the current changeset entry in the ordered set where changesetCollectionId = &#63;.
-	 *
-	 * @param changesetEntryId the primary key of the current changeset entry
-	 * @param changesetCollectionId the changeset collection ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next changeset entry
-	 * @throws NoSuchEntryException if a changeset entry with the primary key could not be found
-	 */
-	public static ChangesetEntry[] findByChangesetCollectionId_PrevAndNext(
-			long changesetEntryId, long changesetCollectionId,
-			OrderByComparator<ChangesetEntry> orderByComparator)
-		throws com.liferay.changeset.exception.NoSuchEntryException {
-
-		return getPersistence().findByChangesetCollectionId_PrevAndNext(
-			changesetEntryId, changesetCollectionId, orderByComparator);
-	}
-
-	/**
 	 * Removes all the changeset entries where changesetCollectionId = &#63; from the database.
 	 *
 	 * @param changesetCollectionId the changeset collection ID
@@ -627,64 +346,10 @@ public class ChangesetEntryUtil {
 	}
 
 	/**
-	 * Returns all the changeset entries where groupId = &#63; and classNameId = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param classNameId the class name ID
-	 * @return the matching changeset entries
-	 */
-	public static List<ChangesetEntry> findByG_C(
-		long groupId, long classNameId) {
-
-		return getPersistence().findByG_C(groupId, classNameId);
-	}
-
-	/**
-	 * Returns a range of all the changeset entries where groupId = &#63; and classNameId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>ChangesetEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param groupId the group ID
-	 * @param classNameId the class name ID
-	 * @param start the lower bound of the range of changeset entries
-	 * @param end the upper bound of the range of changeset entries (not inclusive)
-	 * @return the range of matching changeset entries
-	 */
-	public static List<ChangesetEntry> findByG_C(
-		long groupId, long classNameId, int start, int end) {
-
-		return getPersistence().findByG_C(groupId, classNameId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the changeset entries where groupId = &#63; and classNameId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>ChangesetEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param groupId the group ID
-	 * @param classNameId the class name ID
-	 * @param start the lower bound of the range of changeset entries
-	 * @param end the upper bound of the range of changeset entries (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching changeset entries
-	 */
-	public static List<ChangesetEntry> findByG_C(
-		long groupId, long classNameId, int start, int end,
-		OrderByComparator<ChangesetEntry> orderByComparator) {
-
-		return getPersistence().findByG_C(
-			groupId, classNameId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the changeset entries where groupId = &#63; and classNameId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>ChangesetEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.changeset.model.impl.ChangesetEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -740,59 +405,6 @@ public class ChangesetEntryUtil {
 	}
 
 	/**
-	 * Returns the last changeset entry in the ordered set where groupId = &#63; and classNameId = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param classNameId the class name ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching changeset entry
-	 * @throws NoSuchEntryException if a matching changeset entry could not be found
-	 */
-	public static ChangesetEntry findByG_C_Last(
-			long groupId, long classNameId,
-			OrderByComparator<ChangesetEntry> orderByComparator)
-		throws com.liferay.changeset.exception.NoSuchEntryException {
-
-		return getPersistence().findByG_C_Last(
-			groupId, classNameId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last changeset entry in the ordered set where groupId = &#63; and classNameId = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param classNameId the class name ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching changeset entry, or <code>null</code> if a matching changeset entry could not be found
-	 */
-	public static ChangesetEntry fetchByG_C_Last(
-		long groupId, long classNameId,
-		OrderByComparator<ChangesetEntry> orderByComparator) {
-
-		return getPersistence().fetchByG_C_Last(
-			groupId, classNameId, orderByComparator);
-	}
-
-	/**
-	 * Returns the changeset entries before and after the current changeset entry in the ordered set where groupId = &#63; and classNameId = &#63;.
-	 *
-	 * @param changesetEntryId the primary key of the current changeset entry
-	 * @param groupId the group ID
-	 * @param classNameId the class name ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next changeset entry
-	 * @throws NoSuchEntryException if a changeset entry with the primary key could not be found
-	 */
-	public static ChangesetEntry[] findByG_C_PrevAndNext(
-			long changesetEntryId, long groupId, long classNameId,
-			OrderByComparator<ChangesetEntry> orderByComparator)
-		throws com.liferay.changeset.exception.NoSuchEntryException {
-
-		return getPersistence().findByG_C_PrevAndNext(
-			changesetEntryId, groupId, classNameId, orderByComparator);
-	}
-
-	/**
 	 * Removes all the changeset entries where groupId = &#63; and classNameId = &#63; from the database.
 	 *
 	 * @param groupId the group ID
@@ -814,65 +426,10 @@ public class ChangesetEntryUtil {
 	}
 
 	/**
-	 * Returns all the changeset entries where changesetCollectionId = &#63; and classNameId = &#63;.
-	 *
-	 * @param changesetCollectionId the changeset collection ID
-	 * @param classNameId the class name ID
-	 * @return the matching changeset entries
-	 */
-	public static List<ChangesetEntry> findByC_C(
-		long changesetCollectionId, long classNameId) {
-
-		return getPersistence().findByC_C(changesetCollectionId, classNameId);
-	}
-
-	/**
-	 * Returns a range of all the changeset entries where changesetCollectionId = &#63; and classNameId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>ChangesetEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param changesetCollectionId the changeset collection ID
-	 * @param classNameId the class name ID
-	 * @param start the lower bound of the range of changeset entries
-	 * @param end the upper bound of the range of changeset entries (not inclusive)
-	 * @return the range of matching changeset entries
-	 */
-	public static List<ChangesetEntry> findByC_C(
-		long changesetCollectionId, long classNameId, int start, int end) {
-
-		return getPersistence().findByC_C(
-			changesetCollectionId, classNameId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the changeset entries where changesetCollectionId = &#63; and classNameId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>ChangesetEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param changesetCollectionId the changeset collection ID
-	 * @param classNameId the class name ID
-	 * @param start the lower bound of the range of changeset entries
-	 * @param end the upper bound of the range of changeset entries (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching changeset entries
-	 */
-	public static List<ChangesetEntry> findByC_C(
-		long changesetCollectionId, long classNameId, int start, int end,
-		OrderByComparator<ChangesetEntry> orderByComparator) {
-
-		return getPersistence().findByC_C(
-			changesetCollectionId, classNameId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the changeset entries where changesetCollectionId = &#63; and classNameId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>ChangesetEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.changeset.model.impl.ChangesetEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param changesetCollectionId the changeset collection ID
@@ -928,60 +485,6 @@ public class ChangesetEntryUtil {
 	}
 
 	/**
-	 * Returns the last changeset entry in the ordered set where changesetCollectionId = &#63; and classNameId = &#63;.
-	 *
-	 * @param changesetCollectionId the changeset collection ID
-	 * @param classNameId the class name ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching changeset entry
-	 * @throws NoSuchEntryException if a matching changeset entry could not be found
-	 */
-	public static ChangesetEntry findByC_C_Last(
-			long changesetCollectionId, long classNameId,
-			OrderByComparator<ChangesetEntry> orderByComparator)
-		throws com.liferay.changeset.exception.NoSuchEntryException {
-
-		return getPersistence().findByC_C_Last(
-			changesetCollectionId, classNameId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last changeset entry in the ordered set where changesetCollectionId = &#63; and classNameId = &#63;.
-	 *
-	 * @param changesetCollectionId the changeset collection ID
-	 * @param classNameId the class name ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching changeset entry, or <code>null</code> if a matching changeset entry could not be found
-	 */
-	public static ChangesetEntry fetchByC_C_Last(
-		long changesetCollectionId, long classNameId,
-		OrderByComparator<ChangesetEntry> orderByComparator) {
-
-		return getPersistence().fetchByC_C_Last(
-			changesetCollectionId, classNameId, orderByComparator);
-	}
-
-	/**
-	 * Returns the changeset entries before and after the current changeset entry in the ordered set where changesetCollectionId = &#63; and classNameId = &#63;.
-	 *
-	 * @param changesetEntryId the primary key of the current changeset entry
-	 * @param changesetCollectionId the changeset collection ID
-	 * @param classNameId the class name ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next changeset entry
-	 * @throws NoSuchEntryException if a changeset entry with the primary key could not be found
-	 */
-	public static ChangesetEntry[] findByC_C_PrevAndNext(
-			long changesetEntryId, long changesetCollectionId, long classNameId,
-			OrderByComparator<ChangesetEntry> orderByComparator)
-		throws com.liferay.changeset.exception.NoSuchEntryException {
-
-		return getPersistence().findByC_C_PrevAndNext(
-			changesetEntryId, changesetCollectionId, classNameId,
-			orderByComparator);
-	}
-
-	/**
 	 * Removes all the changeset entries where changesetCollectionId = &#63; and classNameId = &#63; from the database.
 	 *
 	 * @param changesetCollectionId the changeset collection ID
@@ -1005,6 +508,75 @@ public class ChangesetEntryUtil {
 	}
 
 	/**
+	 * Returns the changeset entry where changesetCollectionId = &#63; and classExternalReferenceCode = &#63; and classNameId = &#63; or throws a <code>NoSuchEntryException</code> if it could not be found.
+	 *
+	 * @param changesetCollectionId the changeset collection ID
+	 * @param classExternalReferenceCode the class external reference code
+	 * @param classNameId the class name ID
+	 * @return the matching changeset entry
+	 * @throws NoSuchEntryException if a matching changeset entry could not be found
+	 */
+	public static ChangesetEntry findByC_CERC_C(
+			long changesetCollectionId, String classExternalReferenceCode,
+			long classNameId)
+		throws com.liferay.changeset.exception.NoSuchEntryException {
+
+		return getPersistence().findByC_CERC_C(
+			changesetCollectionId, classExternalReferenceCode, classNameId);
+	}
+
+	/**
+	 * Returns the changeset entry where changesetCollectionId = &#63; and classExternalReferenceCode = &#63; and classNameId = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
+	 *
+	 * @param changesetCollectionId the changeset collection ID
+	 * @param classExternalReferenceCode the class external reference code
+	 * @param classNameId the class name ID
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the matching changeset entry, or <code>null</code> if a matching changeset entry could not be found
+	 */
+	public static ChangesetEntry fetchByC_CERC_C(
+		long changesetCollectionId, String classExternalReferenceCode,
+		long classNameId, boolean useFinderCache) {
+
+		return getPersistence().fetchByC_CERC_C(
+			changesetCollectionId, classExternalReferenceCode, classNameId,
+			useFinderCache);
+	}
+
+	/**
+	 * Removes the changeset entry where changesetCollectionId = &#63; and classExternalReferenceCode = &#63; and classNameId = &#63; from the database.
+	 *
+	 * @param changesetCollectionId the changeset collection ID
+	 * @param classExternalReferenceCode the class external reference code
+	 * @param classNameId the class name ID
+	 * @return the changeset entry that was removed
+	 */
+	public static ChangesetEntry removeByC_CERC_C(
+			long changesetCollectionId, String classExternalReferenceCode,
+			long classNameId)
+		throws com.liferay.changeset.exception.NoSuchEntryException {
+
+		return getPersistence().removeByC_CERC_C(
+			changesetCollectionId, classExternalReferenceCode, classNameId);
+	}
+
+	/**
+	 * Returns the number of changeset entries where changesetCollectionId = &#63; and classExternalReferenceCode = &#63; and classNameId = &#63;.
+	 *
+	 * @param changesetCollectionId the changeset collection ID
+	 * @param classExternalReferenceCode the class external reference code
+	 * @param classNameId the class name ID
+	 * @return the number of matching changeset entries
+	 */
+	public static int countByC_CERC_C(
+		long changesetCollectionId, String classExternalReferenceCode,
+		long classNameId) {
+
+		return getPersistence().countByC_CERC_C(
+			changesetCollectionId, classExternalReferenceCode, classNameId);
+	}
+
+	/**
 	 * Returns the changeset entry where changesetCollectionId = &#63; and classNameId = &#63; and classPK = &#63; or throws a <code>NoSuchEntryException</code> if it could not be found.
 	 *
 	 * @param changesetCollectionId the changeset collection ID
@@ -1018,21 +590,6 @@ public class ChangesetEntryUtil {
 		throws com.liferay.changeset.exception.NoSuchEntryException {
 
 		return getPersistence().findByC_C_C(
-			changesetCollectionId, classNameId, classPK);
-	}
-
-	/**
-	 * Returns the changeset entry where changesetCollectionId = &#63; and classNameId = &#63; and classPK = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
-	 *
-	 * @param changesetCollectionId the changeset collection ID
-	 * @param classNameId the class name ID
-	 * @param classPK the class pk
-	 * @return the matching changeset entry, or <code>null</code> if a matching changeset entry could not be found
-	 */
-	public static ChangesetEntry fetchByC_C_C(
-		long changesetCollectionId, long classNameId, long classPK) {
-
-		return getPersistence().fetchByC_C_C(
 			changesetCollectionId, classNameId, classPK);
 	}
 
@@ -1082,24 +639,6 @@ public class ChangesetEntryUtil {
 
 		return getPersistence().countByC_C_C(
 			changesetCollectionId, classNameId, classPK);
-	}
-
-	/**
-	 * Caches the changeset entry in the entity cache if it is enabled.
-	 *
-	 * @param changesetEntry the changeset entry
-	 */
-	public static void cacheResult(ChangesetEntry changesetEntry) {
-		getPersistence().cacheResult(changesetEntry);
-	}
-
-	/**
-	 * Caches the changeset entries in the entity cache if it is enabled.
-	 *
-	 * @param changesetEntries the changeset entries
-	 */
-	public static void cacheResult(List<ChangesetEntry> changesetEntries) {
-		getPersistence().cacheResult(changesetEntries);
 	}
 
 	/**
@@ -1153,83 +692,294 @@ public class ChangesetEntryUtil {
 	}
 
 	/**
-	 * Returns all the changeset entries.
+	 * Returns the changeset entry where changesetCollectionId = &#63; and classExternalReferenceCode = &#63; and classNameId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
 	 *
-	 * @return the changeset entries
+	 * @param changesetCollectionId the changeset collection ID
+	 * @param classExternalReferenceCode the class external reference code
+	 * @param classNameId the class name ID
+	 * @return the matching changeset entry, or <code>null</code> if a matching changeset entry could not be found
 	 */
-	public static List<ChangesetEntry> findAll() {
-		return getPersistence().findAll();
+	public static ChangesetEntry fetchByC_CERC_C(
+		long changesetCollectionId, String classExternalReferenceCode,
+		long classNameId) {
+
+		return getPersistence().fetchByC_CERC_C(
+			changesetCollectionId, classExternalReferenceCode, classNameId);
 	}
 
 	/**
-	 * Returns a range of all the changeset entries.
+	 * Returns the changeset entry where changesetCollectionId = &#63; and classNameId = &#63; and classPK = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	 *
+	 * @param changesetCollectionId the changeset collection ID
+	 * @param classNameId the class name ID
+	 * @param classPK the class pk
+	 * @return the matching changeset entry, or <code>null</code> if a matching changeset entry could not be found
+	 */
+	public static ChangesetEntry fetchByC_C_C(
+		long changesetCollectionId, long classNameId, long classPK) {
+
+		return getPersistence().fetchByC_C_C(
+			changesetCollectionId, classNameId, classPK);
+	}
+
+	/**
+	 * Returns all the changeset entries where groupId = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @return the matching changeset entries
+	 */
+	public static List<ChangesetEntry> findByGroupId(long groupId) {
+		return getPersistence().findByGroupId(groupId);
+	}
+
+	/**
+	 * Returns a range of all the changeset entries where groupId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>ChangesetEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.changeset.model.impl.ChangesetEntryModelImpl</code>.
 	 * </p>
 	 *
+	 * @param groupId the group ID
 	 * @param start the lower bound of the range of changeset entries
 	 * @param end the upper bound of the range of changeset entries (not inclusive)
-	 * @return the range of changeset entries
+	 * @return the range of matching changeset entries
 	 */
-	public static List<ChangesetEntry> findAll(int start, int end) {
-		return getPersistence().findAll(start, end);
+	public static List<ChangesetEntry> findByGroupId(
+		long groupId, int start, int end) {
+
+		return getPersistence().findByGroupId(groupId, start, end);
 	}
 
 	/**
-	 * Returns an ordered range of all the changeset entries.
+	 * Returns an ordered range of all the changeset entries where groupId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>ChangesetEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.changeset.model.impl.ChangesetEntryModelImpl</code>.
 	 * </p>
 	 *
+	 * @param groupId the group ID
 	 * @param start the lower bound of the range of changeset entries
 	 * @param end the upper bound of the range of changeset entries (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of changeset entries
+	 * @return the ordered range of matching changeset entries
 	 */
-	public static List<ChangesetEntry> findAll(
-		int start, int end,
+	public static List<ChangesetEntry> findByGroupId(
+		long groupId, int start, int end,
 		OrderByComparator<ChangesetEntry> orderByComparator) {
 
-		return getPersistence().findAll(start, end, orderByComparator);
+		return getPersistence().findByGroupId(
+			groupId, start, end, orderByComparator);
 	}
 
 	/**
-	 * Returns an ordered range of all the changeset entries.
+	 * Returns all the changeset entries where companyId = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @return the matching changeset entries
+	 */
+	public static List<ChangesetEntry> findByCompanyId(long companyId) {
+		return getPersistence().findByCompanyId(companyId);
+	}
+
+	/**
+	 * Returns a range of all the changeset entries where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>ChangesetEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.changeset.model.impl.ChangesetEntryModelImpl</code>.
 	 * </p>
 	 *
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of changeset entries
+	 * @param end the upper bound of the range of changeset entries (not inclusive)
+	 * @return the range of matching changeset entries
+	 */
+	public static List<ChangesetEntry> findByCompanyId(
+		long companyId, int start, int end) {
+
+		return getPersistence().findByCompanyId(companyId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the changeset entries where companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.changeset.model.impl.ChangesetEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
 	 * @param start the lower bound of the range of changeset entries
 	 * @param end the upper bound of the range of changeset entries (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param useFinderCache whether to use the finder cache
-	 * @return the ordered range of changeset entries
+	 * @return the ordered range of matching changeset entries
 	 */
-	public static List<ChangesetEntry> findAll(
-		int start, int end, OrderByComparator<ChangesetEntry> orderByComparator,
-		boolean useFinderCache) {
+	public static List<ChangesetEntry> findByCompanyId(
+		long companyId, int start, int end,
+		OrderByComparator<ChangesetEntry> orderByComparator) {
 
-		return getPersistence().findAll(
-			start, end, orderByComparator, useFinderCache);
+		return getPersistence().findByCompanyId(
+			companyId, start, end, orderByComparator);
 	}
 
 	/**
-	 * Removes all the changeset entries from the database.
-	 */
-	public static void removeAll() {
-		getPersistence().removeAll();
-	}
-
-	/**
-	 * Returns the number of changeset entries.
+	 * Returns all the changeset entries where changesetCollectionId = &#63;.
 	 *
-	 * @return the number of changeset entries
+	 * @param changesetCollectionId the changeset collection ID
+	 * @return the matching changeset entries
 	 */
-	public static int countAll() {
-		return getPersistence().countAll();
+	public static List<ChangesetEntry> findByChangesetCollectionId(
+		long changesetCollectionId) {
+
+		return getPersistence().findByChangesetCollectionId(
+			changesetCollectionId);
+	}
+
+	/**
+	 * Returns a range of all the changeset entries where changesetCollectionId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.changeset.model.impl.ChangesetEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param changesetCollectionId the changeset collection ID
+	 * @param start the lower bound of the range of changeset entries
+	 * @param end the upper bound of the range of changeset entries (not inclusive)
+	 * @return the range of matching changeset entries
+	 */
+	public static List<ChangesetEntry> findByChangesetCollectionId(
+		long changesetCollectionId, int start, int end) {
+
+		return getPersistence().findByChangesetCollectionId(
+			changesetCollectionId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the changeset entries where changesetCollectionId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.changeset.model.impl.ChangesetEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param changesetCollectionId the changeset collection ID
+	 * @param start the lower bound of the range of changeset entries
+	 * @param end the upper bound of the range of changeset entries (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching changeset entries
+	 */
+	public static List<ChangesetEntry> findByChangesetCollectionId(
+		long changesetCollectionId, int start, int end,
+		OrderByComparator<ChangesetEntry> orderByComparator) {
+
+		return getPersistence().findByChangesetCollectionId(
+			changesetCollectionId, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns all the changeset entries where groupId = &#63; and classNameId = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param classNameId the class name ID
+	 * @return the matching changeset entries
+	 */
+	public static List<ChangesetEntry> findByG_C(
+		long groupId, long classNameId) {
+
+		return getPersistence().findByG_C(groupId, classNameId);
+	}
+
+	/**
+	 * Returns a range of all the changeset entries where groupId = &#63; and classNameId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.changeset.model.impl.ChangesetEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param classNameId the class name ID
+	 * @param start the lower bound of the range of changeset entries
+	 * @param end the upper bound of the range of changeset entries (not inclusive)
+	 * @return the range of matching changeset entries
+	 */
+	public static List<ChangesetEntry> findByG_C(
+		long groupId, long classNameId, int start, int end) {
+
+		return getPersistence().findByG_C(groupId, classNameId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the changeset entries where groupId = &#63; and classNameId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.changeset.model.impl.ChangesetEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param classNameId the class name ID
+	 * @param start the lower bound of the range of changeset entries
+	 * @param end the upper bound of the range of changeset entries (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching changeset entries
+	 */
+	public static List<ChangesetEntry> findByG_C(
+		long groupId, long classNameId, int start, int end,
+		OrderByComparator<ChangesetEntry> orderByComparator) {
+
+		return getPersistence().findByG_C(
+			groupId, classNameId, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns all the changeset entries where changesetCollectionId = &#63; and classNameId = &#63;.
+	 *
+	 * @param changesetCollectionId the changeset collection ID
+	 * @param classNameId the class name ID
+	 * @return the matching changeset entries
+	 */
+	public static List<ChangesetEntry> findByC_C(
+		long changesetCollectionId, long classNameId) {
+
+		return getPersistence().findByC_C(changesetCollectionId, classNameId);
+	}
+
+	/**
+	 * Returns a range of all the changeset entries where changesetCollectionId = &#63; and classNameId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.changeset.model.impl.ChangesetEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param changesetCollectionId the changeset collection ID
+	 * @param classNameId the class name ID
+	 * @param start the lower bound of the range of changeset entries
+	 * @param end the upper bound of the range of changeset entries (not inclusive)
+	 * @return the range of matching changeset entries
+	 */
+	public static List<ChangesetEntry> findByC_C(
+		long changesetCollectionId, long classNameId, int start, int end) {
+
+		return getPersistence().findByC_C(
+			changesetCollectionId, classNameId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the changeset entries where changesetCollectionId = &#63; and classNameId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.changeset.model.impl.ChangesetEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param changesetCollectionId the changeset collection ID
+	 * @param classNameId the class name ID
+	 * @param start the lower bound of the range of changeset entries
+	 * @param end the upper bound of the range of changeset entries (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching changeset entries
+	 */
+	public static List<ChangesetEntry> findByC_C(
+		long changesetCollectionId, long classNameId, int start, int end,
+		OrderByComparator<ChangesetEntry> orderByComparator) {
+
+		return getPersistence().findByC_C(
+			changesetCollectionId, classNameId, start, end, orderByComparator);
 	}
 
 	public static ChangesetEntryPersistence getPersistence() {
@@ -1243,3 +993,4 @@ public class ChangesetEntryUtil {
 	private static volatile ChangesetEntryPersistence _persistence;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:1205390840

@@ -36,6 +36,20 @@ public class CTSContentUtil {
 	 */
 
 	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(List)
+	 */
+	public static void cacheResult(List<CTSContent> ctsContents) {
+		getPersistence().cacheResult(ctsContents);
+	}
+
+	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(com.liferay.portal.kernel.model.BaseModel)
+	 */
+	public static void cacheResult(CTSContent ctsContent) {
+		getPersistence().cacheResult(ctsContent);
+	}
+
+	/**
 	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#clearCache()
 	 */
 	public static void clearCache() {
@@ -111,62 +125,10 @@ public class CTSContentUtil {
 	}
 
 	/**
-	 * Returns all the cts contents where repositoryId = &#63; and path = &#63;.
-	 *
-	 * @param repositoryId the repository ID
-	 * @param path the path
-	 * @return the matching cts contents
-	 */
-	public static List<CTSContent> findByR_P(long repositoryId, String path) {
-		return getPersistence().findByR_P(repositoryId, path);
-	}
-
-	/**
-	 * Returns a range of all the cts contents where repositoryId = &#63; and path = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CTSContentModelImpl</code>.
-	 * </p>
-	 *
-	 * @param repositoryId the repository ID
-	 * @param path the path
-	 * @param start the lower bound of the range of cts contents
-	 * @param end the upper bound of the range of cts contents (not inclusive)
-	 * @return the range of matching cts contents
-	 */
-	public static List<CTSContent> findByR_P(
-		long repositoryId, String path, int start, int end) {
-
-		return getPersistence().findByR_P(repositoryId, path, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the cts contents where repositoryId = &#63; and path = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CTSContentModelImpl</code>.
-	 * </p>
-	 *
-	 * @param repositoryId the repository ID
-	 * @param path the path
-	 * @param start the lower bound of the range of cts contents
-	 * @param end the upper bound of the range of cts contents (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching cts contents
-	 */
-	public static List<CTSContent> findByR_P(
-		long repositoryId, String path, int start, int end,
-		OrderByComparator<CTSContent> orderByComparator) {
-
-		return getPersistence().findByR_P(
-			repositoryId, path, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the cts contents where repositoryId = &#63; and path = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CTSContentModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.change.tracking.store.model.impl.CTSContentModelImpl</code>.
 	 * </p>
 	 *
 	 * @param repositoryId the repository ID
@@ -222,61 +184,6 @@ public class CTSContentUtil {
 	}
 
 	/**
-	 * Returns the last cts content in the ordered set where repositoryId = &#63; and path = &#63;.
-	 *
-	 * @param repositoryId the repository ID
-	 * @param path the path
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching cts content
-	 * @throws NoSuchContentException if a matching cts content could not be found
-	 */
-	public static CTSContent findByR_P_Last(
-			long repositoryId, String path,
-			OrderByComparator<CTSContent> orderByComparator)
-		throws com.liferay.change.tracking.store.exception.
-			NoSuchContentException {
-
-		return getPersistence().findByR_P_Last(
-			repositoryId, path, orderByComparator);
-	}
-
-	/**
-	 * Returns the last cts content in the ordered set where repositoryId = &#63; and path = &#63;.
-	 *
-	 * @param repositoryId the repository ID
-	 * @param path the path
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching cts content, or <code>null</code> if a matching cts content could not be found
-	 */
-	public static CTSContent fetchByR_P_Last(
-		long repositoryId, String path,
-		OrderByComparator<CTSContent> orderByComparator) {
-
-		return getPersistence().fetchByR_P_Last(
-			repositoryId, path, orderByComparator);
-	}
-
-	/**
-	 * Returns the cts contents before and after the current cts content in the ordered set where repositoryId = &#63; and path = &#63;.
-	 *
-	 * @param ctsContentId the primary key of the current cts content
-	 * @param repositoryId the repository ID
-	 * @param path the path
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next cts content
-	 * @throws NoSuchContentException if a cts content with the primary key could not be found
-	 */
-	public static CTSContent[] findByR_P_PrevAndNext(
-			long ctsContentId, long repositoryId, String path,
-			OrderByComparator<CTSContent> orderByComparator)
-		throws com.liferay.change.tracking.store.exception.
-			NoSuchContentException {
-
-		return getPersistence().findByR_P_PrevAndNext(
-			ctsContentId, repositoryId, path, orderByComparator);
-	}
-
-	/**
 	 * Removes all the cts contents where repositoryId = &#63; and path = &#63; from the database.
 	 *
 	 * @param repositoryId the repository ID
@@ -298,69 +205,10 @@ public class CTSContentUtil {
 	}
 
 	/**
-	 * Returns all the cts contents where companyId = &#63; and repositoryId = &#63; and storeType = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param repositoryId the repository ID
-	 * @param storeType the store type
-	 * @return the matching cts contents
-	 */
-	public static List<CTSContent> findByC_R_S(
-		long companyId, long repositoryId, String storeType) {
-
-		return getPersistence().findByC_R_S(companyId, repositoryId, storeType);
-	}
-
-	/**
-	 * Returns a range of all the cts contents where companyId = &#63; and repositoryId = &#63; and storeType = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CTSContentModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param repositoryId the repository ID
-	 * @param storeType the store type
-	 * @param start the lower bound of the range of cts contents
-	 * @param end the upper bound of the range of cts contents (not inclusive)
-	 * @return the range of matching cts contents
-	 */
-	public static List<CTSContent> findByC_R_S(
-		long companyId, long repositoryId, String storeType, int start,
-		int end) {
-
-		return getPersistence().findByC_R_S(
-			companyId, repositoryId, storeType, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the cts contents where companyId = &#63; and repositoryId = &#63; and storeType = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CTSContentModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param repositoryId the repository ID
-	 * @param storeType the store type
-	 * @param start the lower bound of the range of cts contents
-	 * @param end the upper bound of the range of cts contents (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching cts contents
-	 */
-	public static List<CTSContent> findByC_R_S(
-		long companyId, long repositoryId, String storeType, int start, int end,
-		OrderByComparator<CTSContent> orderByComparator) {
-
-		return getPersistence().findByC_R_S(
-			companyId, repositoryId, storeType, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the cts contents where companyId = &#63; and repositoryId = &#63; and storeType = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CTSContentModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.change.tracking.store.model.impl.CTSContentModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -420,65 +268,6 @@ public class CTSContentUtil {
 	}
 
 	/**
-	 * Returns the last cts content in the ordered set where companyId = &#63; and repositoryId = &#63; and storeType = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param repositoryId the repository ID
-	 * @param storeType the store type
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching cts content
-	 * @throws NoSuchContentException if a matching cts content could not be found
-	 */
-	public static CTSContent findByC_R_S_Last(
-			long companyId, long repositoryId, String storeType,
-			OrderByComparator<CTSContent> orderByComparator)
-		throws com.liferay.change.tracking.store.exception.
-			NoSuchContentException {
-
-		return getPersistence().findByC_R_S_Last(
-			companyId, repositoryId, storeType, orderByComparator);
-	}
-
-	/**
-	 * Returns the last cts content in the ordered set where companyId = &#63; and repositoryId = &#63; and storeType = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param repositoryId the repository ID
-	 * @param storeType the store type
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching cts content, or <code>null</code> if a matching cts content could not be found
-	 */
-	public static CTSContent fetchByC_R_S_Last(
-		long companyId, long repositoryId, String storeType,
-		OrderByComparator<CTSContent> orderByComparator) {
-
-		return getPersistence().fetchByC_R_S_Last(
-			companyId, repositoryId, storeType, orderByComparator);
-	}
-
-	/**
-	 * Returns the cts contents before and after the current cts content in the ordered set where companyId = &#63; and repositoryId = &#63; and storeType = &#63;.
-	 *
-	 * @param ctsContentId the primary key of the current cts content
-	 * @param companyId the company ID
-	 * @param repositoryId the repository ID
-	 * @param storeType the store type
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next cts content
-	 * @throws NoSuchContentException if a cts content with the primary key could not be found
-	 */
-	public static CTSContent[] findByC_R_S_PrevAndNext(
-			long ctsContentId, long companyId, long repositoryId,
-			String storeType, OrderByComparator<CTSContent> orderByComparator)
-		throws com.liferay.change.tracking.store.exception.
-			NoSuchContentException {
-
-		return getPersistence().findByC_R_S_PrevAndNext(
-			ctsContentId, companyId, repositoryId, storeType,
-			orderByComparator);
-	}
-
-	/**
 	 * Removes all the cts contents where companyId = &#63; and repositoryId = &#63; and storeType = &#63; from the database.
 	 *
 	 * @param companyId the company ID
@@ -507,74 +296,10 @@ public class CTSContentUtil {
 	}
 
 	/**
-	 * Returns all the cts contents where companyId = &#63; and repositoryId = &#63; and path = &#63; and storeType = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param repositoryId the repository ID
-	 * @param path the path
-	 * @param storeType the store type
-	 * @return the matching cts contents
-	 */
-	public static List<CTSContent> findByC_R_P_S(
-		long companyId, long repositoryId, String path, String storeType) {
-
-		return getPersistence().findByC_R_P_S(
-			companyId, repositoryId, path, storeType);
-	}
-
-	/**
-	 * Returns a range of all the cts contents where companyId = &#63; and repositoryId = &#63; and path = &#63; and storeType = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CTSContentModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param repositoryId the repository ID
-	 * @param path the path
-	 * @param storeType the store type
-	 * @param start the lower bound of the range of cts contents
-	 * @param end the upper bound of the range of cts contents (not inclusive)
-	 * @return the range of matching cts contents
-	 */
-	public static List<CTSContent> findByC_R_P_S(
-		long companyId, long repositoryId, String path, String storeType,
-		int start, int end) {
-
-		return getPersistence().findByC_R_P_S(
-			companyId, repositoryId, path, storeType, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the cts contents where companyId = &#63; and repositoryId = &#63; and path = &#63; and storeType = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CTSContentModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param repositoryId the repository ID
-	 * @param path the path
-	 * @param storeType the store type
-	 * @param start the lower bound of the range of cts contents
-	 * @param end the upper bound of the range of cts contents (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching cts contents
-	 */
-	public static List<CTSContent> findByC_R_P_S(
-		long companyId, long repositoryId, String path, String storeType,
-		int start, int end, OrderByComparator<CTSContent> orderByComparator) {
-
-		return getPersistence().findByC_R_P_S(
-			companyId, repositoryId, path, storeType, start, end,
-			orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the cts contents where companyId = &#63; and repositoryId = &#63; and path = &#63; and storeType = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CTSContentModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.change.tracking.store.model.impl.CTSContentModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -637,68 +362,6 @@ public class CTSContentUtil {
 	}
 
 	/**
-	 * Returns the last cts content in the ordered set where companyId = &#63; and repositoryId = &#63; and path = &#63; and storeType = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param repositoryId the repository ID
-	 * @param path the path
-	 * @param storeType the store type
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching cts content
-	 * @throws NoSuchContentException if a matching cts content could not be found
-	 */
-	public static CTSContent findByC_R_P_S_Last(
-			long companyId, long repositoryId, String path, String storeType,
-			OrderByComparator<CTSContent> orderByComparator)
-		throws com.liferay.change.tracking.store.exception.
-			NoSuchContentException {
-
-		return getPersistence().findByC_R_P_S_Last(
-			companyId, repositoryId, path, storeType, orderByComparator);
-	}
-
-	/**
-	 * Returns the last cts content in the ordered set where companyId = &#63; and repositoryId = &#63; and path = &#63; and storeType = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param repositoryId the repository ID
-	 * @param path the path
-	 * @param storeType the store type
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching cts content, or <code>null</code> if a matching cts content could not be found
-	 */
-	public static CTSContent fetchByC_R_P_S_Last(
-		long companyId, long repositoryId, String path, String storeType,
-		OrderByComparator<CTSContent> orderByComparator) {
-
-		return getPersistence().fetchByC_R_P_S_Last(
-			companyId, repositoryId, path, storeType, orderByComparator);
-	}
-
-	/**
-	 * Returns the cts contents before and after the current cts content in the ordered set where companyId = &#63; and repositoryId = &#63; and path = &#63; and storeType = &#63;.
-	 *
-	 * @param ctsContentId the primary key of the current cts content
-	 * @param companyId the company ID
-	 * @param repositoryId the repository ID
-	 * @param path the path
-	 * @param storeType the store type
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next cts content
-	 * @throws NoSuchContentException if a cts content with the primary key could not be found
-	 */
-	public static CTSContent[] findByC_R_P_S_PrevAndNext(
-			long ctsContentId, long companyId, long repositoryId, String path,
-			String storeType, OrderByComparator<CTSContent> orderByComparator)
-		throws com.liferay.change.tracking.store.exception.
-			NoSuchContentException {
-
-		return getPersistence().findByC_R_P_S_PrevAndNext(
-			ctsContentId, companyId, repositoryId, path, storeType,
-			orderByComparator);
-	}
-
-	/**
 	 * Removes all the cts contents where companyId = &#63; and repositoryId = &#63; and path = &#63; and storeType = &#63; from the database.
 	 *
 	 * @param companyId the company ID
@@ -749,7 +412,7 @@ public class CTSContentUtil {
 	 * Returns a range of all the cts contents where companyId = &#63; and repositoryId = &#63; and path LIKE &#63; and storeType = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CTSContentModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.change.tracking.store.model.impl.CTSContentModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -772,7 +435,7 @@ public class CTSContentUtil {
 	 * Returns an ordered range of all the cts contents where companyId = &#63; and repositoryId = &#63; and path LIKE &#63; and storeType = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CTSContentModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.change.tracking.store.model.impl.CTSContentModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -797,7 +460,7 @@ public class CTSContentUtil {
 	 * Returns an ordered range of all the cts contents where companyId = &#63; and repositoryId = &#63; and path LIKE &#63; and storeType = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CTSContentModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.change.tracking.store.model.impl.CTSContentModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -860,68 +523,6 @@ public class CTSContentUtil {
 	}
 
 	/**
-	 * Returns the last cts content in the ordered set where companyId = &#63; and repositoryId = &#63; and path LIKE &#63; and storeType = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param repositoryId the repository ID
-	 * @param path the path
-	 * @param storeType the store type
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching cts content
-	 * @throws NoSuchContentException if a matching cts content could not be found
-	 */
-	public static CTSContent findByC_R_LikeP_S_Last(
-			long companyId, long repositoryId, String path, String storeType,
-			OrderByComparator<CTSContent> orderByComparator)
-		throws com.liferay.change.tracking.store.exception.
-			NoSuchContentException {
-
-		return getPersistence().findByC_R_LikeP_S_Last(
-			companyId, repositoryId, path, storeType, orderByComparator);
-	}
-
-	/**
-	 * Returns the last cts content in the ordered set where companyId = &#63; and repositoryId = &#63; and path LIKE &#63; and storeType = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param repositoryId the repository ID
-	 * @param path the path
-	 * @param storeType the store type
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching cts content, or <code>null</code> if a matching cts content could not be found
-	 */
-	public static CTSContent fetchByC_R_LikeP_S_Last(
-		long companyId, long repositoryId, String path, String storeType,
-		OrderByComparator<CTSContent> orderByComparator) {
-
-		return getPersistence().fetchByC_R_LikeP_S_Last(
-			companyId, repositoryId, path, storeType, orderByComparator);
-	}
-
-	/**
-	 * Returns the cts contents before and after the current cts content in the ordered set where companyId = &#63; and repositoryId = &#63; and path LIKE &#63; and storeType = &#63;.
-	 *
-	 * @param ctsContentId the primary key of the current cts content
-	 * @param companyId the company ID
-	 * @param repositoryId the repository ID
-	 * @param path the path
-	 * @param storeType the store type
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next cts content
-	 * @throws NoSuchContentException if a cts content with the primary key could not be found
-	 */
-	public static CTSContent[] findByC_R_LikeP_S_PrevAndNext(
-			long ctsContentId, long companyId, long repositoryId, String path,
-			String storeType, OrderByComparator<CTSContent> orderByComparator)
-		throws com.liferay.change.tracking.store.exception.
-			NoSuchContentException {
-
-		return getPersistence().findByC_R_LikeP_S_PrevAndNext(
-			ctsContentId, companyId, repositoryId, path, storeType,
-			orderByComparator);
-	}
-
-	/**
 	 * Removes all the cts contents where companyId = &#63; and repositoryId = &#63; and path LIKE &#63; and storeType = &#63; from the database.
 	 *
 	 * @param companyId the company ID
@@ -970,24 +571,6 @@ public class CTSContentUtil {
 			NoSuchContentException {
 
 		return getPersistence().findByC_R_P_V_S(
-			companyId, repositoryId, path, version, storeType);
-	}
-
-	/**
-	 * Returns the cts content where companyId = &#63; and repositoryId = &#63; and path = &#63; and version = &#63; and storeType = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
-	 *
-	 * @param companyId the company ID
-	 * @param repositoryId the repository ID
-	 * @param path the path
-	 * @param version the version
-	 * @param storeType the store type
-	 * @return the matching cts content, or <code>null</code> if a matching cts content could not be found
-	 */
-	public static CTSContent fetchByC_R_P_V_S(
-		long companyId, long repositoryId, String path, String version,
-		String storeType) {
-
-		return getPersistence().fetchByC_R_P_V_S(
 			companyId, repositoryId, path, version, storeType);
 	}
 
@@ -1049,24 +632,6 @@ public class CTSContentUtil {
 	}
 
 	/**
-	 * Caches the cts content in the entity cache if it is enabled.
-	 *
-	 * @param ctsContent the cts content
-	 */
-	public static void cacheResult(CTSContent ctsContent) {
-		getPersistence().cacheResult(ctsContent);
-	}
-
-	/**
-	 * Caches the cts contents in the entity cache if it is enabled.
-	 *
-	 * @param ctsContents the cts contents
-	 */
-	public static void cacheResult(List<CTSContent> ctsContents) {
-		getPersistence().cacheResult(ctsContents);
-	}
-
-	/**
 	 * Creates a new cts content with the primary key. Does not add the cts content to the database.
 	 *
 	 * @param ctsContentId the primary key for the new cts content
@@ -1119,82 +684,196 @@ public class CTSContentUtil {
 	}
 
 	/**
-	 * Returns all the cts contents.
+	 * Returns the cts content where companyId = &#63; and repositoryId = &#63; and path = &#63; and version = &#63; and storeType = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
 	 *
-	 * @return the cts contents
+	 * @param companyId the company ID
+	 * @param repositoryId the repository ID
+	 * @param path the path
+	 * @param version the version
+	 * @param storeType the store type
+	 * @return the matching cts content, or <code>null</code> if a matching cts content could not be found
 	 */
-	public static List<CTSContent> findAll() {
-		return getPersistence().findAll();
+	public static CTSContent fetchByC_R_P_V_S(
+		long companyId, long repositoryId, String path, String version,
+		String storeType) {
+
+		return getPersistence().fetchByC_R_P_V_S(
+			companyId, repositoryId, path, version, storeType);
 	}
 
 	/**
-	 * Returns a range of all the cts contents.
+	 * Returns all the cts contents where repositoryId = &#63; and path = &#63;.
+	 *
+	 * @param repositoryId the repository ID
+	 * @param path the path
+	 * @return the matching cts contents
+	 */
+	public static List<CTSContent> findByR_P(long repositoryId, String path) {
+		return getPersistence().findByR_P(repositoryId, path);
+	}
+
+	/**
+	 * Returns a range of all the cts contents where repositoryId = &#63; and path = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CTSContentModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.change.tracking.store.model.impl.CTSContentModelImpl</code>.
 	 * </p>
 	 *
+	 * @param repositoryId the repository ID
+	 * @param path the path
 	 * @param start the lower bound of the range of cts contents
 	 * @param end the upper bound of the range of cts contents (not inclusive)
-	 * @return the range of cts contents
+	 * @return the range of matching cts contents
 	 */
-	public static List<CTSContent> findAll(int start, int end) {
-		return getPersistence().findAll(start, end);
+	public static List<CTSContent> findByR_P(
+		long repositoryId, String path, int start, int end) {
+
+		return getPersistence().findByR_P(repositoryId, path, start, end);
 	}
 
 	/**
-	 * Returns an ordered range of all the cts contents.
+	 * Returns an ordered range of all the cts contents where repositoryId = &#63; and path = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CTSContentModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.change.tracking.store.model.impl.CTSContentModelImpl</code>.
 	 * </p>
 	 *
+	 * @param repositoryId the repository ID
+	 * @param path the path
 	 * @param start the lower bound of the range of cts contents
 	 * @param end the upper bound of the range of cts contents (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of cts contents
+	 * @return the ordered range of matching cts contents
 	 */
-	public static List<CTSContent> findAll(
+	public static List<CTSContent> findByR_P(
+		long repositoryId, String path, int start, int end,
+		OrderByComparator<CTSContent> orderByComparator) {
+
+		return getPersistence().findByR_P(
+			repositoryId, path, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns all the cts contents where companyId = &#63; and repositoryId = &#63; and storeType = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param repositoryId the repository ID
+	 * @param storeType the store type
+	 * @return the matching cts contents
+	 */
+	public static List<CTSContent> findByC_R_S(
+		long companyId, long repositoryId, String storeType) {
+
+		return getPersistence().findByC_R_S(companyId, repositoryId, storeType);
+	}
+
+	/**
+	 * Returns a range of all the cts contents where companyId = &#63; and repositoryId = &#63; and storeType = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.change.tracking.store.model.impl.CTSContentModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param repositoryId the repository ID
+	 * @param storeType the store type
+	 * @param start the lower bound of the range of cts contents
+	 * @param end the upper bound of the range of cts contents (not inclusive)
+	 * @return the range of matching cts contents
+	 */
+	public static List<CTSContent> findByC_R_S(
+		long companyId, long repositoryId, String storeType, int start,
+		int end) {
+
+		return getPersistence().findByC_R_S(
+			companyId, repositoryId, storeType, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the cts contents where companyId = &#63; and repositoryId = &#63; and storeType = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.change.tracking.store.model.impl.CTSContentModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param repositoryId the repository ID
+	 * @param storeType the store type
+	 * @param start the lower bound of the range of cts contents
+	 * @param end the upper bound of the range of cts contents (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching cts contents
+	 */
+	public static List<CTSContent> findByC_R_S(
+		long companyId, long repositoryId, String storeType, int start, int end,
+		OrderByComparator<CTSContent> orderByComparator) {
+
+		return getPersistence().findByC_R_S(
+			companyId, repositoryId, storeType, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns all the cts contents where companyId = &#63; and repositoryId = &#63; and path = &#63; and storeType = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param repositoryId the repository ID
+	 * @param path the path
+	 * @param storeType the store type
+	 * @return the matching cts contents
+	 */
+	public static List<CTSContent> findByC_R_P_S(
+		long companyId, long repositoryId, String path, String storeType) {
+
+		return getPersistence().findByC_R_P_S(
+			companyId, repositoryId, path, storeType);
+	}
+
+	/**
+	 * Returns a range of all the cts contents where companyId = &#63; and repositoryId = &#63; and path = &#63; and storeType = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.change.tracking.store.model.impl.CTSContentModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param repositoryId the repository ID
+	 * @param path the path
+	 * @param storeType the store type
+	 * @param start the lower bound of the range of cts contents
+	 * @param end the upper bound of the range of cts contents (not inclusive)
+	 * @return the range of matching cts contents
+	 */
+	public static List<CTSContent> findByC_R_P_S(
+		long companyId, long repositoryId, String path, String storeType,
+		int start, int end) {
+
+		return getPersistence().findByC_R_P_S(
+			companyId, repositoryId, path, storeType, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the cts contents where companyId = &#63; and repositoryId = &#63; and path = &#63; and storeType = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.change.tracking.store.model.impl.CTSContentModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param repositoryId the repository ID
+	 * @param path the path
+	 * @param storeType the store type
+	 * @param start the lower bound of the range of cts contents
+	 * @param end the upper bound of the range of cts contents (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching cts contents
+	 */
+	public static List<CTSContent> findByC_R_P_S(
+		long companyId, long repositoryId, String path, String storeType,
 		int start, int end, OrderByComparator<CTSContent> orderByComparator) {
 
-		return getPersistence().findAll(start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the cts contents.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CTSContentModelImpl</code>.
-	 * </p>
-	 *
-	 * @param start the lower bound of the range of cts contents
-	 * @param end the upper bound of the range of cts contents (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param useFinderCache whether to use the finder cache
-	 * @return the ordered range of cts contents
-	 */
-	public static List<CTSContent> findAll(
-		int start, int end, OrderByComparator<CTSContent> orderByComparator,
-		boolean useFinderCache) {
-
-		return getPersistence().findAll(
-			start, end, orderByComparator, useFinderCache);
-	}
-
-	/**
-	 * Removes all the cts contents from the database.
-	 */
-	public static void removeAll() {
-		getPersistence().removeAll();
-	}
-
-	/**
-	 * Returns the number of cts contents.
-	 *
-	 * @return the number of cts contents
-	 */
-	public static int countAll() {
-		return getPersistence().countAll();
+		return getPersistence().findByC_R_P_S(
+			companyId, repositoryId, path, storeType, start, end,
+			orderByComparator);
 	}
 
 	public static CTSContentPersistence getPersistence() {
@@ -1208,3 +887,4 @@ public class CTSContentUtil {
 	private static volatile CTSContentPersistence _persistence;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-920161895

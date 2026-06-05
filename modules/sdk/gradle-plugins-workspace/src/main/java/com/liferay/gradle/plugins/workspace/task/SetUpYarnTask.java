@@ -99,23 +99,35 @@ public class SetUpYarnTask extends DefaultTask {
 		Map<String, Object> packageJsonMap =
 			(Map<String, Object>)jsonSlurper.parse(file);
 
+		packageJsonMap.put("private", true);
+
 		Map<String, Object> workspaces =
 			(Map<String, Object>)packageJsonMap.get("workspaces");
 
 		if (workspaces == null) {
-			packageJsonMap.put("private", true);
-
 			workspaces = new HashMap<>();
-
-			packageJsonMap.put("workspaces", workspaces);
 		}
 
 		List<String> packages = getYarnWorkspaces();
 
-		workspaces.put("packages", packages);
+		if (!packages.isEmpty()) {
+			workspaces.put("packages", packages);
+		}
+		else {
+			workspaces.remove("packages");
+		}
+
+		if (!workspaces.isEmpty()) {
+			packageJsonMap.put("workspaces", workspaces);
+		}
+		else {
+			packageJsonMap.remove("workspaces");
+		}
 
 		String packageJSON = JsonOutput.prettyPrint(
 			JsonOutput.toJson(packageJsonMap));
+
+		packageJSON = packageJSON.replaceAll(" {4}", "\t") + "\n";
 
 		Files.write(path, packageJSON.getBytes(StandardCharsets.UTF_8));
 	}

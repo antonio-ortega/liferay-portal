@@ -339,3 +339,4 @@ public interface PatcherAccountLocalService
 	public PatcherAccount updatePatcherAccount(PatcherAccount patcherAccount);
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:2020462423

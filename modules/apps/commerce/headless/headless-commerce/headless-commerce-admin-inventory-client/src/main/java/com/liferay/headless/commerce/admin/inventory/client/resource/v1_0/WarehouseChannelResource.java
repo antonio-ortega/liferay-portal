@@ -992,3 +992,4 @@ public interface WarehouseChannelResource {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-930447528

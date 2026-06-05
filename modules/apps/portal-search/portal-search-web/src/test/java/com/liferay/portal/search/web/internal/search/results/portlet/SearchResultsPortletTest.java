@@ -182,7 +182,7 @@ public class SearchResultsPortletTest {
 		).when(
 			indexer
 		).getSummary(
-			Mockito.any(), Mockito.anyString(), Mockito.any(), Mockito.any()
+			Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()
 		);
 
 		return indexer;
@@ -274,11 +274,6 @@ public class SearchResultsPortletTest {
 			@Override
 			protected void doDispatch(
 				RenderRequest renderRequest, RenderResponse renderResponse) {
-			}
-
-			@Override
-			protected String getCurrentURL(RenderRequest renderRequest) {
-				return RandomTestUtil.randomString();
 			}
 
 			@Override

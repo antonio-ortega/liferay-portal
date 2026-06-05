@@ -47,33 +47,6 @@ public class WidgetPageSpecification
 
 	protected Settings settings;
 
-	public String getSiteTemplatePageSpecificationExternalReferenceCode() {
-		return siteTemplatePageSpecificationExternalReferenceCode;
-	}
-
-	public void setSiteTemplatePageSpecificationExternalReferenceCode(
-		String siteTemplatePageSpecificationExternalReferenceCode) {
-
-		this.siteTemplatePageSpecificationExternalReferenceCode =
-			siteTemplatePageSpecificationExternalReferenceCode;
-	}
-
-	public void setSiteTemplatePageSpecificationExternalReferenceCode(
-		UnsafeSupplier<String, Exception>
-			siteTemplatePageSpecificationExternalReferenceCodeUnsafeSupplier) {
-
-		try {
-			siteTemplatePageSpecificationExternalReferenceCode =
-				siteTemplatePageSpecificationExternalReferenceCodeUnsafeSupplier.
-					get();
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	protected String siteTemplatePageSpecificationExternalReferenceCode;
-
 	public WidgetPageSection[] getWidgetPageSections() {
 		return widgetPageSections;
 	}
@@ -129,3 +102,4 @@ public class WidgetPageSpecification
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-309374395

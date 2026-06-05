@@ -104,6 +104,9 @@ public class FileEntryUtil {
 			return JSONUtil.put(
 				"className", FileEntry.class.getName()
 			).put(
+				"classNameId",
+				PortalUtil.getClassNameId(FileEntry.class.getName())
+			).put(
 				"externalReferenceCode", externalReferenceCode
 			).put(
 				"scopeExternalReferenceCode",
@@ -123,6 +126,9 @@ public class FileEntryUtil {
 			"externalReferenceCode", externalReferenceCode
 		).put(
 			"fileEntryId", String.valueOf(fileEntry.getFileEntryId())
+		).put(
+			"scopeExternalReferenceCode",
+			ItemScopeUtil.getItemScopeExternalReferenceCode(scope, scopeGroupId)
 		).put(
 			"title", fileEntry.getTitle()
 		).put(

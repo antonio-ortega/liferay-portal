@@ -48,6 +48,7 @@ export enum ProductPriceModel {
 }
 
 export enum ProductSpecificationKey {
+	APP_BETA = 'app-beta',
 	APP_BUILD_NUMBER_OF_CPUS = 'cpu',
 	APP_BUILD_RAM_IN_GBS = 'ram',
 	APP_DEVELOPER_NAME = 'developer-name',
@@ -67,6 +68,7 @@ export enum ProductSpecificationKey {
 	APP_TYPE = 'type',
 	APP_VERSION = 'latest-version',
 	APP_VERSION_NOTES = 'product-notes',
+	LIFERAY_PRODUCT_TYPE = 'liferay-product-type',
 	LIFERAY_VERSION = 'liferay-version',
 	SOLUTION_COMPANY_DESCRIPTION = 'solution-company-description',
 	SOLUTION_COMPANY_EMAIL = 'solution-company-email',
@@ -110,6 +112,7 @@ export enum ProductType {
 
 export enum ProductTypeVocabulary {
 	APP = 'App',
+	LIFERAY_PRODUCT = 'Liferay Product',
 	SOLUTION = 'Solution',
 }
 
@@ -143,12 +146,19 @@ export enum ProductWorkflowStatusCode {
 
 export enum SkuOptions {
 	DEVELOPER = 'developer',
+	OPEN_BETA = 'open-beta',
 	STANDARD = 'standard',
 	TRIAL = 'trial',
 }
 
 export enum SolutionTypes {
+	AI_HUB = 'ai-hub',
+	AI_HUB_OPEN_BETA = 'ai-hub-open-beta',
 	ANALYTICS = 'analytics',
+	CMP = 'cmp',
+	DSR = 'dsr',
+	DXP = 'dxp',
+	LIFERAY_DATA_PLATFORM = 'liferay-data-platform',
 	PRE_BUILT_TRIAL = 'pre-built-trial',
 }
 

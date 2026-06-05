@@ -495,3 +495,4 @@ public class ServiceProviderConfigSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:1711663599

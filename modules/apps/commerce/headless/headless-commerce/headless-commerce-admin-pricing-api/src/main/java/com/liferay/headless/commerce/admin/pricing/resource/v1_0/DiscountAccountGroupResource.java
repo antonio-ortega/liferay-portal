@@ -171,3 +171,4 @@ public interface DiscountAccountGroupResource {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-839111140

@@ -55,6 +55,7 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import javax.sql.DataSource;
 
@@ -225,11 +226,12 @@ public class DBPartitionTest extends BaseDBPartitionTestCase {
 					connection.prepareStatement(
 						"select value, classNameId from ClassName_ order by " +
 							"classNameId asc limit 1; ");
+
 				ResultSet resultSet = preparedStatement.executeQuery()) {
 
 				if (resultSet.next()) {
-					classNameValue = resultSet.getString(1);
-					classNameId = resultSet.getLong(2);
+					classNameValue = resultSet.getString("value");
+					classNameId = resultSet.getLong("classNameId");
 				}
 			}
 		}
@@ -259,15 +261,16 @@ public class DBPartitionTest extends BaseDBPartitionTestCase {
 					CompanyThreadLocal.setCompanyIdWithSafeCloseable(
 						companyId)) {
 
-				int rowCount = -1;
+				long rowCount = -1;
 
 				try (PreparedStatement preparedStatement =
 						connection.prepareStatement(
-							"select count(1) from Configuration_");
+							"select count(1) as count from Configuration_");
+
 					ResultSet resultSet = preparedStatement.executeQuery()) {
 
 					if (resultSet.next()) {
-						rowCount = resultSet.getInt(1);
+						rowCount = resultSet.getLong("count");
 					}
 				}
 
@@ -300,13 +303,14 @@ public class DBPartitionTest extends BaseDBPartitionTestCase {
 						"select resourceActionId, name, actionId, " +
 							"bitwiseValue from ResourceAction order by " +
 								"resourceActionId asc limit 1;");
+
 				ResultSet resultSet = preparedStatement.executeQuery()) {
 
 				if (resultSet.next()) {
-					actionId = resultSet.getString(3);
-					bitwiseValue = resultSet.getLong(4);
-					name = resultSet.getString(2);
-					resourceActionId = resultSet.getLong(1);
+					actionId = resultSet.getString("actionId");
+					bitwiseValue = resultSet.getLong("bitwiseValue");
+					name = resultSet.getString("name");
+					resourceActionId = resultSet.getLong("resourceActionId");
 				}
 			}
 		}
@@ -678,11 +682,11 @@ public class DBPartitionTest extends BaseDBPartitionTestCase {
 	public void testGetClassNameIdsSupplier() throws Exception {
 		_assertClassNameIds(
 			classNameIds -> {
-				for (long classNameId :
-						_classNameLocalService.getClassNameIdsSupplier(
-							new String[] {"class.name.test"}
-						).get()) {
+				Supplier<long[]> classNameIdsSupplier =
+					_classNameLocalService.getClassNameIdsSupplier(
+						new String[] {"class.name.test"});
 
+				for (long classNameId : classNameIdsSupplier.get()) {
 					classNameIds.add(classNameId);
 				}
 			});
@@ -691,10 +695,13 @@ public class DBPartitionTest extends BaseDBPartitionTestCase {
 	@Test
 	public void testGetClassNameIdSupplier() throws Exception {
 		_assertClassNameIds(
-			classNameIds -> classNameIds.add(
-				_classNameLocalService.getClassNameIdSupplier(
-					"class.name.test"
-				).get()));
+			classNameIds -> {
+				Supplier<Long> classNameIdSupplier =
+					_classNameLocalService.getClassNameIdSupplier(
+						"class.name.test");
+
+				classNameIds.add(classNameIdSupplier.get());
+			});
 	}
 
 	@Test
@@ -942,9 +949,6 @@ public class DBPartitionTest extends BaseDBPartitionTestCase {
 	private static final String _CLASS_NAME = DBPartitionTest.class.getName();
 
 	@Inject
-	private static ResourceActionLocalService _resourceActionLocalService;
-
-	@Inject
 	private ClassNameLocalService _classNameLocalService;
 
 	@Inject
@@ -955,5 +959,8 @@ public class DBPartitionTest extends BaseDBPartitionTestCase {
 
 	@Inject
 	private PortletPersistence _portletPersistence;
+
+	@Inject
+	private ResourceActionLocalService _resourceActionLocalService;
 
 }

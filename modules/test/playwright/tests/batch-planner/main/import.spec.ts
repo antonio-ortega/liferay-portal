@@ -507,11 +507,9 @@ test('Admin users can see all site scopes regardless of site membership', async 
 	let site: Site;
 
 	await test.step('Setup Site, site scoped object and admin user', async () => {
-		site = await apiHelpers.headlessSite.createSite({
+		site = await apiHelpers.headlessAdminSite.postSite({
 			name: getRandomString(),
 		});
-
-		apiHelpers.data.push({id: site.id, type: 'site'});
 
 		const objectDefinitionAPIClient =
 			await apiHelpers.buildRestClient(ObjectDefinitionAPI);
@@ -561,7 +559,7 @@ test('Admin users can see all site scopes regardless of site membership', async 
 		const scopesArray = scopeInnerText.split('\n');
 
 		expect(scopesArray).toEqual(
-			expect.arrayContaining([site.name, 'Global', 'Liferay DXP'])
+			expect.arrayContaining([site.name, 'Global', 'Liferay DXP Site'])
 		);
 	});
 });
@@ -620,7 +618,7 @@ test('can handle OnlyAddNewRecords and UpdateChangedRecordFields import strategi
 
 	await expect(
 		page.getByText(
-			'com.liferay.object.exception.DuplicateObjectEntryExternalReferenceCodeException'
+			`Duplicate object entry with external reference code 83b46736-f89b-9b90-188c-497d06c08271, group ID 0, and object definition ID ${objectDefinition.id}`
 		)
 	).toBeVisible();
 });
@@ -734,7 +732,7 @@ test('can import CSV file with custom columns order', async ({
 			testLongTextField: 'This is a long text to test testLongTextField',
 			testPrecisionDecimalField: 321.123,
 			testRichTextField:
-				'<p>This is a long text <strong>with some fomatting</strong> to text testRichTextField\n </p>',
+				'<p>This is a long text <strong>with some fomatting</strong> to text testRichTextField </p>',
 			testRichTextFieldRawText:
 				'This is a long text with some fomatting to text testRichTextField',
 			testTextField: 'Test',
@@ -796,7 +794,7 @@ test('can import CSV file with multiple site scoped object entries', async ({
 					'This is a long text to test testLongTextField. The first entry',
 				testPrecisionDecimalField: 321.123,
 				testRichTextField:
-					'<p>This is a long text <strong>with some fomatting</strong> to text testRichTextField. The first entry.\n </p>',
+					'<p>This is a long text <strong>with some fomatting</strong> to text testRichTextField. The first entry. </p>',
 				testRichTextFieldRawText:
 					'This is a long text with some fomatting to text testRichTextField. The first entry.',
 				testTextField: 'Test_FirstEntry',
@@ -816,7 +814,7 @@ test('can import CSV file with multiple site scoped object entries', async ({
 					'This is a long text to test testLongTextField. The second entry',
 				testPrecisionDecimalField: 123.321,
 				testRichTextField:
-					'<p>This is a long text <strong>with some fomatting</strong> to text testRichTextField. The second entry.\n </p>',
+					'<p>This is a long text <strong>with some fomatting</strong> to text testRichTextField. The second entry. </p>',
 				testRichTextFieldRawText:
 					'This is a long text with some fomatting to text testRichTextField. The second entry.',
 				testTextField: 'Test_SecondEntry',
@@ -889,7 +887,7 @@ test('can import CSV file with new and existing site scoped object entries', asy
 				'This is a long text to test testLongTextField. The first entry',
 			testPrecisionDecimalField: 321.123,
 			testRichTextField:
-				'<p>This is a long text <strong>with some fomatting</strong> to text testRichTextField.\n </p>',
+				'<p>This is a long text <strong>with some fomatting</strong> to text testRichTextField. </p>',
 			testRichTextFieldRawText:
 				'This is a long text with some fomatting to text testRichTextField.',
 			testTextField: 'Test',
@@ -909,7 +907,7 @@ test('can import CSV file with new and existing site scoped object entries', asy
 				'This is a long text to test testLongTextField. The second entry',
 			testPrecisionDecimalField: 123.321,
 			testRichTextField:
-				'<p>This is a long text <strong>with some fomatting</strong> to text testRichTextField. New entry.\n </p>',
+				'<p>This is a long text <strong>with some fomatting</strong> to text testRichTextField. New entry. </p>',
 			testRichTextFieldRawText:
 				'This is a long text with some fomatting to text testRichTextField. New entry.',
 			testTextField: 'Test_SecondEntry',
@@ -979,7 +977,7 @@ test('can import CSV file with new and modified existing company scoped object e
 				'This is a long text to test testLongTextField. The first entry',
 			testPrecisionDecimalField: 321.123,
 			testRichTextField:
-				'<p>This is a long text <strong>with some fomatting</strong> to text testRichTextField. The modified entry.\n </p>',
+				'<p>This is a long text <strong>with some fomatting</strong> to text testRichTextField. The modified entry. </p>',
 			testRichTextFieldRawText:
 				'This is a long text with some fomatting to text testRichTextField. The modified entry.',
 			testTextField: 'Test_Modified',
@@ -998,7 +996,7 @@ test('can import CSV file with new and modified existing company scoped object e
 				'This is a long text to test testLongTextField. The second entry',
 			testPrecisionDecimalField: 123.321,
 			testRichTextField:
-				'<p>This is a long text <strong>with some fomatting</strong> to text testRichTextField. The new entry.\n </p>',
+				'<p>This is a long text <strong>with some fomatting</strong> to text testRichTextField. The new entry. </p>',
 			testRichTextFieldRawText:
 				'This is a long text with some fomatting to text testRichTextField. The new entry.',
 			testTextField: 'Test_NewEntry',
@@ -1405,7 +1403,7 @@ test('can show duplicate error message with CSV import existing entry and only a
 
 	await expect(
 		page.getByText(
-			'com.liferay.object.exception.DuplicateObjectEntryExternalReferenceCodeException'
+			`Duplicate object entry with external reference code 83b46736-f89b-9b90-188c-497d06c08271, group ID 0, and object definition ID ${objectDefinition.id}`
 		)
 	).toBeVisible();
 });
@@ -1444,9 +1442,13 @@ test('can show unique contraint error message with CSV import existing entry and
 		'UPDATE'
 	);
 
+	const companyId = await page.evaluate(() => {
+		return Liferay.ThemeDisplay.getCompanyId();
+	});
+
 	await expect(
 		page.getByText(
-			'com.liferay.object.exception.ObjectEntryValuesException$UniqueValueConstraintViolation'
+			`Unique value constraint violation for O_${companyId}_Test.testAutoIncrementField_ with value prefix-1-suffix`
 		)
 	).toBeVisible();
 });

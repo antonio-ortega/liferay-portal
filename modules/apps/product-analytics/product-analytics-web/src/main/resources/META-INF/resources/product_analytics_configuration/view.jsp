@@ -66,6 +66,8 @@ ProductAnalyticsConfigurationDisplayContext productAnalyticsConfigurationDisplay
 			var enabled = document.getElementById('<portlet:namespace />enabled');
 
 			if (
+				consentRenewalPeriod.value !==
+					'<%= productAnalyticsConfigurationDisplayContext.getConsentRenewalPeriod() %>' &&
 				enabled.checked &&
 				<%= productAnalyticsConfigurationDisplayContext.getEnabled() %>
 			) {

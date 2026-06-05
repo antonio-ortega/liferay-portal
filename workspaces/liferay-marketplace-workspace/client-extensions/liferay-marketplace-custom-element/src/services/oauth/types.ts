@@ -53,9 +53,9 @@ export type LicenseKey = {
 export type LicenseTypePayload = {
 	licenseEntry: {
 		description: string;
-		hostName: string;
-		ipAddresses: string;
-		macAddresses: string;
+		hostName: string | undefined;
+		ipAddresses: string | undefined;
+		macAddresses: string | undefined;
 		orderId: string;
 		productId?: string;
 		productPurchaseKey: string;
@@ -122,4 +122,29 @@ export type Properties2 = {
 	licenses: string;
 	sizing: string;
 	version: string;
+};
+
+export type Entitlement = {
+	entitlementDefinitionKey: string;
+	name: string;
+};
+
+export type PostalAddress = {
+	addressCountry: string;
+	addressLocality: string;
+	addressRegion: string;
+	addressType: string;
+	id: number;
+	mailing: boolean;
+	postalCode: string;
+	primary: boolean;
+	streetAddressLine1: string;
+	streetAddressLine2: string;
+	streetAddressLine3: string;
+};
+
+export type AccountProperties = {
+	allowComplimentary: string;
+	allowPermanentLicenses: string;
+	allowSelfProvisioning: string;
 };

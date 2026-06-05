@@ -16,13 +16,17 @@ import {VERSION_ACTIONS} from '../tab_content';
 import {L_CONTENTS, L_FILES} from '../util/constants';
 
 const AssetVersionsListItem = ({
+	dataSetId,
 	file,
 	getAssetVersions,
 	items,
+	objectEntryTitle,
 }: {
+	dataSetId?: string;
 	file?: IAssetFile;
 	getAssetVersions: () => Promise<void>;
 	items: IAssetObjectEntry[];
+	objectEntryTitle?: string;
 }) => {
 	return (
 		<>
@@ -74,7 +78,9 @@ const AssetVersionsListItem = ({
 										await VERSION_ACTIONS[key]?.action(
 											event,
 											item,
-											getAssetVersions
+											getAssetVersions,
+											objectEntryTitle,
+											dataSetId
 										);
 									}}
 								>
@@ -88,13 +94,9 @@ const AssetVersionsListItem = ({
 							) : null
 						)}
 
-						{file ? (
+						{file?.link?.href ? (
 							<ClayDropdown.Item
-								onClick={() => {
-									if (file.link?.href) {
-										navigate(file.link.href);
-									}
-								}}
+								onClick={() => navigate(file.link.href)}
 							>
 								<ClayIcon className="mr-2" symbol="download" />
 

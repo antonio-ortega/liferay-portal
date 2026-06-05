@@ -47,7 +47,9 @@ public class DDMFormInstanceRecordUpgradeProcess extends UpgradeProcess {
 					"formInstanceName from DDLRecord inner join ",
 					"DDMFormInstance on DDLRecord.recordSetId = ",
 					"DDMFormInstance.formInstanceId"));
+
 			ResultSet resultSet = preparedStatement1.executeQuery();
+
 			PreparedStatement preparedStatement2 =
 				AutoBatchPreparedStatementUtil.concurrentAutoBatch(
 					connection,

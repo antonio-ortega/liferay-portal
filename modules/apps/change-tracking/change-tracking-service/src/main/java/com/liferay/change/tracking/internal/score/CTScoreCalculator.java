@@ -123,12 +123,14 @@ public class CTScoreCalculator {
 				try (PreparedStatement preparedStatement =
 						connection.prepareStatement(
 							StringBundler.concat(
-								"select count(", primaryKeyName, ") from ",
+								"select count(", primaryKeyName,
+								") as count from ",
 								ctPersistence.getTableName()));
+
 					ResultSet resultSet = preparedStatement.executeQuery()) {
 
 					if (resultSet.next()) {
-						return resultSet.getInt(1);
+						return (int)resultSet.getLong("count");
 					}
 
 					return 0;

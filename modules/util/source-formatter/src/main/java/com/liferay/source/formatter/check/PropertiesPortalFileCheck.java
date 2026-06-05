@@ -5,10 +5,10 @@
 
 package com.liferay.source.formatter.check;
 
+import com.liferay.petra.io.unsync.UnsyncBufferedReader;
+import com.liferay.petra.io.unsync.UnsyncStringReader;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.io.unsync.UnsyncBufferedReader;
-import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
 import com.liferay.portal.kernel.util.NaturalOrderStringComparator;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -42,13 +42,6 @@ public class PropertiesPortalFileCheck extends BaseFileCheck {
 		int pos = fileName.lastIndexOf(StringPool.SLASH);
 
 		String shortFileName = fileName.substring(pos + 1);
-
-		if (absolutePath.contains("/workspaces/") &&
-			!absolutePath.contains("/playwright/") &&
-			shortFileName.equals("portal-ext.properties")) {
-
-			return content;
-		}
 
 		if (shortFileName.equals("test-portal-impl.properties") ||
 			((isPortalSource() || isSubrepository()) &&

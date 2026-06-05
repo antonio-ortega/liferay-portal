@@ -5,6 +5,7 @@
 
 package com.liferay.headless.commerce.delivery.cart.internal.resource.v1_0;
 
+import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.headless.commerce.delivery.cart.dto.v1_0.Term;
 import com.liferay.headless.commerce.delivery.cart.resource.v1_0.TermResource;
 import com.liferay.petra.function.UnsafeBiConsumer;
@@ -71,7 +72,7 @@ public abstract class BaseTermResourceImpl
 	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-delivery-cart/v1.0/carts/by-externalReferenceCode/{externalReferenceCode}/delivery-terms'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
-		description = "Retrieve delivery terms available for the Cart."
+		description = "Lists the term rows qualified as delivery terms for the cart addressed by external reference code, filtered by order type and the currently selected shipping method."
 	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
@@ -106,7 +107,7 @@ public abstract class BaseTermResourceImpl
 	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-delivery-cart/v1.0/carts/by-externalReferenceCode/{externalReferenceCode}/payment-terms'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
-		description = "Retrieve payment terms available for the Cart."
+		description = "Lists the term rows qualified as payment terms for the cart addressed by external reference code, filtered by order type and the currently selected payment method."
 	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
@@ -141,7 +142,7 @@ public abstract class BaseTermResourceImpl
 	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-delivery-cart/v1.0/carts/{cartId}/delivery-terms'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
-		description = "Retrieve delivery terms available for the Cart."
+		description = "Lists the term rows qualified as delivery terms for the cart addressed by ID, filtered by order type and the currently selected shipping method."
 	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
@@ -174,7 +175,7 @@ public abstract class BaseTermResourceImpl
 	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-delivery-cart/v1.0/carts/{cartId}/payment-terms'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
-		description = "Retrieve payment terms available for the Cart."
+		description = "Lists the term rows qualified as payment terms for the cart addressed by ID, filtered by order type and the currently selected payment method."
 	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
@@ -273,6 +274,15 @@ public abstract class BaseTermResourceImpl
 			@Override
 			public Locale getPreferredLocale() {
 				return LocaleUtil.fromLanguageId(languageId);
+			}
+
+			@Override
+			public boolean isAcceptAllLanguages() {
+				if (ExportImportThreadLocal.isExportInProcess()) {
+					return true;
+				}
+
+				return AcceptLanguage.super.isAcceptAllLanguages();
 			}
 
 		};
@@ -846,3 +856,4 @@ public abstract class BaseTermResourceImpl
 		LogFactoryUtil.getLog(BaseTermResourceImpl.class);
 
 }
+// LIFERAY-REST-BUILDER-HASH:1131578022

@@ -10,7 +10,19 @@ package com.liferay.ai.hub.web.internal.constants;
  */
 public class AIHubFDSNames {
 
-	public static final String TASK_DEFINITIONS =
-		AIHubWebConstants.BUNDLE_SYMBOLIC_NAME + "-taskDefinitions";
+	public static final String AGENT_DEFINITIONS =
+		AIHubWebConstants.BUNDLE_SYMBOLIC_NAME + "-agentDefinitions";
+
+	public static final String CHATBOTS =
+		AIHubWebConstants.BUNDLE_SYMBOLIC_NAME + "-chatbots";
+
+	public static final String CONTENT_RETRIEVERS =
+		AIHubWebConstants.BUNDLE_SYMBOLIC_NAME + "-contentRetrievers";
+
+	public static final String INSTRUCTION_DEFINITIONS =
+		AIHubWebConstants.BUNDLE_SYMBOLIC_NAME + "-instructionDefinitions";
+
+	public static final String MODEL_ARMOR_TEMPLATES =
+		AIHubWebConstants.BUNDLE_SYMBOLIC_NAME + "-modelArmorTemplates";
 
 }

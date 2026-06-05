@@ -280,8 +280,35 @@ public class CloudBucketUtil {
 		return false;
 	}
 
+	public static boolean isS3ObjectPathAvailable(String s3ObjectPath) {
+		if (!_isValidS3ObjectPath(s3ObjectPath)) {
+			return false;
+		}
+
+		if (isS3ObjectRefAvailable(s3ObjectPath)) {
+			return true;
+		}
+
+		try {
+			String listS3Files = listS3Files(s3ObjectPath, true);
+
+			if (!JenkinsResultsParserUtil.isNullOrEmpty(listS3Files.trim())) {
+				return true;
+			}
+		}
+		catch (IOException | TimeoutException exception) {
+		}
+
+		return false;
+	}
+
 	public static boolean isS3ObjectRefAvailable(String s3ObjectPath) {
-		_validateS3ObjectPath(s3ObjectPath);
+		if (!_isValidS3ObjectPath(s3ObjectPath)) {
+			System.out.println(
+				"WARNING: Invalid s3 object path: " + s3ObjectPath);
+
+			return false;
+		}
 
 		File s3ObjectRefFile = _getS3ObjectRefFile(s3ObjectPath);
 
@@ -327,6 +354,25 @@ public class CloudBucketUtil {
 
 		return JenkinsResultsParserUtil.readInputStream(
 			process.getInputStream());
+	}
+
+	public static String readS3Object(String s3ObjectPath) throws IOException {
+		String suffix = ".temp";
+
+		if (s3ObjectPath.endsWith(".gz")) {
+			suffix = ".temp.gz";
+		}
+
+		File s3TempFile = File.createTempFile("s3-", suffix);
+
+		try {
+			downloadS3File(s3TempFile, s3ObjectPath);
+
+			return JenkinsResultsParserUtil.read(s3TempFile);
+		}
+		finally {
+			JenkinsResultsParserUtil.delete(s3TempFile);
+		}
 	}
 
 	public static void syncGCPFiles(String destination, String source)
@@ -392,6 +438,39 @@ public class CloudBucketUtil {
 		System.out.println("Synced " + source + " to " + destination);
 	}
 
+	public static void touchS3File(String s3Path) throws IOException {
+		s3Path = _replaceS3ObjectPath(s3Path);
+
+		long start = System.currentTimeMillis();
+
+		_executeAWSCommands(
+			_getFileTransferCommand(
+				JenkinsResultsParserUtil.combine(
+					"aws s3 cp --metadata timestamp=",
+					JenkinsResultsParserUtil.getDistinctTimeStamp(),
+					" --no-progress"),
+				s3Path, s3Path));
+
+		System.out.println(
+			JenkinsResultsParserUtil.combine(
+				"Touched ", s3Path, " in ",
+				JenkinsResultsParserUtil.toDurationString(
+					System.currentTimeMillis() - start)));
+
+		if (!s3Path.endsWith(_CHECKSUM_FILE_EXTENSION)) {
+			String s3ChecksumPath = s3Path + _CHECKSUM_FILE_EXTENSION;
+
+			try {
+				if (_exists(s3ChecksumPath)) {
+					touchS3File(s3ChecksumPath);
+				}
+			}
+			catch (TimeoutException timeoutException) {
+				throw new IOException(timeoutException);
+			}
+		}
+	}
+
 	public static void uploadS3File(String s3DestinationPath, File sourceFile)
 		throws IOException {
 
@@ -426,6 +505,40 @@ public class CloudBucketUtil {
 			_VALIDATE_CHECKSUM) {
 
 			_createChecksumFile(replacedS3DestinationPath, sourceFile);
+		}
+	}
+
+	public static void uploadS3Object(
+			String s3ObjectContent, String s3ObjectPath)
+		throws IOException {
+
+		File s3TempFile = File.createTempFile("s3-", ".temp");
+
+		File s3TempGzipFile = null;
+
+		if (s3ObjectPath.endsWith(".gz")) {
+			s3TempGzipFile = File.createTempFile("s3-", ".temp.gz");
+		}
+
+		try {
+			JenkinsResultsParserUtil.write(s3TempFile, s3ObjectContent);
+
+			if (s3ObjectPath.endsWith(".gz") && (s3TempGzipFile != null)) {
+				JenkinsResultsParserUtil.gzip(s3TempFile, s3TempGzipFile);
+
+				uploadS3File(s3ObjectPath, s3TempGzipFile);
+
+				return;
+			}
+
+			uploadS3File(s3ObjectPath, s3TempFile);
+		}
+		finally {
+			JenkinsResultsParserUtil.delete(s3TempFile);
+
+			if (s3TempGzipFile != null) {
+				JenkinsResultsParserUtil.delete(s3TempGzipFile);
+			}
 		}
 	}
 
@@ -606,10 +719,6 @@ public class CloudBucketUtil {
 			String destination, String source)
 		throws IOException {
 
-		StringBuilder sb = new StringBuilder();
-
-		sb.append("gcloud auth activate-service-account --key-file ");
-
 		String gcpApplicationCredentialFilePath = null;
 
 		if (destination.startsWith(GCP_BUCKET_PATH_JENKINS_CI_DATA) ||
@@ -639,7 +748,22 @@ public class CloudBucketUtil {
 				gcpApplicationCredentialFilePath);
 
 			if (gcpApplicationCredentialFile.exists()) {
+				String credentialFileName =
+					gcpApplicationCredentialFile.getName();
+
+				String configurationName = credentialFileName.substring(
+					0, credentialFileName.lastIndexOf('.'));
+
+				StringBuilder sb = new StringBuilder();
+
+				sb.append("(gcloud config configurations activate ");
+				sb.append(configurationName);
+				sb.append(" --quiet || gcloud auth login --cred-file=");
 				sb.append(gcpApplicationCredentialFilePath);
+				sb.append(" --quiet || gcloud auth activate-service-account");
+				sb.append(" --key-file=");
+				sb.append(gcpApplicationCredentialFilePath);
+				sb.append(" --quiet)");
 
 				return sb.toString();
 			}
@@ -702,13 +826,28 @@ public class CloudBucketUtil {
 		}
 
 		try {
-			return _isOlderThan(
-				Files.readAttributes(path, BasicFileAttributes.class),
-				ageSeconds);
+			if (_isOlderThan(
+					Files.readAttributes(path, BasicFileAttributes.class),
+					ageSeconds)) {
+
+				return true;
+			}
 		}
 		catch (IOException ioException) {
+		}
+
+		return false;
+	}
+
+	private static boolean _isValidS3ObjectPath(String s3ObjectPath) {
+		if (s3ObjectPath == null) {
 			return false;
 		}
+
+		Matcher s3ObjectPathMatcher = _s3ObjectPathPattern.matcher(
+			s3ObjectPath);
+
+		return s3ObjectPathMatcher.find();
 	}
 
 	private static String _replaceS3ObjectPath(String s3ObjectPath) {
@@ -799,10 +938,7 @@ public class CloudBucketUtil {
 	}
 
 	private static void _validateS3ObjectPath(String s3ObjectPath) {
-		Matcher s3ObjectPathMatcher = _s3ObjectPathPattern.matcher(
-			s3ObjectPath);
-
-		if (!s3ObjectPathMatcher.find()) {
+		if (!_isValidS3ObjectPath(s3ObjectPath)) {
 			throw new RuntimeException(
 				"Invalid S3 object path: " + s3ObjectPath);
 		}
@@ -820,7 +956,8 @@ public class CloudBucketUtil {
 	private static final Pattern _s3ObjectPathPattern = Pattern.compile(
 		"s3://(?<bucketName>[^/]+)/(?<objectPath>.+)");
 	private static final Pattern _signedURLPattern = Pattern.compile(
-		"https:\\/\\/storage.googleapis.com\\/.*");
+		"https:\\/\\/([a-zA-Z\\d-]+\\.)?storage\\." +
+			"(cloud\\.google\\.com|googleapis\\.com)\\/.*");
 
 	static {
 		_buildProperties = new Properties() {

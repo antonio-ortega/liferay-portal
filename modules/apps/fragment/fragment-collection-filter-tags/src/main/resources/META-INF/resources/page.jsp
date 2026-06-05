@@ -15,11 +15,11 @@
 
 <div class="form-group form-group-sm mb-0">
 	<div role="presentation">
-		<label class="control-label <%= fragmentCollectionFilterTagsDisplayContext.isShowLabel() ? "" : "sr-only" %>">
+		<span class="control-label <%= fragmentCollectionFilterTagsDisplayContext.isShowLabel() ? "" : "sr-only" %>">
 			<%= fragmentCollectionFilterTagsDisplayContext.getLabel() %>
-		</label>
+		</span>
 
-		<input class="form-control form-control-select form-control-sm tag-filter-input w-100" type="text" />
+		<input class="form-control form-control-sm tag-filter-input w-100" type="text" />
 
 		<c:choose>
 			<c:when test="<%= fragmentCollectionFilterTagsDisplayContext.isShowHelpText() %>">

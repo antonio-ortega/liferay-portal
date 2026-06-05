@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {FrameLocator, Locator, Page} from '@playwright/test';
+import {FrameLocator, Locator, Page, expect} from '@playwright/test';
 
 export class CommerceAdminProductDetailsPage {
 	readonly addExistingSpecificationValueTextbox: Locator;
@@ -22,23 +22,22 @@ export class CommerceAdminProductDetailsPage {
 	) => Promise<string[]>;
 	readonly editFrameSpecificationProductValue: Locator;
 	readonly editSuccessMessage: Locator;
-	readonly ellipsisProductSpecification: Locator;
-	readonly ellipsisFrameProductSpecification: FrameLocator;
-	readonly frameChooseSpecification: (
+	readonly ellipsisProductSpecification: (
 		specificationName: string
-	) => Promise<Locator>;
+	) => Locator;
+	readonly ellipsisFrameProductSpecification: FrameLocator;
+	readonly frameChooseSpecification: (specificationName: string) => Locator;
 	readonly frameChooseSpecificationValue: (
 		specificationValue: string
 	) => Promise<string[]>;
 	readonly frameDropdownSpecification: Locator;
 	readonly frameSubmitSpecification: Locator;
-	readonly menuItemSpecification: (
-		chooseAddOrCreate: string
-	) => Promise<Locator>;
+	readonly menuItemSpecification: (chooseAddOrCreate: string) => Locator;
 	readonly page: Page;
 	readonly productConfigurationLink: Locator;
 	readonly productDetailsInput: (inputName: string) => Promise<Locator>;
 	readonly productDiagramLink: Locator;
+	readonly productGroupsLink: Locator;
 	readonly productId: Locator;
 	readonly productMediaLink: Locator;
 	readonly productOptionsLink: Locator;
@@ -46,18 +45,19 @@ export class CommerceAdminProductDetailsPage {
 	readonly productSkusLink: Locator;
 	readonly productVisibilityLink: Locator;
 	readonly publishLink: Locator;
+	readonly textTableCell: (text: string) => Locator;
 	readonly visibleToggle: Locator;
 
 	constructor(page: Page) {
 		this.addSpecification = page
 			.getByTestId('managementToolbar')
 			.locator('[data-testid="fdsCreationActionButton"]');
-		this.addSpecificationFrame = page.frameLocator('iframe >> nth=2');
+		this.addSpecificationFrame = page.frameLocator('iframe >> nth=1');
 		this.addExistingSpecificationValueTextbox =
 			this.addSpecificationFrame.getByRole('textbox');
 		this.backLink = page.locator('span[title="Back"]');
 		this.closeEditFrame = page
-			.frameLocator('iframe >> nth=1')
+			.frameLocator('iframe')
 			.getByRole('button')
 			.first();
 		this.createNewSpecificationProduct =
@@ -79,11 +79,15 @@ export class CommerceAdminProductDetailsPage {
 				)
 				.selectOption(specificationValue);
 		};
-		this.ellipsisProductSpecification = page.getByRole('button', {
-			name: 'Actions',
-		});
-		this.ellipsisFrameProductSpecification =
-			page.frameLocator('iframe >> nth=1');
+		this.ellipsisProductSpecification = (specificationName: string) => {
+			return page
+				.locator('[data-testid="visualization-mode-table"]')
+				.getByRole('button', {
+					exact: true,
+					name: `${specificationName} Actions`,
+				});
+		};
+		this.ellipsisFrameProductSpecification = page.frameLocator('iframe');
 		this.editFrameSaveButton =
 			this.ellipsisFrameProductSpecification.getByRole('button', {
 				name: 'Save',
@@ -96,7 +100,7 @@ export class CommerceAdminProductDetailsPage {
 			this.ellipsisFrameProductSpecification.getByText(
 				'Success:Your request completed successfully.'
 			);
-		this.frameChooseSpecification = async (specificationName: string) => {
+		this.frameChooseSpecification = (specificationName: string) => {
 			return this.addSpecificationFrame.getByRole('option', {
 				name: specificationName,
 			});
@@ -115,7 +119,7 @@ export class CommerceAdminProductDetailsPage {
 			'button',
 			{name: 'Submit'}
 		);
-		this.menuItemSpecification = async (chooseAddOrCreate: string) => {
+		this.menuItemSpecification = (chooseAddOrCreate: string) => {
 			return page.getByRole('menuitem', {name: chooseAddOrCreate});
 		};
 		this.page = page;
@@ -126,6 +130,10 @@ export class CommerceAdminProductDetailsPage {
 			page.getByLabel(inputName);
 		this.productDiagramLink = page.getByRole('link', {
 			name: 'Diagram',
+		});
+		this.productGroupsLink = page.getByRole('link', {
+			exact: true,
+			name: 'Product Groups',
 		});
 		this.productId = page.locator('span:has-text("ID")+strong');
 		this.productMediaLink = page.getByRole('link', {
@@ -144,6 +152,11 @@ export class CommerceAdminProductDetailsPage {
 			name: 'Visibility',
 		});
 		this.publishLink = page.getByRole('link', {name: 'Publish'});
+		this.textTableCell = (text: string) =>
+			this.page.getByRole('cell', {
+				exact: true,
+				name: text,
+			});
 		this.visibleToggle = this.ellipsisFrameProductSpecification.getByLabel(
 			'Visible',
 			{exact: true}
@@ -156,9 +169,12 @@ export class CommerceAdminProductDetailsPage {
 		specificationValue: string
 	) {
 		await this.addSpecification.click();
-		await (await this.menuItemSpecification(chooseAddOrEdit)).click();
+		await this.menuItemSpecification(chooseAddOrEdit).click();
+
+		await expect(this.frameDropdownSpecification).toBeVisible();
+
 		await this.frameDropdownSpecification.click();
-		await (await this.frameChooseSpecification(specificationName)).click();
+		await this.frameChooseSpecification(specificationName).click();
 		await this.addExistingSpecificationValueTextbox.fill(
 			specificationValue
 		);
@@ -171,9 +187,12 @@ export class CommerceAdminProductDetailsPage {
 		specificationValue?: string
 	) {
 		await this.addSpecification.click();
-		await (await this.menuItemSpecification(chooseAddOrEdit)).click();
+		await this.menuItemSpecification(chooseAddOrEdit).click();
+
+		await expect(this.frameDropdownSpecification).toBeVisible();
+
 		await this.frameDropdownSpecification.click();
-		await (await this.frameChooseSpecification(specificationName)).click();
+		await this.frameChooseSpecification(specificationName).click();
 		if (specificationValue) {
 			await this.frameChooseSpecificationValue(specificationValue);
 		}
@@ -198,9 +217,10 @@ export class CommerceAdminProductDetailsPage {
 
 	async editOrDeleteProductSpecification(
 		chooseEditOrDelete: string,
+		specificationTitle: string,
 		specificationValue: string
 	) {
-		await this.ellipsisProductSpecification.click();
+		await this.ellipsisProductSpecification(specificationTitle).click();
 		await (
 			await this.dropdownProductSpecification(chooseEditOrDelete)
 		).click();
@@ -214,6 +234,10 @@ export class CommerceAdminProductDetailsPage {
 
 	async goToProductDiagram() {
 		await this.productDiagramLink.click();
+	}
+
+	async goToProductGroups() {
+		await this.productGroupsLink.click();
 	}
 
 	async goToProductOptions() {

@@ -5,6 +5,7 @@
 
 import {ClayButtonWithIcon} from '@clayui/button';
 import {ClayInput} from '@clayui/form';
+import {serializeFDSConfig} from '@liferay/frontend-data-set-web';
 import React, {ChangeEvent, useState} from 'react';
 
 import '../../../css/home/SearchBar.scss';
@@ -25,17 +26,17 @@ export default function SearchBar({
 	const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
 
-		const encodedState = encodeURIComponent(JSON.stringify({q: term}));
-
 		window.location.href =
 			searchResultsURL +
 			'?com.liferay.site.cms.site.initializer-allSection_fdsConfig=' +
-			encodedState;
+			serializeFDSConfig({q: term});
 	};
 
 	return (
 		<div className="align-items-center d-flex flex-column home-section p-2 p-sm-3">
-			<h1>Welcome, {userFirstName}!</h1>
+			<div aria-level={2} className="h1" role="heading">
+				Welcome, {userFirstName}!
+			</div>
 
 			<div className="container mt-5">
 				<div className="justify-content-center row">

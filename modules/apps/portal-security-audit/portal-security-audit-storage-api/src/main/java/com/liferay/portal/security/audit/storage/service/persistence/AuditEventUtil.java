@@ -36,6 +36,20 @@ public class AuditEventUtil {
 	 */
 
 	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(List)
+	 */
+	public static void cacheResult(List<AuditEvent> auditEvents) {
+		getPersistence().cacheResult(auditEvents);
+	}
+
+	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(com.liferay.portal.kernel.model.BaseModel)
+	 */
+	public static void cacheResult(AuditEvent auditEvent) {
+		getPersistence().cacheResult(auditEvent);
+	}
+
+	/**
 	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#clearCache()
 	 */
 	public static void clearCache() {
@@ -111,59 +125,10 @@ public class AuditEventUtil {
 	}
 
 	/**
-	 * Returns all the audit events where companyId = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @return the matching audit events
-	 */
-	public static List<AuditEvent> findByCompanyId(long companyId) {
-		return getPersistence().findByCompanyId(companyId);
-	}
-
-	/**
-	 * Returns a range of all the audit events where companyId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AuditEventModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param start the lower bound of the range of audit events
-	 * @param end the upper bound of the range of audit events (not inclusive)
-	 * @return the range of matching audit events
-	 */
-	public static List<AuditEvent> findByCompanyId(
-		long companyId, int start, int end) {
-
-		return getPersistence().findByCompanyId(companyId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the audit events where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AuditEventModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param start the lower bound of the range of audit events
-	 * @param end the upper bound of the range of audit events (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching audit events
-	 */
-	public static List<AuditEvent> findByCompanyId(
-		long companyId, int start, int end,
-		OrderByComparator<AuditEvent> orderByComparator) {
-
-		return getPersistence().findByCompanyId(
-			companyId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the audit events where companyId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AuditEventModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.security.audit.storage.model.impl.AuditEventModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -214,56 +179,6 @@ public class AuditEventUtil {
 	}
 
 	/**
-	 * Returns the last audit event in the ordered set where companyId = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching audit event
-	 * @throws NoSuchEventException if a matching audit event could not be found
-	 */
-	public static AuditEvent findByCompanyId_Last(
-			long companyId, OrderByComparator<AuditEvent> orderByComparator)
-		throws com.liferay.portal.security.audit.storage.exception.
-			NoSuchEventException {
-
-		return getPersistence().findByCompanyId_Last(
-			companyId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last audit event in the ordered set where companyId = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching audit event, or <code>null</code> if a matching audit event could not be found
-	 */
-	public static AuditEvent fetchByCompanyId_Last(
-		long companyId, OrderByComparator<AuditEvent> orderByComparator) {
-
-		return getPersistence().fetchByCompanyId_Last(
-			companyId, orderByComparator);
-	}
-
-	/**
-	 * Returns the audit events before and after the current audit event in the ordered set where companyId = &#63;.
-	 *
-	 * @param auditEventId the primary key of the current audit event
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next audit event
-	 * @throws NoSuchEventException if a audit event with the primary key could not be found
-	 */
-	public static AuditEvent[] findByCompanyId_PrevAndNext(
-			long auditEventId, long companyId,
-			OrderByComparator<AuditEvent> orderByComparator)
-		throws com.liferay.portal.security.audit.storage.exception.
-			NoSuchEventException {
-
-		return getPersistence().findByCompanyId_PrevAndNext(
-			auditEventId, companyId, orderByComparator);
-	}
-
-	/**
 	 * Removes all the audit events where companyId = &#63; from the database.
 	 *
 	 * @param companyId the company ID
@@ -280,24 +195,6 @@ public class AuditEventUtil {
 	 */
 	public static int countByCompanyId(long companyId) {
 		return getPersistence().countByCompanyId(companyId);
-	}
-
-	/**
-	 * Caches the audit event in the entity cache if it is enabled.
-	 *
-	 * @param auditEvent the audit event
-	 */
-	public static void cacheResult(AuditEvent auditEvent) {
-		getPersistence().cacheResult(auditEvent);
-	}
-
-	/**
-	 * Caches the audit events in the entity cache if it is enabled.
-	 *
-	 * @param auditEvents the audit events
-	 */
-	public static void cacheResult(List<AuditEvent> auditEvents) {
-		getPersistence().cacheResult(auditEvents);
 	}
 
 	/**
@@ -353,82 +250,52 @@ public class AuditEventUtil {
 	}
 
 	/**
-	 * Returns all the audit events.
+	 * Returns all the audit events where companyId = &#63;.
 	 *
-	 * @return the audit events
+	 * @param companyId the company ID
+	 * @return the matching audit events
 	 */
-	public static List<AuditEvent> findAll() {
-		return getPersistence().findAll();
+	public static List<AuditEvent> findByCompanyId(long companyId) {
+		return getPersistence().findByCompanyId(companyId);
 	}
 
 	/**
-	 * Returns a range of all the audit events.
+	 * Returns a range of all the audit events where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AuditEventModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.security.audit.storage.model.impl.AuditEventModelImpl</code>.
 	 * </p>
 	 *
+	 * @param companyId the company ID
 	 * @param start the lower bound of the range of audit events
 	 * @param end the upper bound of the range of audit events (not inclusive)
-	 * @return the range of audit events
+	 * @return the range of matching audit events
 	 */
-	public static List<AuditEvent> findAll(int start, int end) {
-		return getPersistence().findAll(start, end);
+	public static List<AuditEvent> findByCompanyId(
+		long companyId, int start, int end) {
+
+		return getPersistence().findByCompanyId(companyId, start, end);
 	}
 
 	/**
-	 * Returns an ordered range of all the audit events.
+	 * Returns an ordered range of all the audit events where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AuditEventModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.security.audit.storage.model.impl.AuditEventModelImpl</code>.
 	 * </p>
 	 *
-	 * @param start the lower bound of the range of audit events
-	 * @param end the upper bound of the range of audit events (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of audit events
-	 */
-	public static List<AuditEvent> findAll(
-		int start, int end, OrderByComparator<AuditEvent> orderByComparator) {
-
-		return getPersistence().findAll(start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the audit events.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AuditEventModelImpl</code>.
-	 * </p>
-	 *
+	 * @param companyId the company ID
 	 * @param start the lower bound of the range of audit events
 	 * @param end the upper bound of the range of audit events (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param useFinderCache whether to use the finder cache
-	 * @return the ordered range of audit events
+	 * @return the ordered range of matching audit events
 	 */
-	public static List<AuditEvent> findAll(
-		int start, int end, OrderByComparator<AuditEvent> orderByComparator,
-		boolean useFinderCache) {
+	public static List<AuditEvent> findByCompanyId(
+		long companyId, int start, int end,
+		OrderByComparator<AuditEvent> orderByComparator) {
 
-		return getPersistence().findAll(
-			start, end, orderByComparator, useFinderCache);
-	}
-
-	/**
-	 * Removes all the audit events from the database.
-	 */
-	public static void removeAll() {
-		getPersistence().removeAll();
-	}
-
-	/**
-	 * Returns the number of audit events.
-	 *
-	 * @return the number of audit events
-	 */
-	public static int countAll() {
-		return getPersistence().countAll();
+		return getPersistence().findByCompanyId(
+			companyId, start, end, orderByComparator);
 	}
 
 	public static AuditEventPersistence getPersistence() {
@@ -442,3 +309,4 @@ public class AuditEventUtil {
 	private static volatile AuditEventPersistence _persistence;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:1137550584

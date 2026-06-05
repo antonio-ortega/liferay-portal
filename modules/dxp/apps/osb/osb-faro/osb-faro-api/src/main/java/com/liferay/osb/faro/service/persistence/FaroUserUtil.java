@@ -36,6 +36,20 @@ public class FaroUserUtil {
 	 */
 
 	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(List)
+	 */
+	public static void cacheResult(List<FaroUser> faroUsers) {
+		getPersistence().cacheResult(faroUsers);
+	}
+
+	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(com.liferay.portal.kernel.model.BaseModel)
+	 */
+	public static void cacheResult(FaroUser faroUser) {
+		getPersistence().cacheResult(faroUser);
+	}
+
+	/**
 	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#clearCache()
 	 */
 	public static void clearCache() {
@@ -111,59 +125,10 @@ public class FaroUserUtil {
 	}
 
 	/**
-	 * Returns all the faro users where groupId = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @return the matching faro users
-	 */
-	public static List<FaroUser> findByGroupId(long groupId) {
-		return getPersistence().findByGroupId(groupId);
-	}
-
-	/**
-	 * Returns a range of all the faro users where groupId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FaroUserModelImpl</code>.
-	 * </p>
-	 *
-	 * @param groupId the group ID
-	 * @param start the lower bound of the range of faro users
-	 * @param end the upper bound of the range of faro users (not inclusive)
-	 * @return the range of matching faro users
-	 */
-	public static List<FaroUser> findByGroupId(
-		long groupId, int start, int end) {
-
-		return getPersistence().findByGroupId(groupId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the faro users where groupId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FaroUserModelImpl</code>.
-	 * </p>
-	 *
-	 * @param groupId the group ID
-	 * @param start the lower bound of the range of faro users
-	 * @param end the upper bound of the range of faro users (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching faro users
-	 */
-	public static List<FaroUser> findByGroupId(
-		long groupId, int start, int end,
-		OrderByComparator<FaroUser> orderByComparator) {
-
-		return getPersistence().findByGroupId(
-			groupId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the faro users where groupId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FaroUserModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.osb.faro.model.impl.FaroUserModelImpl</code>.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -211,52 +176,6 @@ public class FaroUserUtil {
 	}
 
 	/**
-	 * Returns the last faro user in the ordered set where groupId = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching faro user
-	 * @throws NoSuchFaroUserException if a matching faro user could not be found
-	 */
-	public static FaroUser findByGroupId_Last(
-			long groupId, OrderByComparator<FaroUser> orderByComparator)
-		throws com.liferay.osb.faro.exception.NoSuchFaroUserException {
-
-		return getPersistence().findByGroupId_Last(groupId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last faro user in the ordered set where groupId = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching faro user, or <code>null</code> if a matching faro user could not be found
-	 */
-	public static FaroUser fetchByGroupId_Last(
-		long groupId, OrderByComparator<FaroUser> orderByComparator) {
-
-		return getPersistence().fetchByGroupId_Last(groupId, orderByComparator);
-	}
-
-	/**
-	 * Returns the faro users before and after the current faro user in the ordered set where groupId = &#63;.
-	 *
-	 * @param faroUserId the primary key of the current faro user
-	 * @param groupId the group ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next faro user
-	 * @throws NoSuchFaroUserException if a faro user with the primary key could not be found
-	 */
-	public static FaroUser[] findByGroupId_PrevAndNext(
-			long faroUserId, long groupId,
-			OrderByComparator<FaroUser> orderByComparator)
-		throws com.liferay.osb.faro.exception.NoSuchFaroUserException {
-
-		return getPersistence().findByGroupId_PrevAndNext(
-			faroUserId, groupId, orderByComparator);
-	}
-
-	/**
 	 * Removes all the faro users where groupId = &#63; from the database.
 	 *
 	 * @param groupId the group ID
@@ -276,59 +195,10 @@ public class FaroUserUtil {
 	}
 
 	/**
-	 * Returns all the faro users where liveUserId = &#63;.
-	 *
-	 * @param liveUserId the live user ID
-	 * @return the matching faro users
-	 */
-	public static List<FaroUser> findByLiveUserId(long liveUserId) {
-		return getPersistence().findByLiveUserId(liveUserId);
-	}
-
-	/**
-	 * Returns a range of all the faro users where liveUserId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FaroUserModelImpl</code>.
-	 * </p>
-	 *
-	 * @param liveUserId the live user ID
-	 * @param start the lower bound of the range of faro users
-	 * @param end the upper bound of the range of faro users (not inclusive)
-	 * @return the range of matching faro users
-	 */
-	public static List<FaroUser> findByLiveUserId(
-		long liveUserId, int start, int end) {
-
-		return getPersistence().findByLiveUserId(liveUserId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the faro users where liveUserId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FaroUserModelImpl</code>.
-	 * </p>
-	 *
-	 * @param liveUserId the live user ID
-	 * @param start the lower bound of the range of faro users
-	 * @param end the upper bound of the range of faro users (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching faro users
-	 */
-	public static List<FaroUser> findByLiveUserId(
-		long liveUserId, int start, int end,
-		OrderByComparator<FaroUser> orderByComparator) {
-
-		return getPersistence().findByLiveUserId(
-			liveUserId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the faro users where liveUserId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FaroUserModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.osb.faro.model.impl.FaroUserModelImpl</code>.
 	 * </p>
 	 *
 	 * @param liveUserId the live user ID
@@ -377,54 +247,6 @@ public class FaroUserUtil {
 	}
 
 	/**
-	 * Returns the last faro user in the ordered set where liveUserId = &#63;.
-	 *
-	 * @param liveUserId the live user ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching faro user
-	 * @throws NoSuchFaroUserException if a matching faro user could not be found
-	 */
-	public static FaroUser findByLiveUserId_Last(
-			long liveUserId, OrderByComparator<FaroUser> orderByComparator)
-		throws com.liferay.osb.faro.exception.NoSuchFaroUserException {
-
-		return getPersistence().findByLiveUserId_Last(
-			liveUserId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last faro user in the ordered set where liveUserId = &#63;.
-	 *
-	 * @param liveUserId the live user ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching faro user, or <code>null</code> if a matching faro user could not be found
-	 */
-	public static FaroUser fetchByLiveUserId_Last(
-		long liveUserId, OrderByComparator<FaroUser> orderByComparator) {
-
-		return getPersistence().fetchByLiveUserId_Last(
-			liveUserId, orderByComparator);
-	}
-
-	/**
-	 * Returns the faro users before and after the current faro user in the ordered set where liveUserId = &#63;.
-	 *
-	 * @param faroUserId the primary key of the current faro user
-	 * @param liveUserId the live user ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next faro user
-	 * @throws NoSuchFaroUserException if a faro user with the primary key could not be found
-	 */
-	public static FaroUser[] findByLiveUserId_PrevAndNext(
-			long faroUserId, long liveUserId,
-			OrderByComparator<FaroUser> orderByComparator)
-		throws com.liferay.osb.faro.exception.NoSuchFaroUserException {
-
-		return getPersistence().findByLiveUserId_PrevAndNext(
-			faroUserId, liveUserId, orderByComparator);
-	}
-
-	/**
 	 * Removes all the faro users where liveUserId = &#63; from the database.
 	 *
 	 * @param liveUserId the live user ID
@@ -454,16 +276,6 @@ public class FaroUserUtil {
 		throws com.liferay.osb.faro.exception.NoSuchFaroUserException {
 
 		return getPersistence().findByKey(key);
-	}
-
-	/**
-	 * Returns the faro user where key = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
-	 *
-	 * @param key the key
-	 * @return the matching faro user, or <code>null</code> if a matching faro user could not be found
-	 */
-	public static FaroUser fetchByKey(String key) {
-		return getPersistence().fetchByKey(key);
 	}
 
 	/**
@@ -514,17 +326,6 @@ public class FaroUserUtil {
 	}
 
 	/**
-	 * Returns the faro user where groupId = &#63; and liveUserId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
-	 *
-	 * @param groupId the group ID
-	 * @param liveUserId the live user ID
-	 * @return the matching faro user, or <code>null</code> if a matching faro user could not be found
-	 */
-	public static FaroUser fetchByG_L(long groupId, long liveUserId) {
-		return getPersistence().fetchByG_L(groupId, liveUserId);
-	}
-
-	/**
 	 * Returns the faro user where groupId = &#63; and liveUserId = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
 	 *
 	 * @param groupId the group ID
@@ -563,62 +364,10 @@ public class FaroUserUtil {
 	}
 
 	/**
-	 * Returns all the faro users where groupId = &#63; and roleId = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param roleId the role ID
-	 * @return the matching faro users
-	 */
-	public static List<FaroUser> findByG_R(long groupId, long roleId) {
-		return getPersistence().findByG_R(groupId, roleId);
-	}
-
-	/**
-	 * Returns a range of all the faro users where groupId = &#63; and roleId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FaroUserModelImpl</code>.
-	 * </p>
-	 *
-	 * @param groupId the group ID
-	 * @param roleId the role ID
-	 * @param start the lower bound of the range of faro users
-	 * @param end the upper bound of the range of faro users (not inclusive)
-	 * @return the range of matching faro users
-	 */
-	public static List<FaroUser> findByG_R(
-		long groupId, long roleId, int start, int end) {
-
-		return getPersistence().findByG_R(groupId, roleId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the faro users where groupId = &#63; and roleId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FaroUserModelImpl</code>.
-	 * </p>
-	 *
-	 * @param groupId the group ID
-	 * @param roleId the role ID
-	 * @param start the lower bound of the range of faro users
-	 * @param end the upper bound of the range of faro users (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching faro users
-	 */
-	public static List<FaroUser> findByG_R(
-		long groupId, long roleId, int start, int end,
-		OrderByComparator<FaroUser> orderByComparator) {
-
-		return getPersistence().findByG_R(
-			groupId, roleId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the faro users where groupId = &#63; and roleId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FaroUserModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.osb.faro.model.impl.FaroUserModelImpl</code>.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -672,59 +421,6 @@ public class FaroUserUtil {
 	}
 
 	/**
-	 * Returns the last faro user in the ordered set where groupId = &#63; and roleId = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param roleId the role ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching faro user
-	 * @throws NoSuchFaroUserException if a matching faro user could not be found
-	 */
-	public static FaroUser findByG_R_Last(
-			long groupId, long roleId,
-			OrderByComparator<FaroUser> orderByComparator)
-		throws com.liferay.osb.faro.exception.NoSuchFaroUserException {
-
-		return getPersistence().findByG_R_Last(
-			groupId, roleId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last faro user in the ordered set where groupId = &#63; and roleId = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param roleId the role ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching faro user, or <code>null</code> if a matching faro user could not be found
-	 */
-	public static FaroUser fetchByG_R_Last(
-		long groupId, long roleId,
-		OrderByComparator<FaroUser> orderByComparator) {
-
-		return getPersistence().fetchByG_R_Last(
-			groupId, roleId, orderByComparator);
-	}
-
-	/**
-	 * Returns the faro users before and after the current faro user in the ordered set where groupId = &#63; and roleId = &#63;.
-	 *
-	 * @param faroUserId the primary key of the current faro user
-	 * @param groupId the group ID
-	 * @param roleId the role ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next faro user
-	 * @throws NoSuchFaroUserException if a faro user with the primary key could not be found
-	 */
-	public static FaroUser[] findByG_R_PrevAndNext(
-			long faroUserId, long groupId, long roleId,
-			OrderByComparator<FaroUser> orderByComparator)
-		throws com.liferay.osb.faro.exception.NoSuchFaroUserException {
-
-		return getPersistence().findByG_R_PrevAndNext(
-			faroUserId, groupId, roleId, orderByComparator);
-	}
-
-	/**
 	 * Removes all the faro users where groupId = &#63; and roleId = &#63; from the database.
 	 *
 	 * @param groupId the group ID
@@ -757,17 +453,6 @@ public class FaroUserUtil {
 		throws com.liferay.osb.faro.exception.NoSuchFaroUserException {
 
 		return getPersistence().findByG_E(groupId, emailAddress);
-	}
-
-	/**
-	 * Returns the faro user where groupId = &#63; and emailAddress = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
-	 *
-	 * @param groupId the group ID
-	 * @param emailAddress the email address
-	 * @return the matching faro user, or <code>null</code> if a matching faro user could not be found
-	 */
-	public static FaroUser fetchByG_E(long groupId, String emailAddress) {
-		return getPersistence().fetchByG_E(groupId, emailAddress);
 	}
 
 	/**
@@ -810,62 +495,10 @@ public class FaroUserUtil {
 	}
 
 	/**
-	 * Returns all the faro users where groupId = &#63; and status = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param status the status
-	 * @return the matching faro users
-	 */
-	public static List<FaroUser> findByG_S(long groupId, int status) {
-		return getPersistence().findByG_S(groupId, status);
-	}
-
-	/**
-	 * Returns a range of all the faro users where groupId = &#63; and status = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FaroUserModelImpl</code>.
-	 * </p>
-	 *
-	 * @param groupId the group ID
-	 * @param status the status
-	 * @param start the lower bound of the range of faro users
-	 * @param end the upper bound of the range of faro users (not inclusive)
-	 * @return the range of matching faro users
-	 */
-	public static List<FaroUser> findByG_S(
-		long groupId, int status, int start, int end) {
-
-		return getPersistence().findByG_S(groupId, status, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the faro users where groupId = &#63; and status = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FaroUserModelImpl</code>.
-	 * </p>
-	 *
-	 * @param groupId the group ID
-	 * @param status the status
-	 * @param start the lower bound of the range of faro users
-	 * @param end the upper bound of the range of faro users (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching faro users
-	 */
-	public static List<FaroUser> findByG_S(
-		long groupId, int status, int start, int end,
-		OrderByComparator<FaroUser> orderByComparator) {
-
-		return getPersistence().findByG_S(
-			groupId, status, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the faro users where groupId = &#63; and status = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FaroUserModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.osb.faro.model.impl.FaroUserModelImpl</code>.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -919,59 +552,6 @@ public class FaroUserUtil {
 	}
 
 	/**
-	 * Returns the last faro user in the ordered set where groupId = &#63; and status = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param status the status
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching faro user
-	 * @throws NoSuchFaroUserException if a matching faro user could not be found
-	 */
-	public static FaroUser findByG_S_Last(
-			long groupId, int status,
-			OrderByComparator<FaroUser> orderByComparator)
-		throws com.liferay.osb.faro.exception.NoSuchFaroUserException {
-
-		return getPersistence().findByG_S_Last(
-			groupId, status, orderByComparator);
-	}
-
-	/**
-	 * Returns the last faro user in the ordered set where groupId = &#63; and status = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param status the status
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching faro user, or <code>null</code> if a matching faro user could not be found
-	 */
-	public static FaroUser fetchByG_S_Last(
-		long groupId, int status,
-		OrderByComparator<FaroUser> orderByComparator) {
-
-		return getPersistence().fetchByG_S_Last(
-			groupId, status, orderByComparator);
-	}
-
-	/**
-	 * Returns the faro users before and after the current faro user in the ordered set where groupId = &#63; and status = &#63;.
-	 *
-	 * @param faroUserId the primary key of the current faro user
-	 * @param groupId the group ID
-	 * @param status the status
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next faro user
-	 * @throws NoSuchFaroUserException if a faro user with the primary key could not be found
-	 */
-	public static FaroUser[] findByG_S_PrevAndNext(
-			long faroUserId, long groupId, int status,
-			OrderByComparator<FaroUser> orderByComparator)
-		throws com.liferay.osb.faro.exception.NoSuchFaroUserException {
-
-		return getPersistence().findByG_S_PrevAndNext(
-			faroUserId, groupId, status, orderByComparator);
-	}
-
-	/**
 	 * Removes all the faro users where groupId = &#63; and status = &#63; from the database.
 	 *
 	 * @param groupId the group ID
@@ -993,62 +573,10 @@ public class FaroUserUtil {
 	}
 
 	/**
-	 * Returns all the faro users where liveUserId = &#63; and status = &#63;.
-	 *
-	 * @param liveUserId the live user ID
-	 * @param status the status
-	 * @return the matching faro users
-	 */
-	public static List<FaroUser> findByL_S(long liveUserId, int status) {
-		return getPersistence().findByL_S(liveUserId, status);
-	}
-
-	/**
-	 * Returns a range of all the faro users where liveUserId = &#63; and status = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FaroUserModelImpl</code>.
-	 * </p>
-	 *
-	 * @param liveUserId the live user ID
-	 * @param status the status
-	 * @param start the lower bound of the range of faro users
-	 * @param end the upper bound of the range of faro users (not inclusive)
-	 * @return the range of matching faro users
-	 */
-	public static List<FaroUser> findByL_S(
-		long liveUserId, int status, int start, int end) {
-
-		return getPersistence().findByL_S(liveUserId, status, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the faro users where liveUserId = &#63; and status = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FaroUserModelImpl</code>.
-	 * </p>
-	 *
-	 * @param liveUserId the live user ID
-	 * @param status the status
-	 * @param start the lower bound of the range of faro users
-	 * @param end the upper bound of the range of faro users (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching faro users
-	 */
-	public static List<FaroUser> findByL_S(
-		long liveUserId, int status, int start, int end,
-		OrderByComparator<FaroUser> orderByComparator) {
-
-		return getPersistence().findByL_S(
-			liveUserId, status, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the faro users where liveUserId = &#63; and status = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FaroUserModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.osb.faro.model.impl.FaroUserModelImpl</code>.
 	 * </p>
 	 *
 	 * @param liveUserId the live user ID
@@ -1102,59 +630,6 @@ public class FaroUserUtil {
 	}
 
 	/**
-	 * Returns the last faro user in the ordered set where liveUserId = &#63; and status = &#63;.
-	 *
-	 * @param liveUserId the live user ID
-	 * @param status the status
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching faro user
-	 * @throws NoSuchFaroUserException if a matching faro user could not be found
-	 */
-	public static FaroUser findByL_S_Last(
-			long liveUserId, int status,
-			OrderByComparator<FaroUser> orderByComparator)
-		throws com.liferay.osb.faro.exception.NoSuchFaroUserException {
-
-		return getPersistence().findByL_S_Last(
-			liveUserId, status, orderByComparator);
-	}
-
-	/**
-	 * Returns the last faro user in the ordered set where liveUserId = &#63; and status = &#63;.
-	 *
-	 * @param liveUserId the live user ID
-	 * @param status the status
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching faro user, or <code>null</code> if a matching faro user could not be found
-	 */
-	public static FaroUser fetchByL_S_Last(
-		long liveUserId, int status,
-		OrderByComparator<FaroUser> orderByComparator) {
-
-		return getPersistence().fetchByL_S_Last(
-			liveUserId, status, orderByComparator);
-	}
-
-	/**
-	 * Returns the faro users before and after the current faro user in the ordered set where liveUserId = &#63; and status = &#63;.
-	 *
-	 * @param faroUserId the primary key of the current faro user
-	 * @param liveUserId the live user ID
-	 * @param status the status
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next faro user
-	 * @throws NoSuchFaroUserException if a faro user with the primary key could not be found
-	 */
-	public static FaroUser[] findByL_S_PrevAndNext(
-			long faroUserId, long liveUserId, int status,
-			OrderByComparator<FaroUser> orderByComparator)
-		throws com.liferay.osb.faro.exception.NoSuchFaroUserException {
-
-		return getPersistence().findByL_S_PrevAndNext(
-			faroUserId, liveUserId, status, orderByComparator);
-	}
-
-	/**
 	 * Removes all the faro users where liveUserId = &#63; and status = &#63; from the database.
 	 *
 	 * @param liveUserId the live user ID
@@ -1176,62 +651,10 @@ public class FaroUserUtil {
 	}
 
 	/**
-	 * Returns all the faro users where emailAddress = &#63; and status = &#63;.
-	 *
-	 * @param emailAddress the email address
-	 * @param status the status
-	 * @return the matching faro users
-	 */
-	public static List<FaroUser> findByE_S(String emailAddress, int status) {
-		return getPersistence().findByE_S(emailAddress, status);
-	}
-
-	/**
-	 * Returns a range of all the faro users where emailAddress = &#63; and status = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FaroUserModelImpl</code>.
-	 * </p>
-	 *
-	 * @param emailAddress the email address
-	 * @param status the status
-	 * @param start the lower bound of the range of faro users
-	 * @param end the upper bound of the range of faro users (not inclusive)
-	 * @return the range of matching faro users
-	 */
-	public static List<FaroUser> findByE_S(
-		String emailAddress, int status, int start, int end) {
-
-		return getPersistence().findByE_S(emailAddress, status, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the faro users where emailAddress = &#63; and status = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FaroUserModelImpl</code>.
-	 * </p>
-	 *
-	 * @param emailAddress the email address
-	 * @param status the status
-	 * @param start the lower bound of the range of faro users
-	 * @param end the upper bound of the range of faro users (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching faro users
-	 */
-	public static List<FaroUser> findByE_S(
-		String emailAddress, int status, int start, int end,
-		OrderByComparator<FaroUser> orderByComparator) {
-
-		return getPersistence().findByE_S(
-			emailAddress, status, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the faro users where emailAddress = &#63; and status = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FaroUserModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.osb.faro.model.impl.FaroUserModelImpl</code>.
 	 * </p>
 	 *
 	 * @param emailAddress the email address
@@ -1286,59 +709,6 @@ public class FaroUserUtil {
 	}
 
 	/**
-	 * Returns the last faro user in the ordered set where emailAddress = &#63; and status = &#63;.
-	 *
-	 * @param emailAddress the email address
-	 * @param status the status
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching faro user
-	 * @throws NoSuchFaroUserException if a matching faro user could not be found
-	 */
-	public static FaroUser findByE_S_Last(
-			String emailAddress, int status,
-			OrderByComparator<FaroUser> orderByComparator)
-		throws com.liferay.osb.faro.exception.NoSuchFaroUserException {
-
-		return getPersistence().findByE_S_Last(
-			emailAddress, status, orderByComparator);
-	}
-
-	/**
-	 * Returns the last faro user in the ordered set where emailAddress = &#63; and status = &#63;.
-	 *
-	 * @param emailAddress the email address
-	 * @param status the status
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching faro user, or <code>null</code> if a matching faro user could not be found
-	 */
-	public static FaroUser fetchByE_S_Last(
-		String emailAddress, int status,
-		OrderByComparator<FaroUser> orderByComparator) {
-
-		return getPersistence().fetchByE_S_Last(
-			emailAddress, status, orderByComparator);
-	}
-
-	/**
-	 * Returns the faro users before and after the current faro user in the ordered set where emailAddress = &#63; and status = &#63;.
-	 *
-	 * @param faroUserId the primary key of the current faro user
-	 * @param emailAddress the email address
-	 * @param status the status
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next faro user
-	 * @throws NoSuchFaroUserException if a faro user with the primary key could not be found
-	 */
-	public static FaroUser[] findByE_S_PrevAndNext(
-			long faroUserId, String emailAddress, int status,
-			OrderByComparator<FaroUser> orderByComparator)
-		throws com.liferay.osb.faro.exception.NoSuchFaroUserException {
-
-		return getPersistence().findByE_S_PrevAndNext(
-			faroUserId, emailAddress, status, orderByComparator);
-	}
-
-	/**
 	 * Removes all the faro users where emailAddress = &#63; and status = &#63; from the database.
 	 *
 	 * @param emailAddress the email address
@@ -1357,24 +727,6 @@ public class FaroUserUtil {
 	 */
 	public static int countByE_S(String emailAddress, int status) {
 		return getPersistence().countByE_S(emailAddress, status);
-	}
-
-	/**
-	 * Caches the faro user in the entity cache if it is enabled.
-	 *
-	 * @param faroUser the faro user
-	 */
-	public static void cacheResult(FaroUser faroUser) {
-		getPersistence().cacheResult(faroUser);
-	}
-
-	/**
-	 * Caches the faro users in the entity cache if it is enabled.
-	 *
-	 * @param faroUsers the faro users
-	 */
-	public static void cacheResult(List<FaroUser> faroUsers) {
-		getPersistence().cacheResult(faroUsers);
 	}
 
 	/**
@@ -1428,82 +780,341 @@ public class FaroUserUtil {
 	}
 
 	/**
-	 * Returns all the faro users.
+	 * Returns the faro user where key = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
 	 *
-	 * @return the faro users
+	 * @param key the key
+	 * @return the matching faro user, or <code>null</code> if a matching faro user could not be found
 	 */
-	public static List<FaroUser> findAll() {
-		return getPersistence().findAll();
+	public static FaroUser fetchByKey(String key) {
+		return getPersistence().fetchByKey(key);
 	}
 
 	/**
-	 * Returns a range of all the faro users.
+	 * Returns the faro user where groupId = &#63; and liveUserId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	 *
+	 * @param groupId the group ID
+	 * @param liveUserId the live user ID
+	 * @return the matching faro user, or <code>null</code> if a matching faro user could not be found
+	 */
+	public static FaroUser fetchByG_L(long groupId, long liveUserId) {
+		return getPersistence().fetchByG_L(groupId, liveUserId);
+	}
+
+	/**
+	 * Returns the faro user where groupId = &#63; and emailAddress = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	 *
+	 * @param groupId the group ID
+	 * @param emailAddress the email address
+	 * @return the matching faro user, or <code>null</code> if a matching faro user could not be found
+	 */
+	public static FaroUser fetchByG_E(long groupId, String emailAddress) {
+		return getPersistence().fetchByG_E(groupId, emailAddress);
+	}
+
+	/**
+	 * Returns all the faro users where groupId = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @return the matching faro users
+	 */
+	public static List<FaroUser> findByGroupId(long groupId) {
+		return getPersistence().findByGroupId(groupId);
+	}
+
+	/**
+	 * Returns a range of all the faro users where groupId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FaroUserModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.osb.faro.model.impl.FaroUserModelImpl</code>.
 	 * </p>
 	 *
+	 * @param groupId the group ID
 	 * @param start the lower bound of the range of faro users
 	 * @param end the upper bound of the range of faro users (not inclusive)
-	 * @return the range of faro users
+	 * @return the range of matching faro users
 	 */
-	public static List<FaroUser> findAll(int start, int end) {
-		return getPersistence().findAll(start, end);
+	public static List<FaroUser> findByGroupId(
+		long groupId, int start, int end) {
+
+		return getPersistence().findByGroupId(groupId, start, end);
 	}
 
 	/**
-	 * Returns an ordered range of all the faro users.
+	 * Returns an ordered range of all the faro users where groupId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FaroUserModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.osb.faro.model.impl.FaroUserModelImpl</code>.
 	 * </p>
 	 *
+	 * @param groupId the group ID
 	 * @param start the lower bound of the range of faro users
 	 * @param end the upper bound of the range of faro users (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of faro users
+	 * @return the ordered range of matching faro users
 	 */
-	public static List<FaroUser> findAll(
-		int start, int end, OrderByComparator<FaroUser> orderByComparator) {
+	public static List<FaroUser> findByGroupId(
+		long groupId, int start, int end,
+		OrderByComparator<FaroUser> orderByComparator) {
 
-		return getPersistence().findAll(start, end, orderByComparator);
+		return getPersistence().findByGroupId(
+			groupId, start, end, orderByComparator);
 	}
 
 	/**
-	 * Returns an ordered range of all the faro users.
+	 * Returns all the faro users where liveUserId = &#63;.
+	 *
+	 * @param liveUserId the live user ID
+	 * @return the matching faro users
+	 */
+	public static List<FaroUser> findByLiveUserId(long liveUserId) {
+		return getPersistence().findByLiveUserId(liveUserId);
+	}
+
+	/**
+	 * Returns a range of all the faro users where liveUserId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FaroUserModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.osb.faro.model.impl.FaroUserModelImpl</code>.
 	 * </p>
 	 *
+	 * @param liveUserId the live user ID
+	 * @param start the lower bound of the range of faro users
+	 * @param end the upper bound of the range of faro users (not inclusive)
+	 * @return the range of matching faro users
+	 */
+	public static List<FaroUser> findByLiveUserId(
+		long liveUserId, int start, int end) {
+
+		return getPersistence().findByLiveUserId(liveUserId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the faro users where liveUserId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.osb.faro.model.impl.FaroUserModelImpl</code>.
+	 * </p>
+	 *
+	 * @param liveUserId the live user ID
 	 * @param start the lower bound of the range of faro users
 	 * @param end the upper bound of the range of faro users (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param useFinderCache whether to use the finder cache
-	 * @return the ordered range of faro users
+	 * @return the ordered range of matching faro users
 	 */
-	public static List<FaroUser> findAll(
-		int start, int end, OrderByComparator<FaroUser> orderByComparator,
-		boolean useFinderCache) {
+	public static List<FaroUser> findByLiveUserId(
+		long liveUserId, int start, int end,
+		OrderByComparator<FaroUser> orderByComparator) {
 
-		return getPersistence().findAll(
-			start, end, orderByComparator, useFinderCache);
+		return getPersistence().findByLiveUserId(
+			liveUserId, start, end, orderByComparator);
 	}
 
 	/**
-	 * Removes all the faro users from the database.
-	 */
-	public static void removeAll() {
-		getPersistence().removeAll();
-	}
-
-	/**
-	 * Returns the number of faro users.
+	 * Returns all the faro users where groupId = &#63; and roleId = &#63;.
 	 *
-	 * @return the number of faro users
+	 * @param groupId the group ID
+	 * @param roleId the role ID
+	 * @return the matching faro users
 	 */
-	public static int countAll() {
-		return getPersistence().countAll();
+	public static List<FaroUser> findByG_R(long groupId, long roleId) {
+		return getPersistence().findByG_R(groupId, roleId);
+	}
+
+	/**
+	 * Returns a range of all the faro users where groupId = &#63; and roleId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.osb.faro.model.impl.FaroUserModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param roleId the role ID
+	 * @param start the lower bound of the range of faro users
+	 * @param end the upper bound of the range of faro users (not inclusive)
+	 * @return the range of matching faro users
+	 */
+	public static List<FaroUser> findByG_R(
+		long groupId, long roleId, int start, int end) {
+
+		return getPersistence().findByG_R(groupId, roleId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the faro users where groupId = &#63; and roleId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.osb.faro.model.impl.FaroUserModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param roleId the role ID
+	 * @param start the lower bound of the range of faro users
+	 * @param end the upper bound of the range of faro users (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching faro users
+	 */
+	public static List<FaroUser> findByG_R(
+		long groupId, long roleId, int start, int end,
+		OrderByComparator<FaroUser> orderByComparator) {
+
+		return getPersistence().findByG_R(
+			groupId, roleId, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns all the faro users where groupId = &#63; and status = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param status the status
+	 * @return the matching faro users
+	 */
+	public static List<FaroUser> findByG_S(long groupId, int status) {
+		return getPersistence().findByG_S(groupId, status);
+	}
+
+	/**
+	 * Returns a range of all the faro users where groupId = &#63; and status = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.osb.faro.model.impl.FaroUserModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param status the status
+	 * @param start the lower bound of the range of faro users
+	 * @param end the upper bound of the range of faro users (not inclusive)
+	 * @return the range of matching faro users
+	 */
+	public static List<FaroUser> findByG_S(
+		long groupId, int status, int start, int end) {
+
+		return getPersistence().findByG_S(groupId, status, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the faro users where groupId = &#63; and status = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.osb.faro.model.impl.FaroUserModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param status the status
+	 * @param start the lower bound of the range of faro users
+	 * @param end the upper bound of the range of faro users (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching faro users
+	 */
+	public static List<FaroUser> findByG_S(
+		long groupId, int status, int start, int end,
+		OrderByComparator<FaroUser> orderByComparator) {
+
+		return getPersistence().findByG_S(
+			groupId, status, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns all the faro users where liveUserId = &#63; and status = &#63;.
+	 *
+	 * @param liveUserId the live user ID
+	 * @param status the status
+	 * @return the matching faro users
+	 */
+	public static List<FaroUser> findByL_S(long liveUserId, int status) {
+		return getPersistence().findByL_S(liveUserId, status);
+	}
+
+	/**
+	 * Returns a range of all the faro users where liveUserId = &#63; and status = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.osb.faro.model.impl.FaroUserModelImpl</code>.
+	 * </p>
+	 *
+	 * @param liveUserId the live user ID
+	 * @param status the status
+	 * @param start the lower bound of the range of faro users
+	 * @param end the upper bound of the range of faro users (not inclusive)
+	 * @return the range of matching faro users
+	 */
+	public static List<FaroUser> findByL_S(
+		long liveUserId, int status, int start, int end) {
+
+		return getPersistence().findByL_S(liveUserId, status, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the faro users where liveUserId = &#63; and status = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.osb.faro.model.impl.FaroUserModelImpl</code>.
+	 * </p>
+	 *
+	 * @param liveUserId the live user ID
+	 * @param status the status
+	 * @param start the lower bound of the range of faro users
+	 * @param end the upper bound of the range of faro users (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching faro users
+	 */
+	public static List<FaroUser> findByL_S(
+		long liveUserId, int status, int start, int end,
+		OrderByComparator<FaroUser> orderByComparator) {
+
+		return getPersistence().findByL_S(
+			liveUserId, status, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns all the faro users where emailAddress = &#63; and status = &#63;.
+	 *
+	 * @param emailAddress the email address
+	 * @param status the status
+	 * @return the matching faro users
+	 */
+	public static List<FaroUser> findByE_S(String emailAddress, int status) {
+		return getPersistence().findByE_S(emailAddress, status);
+	}
+
+	/**
+	 * Returns a range of all the faro users where emailAddress = &#63; and status = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.osb.faro.model.impl.FaroUserModelImpl</code>.
+	 * </p>
+	 *
+	 * @param emailAddress the email address
+	 * @param status the status
+	 * @param start the lower bound of the range of faro users
+	 * @param end the upper bound of the range of faro users (not inclusive)
+	 * @return the range of matching faro users
+	 */
+	public static List<FaroUser> findByE_S(
+		String emailAddress, int status, int start, int end) {
+
+		return getPersistence().findByE_S(emailAddress, status, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the faro users where emailAddress = &#63; and status = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.osb.faro.model.impl.FaroUserModelImpl</code>.
+	 * </p>
+	 *
+	 * @param emailAddress the email address
+	 * @param status the status
+	 * @param start the lower bound of the range of faro users
+	 * @param end the upper bound of the range of faro users (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching faro users
+	 */
+	public static List<FaroUser> findByE_S(
+		String emailAddress, int status, int start, int end,
+		OrderByComparator<FaroUser> orderByComparator) {
+
+		return getPersistence().findByE_S(
+			emailAddress, status, start, end, orderByComparator);
 	}
 
 	public static FaroUserPersistence getPersistence() {
@@ -1517,3 +1128,4 @@ public class FaroUserUtil {
 	private static volatile FaroUserPersistence _persistence;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:166202172

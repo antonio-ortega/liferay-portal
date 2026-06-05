@@ -6,14 +6,12 @@
 import {expect, mergeTests} from '@playwright/test';
 
 import {apiHelpersTest} from '../../../../fixtures/apiHelpersTest';
-import {applicationsMenuPageTest} from '../../../../fixtures/applicationsMenuPageTest';
 import {commercePagesTest} from '../../../../fixtures/commercePagesTest';
 import {dataApiHelpersTest} from '../../../../fixtures/dataApiHelpersTest';
 import {loginTest} from '../../../../fixtures/loginTest';
 
 export const test = mergeTests(
 	apiHelpersTest,
-	applicationsMenuPageTest,
 	commercePagesTest,
 	dataApiHelpersTest,
 	loginTest()
@@ -71,7 +69,9 @@ test(
 			);
 
 			await expect(
-				page.getByText(specification.title.en_US)
+				commerceAdminProductDetailsPage.textTableCell(
+					specification.title.en_US
+				)
 			).toBeVisible();
 
 			await apiHelpers.listTypeAdmin.postListTypeEntry({
@@ -83,6 +83,7 @@ test(
 
 			await commerceAdminProductDetailsPage.editOrDeleteProductSpecification(
 				'Edit',
+				specification.title.en_US,
 				'item2'
 			);
 
@@ -261,7 +262,7 @@ test(
 
 			const selectSpecificationValueIframe = page
 				.frameLocator('iframe')
-				.nth(2)
+				.nth(1)
 				.locator('select[name="listTypeEntriesSelect"]');
 
 			await expect(selectSpecificationValueIframe).toHaveAttribute(
@@ -282,7 +283,7 @@ test(
 
 			const inputSpecificationValueIframe = page
 				.frameLocator('iframe')
-				.nth(2)
+				.nth(1)
 				.getByRole('textbox')
 				.nth(1);
 

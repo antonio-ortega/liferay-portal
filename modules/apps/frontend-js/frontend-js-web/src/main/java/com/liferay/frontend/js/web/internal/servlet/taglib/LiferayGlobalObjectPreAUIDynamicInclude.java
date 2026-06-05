@@ -21,6 +21,7 @@ import com.liferay.portal.kernel.feature.flag.FeatureFlagManager;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutTypePortlet;
@@ -443,6 +444,17 @@ public class LiferayGlobalObjectPreAUIDynamicInclude
 
 		for (FeatureFlag featureFlag :
 				_featureFlagManager.getFeatureFlags(
+					CompanyConstants.SYSTEM, null)) {
+
+			sb.append(StringPool.APOSTROPHE);
+			sb.append(featureFlag.getKey());
+			sb.append("': ");
+			sb.append(featureFlag.isEnabled());
+			sb.append(",\n");
+		}
+
+		for (FeatureFlag featureFlag :
+				_featureFlagManager.getFeatureFlags(
 					themeDisplay.getCompanyId(), null)) {
 
 			sb.append(StringPool.APOSTROPHE);
@@ -610,6 +622,8 @@ public class LiferayGlobalObjectPreAUIDynamicInclude
 		_renderMethod(
 			"getLanguageId", sb, _language.getLanguageId(httpServletRequest));
 		_renderMethod("getParentGroupId", sb, themeDisplay.getSiteGroupId());
+		_renderMethod(
+			"getParentSiteGroupId", sb, themeDisplay.getParentSiteGroupId());
 		_renderMethod("getPathContext", sb, themeDisplay.getPathContext());
 		_renderMethod("getPathImage", sb, themeDisplay.getPathImage());
 		_renderMethod(

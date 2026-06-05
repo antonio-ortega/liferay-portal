@@ -277,8 +277,8 @@ public class ObjectEntryInfoItemFormProviderTest {
 		throws Exception {
 
 		return _objectDefinitionLocalService.addCustomObjectDefinition(
-			null, TestPropsValues.getUserId(), 0, null, false, true, false,
-			true, false, false, false, false, null,
+			null, TestPropsValues.getUserId(), 0, null, true, false, true,
+			false, true, false, false, false, false, null,
 			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 			ObjectDefinitionTestUtil.getRandomName(), null, null,
 			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
@@ -383,6 +383,8 @@ public class ObjectEntryInfoItemFormProviderTest {
 		_assertInfoField(
 			objectField.getObjectFieldId() + "#fileName", _childInfoForm);
 		_assertInfoField(
+			objectField.getObjectFieldId() + "#fileURL", _childInfoForm);
+		_assertInfoField(
 			objectField.getObjectFieldId() + "#mimeType", _childInfoForm);
 		_assertInfoField(
 			objectField.getObjectFieldId() + "#size", _childInfoForm);
@@ -473,6 +475,7 @@ public class ObjectEntryInfoItemFormProviderTest {
 					objectEntry.getObjectEntryId(),
 					_layoutDisplayPageProviderRegistry.
 						getLayoutDisplayPageProviderByClassName(
+							_childObjectDefinition.getCompanyId(),
 							_childObjectDefinition.getClassName())));
 
 			_assertOptionInfoFieldTypes(

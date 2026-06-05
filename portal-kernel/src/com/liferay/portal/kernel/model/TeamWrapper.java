@@ -477,3 +477,4 @@ public class TeamWrapper
 	}
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:90251453

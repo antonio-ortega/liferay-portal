@@ -6,30 +6,36 @@
 package com.liferay.marketplace;
 
 import com.liferay.client.extension.util.spring.boot3.BaseRestController;
-import com.liferay.client.extension.util.spring.boot3.client.LiferayOAuth2AccessTokenManager;
+import com.liferay.headless.commerce.admin.order.client.dto.v1_0.Order;
+import com.liferay.marketplace.constants.MarketplaceConstants;
+import com.liferay.marketplace.service.AnalyticsService;
 import com.liferay.marketplace.service.KoroneikiService;
+import com.liferay.marketplace.service.MarketplaceService;
+import com.liferay.marketplace.service.ProvisioningService;
 import com.liferay.osb.koroneiki.phloem.rest.client.dto.v1_0.ProductPurchase;
 import com.liferay.osb.provisioning.marketplace.rest.client.dto.v1_0.AppLicenseKey;
 import com.liferay.osb.provisioning.marketplace.rest.client.http.HttpInvoker;
 import com.liferay.osb.provisioning.marketplace.rest.client.pagination.Page;
 import com.liferay.osb.provisioning.marketplace.rest.client.pagination.Pagination;
 import com.liferay.osb.provisioning.marketplace.rest.client.resource.v1_0.AppLicenseKeyResource;
-import com.liferay.petra.string.StringPool;
+import com.liferay.osb.provisioning.rest.client.dto.v1_0.LicenseKey;
+import com.liferay.osb.provisioning.rest.client.resource.v1_0.LicenseKeyResource;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Validator;
 
-import java.net.URL;
-
-import java.time.ZonedDateTime;
+import java.time.Instant;
 
 import java.util.Collections;
 import java.util.Date;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import java.util.Map;
+import java.util.Objects;
 
 import org.json.JSONObject;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -43,6 +49,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 /**
  * @author Keven Leone
@@ -51,38 +58,23 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class ProvisioningRestController extends BaseRestController {
 
-	@PostMapping("license-keys/{id}/deactivate")
-	public void deactivateLicenseKeys(
-			@AuthenticationPrincipal Jwt jwt, @PathVariable("id") long id)
+	@GetMapping("app-license-keys/{id}")
+	public AppLicenseKey getAppLicenseKeys(@PathVariable("id") long id)
 		throws Exception {
 
 		AppLicenseKeyResource appLicenseKeyResource =
-			_getAppLicenseKeyResource();
-
-		appLicenseKeyResource.putAppLicenseKeyDeactivate(
-			jwt.getClaim("username"), jwt.getClaim("sub"), new Long[] {id});
-
-		if (_log.isInfoEnabled()) {
-			_log.info("License key " + id + " deactivated");
-		}
-	}
-
-	@GetMapping("license-keys/{id}")
-	public AppLicenseKey getLicenseKeys(@PathVariable("id") long id)
-		throws Exception {
-
-		AppLicenseKeyResource appLicenseKeyResource =
-			_getAppLicenseKeyResource();
+			_provisioningService.getAppLicenseKeyResource();
 
 		return appLicenseKeyResource.getAppLicenseKey(id);
 	}
 
-	@GetMapping("license-keys/{id}/download")
-	public ResponseEntity getLicenseKeysDownload(@PathVariable("id") long id)
+	@GetMapping("app-license-keys/{id}/download")
+	public ResponseEntity<byte[]> getAppLicenseKeysDownload(
+			@PathVariable("id") long id)
 		throws Exception {
 
 		AppLicenseKeyResource appLicenseKeyResource =
-			_getAppLicenseKeyResource();
+			_provisioningService.getAppLicenseKeyResource();
 
 		AppLicenseKey appLicenseKey = appLicenseKeyResource.getAppLicenseKey(
 			id);
@@ -90,6 +82,210 @@ public class ProvisioningRestController extends BaseRestController {
 		HttpInvoker.HttpResponse httpResponse =
 			appLicenseKeyResource.getAppLicenseKeyDownloadHttpResponse(
 				appLicenseKey.getId());
+
+		return _licenseKeyDownloadResponse(
+			httpResponse.getBinaryContent(), appLicenseKey.getHostName(),
+			appLicenseKey.getProductName(), appLicenseKey.getProductVersion());
+	}
+
+	@GetMapping("license-key/{id}")
+	public LicenseKey getLicenseKey(@PathVariable("id") long id)
+		throws Exception {
+
+		LicenseKeyResource licenseKeyResource =
+			_provisioningService.getLicenseKeyResource();
+
+		return licenseKeyResource.getLicenseKey(id);
+	}
+
+	@GetMapping("license-keys/{id}/download")
+	public ResponseEntity<byte[]> getLicenseKeysDownload(
+			@PathVariable("id") long id)
+		throws Exception {
+
+		LicenseKeyResource licenseKeyResource =
+			_provisioningService.getLicenseKeyResource();
+
+		LicenseKey licenseKey = licenseKeyResource.getLicenseKey(id);
+
+		com.liferay.osb.provisioning.rest.client.http.HttpInvoker.HttpResponse
+			httpResponse = licenseKeyResource.getLicenseKeyDownloadHttpResponse(
+				licenseKey.getId());
+
+		return _licenseKeyDownloadResponse(
+			httpResponse.getBinaryContent(), licenseKey.getHostName(),
+			licenseKey.getProductName(), licenseKey.getProductVersion());
+	}
+
+	@GetMapping("order-app-license-keys/{orderId}")
+	public Page<AppLicenseKey> getOrderAppLicenseKeys(
+			@PathVariable("orderId") String orderId,
+			@RequestParam(defaultValue = "1", required = false) int page,
+			@RequestParam(defaultValue = "20", required = false) int pageSize)
+		throws Exception {
+
+		AppLicenseKeyResource appLicenseKeyResource =
+			_provisioningService.getAppLicenseKeyResource();
+
+		return appLicenseKeyResource.getAppLicenseKeysPage(
+			"", "active eq true and orderId eq '" + orderId + "'",
+			Pagination.of(page, pageSize), "");
+	}
+
+	@GetMapping("order-license-keys/{orderId}")
+	public com.liferay.osb.provisioning.rest.client.pagination.Page<LicenseKey>
+			getOrderLicenseKeys(
+				@PathVariable("orderId") String orderId,
+				@RequestParam(defaultValue = "1", required = false) int page,
+				@RequestParam(defaultValue = "20", required = false) int
+					pageSize)
+		throws Exception {
+
+		LicenseKeyResource licenseKeyResource =
+			_provisioningService.getLicenseKeyResource();
+
+		return licenseKeyResource.getLicenseKeysPage(
+			"", "assetReceiptLicenseUuid eq '" + orderId + "'",
+			com.liferay.osb.provisioning.rest.client.pagination.Pagination.of(
+				page, pageSize),
+			"");
+	}
+
+	@PostMapping("app-license-keys")
+	public AppLicenseKey postAppLicenseKeys(
+			@AuthenticationPrincipal Jwt jwt, @RequestBody String json)
+		throws Exception {
+
+		AppLicenseKey appLicenseKey = AppLicenseKey.toDTO(
+			new JSONObject(
+				json
+			).getJSONObject(
+				"licenseEntry"
+			).toString());
+
+		return _provisioningService.postAppLicenseKey(appLicenseKey, jwt);
+	}
+
+	@PostMapping("app-license-keys/{id}/deactivate")
+	public void postAppLicenseKeysDeactivate(
+			@AuthenticationPrincipal Jwt jwt, @PathVariable("id") long id)
+		throws Exception {
+
+		AppLicenseKeyResource appLicenseKeyResource =
+			_provisioningService.getAppLicenseKeyResource();
+
+		appLicenseKeyResource.putAppLicenseKeyDeactivate(
+			jwt.getClaim("username"), jwt.getClaim("sub"), new Long[] {id});
+	}
+
+	@PostMapping("cmp-beta-license-key")
+	public void postCMPBetaLicenseKey(
+			@AuthenticationPrincipal Jwt jwt, @RequestBody String json)
+		throws Exception {
+
+		AppLicenseKey appLicenseKey = AppLicenseKey.toDTO(json);
+
+		_postAppLicenseKey(
+			appLicenseKey, jwt,
+			_marketplaceService.getOrder(
+				GetterUtil.getLong(appLicenseKey.getOrderId())));
+	}
+
+	@PostMapping("dsr-beta-license-key")
+	public void postDSRBetaLicenseKey(
+			@AuthenticationPrincipal Jwt jwt, @RequestBody String json)
+		throws Exception {
+
+		AppLicenseKey appLicenseKey = AppLicenseKey.toDTO(
+			new JSONObject(
+				json
+			).getJSONObject(
+				"licenseEntry"
+			).toString());
+
+		Order order = _marketplaceService.getOrder(
+			GetterUtil.getLong(appLicenseKey.getOrderId()));
+
+		_postAppLicenseKey(appLicenseKey, jwt, order);
+
+		_provisionAnalyticsWorkspace(new JSONObject(json), order);
+	}
+
+	@PostMapping("license-key-type-free")
+	public LicenseKey postLicenseKeyTypeFree(@RequestBody String json)
+		throws Exception {
+
+		LicenseKeyResource licenseKeyResource =
+			_provisioningService.getLicenseKeyResource();
+
+		LicenseKey licenseKey = licenseKeyResource.postLicenseKeyTypeFree(
+			LicenseKey.toDTO(json));
+
+		_marketplaceService.completeOrder(
+			GetterUtil.getLong(licenseKey.getAssetReceiptLicenseUuid()),
+			MarketplaceConstants.ORDER_PAYMENT_STATUS_NOT_REQUIRED);
+
+		return licenseKey;
+	}
+
+	@PostMapping("license-key-type-free-domains-check")
+	public void postLicenseKeyTypeFreeDomainCheck(@RequestBody String json)
+		throws Exception {
+
+		LicenseKey licenseKey = LicenseKey.toDTO(json);
+
+		LicenseKeyResource licenseKeyResource =
+			_provisioningService.getLicenseKeyResource();
+
+		com.liferay.osb.provisioning.rest.client.pagination.Page<LicenseKey>
+			licenseKeysPage = licenseKeyResource.getLicenseKeysPage(
+				null,
+				StringBundler.concat(
+					"domains eq '", licenseKey.getDomains(), "' and owner eq '",
+					licenseKey.getOwner(), "'"),
+				com.liferay.osb.provisioning.rest.client.pagination.Pagination.
+					of(1, 20),
+				null);
+
+		if (licenseKeysPage.fetchFirstItem() != null) {
+			throw new ResponseStatusException(
+				HttpStatus.CONFLICT,
+				"A License key was already provisioned for the owner with " +
+					"this domain");
+		}
+	}
+
+	@PostMapping("license-key-type-free/{id}/renew")
+	public void postLicenseKeyTypeFreeRenew(@PathVariable long id)
+		throws Exception {
+
+		LicenseKeyResource licenseKeyResource =
+			_provisioningService.getLicenseKeyResource();
+
+		LicenseKey licenseKey = licenseKeyResource.getLicenseKey(id);
+
+		Date expirationDate = licenseKey.getExpirationDate();
+
+		Instant instant = expirationDate.toInstant();
+
+		if (instant.isAfter(Instant.now())) {
+			return;
+		}
+
+		licenseKeyResource.postLicenseKeyTypeFree(
+			new LicenseKey() {
+				{
+					setAssetReceiptLicenseUuid(
+						licenseKey.getAssetReceiptLicenseUuid());
+					setDomains(licenseKey.getDomains());
+					setOwner(licenseKey.getOwner());
+				}
+			});
+	}
+
+	private ResponseEntity<byte[]> _licenseKeyDownloadResponse(
+		byte[] content, String hostName, String productName,
+		String productVersion) {
 
 		HttpHeaders httpHeaders = new HttpHeaders();
 
@@ -101,137 +297,113 @@ public class ProvisioningRestController extends BaseRestController {
 		StringBuilder sb = new StringBuilder();
 
 		sb.append("activation-key-");
-		sb.append(appLicenseKey.getProductName());
-		sb.append(StringPool.DASH);
-		sb.append(appLicenseKey.getProductVersion());
-		sb.append(StringPool.DASH);
-		sb.append(appLicenseKey.getHostName());
+		sb.append(productName);
+		sb.append("-");
+		sb.append(productVersion);
+		sb.append("-");
+		sb.append(hostName);
 		sb.append(".xml");
 
+		String fileName = sb.toString();
+
+		fileName = fileName.replaceAll(" ", "-");
+
 		httpHeaders.setContentDispositionFormData(
-			"attachment",
-			sb.toString(
-			).replaceAll(
-				StringPool.SPACE, StringPool.DASH
-			).toLowerCase());
+			"attachment", StringUtil.toLowerCase(fileName));
 
 		httpHeaders.setContentType(MediaType.TEXT_XML);
 
-		return new ResponseEntity(
-			httpResponse.getBinaryContent(), httpHeaders, HttpStatus.OK);
+		return new ResponseEntity<>(content, httpHeaders, HttpStatus.OK);
 	}
 
-	@GetMapping("order-license-keys/{orderId}")
-	public Page<AppLicenseKey> getOrderLicenseKeys(
-			@PathVariable("orderId") String orderId,
-			@RequestParam(defaultValue = "1", required = false) int page,
-			@RequestParam(defaultValue = "20", required = false) int pageSize)
+	private void _postAppLicenseKey(
+			AppLicenseKey appLicenseKey, Jwt jwt, Order order)
 		throws Exception {
 
-		AppLicenseKeyResource appLicenseKeyResource =
-			_getAppLicenseKeyResource();
+		if (Objects.equals(appLicenseKey.getHostName(), null) &&
+			Objects.equals(appLicenseKey.getIpAddresses(), null) &&
+			Objects.equals(appLicenseKey.getMacAddresses(), null)) {
 
-		return appLicenseKeyResource.getAppLicenseKeysPage(
-			"", "active eq true and orderId eq '" + orderId + "'",
-			Pagination.of(page, pageSize), "");
+			throw new ResponseStatusException(
+				HttpStatus.BAD_REQUEST,
+				"At least one of the following fields is required: host " +
+					"name, IP addresses, or MAC addresses");
+		}
+
+		ProductPurchase[] productPurchases =
+			_koroneikiService.postAccountProductPurchases(
+				jwt, "3 Months Limited Beta", order);
+
+		ProductPurchase productPurchase = productPurchases[0];
+
+		if (productPurchase == null) {
+			return;
+		}
+
+		Map<String, String> productSpecificationsMap =
+			_marketplaceService.getProductSpecificationsMap(
+				_marketplaceService.getOrderProductId(order));
+
+		if (Validator.isNotNull(
+				productSpecificationsMap.get("app-entry-uuid"))) {
+
+			appLicenseKey.setProductId(
+				productSpecificationsMap.get("app-entry-uuid"));
+		}
+
+		_provisioningService.postAppLicenseKey(
+			appLicenseKey, jwt, productPurchase);
+
+		_marketplaceService.completeOrder(
+			order.getId(),
+			MarketplaceConstants.ORDER_PAYMENT_STATUS_NOT_REQUIRED);
 	}
 
-	@PostMapping("license-keys")
-	public AppLicenseKey postLicenseKeys(
-			@AuthenticationPrincipal Jwt jwt, @RequestBody String json)
+	private void _provisionAnalyticsWorkspace(
+			JSONObject jsonObject, Order order)
 		throws Exception {
 
-		JSONObject jsonObject = new JSONObject(json);
+		String analyticsProject = _analyticsService.getCorpProjectUuid(
+			order.getAccountExternalReferenceCode());
 
-		AppLicenseKey appLicenseKey = AppLicenseKey.toDTO(
-			jsonObject.getJSONObject(
-				"licenseEntry"
-			).toString());
+		if (analyticsProject == null) {
+			JSONObject analyticsFormJSONObject = jsonObject.getJSONObject(
+				"analyticsForm");
 
-		appLicenseKey.setActive(true);
-		appLicenseKey.setCreateDate(new Date());
+			analyticsFormJSONObject.put(
+				"corpProjectUuid", order.getAccountExternalReferenceCode());
 
-		ProductPurchase productPurchase = _koroneikiService.getProductPurchase(
-			appLicenseKey.getProductPurchaseKey());
-
-		Date expirationDate = productPurchase.getEndDate();
-
-		if (productPurchase.getPerpetual()) {
-			expirationDate = Date.from(
-				ZonedDateTime.now(
-				).plusYears(
-					100
-				).toInstant());
+			analyticsProject = _analyticsService.provision(
+				analyticsFormJSONObject);
 		}
 
-		appLicenseKey.setExpirationDate(expirationDate);
-
-		AppLicenseKey.LicenseType licenseType =
-			AppLicenseKey.LicenseType.PRODUCTION;
-
-		appLicenseKey.setLicenseType(licenseType);
-
-		appLicenseKey.setOwner((String)jwt.getClaim("username"));
-
-		if (appLicenseKey.getProductId() == null) {
-			appLicenseKey.setProductId(productPurchase.getProductKey());
-		}
-
-		appLicenseKey.setProductName(
-			productPurchase.getProduct(
-			).getName());
-		appLicenseKey.setProductVersion("1");
-
-		Date startDate = productPurchase.getStartDate();
-
-		if (startDate == null) {
-			startDate = new Date();
-		}
-
-		appLicenseKey.setStartDate(startDate);
-		appLicenseKey.setUserName((String)jwt.getClaim("username"));
-		appLicenseKey.setUserUuid((String)jwt.getClaim("sub"));
-
-		AppLicenseKeyResource appLicenseKeyResource =
-			_getAppLicenseKeyResource();
-
-		appLicenseKey = appLicenseKeyResource.postAppLicenseKey(
-			jwt.getClaim("username"), jwt.getClaim("sub"), appLicenseKey);
-
-		if (_log.isInfoEnabled()) {
-			_log.info("Created app license key " + appLicenseKey);
-		}
-
-		return appLicenseKey;
+		_marketplaceService.updateOrder(
+			HashMapBuilder.put(
+				"order-metadata",
+				new JSONObject(
+					GetterUtil.get(
+						order.getCustomFields(
+						).get(
+							"order-metadata"
+						),
+						"{}")
+				).put(
+					"analyticsProject", new JSONObject(analyticsProject)
+				).toString()
+			).build(),
+			order.getId(), MarketplaceConstants.ORDER_STATUS_COMPLETED);
 	}
 
-	private AppLicenseKeyResource _getAppLicenseKeyResource() throws Exception {
-		return AppLicenseKeyResource.builder(
-		).header(
-			"Authorization",
-			_liferayOAuth2AccessTokenManager.getAuthorization(
-				"external-provisioning")
-		).endpoint(
-			_externalProvisioningHomePageURL
-		).build();
-	}
-
-	private static final Log _log = LogFactory.getLog(
-		ProvisioningRestController.class);
-
-	@Value("${external.provisioning.oauth2.headless.server.home.page.url}")
-	private URL _externalProvisioningHomePageURL;
-
-	@Value("${liferay.marketplace.koroneiki.auth.token}")
-	private String _koroneikiAuthToken;
-
-	@Value("${liferay.marketplace.koroneiki.auth.url}")
-	private URL _koroneikiAuthURL;
+	@Autowired
+	private AnalyticsService _analyticsService;
 
 	@Autowired
 	private KoroneikiService _koroneikiService;
 
 	@Autowired
-	private LiferayOAuth2AccessTokenManager _liferayOAuth2AccessTokenManager;
+	private MarketplaceService _marketplaceService;
+
+	@Autowired
+	private ProvisioningService _provisioningService;
 
 }

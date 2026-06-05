@@ -10,12 +10,14 @@ import com.liferay.portal.kernel.util.PortalRunMode;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.search.document.Document;
 import com.liferay.portal.search.document.DocumentBuilder;
+import com.liferay.portal.search.document.DocumentBuilderFactory;
 import com.liferay.portal.search.engine.adapter.document.BulkDocumentRequest;
 import com.liferay.portal.search.engine.adapter.document.IndexDocumentRequest;
 import com.liferay.portal.search.engine.adapter.document.UpdateDocumentRequest;
 import com.liferay.portal.search.index.IndexNameBuilder;
 import com.liferay.portal.search.script.ScriptBuilder;
 import com.liferay.portal.search.script.ScriptType;
+import com.liferay.portal.search.script.Scripts;
 import com.liferay.portal.workflow.metrics.internal.search.constants.WorkflowMetricsIndexTypeConstants;
 import com.liferay.portal.workflow.metrics.internal.search.index.util.WorkflowMetricsIndexerUtil;
 import com.liferay.portal.workflow.metrics.model.AddProcessRequest;
@@ -78,7 +80,7 @@ public class ProcessWorkflowMetricsIndexerImpl
 
 	@Override
 	public Document addProcess(AddProcessRequest addProcessRequest) {
-		DocumentBuilder documentBuilder = documentBuilderFactory.builder();
+		DocumentBuilder documentBuilder = DocumentBuilderFactory.builder();
 
 		documentBuilder.setValue(
 			"active", addProcessRequest.isActive()
@@ -121,7 +123,7 @@ public class ProcessWorkflowMetricsIndexerImpl
 
 	@Override
 	public void deleteProcess(DeleteProcessRequest deleteProcessRequest) {
-		DocumentBuilder documentBuilder = documentBuilderFactory.builder();
+		DocumentBuilder documentBuilder = DocumentBuilderFactory.builder();
 
 		documentBuilder.setLong(
 			"companyId", deleteProcessRequest.getCompanyId()
@@ -152,7 +154,7 @@ public class ProcessWorkflowMetricsIndexerImpl
 
 	@Override
 	public Document updateProcess(UpdateProcessRequest updateProcessRequest) {
-		DocumentBuilder documentBuilder = documentBuilderFactory.builder();
+		DocumentBuilder documentBuilder = DocumentBuilderFactory.builder();
 
 		if (!searchCapabilities.isWorkflowMetricsSupported()) {
 			return documentBuilder.build();
@@ -201,7 +203,7 @@ public class ProcessWorkflowMetricsIndexerImpl
 			() -> {
 				updateDocument(document);
 
-				ScriptBuilder scriptBuilder = scripts.builder();
+				ScriptBuilder scriptBuilder = Scripts.INSTANCE.builder();
 
 				UpdateDocumentRequest updateDocumentRequest =
 					new UpdateDocumentRequest(
@@ -236,7 +238,7 @@ public class ProcessWorkflowMetricsIndexerImpl
 	private Document _createWorkflowMetricsInstanceDocument(
 		long companyId, long processId) {
 
-		DocumentBuilder documentBuilder = documentBuilderFactory.builder();
+		DocumentBuilder documentBuilder = DocumentBuilderFactory.builder();
 
 		documentBuilder.setValue(
 			"active", true

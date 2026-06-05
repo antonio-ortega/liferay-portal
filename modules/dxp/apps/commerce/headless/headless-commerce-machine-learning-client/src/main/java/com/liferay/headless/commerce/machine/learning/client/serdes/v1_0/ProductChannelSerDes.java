@@ -325,3 +325,4 @@ public class ProductChannelSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:511511157

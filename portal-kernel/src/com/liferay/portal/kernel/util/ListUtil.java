@@ -5,10 +5,10 @@
 
 package com.liferay.portal.kernel.util;
 
+import com.liferay.petra.io.unsync.UnsyncBufferedReader;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.bean.BeanPropertiesUtil;
-import com.liferay.portal.kernel.io.unsync.UnsyncBufferedReader;
 
 import java.io.File;
 import java.io.FileReader;
@@ -33,6 +33,7 @@ import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.IntFunction;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.function.ToLongFunction;
@@ -367,6 +368,32 @@ public class ListUtil {
 
 	public static List<String> fromString(String s, String delimiter) {
 		return fromArray(StringUtil.split(s, delimiter));
+	}
+
+	public static <E> E[] getPreviousAndNext(
+		List<E> list, Predicate<E> predicate, IntFunction<E[]> intFunction) {
+
+		E[] previousAndNext = intFunction.apply(3);
+
+		for (int i = 0; i < list.size(); i++) {
+			E element = list.get(i);
+
+			if (predicate.test(element)) {
+				if (i > 0) {
+					previousAndNext[0] = list.get(i - 1);
+				}
+
+				previousAndNext[1] = element;
+
+				if (i < (list.size() - 1)) {
+					previousAndNext[2] = list.get(i + 1);
+				}
+
+				break;
+			}
+		}
+
+		return previousAndNext;
 	}
 
 	public static boolean isEmpty(List<?> list) {

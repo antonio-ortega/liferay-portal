@@ -27,6 +27,11 @@
 		<field name="ctCollectionId" type="long" />
 		<field name="cacheMissEntryId" type="long" />
 	</model>
+	<model name="com.liferay.portal.tools.service.builder.test.model.CacheReplicatorEntry">
+		<field name="cacheReplicatorEntryId" type="long" />
+		<field name="companyId" type="long" />
+		<field name="name" type="String" />
+	</model>
 	<model name="com.liferay.portal.tools.service.builder.test.model.DataLimitEntry">
 		<field name="dataLimitEntryId" type="long" />
 		<field name="companyId" type="long" />
@@ -49,6 +54,15 @@
 		<field name="dslQueryEntryId" type="long" />
 		<field name="status" type="String" />
 		<field name="statusDate" type="Date" />
+	</model>
+	<model name="com.liferay.portal.tools.service.builder.test.model.DynamicQueryEntry">
+		<field name="dynamicQueryEntryId" type="long" />
+		<field name="createDate" type="Date" />
+		<field name="modifiedDate" type="Date" />
+		<field name="amount" type="long" />
+		<field name="description" type="String" />
+		<field name="name" type="String" />
+		<field name="status" type="int" />
 	</model>
 	<model name="com.liferay.portal.tools.service.builder.test.model.EagerBlobEntry">
 		<field name="uuid" type="String" />
@@ -131,8 +145,8 @@
 		<field name="headId" type="long" />
 		<field name="defaultLanguageId" type="String" />
 		<field name="lvEntryId" type="long" />
-		<field name="companyId" type="long" />
 		<field name="groupId" type="long" />
+		<field name="companyId" type="long" />
 		<field name="uniqueGroupKey" type="String" />
 	</model>
 	<model name="com.liferay.portal.tools.service.builder.test.model.LVEntryLocalization">
@@ -161,8 +175,8 @@
 		<field name="uuid" type="String" />
 		<field name="defaultLanguageId" type="String" />
 		<field name="lvEntryId" type="long" />
-		<field name="companyId" type="long" />
 		<field name="groupId" type="long" />
+		<field name="companyId" type="long" />
 		<field name="uniqueGroupKey" type="String" />
 	</model>
 	<model name="com.liferay.portal.tools.service.builder.test.model.ManyColumnsEntry">

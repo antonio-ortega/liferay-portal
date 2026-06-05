@@ -6,22 +6,17 @@
 package com.liferay.portal.search.opensearch2.internal.search.engine.adapter.search;
 
 import com.liferay.portal.kernel.search.BooleanClauseOccur;
-import com.liferay.portal.kernel.search.generic.BooleanQueryImpl;
-import com.liferay.portal.kernel.search.generic.MatchQuery;
-import com.liferay.portal.kernel.test.ReflectionTestUtil;
+import com.liferay.portal.kernel.search.BooleanQuery;
+import com.liferay.portal.kernel.search.MatchQuery;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.search.engine.adapter.search.SearchSearchRequest;
-import com.liferay.portal.search.filter.ComplexQueryBuilderFactory;
 import com.liferay.portal.search.filter.ComplexQueryPartBuilderFactory;
-import com.liferay.portal.search.internal.filter.ComplexQueryBuilderImpl;
 import com.liferay.portal.search.internal.filter.ComplexQueryPartBuilderFactoryImpl;
-import com.liferay.portal.search.internal.query.QueriesImpl;
 import com.liferay.portal.search.opensearch2.internal.OpenSearchTestRule;
 import com.liferay.portal.search.opensearch2.internal.connection.IndexName;
-import com.liferay.portal.search.opensearch2.internal.facet.FacetTranslator;
 import com.liferay.portal.search.opensearch2.internal.index.LiferayIndexFixture;
 import com.liferay.portal.search.opensearch2.internal.query.SearchAssert;
-import com.liferay.portal.search.query.Queries;
+import com.liferay.portal.search.query.QueriesUtil;
 import com.liferay.portal.search.query.Query;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
@@ -56,12 +51,6 @@ public class CommonSearchRequestBuilderAssemblerImplTest {
 		_liferayIndexFixture = new LiferayIndexFixture(_indexName);
 
 		_liferayIndexFixture.setUp();
-
-		Queries queries = new QueriesImpl();
-
-		_commonSearchRequestBuilderAssembler =
-			createCommonSearchSourceBuilderAssembler(queries);
-		_queries = queries;
 	}
 
 	@After
@@ -83,12 +72,12 @@ public class CommonSearchRequestBuilderAssemblerImplTest {
 			new MatchQuery("entryClassName", "DLFileEntry"));
 
 		_addPart(
-			"filter", _queries.term("title", "bravo"), searchSearchRequest);
+			"filter", QueriesUtil.term("title", "bravo"), searchSearchRequest);
 
 		_assertSearch(searchSearchRequest, "bravo 1");
 
 		_addPartAdditive(
-			"filter", _queries.term("entryClassName", "JournalArticle"),
+			"filter", QueriesUtil.term("entryClassName", "JournalArticle"),
 			searchSearchRequest);
 
 		_assertSearch(searchSearchRequest, "alpha 1");
@@ -108,12 +97,12 @@ public class CommonSearchRequestBuilderAssemblerImplTest {
 			new MatchQuery("entryClassName", "DLFileEntry"));
 
 		_addPart(
-			"filter", _queries.term("title", "bravo"), searchSearchRequest);
+			"filter", QueriesUtil.term("title", "bravo"), searchSearchRequest);
 
 		_assertSearch(searchSearchRequest, "bravo 1");
 
 		_addPartAdditive(
-			"must_not", _queries.term("entryClassName", "JournalArticle"),
+			"must_not", QueriesUtil.term("entryClassName", "JournalArticle"),
 			searchSearchRequest);
 
 		_assertSearch(searchSearchRequest, "bravo 1");
@@ -133,12 +122,12 @@ public class CommonSearchRequestBuilderAssemblerImplTest {
 			new MatchQuery("entryClassName", "DLFileEntry"));
 
 		_addPart(
-			"filter", _queries.term("title", "bravo"), searchSearchRequest);
+			"filter", QueriesUtil.term("title", "bravo"), searchSearchRequest);
 
 		_assertSearch(searchSearchRequest, "bravo 1");
 
 		_addPartAdditive(
-			"must", _queries.term("entryClassName", "JournalArticle"),
+			"must", QueriesUtil.term("entryClassName", "JournalArticle"),
 			searchSearchRequest);
 
 		_assertSearch(searchSearchRequest, "alpha 1");
@@ -158,12 +147,12 @@ public class CommonSearchRequestBuilderAssemblerImplTest {
 			new MatchQuery("entryClassName", "DLFileEntry"));
 
 		_addPart(
-			"filter", _queries.term("title", "bravo"), searchSearchRequest);
+			"filter", QueriesUtil.term("title", "bravo"), searchSearchRequest);
 
 		_assertSearch(searchSearchRequest, "bravo 1");
 
 		_addPartAdditive(
-			"should", _queries.term("entryClassName", "JournalArticle"),
+			"should", QueriesUtil.term("entryClassName", "JournalArticle"),
 			searchSearchRequest);
 
 		_assertSearch(searchSearchRequest, "alpha 1", "bravo 1");
@@ -179,17 +168,17 @@ public class CommonSearchRequestBuilderAssemblerImplTest {
 
 		SearchSearchRequest searchSearchRequest = _createSearchSearchRequest();
 
-		BooleanQueryImpl booleanQueryImpl = new BooleanQueryImpl();
+		BooleanQuery booleanQuery = new BooleanQuery();
 
-		booleanQueryImpl.add(
+		booleanQuery.add(
 			new MatchQuery("title", "alpha"), BooleanClauseOccur.MUST);
 
-		searchSearchRequest.setQuery(booleanQueryImpl);
+		searchSearchRequest.setQuery(booleanQuery);
 
 		_assertSearch(searchSearchRequest, "alpha 1", "alpha 2");
 
 		_addPartRoot(
-			"filter", _queries.term("entryClassName", "DLFileEntry"),
+			"filter", QueriesUtil.term("entryClassName", "DLFileEntry"),
 			searchSearchRequest);
 
 		_assertSearch(searchSearchRequest, "alpha 2");
@@ -205,17 +194,17 @@ public class CommonSearchRequestBuilderAssemblerImplTest {
 
 		SearchSearchRequest searchSearchRequest = _createSearchSearchRequest();
 
-		BooleanQueryImpl booleanQueryImpl = new BooleanQueryImpl();
+		BooleanQuery booleanQuery = new BooleanQuery();
 
-		booleanQueryImpl.add(
+		booleanQuery.add(
 			new MatchQuery("title", "alpha"), BooleanClauseOccur.MUST);
 
-		searchSearchRequest.setQuery(booleanQueryImpl);
+		searchSearchRequest.setQuery(booleanQuery);
 
 		_assertSearch(searchSearchRequest, "alpha 1", "alpha 2");
 
 		_addPartRoot(
-			"must_not", _queries.term("entryClassName", "DLFileEntry"),
+			"must_not", QueriesUtil.term("entryClassName", "DLFileEntry"),
 			searchSearchRequest);
 
 		_assertSearch(searchSearchRequest, "alpha 1");
@@ -231,17 +220,17 @@ public class CommonSearchRequestBuilderAssemblerImplTest {
 
 		SearchSearchRequest searchSearchRequest = _createSearchSearchRequest();
 
-		BooleanQueryImpl booleanQueryImpl = new BooleanQueryImpl();
+		BooleanQuery booleanQuery = new BooleanQuery();
 
-		booleanQueryImpl.add(
+		booleanQuery.add(
 			new MatchQuery("title", "alpha"), BooleanClauseOccur.MUST);
 
-		searchSearchRequest.setQuery(booleanQueryImpl);
+		searchSearchRequest.setQuery(booleanQuery);
 
 		_assertSearch(searchSearchRequest, "alpha 1", "alpha 2");
 
 		_addPartRoot(
-			"must", _queries.term("entryClassName", "DLFileEntry"),
+			"must", QueriesUtil.term("entryClassName", "DLFileEntry"),
 			searchSearchRequest);
 
 		_assertSearch(searchSearchRequest, "alpha 2");
@@ -257,17 +246,17 @@ public class CommonSearchRequestBuilderAssemblerImplTest {
 
 		SearchSearchRequest searchSearchRequest = _createSearchSearchRequest();
 
-		BooleanQueryImpl booleanQueryImpl = new BooleanQueryImpl();
+		BooleanQuery booleanQuery = new BooleanQuery();
 
-		booleanQueryImpl.add(
+		booleanQuery.add(
 			new MatchQuery("title", "alpha"), BooleanClauseOccur.MUST);
 
-		searchSearchRequest.setQuery(booleanQueryImpl);
+		searchSearchRequest.setQuery(booleanQuery);
 
 		_assertSearch(searchSearchRequest, "alpha 1", "alpha 2");
 
 		_addPartRoot(
-			"should", _queries.term("entryClassName", "DLFileEntry"),
+			"should", QueriesUtil.term("entryClassName", "DLFileEntry"),
 			searchSearchRequest);
 
 		_assertSearch(searchSearchRequest, "alpha 1", "alpha 2");
@@ -283,17 +272,17 @@ public class CommonSearchRequestBuilderAssemblerImplTest {
 
 		SearchSearchRequest searchSearchRequest = _createSearchSearchRequest();
 
-		BooleanQueryImpl booleanQueryImpl = new BooleanQueryImpl();
+		BooleanQuery booleanQuery = new BooleanQuery();
 
-		booleanQueryImpl.add(
+		booleanQuery.add(
 			new MatchQuery("title", "alpha"), BooleanClauseOccur.MUST);
 
-		searchSearchRequest.setQuery(booleanQueryImpl);
+		searchSearchRequest.setQuery(booleanQuery);
 
 		_assertSearch(searchSearchRequest, "alpha 1", "alpha 2");
 
 		_addPart(
-			"filter", _queries.term("entryClassName", "DLFileEntry"),
+			"filter", QueriesUtil.term("entryClassName", "DLFileEntry"),
 			searchSearchRequest);
 
 		_assertSearch(searchSearchRequest, "alpha 2");
@@ -309,17 +298,17 @@ public class CommonSearchRequestBuilderAssemblerImplTest {
 
 		SearchSearchRequest searchSearchRequest = _createSearchSearchRequest();
 
-		BooleanQueryImpl booleanQueryImpl = new BooleanQueryImpl();
+		BooleanQuery booleanQuery = new BooleanQuery();
 
-		booleanQueryImpl.add(
+		booleanQuery.add(
 			new MatchQuery("title", "alpha"), BooleanClauseOccur.MUST);
 
-		searchSearchRequest.setQuery(booleanQueryImpl);
+		searchSearchRequest.setQuery(booleanQuery);
 
 		_assertSearch(searchSearchRequest, "alpha 1", "alpha 2");
 
 		_addPart(
-			"must_not", _queries.term("entryClassName", "DLFileEntry"),
+			"must_not", QueriesUtil.term("entryClassName", "DLFileEntry"),
 			searchSearchRequest);
 
 		_assertSearch(searchSearchRequest, "alpha 1");
@@ -335,17 +324,17 @@ public class CommonSearchRequestBuilderAssemblerImplTest {
 
 		SearchSearchRequest searchSearchRequest = _createSearchSearchRequest();
 
-		BooleanQueryImpl booleanQueryImpl = new BooleanQueryImpl();
+		BooleanQuery booleanQuery = new BooleanQuery();
 
-		booleanQueryImpl.add(
+		booleanQuery.add(
 			new MatchQuery("title", "alpha"), BooleanClauseOccur.MUST);
 
-		searchSearchRequest.setQuery(booleanQueryImpl);
+		searchSearchRequest.setQuery(booleanQuery);
 
 		_assertSearch(searchSearchRequest, "alpha 1", "alpha 2");
 
 		_addPart(
-			"must", _queries.term("entryClassName", "DLFileEntry"),
+			"must", QueriesUtil.term("entryClassName", "DLFileEntry"),
 			searchSearchRequest);
 
 		_assertSearch(searchSearchRequest, "alpha 2");
@@ -361,17 +350,17 @@ public class CommonSearchRequestBuilderAssemblerImplTest {
 
 		SearchSearchRequest searchSearchRequest = _createSearchSearchRequest();
 
-		BooleanQueryImpl booleanQueryImpl = new BooleanQueryImpl();
+		BooleanQuery booleanQuery = new BooleanQuery();
 
-		booleanQueryImpl.add(
+		booleanQuery.add(
 			new MatchQuery("title", "alpha"), BooleanClauseOccur.MUST);
 
-		searchSearchRequest.setQuery(booleanQueryImpl);
+		searchSearchRequest.setQuery(booleanQuery);
 
 		_assertSearch(searchSearchRequest, "alpha 1", "alpha 2");
 
 		_addPart(
-			"should", _queries.term("entryClassName", "DLFileEntry"),
+			"should", QueriesUtil.term("entryClassName", "DLFileEntry"),
 			searchSearchRequest);
 
 		_assertSearch(searchSearchRequest, "alpha 1", "alpha 2");
@@ -385,17 +374,17 @@ public class CommonSearchRequestBuilderAssemblerImplTest {
 
 		SearchSearchRequest searchSearchRequest = _createSearchSearchRequest();
 
-		BooleanQueryImpl booleanQueryImpl = new BooleanQueryImpl();
+		BooleanQuery booleanQuery = new BooleanQuery();
 
-		booleanQueryImpl.add(
+		booleanQuery.add(
 			new MatchQuery("title", "alpha"), BooleanClauseOccur.MUST);
 
-		searchSearchRequest.setQuery(booleanQueryImpl);
+		searchSearchRequest.setQuery(booleanQuery);
 
 		_assertSearch(searchSearchRequest, "alpha 1", "alpha 2");
 
 		_addPartAdditiveAndRoot(
-			"filter", _queries.term("entryClassName", "DLFileEntry"),
+			"filter", QueriesUtil.term("entryClassName", "DLFileEntry"),
 			searchSearchRequest);
 
 		_assertSearch(searchSearchRequest, "alpha 2", "bravo 1");
@@ -409,17 +398,17 @@ public class CommonSearchRequestBuilderAssemblerImplTest {
 
 		SearchSearchRequest searchSearchRequest = _createSearchSearchRequest();
 
-		BooleanQueryImpl booleanQueryImpl = new BooleanQueryImpl();
+		BooleanQuery booleanQuery = new BooleanQuery();
 
-		booleanQueryImpl.add(
+		booleanQuery.add(
 			new MatchQuery("title", "alpha"), BooleanClauseOccur.MUST);
 
-		searchSearchRequest.setQuery(booleanQueryImpl);
+		searchSearchRequest.setQuery(booleanQuery);
 
 		_assertSearch(searchSearchRequest, "alpha 1", "alpha 2");
 
 		_addPartAdditiveAndRoot(
-			"must_not", _queries.term("entryClassName", "DLFileEntry"),
+			"must_not", QueriesUtil.term("entryClassName", "DLFileEntry"),
 			searchSearchRequest);
 
 		_assertSearch(searchSearchRequest, "alpha 1");
@@ -433,17 +422,17 @@ public class CommonSearchRequestBuilderAssemblerImplTest {
 
 		SearchSearchRequest searchSearchRequest = _createSearchSearchRequest();
 
-		BooleanQueryImpl booleanQueryImpl = new BooleanQueryImpl();
+		BooleanQuery booleanQuery = new BooleanQuery();
 
-		booleanQueryImpl.add(
+		booleanQuery.add(
 			new MatchQuery("title", "alpha"), BooleanClauseOccur.MUST);
 
-		searchSearchRequest.setQuery(booleanQueryImpl);
+		searchSearchRequest.setQuery(booleanQuery);
 
 		_assertSearch(searchSearchRequest, "alpha 1", "alpha 2");
 
 		_addPartAdditiveAndRoot(
-			"must", _queries.term("entryClassName", "DLFileEntry"),
+			"must", QueriesUtil.term("entryClassName", "DLFileEntry"),
 			searchSearchRequest);
 
 		_assertSearch(searchSearchRequest, "alpha 2", "bravo 1");
@@ -457,17 +446,17 @@ public class CommonSearchRequestBuilderAssemblerImplTest {
 
 		SearchSearchRequest searchSearchRequest = _createSearchSearchRequest();
 
-		BooleanQueryImpl booleanQueryImpl = new BooleanQueryImpl();
+		BooleanQuery booleanQuery = new BooleanQuery();
 
-		booleanQueryImpl.add(
+		booleanQuery.add(
 			new MatchQuery("title", "alpha"), BooleanClauseOccur.MUST);
 
-		searchSearchRequest.setQuery(booleanQueryImpl);
+		searchSearchRequest.setQuery(booleanQuery);
 
 		_assertSearch(searchSearchRequest, "alpha 1", "alpha 2");
 
 		_addPartAdditiveAndRoot(
-			"should", _queries.term("entryClassName", "DLFileEntry"),
+			"should", QueriesUtil.term("entryClassName", "DLFileEntry"),
 			searchSearchRequest);
 
 		_assertSearch(searchSearchRequest, "alpha 1", "alpha 2", "bravo 1");
@@ -488,7 +477,7 @@ public class CommonSearchRequestBuilderAssemblerImplTest {
 		_assertSearch(searchSearchRequest, "alpha 1", "alpha 2");
 
 		_addPartRoot(
-			"filter", _queries.term("entryClassName", "DLFileEntry"),
+			"filter", QueriesUtil.term("entryClassName", "DLFileEntry"),
 			searchSearchRequest);
 
 		_assertSearch(searchSearchRequest, "alpha 2");
@@ -509,7 +498,7 @@ public class CommonSearchRequestBuilderAssemblerImplTest {
 		_assertSearch(searchSearchRequest, "alpha 1", "alpha 2");
 
 		_addPartRoot(
-			"must_not", _queries.term("entryClassName", "DLFileEntry"),
+			"must_not", QueriesUtil.term("entryClassName", "DLFileEntry"),
 			searchSearchRequest);
 
 		_assertSearch(searchSearchRequest, "alpha 1");
@@ -530,7 +519,7 @@ public class CommonSearchRequestBuilderAssemblerImplTest {
 		_assertSearch(searchSearchRequest, "alpha 1", "alpha 2");
 
 		_addPartRoot(
-			"must", _queries.term("entryClassName", "DLFileEntry"),
+			"must", QueriesUtil.term("entryClassName", "DLFileEntry"),
 			searchSearchRequest);
 
 		_assertSearch(searchSearchRequest, "alpha 2");
@@ -551,7 +540,7 @@ public class CommonSearchRequestBuilderAssemblerImplTest {
 		_assertSearch(searchSearchRequest, "alpha 1", "alpha 2");
 
 		_addPartRoot(
-			"should", _queries.term("entryClassName", "DLFileEntry"),
+			"should", QueriesUtil.term("entryClassName", "DLFileEntry"),
 			searchSearchRequest);
 
 		_assertSearch(searchSearchRequest, "alpha 1", "alpha 2");
@@ -559,29 +548,6 @@ public class CommonSearchRequestBuilderAssemblerImplTest {
 
 	@Rule
 	public TestName testName = new TestName();
-
-	protected static CommonSearchRequestBuilderAssembler
-		createCommonSearchSourceBuilderAssembler(Queries queries) {
-
-		CommonSearchRequestBuilderAssembler
-			commonSearchRequestBuilderAssembler =
-				new CommonSearchRequestBuilderAssemblerImpl();
-
-		ReflectionTestUtil.setFieldValue(
-			commonSearchRequestBuilderAssembler, "_complexQueryBuilderFactory",
-			createComplexQueryBuilderFactory(queries));
-		ReflectionTestUtil.setFieldValue(
-			commonSearchRequestBuilderAssembler, "_facetTranslator",
-			new FacetTranslator());
-
-		return commonSearchRequestBuilderAssembler;
-	}
-
-	protected static ComplexQueryBuilderFactory
-		createComplexQueryBuilderFactory(Queries queries) {
-
-		return () -> new ComplexQueryBuilderImpl(queries, null);
-	}
 
 	private void _addPart(
 		String occur, Query query, SearchSearchRequest searchSearchRequest) {
@@ -649,7 +615,7 @@ public class CommonSearchRequestBuilderAssemblerImplTest {
 
 		SearchRequest.Builder builder = new SearchRequest.Builder();
 
-		_commonSearchRequestBuilderAssembler.assemble(
+		CommonSearchRequestBuilderAssembler.INSTANCE.assemble(
 			searchSearchRequest, builder);
 
 		SearchAssert.assertSearch(
@@ -674,13 +640,10 @@ public class CommonSearchRequestBuilderAssemblerImplTest {
 			).build());
 	}
 
-	private CommonSearchRequestBuilderAssembler
-		_commonSearchRequestBuilderAssembler;
 	private final ComplexQueryPartBuilderFactory
 		_complexQueryPartBuilderFactory =
 			new ComplexQueryPartBuilderFactoryImpl();
 	private IndexName _indexName;
 	private LiferayIndexFixture _liferayIndexFixture;
-	private Queries _queries;
 
 }

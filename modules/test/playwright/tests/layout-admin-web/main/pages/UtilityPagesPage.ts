@@ -107,6 +107,26 @@ export class UtilityPagesPage {
 		});
 	}
 
+	async deleteAllPages() {
+		while ((await this.page.locator('div.card-row').count()) > 0) {
+			const count = await this.page.locator('div.card-row').count();
+
+			await this.page.getByLabel('Select All Items on the Page').check();
+
+			await this.page.getByRole('button', {name: 'Delete'}).click();
+
+			await this.page
+				.locator('div.modal-content')
+				.getByRole('button', {name: 'Delete'})
+				.click();
+
+			await waitForAlert(
+				this.page,
+				`Success:You successfully deleted ${count} utility page(s).`
+			);
+		}
+	}
+
 	async deletePage(name: string) {
 		await this.clickOnAction('Delete', name);
 

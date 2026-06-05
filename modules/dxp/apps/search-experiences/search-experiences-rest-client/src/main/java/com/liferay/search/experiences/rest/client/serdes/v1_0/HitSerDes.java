@@ -303,3 +303,4 @@ public class HitSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-154092407

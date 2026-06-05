@@ -12,6 +12,73 @@
 	<property name="manifest.bundle.symbolic.name" value="com.liferay.portal.impl;singleton:=true" />
 	<property name="service.file" value="service.xml" />
 
+	<path id="rest.builder.classpath">
+		<fileset
+			dir="${sdk.dir}/dependencies/com.liferay.portal.tools.rest.builder/lib"
+			includes="*.jar"
+		/>
+	</path>
+
+	<path id="service.builder.classpath">
+		<fileset
+			dir="${sdk.dir}/dependencies/com.liferay.portal.tools.service.builder/lib"
+			includes="*.jar"
+		/>
+	</path>
+
+	<macrodef name="build-service">
+		<attribute default="portal-hbm.xml" name="hbm.file" />
+		<attribute name="service.file" />
+		<attribute default="false" name="skip.compile" />
+		<sequential>
+			<java
+				classname="com.liferay.portal.tools.service.builder.ServiceBuilder"
+				classpathref="service.builder.classpath"
+				failonerror="true"
+				fork="${fork.mode}"
+				logError="true"
+				newenvironment="${fork.mode}"
+			>
+				<jvmarg if:true="${jvm.debug}" value="${jpda.settings}" />
+				<jvmarg if:true="${jvm.debug}" value="-Dfile.encoding=UTF-8" />
+				<jvmarg if:true="${jvm.debug}" value="-XX:MaxMetaspaceSize=512m" />
+				<jvmarg if:true="${jvm.debug}" value="-Xms512m" />
+				<jvmarg if:true="${jvm.debug}" value="-Xmx1024m" />
+				<jvmarg if:true="${jvm.debug}" value="-Xss2048k" />
+				<arg value="-Dexternal-properties=com/liferay/portal/tools/dependencies/portal-tools.properties" />
+				<arg value="-Dorg.apache.commons.logging.Log=org.apache.commons.logging.impl.Log4JLogger" />
+				<arg value="service.api.dir=${basedir}/../portal-kernel/src" />
+				<arg value="service.auto.import.default.references=true" />
+				<arg value="service.auto.namespace.tables=false" />
+				<arg value="service.bean.locator.util=com.liferay.portal.kernel.bean.PortalBeanLocatorUtil" />
+				<arg value="service.build.number=1" />
+				<arg value="service.build.number.increment=true" />
+				<arg value="service.hbm.file=${basedir}/src/META-INF/@{hbm.file}" />
+				<arg value="service.impl.dir=${basedir}/src" />
+				<arg value="service.incubation.features=${service.builder.incubation.features}" />
+				<arg value="service.input.file=@{service.file}" />
+				<arg value="service.model.hints.configs=${basedir}/src/META-INF/portal-model-hints.xml" />
+				<arg value="service.model.hints.file=${basedir}/src/META-INF/portal-model-hints.xml" />
+				<arg value="service.osgi.module=false" />
+				<arg value="service.plugin.name=" />
+				<arg value="service.props.util=com.liferay.portal.kernel.util.PropsUtil" />
+				<arg value="service.resources.dir=${basedir}/src" />
+				<arg value="service.spring.file=${basedir}/src/META-INF/portal-spring.xml" />
+				<arg value="service.spring.namespaces=beans" />
+				<arg value="service.sql.dir=${basedir}/../sql" />
+				<arg value="service.sql.file=portal-tables.sql" />
+				<arg value="service.sql.indexes.file=indexes.sql" />
+				<arg value="service.sql.sequences.file=sequences.sql" />
+				<arg value="service.target.entity.name=${service.target.entity.name}" />
+				<arg value="service.test.dir=${basedir}/../modules/test/persistence-test/src/testIntegration/java" />
+			</java>
+
+			<delete file="ServiceBuilder.temp" />
+
+			<ant dir="../portal-kernel" inheritAll="false" target="compile" unless:true="@{skip.compile}" />
+		</sequential>
+	</macrodef>
+
 	<target name="build-db">
 		<ant dir="../sql" target="build-db" />
 	</target>
@@ -169,139 +236,250 @@
 		</java>
 	</target>
 
-	<target name="build-service">
-		<path id="service.builder.classpath">
-			<fileset
-				dir="${sdk.dir}/dependencies/com.liferay.portal.tools.service.builder/lib"
-				includes="*.jar"
-			/>
-		</path>
+	<target name="build-rests">
+		<tstamp>
+			<format pattern="yyyyMMddkkmmssSSS" property="build.rests.tstamp.value" />
+		</tstamp>
 
-		<property name="hbm.file" value="portal-hbm.xml" />
+		<property name="rest.builder.baseline.output.file" value="${java.io.tmpdir}/rest-builder-baseline-${build.rests.tstamp.value}" />
+
+		<java
+			classname="com.liferay.portal.tools.rest.builder.RESTBuilder"
+			classpathref="rest.builder.classpath"
+			failonerror="true"
+			fork="${fork.mode}"
+			logError="true"
+			newenvironment="${fork.mode}"
+		>
+			<jvmarg if:true="${jvm.debug}" value="${jpda.settings}" />
+			<jvmarg if:true="${jvm.debug}" value="-Dfile.encoding=UTF-8" />
+			<jvmarg if:true="${jvm.debug}" value="-XX:MaxMetaspaceSize=512m" />
+			<jvmarg if:true="${jvm.debug}" value="-Xms512m" />
+			<jvmarg if:true="${jvm.debug}" value="-Xmx1024m" />
+			<jvmarg if:true="${jvm.debug}" value="-Xss2048k" />
+			<arg value="rest.config.dirs=${basedir}/../modules" />
+			<arg if:true="${build.rests.baseline.enabled}" value="rest.builder.baseline.output.file=${rest.builder.baseline.output.file}" />
+		</java>
+
+		<if>
+			<istrue value="${build.rests.baseline.enabled}" />
+			<then>
+				<trycatch>
+					<try>
+						<if>
+							<available file="${rest.builder.baseline.output.file}" />
+							<then>
+								<loadfile
+									property="rest.builder.baseline.tasks"
+									srcfile="${rest.builder.baseline.output.file}"
+								/>
+
+								<if>
+									<isset property="rest.builder.baseline.tasks" />
+									<then>
+										<gradle-execute dir="../modules" forcedcacheenabled="false" task="${rest.builder.baseline.tasks}">
+											<arg value="--continue" />
+											<arg value="--parallel" />
+											<arg value="--quiet" />
+										</gradle-execute>
+									</then>
+								</if>
+							</then>
+						</if>
+					</try>
+					<finally>
+						<delete failonerror="false" file="${rest.builder.baseline.output.file}" />
+					</finally>
+				</trycatch>
+			</then>
+		</if>
+	</target>
+
+	<target name="build-service-counter">
+		<build-service
+			hbm.file="counter-hbm.xml"
+			service.file="${basedir}/src/com/liferay/counter/service.xml"
+		/>
+	</target>
+
+	<target name="build-service-portal">
+		<build-service
+			service.file="${basedir}/src/com/liferay/portal/service.xml"
+		/>
+	</target>
+
+	<target name="build-service-portlet-announcements">
+		<build-service
+			service.file="${basedir}/src/com/liferay/portlet/announcements/service.xml"
+		/>
+	</target>
+
+	<target name="build-service-portlet-asset">
+		<build-service
+			service.file="${basedir}/src/com/liferay/portlet/asset/service.xml"
+		/>
+	</target>
+
+	<target name="build-service-portlet-documentlibrary">
+		<build-service
+			service.file="${basedir}/src/com/liferay/portlet/documentlibrary/service.xml"
+		/>
+	</target>
+
+	<target name="build-service-portlet-expando">
+		<build-service
+			service.file="${basedir}/src/com/liferay/portlet/expando/service.xml"
+		/>
+	</target>
+
+	<target name="build-service-portlet-exportimport">
+		<build-service
+			service.file="${basedir}/src/com/liferay/portlet/exportimport/service.xml"
+		/>
+	</target>
+
+	<target name="build-service-portlet-ratings">
+		<build-service
+			service.file="${basedir}/src/com/liferay/portlet/ratings/service.xml"
+		/>
+	</target>
+
+	<target name="build-service-portlet-social">
+		<build-service
+			service.file="${basedir}/src/com/liferay/portlet/social/service.xml"
+		/>
+	</target>
+
+	<target name="build-service-portlets">
+		<build-service
+			service.file="${basedir}/src/com/liferay/portlet/announcements/service.xml"
+			skip.compile="true"
+		/>
+		<build-service
+			service.file="${basedir}/src/com/liferay/portlet/asset/service.xml"
+			skip.compile="true"
+		/>
+		<build-service
+			service.file="${basedir}/src/com/liferay/portlet/documentlibrary/service.xml"
+			skip.compile="true"
+		/>
+		<build-service
+			service.file="${basedir}/src/com/liferay/portlet/expando/service.xml"
+			skip.compile="true"
+		/>
+		<build-service
+			service.file="${basedir}/src/com/liferay/portlet/exportimport/service.xml"
+			skip.compile="true"
+		/>
+		<build-service
+			service.file="${basedir}/src/com/liferay/portlet/ratings/service.xml"
+			skip.compile="true"
+		/>
+		<build-service
+			service.file="${basedir}/src/com/liferay/portlet/social/service.xml"
+		/>
+	</target>
+
+	<target name="build-services">
+		<build-service
+			hbm.file="counter-hbm.xml"
+			service.file="${basedir}/src/com/liferay/counter/service.xml"
+			skip.compile="true"
+		/>
+		<build-service
+			service.file="${basedir}/src/com/liferay/portal/service.xml"
+			skip.compile="true"
+		/>
+		<build-service
+			service.file="${basedir}/src/com/liferay/portlet/announcements/service.xml"
+			skip.compile="true"
+		/>
+		<build-service
+			service.file="${basedir}/src/com/liferay/portlet/asset/service.xml"
+			skip.compile="true"
+		/>
+		<build-service
+			service.file="${basedir}/src/com/liferay/portlet/documentlibrary/service.xml"
+			skip.compile="true"
+		/>
+		<build-service
+			service.file="${basedir}/src/com/liferay/portlet/expando/service.xml"
+			skip.compile="true"
+		/>
+		<build-service
+			service.file="${basedir}/src/com/liferay/portlet/exportimport/service.xml"
+			skip.compile="true"
+		/>
+		<build-service
+			service.file="${basedir}/src/com/liferay/portlet/ratings/service.xml"
+			skip.compile="true"
+		/>
+		<build-service
+			service.file="${basedir}/src/com/liferay/portlet/social/service.xml"
+			skip.compile="true"
+		/>
+
+		<ant dir="../portal-kernel" inheritAll="false" target="compile" />
+
+		<tstamp>
+			<format pattern="yyyyMMddkkmmssSSS" property="build.services.tstamp.value" />
+		</tstamp>
+
+		<property name="service.builder.baseline.output.file" value="${java.io.tmpdir}/service-builder-baseline-${build.services.tstamp.value}" />
 
 		<java
 			classname="com.liferay.portal.tools.service.builder.ServiceBuilder"
 			classpathref="service.builder.classpath"
 			failonerror="true"
-			fork="true"
+			fork="${fork.mode}"
 			logError="true"
-			newenvironment="true"
+			newenvironment="${fork.mode}"
 		>
 			<jvmarg if:true="${jvm.debug}" value="${jpda.settings}" />
-			<jvmarg value="-Dfile.encoding=UTF-8" />
-			<jvmarg value="-XX:MaxMetaspaceSize=512m" />
-			<jvmarg value="-Xms512m" />
-			<jvmarg value="-Xmx1024m" />
-			<jvmarg value="-Xss2048k" />
+			<jvmarg if:true="${jvm.debug}" value="-Dfile.encoding=UTF-8" />
+			<jvmarg if:true="${jvm.debug}" value="-XX:MaxMetaspaceSize=768m" />
+			<jvmarg if:true="${jvm.debug}" value="-Xms512m" />
+			<jvmarg if:true="${jvm.debug}" value="-Xmx2048m" />
+			<jvmarg if:true="${jvm.debug}" value="-Xss2048k" />
 			<arg value="-Dexternal-properties=com/liferay/portal/tools/dependencies/portal-tools.properties" />
 			<arg value="-Dorg.apache.commons.logging.Log=org.apache.commons.logging.impl.Log4JLogger" />
-			<arg value="service.api.dir=${basedir}/../portal-kernel/src" />
-			<arg value="service.auto.import.default.references=true" />
-			<arg value="service.auto.namespace.tables=false" />
-			<arg value="service.bean.locator.util=com.liferay.portal.kernel.bean.PortalBeanLocatorUtil" />
-			<arg value="service.build.number=1" />
-			<arg value="service.build.number.increment=true" />
-			<arg value="service.hbm.file=${basedir}/src/META-INF/${hbm.file}" />
-			<arg value="service.impl.dir=${basedir}/src" />
+			<arg if:true="${build.services.baseline.enabled}" value="service.builder.baseline.output.file=${service.builder.baseline.output.file}" />
 			<arg value="service.incubation.features=${service.builder.incubation.features}" />
-			<arg value="service.input.file=${service.file}" />
-			<arg value="service.model.hints.configs=${basedir}/src/META-INF/portal-model-hints.xml" />
-			<arg value="service.model.hints.file=${basedir}/src/META-INF/portal-model-hints.xml" />
-			<arg value="service.osgi.module=false" />
-			<arg value="service.plugin.name=" />
-			<arg value="service.props.util=com.liferay.portal.kernel.util.PropsUtil" />
-			<arg value="service.resources.dir=${basedir}/src" />
-			<arg value="service.spring.file=${basedir}/src/META-INF/portal-spring.xml" />
-			<arg value="service.spring.namespaces=beans" />
-			<arg value="service.sql.dir=${basedir}/../sql" />
-			<arg value="service.sql.file=portal-tables.sql" />
-			<arg value="service.sql.indexes.file=indexes.sql" />
-			<arg value="service.sql.sequences.file=sequences.sql" />
-			<arg value="service.target.entity.name=${service.target.entity.name}" />
-			<arg value="service.test.dir=${basedir}/../modules/test/persistence-test/src/testIntegration/java" />
+			<arg value="service.input.files.dir=${basedir}/../modules" />
 		</java>
 
-		<delete file="ServiceBuilder.temp" />
+		<if>
+			<istrue value="${build.services.baseline.enabled}" />
+			<then>
+				<trycatch>
+					<try>
+						<if>
+							<available file="${service.builder.baseline.output.file}" />
+							<then>
+								<loadfile
+									property="service.builder.baseline.tasks"
+									srcfile="${service.builder.baseline.output.file}"
+								/>
 
-		<ant dir="../portal-kernel" inheritAll="false" target="compile" />
-	</target>
-
-	<target name="build-service-counter">
-		<antcall target="build-service">
-			<param name="hbm.file" value="counter-hbm.xml" />
-			<param name="service.file" value="${basedir}/src/com/liferay/counter/service.xml" />
-		</antcall>
-	</target>
-
-	<target name="build-service-portal">
-		<antcall target="build-service">
-			<param name="service.file" value="${basedir}/src/com/liferay/portal/service.xml" />
-		</antcall>
-	</target>
-
-	<target name="build-service-portlet-announcements">
-		<antcall target="build-service">
-			<param name="service.file" value="${basedir}/src/com/liferay/portlet/announcements/service.xml" />
-		</antcall>
-	</target>
-
-	<target name="build-service-portlet-asset">
-		<antcall target="build-service">
-			<param name="service.file" value="${basedir}/src/com/liferay/portlet/asset/service.xml" />
-		</antcall>
-	</target>
-
-	<target name="build-service-portlet-documentlibrary">
-		<antcall target="build-service">
-			<param name="service.file" value="${basedir}/src/com/liferay/portlet/documentlibrary/service.xml" />
-		</antcall>
-	</target>
-
-	<target name="build-service-portlet-expando">
-		<antcall target="build-service">
-			<param name="service.file" value="${basedir}/src/com/liferay/portlet/expando/service.xml" />
-		</antcall>
-	</target>
-
-	<target name="build-service-portlet-exportimport">
-		<antcall target="build-service">
-			<param name="service.file" value="${basedir}/src/com/liferay/portlet/exportimport/service.xml" />
-		</antcall>
-	</target>
-
-	<target name="build-service-portlet-ratings">
-		<antcall target="build-service">
-			<param name="service.file" value="${basedir}/src/com/liferay/portlet/ratings/service.xml" />
-		</antcall>
-	</target>
-
-	<target name="build-service-portlet-social">
-		<antcall target="build-service">
-			<param name="service.file" value="${basedir}/src/com/liferay/portlet/social/service.xml" />
-		</antcall>
-	</target>
-
-	<target name="build-service-portlets">
-		<antcall target="build-service-portlet-announcements" />
-		<antcall target="build-service-portlet-asset" />
-		<antcall target="build-service-portlet-documentlibrary" />
-		<antcall target="build-service-portlet-expando" />
-		<antcall target="build-service-portlet-exportimport" />
-		<antcall target="build-service-portlet-ratings" />
-		<antcall target="build-service-portlet-social" />
-	</target>
-
-	<target name="build-services">
-		<antcall target="build-service-counter" />
-		<antcall target="build-service-portal" />
-		<antcall target="build-service-portlets" />
-
-		<gradle-execute dir="../modules" forcedcacheenabled="false" task="buildService">
-			<arg value="--continue" />
-			<arg unless:true="${build.services.baseline.enabled}" value="--exclude-task" />
-			<arg unless:true="${build.services.baseline.enabled}" value="baseline" />
-			<arg value="-Dskip.read.only=${build.services.skip.read.only}" />
-		</gradle-execute>
+								<if>
+									<isset property="service.builder.baseline.tasks" />
+									<then>
+										<gradle-execute dir="../modules" forcedcacheenabled="false" task="${service.builder.baseline.tasks}">
+											<arg value="--continue" />
+											<arg value="--parallel" />
+											<arg value="--quiet" />
+										</gradle-execute>
+									</then>
+								</if>
+							</then>
+						</if>
+					</try>
+					<finally>
+						<delete failonerror="false" file="${service.builder.baseline.output.file}" />
+					</finally>
+				</trycatch>
+			</then>
+		</if>
 	</target>
 
 	<target name="build-upgrade-table">
@@ -550,23 +728,11 @@
 						</if>
 
 						<if>
-							<or>
-								<matches pattern="modules/test/poshi" string="${baseline.current.branch.file.names}" />
-								<not>
-									<matches pattern="\.(js|json|jsp|jspf|scss|ts|tsx)(${line.separator}|$)" string="${baseline.current.branch.file.names}" />
-								</not>
-							</or>
-							<then>
-								<property name="skip.node.task" value="true" />
-							</then>
-						</if>
-
-						<if>
 							<not>
-								<matches pattern="modules/test/playwright" string="${baseline.current.branch.file.names}" />
+								<matches pattern="${source.formatter.frontend.file.regex}" string="${baseline.current.branch.file.names}" />
 							</not>
 							<then>
-								<property name="skip.playwright.task" value="true" />
+								<property name="skip.node.task" value="true" />
 							</then>
 						</if>
 					</then>
@@ -681,15 +847,6 @@
 							</and>
 							<then>
 								<gradle-execute dir="${project.dir}/modules" task=":portalYarnCheckFormat" />
-
-								<if>
-									<not>
-										<isset property="skip.playwright.task" />
-									</not>
-									<then>
-										<gradle-execute dir="${project.dir}/modules/test/playwright" task="packageRunCheckFormat" />
-									</then>
-								</if>
 							</then>
 							<else>
 								<if>
@@ -706,15 +863,6 @@
 									<else>
 										<gradle-execute dir="${project.dir}/modules" task=":portalYarnFormat" />
 									</else>
-								</if>
-
-								<if>
-									<not>
-										<isset property="skip.playwright.task" />
-									</not>
-									<then>
-										<gradle-execute dir="${project.dir}/modules/test/playwright" task="packageRunFormat" />
-									</then>
 								</if>
 							</else>
 						</if>

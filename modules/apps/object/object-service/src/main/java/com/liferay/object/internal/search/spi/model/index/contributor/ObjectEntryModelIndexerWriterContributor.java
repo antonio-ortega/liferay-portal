@@ -18,14 +18,13 @@ import com.liferay.object.service.ObjectEntryLocalService;
 import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.object.service.ObjectFolderLocalService;
 import com.liferay.petra.sql.dsl.DSLQueryFactoryUtil;
+import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.search.ReindexCacheThreadLocal;
-import com.liferay.portal.search.batch.BatchIndexingActionable;
-import com.liferay.portal.search.batch.DynamicQueryBatchIndexingActionableFactory;
+import com.liferay.portal.search.indexer.IndexerDocumentBuilder;
 import com.liferay.portal.search.spi.model.index.contributor.ModelIndexerWriterContributor;
 import com.liferay.portal.search.spi.model.index.contributor.helper.IndexerWriterMode;
-import com.liferay.portal.search.spi.model.index.contributor.helper.ModelIndexerWriterDocumentHelper;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -38,21 +37,20 @@ import java.util.Map;
  * @author Brian Wing Shun Chan
  */
 public class ObjectEntryModelIndexerWriterContributor
-	implements ModelIndexerWriterContributor<ObjectEntry> {
+	extends ModelIndexerWriterContributor<ObjectEntry> {
 
 	public ObjectEntryModelIndexerWriterContributor(
-		DynamicQueryBatchIndexingActionableFactory
-			dynamicQueryBatchIndexingActionableFactory,
 		ObjectDefinition objectDefinition,
 		ObjectDefinitionLocalService objectDefinitionLocalService,
 		ObjectEntryLocalService objectEntryLocalService,
 		ObjectFieldLocalService objectFieldLocalService,
 		ObjectFolderLocalService objectFolderLocalService) {
 
-		_dynamicQueryBatchIndexingActionableFactory =
-			dynamicQueryBatchIndexingActionableFactory;
+		super(
+			IndexerWriterMode.UPDATE,
+			objectEntryLocalService::getIndexableActionableDynamicQuery);
+
 		_objectDefinitionLocalService = objectDefinitionLocalService;
-		_objectEntryLocalService = objectEntryLocalService;
 		_objectFieldLocalService = objectFieldLocalService;
 		_objectFolderLocalService = objectFolderLocalService;
 
@@ -62,10 +60,10 @@ public class ObjectEntryModelIndexerWriterContributor
 
 	@Override
 	public void customize(
-		BatchIndexingActionable batchIndexingActionable,
-		ModelIndexerWriterDocumentHelper modelIndexerWriterDocumentHelper) {
+		IndexableActionableDynamicQuery indexableActionableDynamicQuery,
+		IndexerDocumentBuilder indexerDocumentBuilder) {
 
-		batchIndexingActionable.setAddCriteriaMethod(
+		indexableActionableDynamicQuery.setAddCriteriaMethod(
 			dynamicQuery -> {
 				Property objectDefinitionIdProperty =
 					PropertyFactoryUtil.forName("objectDefinitionId");
@@ -73,6 +71,8 @@ public class ObjectEntryModelIndexerWriterContributor
 				dynamicQuery.add(
 					objectDefinitionIdProperty.eq(_objectDefinitionId));
 			});
+		indexableActionableDynamicQuery.setCacheKeySuffix(
+			String.valueOf(_objectDefinitionId));
 
 		ObjectDefinition objectDefinition =
 			_objectDefinitionLocalService.fetchObjectDefinition(
@@ -80,34 +80,20 @@ public class ObjectEntryModelIndexerWriterContributor
 
 		_initObjectDefinition(objectDefinition);
 
-		batchIndexingActionable.setPerformActionMethod(
+		indexableActionableDynamicQuery.setPerformActionMethod(
 			(ObjectEntry objectEntry) -> {
 				objectEntry.setObjectDefinition(objectDefinition);
 
-				batchIndexingActionable.addDocuments(
-					modelIndexerWriterDocumentHelper.getDocument(objectEntry));
+				return indexerDocumentBuilder.getDocument(objectEntry);
 			});
 	}
 
 	@Override
-	public BatchIndexingActionable getBatchIndexingActionable() {
-		return _dynamicQueryBatchIndexingActionableFactory.
-			getBatchIndexingActionable(
-				_objectEntryLocalService.getIndexableActionableDynamicQuery());
-	}
-
-	@Override
-	public long getCompanyId(ObjectEntry objectEntry) {
-		return objectEntry.getCompanyId();
-	}
-
-	@Override
-	public IndexerWriterMode getIndexerWriterMode(ObjectEntry objectEntry) {
-		return IndexerWriterMode.UPDATE;
-	}
-
-	@Override
 	public boolean shouldRun(long companyId) {
+		if (ReindexCacheThreadLocal.isFullMode()) {
+			return false;
+		}
+
 		if (_companyId == companyId) {
 			return true;
 		}
@@ -193,11 +179,8 @@ public class ObjectEntryModelIndexerWriterContributor
 	}
 
 	private final long _companyId;
-	private final DynamicQueryBatchIndexingActionableFactory
-		_dynamicQueryBatchIndexingActionableFactory;
 	private final Long _objectDefinitionId;
 	private final ObjectDefinitionLocalService _objectDefinitionLocalService;
-	private final ObjectEntryLocalService _objectEntryLocalService;
 	private final ObjectFieldLocalService _objectFieldLocalService;
 	private final ObjectFolderLocalService _objectFolderLocalService;
 

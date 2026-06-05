@@ -460,3 +460,4 @@ public class AccountCategoryForecastSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:733477658

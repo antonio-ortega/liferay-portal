@@ -6,7 +6,7 @@
 import {ISearchAssetObjectEntry} from '../../../../../src/main/resources/META-INF/resources/js/common/types/AssetType';
 import {
 	IBulkActionTaskStarterDTO,
-	IBulkActionTaskType,
+	IBulkActionType,
 } from '../../../../../src/main/resources/META-INF/resources/js/common/types/BulkActionTask';
 import {
 	displayCreateTaskErrorToast,
@@ -50,7 +50,7 @@ const MOCK_CLASS_NAME_ID = 12345;
 
 const getStarterDTO = (
 	overrides = {}
-): IBulkActionTaskStarterDTO<keyof IBulkActionTaskType> & {
+): IBulkActionTaskStarterDTO<keyof IBulkActionType> & {
 	apiURL: string;
 	classNameId: number;
 } => ({
@@ -61,7 +61,7 @@ const getStarterDTO = (
 		items: [{id: 1}, {id: 2}] as unknown as ISearchAssetObjectEntry[],
 		selectAll: false,
 	},
-	type: 'DeleteBulkAction',
+	type: 'DeleteObjectBulkSelectionAction',
 	...overrides,
 });
 
@@ -99,7 +99,7 @@ describe('BulkActionTaskStarter', () => {
 			expect(composeCreateTaskURL).toHaveBeenCalledWith(
 				dto.apiURL,
 				dto.selectedData,
-				false
+				dto.type
 			);
 		});
 
@@ -111,13 +111,15 @@ describe('BulkActionTaskStarter', () => {
 			expect(composeCreateTaskURL).toHaveBeenCalledWith(
 				dto.apiURL,
 				dto.selectedData,
-				true
+				'DownloadBulkAction'
 			);
 		});
 	});
 
 	describe('onCreateSuccess', () => {
-		const mockResponse = {data: {id: 987}};
+		const mockResponse = {
+			data: {id: 987, type: 'DeleteObjectBulkSelectionAction'},
+		};
 
 		it('calls onCreateTaskSuccess and overrides default toast when specified', () => {
 			const onCreateSuccess = jest.fn();
@@ -169,9 +171,29 @@ describe('BulkActionTaskStarter', () => {
 			starter.onCreateSuccess(mockResponse as any);
 
 			expect(getBulkActionTaskMessage).toHaveBeenCalledWith(
-				'DeleteBulkAction',
+				'DeleteObjectBulkSelectionAction',
 				'info',
-				expect.any(Object)
+				expect.any(Object),
+				undefined
+			);
+		});
+
+		it('displays a toast with the correct message when additionalData is provided', () => {
+			const additionalData = {assetName: 'test-asset'};
+			const starter = new BulkActionTaskStarter(
+				getStarterDTO({additionalData})
+			);
+			(getBulkActionTaskMessage as jest.Mock).mockReturnValue(
+				'mock-message'
+			);
+
+			starter.onCreateSuccess(mockResponse as any);
+
+			expect(getBulkActionTaskMessage).toHaveBeenCalledWith(
+				'DeleteObjectBulkSelectionAction',
+				'info',
+				expect.any(Object),
+				additionalData
 			);
 		});
 

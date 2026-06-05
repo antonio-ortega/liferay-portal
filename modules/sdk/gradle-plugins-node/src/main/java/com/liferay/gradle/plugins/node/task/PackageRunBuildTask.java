@@ -47,10 +47,18 @@ public class PackageRunBuildTask extends PackageRunTask {
 		}
 
 		File file = new File(
-			portalRootDir, "modules/_node-scripts/package.json");
+			portalRootDir, "modules/frontend-sdk/node-scripts/package.json");
 
 		if (!file.exists()) {
-			return null;
+
+			// Backwards compatibility
+
+			file = new File(
+				portalRootDir, "modules/_node-scripts/package.json");
+
+			if (!file.exists()) {
+				return null;
+			}
 		}
 
 		return file;

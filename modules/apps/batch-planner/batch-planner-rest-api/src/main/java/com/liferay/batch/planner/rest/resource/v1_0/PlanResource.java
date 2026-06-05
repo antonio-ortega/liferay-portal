@@ -145,3 +145,4 @@ public interface PlanResource {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:1418213845

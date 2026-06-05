@@ -10,6 +10,7 @@ import com.liferay.depot.constants.DepotConstants;
 import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.service.DepotEntryLocalService;
 import com.liferay.exportimport.kernel.service.StagingLocalService;
+import com.liferay.exportimport.test.util.LazyReferencingTestUtil;
 import com.liferay.headless.admin.site.client.dto.v1_0.ContentPageSpecification;
 import com.liferay.headless.admin.site.client.dto.v1_0.ContentPageTemplate;
 import com.liferay.headless.admin.site.client.dto.v1_0.ContentPageTemplateSettings;
@@ -27,9 +28,11 @@ import com.liferay.headless.admin.site.client.pagination.Page;
 import com.liferay.headless.admin.site.client.problem.Problem;
 import com.liferay.headless.admin.site.client.resource.v1_0.PageTemplateResource;
 import com.liferay.headless.admin.site.resource.v1_0.test.util.AssetTestUtil;
+import com.liferay.headless.admin.site.resource.v1_0.test.util.FileEntryTestUtil;
 import com.liferay.headless.admin.site.resource.v1_0.test.util.LayoutPageTemplateEntryTestUtil;
 import com.liferay.headless.admin.site.resource.v1_0.test.util.PageSpecificationsTestUtil;
 import com.liferay.headless.admin.site.resource.v1_0.test.util.SettingsTestUtil;
+import com.liferay.headless.admin.site.resource.v1_0.test.util.ThumbnailURLReferenceUtil;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateCollectionTypeConstants;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateCollection;
@@ -45,7 +48,6 @@ import com.liferay.petra.function.UnsafeRunnable;
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.lazy.referencing.LazyReferencingThreadLocal;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
@@ -68,15 +70,18 @@ import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.search.test.util.IdempotentRetryAssert;
+import com.liferay.portal.test.log.LogCapture;
+import com.liferay.portal.test.log.LoggerTestUtil;
 import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
-import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -84,12 +89,11 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -110,33 +114,6 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 			new LiferayIntegrationTestRule(),
 			PermissionCheckerMethodTestRule.INSTANCE);
 
-	@Before
-	@Override
-	public void setUp() throws Exception {
-		super.setUp();
-
-		_pageTemplateResource.setContextAcceptLanguage(
-			new AcceptLanguage() {
-
-				@Override
-				public List<Locale> getLocales() {
-					return Arrays.asList(LocaleUtil.getDefault());
-				}
-
-				@Override
-				public String getPreferredLanguageId() {
-					return LocaleUtil.toLanguageId(LocaleUtil.getDefault());
-				}
-
-				@Override
-				public Locale getPreferredLocale() {
-					return LocaleUtil.getDefault();
-				}
-
-			});
-		_pageTemplateResource.setContextUser(TestPropsValues.getUser());
-	}
-
 	@Ignore
 	@Override
 	@Test
@@ -153,12 +130,12 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 		_testDeleteSitePageTemplate(
 			testGroup, pageTemplate.getExternalReferenceCode());
 
-		_enableLocalStaging();
+		_enableLocalStaging(irrelevantGroup);
 
 		_assertProblemException(
-			"BAD_REQUEST",
+			"BAD_REQUEST", null,
 			() -> pageTemplateResource.deleteSitePageTemplate(
-				testGroup.getExternalReferenceCode(),
+				irrelevantGroup.getExternalReferenceCode(),
 				pageTemplate.getExternalReferenceCode()));
 
 		_withCompanyGroupWidgetPageTemplate(
@@ -172,7 +149,7 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 
 		_withDepotEntry(
 			group -> _assertProblemException(
-				"BAD_REQUEST",
+				"BAD_REQUEST", null,
 				() -> pageTemplateResource.deleteSitePageTemplate(
 					group.getExternalReferenceCode(),
 					RandomTestUtil.randomString())));
@@ -193,7 +170,7 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 			_getWidgetPageTemplate(testGroup));
 
 		_assertProblemException(
-			"NOT_FOUND",
+			"NOT_FOUND", null,
 			() -> pageTemplateResource.getSitePageTemplate(
 				testGroup.getExternalReferenceCode(),
 				RandomTestUtil.randomString()));
@@ -208,7 +185,7 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 
 		_withDepotEntry(
 			group -> _assertProblemException(
-				"BAD_REQUEST",
+				"BAD_REQUEST", null,
 				() -> pageTemplateResource.getSitePageTemplate(
 					group.getExternalReferenceCode(),
 					RandomTestUtil.randomString())));
@@ -253,12 +230,11 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 
 		_withDepotEntry(
 			group -> _assertProblemException(
-				"BAD_REQUEST",
+				"BAD_REQUEST", null,
 				() -> _getSitePageTemplatesPageTotalCount(
 					group.getExternalReferenceCode())));
 	}
 
-	@Ignore
 	@Override
 	@Test
 	public void testGetSitePageTemplatesPageWithSortDateTime()
@@ -267,14 +243,12 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 		super.testGetSitePageTemplatesPageWithSortDateTime();
 	}
 
-	@Ignore
 	@Override
 	@Test
 	public void testGetSitePageTemplatesPageWithSortDouble() throws Exception {
 		super.testGetSitePageTemplatesPageWithSortDouble();
 	}
 
-	@Ignore
 	@Override
 	@Test
 	public void testGetSitePageTemplatesPageWithSortInteger() throws Exception {
@@ -311,12 +285,12 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 		_enableLocalStaging();
 
 		_assertProblemException(
-			"BAD_REQUEST",
+			"BAD_REQUEST", null,
 			() -> _testPatchSitePageTemplate(
 				contentPageTemplate, testGroup.getExternalReferenceCode()));
 
 		_assertProblemException(
-			"BAD_REQUEST",
+			"BAD_REQUEST", null,
 			() -> _testPatchSitePageTemplate(
 				widgetPageTemplate, testGroup.getExternalReferenceCode()));
 
@@ -332,7 +306,7 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 					group.getExternalReferenceCode());
 
 				_assertProblemException(
-					"BAD_REQUEST",
+					"BAD_REQUEST", null,
 					() -> {
 						ContentPageTemplate curContentPageTemplate =
 							_getContentPageTemplate(group);
@@ -346,7 +320,7 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 
 		_withDepotEntry(
 			group -> _assertProblemException(
-				"BAD_REQUEST",
+				"BAD_REQUEST", null,
 				() -> {
 					PageTemplate pageTemplate = _getPageTemplate(group);
 
@@ -395,7 +369,7 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 		_enableLocalStaging();
 
 		_assertProblemException(
-			"BAD_REQUEST",
+			"BAD_REQUEST", null,
 			() -> _postSitePageTemplate(
 				_getPageTemplate(testGroup),
 				testGroup.getExternalReferenceCode()));
@@ -407,7 +381,7 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 					group.getExternalReferenceCode());
 
 				_assertProblemException(
-					"BAD_REQUEST",
+					"BAD_REQUEST", null,
 					() -> pageTemplateResource.postSitePageTemplate(
 						group.getExternalReferenceCode(),
 						_getContentPageTemplate(group)));
@@ -415,7 +389,7 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 
 		_withDepotEntry(
 			group -> _assertProblemException(
-				"BAD_REQUEST",
+				"BAD_REQUEST", null,
 				() -> pageTemplateResource.postSitePageTemplate(
 					group.getExternalReferenceCode(),
 					_getPageTemplate(group))));
@@ -542,12 +516,12 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 		_enableLocalStaging();
 
 		_assertProblemException(
-			"BAD_REQUEST",
+			"BAD_REQUEST", null,
 			() -> _testPutSitePageTemplate(
 				contentPageTemplate, testGroup.getExternalReferenceCode()));
 
 		_assertProblemException(
-			"BAD_REQUEST",
+			"BAD_REQUEST", null,
 			() -> _testPutSitePageTemplate(
 				widgetPageTemplate, testGroup.getExternalReferenceCode()));
 
@@ -563,7 +537,7 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 					group.getExternalReferenceCode());
 
 				_assertProblemException(
-					"BAD_REQUEST",
+					"BAD_REQUEST", null,
 					() -> {
 						ContentPageTemplate curContentPageTemplate =
 							_getContentPageTemplate(group);
@@ -577,7 +551,7 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 
 		_withDepotEntry(
 			group -> _assertProblemException(
-				"BAD_REQUEST",
+				"BAD_REQUEST", null,
 				() -> {
 					PageTemplate pageTemplate = _getPageTemplate(group);
 
@@ -592,7 +566,7 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 		return new String[] {
 			"active", "description_i18n", "externalReferenceCode", "keywords",
 			"name", "name_i18n", "pageTemplateSet", "pageTemplateSettings",
-			"taxonomyCategoryItemExternalReferences"
+			"taxonomyCategoryBriefs"
 		};
 	}
 
@@ -680,27 +654,6 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 			pageTemplateSet.getExternalReferenceCode(), pageTemplate);
 	}
 
-	private static com.liferay.headless.admin.site.dto.v1_0.PageTemplate
-		_toPageTemplate(PageTemplate pageTemplate) {
-
-		if (pageTemplate == null) {
-			return null;
-		}
-
-		return com.liferay.headless.admin.site.dto.v1_0.PageTemplate.toDTO(
-			pageTemplate.toString());
-	}
-
-	private static PageTemplate _toPageTemplate(
-		com.liferay.headless.admin.site.dto.v1_0.PageTemplate pageTemplate) {
-
-		if (pageTemplate == null) {
-			return null;
-		}
-
-		return PageTemplate.toDTO(pageTemplate.toString());
-	}
-
 	private FileEntry _addPortletFileEntry(long folderId) throws Exception {
 		Class<?> clazz = getClass();
 
@@ -752,7 +705,7 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 		throws Exception {
 
 		_assertProblemException(
-			"BAD_REQUEST",
+			"BAD_REQUEST", "The page template must be of type basic",
 			() -> pageTemplateResource.postSitePageTemplatePageSpecification(
 				testGroup.getExternalReferenceCode(),
 				pageTemplateExternalReferenceCode,
@@ -764,7 +717,8 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 	}
 
 	private void _assertProblemException(
-			String status, UnsafeRunnable<Exception> unsafeRunnable)
+			String expectedStatus, String expectedTitle,
+			UnsafeRunnable<Exception> unsafeRunnable)
 		throws Exception {
 
 		try {
@@ -775,8 +729,8 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 		catch (Problem.ProblemException problemException) {
 			Problem problem = problemException.getProblem();
 
-			Assert.assertEquals(status, problem.getStatus());
-			Assert.assertNull(problem.getTitle());
+			Assert.assertEquals(expectedStatus, problem.getStatus());
+			Assert.assertEquals(expectedTitle, problem.getTitle());
 		}
 	}
 
@@ -806,10 +760,22 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 	}
 
 	private void _enableLocalStaging() throws Exception {
-		_stagingLocalService.enableLocalStaging(
-			TestPropsValues.getUserId(), testGroup, true, false,
-			ServiceContextTestUtil.getServiceContext(
-				testGroup, TestPropsValues.getUserId()));
+		_enableLocalStaging(testGroup);
+	}
+
+	private void _enableLocalStaging(Group group) throws Exception {
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				"com.liferay.batch.engine.internal." +
+					"BatchEngineImportTaskExecutorImpl",
+				LoggerTestUtil.OFF)) {
+
+			_stagingLocalService.enableLocalStaging(
+				TestPropsValues.getUserId(), group, true, false,
+				ServiceContextTestUtil.getServiceContext(
+					group, TestPropsValues.getUserId()));
+		}
+
+		Assert.assertTrue(group.hasStagingGroup());
 	}
 
 	private ContentPageTemplate _getContentPageTemplate(Group group)
@@ -834,8 +800,8 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 						setType(Type.CONTENT_PAGE_TEMPLATE_SETTINGS);
 					}
 				};
-				taxonomyCategoryItemExternalReferences =
-					AssetTestUtil.randomTaxonomyCategoryItemExternalReferences(
+				taxonomyCategoryBriefs =
+					AssetTestUtil.randomTaxonomyCategoryBriefs(
 						testCompany.getGroupId(), serviceContext);
 				type = Type.CONTENT_PAGE_TEMPLATE;
 				uuid = StringUtil.toLowerCase(RandomTestUtil.randomString());
@@ -879,11 +845,12 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 		).authentication(
 			user.getEmailAddress(), PropsValues.DEFAULT_ADMIN_PASSWORD
 		).endpoint(
-			testCompany.getVirtualHostname(), 8080, "http"
+			testCompany.getVirtualHostname(),
+			PortalUtil.getPortalServerPort(false), "http"
 		).locale(
 			LocaleUtil.getDefault()
 		).parameters(
-			"nestedFields", "pageSpecifications,thumbnail"
+			"nestedFields", "pageSpecifications,thumbnailURLReference"
 		).build();
 	}
 
@@ -1014,8 +981,8 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 				).build();
 				pageTemplateSet = _getPageTemplateSet(group);
 				pageTemplateSettings = _getWidgetPageTemplateSettings();
-				taxonomyCategoryItemExternalReferences =
-					AssetTestUtil.randomTaxonomyCategoryItemExternalReferences(
+				taxonomyCategoryBriefs =
+					AssetTestUtil.randomTaxonomyCategoryBriefs(
 						testCompany.getGroupId(), serviceContext);
 				type = PageTemplate.Type.WIDGET_PAGE_TEMPLATE;
 				uuid = StringUtil.toLowerCase(RandomTestUtil.randomString());
@@ -1093,10 +1060,14 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 
 			Assert.fail();
 		}
-		catch (UnsupportedOperationException unsupportedOperationException) {
+		catch (Problem.ProblemException problemException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(unsupportedOperationException);
+				_log.debug(problemException);
 			}
+
+			Problem problem = problemException.getProblem();
+
+			Assert.assertEquals("IllegalArgumentException", problem.getType());
 		}
 
 		Assert.assertNull(
@@ -1106,7 +1077,8 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 					testGroup.getGroupId()));
 
 		try (SafeCloseable safeCloseable =
-				LazyReferencingThreadLocal.setEnabledWithSafeCloseable(true)) {
+				LazyReferencingTestUtil.setLazyReferencingWithSafeCloseable(
+					true)) {
 
 			PageTemplate pageTemplate = unsafeFunction.apply(pageTemplateSet);
 
@@ -1144,7 +1116,7 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 					pageTemplateExternalReferenceCode, group.getGroupId()));
 
 		_assertProblemException(
-			"NOT_FOUND",
+			"NOT_FOUND", null,
 			() -> pageTemplateResource.deleteSitePageTemplate(
 				group.getExternalReferenceCode(),
 				pageTemplateExternalReferenceCode));
@@ -1166,25 +1138,33 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 
 		PageTemplate randomPageTemplate = randomPageTemplate();
 
-		Repository repository = _portletFileRepository.addPortletRepository(
-			testGroup.getGroupId(), RandomTestUtil.randomString(),
-			ServiceContextTestUtil.getServiceContext(
-				testGroup, TestPropsValues.getUserId()));
-
-		FileEntry fileEntry = _addPortletFileEntry(repository.getDlFolderId());
+		FileEntry fileEntry = FileEntryTestUtil.addPreviewFileEntry(
+			testGroup, _portletFileRepository, getClass());
 
 		randomPageTemplate.setThumbnailURLReference(
-			() -> new ThumbnailURLReference() {
-				{
-					setExternalReferenceCode(
-						fileEntry.getExternalReferenceCode());
-				}
-			});
+			() -> ThumbnailURLReferenceUtil.getThumbnailURLReference(
+				fileEntry, null));
 
 		PageTemplate postPageTemplate =
 			testPostSitePageTemplate_addPageTemplate(randomPageTemplate);
 
 		PageTemplateResource pageTemplateResource = _getPageTemplateResource();
+
+		IdempotentRetryAssert.retryAssert(
+			30, TimeUnit.SECONDS, 500, TimeUnit.MILLISECONDS,
+			() -> {
+				PageTemplate getPageTemplate =
+					pageTemplateResource.getSitePageTemplate(
+						testGroup.getExternalReferenceCode(),
+						postPageTemplate.getExternalReferenceCode());
+
+				ThumbnailURLReference thumbnailURLReference =
+					getPageTemplate.getThumbnailURLReference();
+
+				Assert.assertNotNull(thumbnailURLReference);
+
+				return thumbnailURLReference.getUrl();
+			});
 
 		Page<PageTemplate> page = pageTemplateResource.getSitePageTemplatesPage(
 			testGroup.getExternalReferenceCode(), null, null, null, null, null);
@@ -1471,7 +1451,7 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 		}
 
 		_assertProblemException(
-			"BAD_REQUEST",
+			"BAD_REQUEST", null,
 			() -> pageTemplateResource.patchSitePageTemplate(
 				testGroup.getExternalReferenceCode(),
 				pageTemplate.getExternalReferenceCode(), patchPageTemplate));
@@ -1480,16 +1460,14 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 			pageTemplateSet -> {
 				patchPageTemplate.setPageTemplateSet(pageTemplateSet);
 
-				return _toPageTemplate(
-					_pageTemplateResource.patchSitePageTemplate(
-						testGroup.getExternalReferenceCode(),
-						pageTemplate.getExternalReferenceCode(),
-						_toPageTemplate(patchPageTemplate)));
+				return pageTemplateResource.patchSitePageTemplate(
+					testGroup.getExternalReferenceCode(),
+					pageTemplate.getExternalReferenceCode(), patchPageTemplate);
 			});
 	}
 
 	private void _testPatchSitePageTemplateWithThumbnail() throws Exception {
-		PageTemplate pageTemplate1 = randomPageTemplate();
+		PageTemplate pageTemplate = randomPageTemplate();
 
 		Repository repository = _portletFileRepository.addPortletRepository(
 			testGroup.getGroupId(), RandomTestUtil.randomString(),
@@ -1498,62 +1476,43 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 
 		FileEntry fileEntry = _addPortletFileEntry(repository.getDlFolderId());
 
-		pageTemplate1.setThumbnailURLReference(
-			() -> new ThumbnailURLReference() {
-				{
-					setExternalReferenceCode(
-						fileEntry.getExternalReferenceCode());
-				}
-			});
+		pageTemplate.setThumbnailURLReference(
+			() -> ThumbnailURLReferenceUtil.getThumbnailURLReference(
+				fileEntry, null));
 
 		PageTemplateResource pageTemplateResource = _getPageTemplateResource();
 
 		pageTemplateResource.postSitePageTemplate(
-			testGroup.getExternalReferenceCode(), pageTemplate1);
+			testGroup.getExternalReferenceCode(), pageTemplate);
 
 		_assertThumbnailFileEntryId(
-			false, pageTemplate1.getExternalReferenceCode(),
+			false, pageTemplate.getExternalReferenceCode(),
 			fileEntry.getExternalReferenceCode());
 
 		FileEntry newFileEntry = _addPortletFileEntry(
 			repository.getDlFolderId());
 
-		pageTemplate1.setThumbnailURLReference(
-			() -> new ThumbnailURLReference() {
-				{
-					setExternalReferenceCode(
-						newFileEntry.getExternalReferenceCode());
-					setUrl(RandomTestUtil.randomString());
-				}
-			});
+		pageTemplate.setThumbnailURLReference(
+			() -> ThumbnailURLReferenceUtil.getThumbnailURLReference(
+				newFileEntry, RandomTestUtil.randomString()));
 
 		pageTemplateResource.patchSitePageTemplate(
 			testGroup.getExternalReferenceCode(),
-			pageTemplate1.getExternalReferenceCode(), pageTemplate1);
+			pageTemplate.getExternalReferenceCode(), pageTemplate);
 
 		_assertThumbnailFileEntryId(
-			false, pageTemplate1.getExternalReferenceCode(),
+			false, pageTemplate.getExternalReferenceCode(),
 			newFileEntry.getExternalReferenceCode());
 
-		PageTemplate pageTemplate2 = randomPageTemplate();
-
 		ThumbnailURLReference thumbnailURLReference =
-			new ThumbnailURLReference() {
-				{
-					setExternalReferenceCode(RandomTestUtil.randomString());
-					setUrl(
-						() ->
-							"http://localhost:8080/" +
-								RandomTestUtil.randomString());
-				}
-			};
+			ThumbnailURLReferenceUtil.getRandomThumbnailURLReference();
 
-		pageTemplate2.setThumbnailURLReference(thumbnailURLReference);
+		pageTemplate.setThumbnailURLReference(thumbnailURLReference);
 
 		try {
 			pageTemplateResource.patchSitePageTemplate(
 				testGroup.getExternalReferenceCode(),
-				pageTemplate1.getExternalReferenceCode(), pageTemplate2);
+				pageTemplate.getExternalReferenceCode(), pageTemplate);
 		}
 		catch (Problem.ProblemException problemException) {
 			Problem problem = problemException.getProblem();
@@ -1630,7 +1589,7 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 			});
 
 		_assertProblemException(
-			"BAD_REQUEST",
+			"BAD_REQUEST", null,
 			() -> _postSitePageTemplate(
 				pageTemplate, testGroup.getExternalReferenceCode()));
 
@@ -1650,7 +1609,7 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 			});
 
 		_assertProblemException(
-			"BAD_REQUEST",
+			"BAD_REQUEST", null,
 			() -> _postSitePageTemplate(
 				pageTemplate, testGroup.getExternalReferenceCode()));
 
@@ -1660,7 +1619,7 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 			() -> new PageSpecification[] {widgetPageSpecification});
 
 		_assertProblemException(
-			"BAD_REQUEST",
+			"BAD_REQUEST", null,
 			() -> _postSitePageTemplate(
 				pageTemplate, testGroup.getExternalReferenceCode()));
 
@@ -1670,6 +1629,8 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 
 		_assertProblemException(
 			"BAD_REQUEST",
+			"The provided external reference code does not point to a widget " +
+				"page specification",
 			() -> _postSitePageTemplate(
 				pageTemplate, testGroup.getExternalReferenceCode()));
 
@@ -1717,7 +1678,7 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 		pageTemplate.setPageTemplateSet(() -> null);
 
 		_assertProblemException(
-			"BAD_REQUEST",
+			"BAD_REQUEST", null,
 			() -> _postSitePageTemplate(
 				pageTemplate, testGroup.getExternalReferenceCode()));
 
@@ -1729,7 +1690,7 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 			});
 
 		_assertProblemException(
-			"BAD_REQUEST",
+			"BAD_REQUEST", null,
 			() -> _postSitePageTemplate(
 				pageTemplate, testGroup.getExternalReferenceCode()));
 
@@ -1737,10 +1698,8 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 			pageTemplateSet -> {
 				pageTemplate.setPageTemplateSet(pageTemplateSet);
 
-				return _toPageTemplate(
-					_pageTemplateResource.postSitePageTemplate(
-						testGroup.getExternalReferenceCode(),
-						_toPageTemplate(pageTemplate)));
+				return pageTemplateResource.postSitePageTemplate(
+					testGroup.getExternalReferenceCode(), pageTemplate);
 			});
 	}
 
@@ -1755,12 +1714,8 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 		FileEntry fileEntry = _addPortletFileEntry(repository.getDlFolderId());
 
 		pageTemplate.setThumbnailURLReference(
-			() -> new ThumbnailURLReference() {
-				{
-					setExternalReferenceCode(
-						fileEntry.getExternalReferenceCode());
-				}
-			});
+			() -> ThumbnailURLReferenceUtil.getThumbnailURLReference(
+				fileEntry, null));
 
 		PageTemplate postPageTemplate =
 			pageTemplateResource.postSitePageTemplate(
@@ -1773,15 +1728,7 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 		pageTemplate = randomPageTemplate();
 
 		ThumbnailURLReference thumbnailURLReference =
-			new ThumbnailURLReference() {
-				{
-					setExternalReferenceCode(RandomTestUtil.randomString());
-					setUrl(
-						() ->
-							"http://localhost:8080/" +
-								RandomTestUtil.randomString());
-				}
-			};
+			ThumbnailURLReferenceUtil.getRandomThumbnailURLReference();
 
 		pageTemplate.setThumbnailURLReference(thumbnailURLReference);
 
@@ -1960,7 +1907,7 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 		pageTemplate.setPageTemplateSet(() -> null);
 
 		_assertProblemException(
-			"BAD_REQUEST",
+			"BAD_REQUEST", null,
 			() -> pageTemplateResource.putSitePageTemplate(
 				testGroup.getExternalReferenceCode(),
 				pageTemplate.getExternalReferenceCode(), pageTemplate));
@@ -1973,7 +1920,7 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 			});
 
 		_assertProblemException(
-			"BAD_REQUEST",
+			"BAD_REQUEST", null,
 			() -> pageTemplateResource.putSitePageTemplate(
 				testGroup.getExternalReferenceCode(),
 				pageTemplate.getExternalReferenceCode(), pageTemplate));
@@ -1982,11 +1929,9 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 			pageTemplateSet -> {
 				pageTemplate.setPageTemplateSet(pageTemplateSet);
 
-				return _toPageTemplate(
-					_pageTemplateResource.putSitePageTemplate(
-						testGroup.getExternalReferenceCode(),
-						pageTemplate.getExternalReferenceCode(),
-						_toPageTemplate(pageTemplate)));
+				return pageTemplateResource.putSitePageTemplate(
+					testGroup.getExternalReferenceCode(),
+					pageTemplate.getExternalReferenceCode(), pageTemplate);
 			});
 	}
 
@@ -2003,12 +1948,8 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 		FileEntry fileEntry1 = _addPortletFileEntry(repository.getDlFolderId());
 
 		pageTemplate.setThumbnailURLReference(
-			() -> new ThumbnailURLReference() {
-				{
-					setExternalReferenceCode(
-						fileEntry1.getExternalReferenceCode());
-				}
-			});
+			() -> ThumbnailURLReferenceUtil.getThumbnailURLReference(
+				fileEntry1, null));
 
 		PageTemplate putPageTemplate = pageTemplateResource.putSitePageTemplate(
 			testGroup.getExternalReferenceCode(),
@@ -2021,12 +1962,8 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 		FileEntry fileEntry2 = _addPortletFileEntry(repository.getDlFolderId());
 
 		putPageTemplate.setThumbnailURLReference(
-			() -> new ThumbnailURLReference() {
-				{
-					setExternalReferenceCode(
-						fileEntry2.getExternalReferenceCode());
-				}
-			});
+			() -> ThumbnailURLReferenceUtil.getThumbnailURLReference(
+				fileEntry2, null));
 
 		putPageTemplate = pageTemplateResource.putSitePageTemplate(
 			testGroup.getExternalReferenceCode(),
@@ -2045,25 +1982,15 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 		_assertThumbnailFileEntryId(
 			true, putPageTemplate.getExternalReferenceCode(), null);
 
-		pageTemplate = randomPageTemplate();
-
 		ThumbnailURLReference thumbnailURLReference =
-			new ThumbnailURLReference() {
-				{
-					setExternalReferenceCode(RandomTestUtil.randomString());
-					setUrl(
-						() ->
-							"http://localhost:8080/" +
-								RandomTestUtil.randomString());
-				}
-			};
+			ThumbnailURLReferenceUtil.getRandomThumbnailURLReference();
 
-		pageTemplate.setThumbnailURLReference(thumbnailURLReference);
+		putPageTemplate.setThumbnailURLReference(thumbnailURLReference);
 
 		try {
 			pageTemplateResource.putSitePageTemplate(
 				testGroup.getExternalReferenceCode(),
-				putPageTemplate.getExternalReferenceCode(), pageTemplate);
+				putPageTemplate.getExternalReferenceCode(), putPageTemplate);
 		}
 		catch (Problem.ProblemException problemException) {
 			Problem problem = problemException.getProblem();
@@ -2146,10 +2073,6 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 
 	@Inject
 	private LayoutPageTemplateEntryService _layoutPageTemplateEntryService;
-
-	@Inject
-	private com.liferay.headless.admin.site.resource.v1_0.PageTemplateResource
-		_pageTemplateResource;
 
 	@Inject
 	private PortletFileRepository _portletFileRepository;

@@ -104,3 +104,4 @@ public class SearchRequestBody implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-451661791

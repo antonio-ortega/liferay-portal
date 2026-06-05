@@ -2,11 +2,48 @@ resource "helm_release" "crossplane" {
 	atomic=true
 	chart="crossplane"
 	cleanup_on_fail=true
-	create_namespace=true
+	create_namespace=false
 	name="crossplane"
 	namespace=var.crossplane_namespace
 	repository="https://charts.crossplane.io/stable"
-	upgrade_install=true
-	version="2.1.3"
+	values=[
+		yamlencode(
+			{
+				podSecurityContextCrossplane=local.default_crossplane_pod_security_context
+				podSecurityContextRBACManager=local.default_crossplane_pod_security_context
+				resourcesCrossplane={
+					limits={
+						memory="2Gi"
+					}
+					requests={
+						cpu="63m"
+						memory="768Mi"
+					}
+				}
+				resourcesRBACManager={
+					limits={
+						memory="512Mi"
+					}
+					requests={
+						cpu="15m"
+						memory="256Mi"
+					}
+				}
+				securityContextCrossplane=local.default_crossplane_container_security_context
+				securityContextRBACManager=local.default_crossplane_container_security_context
+			})
+	]
+	version=var.crossplane_helm_chart_version
 	wait=true
+}
+
+resource "kubernetes_namespace" "crossplane" {
+	metadata {
+		labels=merge(
+			local.common_labels,
+			{
+				"pod-security.kubernetes.io/enforce"="restricted"
+			})
+		name=var.crossplane_namespace
+	}
 }

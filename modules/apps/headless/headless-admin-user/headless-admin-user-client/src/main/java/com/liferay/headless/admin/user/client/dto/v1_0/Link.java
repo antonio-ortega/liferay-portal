@@ -97,3 +97,4 @@ public class Link implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:772857603

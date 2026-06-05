@@ -196,3 +196,4 @@ public interface WebUrlResource {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:695263476

@@ -1576,3 +1576,4 @@ public interface ContentStructureResource {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-456568178

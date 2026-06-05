@@ -42,6 +42,8 @@ import com.liferay.portal.kernel.plugin.PluginPackage;
 import com.liferay.portal.kernel.portlet.PortletConfigFactoryUtil;
 import com.liferay.portal.kernel.portlet.PortletInstanceFactoryUtil;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
+import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.security.permission.ResourceActionsUtil;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
@@ -1059,7 +1061,18 @@ public class MainServlet extends HttpServlet {
 	private boolean _processGroupInactiveRequest(
 			HttpServletRequest httpServletRequest,
 			HttpServletResponse httpServletResponse)
-		throws IOException, PortalException {
+		throws IOException, PortalException, ServletException {
+
+		Object renderingMaintenanceUtilityPage =
+			httpServletRequest.getAttribute(
+				WebKeys.RENDERING_MAINTENANCE_UTILITY_PAGE);
+
+		if (renderingMaintenanceUtilityPage != null) {
+			httpServletRequest.removeAttribute(
+				WebKeys.RENDERING_MAINTENANCE_UTILITY_PAGE);
+
+			return false;
+		}
 
 		long plid = ParamUtil.getLong(httpServletRequest, "p_l_id");
 
@@ -1069,8 +1082,29 @@ public class MainServlet extends HttpServlet {
 
 		Layout layout = LayoutLocalServiceUtil.getLayout(plid);
 
-		if (GroupLocalServiceUtil.isLiveGroupActive(layout.getGroup())) {
+		Group group = layout.getGroup();
+
+		if (GroupLocalServiceUtil.isLiveGroupActive(group)) {
 			return false;
+		}
+
+		if (GroupLocalServiceUtil.isMaintenanceMode(group)) {
+			PermissionChecker permissionChecker =
+				PermissionThreadLocal.getPermissionChecker();
+
+			if ((permissionChecker != null) &&
+				permissionChecker.isGroupAdmin(group.getGroupId())) {
+
+				return false;
+			}
+
+			PortalUtil.sendError(
+				HttpServletResponse.SC_SERVICE_UNAVAILABLE,
+				new PortalException(
+					"this-site-is-temporarily-unavailable-for-maintenance"),
+				httpServletRequest, httpServletResponse);
+
+			return true;
 		}
 
 		InactiveRequestHandler inactiveRequestHandler =

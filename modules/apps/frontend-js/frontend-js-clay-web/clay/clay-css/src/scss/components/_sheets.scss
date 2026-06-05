@@ -125,17 +125,21 @@
 	}
 
 	> fieldset {
-		margin-bottom: math-sign($sheet-section-margin-bottom);
+		margin-bottom: calc(#{$sheet-section-margin-bottom} * -1);
 
 		@include clay-scale-component {
-			margin-bottom: math-sign($sheet-section-margin-bottom-mobile);
+			margin-bottom: calc(#{$sheet-section-margin-bottom-mobile} * -1);
 		}
 	}
 
 	> .card-page:last-child,
 	.card-page-last {
-		margin-bottom: math-sign(
-			if(variable-exists(card-margin-bottom), $card-margin-bottom, 1.5rem)
+		margin-bottom: calc(
+			#{if(
+					variable-exists(card-margin-bottom),
+					$card-margin-bottom,
+					1.5rem
+				)} * -1
 		);
 	}
 
@@ -235,10 +239,26 @@ fieldset {
 
 	@if ($enable-c-inner) {
 		.c-inner {
-			margin-bottom: #{math-sign($sheet-subtitle-padding-y)};
-			margin-left: #{math-sign($sheet-subtitle-padding-x)};
-			margin-right: #{math-sign($sheet-subtitle-padding-x)};
-			margin-top: #{math-sign($sheet-subtitle-padding-y)};
+			margin-bottom: if(
+				$sheet-subtitle-padding-y,
+				calc(#{$sheet-subtitle-padding-y} * -1),
+				null
+			);
+			margin-left: if(
+				$sheet-subtitle-padding-x,
+				calc(#{$sheet-subtitle-padding-x} * -1),
+				null
+			);
+			margin-right: if(
+				$sheet-subtitle-padding-x,
+				calc(#{$sheet-subtitle-padding-x} * -1),
+				null
+			);
+			margin-top: if(
+				$sheet-subtitle-padding-y,
+				calc(#{$sheet-subtitle-padding-y} * -1),
+				null
+			);
 		}
 	}
 
@@ -256,12 +276,16 @@ fieldset {
 
 		@if ($enable-c-inner) {
 			.c-inner {
-				margin-left: #{math-sign(
-						$sheet-subtitle-collapse-icon-padding-left
-					)};
-				margin-right: #{math-sign(
-						$sheet-subtitle-collapse-icon-padding-right
-					)};
+				margin-left: if(
+					$sheet-subtitle-collapse-icon-padding-left,
+					calc(#{$sheet-subtitle-collapse-icon-padding-left} * -1),
+					null
+				);
+				margin-right: if(
+					$sheet-subtitle-collapse-icon-padding-right,
+					calc(#{$sheet-subtitle-collapse-icon-padding-right} * -1),
+					null
+				);
 			}
 		}
 	}

@@ -27,6 +27,7 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 
 import java.text.DateFormat;
@@ -37,11 +38,21 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * @author Carolina Barbosa
  */
 public class ObjectFieldSettingUtil {
+
+	public static Set<String> getAllowedFileSources(long companyId) {
+		return SetUtil.fromArray(
+			ObjectFieldSettingConstants.VALUE_CMS_BASIC_DOCUMENT,
+			ObjectFieldSettingConstants.VALUE_DOCS_AND_MEDIA,
+			ObjectFieldSettingConstants.
+				VALUE_USER_COMPUTER_TO_CMS_BASIC_DOCUMENT,
+			ObjectFieldSettingConstants.VALUE_USER_COMPUTER_TO_DOCS_AND_MEDIA);
+	}
 
 	public static Object getDefaultValue(
 		DDMExpressionFactory ddmExpressionFactory, ObjectField objectField,

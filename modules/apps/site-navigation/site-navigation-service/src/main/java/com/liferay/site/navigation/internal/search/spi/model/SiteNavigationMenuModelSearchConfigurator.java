@@ -6,10 +6,8 @@
 package com.liferay.site.navigation.internal.search.spi.model;
 
 import com.liferay.portal.kernel.search.Field;
-import com.liferay.portal.search.batch.DynamicQueryBatchIndexingActionableFactory;
 import com.liferay.portal.search.spi.model.index.contributor.ModelIndexerWriterContributor;
 import com.liferay.portal.search.spi.model.registrar.ModelSearchConfigurator;
-import com.liferay.site.navigation.internal.search.spi.model.index.contributor.SiteNavigationMenuModelIndexerWriterContributor;
 import com.liferay.site.navigation.model.SiteNavigationMenu;
 import com.liferay.site.navigation.service.SiteNavigationMenuLocalService;
 
@@ -51,15 +49,10 @@ public class SiteNavigationMenuModelSearchConfigurator
 
 	@Activate
 	protected void activate() {
-		_modelIndexWriterContributor =
-			new SiteNavigationMenuModelIndexerWriterContributor(
-				_dynamicQueryBatchIndexingActionableFactory,
-				_siteNavigationMenuLocalService);
+		_modelIndexWriterContributor = new ModelIndexerWriterContributor<>(
+			_siteNavigationMenuLocalService::
+				getIndexableActionableDynamicQuery);
 	}
-
-	@Reference
-	private DynamicQueryBatchIndexingActionableFactory
-		_dynamicQueryBatchIndexingActionableFactory;
 
 	private ModelIndexerWriterContributor<SiteNavigationMenu>
 		_modelIndexWriterContributor;

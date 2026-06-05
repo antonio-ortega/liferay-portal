@@ -6,16 +6,18 @@
 import {Site} from '../types/Site';
 import ApiHelper from './ApiHelper';
 
+export type ConnectedSiteRequestBody = {
+	searchable?: boolean;
+};
+
 async function connectSiteToSpace(
 	externalReferenceCode: string,
 	siteExternalReferenceCode: string,
-	searchable?: string
+	body: ConnectedSiteRequestBody = {searchable: true}
 ) {
 	return await ApiHelper.put<Site>(
 		`/o/headless-asset-library/v1.0/asset-libraries/${externalReferenceCode}/connected-sites/${siteExternalReferenceCode}`,
-		{
-			searchable: searchable ? searchable : 'true',
-		}
+		body
 	);
 }
 
@@ -36,7 +38,7 @@ async function getConnectedSitesFromSpace(externalReferenceCode: string) {
 
 async function getAllSites() {
 	return await ApiHelper.get<{items: Site[]}>(
-		`/o/headless-site/v1.0/sites?active=true`
+		`/o/headless-admin-site/v1.0/sites?active=true`
 	);
 }
 

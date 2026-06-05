@@ -5,20 +5,28 @@
 
 package com.liferay.portal.workflow.kaleo.runtime.integration.internal.security.permission.resource;
 
+import com.liferay.account.model.AccountEntry;
+import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
+import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.security.permission.PermissionCacheUtil;
 import com.liferay.portal.workflow.configuration.WorkflowDefinitionConfiguration;
 import com.liferay.portal.workflow.kaleo.model.KaleoDefinition;
 import com.liferay.portal.workflow.kaleo.service.KaleoDefinitionLocalService;
 
 import java.util.Map;
+import java.util.Objects;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -69,7 +77,35 @@ public class KaleoDefinitionModelResourcePermission
 		if (permissionChecker.isOmniadmin() ||
 			((StringUtil.equals(actionId, ActionKeys.VIEW) ||
 			  _companyAdministratorCanPublish) &&
-			 permissionChecker.isCompanyAdmin())) {
+			 permissionChecker.isCompanyAdmin()) ||
+			_isCMSAdministrator(permissionChecker)) {
+
+			return true;
+		}
+
+		if (kaleoDefinition == null) {
+			return false;
+		}
+
+		long groupId = kaleoDefinition.getGroupId();
+
+		if (groupId == 0) {
+			return false;
+		}
+
+		Group group = _groupLocalService.fetchGroup(groupId);
+
+		AccountEntry accountEntry =
+			_accountEntryLocalService.fetchUserAccountEntry(
+				permissionChecker.getUserId(), group.getClassPK());
+
+		if (accountEntry == null) {
+			return false;
+		}
+
+		if (Objects.equals(ActionKeys.VIEW, actionId) ||
+			!Objects.equals(
+				accountEntry.getExternalReferenceCode(), "L_AI_HUB")) {
 
 			return true;
 		}
@@ -110,7 +146,34 @@ public class KaleoDefinitionModelResourcePermission
 			workflowDefinitionConfiguration.companyAdministratorCanPublish();
 	}
 
+	private boolean _isCMSAdministrator(PermissionChecker permissionChecker)
+		throws PortalException {
+
+		long userId = permissionChecker.getUserId();
+		long companyId = permissionChecker.getCompanyId();
+
+		Boolean value = PermissionCacheUtil.getUserPrimaryKeyRole(
+			userId, companyId, RoleConstants.CMS_ADMINISTRATOR);
+
+		if (value == null) {
+			value = _roleLocalService.hasUserRole(
+				userId, permissionChecker.getCompanyId(),
+				RoleConstants.CMS_ADMINISTRATOR, true);
+
+			PermissionCacheUtil.putUserPrimaryKeyRole(
+				userId, companyId, RoleConstants.CMS_ADMINISTRATOR, value);
+		}
+
+		return value;
+	}
+
+	@Reference
+	private AccountEntryLocalService _accountEntryLocalService;
+
 	private volatile boolean _companyAdministratorCanPublish;
+
+	@Reference
+	private GroupLocalService _groupLocalService;
 
 	@Reference
 	private KaleoDefinitionLocalService _kaleoDefinitionLocalService;
@@ -119,5 +182,8 @@ public class KaleoDefinitionModelResourcePermission
 		target = "(resource.name=" + WorkflowConstants.RESOURCE_NAME + ")"
 	)
 	private PortletResourcePermission _portletResourcePermission;
+
+	@Reference
+	private RoleLocalService _roleLocalService;
 
 }

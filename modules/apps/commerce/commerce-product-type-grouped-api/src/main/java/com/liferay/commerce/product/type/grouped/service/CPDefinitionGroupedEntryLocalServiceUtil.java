@@ -107,6 +107,13 @@ public class CPDefinitionGroupedEntryLocalServiceUtil {
 		getService().deleteCPDefinitionGroupedEntries(cpDefinitionId);
 	}
 
+	public static void deleteCPDefinitionGroupedEntriesByEntryCProductId(
+		long entryCProductId) {
+
+		getService().deleteCPDefinitionGroupedEntriesByEntryCProductId(
+			entryCProductId);
+	}
+
 	/**
 	 * Deletes the cp definition grouped entry from the database. Also notifies the appropriate model listeners.
 	 *
@@ -501,3 +508,4 @@ public class CPDefinitionGroupedEntryLocalServiceUtil {
 			CPDefinitionGroupedEntryLocalService.class);
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-1628046761

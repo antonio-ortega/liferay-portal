@@ -86,6 +86,8 @@ public class RecentLayoutSetBranchModelImpl
 	public static final String TABLE_SQL_DROP =
 		"drop table RecentLayoutSetBranch";
 
+	public static final String ENTITY_ALIAS = "recentLayoutSetBranch";
+
 	public static final String ORDER_BY_JPQL =
 		" ORDER BY recentLayoutSetBranch.recentLayoutSetBranchId ASC";
 
@@ -795,3 +797,4 @@ public class RecentLayoutSetBranchModelImpl
 	private RecentLayoutSetBranch _escapedModel;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-1369876766

@@ -148,3 +148,4 @@ public interface NodeMetricResource {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1929815283

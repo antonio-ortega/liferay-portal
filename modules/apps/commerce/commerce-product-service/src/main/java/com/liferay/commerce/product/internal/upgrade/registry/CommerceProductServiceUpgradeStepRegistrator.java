@@ -39,7 +39,6 @@ import com.liferay.commerce.product.internal.upgrade.v5_21_0.util.CPConfiguratio
 import com.liferay.commerce.product.internal.upgrade.v5_22_0.CPSpecificationOptionUpgradeProcess;
 import com.liferay.commerce.product.internal.upgrade.v5_25_0.util.CPConfigurationListRelTable;
 import com.liferay.commerce.product.internal.upgrade.v5_26_0.util.CPConfigurationEntrySettingTable;
-import com.liferay.commerce.product.internal.upgrade.v5_4_0.CommercePermissionUpgradeProcess;
 import com.liferay.commerce.product.internal.upgrade.v5_5_0.util.CPInstanceUnitOfMeasureTable;
 import com.liferay.commerce.product.internal.upgrade.v6_1_0.CPConfigurationEntryUpgradeProcess;
 import com.liferay.commerce.product.internal.upgrade.v6_2_0.CPDefinitionLocalizationUpgradeProcess;
@@ -54,6 +53,7 @@ import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.RepositoryLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
+import com.liferay.portal.kernel.service.ResourceLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.upgrade.BaseExternalReferenceCodeUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.BaseUuidUpgradeProcess;
@@ -390,8 +390,10 @@ public class CommerceProductServiceUpgradeStepRegistrator
 
 		registry.register(
 			"5.3.0", "5.4.0",
-			new CommercePermissionUpgradeProcess(
-				_resourceActionLocalService, _resourcePermissionLocalService));
+			new com.liferay.commerce.product.internal.upgrade.v5_4_0.
+				CommercePermissionUpgradeProcess(
+					_resourceActionLocalService,
+					_resourcePermissionLocalService));
 
 		registry.register(
 			"5.4.0", "5.5.0", CPInstanceUnitOfMeasureTable.create());
@@ -460,8 +462,12 @@ public class CommerceProductServiceUpgradeStepRegistrator
 
 			});
 
+		registry.register("5.13.0", "5.13.1", new DummyUpgradeProcess());
+
+		registry.register("5.13.1", "5.13.2", new DummyUpgradeProcess());
+
 		registry.register(
-			"5.13.0", "5.14.0",
+			"5.13.2", "5.14.0",
 			new CPDefinitionSpecificationOptionValueUpgradeProcess());
 
 		registry.register(
@@ -647,13 +653,17 @@ public class CommerceProductServiceUpgradeStepRegistrator
 				"CPConfigurationList", "masterCPConfigurationList",
 				"master BOOLEAN"));
 
+		registry.register("5.27.0", "5.27.1", new DummyUpgradeStep());
+
+		registry.register("5.27.1", "5.27.2", new DummyUpgradeStep());
+
 		registry.register(
-			"5.27.0", "5.27.1",
-			new com.liferay.commerce.product.internal.upgrade.v5_28_0.
+			"5.27.2", "5.27.3",
+			new com.liferay.commerce.product.internal.upgrade.v5_27_3.
 				CPDefinitionSpecificationOptionValueUpgradeProcess());
 
 		registry.register(
-			"5.27.1", "5.28.0",
+			"5.27.3", "5.28.0",
 			new com.liferay.commerce.product.internal.upgrade.v5_28_0.
 				CPSpecificationOptionUpgradeProcess());
 
@@ -667,6 +677,22 @@ public class CommerceProductServiceUpgradeStepRegistrator
 
 		registry.register(
 			"6.1.0", "6.2.0", new CPDefinitionLocalizationUpgradeProcess());
+
+		registry.register(
+			"6.2.0", "6.3.0",
+			new com.liferay.commerce.product.internal.upgrade.v6_3_0.
+				CommercePermissionUpgradeProcess(
+					_resourceActionLocalService,
+					_resourcePermissionLocalService));
+
+		registry.register("6.3.0", "6.3.1", new DummyUpgradeStep());
+
+		registry.register(
+			"6.3.1", "6.4.0",
+			new com.liferay.commerce.product.internal.upgrade.v6_4_0.
+				CommercePermissionUpgradeProcess(
+					_companyLocalService, _resourceActionLocalService,
+					_resourceLocalService, _resourcePermissionLocalService));
 
 		if (_log.isInfoEnabled()) {
 			_log.info("Commerce product upgrade step registrator finished");
@@ -720,6 +746,9 @@ public class CommerceProductServiceUpgradeStepRegistrator
 
 	@Reference
 	private ResourceActionLocalService _resourceActionLocalService;
+
+	@Reference
+	private ResourceLocalService _resourceLocalService;
 
 	@Reference
 	private ResourcePermissionLocalService _resourcePermissionLocalService;

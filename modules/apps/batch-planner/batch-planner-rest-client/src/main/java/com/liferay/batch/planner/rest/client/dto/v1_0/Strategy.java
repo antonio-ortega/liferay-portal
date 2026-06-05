@@ -95,3 +95,4 @@ public class Strategy implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:682540463

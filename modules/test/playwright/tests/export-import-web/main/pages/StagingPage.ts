@@ -5,16 +5,34 @@
 
 import {Locator, Page, expect} from '@playwright/test';
 
+import {clickAndExpectToBeVisible} from '../../../../utils/clickAndExpectToBeVisible';
 import getRandomString from '../../../../utils/getRandomString';
 
+type StagedPortletsSelection = 'all' | 'none' | string[];
+
+type StagingOptions = {
+	stagedPortlets?: StagedPortletsSelection;
+};
+
 export class StagingPage {
+	readonly cancelButton: Locator;
 	readonly localStagingButton: Locator;
+	readonly newPublishProcessButton: Locator;
 	readonly page: Page;
+	readonly portletListContainer: Locator;
 	readonly stagedPortletCheckbox: (stagedPortletName: string) => Locator;
 
 	constructor(page: Page) {
+		this.cancelButton = page.getByRole('button', {name: 'Cancel'});
 		this.localStagingButton = page.getByTestId('stagingType_local');
+		this.newPublishProcessButton = page.getByRole('link', {
+			name: 'Custom Publish Process',
+		});
 		this.page = page;
+		this.portletListContainer = page.locator(
+			'#_com_liferay_staging_processes_web_portlet_StagingProcessesPortlet_selectContents .portlet-list'
+		);
+
 		this.stagedPortletCheckbox = (stagedPortletName: string) =>
 			this.page
 				.locator('.custom-checkbox')
@@ -22,7 +40,9 @@ export class StagingPage {
 				.locator('input');
 	}
 
-	async enableLocalStaging(stagedPortlets?: string[]) {
+	async enableLocalStaging({
+		stagedPortlets,
+	}: StagingOptions = {}): Promise<void> {
 		await this.localStagingButton.check();
 
 		this.page.once('dialog', async (dialog) => {
@@ -32,7 +52,14 @@ export class StagingPage {
 			await dialog.accept().catch();
 		});
 
-		if (stagedPortlets) {
+		if (stagedPortlets === 'all') {
+			await this.stagedPortletCheckbox('Select All').check();
+		}
+		else if (stagedPortlets === 'none') {
+			await this.stagedPortletCheckbox('Select All').check();
+			await this.stagedPortletCheckbox('Select All').uncheck();
+		}
+		else if (Array.isArray(stagedPortlets)) {
 			await this.stagedPortletCheckbox('Select All').check();
 			await this.stagedPortletCheckbox('Select All').uncheck();
 
@@ -55,7 +82,6 @@ export class StagingPage {
 			});
 		}
 	}
-
 	async addTemplate(templateName: string) {
 		await this.page.waitForLoadState('domcontentloaded');
 		await this.page.getByRole('link', {exact: true, name: 'New'}).click();
@@ -65,13 +91,15 @@ export class StagingPage {
 	}
 
 	async publishTemplate(templateName: string) {
-		await this.page
-			.locator(`tr`)
-			.filter({hasText: templateName})
-			.getByRole('button')
-			.click();
+		await clickAndExpectToBeVisible({
+			autoClick: true,
+			target: this.page.getByRole('menuitem', {name: 'Publish'}),
+			trigger: this.page
+				.locator(`tr`)
+				.filter({hasText: templateName})
+				.getByRole('button'),
+		});
 
-		await this.page.getByRole('menuitem', {name: 'Publish'}).click();
 		await this.page.getByRole('button', {name: 'Publish to Live'}).click();
 		await expect(
 			this.page
@@ -82,6 +110,39 @@ export class StagingPage {
 		).toBeVisible({
 			timeout: 60 * 1000,
 		});
+	}
+
+	async getContentItems() {
+		await this.newPublishProcessButton.click();
+
+		const portletListContainer = this.portletListContainer;
+
+		await portletListContainer.waitFor({state: 'attached'});
+
+		const itemsLocator = portletListContainer.locator(
+			'.custom-control-label-text:has(strong)'
+		);
+
+		const itemsMap = new Map();
+
+		for (const itemLocator of await itemsLocator.all()) {
+			const title = await itemLocator.locator('strong').textContent();
+			const countText = await itemLocator
+				.locator('.staging-taglib-checkbox-items')
+				.textContent();
+
+			const countMatch = countText ? countText.match(/\d+/) : null;
+
+			if (title && countMatch) {
+				const countAsNumber = parseInt(countMatch[0], 10);
+
+				itemsMap.set(title.trim(), countAsNumber);
+			}
+		}
+
+		await this.cancelButton.click();
+
+		return itemsMap;
 	}
 
 	async publish({
@@ -152,10 +213,7 @@ export class StagingPage {
 	}
 
 	async gotoTemplatePage() {
-		await this.page
-			.getByText('Staging Open Applications')
-			.getByLabel('Options')
-			.click();
+		await this.page.locator('.portlet-options').click();
 		await this.page
 			.getByRole('menuitem', {name: 'Publish Templates'})
 			.click();

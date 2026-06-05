@@ -15,6 +15,7 @@ import Breadcrumb, {
 } from '../../../../src/main/resources/META-INF/resources/js/common/components/Breadcrumb';
 
 jest.mock('frontend-js-components-web', () => ({
+	FeatureIndicator: ({type}: {type: string}) => <span>{type}</span>,
 	openModal: jest.fn(),
 }));
 
@@ -196,5 +197,32 @@ describe('Breadcrumb', () => {
 				title: confirmationTitle,
 			})
 		);
+	});
+
+	it('renders the enterprise badge when `freeTier` is true and there is a single breadcrumb item', () => {
+		render(
+			<Breadcrumb breadcrumbItems={testBreadcrumbItemsSingle} freeTier />
+		);
+
+		expect(screen.getByText('enterprise')).toBeInTheDocument();
+	});
+
+	it('does not render the enterprise badge when `freeTier` is false', () => {
+		render(
+			<Breadcrumb
+				breadcrumbItems={testBreadcrumbItemsSingle}
+				freeTier={false}
+			/>
+		);
+
+		expect(screen.queryByText('enterprise')).not.toBeInTheDocument();
+	});
+
+	it('does not render the enterprise badge when there are multiple breadcrumb items', () => {
+		render(
+			<Breadcrumb breadcrumbItems={testBreadcrumbItemsShort} freeTier />
+		);
+
+		expect(screen.queryByText('enterprise')).not.toBeInTheDocument();
 	});
 });

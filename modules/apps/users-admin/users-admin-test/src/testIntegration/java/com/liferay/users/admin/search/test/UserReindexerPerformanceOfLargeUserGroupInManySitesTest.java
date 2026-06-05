@@ -27,7 +27,7 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.search.configuration.ReindexerConfiguration;
 import com.liferay.portal.search.query.BooleanQuery;
-import com.liferay.portal.search.query.Queries;
+import com.liferay.portal.search.query.QueriesUtil;
 import com.liferay.portal.search.reindexer.Reindexer;
 import com.liferay.portal.search.searcher.SearchRequestBuilder;
 import com.liferay.portal.search.searcher.SearchRequestBuilderFactory;
@@ -302,15 +302,15 @@ public class UserReindexerPerformanceOfLargeUserGroupInManySitesTest {
 	protected SearchResponse searchUsersInAllGroups(
 		List<Group> groups, long testUserId) {
 
-		BooleanQuery booleanQuery = _queries.booleanQuery();
+		BooleanQuery booleanQuery = QueriesUtil.booleanQuery();
 
 		groups.forEach(
 			group -> booleanQuery.addMustQueryClauses(
-				_queries.term(Field.GROUP_ID, group.getGroupId())));
+				QueriesUtil.term(Field.GROUP_ID, group.getGroupId())));
 
 		if (testUserId != 0) {
 			booleanQuery.addMustNotQueryClauses(
-				_queries.term(Field.USER_ID, testUserId));
+				QueriesUtil.term(Field.USER_ID, testUserId));
 		}
 
 		Group group = groups.get(0);
@@ -357,27 +357,6 @@ public class UserReindexerPerformanceOfLargeUserGroupInManySitesTest {
 
 	private static final boolean _STRESS_MODE_10_MIN_TO_RUN_ALL_TESTS = false;
 
-	@Inject
-	private static OrganizationLocalService _organizationLocalService;
-
-	@Inject
-	private static Queries _queries;
-
-	@Inject
-	private static Reindexer _reindexer;
-
-	@Inject
-	private static Searcher _searcher;
-
-	@Inject
-	private static SearchRequestBuilderFactory _searchRequestBuilderFactory;
-
-	@Inject
-	private static UserGroupLocalService _userGroupLocalService;
-
-	@Inject
-	private static UserLocalService _userLocalService;
-
 	@DeleteAfterTestRun
 	private List<Address> _addresses = new ArrayList<>();
 
@@ -386,11 +365,29 @@ public class UserReindexerPerformanceOfLargeUserGroupInManySitesTest {
 
 	private int _groupsCount;
 
+	@Inject
+	private OrganizationLocalService _organizationLocalService;
+
 	@DeleteAfterTestRun
 	private List<Organization> _organizations;
 
+	@Inject
+	private Reindexer _reindexer;
+
+	@Inject
+	private Searcher _searcher;
+
+	@Inject
+	private SearchRequestBuilderFactory _searchRequestBuilderFactory;
+
+	@Inject
+	private UserGroupLocalService _userGroupLocalService;
+
 	@DeleteAfterTestRun
 	private List<UserGroup> _userGroups;
+
+	@Inject
+	private UserLocalService _userLocalService;
 
 	@DeleteAfterTestRun
 	private List<User> _users;

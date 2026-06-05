@@ -22,6 +22,7 @@ import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.search.spi.model.index.contributor.ModelDocumentContributor;
 
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -66,8 +67,16 @@ public class CommerceShipmentModelDocumentContributor
 			document.addKeyword(
 				"commerceOrderIds",
 				_getCommerceOrderIds(commerceShipment.getCommerceShipmentId()));
-			document.addDateSortable(
-				"expectedDate", commerceShipment.getExpectedDate());
+
+			Date expectedDate = commerceShipment.getExpectedDate();
+
+			if (expectedDate != null) {
+				document.addDate(
+					"expectedDate", commerceShipment.getExpectedDate());
+				document.addDateSortable(
+					"expectedDate", commerceShipment.getExpectedDate());
+			}
+
 			document.addNumber(
 				"itemsCount",
 				_commerceShipmentItemLocalService.getCommerceShipmentItemsCount(
@@ -82,6 +91,15 @@ public class CommerceShipmentModelDocumentContributor
 					"oneLineAddress",
 					_commerceAddressFormatter.getOneLineAddress(
 						commerceAddress));
+			}
+
+			Date shippingDate = commerceShipment.getShippingDate();
+
+			if (shippingDate != null) {
+				document.addDate(
+					"shippingDate", commerceShipment.getShippingDate());
+				document.addDateSortable(
+					"shippingDate", commerceShipment.getShippingDate());
 			}
 
 			document.addKeyword(

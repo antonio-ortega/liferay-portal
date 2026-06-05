@@ -37,7 +37,7 @@ public class GenerateReportsControllerBuildRunner
 
 	@Override
 	public void run() {
-		invokeGenerateReportsBuild();
+		invokeGenerateReportsBuilds();
 	}
 
 	@Override
@@ -48,7 +48,7 @@ public class GenerateReportsControllerBuildRunner
 		super(buildData);
 	}
 
-	protected void invokeGenerateReportsBuild() {
+	protected void invokeGenerateReportsBuilds() {
 		List<String> reportNames = _getSelectedReportNames();
 
 		if (reportNames.isEmpty()) {
@@ -59,71 +59,39 @@ public class GenerateReportsControllerBuildRunner
 			return;
 		}
 
-		Properties buildProperties = null;
-
-		try {
-			buildProperties = JenkinsResultsParserUtil.getBuildProperties();
-		}
-		catch (IOException ioException) {
-			throw new RuntimeException(ioException);
-		}
-
-		StringBuilder sb = new StringBuilder();
-
-		String jenkinsMasterName = buildProperties.getProperty(
-			"report.generate.reports.jenkins.master");
-
-		String jobURL = "http://" + jenkinsMasterName + "/job/generate-reports";
-
-		sb.append(jobURL);
-
-		sb.append("/buildWithParameters?token=");
-
-		sb.append(buildProperties.getProperty("jenkins.authentication.token"));
-
-		Map<String, String> invocationParameters = new HashMap<>();
-
 		BuildData buildData = getBuildData();
 
-		invocationParameters.put(
-			"JENKINS_GITHUB_URL", buildData.getJenkinsGitHubURL());
+		String jenkinsGitHubURL = buildData.getJenkinsGitHubURL();
 
-		Collections.sort(reportNames);
+		List<String> groupedReportNames = new ArrayList<>();
 
-		invocationParameters.put("REPORT_NAMES", String.join(",", reportNames));
+		for (String reportName : reportNames) {
+			if (reportName.startsWith("Flaky Test")) {
+				Map<String, String> invocationParameters = new HashMap<>();
 
-		for (Map.Entry<String, String> invocationParameter :
-				invocationParameters.entrySet()) {
+				invocationParameters.put(
+					"JENKINS_GITHUB_URL", jenkinsGitHubURL);
 
-			String invocationParameterValue = invocationParameter.getValue();
+				invocationParameters.put("REPORT_NAMES", reportName);
+				invocationParameters.put("SLAVE_LABEL", "slave");
 
-			if (JenkinsResultsParserUtil.isNullOrEmpty(
-					invocationParameterValue)) {
+				_invoke(invocationParameters);
 
 				continue;
 			}
 
-			sb.append("&");
-			sb.append(invocationParameter.getKey());
-			sb.append("=");
-			sb.append(invocationParameterValue);
+			groupedReportNames.add(reportName);
 		}
 
-		try {
-			JenkinsResultsParserUtil.toString(sb.toString());
+		if (!groupedReportNames.isEmpty()) {
+			Map<String, String> invocationParameters = new HashMap<>();
 
-			System.out.println(
-				"The following reports will be generated at: " + jobURL);
+			invocationParameters.put("JENKINS_GITHUB_URL", jenkinsGitHubURL);
 
-			for (String reportName : reportNames) {
-				System.out.println(reportName);
-			}
-		}
-		catch (IOException ioException) {
-			System.out.println(
-				"Unable to invoke a new build to generate reports");
+			invocationParameters.put(
+				"REPORT_NAMES", String.join(",", groupedReportNames));
 
-			ioException.printStackTrace();
+			_invoke(invocationParameters);
 		}
 
 		_updateBuildDescription(reportNames);
@@ -262,7 +230,64 @@ public class GenerateReportsControllerBuildRunner
 			}
 		}
 
+		Collections.sort(_selectedReportNames);
+
 		return _selectedReportNames;
+	}
+
+	private void _invoke(Map<String, String> invocationParameters) {
+		Properties buildProperties = null;
+
+		try {
+			buildProperties = JenkinsResultsParserUtil.getBuildProperties();
+		}
+		catch (IOException ioException) {
+			throw new RuntimeException(ioException);
+		}
+
+		StringBuilder sb = new StringBuilder();
+
+		String jenkinsMasterName = buildProperties.getProperty(
+			"report.generate.reports.jenkins.master");
+
+		String jobURL = "http://" + jenkinsMasterName + "/job/generate-reports";
+
+		sb.append(jobURL);
+
+		sb.append("/buildWithParameters?token=");
+
+		sb.append(buildProperties.getProperty("jenkins.authentication.token"));
+
+		for (Map.Entry<String, String> invocationParameter :
+				invocationParameters.entrySet()) {
+
+			String invocationParameterValue = invocationParameter.getValue();
+
+			if (JenkinsResultsParserUtil.isNullOrEmpty(
+					invocationParameterValue)) {
+
+				continue;
+			}
+
+			sb.append("&");
+			sb.append(invocationParameter.getKey());
+			sb.append("=");
+			sb.append(invocationParameterValue);
+		}
+
+		try {
+			JenkinsResultsParserUtil.toString(sb.toString());
+
+			System.out.println(
+				"The " + invocationParameters.get("REPORT_NAMES") +
+					" report(s) will be generated at: " + jobURL);
+		}
+		catch (IOException ioException) {
+			System.out.println(
+				"Unable to invoke a new build to generate reports");
+
+			ioException.printStackTrace();
+		}
 	}
 
 	private void _updateBuildDescription(List<String> reportNames) {

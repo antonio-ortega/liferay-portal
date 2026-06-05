@@ -33,13 +33,17 @@ SearchContainer<Country> countrySearchContainer = CountrySearchContainerFactory.
 				<%
 				List<String> availableActions = new ArrayList<>();
 
-				availableActions.add("deleteCountries");
-
-				if (country.getActive()) {
-					availableActions.add("deactivateCountries");
+				if (CountryPermissionUtil.contains(permissionChecker, country, ActionKeys.DELETE)) {
+					availableActions.add("deleteCountries");
 				}
-				else {
-					availableActions.add("activateCountries");
+
+				if (CountryPermissionUtil.contains(permissionChecker, country, ActionKeys.UPDATE)) {
+					if (country.getActive()) {
+						availableActions.add("deactivateCountries");
+					}
+					else {
+						availableActions.add("activateCountries");
+					}
 				}
 
 				row.setData(
@@ -52,12 +56,6 @@ SearchContainer<Country> countrySearchContainer = CountrySearchContainerFactory.
 					<portlet:param name="mvcRenderCommandName" value="/address/edit_country" />
 					<portlet:param name="countryId" value="<%= String.valueOf(country.getCountryId()) %>" />
 				</portlet:renderURL>
-
-				<%
-				if (!PortalPermissionUtil.contains(permissionChecker, ActionKeys.MANAGE_COUNTRIES)) {
-					rowURL = null;
-				}
-				%>
 
 				<liferay-ui:search-container-column-text
 					cssClass="font-weight-bold important table-cell-expand-smallest"
@@ -105,6 +103,16 @@ SearchContainer<Country> countrySearchContainer = CountrySearchContainerFactory.
 					name="priority"
 					property="position"
 				/>
+
+				<liferay-ui:search-container-column-text
+					cssClass="table-cell-expand-smallest table-cell-ws-nowrap table-column-text-center"
+					name="status"
+				>
+					<clay:label
+						displayType="<%= WorkflowConstants.getStatusStyle(country.getStatus()) %>"
+						label="<%= WorkflowConstants.getStatusLabel(country.getStatus()) %>"
+					/>
+				</liferay-ui:search-container-column-text>
 
 				<liferay-ui:search-container-column-jsp
 					cssClass="table-column-text-end"

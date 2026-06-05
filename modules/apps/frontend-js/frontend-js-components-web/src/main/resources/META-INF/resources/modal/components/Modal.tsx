@@ -8,7 +8,6 @@ import ClayLoadingIndicator from '@clayui/loading-indicator';
 import ClayModal, {useModal} from '@clayui/modal';
 import classNames from 'classnames';
 import {navigate} from 'frontend-js-web';
-import PropTypes from 'prop-types';
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 
 import Iframe, {IframeOnOpen} from './Iframe';
@@ -62,6 +61,7 @@ export interface ModalProps {
 		onEvent: EventHandler;
 	}[];
 	disableAutoClose?: boolean;
+	disableButtonsOnLoading?: boolean;
 	disableHeader?: boolean;
 	footerCssClass?: string;
 	headerCssClass?: string;
@@ -95,6 +95,7 @@ export default function Modal({
 	customEvents,
 	disableAutoClose,
 	disableHeader,
+	disableButtonsOnLoading = false,
 	footerCssClass,
 	headerCssClass,
 	headerHTML,
@@ -278,7 +279,15 @@ export default function Modal({
 			}
 		});
 
-		eventHandlers.push(closeEventHandler);
+		const loadingEventHandler = Liferay.on('isLoadingModal', (event) => {
+			if (event.id && id && event.id !== id) {
+				return;
+			}
+
+			setLoading(event.loading);
+		});
+
+		eventHandlers.push(closeEventHandler, loadingEventHandler);
 
 		return () => {
 			eventHandlers.forEach((eventHandler) => {
@@ -397,6 +406,10 @@ export default function Modal({
 													index
 												) => (
 													<ClayButton
+														disabled={
+															disableButtonsOnLoading &&
+															loading
+														}
 														displayType={
 															displayType
 														}
@@ -431,48 +444,3 @@ export default function Modal({
 		</>
 	);
 }
-
-Modal.propTypes = {
-	bodyHTML: PropTypes.string,
-	buttons: PropTypes.arrayOf(
-		PropTypes.shape({
-			displayType: PropTypes.oneOf([
-				'danger',
-				'info',
-				'link',
-				null,
-				'primary',
-				'secondary',
-				'success',
-				'unstyled',
-				'warning',
-			]),
-			formId: PropTypes.string,
-			id: PropTypes.string,
-			label: PropTypes.string,
-			onClick: PropTypes.func,
-			type: PropTypes.oneOf(['cancel', 'submit']),
-		})
-	),
-	center: PropTypes.bool,
-	containerProps: PropTypes.object,
-	contentComponent: PropTypes.elementType,
-	customEvents: PropTypes.arrayOf(
-		PropTypes.shape({
-			name: PropTypes.string,
-			onEvent: PropTypes.func,
-		})
-	),
-	disableHeader: PropTypes.bool,
-	headerHTML: PropTypes.string,
-	height: PropTypes.string,
-	id: PropTypes.string,
-	iframeProps: PropTypes.object,
-	onClose: PropTypes.func,
-	onOpen: PropTypes.func,
-	role: PropTypes.string,
-	size: PropTypes.oneOf(['full-screen', 'lg', 'md', 'sm']),
-	status: PropTypes.string,
-	title: PropTypes.string,
-	url: PropTypes.string,
-};

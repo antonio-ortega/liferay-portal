@@ -6,96 +6,103 @@
 import {expect, mergeTests} from '@playwright/test';
 
 import {apiHelpersTest} from '../../../fixtures/apiHelpersTest';
+import {dataApiHelpersTest} from '../../../fixtures/dataApiHelpersTest';
 import {featureFlagsTest} from '../../../fixtures/featureFlagsTest';
+import {isolatedChannelTest} from '../../../fixtures/isolatedChannelTest';
+import {isolatedSiteTest} from '../../../fixtures/isolatedSiteTest';
+import {loginAnalyticsCloudTest} from '../../../fixtures/loginAnalyticsCloudTest';
 import {loginTest} from '../../../fixtures/loginTest';
 import getRandomString from '../../../utils/getRandomString';
-import {
-	createSitePage,
-	navigateToSitePage,
-} from '../../osb-faro-web/main/utils/portal';
-import {Analytics, Event} from './utils/analytics';
+import {syncAnalyticsCloud} from '../../analytics-settings-web/main/utils/analytics-settings';
+import getFragmentDefinition from '../../layout-content-page-editor-web/main/utils/getFragmentDefinition';
+import getPageDefinition from '../../layout-content-page-editor-web/main/utils/getPageDefinition';
+import {captureAnalyticsEvents} from './utils/captureAnalyticsEvents';
 
 const test = mergeTests(
 	apiHelpersTest,
+	dataApiHelpersTest,
 	featureFlagsTest({
 		'LPS-178052': {enabled: true},
 	}),
+	isolatedChannelTest,
+	isolatedSiteTest,
+	loginAnalyticsCloudTest(),
 	loginTest()
 );
-
-let site;
-const siteName = getRandomString();
-
-test.beforeEach(async ({apiHelpers}) => {
-	site = await apiHelpers.headlessSite.createSite({
-		name: siteName,
-	});
-});
-
-test.afterEach(async ({apiHelpers}) => {
-	await test.step('Delete site on de DXP side', async () => {
-		await apiHelpers.headlessSite.deleteSite(site.id);
-	});
-});
 
 test(
 	'Verify events after navigating by SPA',
 	{
-		tag: '@LPD-56895',
+		tag: ['@LPD-56895', '@LRAC-8800'],
 	},
-	async ({apiHelpers, page}) => {
-		await test.step('test', async () => {
-			const pageTitle1 = 'MyPage 1';
+	async ({analyticsChannel: channel, apiHelpers, page, project, site}) => {
+		await syncAnalyticsCloud({
+			apiHelpers,
+			channel,
+			page,
+			project,
+			siteName: site.name,
+		});
 
-			await test.step('Create My Page 1', async () => {
-				await createSitePage({
-					apiHelpers,
-					pageTitle: pageTitle1,
-					siteName,
-				});
-			});
+		const layout1 = await apiHelpers.headlessDelivery.createSitePage({
+			pageDefinition: getPageDefinition([
+				getFragmentDefinition({
+					id: getRandomString(),
+					key: 'BASIC_COMPONENT-heading',
+				}),
+			]),
+			siteId: site.id,
+			title: 'MyPage 1',
+		});
 
-			const pageTitle2 = 'MyPage 2';
+		const layout2 = await apiHelpers.headlessDelivery.createSitePage({
+			pageDefinition: getPageDefinition([
+				getFragmentDefinition({
+					id: getRandomString(),
+					key: 'BASIC_COMPONENT-heading',
+				}),
+			]),
+			siteId: site.id,
+			title: 'MyPage 2',
+		});
 
-			await test.step('Create My Page 2', async () => {
-				await createSitePage({
-					apiHelpers,
-					pageTitle: pageTitle2,
-					siteName,
-				});
-			});
+		const capturedEvents = captureAnalyticsEvents(page);
 
-			await test.step('Go to My Page 1', async () => {
-				await navigateToSitePage({
-					page,
-					pageName: pageTitle1,
-					siteName,
-				});
-			});
+		const pageViewedWithTitle = (titleFragment: string) =>
+			capturedEvents.some(
+				(event) =>
+					event.eventId === 'pageViewed' &&
+					typeof event.context.title === 'string' &&
+					event.context.title.includes(titleFragment)
+			);
 
-			await test.step('Check the pageViewed event on My Page 1', async () => {
-				const analytics = new Analytics(page);
+		await test.step('Go to My Page 1', async () => {
+			await page.goto(
+				`/web${site.friendlyUrlPath}${layout1.friendlyUrlPath}`
+			);
 
-				const pageViewedEvent = (await analytics.getEvents(
-					'pageViewed'
-				)) as Event;
+			await expect.poll(() => pageViewedWithTitle('MyPage 1')).toBe(true);
+		});
 
-				expect(pageViewedEvent).toBeTruthy();
-			});
+		await test.step('Go to My Page 2', async () => {
+			await page.goto(
+				`/web${site.friendlyUrlPath}${layout2.friendlyUrlPath}`
+			);
 
-			await test.step('Go to My Page 2', async () => {
-				await page.getByRole('menuitem', {name: 'MyPage 2'}).click();
-			});
+			await expect.poll(() => pageViewedWithTitle('MyPage 2')).toBe(true);
+		});
 
-			await test.step('Check the pageViewed event on My Page 2', async () => {
-				const analytics = new Analytics(page);
+		await test.step('Verify channelId and dataSourceId in pageViewed events', async () => {
+			const pageViewedEvents = capturedEvents.filter(
+				(event) => event.eventId === 'pageViewed'
+			);
 
-				const pageViewedEvent = (await analytics.getEvents(
-					'pageViewed'
-				)) as Event;
+			expect(pageViewedEvents.length).toBeGreaterThan(0);
 
-				expect(pageViewedEvent).toBeTruthy();
-			});
+			for (const event of pageViewedEvents) {
+				expect(event.channelId).toBe(channel.id);
+				expect(event.dataSourceId).toBeTruthy();
+			}
 		});
 	}
 );

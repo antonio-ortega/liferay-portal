@@ -7,8 +7,8 @@ package com.liferay.marketplace.util;
 
 import com.liferay.headless.commerce.admin.catalog.client.dto.v1_0.Product;
 import com.liferay.headless.commerce.admin.catalog.client.dto.v1_0.SkuOption;
+import com.liferay.headless.commerce.admin.order.client.dto.v1_0.Order;
 import com.liferay.headless.commerce.admin.order.client.dto.v1_0.OrderItem;
-import com.liferay.headless.commerce.admin.order.client.pagination.Page;
 import com.liferay.marketplace.model.PublisherAssetLink;
 import com.liferay.osb.koroneiki.phloem.rest.client.dto.v1_0.ExternalLink;
 import com.liferay.portal.kernel.util.ArrayUtil;
@@ -23,8 +23,9 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import java.time.Instant;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 
 import java.util.Arrays;
 import java.util.Date;
@@ -99,11 +100,11 @@ public class MarketplaceUtil {
 	}
 
 	public static JSONArray createCloudProvisioningJSONArray(
-		Page<OrderItem> orderItemsPage) {
+		OrderItem[] orderItems) {
 
 		JSONArray jsonArray = new JSONArray();
 
-		for (OrderItem orderItem : orderItemsPage.getItems()) {
+		for (OrderItem orderItem : orderItems) {
 			jsonArray.put(
 				new JSONObject(
 				).put(
@@ -226,6 +227,23 @@ public class MarketplaceUtil {
 		}
 	}
 
+	public static String format(Date date) {
+		return format(date, "Not Applicable");
+	}
+
+	public static String format(Date date, String defaultValue) {
+		if (date == null) {
+			return defaultValue;
+		}
+
+		return date.toInstant(
+		).atZone(
+			ZoneId.of("UTC")
+		).format(
+			DateTimeFormatter.ofPattern("MMMM d, yyyy")
+		);
+	}
+
 	public static Map<String, Properties> getArtifactPropertiesMap(
 		Product product, Map<String, String> productSpecificationsMap,
 		PublisherAssetLink publisherAssetLink) {
@@ -268,26 +286,37 @@ public class MarketplaceUtil {
 		return localeMap.get("en_US");
 	}
 
+	public static JSONObject getOrderMetadata(Order order) {
+		Map<String, String> customFields =
+			(Map<String, String>)order.getCustomFields();
+
+		return new JSONObject(
+			customFields.getOrDefault("order-metadata", "{}"));
+	}
+
 	public static Date getOrderPurchaseEndDate(
 		String licenseType, String licenseUsageType) {
 
 		ZonedDateTime zonedDateTime = ZonedDateTime.now();
 
-		if (Objects.equals(licenseType, "Subscription")) {
-			Instant instant = zonedDateTime.plusYears(
-				1
-			).toInstant();
-
-			return Date.from(instant);
+		if (StringUtil.equalsIgnoreCase(licenseType, "3 Months Limited Beta")) {
+			return Date.from(
+				zonedDateTime.plusMonths(
+					3
+				).toInstant());
 		}
-		else if (Objects.equals(licenseUsageType, "trial")) {
+
+		if (StringUtil.equalsIgnoreCase(licenseUsageType, "Trial")) {
 			return Date.from(
 				zonedDateTime.plusMonths(
 					1
 				).toInstant());
 		}
 
-		return null;
+		return Date.from(
+			zonedDateTime.plusYears(
+				1
+			).toInstant());
 	}
 
 	public static String getSkuOptionValue(String key, SkuOption[] skuOptions) {
@@ -345,6 +374,10 @@ public class MarketplaceUtil {
 
 			ByteArrayOutputStream byteArrayOutputStream =
 				new ByteArrayOutputStream();
+
+			Properties properties = entry.getValue();
+
+			properties.store(byteArrayOutputStream, null);
 
 			zipOutputStream.write(byteArrayOutputStream.toByteArray());
 

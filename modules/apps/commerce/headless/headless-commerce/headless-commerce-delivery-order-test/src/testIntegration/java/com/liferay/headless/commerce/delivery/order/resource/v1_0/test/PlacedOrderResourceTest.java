@@ -33,6 +33,7 @@ import com.liferay.headless.commerce.delivery.order.client.pagination.Pagination
 import com.liferay.headless.commerce.delivery.order.client.resource.v1_0.PlacedOrderResource;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.model.Address;
 import com.liferay.portal.kernel.model.Country;
 import com.liferay.portal.kernel.model.Region;
@@ -59,11 +60,13 @@ import java.text.DateFormat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -107,14 +110,30 @@ public class PlacedOrderResourceTest extends BasePlacedOrderResourceTestCase {
 			_commerceCurrency.getCode(), _serviceContext);
 
 		_country = _countryLocalService.addCountry(
-			"XY", "XYZ", true, true, RandomTestUtil.randomString(),
+			null, "XY", "XYZ", true, true, RandomTestUtil.randomString(),
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
 			RandomTestUtil.nextDouble(), true, true, false, _serviceContext);
 
 		_region = _regionLocalService.addRegion(
-			_country.getCountryId(), true, RandomTestUtil.randomString(),
+			null, _country.getCountryId(), true, RandomTestUtil.randomString(),
 			RandomTestUtil.nextDouble(), RandomTestUtil.randomString(),
 			_serviceContext);
+	}
+
+	@After
+	@Override
+	public void tearDown() throws Exception {
+		super.tearDown();
+
+		for (CommerceOrder commerceOrder :
+				_commerceOrderLocalService.getCommerceOrders(
+					_commerceChannel.getGroupId(),
+					_accountEntry.getAccountEntryId(), QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS, null)) {
+
+			_commerceOrderLocalService.deleteCommerceOrder(
+				commerceOrder.getCommerceOrderId());
+		}
 	}
 
 	@Override
@@ -605,7 +624,12 @@ public class PlacedOrderResourceTest extends BasePlacedOrderResourceTestCase {
 		commerceOrder.setName(RandomTestUtil.randomString() + StringPool.AT);
 		commerceOrder.setPurchaseOrderNumber(
 			RandomTestUtil.randomString() + StringPool.AMPERSAND);
-		commerceOrder.setRequestedDeliveryDate(RandomTestUtil.nextDate());
+
+		Calendar calendar = Calendar.getInstance();
+
+		calendar.add(Calendar.MONTH, 1);
+
+		commerceOrder.setRequestedDeliveryDate(calendar.getTime());
 
 		User filterUser = UserTestUtil.addUser(testCompany);
 

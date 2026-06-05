@@ -6,31 +6,31 @@
 import {expect, mergeTests} from '@playwright/test';
 
 import {apiHelpersTest} from '../../../../fixtures/apiHelpersTest';
-import {applicationsMenuPageTest} from '../../../../fixtures/applicationsMenuPageTest';
 import {commercePagesTest} from '../../../../fixtures/commercePagesTest';
 import {dataApiHelpersTest} from '../../../../fixtures/dataApiHelpersTest';
+import {globalMenuPagesTest} from '../../../../fixtures/globalMenuPagesTest';
 import {loginTest} from '../../../../fixtures/loginTest';
 import {getRandomInt} from '../../../../utils/getRandomInt';
 
 export const test = mergeTests(
 	apiHelpersTest,
-	applicationsMenuPageTest,
 	commercePagesTest,
 	dataApiHelpersTest,
+	globalMenuPagesTest,
 	loginTest()
 );
 
 async function setAndCheckSorting({
-	applicationsMenuPage,
 	commerceThemeMiniumCatalogPage,
 	firstCardItem,
 	firstCardItemAfterChange,
+	globalMenuPage,
 	page,
 	siteName,
 	sortingOption1,
 	sortingOption2,
 }) {
-	await applicationsMenuPage.goToSite(siteName);
+	await globalMenuPage.goToSite(siteName);
 	await page.waitForLoadState('networkidle');
 
 	await commerceThemeMiniumCatalogPage.optionsButton.click();
@@ -61,31 +61,27 @@ async function setAndCheckSorting({
 
 test('LPD-18714 Setting default sort for commerce products', async ({
 	apiHelpers,
-	applicationsMenuPage,
 	commerceThemeMiniumCatalogPage,
+	globalMenuPage,
 	page,
 }) => {
 	test.setTimeout(180000);
 
 	const siteName1 = 'Minium' + getRandomInt();
 
-	const site1 = await apiHelpers.headlessSite.createSite({
+	await apiHelpers.headlessAdminSite.postSite({
 		name: siteName1,
 		templateKey: 'minium-initializer',
 		templateType: 'site-initializer',
 	});
 
-	apiHelpers.data.push({id: site1.id, type: 'site'});
-
 	const siteName2 = 'Minium' + getRandomInt();
 
-	const site2 = await apiHelpers.headlessSite.createSite({
+	await apiHelpers.headlessAdminSite.postSite({
 		name: siteName2,
 		templateKey: 'minium-initializer',
 		templateType: 'site-initializer',
 	});
-
-	apiHelpers.data.push({id: site2.id, type: 'site'});
 
 	const sortingOption1 = 'Name Ascending';
 	const sortingOption2 = 'Name Descending';
@@ -98,10 +94,10 @@ test('LPD-18714 Setting default sort for commerce products', async ({
 
 	try {
 		await setAndCheckSorting({
-			applicationsMenuPage,
 			commerceThemeMiniumCatalogPage,
 			firstCardItem: firstCardItemSortingOption1,
 			firstCardItemAfterChange: firstCardItemSortingOption3,
+			globalMenuPage,
 			page,
 			siteName: siteName1,
 			sortingOption1,
@@ -109,17 +105,17 @@ test('LPD-18714 Setting default sort for commerce products', async ({
 		});
 
 		await setAndCheckSorting({
-			applicationsMenuPage,
 			commerceThemeMiniumCatalogPage,
 			firstCardItem: firstCardItemSortingOption2,
 			firstCardItemAfterChange: firstCardItemSortingOption4,
+			globalMenuPage,
 			page,
 			siteName: siteName2,
 			sortingOption1: sortingOption2,
 			sortingOption2: sortingOption4,
 		});
 
-		await applicationsMenuPage.goToSite(siteName1);
+		await globalMenuPage.goToSite(siteName1);
 
 		expect(
 			await commerceThemeMiniumCatalogPage.orderByButton.innerText()

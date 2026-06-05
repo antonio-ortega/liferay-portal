@@ -147,3 +147,4 @@ public interface TimeRangeResource {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-710796921

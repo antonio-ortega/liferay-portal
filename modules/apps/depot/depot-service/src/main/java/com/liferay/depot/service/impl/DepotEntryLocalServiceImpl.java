@@ -28,12 +28,14 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupConstants;
+import com.liferay.portal.kernel.model.Groups_OrgsTable;
 import com.liferay.portal.kernel.model.Groups_UserGroupsTable;
 import com.liferay.portal.kernel.model.ModelHintsUtil;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.Users_GroupsTable;
+import com.liferay.portal.kernel.model.Users_OrgsTable;
 import com.liferay.portal.kernel.model.Users_UserGroupsTable;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceLocalService;
@@ -117,10 +119,12 @@ public class DepotEntryLocalServiceImpl extends DepotEntryLocalServiceBaseImpl {
 		depotEntry.setUuid(serviceContext.getUuid());
 
 		Group group = _groupLocalService.addGroup(
-			StringPool.BLANK, serviceContext.getUserId(),
-			GroupConstants.DEFAULT_PARENT_GROUP_ID, DepotEntry.class.getName(),
-			depotEntry.getDepotEntryId(), GroupConstants.DEFAULT_LIVE_GROUP_ID,
-			nameMap, descriptionMap, GroupConstants.TYPE_DEPOT, null, true,
+			GetterUtil.getString(
+				serviceContext.getAttribute("groupExternalReferenceCode")),
+			serviceContext.getUserId(), GroupConstants.DEFAULT_PARENT_GROUP_ID,
+			DepotEntry.class.getName(), depotEntry.getDepotEntryId(),
+			GroupConstants.DEFAULT_LIVE_GROUP_ID, nameMap, descriptionMap,
+			GroupConstants.TYPE_DEPOT, null, true,
 			GroupConstants.DEFAULT_MEMBERSHIP_RESTRICTION,
 			"/asset-library-" + depotEntry.getDepotEntryId(), false, false,
 			true, serviceContext);
@@ -242,39 +246,7 @@ public class DepotEntryLocalServiceImpl extends DepotEntryLocalServiceBaseImpl {
 
 	@Override
 	public List<Long> getDepotEntryGroupIds(
-		long companyId, long userId, int type, boolean userGroupsOnly) {
-
-		if (userGroupsOnly) {
-			return dslQuery(
-				DSLQueryFactoryUtil.selectDistinct(
-					DepotEntryTable.INSTANCE.groupId
-				).from(
-					DepotEntryTable.INSTANCE
-				).innerJoinON(
-					Groups_UserGroupsTable.INSTANCE,
-					Groups_UserGroupsTable.INSTANCE.groupId.eq(
-						DepotEntryTable.INSTANCE.groupId)
-				).innerJoinON(
-					Users_UserGroupsTable.INSTANCE,
-					Users_UserGroupsTable.INSTANCE.userGroupId.eq(
-						Groups_UserGroupsTable.INSTANCE.userGroupId
-					).and(
-						Users_UserGroupsTable.INSTANCE.userId.eq(userId)
-					)
-				).where(
-					DepotEntryTable.INSTANCE.companyId.eq(
-						companyId
-					).and(
-						() -> {
-							if (type != DepotConstants.TYPE_ANY) {
-								return DepotEntryTable.INSTANCE.type.eq(type);
-							}
-
-							return null;
-						}
-					)
-				));
-		}
+		long companyId, long userId, int type, boolean dynamicInheritanceOnly) {
 
 		return dslQuery(
 			DSLQueryFactoryUtil.selectDistinct(
@@ -283,10 +255,27 @@ public class DepotEntryLocalServiceImpl extends DepotEntryLocalServiceBaseImpl {
 				DepotEntryTable.INSTANCE
 			).leftJoinOn(
 				Users_GroupsTable.INSTANCE,
-				Users_GroupsTable.INSTANCE.groupId.eq(
-					DepotEntryTable.INSTANCE.groupId
+				() -> {
+					if (dynamicInheritanceOnly) {
+						return null;
+					}
+
+					return Users_GroupsTable.INSTANCE.groupId.eq(
+						DepotEntryTable.INSTANCE.groupId
+					).and(
+						Users_GroupsTable.INSTANCE.userId.eq(userId)
+					);
+				}
+			).leftJoinOn(
+				Groups_OrgsTable.INSTANCE,
+				Groups_OrgsTable.INSTANCE.groupId.eq(
+					DepotEntryTable.INSTANCE.groupId)
+			).leftJoinOn(
+				Users_OrgsTable.INSTANCE,
+				Users_OrgsTable.INSTANCE.organizationId.eq(
+					Groups_OrgsTable.INSTANCE.organizationId
 				).and(
-					Users_GroupsTable.INSTANCE.userId.eq(userId)
+					Users_OrgsTable.INSTANCE.userId.eq(userId)
 				)
 			).leftJoinOn(
 				Groups_UserGroupsTable.INSTANCE,
@@ -311,11 +300,25 @@ public class DepotEntryLocalServiceImpl extends DepotEntryLocalServiceBaseImpl {
 						return null;
 					}
 				).and(
-					Predicate.withParentheses(
-						Users_GroupsTable.INSTANCE.userId.isNotNull(
-						).or(
-							Users_UserGroupsTable.INSTANCE.userId.isNotNull()
-						))
+					() -> {
+						if (dynamicInheritanceOnly) {
+							return Predicate.withParentheses(
+								Users_OrgsTable.INSTANCE.userId.isNotNull(
+								).or(
+									Users_UserGroupsTable.INSTANCE.userId.
+										isNotNull()
+								));
+						}
+
+						return Predicate.withParentheses(
+							Users_GroupsTable.INSTANCE.userId.isNotNull(
+							).or(
+								Users_OrgsTable.INSTANCE.userId.isNotNull()
+							).or(
+								Users_UserGroupsTable.INSTANCE.userId.
+									isNotNull()
+							));
+					}
 				)
 			));
 	}

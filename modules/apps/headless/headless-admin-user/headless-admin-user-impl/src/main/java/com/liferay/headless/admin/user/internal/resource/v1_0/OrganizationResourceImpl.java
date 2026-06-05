@@ -14,6 +14,7 @@ import com.liferay.account.service.AccountEntryService;
 import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.service.AssetCategoryService;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
+import com.liferay.exportimport.constants.ExportImportConstants;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.exportimport.vulcan.batch.engine.ExportImportVulcanBatchEngineTaskItemDelegate;
 import com.liferay.headless.admin.user.dto.v1_0.Account;
@@ -44,7 +45,6 @@ import com.liferay.headless.admin.user.internal.util.v1_0.ResourcePermissionUtil
 import com.liferay.headless.admin.user.resource.v1_0.OrganizationResource;
 import com.liferay.headless.admin.user.resource.v1_0.RoleResource;
 import com.liferay.petra.string.CharPool;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Address;
@@ -59,11 +59,11 @@ import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.search.BooleanClauseOccur;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Sort;
+import com.liferay.portal.kernel.search.WildcardQuery;
 import com.liferay.portal.kernel.search.filter.BooleanFilter;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.search.filter.QueryFilter;
 import com.liferay.portal.kernel.search.filter.TermFilter;
-import com.liferay.portal.kernel.search.generic.WildcardQueryImpl;
 import com.liferay.portal.kernel.service.EmailAddressService;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ListTypeLocalService;
@@ -301,8 +301,15 @@ public class OrganizationResourceImpl
 	}
 
 	@Override
-	public ExportImportDescriptor getExportImportDescriptor() {
-		return new ExportImportDescriptor() {
+	public ExportImportDescriptor<com.liferay.portal.kernel.model.Organization>
+		getExportImportDescriptor() {
+
+		return new ExportImportDescriptor<>() {
+
+			@Override
+			public String getKey() {
+				return OrganizationResourceImpl.class.getName();
+			}
 
 			@Override
 			public String getLabelLanguageKey() {
@@ -310,9 +317,10 @@ public class OrganizationResourceImpl
 			}
 
 			@Override
-			public String getModelClassName() {
-				return com.liferay.portal.kernel.model.Organization.class.
-					getName();
+			public Class<com.liferay.portal.kernel.model.Organization>
+				getModelClass() {
+
+				return com.liferay.portal.kernel.model.Organization.class;
 			}
 
 			@Override
@@ -337,13 +345,13 @@ public class OrganizationResourceImpl
 			}
 
 			@Override
-			public String getResourceClassName() {
-				return OrganizationResourceImpl.class.getName();
+			public Scope getScope() {
+				return Scope.COMPANY;
 			}
 
 			@Override
-			public Scope getScope() {
-				return Scope.COMPANY;
+			public String getSectionKey() {
+				return ExportImportConstants.SECTION_KEY_USERS;
 			}
 
 		};
@@ -888,10 +896,6 @@ public class OrganizationResourceImpl
 	}
 
 	private long[] _getAssetCategoryIds(Organization organization) {
-		if (!FeatureFlagManagerUtil.isEnabled("LPD-35914")) {
-			return null;
-		}
-
 		TaxonomyCategoryBrief[] taxonomyCategoryBriefs =
 			organization.getTaxonomyCategoryBriefs();
 
@@ -925,8 +929,13 @@ public class OrganizationResourceImpl
 					}
 
 					AssetCategory assetCategory =
-						_assetCategoryService.getOrAddEmptyCategory(
-							externalReferenceCode, group.getGroupId());
+						_assetCategoryService.
+							getOrAddEmptyCategoryWithAncestors(
+								externalReferenceCode, group.getGroupId(),
+								taxonomyCategoryBrief.
+									getParentTaxonomyCategoryExternalReferenceCode(),
+								taxonomyCategoryBrief.
+									getParentVocabularyExternalReferenceCode());
 
 					return assetCategory.getCategoryId();
 				},
@@ -941,6 +950,7 @@ public class OrganizationResourceImpl
 		}
 
 		return ServiceBuilderCountryUtil.toServiceBuilderCountryId(
+			location.getAddressCountryExternalReferenceCode(),
 			contextCompany.getCompanyId(), location.getAddressCountry());
 	}
 
@@ -1085,7 +1095,7 @@ public class OrganizationResourceImpl
 					if (serviceBuilderOrganizationId != 0L) {
 						booleanFilter.add(
 							new QueryFilter(
-								new WildcardQueryImpl(
+								new WildcardQuery(
 									"treePath",
 									"*" + parentOrganizationId + "*")));
 						booleanFilter.add(
@@ -1153,21 +1163,6 @@ public class OrganizationResourceImpl
 			return Long.valueOf(parentOrganization.getId());
 		}
 
-		if (!FeatureFlagManagerUtil.isEnabled("LPD-35914")) {
-			com.liferay.portal.kernel.model.Organization
-				serviceBuilderOrganization =
-					_organizationService.
-						fetchOrganizationByExternalReferenceCode(
-							parentOrganization.getExternalReferenceCode(),
-							contextCompany.getCompanyId());
-
-			if (serviceBuilderOrganization == null) {
-				return defaultValue;
-			}
-
-			return serviceBuilderOrganization.getOrganizationId();
-		}
-
 		com.liferay.portal.kernel.model.Organization
 			serviceBuilderOrganization =
 				_organizationLocalService.getOrAddEmptyOrganization(
@@ -1221,7 +1216,9 @@ public class OrganizationResourceImpl
 		}
 
 		return ServiceBuilderRegionUtil.getServiceBuilderRegionId(
-			location.getAddressRegion(), countryId);
+			location.getAddressRegionExternalReferenceCode(),
+			contextCompany.getCompanyId(), location.getAddressRegion(),
+			countryId);
 	}
 
 	private long _getServiceBuilderOrganizationId(String organizationId)
@@ -1443,10 +1440,6 @@ public class OrganizationResourceImpl
 			com.liferay.portal.kernel.model.Organization
 				serviceBuilderOrganization)
 		throws Exception {
-
-		if (!FeatureFlagManagerUtil.isEnabled("LPD-35914")) {
-			return serviceBuilderOrganization;
-		}
 
 		AccountBrief[] accountBriefs = organization.getAccountBriefs();
 

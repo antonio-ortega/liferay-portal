@@ -1,19 +1,20 @@
 import 'test/mock-modal';
 
-import * as useDataSource from 'shared/hooks/useDataSource';
+import * as useDataSources from 'shared/context/dataSources';
 import client from 'shared/apollo/client';
 import EventAnalysisList from '../List';
 import mockStore from 'test/mock-store';
 import React from 'react';
-import {ApolloProvider} from '@apollo/react-components';
+import {ApolloProvider} from '@apollo/client';
 import {fireEvent, render} from '@testing-library/react';
 import {MemoryRouter, Route} from 'react-router-dom';
-import {MockedProvider} from '@apollo/react-testing';
+import {MockedProvider} from '@apollo/client/testing';
 import {mockEmptyState, mockSuccessState} from 'test/__mocks__/mock-objects';
 import {mockEventAnalysisListReq} from 'test/graphql-data';
 import {open} from 'shared/actions/modals';
 import {Provider} from 'react-redux';
 import {Routes} from 'shared/util/router';
+import {useRequest} from 'shared/hooks/useRequest';
 import {waitForLoadingToBeRemoved} from 'test/helpers';
 
 jest.unmock('react-dom');
@@ -24,6 +25,18 @@ jest.mock('react-router-dom', () => ({
 		channelId: '456',
 		groupId: '123'
 	})
+}));
+
+const mockUseRequestResponse = (overrides = {}) => ({
+	data: [],
+	error: false,
+	loading: false,
+	refetch: jest.fn(),
+	...overrides
+});
+
+jest.mock('shared/hooks/useRequest', () => ({
+	useRequest: jest.fn()
 }));
 
 const eventAnalysis = [
@@ -58,11 +71,15 @@ const WrappedComponent = ({eventAnalyses}) => (
 		</ApolloProvider>
 	</Provider>
 );
-const mockUseDataSource = useDataSource;
+const mockUseDataSource = useDataSources;
 
 describe('Event Analysis List', () => {
+	beforeEach(() => {
+		useRequest.mockReturnValue(mockUseRequestResponse());
+	});
+
 	it('should render', async () => {
-		mockUseDataSource.useDataSource = jest.fn(() => mockSuccessState);
+		mockUseDataSource.useDataSources = jest.fn(() => mockSuccessState);
 
 		const {container} = render(
 			<WrappedComponent eventAnalyses={eventAnalysis} />
@@ -70,7 +87,11 @@ describe('Event Analysis List', () => {
 
 		await waitForLoadingToBeRemoved(container);
 
-		expect(container).toMatchSnapshot();
+		expect(
+			container.querySelector('.event-analysis-list-root')
+		).toBeInTheDocument();
+		expect(container.querySelector('table')).toBeInTheDocument();
+		expect(container.querySelector('tbody tr')).toBeInTheDocument();
 	});
 
 	it('should render empty state', async () => {
@@ -125,7 +146,7 @@ describe('Event Analysis List', () => {
 
 describe('EventAnalysisList with no Data Source', () => {
 	it('should render EmptyState', () => {
-		mockUseDataSource.useDataSource = jest.fn(() => mockEmptyState);
+		mockUseDataSource.useDataSources = jest.fn(() => mockEmptyState);
 
 		const {getByText} = render(
 			<WrappedComponent eventAnalyses={eventAnalysis} />
@@ -138,5 +159,79 @@ describe('EventAnalysisList with no Data Source', () => {
 		expect(
 			getByText('Access our documentation to learn more.')
 		).toBeInTheDocument();
+	});
+});
+
+describe('Event Analysis List - Feature Limits', () => {
+	it('should enable the create button when limit is NOT reached', async () => {
+		useRequest.mockReturnValue(
+			mockUseRequestResponse({
+				data: [
+					{
+						currentUsage: 2,
+						limit: 3,
+						name: 'Event Analysis'
+					}
+				]
+			})
+		);
+
+		mockUseDataSource.useDataSources = jest.fn(() => mockSuccessState);
+
+		const {getByText} = render(
+			<WrappedComponent eventAnalyses={eventAnalysis} />
+		);
+
+		const createButton = getByText('Create Analysis').closest('a');
+		expect(createButton).not.toHaveClass('disabled');
+	});
+
+	it('should disable the create button and show alert icon when limit IS reached', async () => {
+		useRequest.mockReturnValue(
+			mockUseRequestResponse({
+				data: [
+					{
+						currentUsage: 3,
+						limit: 3,
+						name: 'Event Analysis'
+					}
+				]
+			})
+		);
+		mockUseDataSource.useDataSources = jest.fn(() => mockSuccessState);
+
+		const {container, getByText} = render(
+			<WrappedComponent eventAnalyses={eventAnalysis} />
+		);
+
+		const createButton = getByText('Create Analysis').closest('a');
+		expect(createButton).toHaveClass('disabled');
+
+		expect(
+			container.querySelector('.lexicon-icon-exclamation-full')
+		).toBeInTheDocument();
+	});
+
+	it('should enable the create button when limit is unlimited (-1)', async () => {
+		useRequest.mockReturnValue(
+			mockUseRequestResponse({
+				data: [
+					{
+						currentUsage: 100,
+						limit: -1,
+						name: 'Event Analysis'
+					}
+				]
+			})
+		);
+
+		mockUseDataSource.useDataSources = jest.fn(() => mockSuccessState);
+
+		const {getByText} = render(
+			<WrappedComponent eventAnalyses={eventAnalysis} />
+		);
+
+		const createButton = getByText('Create Analysis').closest('a');
+		expect(createButton).not.toHaveClass('disabled');
 	});
 });

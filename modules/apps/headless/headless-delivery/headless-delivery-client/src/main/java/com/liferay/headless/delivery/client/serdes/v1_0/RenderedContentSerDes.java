@@ -373,3 +373,4 @@ public class RenderedContentSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:579675408

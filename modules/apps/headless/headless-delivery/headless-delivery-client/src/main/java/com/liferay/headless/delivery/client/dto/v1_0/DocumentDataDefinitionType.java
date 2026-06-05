@@ -464,3 +464,4 @@ public class DocumentDataDefinitionType implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-954682807

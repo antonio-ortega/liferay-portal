@@ -1077,3 +1077,4 @@ public class ContentTemplate implements Serializable {
 	private Map<String, Serializable> _extendedProperties;
 
 }
+// LIFERAY-REST-BUILDER-HASH:1717140014

@@ -39,6 +39,7 @@ import com.liferay.layout.provider.LayoutStructureProvider;
 import com.liferay.layout.test.util.ContentLayoutTestUtil;
 import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.layout.util.LayoutServiceContextHelper;
+import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.Group;
@@ -54,6 +55,7 @@ import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.ScopeUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.Inject;
@@ -147,66 +149,16 @@ public class MapToFieldInformationTemplateTest {
 
 	@Test
 	public void testMapToInfoField() throws Exception {
-		_mapToInfoField(
-			AssetCategory.class.getName(), 0, _assetCategory.getCategoryId(),
-			"name", StringPool.BLANK);
-		_mapToInfoField(
-			BlogsEntry.class.getName(), 0, _blogsEntry.getEntryId(), "content",
-			StringPool.BLANK);
-		_mapToInfoField(
-			FileEntry.class.getName(), _dlFileEntry.getFileEntryTypeId(),
-			_dlFileEntry.getFileEntryId(), "title",
-			String.valueOf(_dlFileEntry.getFileEntryTypeId()));
-		_mapToInfoField(
-			JournalArticle.class.getName(), _journalArticle.getDDMStructureId(),
-			_journalArticle.getResourcePrimKey(),
-			"DDMStructure_" + _ddmFormField.getName(),
-			String.valueOf(_journalArticle.getDDMStructureId()));
-
-		_assertRenderLayoutHTML(
-			_assetCategory.getName(), _blogsEntry.getContent(), _fieldContent,
-			_dlFileEntry.getTitle());
+		_testMapToInfoField(1, infoField -> infoField.getExternalUniqueId());
+		_testMapToInfoField(2, infoField -> infoField.getUniqueId());
 	}
 
 	@Test
 	public void testMapToInfoFieldInCollectionDisplay() throws Exception {
-		InfoField infoField = TemplateTestUtil.addTemplateEntryInfoField(
-			"AssetEntry_title", AssetEntry.class.getName(), StringPool.BLANK,
-			_infoItemServiceRegistry, _serviceContext);
-
-		ContentLayoutTestUtil.addCollectionDisplayToLayout(
-			JSONUtil.put(
-				"itemType", AssetEntry.class.getName()
-			).put(
-				"key",
-				"com.liferay.asset.internal.info.collection.provider." +
-					"RecentContentInfoCollectionProvider"
-			).put(
-				"type", InfoListProviderItemSelectorReturnType.class.getName()
-			),
-			_draftLayout, _layoutStructureProvider, null, null, 0,
-			_segmentsExperienceId,
-			_fragmentEntryLinkLocalService.addFragmentEntryLink(
-				null, TestPropsValues.getUserId(), _group.getGroupId(), null,
-				null, null, _segmentsExperienceId, _draftLayout.getPlid(),
-				_fragmentEntry.getCss(), _fragmentEntry.getHtml(),
-				_fragmentEntry.getJs(), _fragmentEntry.getConfiguration(),
-				JSONUtil.put(
-					FragmentEntryProcessorConstants.
-						KEY_EDITABLE_FRAGMENT_ENTRY_PROCESSOR,
-					JSONUtil.put(
-						"element-text",
-						JSONUtil.put(
-							"collectionFieldId", infoField.getUniqueId()))
-				).toString(),
-				StringPool.BLANK, 0, _fragmentEntry.getFragmentEntryKey(),
-				_fragmentEntry.getType(), _serviceContext));
-
-		ContentLayoutTestUtil.publishLayout(_draftLayout, _layout);
-
-		_assertRenderLayoutHTML(
-			_blogsEntry.getTitle(), _dlFileEntry.getTitle(),
-			_journalArticle.getTitle());
+		_testMapToInfoFieldInCollectionDisplay(
+			1, infoField -> infoField.getExternalUniqueId());
+		_testMapToInfoFieldInCollectionDisplay(
+			2, infoField -> infoField.getUniqueId());
 	}
 
 	private AssetCategory _addAssetCategory() throws Exception {
@@ -263,6 +215,19 @@ public class MapToFieldInformationTemplateTest {
 			_dataDefinitionResourceFactory, _ddmFormField,
 			_ddmFormValuesToFieldsConverter, _fieldContent, _group.getGroupId(),
 			_journalConverter);
+	}
+
+	private void _assertRenderLayoutHTML(int count, String... strings)
+		throws Exception {
+
+		String html = ContentLayoutTestUtil.getRenderLayoutHTML(
+			_layout, _layoutServiceContextHelper, _layoutStructureProvider,
+			_segmentsExperienceId);
+
+		for (String string : strings) {
+			Assert.assertEquals(
+				html, count, StringUtil.count(html, string + "</h1>"));
+		}
 	}
 
 	private void _assertRenderLayoutHTML(String... strings) throws Exception {
@@ -340,7 +305,8 @@ public class MapToFieldInformationTemplateTest {
 
 	private void _mapToInfoField(
 			String className, long classTypeId, long classPK, String fieldName,
-			String infoItemFormVariationKey)
+			String infoItemFormVariationKey,
+			UnsafeFunction<InfoField, String, Exception> unsafeFunction)
 		throws Exception {
 
 		InfoField infoField = TemplateTestUtil.addTemplateEntryInfoField(
@@ -363,17 +329,90 @@ public class MapToFieldInformationTemplateTest {
 					).put(
 						"classTypeId", String.valueOf(classTypeId)
 					).put(
-						"fieldId", infoField.getUniqueId()
+						"fieldId", unsafeFunction.apply(infoField)
 					))
 			).toString(),
 			_fragmentEntry.getCss(), _fragmentEntry.getConfiguration(),
 			_fragmentEntry.getExternalReferenceCode(),
-			_fragmentEntry.getScopeERC(), _fragmentEntry.getHtml(),
-			_fragmentEntry.getJs(), _draftLayout,
+			ScopeUtil.getItemScopeExternalReferenceCode(
+				_fragmentEntry.getGroupId(), _draftLayout.getGroupId()),
+			_fragmentEntry.getHtml(), _fragmentEntry.getJs(), _draftLayout,
 			_fragmentEntry.getFragmentEntryKey(), _fragmentEntry.getType(),
 			null, 0, _segmentsExperienceId);
 
 		ContentLayoutTestUtil.publishLayout(_draftLayout, _layout);
+	}
+
+	private void _testMapToInfoField(
+			int count,
+			UnsafeFunction<InfoField, String, Exception> unsafeFunction)
+		throws Exception {
+
+		_mapToInfoField(
+			AssetCategory.class.getName(), 0, _assetCategory.getCategoryId(),
+			"name", StringPool.BLANK, unsafeFunction);
+		_mapToInfoField(
+			BlogsEntry.class.getName(), 0, _blogsEntry.getEntryId(), "content",
+			StringPool.BLANK, unsafeFunction);
+		_mapToInfoField(
+			FileEntry.class.getName(), _dlFileEntry.getFileEntryTypeId(),
+			_dlFileEntry.getFileEntryId(), "title",
+			String.valueOf(_dlFileEntry.getFileEntryTypeId()), unsafeFunction);
+		_mapToInfoField(
+			JournalArticle.class.getName(), _journalArticle.getDDMStructureId(),
+			_journalArticle.getResourcePrimKey(),
+			"DDMStructure_" + _ddmFormField.getName(),
+			String.valueOf(_journalArticle.getDDMStructureId()),
+			unsafeFunction);
+
+		_assertRenderLayoutHTML(
+			count, _assetCategory.getName(), _blogsEntry.getContent(),
+			_fieldContent, _dlFileEntry.getTitle());
+	}
+
+	private void _testMapToInfoFieldInCollectionDisplay(
+			int count,
+			UnsafeFunction<InfoField, String, Exception> unsafeFunction)
+		throws Exception {
+
+		InfoField infoField = TemplateTestUtil.addTemplateEntryInfoField(
+			"AssetEntry_title", AssetEntry.class.getName(), StringPool.BLANK,
+			_infoItemServiceRegistry, _serviceContext);
+
+		ContentLayoutTestUtil.addCollectionDisplayToLayout(
+			JSONUtil.put(
+				"itemType", AssetEntry.class.getName()
+			).put(
+				"key",
+				"com.liferay.asset.internal.info.collection.provider." +
+					"RecentContentInfoCollectionProvider"
+			).put(
+				"type", InfoListProviderItemSelectorReturnType.class.getName()
+			),
+			_draftLayout, _layoutStructureProvider, null, null, 0,
+			_segmentsExperienceId,
+			_fragmentEntryLinkLocalService.addFragmentEntryLink(
+				null, TestPropsValues.getUserId(), _group.getGroupId(), null,
+				null, null, _segmentsExperienceId, _draftLayout.getPlid(),
+				_fragmentEntry.getCss(), _fragmentEntry.getHtml(),
+				_fragmentEntry.getJs(), _fragmentEntry.getConfiguration(),
+				JSONUtil.put(
+					FragmentEntryProcessorConstants.
+						KEY_EDITABLE_FRAGMENT_ENTRY_PROCESSOR,
+					JSONUtil.put(
+						"element-text",
+						JSONUtil.put(
+							"collectionFieldId",
+							unsafeFunction.apply(infoField)))
+				).toString(),
+				StringPool.BLANK, 0, _fragmentEntry.getFragmentEntryKey(),
+				_fragmentEntry.getType(), _serviceContext));
+
+		ContentLayoutTestUtil.publishLayout(_draftLayout, _layout);
+
+		_assertRenderLayoutHTML(
+			count, _blogsEntry.getTitle(), _dlFileEntry.getTitle(),
+			_journalArticle.getTitle());
 	}
 
 	private AssetCategory _assetCategory;

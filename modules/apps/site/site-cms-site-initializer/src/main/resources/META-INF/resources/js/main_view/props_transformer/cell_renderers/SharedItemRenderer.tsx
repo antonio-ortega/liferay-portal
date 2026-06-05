@@ -6,12 +6,12 @@
 import ClayIcon from '@clayui/icon';
 import ClayLink from '@clayui/link';
 import ClaySticker from '@clayui/sticker';
-import {ClayTooltipProvider} from '@clayui/tooltip';
 import {replaceTokens} from '@liferay/frontend-data-set-web';
-import {sub} from 'frontend-js-web';
 import React, {useMemo} from 'react';
 
+import SharedIcon from '../../../common/components/SharedIcon';
 import {OBJECT_ENTRY_FOLDER_CLASS_NAME} from '../../../common/utils/constants';
+import {openSharedItemViewModal} from '../utils/openSharedItemViewModal';
 
 interface ActionItem {
 	data: {id: string};
@@ -55,22 +55,22 @@ export default function SharedItemRenderer({
 		iconColor = 'content-icon-web-content';
 	}
 
+	const isFolder = itemData?.className === OBJECT_ENTRY_FOLDER_CLASS_NAME;
+	const visible = itemData?.visible;
+
+	const shouldOpenModal =
+		!itemData?.actionIds?.includes('UPDATE') && !isFolder && visible;
+
 	const linkHref = useMemo(() => {
 		const {actionId} = options;
 
-		if (!actions.length || !actionId) {
+		if (shouldOpenModal || !actions.length || !actionId || !visible) {
 			return null;
 		}
 
-		const isFolder = itemData?.className === OBJECT_ENTRY_FOLDER_CLASS_NAME;
-		const isUpdate =
-			itemData?.actionIds?.includes('UPDATE') && itemData?.visible;
-
 		const resolvedActionId = isFolder
 			? `${actionId}Folder`
-			: isUpdate
-				? `${actionId}Edit`
-				: actionId;
+			: `${actionId}Edit`;
 
 		const selectedAction = actions.find(
 			({data}) => data?.id === resolvedActionId
@@ -81,7 +81,7 @@ export default function SharedItemRenderer({
 		}
 
 		return replaceTokens(selectedAction.href, itemData);
-	}, [actions, itemData, options]);
+	}, [actions, isFolder, itemData, options, shouldOpenModal, visible]);
 
 	return (
 		<span className="align-items-center c-gap-2 d-flex table-list-title">
@@ -89,7 +89,20 @@ export default function SharedItemRenderer({
 				<ClayIcon aria-hidden="true" symbol={icon} />
 			</ClaySticker>
 
-			{linkHref ? (
+			{shouldOpenModal ? (
+				<ClayLink
+					aria-label={title}
+					data-senna-off
+					href="#"
+					onClick={(event: React.MouseEvent) => {
+						event.preventDefault();
+
+						openSharedItemViewModal(itemData);
+					}}
+				>
+					{title}
+				</ClayLink>
+			) : linkHref ? (
 				<ClayLink aria-label={title} data-senna-off href={linkHref}>
 					{title}
 				</ClayLink>
@@ -97,21 +110,7 @@ export default function SharedItemRenderer({
 				<span>{title}</span>
 			)}
 
-			{siteName && (
-				<ClayTooltipProvider>
-					<ClaySticker
-						className="flex-shrink-0"
-						data-tooltip-align="top"
-						displayType="unstyled"
-						title={sub(
-							Liferay.Language.get('shared-from-x'),
-							`"${siteName}"`
-						)}
-					>
-						<ClayIcon className="text-secondary" symbol="users" />
-					</ClaySticker>
-				</ClayTooltipProvider>
-			)}
+			{siteName && <SharedIcon spaceName={siteName} />}
 		</span>
 	);
 }

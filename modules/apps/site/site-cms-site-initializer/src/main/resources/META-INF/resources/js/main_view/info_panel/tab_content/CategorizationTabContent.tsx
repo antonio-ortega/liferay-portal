@@ -39,6 +39,8 @@ const CategorizationTabContent = () => {
 
 			delete (data as Partial<IAssetObjectEntry>).actions;
 
+			delete (data as Partial<IAssetObjectEntry>).file;
+
 			setCurrentAsset(data);
 		}
 		catch (error) {
@@ -69,7 +71,6 @@ const CategorizationTabContent = () => {
 					error,
 				} = await ObjectEntryService.patchObjectEntry(
 					{
-						...currentAsset,
 						keywords: keywords || currentAsset.keywords,
 						taxonomyCategoryIds:
 							taxonomyCategoryIds ||

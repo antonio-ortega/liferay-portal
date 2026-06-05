@@ -6,8 +6,6 @@
 package com.liferay.portal.search.opensearch2.internal.search.engine.adapter.document;
 
 import com.liferay.portal.kernel.search.BooleanQuery;
-import com.liferay.portal.kernel.search.generic.BooleanQueryImpl;
-import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.search.engine.adapter.document.DeleteByQueryDocumentRequest;
 import com.liferay.portal.search.opensearch2.internal.BaseOpenSearchTestCase;
@@ -46,7 +44,7 @@ public class DeleteByQueryDocumentRequestExecutorTest
 	}
 
 	protected void doTestDocumentRequestTranslation(boolean refresh) {
-		BooleanQuery booleanQuery = new BooleanQueryImpl();
+		BooleanQuery booleanQuery = new BooleanQuery();
 
 		booleanQuery.addExactTerm(_FIELD_NAME, true);
 
@@ -56,16 +54,13 @@ public class DeleteByQueryDocumentRequestExecutorTest
 
 		deleteByQueryDocumentRequest.setRefresh(refresh);
 
-		DeleteByQueryDocumentRequestExecutorImpl
-			deleteByQueryDocumentRequestExecutorImpl =
-				new DeleteByQueryDocumentRequestExecutorImpl();
-
-		ReflectionTestUtil.setFieldValue(
-			deleteByQueryDocumentRequestExecutorImpl,
-			"_openSearchConnectionManager", openSearchConnectionManager);
+		DeleteByQueryDocumentRequestExecutor
+			deleteByQueryDocumentRequestExecutor =
+				new DeleteByQueryDocumentRequestExecutor(
+					openSearchConnectionManager);
 
 		DeleteByQueryRequest deleteByQueryRequest =
-			deleteByQueryDocumentRequestExecutorImpl.createDeleteByQueryRequest(
+			deleteByQueryDocumentRequestExecutor.createDeleteByQueryRequest(
 				deleteByQueryDocumentRequest);
 
 		Assert.assertArrayEquals(

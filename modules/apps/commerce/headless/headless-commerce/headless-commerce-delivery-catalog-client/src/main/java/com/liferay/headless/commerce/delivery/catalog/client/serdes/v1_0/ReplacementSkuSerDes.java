@@ -450,3 +450,4 @@ public class ReplacementSkuSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:1920828861

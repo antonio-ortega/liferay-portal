@@ -1,39 +1,80 @@
-import client from 'shared/apollo/client';
 import EventSection from '../EventSection';
 import mockStore from 'test/mock-store';
 import React from 'react';
-import {ApolloProvider} from '@apollo/react-components';
+import {AttributesContext} from '../../context/attributes';
+import {fireEvent, render} from '@testing-library/react';
+import {InMemoryCache} from '@apollo/client';
 import {MemoryRouter, Route} from 'react-router-dom';
+import {MockedProvider} from '@apollo/client/testing';
 import {Provider} from 'react-redux';
-import {render} from '@testing-library/react';
 import {Routes} from 'shared/util/router';
 
 jest.unmock('react-dom');
 
-describe('EventSection', () => {
-	const WrappedComponent = props => (
+const DefaultComponent = ({attributesValue, ...props}) => (
+	<Provider store={mockStore()}>
 		<MemoryRouter initialEntries={['/workspace/23/event-analysis']}>
 			<Route path={Routes.EVENT_ANALYSIS}>
-				<ApolloProvider client={client}>
-					<Provider store={mockStore()}>
+				<MockedProvider
+					cache={
+						new InMemoryCache({
+							addTypename: false,
+							freezeResults: false
+						})
+					}
+				>
+					{attributesValue ? (
+						<AttributesContext.Provider value={attributesValue}>
+							<EventSection {...props} />
+						</AttributesContext.Provider>
+					) : (
 						<EventSection {...props} />
-					</Provider>
-				</ApolloProvider>
+					)}
+				</MockedProvider>
 			</Route>
 		</MemoryRouter>
-	);
+	</Provider>
+);
 
+describe('EventSection', () => {
 	it('render', () => {
-		const {container} = render(<WrappedComponent />);
+		const {container} = render(<DefaultComponent />);
 
 		expect(container).toMatchSnapshot();
 	});
 
 	it('render with event', () => {
 		const {container} = render(
-			<WrappedComponent event={{name: 'View Article'}} />
+			<DefaultComponent event={{name: 'View Article'}} />
 		);
 
 		expect(container).toMatchSnapshot();
+	});
+
+	it('clears the event and the attributes when the remove button is clicked', () => {
+		const deleteAllAttributes = jest.fn();
+		const onEventChange = jest.fn();
+
+		const {container} = render(
+			<DefaultComponent
+				attributesValue={{
+					attributes: {},
+					breakdownOrder: [],
+					breakdowns: {},
+					changed: false,
+					deleteAllAttributes,
+					filterOrder: [],
+					filters: {}
+				}}
+				event={{id: '1', name: 'View Article'}}
+				onEventChange={onEventChange}
+			/>
+		);
+
+		fireEvent.click(container.querySelector('.remove-button'));
+
+		expect(onEventChange).toHaveBeenCalledTimes(1);
+		expect(onEventChange).toHaveBeenCalledWith(null);
+		expect(deleteAllAttributes).toHaveBeenCalledTimes(1);
 	});
 });

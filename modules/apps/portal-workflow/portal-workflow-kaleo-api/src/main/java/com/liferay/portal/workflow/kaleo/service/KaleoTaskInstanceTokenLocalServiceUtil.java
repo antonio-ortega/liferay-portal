@@ -473,6 +473,12 @@ public class KaleoTaskInstanceTokenLocalServiceUtil {
 		return getService().hasPendingKaleoTaskForms(kaleoTaskInstanceTokenId);
 	}
 
+	public static boolean isNotifiableUser(long userId, long workflowTaskId)
+		throws PortalException {
+
+		return getService().isNotifiableUser(userId, workflowTaskId);
+	}
+
 	public static List<KaleoTaskInstanceToken> search(
 		String keywords, Boolean completed, Boolean searchByUserRoles,
 		int start, int end,
@@ -690,3 +696,4 @@ public class KaleoTaskInstanceTokenLocalServiceUtil {
 			KaleoTaskInstanceTokenLocalService.class);
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:1984201992

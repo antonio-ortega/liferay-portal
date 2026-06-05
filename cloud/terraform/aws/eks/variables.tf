@@ -1,19 +1,17 @@
 variable "arn_partition" {
 	default="aws"
-}
-variable "demo_mode" {
-	default=false
-	type=bool
+	type=string
 }
 variable "deployment_name" {
-	default="liferay-self-hosted"
+	type=string
 	validation {
-		condition=can(regex("^[a-z0-9-]*$", var.deployment_name))
-		error_message="The deployment_name must contain only lowercase letters, numbers, and hyphens."
+		condition=can(regex("^[a-z][a-z0-9-]{2,23}$", var.deployment_name))
+		error_message="The variable \"deployment_name\" must be 3-24 characters, start with a lowercase letter, and contain only lowercase letters, numbers, and hyphens."
 	}
 }
 variable "deployment_namespace" {
 	default="liferay-system"
+	type=string
 	validation {
 		condition=can(regex("^[a-z0-9-]*$", var.deployment_namespace))
 		error_message="The deployment_namespace must contain only lowercase letters, numbers, and hyphens."
@@ -23,15 +21,50 @@ variable "ecr_repositories" {
 	type=map(object({ arn=string, url=string }))
 	default={}
 }
+variable "eks_allow_public_access" {
+	default=true
+	type=bool
+}
+variable "eks_api_additional_allowed_cidr_blocks" {
+	default=[]
+	type=list(string)
+	validation {
+		condition=alltrue([for cidr in var.eks_api_additional_allowed_cidr_blocks : can(cidrhost(cidr, 0))])
+		error_message="The variable \"eks_api_additional_allowed_cidr_blocks\" must contain valid CIDR blocks."
+	}
+}
+variable "envoy_gateway_helm_chart_version" {
+	type=string
+}
+variable "gateway_namespace" {
+	default="envoy-gateway-system"
+	type=string
+}
+variable "max_availability_zones" {
+	default=2
+	type=number
+}
+variable "observability_config" {
+	default={}
+	type=object(
+		{
+			alloy_namespace=optional(string, "alloy")
+			enabled=optional(bool, false)
+		}
+	)
+}
 variable "private_subnets" {
-	default=["10.0.1.0/24", "10.0.2.0/24"]
+	default=null
+	type=list(string)
 }
 variable "public_subnets" {
-	default=["10.0.101.0/24", "10.0.102.0/24"]
+	default=null
+	type=list(string)
 }
 variable "region" {
-	default="us-west-2"
+	type=string
 }
 variable "vpc_cidr" {
 	default="10.0.0.0/16"
+	type=string
 }

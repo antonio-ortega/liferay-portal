@@ -5,11 +5,9 @@
 
 package com.liferay.dynamic.data.mapping.internal.search;
 
-import com.liferay.dynamic.data.mapping.internal.search.spi.model.index.contributor.DDMStructureLayoutModelIndexerWriterContributor;
 import com.liferay.dynamic.data.mapping.model.DDMStructureLayout;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLayoutLocalService;
 import com.liferay.portal.kernel.search.Field;
-import com.liferay.portal.search.batch.DynamicQueryBatchIndexingActionableFactory;
 import com.liferay.portal.search.spi.model.index.contributor.ModelIndexerWriterContributor;
 import com.liferay.portal.search.spi.model.registrar.ModelSearchConfigurator;
 
@@ -51,18 +49,13 @@ public class DDMStructureLayoutModelSearchConfigurator
 
 	@Activate
 	protected void activate() {
-		_modelIndexWriterContributor =
-			new DDMStructureLayoutModelIndexerWriterContributor(
-				_ddmStructureLayoutLocalService,
-				_dynamicQueryBatchIndexingActionableFactory);
+		_modelIndexWriterContributor = new ModelIndexerWriterContributor<>(
+			_ddmStructureLayoutLocalService::
+				getIndexableActionableDynamicQuery);
 	}
 
 	@Reference
 	private DDMStructureLayoutLocalService _ddmStructureLayoutLocalService;
-
-	@Reference
-	private DynamicQueryBatchIndexingActionableFactory
-		_dynamicQueryBatchIndexingActionableFactory;
 
 	private ModelIndexerWriterContributor<DDMStructureLayout>
 		_modelIndexWriterContributor;

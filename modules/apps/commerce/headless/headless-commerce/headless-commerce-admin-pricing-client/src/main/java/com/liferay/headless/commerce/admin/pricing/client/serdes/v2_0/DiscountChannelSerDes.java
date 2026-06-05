@@ -383,3 +383,4 @@ public class DiscountChannelSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1029620558

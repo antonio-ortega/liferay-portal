@@ -71,3 +71,4 @@ public class LayoutBranchServiceUtil {
 	private static volatile LayoutBranchService _service;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:1757820789

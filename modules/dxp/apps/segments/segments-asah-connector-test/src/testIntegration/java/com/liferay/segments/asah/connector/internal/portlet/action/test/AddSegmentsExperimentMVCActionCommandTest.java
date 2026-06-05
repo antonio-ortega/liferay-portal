@@ -27,7 +27,7 @@ import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
-import com.liferay.portal.kernel.util.ScopeUtil;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
@@ -96,7 +96,9 @@ public class AddSegmentsExperimentMVCActionCommandTest {
 						TestPropsValues.getCompanyId(),
 						AnalyticsConfiguration.class.getName(),
 						HashMapDictionaryBuilder.<String, Object>put(
-							"liferayAnalyticsURL", "http://localhost:8080/"
+							"liferayAnalyticsURL",
+							"http://localhost:" +
+								PortalUtil.getPortalServerPort(false) + "/"
 						).build())) {
 
 			ReflectionTestUtil.invoke(
@@ -108,7 +110,8 @@ public class AddSegmentsExperimentMVCActionCommandTest {
 
 	@Test
 	public void testAddSegmentsExperiment() throws Exception {
-		String liferayAnalyticsURL = "http://localhost:8080/";
+		String liferayAnalyticsURL =
+			"http://localhost:" + PortalUtil.getPortalServerPort(false) + "/";
 
 		String description = RandomTestUtil.randomString();
 
@@ -242,7 +245,9 @@ public class AddSegmentsExperimentMVCActionCommandTest {
 							"liferayAnalyticsFaroBackendURL",
 							"http://localhost:8086"
 						).put(
-							"liferayAnalyticsURL", "http://localhost:8080/"
+							"liferayAnalyticsURL",
+							"http://localhost:" +
+								PortalUtil.getPortalServerPort(false) + "/"
 						).build())) {
 
 			Object asahFaroBackendClient = ReflectionTestUtil.getFieldValue(
@@ -286,7 +291,8 @@ public class AddSegmentsExperimentMVCActionCommandTest {
 	public void testAddSegmentsExperimentWithSecondarySegmentsExperienceSelected()
 		throws Exception {
 
-		String liferayAnalyticsURL = "http://localhost:8080/";
+		String liferayAnalyticsURL =
+			"http://localhost:" + PortalUtil.getPortalServerPort(false) + "/";
 
 		String description = RandomTestUtil.randomString();
 
@@ -385,10 +391,7 @@ public class AddSegmentsExperimentMVCActionCommandTest {
 			segmentsEntryName, RandomTestUtil.randomString());
 
 		return SegmentsTestUtil.addSegmentsExperience(
-			segmentsEntry.getExternalReferenceCode(),
-			ScopeUtil.getItemScopeExternalReferenceCode(
-				segmentsEntry.getGroupId(), _group.getGroupId()),
-			_layout.getPlid(),
+			segmentsEntry.getExternalReferenceCode(), null, _layout.getPlid(),
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 	}
 

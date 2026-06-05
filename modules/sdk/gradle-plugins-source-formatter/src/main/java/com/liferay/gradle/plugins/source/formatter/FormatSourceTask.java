@@ -14,9 +14,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import org.gradle.api.Project;
+import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
@@ -25,7 +29,6 @@ import org.gradle.api.tasks.JavaExec;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
-import org.gradle.util.CollectionUtils;
 
 /**
  * @author Raymond Augé
@@ -34,9 +37,19 @@ import org.gradle.util.CollectionUtils;
 public class FormatSourceTask extends JavaExec {
 
 	public FormatSourceTask() {
+		Project project = getProject();
+
+		_projectDir = project.getProjectDir();
+
 		Property<String> mainClass = getMainClass();
 
 		mainClass.set("com.liferay.source.formatter.SourceFormatter");
+	}
+
+	public void addSourceFormatterProperty(String key, String value) {
+		List<String> sourceFormatterProperties = getSourceFormatterProperties();
+
+		sourceFormatterProperties.add(key + "=" + value);
 	}
 
 	@Override
@@ -49,7 +62,7 @@ public class FormatSourceTask extends JavaExec {
 	@Internal
 	public File getBaseDir() {
 		return GradleUtil.toFile(
-			getProject(), _sourceFormatterArgs.getBaseDirName());
+			_projectDir, _sourceFormatterArgs.getBaseDirName());
 	}
 
 	@Input
@@ -86,15 +99,23 @@ public class FormatSourceTask extends JavaExec {
 	@Optional
 	@PathSensitive(PathSensitivity.RELATIVE)
 	public FileCollection getFiles() {
-		Project project = getProject();
-
 		List<String> fileNames = _sourceFormatterArgs.getFileNames();
 
 		if (fileNames == null) {
 			fileNames = Collections.emptyList();
 		}
 
-		return project.files(fileNames);
+		ObjectFactory objectFactory = getObjectFactory();
+
+		ConfigurableFileCollection configurableFileCollection =
+			objectFactory.fileCollection();
+
+		for (String fileName : fileNames) {
+			configurableFileCollection.from(
+				GradleUtil.toFile(_projectDir, fileName));
+		}
+
+		return configurableFileCollection;
 	}
 
 	@Input
@@ -111,6 +132,12 @@ public class FormatSourceTask extends JavaExec {
 	@Input
 	public int getProcessorThreadCount() {
 		return _sourceFormatterArgs.getProcessorThreadCount();
+	}
+
+	@Input
+	@Optional
+	public List<String> getSourceFormatterProperties() {
+		return _sourceFormatterArgs.getSourceFormatterProperties();
 	}
 
 	@Input
@@ -177,21 +204,20 @@ public class FormatSourceTask extends JavaExec {
 	}
 
 	public void setCheckCategoryNames(Iterable<String> checkCategoryNames) {
-		_sourceFormatterArgs.setCheckCategoryNames(
-			CollectionUtils.toList(checkCategoryNames));
+		_sourceFormatterArgs.setCheckCategoryNames(_toList(checkCategoryNames));
 	}
 
 	public void setCheckCategoryNames(String... checkCategoryNames) {
 		_sourceFormatterArgs.setCheckCategoryNames(
-			CollectionUtils.toList(checkCategoryNames));
+			Arrays.asList(checkCategoryNames));
 	}
 
 	public void setCheckNames(Iterable<String> checkNames) {
-		_sourceFormatterArgs.setCheckNames(CollectionUtils.toList(checkNames));
+		_sourceFormatterArgs.setCheckNames(_toList(checkNames));
 	}
 
 	public void setCheckNames(String... checkNames) {
-		_sourceFormatterArgs.setCheckNames(CollectionUtils.toList(checkNames));
+		_sourceFormatterArgs.setCheckNames(Arrays.asList(checkNames));
 	}
 
 	public void setFailOnAutoFix(boolean failOnAutoFix) {
@@ -203,18 +229,22 @@ public class FormatSourceTask extends JavaExec {
 	}
 
 	public void setFileExtensions(Iterable<String> fileExtensions) {
-		_sourceFormatterArgs.setFileExtensions(
-			CollectionUtils.toList(fileExtensions));
+		_sourceFormatterArgs.setFileExtensions(_toList(fileExtensions));
 	}
 
 	public void setFileExtensions(String... fileExtensions) {
-		_sourceFormatterArgs.setFileExtensions(
-			CollectionUtils.toList(fileExtensions));
+		_sourceFormatterArgs.setFileExtensions(Arrays.asList(fileExtensions));
 	}
 
 	public void setFileNames(Iterable<String> fileNames) {
 		_sourceFormatterArgs.setFileNames(
-			CollectionUtils.toStringList(fileNames));
+			StreamSupport.stream(
+				fileNames.spliterator(), false
+			).map(
+				Object::toString
+			).collect(
+				Collectors.toList()
+			));
 	}
 
 	public void setFileNames(String... fileNames) {
@@ -280,14 +310,15 @@ public class FormatSourceTask extends JavaExec {
 		args.add("source.auto.fix=" + isAutoFix());
 		args.add(
 			"source.check.category.names=" +
-				CollectionUtils.join(",", getCheckCategoryNames()));
-		args.add(
-			"source.check.names=" + CollectionUtils.join(",", getCheckNames()));
+				String.join(",", getCheckCategoryNames()));
+		args.add("source.check.names=" + String.join(",", getCheckNames()));
 		args.add("source.fail.on.auto.fix=" + isFailOnAutoFix());
 		args.add("source.fail.on.has.warning=" + isFailOnHasWarning());
 		args.add(
-			"source.file.extensions=" +
-				CollectionUtils.join(",", getFileExtensions()));
+			"source.file.extensions=" + String.join(",", getFileExtensions()));
+		args.add(
+			"source.formatter.properties=" +
+				String.join("\\n", getSourceFormatterProperties()));
 		args.add("source.print.errors=" + isPrintErrors());
 		args.add("validate.commit.messages=" + isValidateCommitMessages());
 
@@ -335,6 +366,15 @@ public class FormatSourceTask extends JavaExec {
 		return pathString;
 	}
 
+	private <T> List<T> _toList(Iterable<T> iterable) {
+		return StreamSupport.stream(
+			iterable.spliterator(), false
+		).collect(
+			Collectors.toList()
+		);
+	}
+
+	private final File _projectDir;
 	private final SourceFormatterArgs _sourceFormatterArgs =
 		new SourceFormatterArgs();
 

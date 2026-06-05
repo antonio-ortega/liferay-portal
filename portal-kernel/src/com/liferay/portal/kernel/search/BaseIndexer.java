@@ -16,6 +16,7 @@ import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
+import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.exception.NoSuchCountryException;
 import com.liferay.portal.kernel.exception.NoSuchModelException;
 import com.liferay.portal.kernel.exception.NoSuchRegionException;
@@ -39,7 +40,6 @@ import com.liferay.portal.kernel.search.filter.BooleanFilter;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.search.filter.QueryFilter;
 import com.liferay.portal.kernel.search.filter.TermsFilter;
-import com.liferay.portal.kernel.search.generic.BooleanQueryImpl;
 import com.liferay.portal.kernel.search.hits.HitsProcessorRegistryUtil;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
@@ -237,6 +237,20 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 			IndexerRegistryUtil.getIndexerPostProcessors(this);
 
 		return indexerPostProcessors.toArray(new IndexerPostProcessor[0]);
+	}
+
+	@Override
+	public long getReindexEntryCount(long companyId) {
+		IndexableActionableDynamicQuery indexableActionableDynamicQuery =
+			getIndexableActionableDynamicQuery();
+
+		if (indexableActionableDynamicQuery == null) {
+			return Long.MAX_VALUE;
+		}
+
+		indexableActionableDynamicQuery.setCompanyId(companyId);
+
+		return indexableActionableDynamicQuery.performCount();
 	}
 
 	@Override
@@ -441,31 +455,6 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 	}
 
 	@Override
-	public void reindex(String[] ids) throws SearchException {
-		if (IndexWriterHelperUtil.isIndexReadOnly() ||
-			IndexWriterHelperUtil.isIndexReadOnly(getClassName()) ||
-			!isIndexerEnabled()) {
-
-			return;
-		}
-
-		long companyId = (ids.length > 0) ? GetterUtil.getLong(ids[0]) :
-			CompanyThreadLocal.getCompanyId();
-
-		try (SafeCloseable safeCloseable =
-				CompanyThreadLocal.setCompanyIdWithSafeCloseable(companyId)) {
-
-			doReindex(ids);
-		}
-		catch (SearchException searchException) {
-			throw searchException;
-		}
-		catch (Exception exception) {
-			throw new SearchException(exception);
-		}
-	}
-
-	@Override
 	public void reindex(T object) throws SearchException {
 		try {
 			if (IndexWriterHelperUtil.isIndexReadOnly() ||
@@ -483,6 +472,44 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 		catch (Exception exception) {
 			throw new SearchException(exception);
 		}
+	}
+
+	@Override
+	public void reindexCompany(long companyId) throws SearchException {
+		if (IndexWriterHelperUtil.isIndexReadOnly() ||
+			IndexWriterHelperUtil.isIndexReadOnly(getClassName()) ||
+			!isIndexerEnabled()) {
+
+			return;
+		}
+
+		try (SafeCloseable safeCloseable =
+				CompanyThreadLocal.setCompanyIdWithSafeCloseable(companyId)) {
+
+			doReindexCompany(companyId);
+		}
+		catch (SearchException searchException) {
+			throw searchException;
+		}
+		catch (Exception exception) {
+			throw new SearchException(exception);
+		}
+	}
+
+	@Override
+	public Document safeGetDocument(T object) {
+		try {
+			return getDocument(object);
+		}
+		catch (SearchException searchException) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(
+					"Unable to get document for " + getClassName(),
+					searchException);
+			}
+		}
+
+		return null;
 	}
 
 	@Override
@@ -626,7 +653,7 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 			Collection<Facet> facets)
 		throws ParseException {
 
-		BooleanQuery facetBooleanQuery = new BooleanQueryImpl();
+		BooleanQuery facetBooleanQuery = new BooleanQuery();
 
 		for (Facet facet : facets) {
 			BooleanClause<Query> facetBooleanClause = facet.getFacetClause();
@@ -953,7 +980,7 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 			BooleanFilter fullQueryBooleanFilter, SearchContext searchContext)
 		throws Exception {
 
-		BooleanQuery searchQuery = new BooleanQueryImpl();
+		BooleanQuery searchQuery = new BooleanQuery();
 
 		addSearchKeywords(searchQuery, searchContext);
 
@@ -974,7 +1001,7 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 				facetBooleanFilter, BooleanClauseOccur.MUST);
 		}
 
-		BooleanQuery fullBooleanQuery = new BooleanQueryImpl();
+		BooleanQuery fullBooleanQuery = new BooleanQuery();
 
 		if (fullQueryBooleanFilter.hasClauses()) {
 			fullBooleanQuery.setPreBooleanFilter(fullQueryBooleanFilter);
@@ -1100,9 +1127,22 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 	protected abstract void doReindex(String className, long classPK)
 		throws Exception;
 
-	protected abstract void doReindex(String[] ids) throws Exception;
-
 	protected abstract void doReindex(T object) throws Exception;
+
+	protected void doReindexCompany(long companyId) throws Exception {
+		IndexableActionableDynamicQuery indexableActionableDynamicQuery =
+			getIndexableActionableDynamicQuery();
+
+		if (indexableActionableDynamicQuery == null) {
+			return;
+		}
+
+		indexableActionableDynamicQuery.setCompanyId(companyId);
+		indexableActionableDynamicQuery.setPerformActionMethod(
+			this::safeGetDocument);
+
+		indexableActionableDynamicQuery.performActions();
+	}
 
 	protected Hits doSearch(SearchContext searchContext)
 		throws SearchException {
@@ -1208,6 +1248,12 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 	protected List<ExpandoQueryContributor> getExpandoQueryContributors() {
 		return Collections.singletonList(
 			_expandoQueryContributorSnapshot.get());
+	}
+
+	protected IndexableActionableDynamicQuery
+		getIndexableActionableDynamicQuery() {
+
+		return null;
 	}
 
 	protected Locale getLocale(PortletRequest portletRequest) {

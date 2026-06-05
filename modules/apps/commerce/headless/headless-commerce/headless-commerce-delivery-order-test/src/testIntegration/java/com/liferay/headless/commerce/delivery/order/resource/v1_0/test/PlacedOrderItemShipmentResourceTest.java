@@ -101,10 +101,10 @@ public class PlacedOrderItemShipmentResourceTest
 		_commercePriceList =
 			_commercePriceListLocalService.addCommercePriceList(
 				RandomTestUtil.randomString(), _user.getUserId(),
-				testGroup.getGroupId(), _commerceCurrency.getCode(), true,
-				CommercePriceListConstants.TYPE_PRICE_LIST, 0, true,
-				RandomTestUtil.randomString(), RandomTestUtil.nextDouble(), 1,
-				1, 2022, 12, 0, 0, 0, 0, 0, 0, true, _serviceContext);
+				testGroup.getGroupId(), 0, true, _commerceCurrency.getCode(), 1,
+				12, 0, 1, 2022, 0, 0, 0, 0, 0, RandomTestUtil.randomString(),
+				true, true, RandomTestUtil.nextDouble(),
+				CommercePriceListConstants.TYPE_PRICE_LIST, _serviceContext);
 
 		_cpInstance = CPTestUtil.addCPInstanceWithRandomSku(
 			testGroup.getGroupId(), BigDecimal.TEN);
@@ -131,12 +131,12 @@ public class PlacedOrderItemShipmentResourceTest
 			_commerceOrder);
 
 		_country = _countryLocalService.addCountry(
-			"XY", "XYZ", true, true, RandomTestUtil.randomString(),
+			null, "XY", "XYZ", true, true, RandomTestUtil.randomString(),
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
 			RandomTestUtil.nextDouble(), true, true, false, _serviceContext);
 
 		_region = _regionLocalService.addRegion(
-			_country.getCountryId(), true, RandomTestUtil.randomString(),
+			null, _country.getCountryId(), true, RandomTestUtil.randomString(),
 			RandomTestUtil.nextDouble(), RandomTestUtil.randomString(),
 			_serviceContext);
 	}

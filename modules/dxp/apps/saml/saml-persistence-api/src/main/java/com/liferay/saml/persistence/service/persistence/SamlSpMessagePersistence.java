@@ -47,7 +47,7 @@ public interface SamlSpMessagePersistence
 	 * Returns a range of all the saml sp messages where expirationDate &lt; &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SamlSpMessageModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.saml.persistence.model.impl.SamlSpMessageModelImpl</code>.
 	 * </p>
 	 *
 	 * @param expirationDate the expiration date
@@ -62,7 +62,7 @@ public interface SamlSpMessagePersistence
 	 * Returns an ordered range of all the saml sp messages where expirationDate &lt; &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SamlSpMessageModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.saml.persistence.model.impl.SamlSpMessageModelImpl</code>.
 	 * </p>
 	 *
 	 * @param expirationDate the expiration date
@@ -80,7 +80,7 @@ public interface SamlSpMessagePersistence
 	 * Returns an ordered range of all the saml sp messages where expirationDate &lt; &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SamlSpMessageModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.saml.persistence.model.impl.SamlSpMessageModelImpl</code>.
 	 * </p>
 	 *
 	 * @param expirationDate the expiration date
@@ -123,47 +123,6 @@ public interface SamlSpMessagePersistence
 			orderByComparator);
 
 	/**
-	 * Returns the last saml sp message in the ordered set where expirationDate &lt; &#63;.
-	 *
-	 * @param expirationDate the expiration date
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching saml sp message
-	 * @throws NoSuchSpMessageException if a matching saml sp message could not be found
-	 */
-	public SamlSpMessage findByLtExpirationDate_Last(
-			Date expirationDate,
-			com.liferay.portal.kernel.util.OrderByComparator<SamlSpMessage>
-				orderByComparator)
-		throws NoSuchSpMessageException;
-
-	/**
-	 * Returns the last saml sp message in the ordered set where expirationDate &lt; &#63;.
-	 *
-	 * @param expirationDate the expiration date
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching saml sp message, or <code>null</code> if a matching saml sp message could not be found
-	 */
-	public SamlSpMessage fetchByLtExpirationDate_Last(
-		Date expirationDate,
-		com.liferay.portal.kernel.util.OrderByComparator<SamlSpMessage>
-			orderByComparator);
-
-	/**
-	 * Returns the saml sp messages before and after the current saml sp message in the ordered set where expirationDate &lt; &#63;.
-	 *
-	 * @param samlSpMessageId the primary key of the current saml sp message
-	 * @param expirationDate the expiration date
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next saml sp message
-	 * @throws NoSuchSpMessageException if a saml sp message with the primary key could not be found
-	 */
-	public SamlSpMessage[] findByLtExpirationDate_PrevAndNext(
-			long samlSpMessageId, Date expirationDate,
-			com.liferay.portal.kernel.util.OrderByComparator<SamlSpMessage>
-				orderByComparator)
-		throws NoSuchSpMessageException;
-
-	/**
 	 * Removes all the saml sp messages where expirationDate &lt; &#63; from the database.
 	 *
 	 * @param expirationDate the expiration date
@@ -189,16 +148,6 @@ public interface SamlSpMessagePersistence
 	public SamlSpMessage findBySIEI_SIRK(
 			String samlIdpEntityId, String samlIdpResponseKey)
 		throws NoSuchSpMessageException;
-
-	/**
-	 * Returns the saml sp message where samlIdpEntityId = &#63; and samlIdpResponseKey = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
-	 *
-	 * @param samlIdpEntityId the saml idp entity ID
-	 * @param samlIdpResponseKey the saml idp response key
-	 * @return the matching saml sp message, or <code>null</code> if a matching saml sp message could not be found
-	 */
-	public SamlSpMessage fetchBySIEI_SIRK(
-		String samlIdpEntityId, String samlIdpResponseKey);
 
 	/**
 	 * Returns the saml sp message where samlIdpEntityId = &#63; and samlIdpResponseKey = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
@@ -232,20 +181,6 @@ public interface SamlSpMessagePersistence
 	 */
 	public int countBySIEI_SIRK(
 		String samlIdpEntityId, String samlIdpResponseKey);
-
-	/**
-	 * Caches the saml sp message in the entity cache if it is enabled.
-	 *
-	 * @param samlSpMessage the saml sp message
-	 */
-	public void cacheResult(SamlSpMessage samlSpMessage);
-
-	/**
-	 * Caches the saml sp messages in the entity cache if it is enabled.
-	 *
-	 * @param samlSpMessages the saml sp messages
-	 */
-	public void cacheResult(java.util.List<SamlSpMessage> samlSpMessages);
 
 	/**
 	 * Creates a new saml sp message with the primary key. Does not add the saml sp message to the database.
@@ -286,71 +221,17 @@ public interface SamlSpMessagePersistence
 	public SamlSpMessage fetchByPrimaryKey(long samlSpMessageId);
 
 	/**
-	 * Returns all the saml sp messages.
+	 * Returns the saml sp message where samlIdpEntityId = &#63; and samlIdpResponseKey = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
 	 *
-	 * @return the saml sp messages
+	 * @param samlIdpEntityId the saml idp entity ID
+	 * @param samlIdpResponseKey the saml idp response key
+	 * @return the matching saml sp message, or <code>null</code> if a matching saml sp message could not be found
 	 */
-	public java.util.List<SamlSpMessage> findAll();
+	public default SamlSpMessage fetchBySIEI_SIRK(
+		String samlIdpEntityId, String samlIdpResponseKey) {
 
-	/**
-	 * Returns a range of all the saml sp messages.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SamlSpMessageModelImpl</code>.
-	 * </p>
-	 *
-	 * @param start the lower bound of the range of saml sp messages
-	 * @param end the upper bound of the range of saml sp messages (not inclusive)
-	 * @return the range of saml sp messages
-	 */
-	public java.util.List<SamlSpMessage> findAll(int start, int end);
-
-	/**
-	 * Returns an ordered range of all the saml sp messages.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SamlSpMessageModelImpl</code>.
-	 * </p>
-	 *
-	 * @param start the lower bound of the range of saml sp messages
-	 * @param end the upper bound of the range of saml sp messages (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of saml sp messages
-	 */
-	public java.util.List<SamlSpMessage> findAll(
-		int start, int end,
-		com.liferay.portal.kernel.util.OrderByComparator<SamlSpMessage>
-			orderByComparator);
-
-	/**
-	 * Returns an ordered range of all the saml sp messages.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SamlSpMessageModelImpl</code>.
-	 * </p>
-	 *
-	 * @param start the lower bound of the range of saml sp messages
-	 * @param end the upper bound of the range of saml sp messages (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param useFinderCache whether to use the finder cache
-	 * @return the ordered range of saml sp messages
-	 */
-	public java.util.List<SamlSpMessage> findAll(
-		int start, int end,
-		com.liferay.portal.kernel.util.OrderByComparator<SamlSpMessage>
-			orderByComparator,
-		boolean useFinderCache);
-
-	/**
-	 * Removes all the saml sp messages from the database.
-	 */
-	public void removeAll();
-
-	/**
-	 * Returns the number of saml sp messages.
-	 *
-	 * @return the number of saml sp messages
-	 */
-	public int countAll();
+		return fetchBySIEI_SIRK(samlIdpEntityId, samlIdpResponseKey, true);
+	}
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:735041368

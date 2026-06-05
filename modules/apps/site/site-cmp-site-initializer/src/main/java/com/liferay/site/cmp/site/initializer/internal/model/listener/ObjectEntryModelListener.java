@@ -5,23 +5,52 @@
 
 package com.liferay.site.cmp.site.initializer.internal.model.listener;
 
+import com.liferay.depot.constants.DepotRolesConstants;
 import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntry;
 import com.liferay.object.rest.filter.factory.FilterFactory;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectEntryLocalService;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.sql.dsl.expression.Predicate;
+import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.ModelListenerException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
+import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.BaseModelListener;
+import com.liferay.portal.kernel.model.Contact;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.ModelListener;
+import com.liferay.portal.kernel.model.ResourceAction;
+import com.liferay.portal.kernel.model.ResourceConstants;
+import com.liferay.portal.kernel.model.Role;
+import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.model.role.RoleConstants;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.ResourceActionLocalService;
+import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
+import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.UserGroupRoleService;
+import com.liferay.portal.kernel.service.UserService;
+import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.CalendarFactoryUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Validator;
 
 import java.io.Serializable;
 
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 import org.osgi.service.component.annotations.Component;
@@ -38,6 +67,8 @@ public class ObjectEntryModelListener extends BaseModelListener<ObjectEntry> {
 		throws ModelListenerException {
 
 		try {
+			_setResourcePermissions(objectEntry);
+			_updateGroup(objectEntry);
 			_updateProjectCompletionRate(objectEntry);
 		}
 		catch (Exception exception) {
@@ -63,11 +94,51 @@ public class ObjectEntryModelListener extends BaseModelListener<ObjectEntry> {
 		throws ModelListenerException {
 
 		try {
+			_updateGroup(objectEntry);
 			_updateProjectCompletionRate(objectEntry);
+			_updateProjectManagerProjectSponsorUserGroupRoles(objectEntry);
 		}
 		catch (Exception exception) {
 			throw new ModelListenerException(exception);
 		}
+	}
+
+	private String[] _getAssetLibraryContentReviewerActionIds(
+		ObjectDefinition objectDefinition) {
+
+		if (StringUtil.equals(
+				objectDefinition.getExternalReferenceCode(), "L_CMP_TASK")) {
+
+			return new String[] {
+				ActionKeys.ADD_DISCUSSION, ActionKeys.DELETE,
+				ActionKeys.PERMISSIONS, ActionKeys.UPDATE, ActionKeys.VIEW
+			};
+		}
+
+		return new String[] {ActionKeys.ADD_DISCUSSION, ActionKeys.VIEW};
+	}
+
+	private JSONObject _getCMPDefaultPermissionJSONObject(
+		ObjectDefinition objectDefinition) {
+
+		String[] actionIds = TransformUtil.transformToArray(
+			_resourceActionLocalService.getResourceActions(
+				objectDefinition.getClassName()),
+			ResourceAction::getActionId, String.class);
+
+		return JSONUtil.put(
+			DepotRolesConstants.ASSET_LIBRARY_ADMINISTRATOR, actionIds
+		).put(
+			DepotRolesConstants.ASSET_LIBRARY_CONTENT_REVIEWER,
+			_getAssetLibraryContentReviewerActionIds(objectDefinition)
+		).put(
+			DepotRolesConstants.ASSET_LIBRARY_MEMBER,
+			new String[] {ActionKeys.ADD_DISCUSSION, ActionKeys.VIEW}
+		).put(
+			RoleConstants.CMS_ADMINISTRATOR, actionIds
+		).put(
+			RoleConstants.OWNER, actionIds
+		);
 	}
 
 	private int _getCount(
@@ -79,6 +150,92 @@ public class ObjectEntryModelListener extends BaseModelListener<ObjectEntry> {
 			new Long[] {objectEntry.getGroupId()}, 0, 0,
 			objectEntry.getObjectDefinitionId(),
 			_filterFactory.create(filterString, objectDefinition), false, null);
+	}
+
+	private void _setResourcePermissions(ObjectEntry objectEntry)
+		throws Exception {
+
+		ObjectDefinition objectDefinition =
+			_objectDefinitionLocalService.fetchObjectDefinition(
+				objectEntry.getObjectDefinitionId());
+
+		if (!StringUtil.equals(
+				objectDefinition.getExternalReferenceCode(), "L_CMP_PROJECT") &&
+			!StringUtil.equals(
+				objectDefinition.getExternalReferenceCode(), "L_CMP_TASK")) {
+
+			return;
+		}
+
+		JSONObject defaultPermissionsJSONObject =
+			_getCMPDefaultPermissionJSONObject(
+				_objectDefinitionLocalService.fetchObjectDefinition(
+					objectEntry.getObjectDefinitionId()));
+
+		List<Role> roles = _roleLocalService.getGroupRolesAndTeamRoles(
+			objectEntry.getCompanyId(), null,
+			Arrays.asList(
+				RoleConstants.ADMINISTRATOR,
+				DepotRolesConstants.ASSET_LIBRARY_OWNER),
+			null, null,
+			new int[] {RoleConstants.TYPE_REGULAR, RoleConstants.TYPE_DEPOT},
+			null, 0, 0, QueryUtil.ALL_POS, QueryUtil.ALL_POS);
+
+		for (Role role : roles) {
+			String[] actionIds = (String[])defaultPermissionsJSONObject.get(
+				role.getName());
+
+			if (actionIds == null) {
+				actionIds = new String[0];
+			}
+
+			_resourcePermissionLocalService.setResourcePermissions(
+				objectEntry.getCompanyId(), objectEntry.getModelClassName(),
+				ResourceConstants.SCOPE_INDIVIDUAL,
+				String.valueOf(objectEntry.getObjectEntryId()),
+				role.getRoleId(), actionIds);
+		}
+	}
+
+	private void _updateGroup(ObjectEntry objectEntry) {
+		if (!FeatureFlagManagerUtil.isEnabled(
+				objectEntry.getCompanyId(), "LPD-58677")) {
+
+			return;
+		}
+
+		ObjectDefinition objectDefinition =
+			_objectDefinitionLocalService.fetchObjectDefinition(
+				objectEntry.getObjectDefinitionId());
+
+		if (!StringUtil.equals(
+				objectDefinition.getExternalReferenceCode(), "L_CMP_PROJECT")) {
+
+			return;
+		}
+
+		String title = MapUtil.getString(objectEntry.getValues(), "title");
+
+		if (Validator.isNull(title)) {
+			return;
+		}
+
+		Group group = _groupLocalService.fetchGroup(objectEntry.getGroupId());
+
+		if (group == null) {
+			return;
+		}
+
+		Locale defaultLocale = LocaleUtil.fromLanguageId(
+			group.getDefaultLanguageId());
+
+		if (StringUtil.equals(group.getName(defaultLocale), title)) {
+			return;
+		}
+
+		group.setName(title, defaultLocale);
+
+		_groupLocalService.updateGroup(group);
 	}
 
 	private void _updateProjectCompletionRate(ObjectEntry objectEntry)
@@ -132,15 +289,112 @@ public class ObjectEntryModelListener extends BaseModelListener<ObjectEntry> {
 			new ServiceContext());
 	}
 
+	private void _updateProjectManagerProjectSponsorUserGroupRoles(
+			ObjectEntry objectEntry)
+		throws Exception {
+
+		ObjectDefinition objectDefinition = objectEntry.getObjectDefinition();
+
+		if (!StringUtil.equals(
+				objectDefinition.getExternalReferenceCode(), "L_CMP_PROJECT")) {
+
+			return;
+		}
+
+		_updateUserGroupRoles(
+			objectEntry.getGroupId(),
+			Arrays.asList(
+				DepotRolesConstants.ASSET_LIBRARY_ADMINISTRATOR,
+				DepotRolesConstants.ASSET_LIBRARY_MEMBER),
+			MapUtil.getLong(
+				objectEntry.getValues(), "r_userToCMPProjectManager_userId",
+				0));
+		_updateUserGroupRoles(
+			objectEntry.getGroupId(),
+			Collections.singletonList(DepotRolesConstants.ASSET_LIBRARY_MEMBER),
+			MapUtil.getLong(
+				objectEntry.getValues(), "r_userToCMPProjectSponsor_userId",
+				0));
+	}
+
+	private User _updateUser(long[] groupIds, Long userId) throws Exception {
+		User user = _userService.getUserById(userId);
+
+		Contact contact = user.getContact();
+
+		Calendar calendar = CalendarFactoryUtil.getCalendar();
+
+		calendar.setTime(user.getBirthday());
+
+		return _userService.updateUser(
+			user.getUserId(), user.getPassword(), null, null,
+			user.isPasswordReset(), null, null, user.getScreenName(),
+			user.getEmailAddress(), user.getLanguageId(), user.getTimeZoneId(),
+			user.getGreeting(), user.getComments(), user.getFirstName(),
+			user.getMiddleName(), user.getLastName(),
+			contact.getPrefixListTypeId(), contact.getSuffixListTypeId(),
+			user.isMale(), calendar.get(Calendar.MONTH),
+			calendar.get(Calendar.DATE), calendar.get(Calendar.YEAR),
+			contact.getSmsSn(), contact.getFacebookSn(), contact.getJabberSn(),
+			contact.getSkypeSn(), contact.getTwitterSn(), user.getJobTitle(),
+			groupIds, user.getOrganizationIds(), null, null,
+			user.getUserGroupIds(), new ServiceContext());
+	}
+
+	private void _updateUserGroupRoles(
+			long groupId, List<String> roleNames, long userId)
+		throws Exception {
+
+		if (userId == 0) {
+			return;
+		}
+
+		User user = _userService.getUserById(userId);
+
+		user = _updateUser(
+			ArrayUtil.append(user.getGroupIds(), groupId), userId);
+
+		long companyId = user.getCompanyId();
+
+		_userGroupRoleService.addUserGroupRoles(
+			user.getUserId(), groupId,
+			TransformUtil.transformToLongArray(
+				roleNames,
+				roleName -> {
+					Role role = _roleLocalService.fetchRole(
+						companyId, roleName);
+
+					return role.getRoleId();
+				}));
+	}
+
 	@Reference(
 		target = "(filter.factory.key=" + ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT + ")"
 	)
 	private FilterFactory<Predicate> _filterFactory;
 
 	@Reference
+	private GroupLocalService _groupLocalService;
+
+	@Reference
 	private ObjectDefinitionLocalService _objectDefinitionLocalService;
 
 	@Reference
 	private ObjectEntryLocalService _objectEntryLocalService;
+
+	@Reference
+	private ResourceActionLocalService _resourceActionLocalService;
+
+	@Reference
+	private ResourcePermissionLocalService _resourcePermissionLocalService;
+
+	@Reference
+	private RoleLocalService _roleLocalService;
+
+	@Reference
+	private UserGroupRoleService _userGroupRoleService;
+
+	@Reference
+	private UserService _userService;
 
 }

@@ -21,14 +21,14 @@ import com.liferay.portal.search.aggregation.bucket.TermsAggregation;
 import com.liferay.portal.search.aggregation.bucket.TermsAggregationResult;
 import com.liferay.portal.search.aggregation.metrics.TopHitsAggregation;
 import com.liferay.portal.search.aggregation.metrics.TopHitsAggregationResult;
-import com.liferay.portal.search.engine.adapter.search.SearchRequestExecutor;
+import com.liferay.portal.search.engine.adapter.SearchEngineAdapter;
 import com.liferay.portal.search.engine.adapter.search.SearchSearchRequest;
 import com.liferay.portal.search.engine.adapter.search.SearchSearchResponse;
 import com.liferay.portal.search.hits.SearchHit;
 import com.liferay.portal.search.hits.SearchHits;
 import com.liferay.portal.search.index.IndexNameBuilder;
 import com.liferay.portal.search.query.BooleanQuery;
-import com.liferay.portal.search.query.Queries;
+import com.liferay.portal.search.query.QueriesUtil;
 import com.liferay.portal.search.query.TermsQuery;
 import com.liferay.portal.workflow.metrics.model.WorkflowMetricsSLADefinition;
 import com.liferay.portal.workflow.metrics.search.index.constants.WorkflowMetricsIndexNameConstants;
@@ -70,16 +70,16 @@ public class WorkflowMetricsSLADefinitionTransformer {
 		String currentProcessVersion, String latestProcessVersion,
 		WorkflowMetricsSLADefinition workflowMetricsSLADefinition) {
 
-		BooleanQuery booleanQuery = _queries.booleanQuery();
+		BooleanQuery booleanQuery = QueriesUtil.booleanQuery();
 
-		TermsQuery termsQuery = _queries.terms("version");
+		TermsQuery termsQuery = QueriesUtil.terms("version");
 
 		termsQuery.addValues(currentProcessVersion, latestProcessVersion);
 
 		return booleanQuery.addMustQueryClauses(
-			_queries.term(
+			QueriesUtil.term(
 				"companyId", workflowMetricsSLADefinition.getCompanyId()),
-			_queries.term(
+			QueriesUtil.term(
 				"processId", workflowMetricsSLADefinition.getProcessId()),
 			termsQuery);
 	}
@@ -146,7 +146,7 @@ public class WorkflowMetricsSLADefinitionTransformer {
 		searchSearchRequest.setSize(0);
 
 		SearchSearchResponse searchSearchResponse =
-			_searchRequestExecutor.executeSearchRequest(searchSearchRequest);
+			_searchEngineAdapter.execute(searchSearchRequest);
 
 		Map<String, AggregationResult> aggregationResultsMap =
 			searchSearchResponse.getAggregationResultsMap();
@@ -258,10 +258,7 @@ public class WorkflowMetricsSLADefinitionTransformer {
 	private IndexNameBuilder _indexNameBuilder;
 
 	@Reference
-	private Queries _queries;
-
-	@Reference
-	private SearchRequestExecutor _searchRequestExecutor;
+	private SearchEngineAdapter _searchEngineAdapter;
 
 	@Reference
 	private WorkflowMetricsSLADefinitionLocalService

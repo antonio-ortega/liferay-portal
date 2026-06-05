@@ -99,3 +99,4 @@ public class ClassTypeReference implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-222514003

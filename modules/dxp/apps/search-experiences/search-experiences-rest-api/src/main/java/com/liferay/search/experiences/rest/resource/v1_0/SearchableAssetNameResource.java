@@ -148,3 +148,4 @@ public interface SearchableAssetNameResource {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-307729041

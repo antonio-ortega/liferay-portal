@@ -658,3 +658,4 @@ public class ObjectActionSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:543528549

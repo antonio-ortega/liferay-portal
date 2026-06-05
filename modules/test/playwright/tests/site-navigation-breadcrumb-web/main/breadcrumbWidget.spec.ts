@@ -8,6 +8,7 @@ import {expect, mergeTests} from '@playwright/test';
 import {apiHelpersTest} from '../../../fixtures/apiHelpersTest';
 import {breadcrumbPagesTest} from '../../../fixtures/breadcrumbPagesTest';
 import {breadcrumbWidgetPagesTest} from '../../../fixtures/breadcrumbWidgetPagesTest';
+import {dataApiHelpersTest} from '../../../fixtures/dataApiHelpersTest';
 import {isolatedSiteTest} from '../../../fixtures/isolatedSiteTest';
 import {loginTest} from '../../../fixtures/loginTest';
 import {pageViewModePagesTest} from '../../../fixtures/pageViewModePagesTest';
@@ -19,6 +20,7 @@ export const test = mergeTests(
 	apiHelpersTest,
 	breadcrumbPagesTest,
 	breadcrumbWidgetPagesTest,
+	dataApiHelpersTest,
 	isolatedSiteTest,
 	loginTest(),
 	pageViewModePagesTest,
@@ -194,9 +196,9 @@ test('Configure Show Parent Sites in Breadcrumb widget', async ({
 	breadcrumbWidgetPage,
 	site,
 }) => {
-	const childSite = await apiHelpers.headlessSite.createSite({
+	const childSite = await apiHelpers.headlessAdminSite.postSite({
 		name: getRandomString(),
-		parentSiteKey: site.name,
+		parentSiteExternalReferenceCode: site.externalReferenceCode,
 	});
 
 	const layout = await breadcrumbWidgetPage.addBreadcrumbPortlet(childSite);
@@ -213,8 +215,6 @@ test('Configure Show Parent Sites in Breadcrumb widget', async ({
 		childSite.name,
 		layout.nameCurrentValue,
 	]);
-
-	await apiHelpers.headlessSite.deleteSite(childSite.id);
 });
 
 test('Configure Show Guest Site in Breadcrumb widget', async ({
@@ -232,7 +232,7 @@ test('Configure Show Guest Site in Breadcrumb widget', async ({
 	await breadcrumbPage.toggleBreadcrumbConfiguration('Show Guest Site');
 
 	await breadcrumbPage.assertBreadcrumbEntries(3, [
-		'Liferay DXP',
+		'Liferay',
 		site.name,
 		layout.nameCurrentValue,
 	]);
@@ -265,7 +265,7 @@ test('Preview pane reloads in Breadcrumb widget configuration', async ({
 
 	await breadcrumbPage.assertBreadcrumbEntries(
 		3,
-		['Liferay DXP', site.name, layout.nameCurrentValue],
+		['Liferay', site.name, layout.nameCurrentValue],
 		configurationIFrame
 	);
 });

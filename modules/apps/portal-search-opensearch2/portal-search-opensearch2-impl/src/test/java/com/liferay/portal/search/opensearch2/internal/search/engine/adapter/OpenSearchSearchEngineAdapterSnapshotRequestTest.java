@@ -27,12 +27,12 @@ import com.liferay.portal.search.engine.adapter.snapshot.SnapshotState;
 import com.liferay.portal.search.opensearch2.internal.BaseOpenSearchTestCase;
 import com.liferay.portal.search.opensearch2.internal.OpenSearchTestRule;
 import com.liferay.portal.search.opensearch2.internal.connection.OpenSearchConnectionManager;
-import com.liferay.portal.search.opensearch2.internal.search.engine.adapter.snapshot.SnapshotRequestExecutorTestUtil;
 import com.liferay.portal.search.test.util.IdempotentRetryAssert;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.io.IOException;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -43,9 +43,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.opensearch.indices.CreateIndexRequest;
@@ -103,10 +101,6 @@ public class OpenSearchSearchEngineAdapterSnapshotRequestTest
 
 	@Test
 	public void testCreateSnapshot() {
-		expectedException.expect(RuntimeException.class);
-		expectedException.expectMessage(
-			"Missing required property 'GetSnapshotResponse.total'");
-
 		String snapshotName = "test_create_snapshot";
 
 		CreateSnapshotRequest createSnapshotRequest = new CreateSnapshotRequest(
@@ -180,10 +174,6 @@ public class OpenSearchSearchEngineAdapterSnapshotRequestTest
 
 	@Test
 	public void testDeleteSnapshot() throws Exception {
-		expectedException.expect(RuntimeException.class);
-		expectedException.expectMessage(
-			"Missing required property 'GetSnapshotResponse.total'");
-
 		String snapshotName = "test_delete_snapshot";
 
 		_createSnapshot(_REPOSITORY_NAME, snapshotName, true, TEST_INDEX_NAME);
@@ -240,10 +230,6 @@ public class OpenSearchSearchEngineAdapterSnapshotRequestTest
 
 	@Test
 	public void testGetSnapshots() {
-		expectedException.expect(RuntimeException.class);
-		expectedException.expectMessage(
-			"Missing required property 'GetSnapshotResponse.total'");
-
 		String snapshotName = "test_get_snapshots";
 
 		_createSnapshot(_REPOSITORY_NAME, snapshotName, true, TEST_INDEX_NAME);
@@ -294,21 +280,19 @@ public class OpenSearchSearchEngineAdapterSnapshotRequestTest
 		_deleteSnapshot(_REPOSITORY_NAME, snapshotName);
 	}
 
-	@Rule
-	public ExpectedException expectedException = ExpectedException.none();
-
 	protected static SearchEngineAdapter createSearchEngineAdapter(
 		OpenSearchConnectionManager openSearchConnectionManager) {
 
-		SearchEngineAdapter searchEngineAdapter =
+		OpenSearchSearchEngineAdapterImpl openSearchSearchEngineAdapterImpl =
 			new OpenSearchSearchEngineAdapterImpl();
 
 		ReflectionTestUtil.setFieldValue(
-			searchEngineAdapter, "_snapshotRequestExecutor",
-			SnapshotRequestExecutorTestUtil.createSnapshotRequestExecutor(
-				openSearchConnectionManager));
+			openSearchSearchEngineAdapterImpl, "_openSearchConnectionManager",
+			openSearchConnectionManager);
 
-		return searchEngineAdapter;
+		openSearchSearchEngineAdapterImpl.activate(Collections.emptyMap());
+
+		return openSearchSearchEngineAdapterImpl;
 	}
 
 	private void _createIndex() {

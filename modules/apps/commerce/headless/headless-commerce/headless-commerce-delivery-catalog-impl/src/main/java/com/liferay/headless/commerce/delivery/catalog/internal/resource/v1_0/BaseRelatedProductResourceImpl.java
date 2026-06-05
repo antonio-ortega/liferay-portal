@@ -5,6 +5,7 @@
 
 package com.liferay.headless.commerce.delivery.catalog.internal.resource.v1_0;
 
+import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.RelatedProduct;
 import com.liferay.headless.commerce.delivery.catalog.resource.v1_0.RelatedProductResource;
 import com.liferay.petra.function.UnsafeBiConsumer;
@@ -71,7 +72,7 @@ public abstract class BaseRelatedProductResourceImpl
 	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-delivery-catalog/v1.0/channels/{channelId}/products/{productId}/related-products'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
-		description = "Gets a list of Related Products of a Product."
+		description = "Lists CPDefinitionLink rows for /channels/{channelId}/products/{productId}/related-products. Resolves the active CPDefinition. When the `type` query parameter is omitted, every APPROVED link is returned; otherwise links are filtered to the supplied type (for example, up-sell, cross-sell). Exposed as the `relatedProducts` field of the Product DTO. Validation -- NoSuchCPDefinitionException -> 404 when the productId does not resolve to an active CPDefinition. List query support -- pagination and `type` filter only; filterable fields -- type."
 	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
@@ -200,6 +201,15 @@ public abstract class BaseRelatedProductResourceImpl
 			@Override
 			public Locale getPreferredLocale() {
 				return LocaleUtil.fromLanguageId(languageId);
+			}
+
+			@Override
+			public boolean isAcceptAllLanguages() {
+				if (ExportImportThreadLocal.isExportInProcess()) {
+					return true;
+				}
+
+				return AcceptLanguage.super.isAcceptAllLanguages();
 			}
 
 		};
@@ -777,3 +787,4 @@ public abstract class BaseRelatedProductResourceImpl
 		LogFactoryUtil.getLog(BaseRelatedProductResourceImpl.class);
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1215189242

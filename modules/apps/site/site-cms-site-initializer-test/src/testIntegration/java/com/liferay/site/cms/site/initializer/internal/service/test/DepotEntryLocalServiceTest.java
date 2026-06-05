@@ -11,13 +11,17 @@ import com.liferay.depot.constants.DepotRolesConstants;
 import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.service.DepotEntryLocalService;
 import com.liferay.document.library.kernel.service.DLFolderLocalService;
+import com.liferay.object.constants.ObjectActionKeys;
 import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.constants.ObjectEntryFolderConstants;
+import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntryFolder;
+import com.liferay.object.model.ObjectField;
 import com.liferay.object.rest.filter.factory.FilterFactory;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectEntryFolderLocalService;
+import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.sql.dsl.expression.Predicate;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
@@ -40,6 +44,7 @@ import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
@@ -187,29 +192,34 @@ public class DepotEntryLocalServiceTest {
 				getObjectDefinitionByExternalReferenceCode(
 					"L_CMS_BASIC_WEB_CONTENT", TestPropsValues.getCompanyId());
 
+		String[] objectEntryActionIds = {
+			ActionKeys.ADD_DISCUSSION, ActionKeys.DELETE,
+			ActionKeys.DELETE_DISCUSSION, ActionKeys.DOWNLOAD,
+			ActionKeys.PERMISSIONS, ActionKeys.UPDATE,
+			ActionKeys.UPDATE_DISCUSSION, ActionKeys.VIEW
+		};
+
 		Assert.assertArrayEquals(
-			new String[] {
-				ActionKeys.ADD_DISCUSSION, ActionKeys.DELETE,
-				ActionKeys.DELETE_DISCUSSION, ActionKeys.PERMISSIONS,
-				ActionKeys.UPDATE, ActionKeys.UPDATE_DISCUSSION, ActionKeys.VIEW
-			},
+			objectEntryActionIds,
 			JSONUtil.toStringArray(
 				jsonObject2.getJSONArray(
 					DepotRolesConstants.ASSET_LIBRARY_ADMINISTRATOR)));
 		Assert.assertArrayEquals(
-			new String[] {
-				ActionKeys.ADD_DISCUSSION, ActionKeys.DELETE,
-				ActionKeys.DELETE_DISCUSSION, ActionKeys.PERMISSIONS,
-				ActionKeys.UPDATE, ActionKeys.UPDATE_DISCUSSION, ActionKeys.VIEW
-			},
+			objectEntryActionIds,
 			JSONUtil.toStringArray(
 				jsonObject2.getJSONArray(
 					DepotRolesConstants.ASSET_LIBRARY_CONTENT_REVIEWER)));
+
+		String[] assetLibraryMemberObjectEntryActionIds = {
+			ActionKeys.ADD_DISCUSSION, ActionKeys.DOWNLOAD, ActionKeys.VIEW
+		};
+
 		Assert.assertArrayEquals(
-			new String[] {ActionKeys.ADD_DISCUSSION, ActionKeys.VIEW},
+			assetLibraryMemberObjectEntryActionIds,
 			JSONUtil.toStringArray(
 				jsonObject2.getJSONArray(
 					DepotRolesConstants.ASSET_LIBRARY_MEMBER)));
+
 		Assert.assertArrayEquals(
 			TransformUtil.transformToArray(
 				_resourceActionLocalService.getResourceActions(
@@ -237,26 +247,34 @@ public class DepotEntryLocalServiceTest {
 				getObjectDefinitionByExternalReferenceCode(
 					"L_CMS_BASIC_DOCUMENT", TestPropsValues.getCompanyId());
 
+		List<ObjectField> objectFields =
+			_objectFieldLocalService.getObjectFieldsByBusinessType(
+				objectDefinition.getObjectDefinitionId(),
+				ObjectFieldConstants.BUSINESS_TYPE_ATTACHMENT);
+
+		if (ListUtil.isNotEmpty(objectFields)) {
+			ObjectField objectField = objectFields.get(0);
+
+			assetLibraryMemberObjectEntryActionIds = ArrayUtil.append(
+				assetLibraryMemberObjectEntryActionIds,
+				objectField.getAttachmentDownloadActionKey());
+			objectEntryActionIds = ArrayUtil.append(
+				objectEntryActionIds,
+				objectField.getAttachmentDownloadActionKey());
+		}
+
 		Assert.assertArrayEquals(
-			new String[] {
-				ActionKeys.ADD_DISCUSSION, ActionKeys.DELETE,
-				ActionKeys.DELETE_DISCUSSION, ActionKeys.PERMISSIONS,
-				ActionKeys.UPDATE, ActionKeys.UPDATE_DISCUSSION, ActionKeys.VIEW
-			},
+			objectEntryActionIds,
 			JSONUtil.toStringArray(
 				jsonObject2.getJSONArray(
 					DepotRolesConstants.ASSET_LIBRARY_ADMINISTRATOR)));
 		Assert.assertArrayEquals(
-			new String[] {
-				ActionKeys.ADD_DISCUSSION, ActionKeys.DELETE,
-				ActionKeys.DELETE_DISCUSSION, ActionKeys.PERMISSIONS,
-				ActionKeys.UPDATE, ActionKeys.UPDATE_DISCUSSION, ActionKeys.VIEW
-			},
+			objectEntryActionIds,
 			JSONUtil.toStringArray(
 				jsonObject2.getJSONArray(
 					DepotRolesConstants.ASSET_LIBRARY_CONTENT_REVIEWER)));
 		Assert.assertArrayEquals(
-			new String[] {ActionKeys.ADD_DISCUSSION, ActionKeys.VIEW},
+			assetLibraryMemberObjectEntryActionIds,
 			JSONUtil.toStringArray(
 				jsonObject2.getJSONArray(
 					DepotRolesConstants.ASSET_LIBRARY_MEMBER)));
@@ -283,16 +301,18 @@ public class DepotEntryLocalServiceTest {
 
 		Assert.assertArrayEquals(
 			new String[] {
-				ActionKeys.ADD_ENTRY, ActionKeys.DELETE, ActionKeys.PERMISSIONS,
-				ActionKeys.UPDATE, ActionKeys.SUBSCRIBE, ActionKeys.VIEW
+				ActionKeys.ADD_ENTRY, ObjectActionKeys.ADD_OBJECT_ENTRY_FOLDER,
+				ActionKeys.DELETE, ActionKeys.PERMISSIONS, ActionKeys.UPDATE,
+				ActionKeys.SUBSCRIBE, ActionKeys.VIEW
 			},
 			JSONUtil.toStringArray(
 				jsonObject2.getJSONArray(
 					DepotRolesConstants.ASSET_LIBRARY_ADMINISTRATOR)));
 		Assert.assertArrayEquals(
 			new String[] {
-				ActionKeys.ADD_ENTRY, ActionKeys.DELETE, ActionKeys.PERMISSIONS,
-				ActionKeys.UPDATE, ActionKeys.SUBSCRIBE, ActionKeys.VIEW
+				ActionKeys.ADD_ENTRY, ObjectActionKeys.ADD_OBJECT_ENTRY_FOLDER,
+				ActionKeys.DELETE, ActionKeys.PERMISSIONS, ActionKeys.UPDATE,
+				ActionKeys.SUBSCRIBE, ActionKeys.VIEW
 			},
 			JSONUtil.toStringArray(
 				jsonObject2.getJSONArray(
@@ -392,6 +412,9 @@ public class DepotEntryLocalServiceTest {
 
 	@Inject
 	private ObjectEntryFolderLocalService _objectEntryFolderLocalService;
+
+	@Inject
+	private ObjectFieldLocalService _objectFieldLocalService;
 
 	@Inject
 	private PortletFileRepository _portletFileRepository;

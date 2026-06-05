@@ -11,14 +11,20 @@ import com.liferay.object.service.ObjectDefinitionLocalServiceUtil;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.json.JSONFactoryUtil;
-import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.encryptor.EncryptorUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupConstants;
+import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.UserServiceUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.HttpComponentsUtil;
+import com.liferay.portal.kernel.util.InetAddressUtil;
 import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.PortalRunMode;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
@@ -27,84 +33,114 @@ import com.liferay.portal.vulcan.pagination.Page;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.mcp.McpToolProvider;
 import dev.langchain4j.mcp.client.DefaultMcpClient;
+import dev.langchain4j.mcp.client.McpClient;
 import dev.langchain4j.mcp.client.transport.McpTransport;
-import dev.langchain4j.mcp.client.transport.http.HttpMcpTransport;
 import dev.langchain4j.mcp.client.transport.http.StreamableHttpMcpTransport;
 import dev.langchain4j.model.chat.request.json.JsonAnyOfSchema;
 import dev.langchain4j.model.chat.request.json.JsonObjectSchema;
 import dev.langchain4j.model.chat.request.json.JsonSchemaElement;
 
-import java.util.Base64;
+import java.io.Serializable;
+
+import java.net.UnknownHostException;
+
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author João Victor Alves
  */
 public class MCPToolProviderUtil {
 
+	public static void close(String sseEventSinkKey) {
+		List<McpClient> mcpClients = _mcpClients.get(sseEventSinkKey);
+
+		if (mcpClients == null) {
+			return;
+		}
+
+		for (McpClient mcpClient : mcpClients) {
+			try {
+				mcpClient.close();
+			}
+			catch (Exception exception) {
+				_log.error(exception);
+			}
+		}
+
+		_mcpClients.remove(sseEventSinkKey);
+	}
+
 	public static McpToolProvider create(
 		long companyId, DTOConverterRegistry dtoConverterRegistry, long groupId,
 		Locale locale, List<String> mcpServerExternalReferenceCodes,
-		ObjectEntryManager objectEntryManager, long userId) {
+		ObjectEntryManager objectEntryManager, String sseEventSinkKey,
+		long userId, Map<String, Serializable> workflowContext) {
 
 		if (ListUtil.isEmpty(mcpServerExternalReferenceCodes)) {
 			return null;
 		}
 
+		String userToken;
+
+		try {
+			Company company = CompanyLocalServiceUtil.getCompany(companyId);
+
+			userToken = EncryptorUtil.decrypt(
+				company.getKeyObj(), (String)workflowContext.get("userToken"));
+		}
+		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
+			return null;
+		}
+
+		List<McpClient> mcpClients = TransformUtil.transform(
+			_getMCPServerObjectEntries(
+				companyId, dtoConverterRegistry, groupId, locale,
+				mcpServerExternalReferenceCodes, objectEntryManager, userId),
+			objectEntry -> {
+				McpTransport mcpTransport = _createMcpTransport(
+					objectEntry.getProperties(), userToken);
+
+				return new DefaultMcpClient.Builder(
+				).transport(
+					mcpTransport
+				).build();
+			});
+
+		_mcpClients.put(sseEventSinkKey, mcpClients);
+
 		return McpToolProvider.builder(
 		).mcpClients(
-			TransformUtil.transform(
-				_getMCPServerObjectEntries(
-					companyId, dtoConverterRegistry, groupId, locale,
-					mcpServerExternalReferenceCodes, objectEntryManager,
-					userId),
-				objectEntry -> {
-					McpTransport mcpTransport = _createMcpTransport(
-						objectEntry.getProperties());
-
-					return new DefaultMcpClient.Builder(
-					).transport(
-						mcpTransport
-					).build();
-				})
+			mcpClients
 		).filter(
 			(mcpClient, toolSpecification) -> _filterToolSpecifications(
 				toolSpecification)
 		).build();
 	}
 
-	private static Map<String, String> _createCustomHeaders(
-		String authArguments) {
-
-		if (authArguments.isBlank()) {
-			return Map.of();
-		}
-
-		return Map.of("Authorization", _parseBasicAuthorization(authArguments));
-	}
-
 	private static McpTransport _createMcpTransport(
-		Map<String, Object> properties) {
+			Map<String, Object> properties, String userToken)
+		throws UnknownHostException {
 
 		String url = GetterUtil.getString(properties.get("url"));
 
-		Map<String, String> customHeaders = _createCustomHeaders(
-			GetterUtil.getString(properties.get("authArguments")));
+		if (!PortalRunMode.isTestMode() &&
+			InetAddressUtil.isLocalInetAddress(
+				InetAddressUtil.getInetAddressByName(
+					HttpComponentsUtil.getDomain(url)))) {
 
-		if (url.endsWith("/sse")) {
-			return new HttpMcpTransport.Builder(
-			).customHeaders(
-				customHeaders
-			).sseUrl(
-				url
-			).build();
+			throw new SecurityException("Local links are not allowed: " + url);
 		}
 
 		return new StreamableHttpMcpTransport.Builder(
 		).customHeaders(
-			customHeaders
+			Map.of("Liferay-AI-Hub-Cell-On-Behalf-Of", userToken)
 		).url(
 			url
 		).build();
@@ -145,7 +181,7 @@ public class MCPToolProviderUtil {
 				companyId,
 				ObjectDefinitionLocalServiceUtil.
 					fetchObjectDefinitionByExternalReferenceCode(
-						"L_MCP_SERVER", companyId),
+						"L_AI_HUB_MCP_SERVER", companyId),
 				groupKey, null,
 				new DefaultDTOConverterContext(
 					false, Map.of(), dtoConverterRegistry, null, locale, null,
@@ -166,24 +202,10 @@ public class MCPToolProviderUtil {
 		}
 	}
 
-	private static String _parseBasicAuthorization(String authArguments) {
-		try {
-			JSONObject jsonObject = JSONFactoryUtil.createJSONObject(
-				authArguments);
+	private static final Log _log = LogFactoryUtil.getLog(
+		MCPToolProviderUtil.class);
 
-			Base64.Encoder encoder = Base64.getEncoder();
-
-			String credentials =
-				jsonObject.getString("userName") + ":" +
-					jsonObject.getString("password");
-
-			return "Basic " +
-				new String(
-					encoder.encode(credentials.getBytes("UTF-8")), "UTF-8");
-		}
-		catch (Exception exception) {
-			throw new RuntimeException(exception);
-		}
-	}
+	private static final Map<String, List<McpClient>> _mcpClients =
+		new ConcurrentHashMap<>();
 
 }

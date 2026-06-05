@@ -11,7 +11,7 @@ import ClayMultiSelect from '@clayui/multi-select';
 import {FrontendDataSet} from '@liferay/frontend-data-set-web';
 import {useFormik} from 'formik';
 import {sub} from 'frontend-js-web';
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 
 import SpaceSticker from '../../../common/components/SpaceSticker';
 import ApiHelper from '../../../common/services/ApiHelper';
@@ -36,8 +36,9 @@ export default function MergeTagsModalContent({
 	selectIntoTags: Tag[];
 }) {
 	const [tags, setTags] = useState<Tag[]>([]);
-	const [currentTag, setCurrentTag] = useState(selectIntoTags[0]);
 	const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
+
+	const selectedTagRef = useRef(false);
 
 	useEffect(() => {
 		const getTags = async () => {
@@ -55,26 +56,29 @@ export default function MergeTagsModalContent({
 
 				setTags(allTags);
 
-				const selectedTag = allTags.find(
-					(tag: Tag) =>
-						tag.value === currentTag.value &&
-						tag.label === currentTag.label
-				);
+				if (!selectedTagRef.current) {
+					const selectedTag = allTags.find(
+						(tag: Tag) =>
+							tag.value === selectIntoTags[0].value &&
+							tag.label === selectIntoTags[0].label
+					);
 
-				if (selectedTag) {
-					setSelectedTags([selectedTag]);
+					if (selectedTag) {
+						setSelectedTags([selectedTag]);
+
+						selectedTagRef.current = true;
+					}
 				}
 			}
 		};
 
 		getTags();
-	}, [cmsGroupId, currentTag]);
+	}, [cmsGroupId, selectIntoTags]);
 
-	const _getConfirmationMessage = () => {
+	const _getConfirmationMessage = (tag: Tag) => {
 		const tagNames =
 			'"' + selectedTags.map((item) => item.label).join(', ') + '"';
-		const intoTagName =
-			'"' + Liferay.Util.escapeHTML(currentTag.label) + '"';
+		const intoTagName = '"' + Liferay.Util.escapeHTML(tag.label) + '"';
 
 		return sub(
 			Liferay.Language.get(
@@ -87,7 +91,7 @@ export default function MergeTagsModalContent({
 	};
 
 	const _handleTagChange = (items: Tag[]) => {
-		setSelectedTags(tags.filter((item) => items.includes(item)));
+		setSelectedTags(items);
 	};
 
 	const mergeTags = (tag: Tag) => {
@@ -108,10 +112,10 @@ export default function MergeTagsModalContent({
 			successMessage: sub(
 				Liferay.Language.get('x-and-x-have-been-successfully-merged'),
 				selectedTags
-					.filter((item) => item.label !== currentTag.label)
+					.filter((item) => item.label !== tag.label)
 					.map((item) => item.label)
 					.join(', '),
-				`${Liferay.Util.escapeHTML(currentTag.label)}`
+				`${Liferay.Util.escapeHTML(tag.label)}`
 			),
 			url,
 		});
@@ -119,9 +123,9 @@ export default function MergeTagsModalContent({
 		closeModal();
 	};
 
-	const {handleSubmit} = useFormik({
+	const {handleSubmit, setFieldValue, values} = useFormik({
 		initialValues: {
-			currentTag,
+			currentTag: selectIntoTags[0],
 		},
 		onSubmit: (values) => {
 			const mergeModel = document.querySelector(
@@ -154,7 +158,7 @@ export default function MergeTagsModalContent({
 			}
 
 			openCMSModal({
-				bodyHTML: _getConfirmationMessage(),
+				bodyHTML: _getConfirmationMessage(values.currentTag),
 				buttons: [
 					{
 						autoFocus: true,
@@ -252,6 +256,7 @@ export default function MergeTagsModalContent({
 									},
 								],
 							}}
+							hideManagementBarInEmptyState={true}
 							id="merge"
 
 							// @ts-ignore
@@ -393,11 +398,19 @@ export default function MergeTagsModalContent({
 						</label>
 
 						<ClaySelectWithOption
-							onChange={(event) =>
-								setCurrentTag(event.target.dataset as Tag)
-							}
-							options={selectIntoTags}
-							value={currentTag.label}
+							onChange={(event) => {
+								const selectedId = event.target.value;
+
+								const tag = selectedTags.find(
+									(item) => String(item.value) === selectedId
+								);
+
+								if (tag) {
+									setFieldValue('currentTag', tag);
+								}
+							}}
+							options={selectedTags}
+							value={values.currentTag.value}
 						/>
 					</Form.Group>
 				</ClayModal.Body>

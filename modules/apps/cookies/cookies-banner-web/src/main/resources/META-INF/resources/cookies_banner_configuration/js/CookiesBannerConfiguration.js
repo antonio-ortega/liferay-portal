@@ -9,6 +9,7 @@ import {
 	acceptAllCookies,
 	declineAllCookies,
 	getCookie,
+	hasPreviouslyStoredConsent,
 	setCookie,
 	setUserConfigCookie,
 	userConfigCookieName,
@@ -16,11 +17,36 @@ import {
 
 export default function ({
 	consentRenewalPeriod,
+	consentRenewalPeriodTimeUnit,
+	dissentRenewalPeriod,
+	dissentRenewalPeriodTimeUnit,
 	namespace,
 	optionalConsentCookieTypeNames,
 	requiredConsentCookieTypeNames,
 	showButtons,
 }) {
+	const storeConsentCheckbox = document.getElementById(
+		`${namespace}storeConsent`
+	);
+
+	if (storeConsentCheckbox !== null) {
+		const notifyStoreConsentPreferenceUpdate = () =>
+			getOpener().Liferay.fire('storeCookiesConsentPreferenceUpdate', {
+				value: storeConsentCheckbox.checked,
+			});
+
+		storeConsentCheckbox.addEventListener(
+			'change',
+			notifyStoreConsentPreferenceUpdate
+		);
+
+		storeConsentCheckbox.removeAttribute('disabled');
+
+		hasPreviouslyStoredConsent().then((storeConsent) => {
+			storeConsentCheckbox.checked = storeConsent;
+		});
+	}
+
 	const toggleSwitches = Array.from(
 		document.querySelectorAll(
 			`#${namespace}cookiesBannerConfigurationForm [data-cookie-key]`
@@ -38,12 +64,15 @@ export default function ({
 
 		toggleSwitch.addEventListener('click', notifyCookiePreferenceUpdate);
 
-		if (getCookie(userConfigCookieName)) {
-			toggleSwitch.checked = getCookie(cookieKey) === 'true';
-		}
-		else {
-			toggleSwitch.checked = toggleSwitch.dataset.prechecked === 'true';
-		}
+		toggleSwitch.checked = toggleSwitch.dataset.prechecked;
+
+		getCookie(userConfigCookieName).then((cookie) => {
+			if (cookie) {
+				getCookie(cookieKey).then((cookie) => {
+					toggleSwitch.checked = cookie === 'true';
+				});
+			}
+		});
 
 		notifyCookiePreferenceUpdate();
 
@@ -61,23 +90,44 @@ export default function ({
 			`${namespace}useNecessaryCookiesOnlyButton`
 		);
 
+		if (dissentRenewalPeriod === 0) {
+			dissentRenewalPeriod = consentRenewalPeriod;
+			dissentRenewalPeriodTimeUnit = consentRenewalPeriodTimeUnit;
+		}
+
 		acceptAllButton.addEventListener('click', () => {
 			acceptAllCookies(
 				consentRenewalPeriod,
 				optionalConsentCookieTypeNames,
-				requiredConsentCookieTypeNames
+				requiredConsentCookieTypeNames,
+				storeConsentCheckbox?.checked,
+				consentRenewalPeriodTimeUnit
 			);
 
-			setUserConfigCookie(consentRenewalPeriod);
+			setUserConfigCookie(
+				consentRenewalPeriod,
+				storeConsentCheckbox?.checked,
+				consentRenewalPeriodTimeUnit
+			);
 
 			window.location.reload();
 		});
 
 		acceptSelectedButton.addEventListener('click', () => {
 			toggleSwitches.forEach((toggleSwitch) => {
+				let renewalPeriod = consentRenewalPeriod;
+				let timeUnit = consentRenewalPeriodTimeUnit;
+
+				if (!toggleSwitch.checked) {
+					renewalPeriod = dissentRenewalPeriod;
+					timeUnit = dissentRenewalPeriodTimeUnit;
+				}
+
 				setCookie(
-					consentRenewalPeriod,
+					renewalPeriod,
 					toggleSwitch.dataset.cookieKey,
+					storeConsentCheckbox?.checked,
+					timeUnit,
 					toggleSwitch.checked ? 'true' : 'false'
 				);
 			});
@@ -87,12 +137,18 @@ export default function ({
 					setCookie(
 						consentRenewalPeriod,
 						requiredConsentCookieTypeName,
+						storeConsentCheckbox?.checked,
+						consentRenewalPeriodTimeUnit,
 						'true'
 					);
 				}
 			);
 
-			setUserConfigCookie(consentRenewalPeriod);
+			setUserConfigCookie(
+				consentRenewalPeriod,
+				storeConsentCheckbox?.checked,
+				consentRenewalPeriodTimeUnit
+			);
 
 			window.location.reload();
 		});
@@ -100,11 +156,19 @@ export default function ({
 		useNecessaryCookiesOnlyButton.addEventListener('click', () => {
 			declineAllCookies(
 				consentRenewalPeriod,
+				consentRenewalPeriodTimeUnit,
+				dissentRenewalPeriod,
+				dissentRenewalPeriodTimeUnit,
 				optionalConsentCookieTypeNames,
-				requiredConsentCookieTypeNames
+				requiredConsentCookieTypeNames,
+				storeConsentCheckbox?.checked
 			);
 
-			setUserConfigCookie(consentRenewalPeriod);
+			setUserConfigCookie(
+				consentRenewalPeriod,
+				storeConsentCheckbox?.checked,
+				consentRenewalPeriodTimeUnit
+			);
 
 			window.location.reload();
 		});

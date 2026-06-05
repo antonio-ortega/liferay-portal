@@ -146,6 +146,7 @@ public class DDLExporterTest {
 
 		try (ByteArrayInputStream byteArrayInputStream =
 				new ByteArrayInputStream(bytes);
+
 			BufferedReader bufferedReader = new BufferedReader(
 				new InputStreamReader(byteArrayInputStream))) {
 
@@ -254,6 +255,7 @@ public class DDLExporterTest {
 
 		try (ByteArrayInputStream byteArrayInputStream =
 				new ByteArrayInputStream(bytes);
+
 			BufferedReader bufferedReader = new BufferedReader(
 				new InputStreamReader(byteArrayInputStream))) {
 
@@ -318,6 +320,7 @@ public class DDLExporterTest {
 
 		try (ByteArrayInputStream byteArrayInputStream =
 				new ByteArrayInputStream(bytes);
+
 			BufferedReader bufferedReader = new BufferedReader(
 				new InputStreamReader(byteArrayInputStream))) {
 
@@ -735,10 +738,11 @@ public class DDLExporterTest {
 			});
 	}
 
-	@Inject
-	private static DDLExporterFactory _ddlExporterFactory;
-
 	private Set<Locale> _availableLocales;
+
+	@Inject
+	private DDLExporterFactory _ddlExporterFactory;
+
 	private Map<DDMFormFieldType, String> _ddmFormFieldDataTypes;
 	private final Locale _defaultLocale = LocaleUtil.US;
 	private Map<DDMFormFieldType, String> _fieldValues;

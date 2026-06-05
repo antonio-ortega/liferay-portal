@@ -7,12 +7,16 @@ package com.liferay.headless.admin.site.internal.resource.v1_0.util;
 
 import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.service.AssetCategoryServiceUtil;
+import com.liferay.exportimport.kernel.staging.MergeLayoutPrototypesThreadLocal;
 import com.liferay.headless.admin.site.dto.v1_0.ContentPageSpecification;
-import com.liferay.headless.admin.site.dto.v1_0.ItemExternalReference;
 import com.liferay.headless.admin.site.dto.v1_0.PageExperience;
 import com.liferay.headless.admin.site.dto.v1_0.PageSpecification;
+import com.liferay.headless.admin.site.dto.v1_0.ParentTaxonomyCategory;
+import com.liferay.headless.admin.site.dto.v1_0.ParentTaxonomyVocabulary;
+import com.liferay.headless.admin.site.dto.v1_0.TaxonomyCategoryBrief;
 import com.liferay.headless.admin.site.internal.util.LogUtil;
 import com.liferay.headless.common.spi.service.context.ServiceContextBuilder;
+import com.liferay.headless.common.spi.util.GroupUtil;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.model.Group;
@@ -41,10 +45,10 @@ import java.util.Objects;
 public class ServiceContextUtil {
 
 	public static ServiceContext createServiceContext(
-			ItemExternalReference[] assetCategoriesItemExternalReferences,
 			long companyId, Date createDate, long groupId,
 			HttpServletRequest httpServletRequest, String[] keywords,
-			Date modifiedDate, long userId, String uuid)
+			Date modifiedDate, TaxonomyCategoryBrief[] taxonomyCategoryBriefs,
+			long userId, String uuid)
 		throws Exception {
 
 		ServiceContext serviceContext = ServiceContextBuilder.create(
@@ -52,8 +56,7 @@ public class ServiceContextUtil {
 		).build();
 
 		serviceContext.setAssetCategoryIds(
-			_getAssetCategoryIds(
-				groupId, assetCategoriesItemExternalReferences));
+			_getAssetCategoryIds(groupId, taxonomyCategoryBriefs));
 		serviceContext.setAssetTagNames(keywords);
 		serviceContext.setCompanyId(companyId);
 		serviceContext.setCreateDate(createDate);
@@ -148,7 +151,13 @@ public class ServiceContextUtil {
 		if (Validator.isNull(
 				siteTemplatePageSpecificationExternalReferenceCode)) {
 
-			return;
+			if (MergeLayoutPrototypesThreadLocal.isInProgress()) {
+				siteTemplatePageSpecificationExternalReferenceCode =
+					pageSpecification.getExternalReferenceCode();
+			}
+			else {
+				return;
+			}
 		}
 
 		boolean privateLayout = Boolean.FALSE;
@@ -183,7 +192,6 @@ public class ServiceContextUtil {
 						getDraftContentPageSpecificationExternalReferenceCode())) {
 
 				draftLayout = Boolean.TRUE;
-				privateLayout = Boolean.TRUE;
 			}
 		}
 
@@ -219,21 +227,21 @@ public class ServiceContextUtil {
 	}
 
 	private static long[] _getAssetCategoryIds(
-			long groupId, ItemExternalReference[] itemExternalReferences)
+			long groupId, TaxonomyCategoryBrief[] taxonomyCategoryBriefs)
 		throws Exception {
 
-		if (ArrayUtil.isEmpty(itemExternalReferences)) {
+		if (ArrayUtil.isEmpty(taxonomyCategoryBriefs)) {
 			return new long[0];
 		}
 
 		Group group = GroupServiceUtil.getGroup(groupId);
 
 		return TransformUtil.unsafeTransformToLongArray(
-			ListUtil.fromArray(itemExternalReferences),
-			itemExternalReference -> {
+			ListUtil.fromArray(taxonomyCategoryBriefs),
+			taxonomyCategoryBrief -> {
 				long scopeGroupId = groupId;
 
-				Scope scope = itemExternalReference.getScope();
+				Scope scope = taxonomyCategoryBrief.getScope();
 
 				if (scope != null) {
 					scopeGroupId = GroupUtil.getGroupId(
@@ -241,10 +249,26 @@ public class ServiceContextUtil {
 						scope.getExternalReferenceCode());
 				}
 
+				String parentTaxonomyCategoryExternalReferenceCode = null;
+
+				ParentTaxonomyVocabulary parentTaxonomyVocabulary =
+					taxonomyCategoryBrief.getParentTaxonomyVocabulary();
+
+				ParentTaxonomyCategory parentTaxonomyCategory =
+					taxonomyCategoryBrief.getParentTaxonomyCategory();
+
+				if (parentTaxonomyCategory != null) {
+					parentTaxonomyCategoryExternalReferenceCode =
+						parentTaxonomyCategory.getExternalReferenceCode();
+				}
+
 				AssetCategory assetCategory =
-					AssetCategoryServiceUtil.getOrAddEmptyCategory(
-						itemExternalReference.getExternalReferenceCode(),
-						scopeGroupId);
+					AssetCategoryServiceUtil.getOrAddEmptyCategoryWithAncestors(
+						taxonomyCategoryBrief.
+							getTaxonomyCategoryExternalReferenceCode(),
+						scopeGroupId,
+						parentTaxonomyCategoryExternalReferenceCode,
+						parentTaxonomyVocabulary.getExternalReferenceCode());
 
 				return assetCategory.getCategoryId();
 			});

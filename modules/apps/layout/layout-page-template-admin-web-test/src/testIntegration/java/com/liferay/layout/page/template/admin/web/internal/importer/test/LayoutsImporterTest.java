@@ -60,6 +60,8 @@ import com.liferay.layout.util.structure.FragmentStyledLayoutStructureItem;
 import com.liferay.layout.util.structure.LayoutStructure;
 import com.liferay.layout.util.structure.LayoutStructureItem;
 import com.liferay.layout.util.structure.RowStyledLayoutStructureItem;
+import com.liferay.layout.utility.page.model.LayoutUtilityPageEntry;
+import com.liferay.layout.utility.page.service.LayoutUtilityPageEntryLocalService;
 import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.field.util.ObjectFieldUtil;
 import com.liferay.object.model.ObjectDefinition;
@@ -80,17 +82,20 @@ import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.Organization;
+import com.liferay.portal.kernel.model.PortletPreferences;
 import com.liferay.portal.kernel.model.Repository;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.portlet.PortletIdCodec;
+import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portal.kernel.portletfilerepository.PortletFileRepositoryUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
+import com.liferay.portal.kernel.service.PortletPreferencesLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
@@ -111,6 +116,8 @@ import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.PortletKeys;
+import com.liferay.portal.kernel.util.ScopeUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
@@ -245,9 +252,9 @@ public class LayoutsImporterTest {
 			LayoutPageTemplateEntryTypeConstants.BASIC);
 
 		List<LayoutsImporterResultEntry> layoutsImporterResultEntries =
-			_layoutsImporter.importFile(
-				TestPropsValues.getUserId(), _group2.getGroupId(), 0, file,
-				LayoutsImportStrategy.DO_NOT_OVERWRITE, true);
+			_importFile(
+				file, LayoutsImportStrategy.DO_NOT_OVERWRITE, 0,
+				_serviceContext2);
 
 		LayoutsImporterResultEntry layoutsImporterResultEntry =
 			layoutsImporterResultEntries.get(0);
@@ -271,7 +278,7 @@ public class LayoutsImporterTest {
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			DisplayPageTemplateTestUtil.addDisplayPageTemplate(
 				_group1.getGroupId(),
-				_portal.getClassNameId(AssetCategory.class.getName()), 0);
+				_portal.getClassNameId(AssetCategory.class.getName()), null);
 
 		Layout layout = _layoutLocalService.getLayout(
 			layoutPageTemplateEntry.getPlid());
@@ -313,10 +320,9 @@ public class LayoutsImporterTest {
 		}
 
 		List<LayoutsImporterResultEntry> layoutsImporterResultEntries =
-			_layoutsImporter.importFile(
-				TestPropsValues.getUserId(), _group2.getGroupId(), 0,
-				zipWriter.getFile(), LayoutsImportStrategy.DO_NOT_OVERWRITE,
-				true);
+			_importFile(
+				zipWriter.getFile(), LayoutsImportStrategy.DO_NOT_OVERWRITE, 0,
+				_serviceContext2);
 
 		Assert.assertEquals(
 			layoutsImporterResultEntries.toString(), 2,
@@ -351,19 +357,10 @@ public class LayoutsImporterTest {
 
 	@Test
 	public void testImportDisplayPageTemplates() throws Exception {
-		List<LayoutsImporterResultEntry> layoutsImporterResultEntries = null;
-
-		ServiceContextThreadLocal.pushServiceContext(_serviceContext1);
-
-		try {
-			layoutsImporterResultEntries = _layoutsImporter.importFile(
-				TestPropsValues.getUserId(), _group1.getGroupId(), 0,
+		List<LayoutsImporterResultEntry> layoutsImporterResultEntries =
+			_importFile(
 				_getFile(_RESOURCES_PATH_DISPLAY_PAGE_TEMPLATES),
-				LayoutsImportStrategy.DO_NOT_OVERWRITE, true);
-		}
-		finally {
-			ServiceContextThreadLocal.popServiceContext();
-		}
+				LayoutsImportStrategy.DO_NOT_OVERWRITE, 0, _serviceContext1);
 
 		Assert.assertEquals(
 			layoutsImporterResultEntries.toString(), 3,
@@ -404,18 +401,10 @@ public class LayoutsImporterTest {
 
 		_addFragmentEntry(html, key, name, _serviceContext2);
 
-		List<LayoutsImporterResultEntry> layoutsImporterResultEntries = null;
-
-		ServiceContextThreadLocal.pushServiceContext(_serviceContext2);
-
-		try {
-			layoutsImporterResultEntries = _layoutsImporter.importFile(
-				TestPropsValues.getUserId(), _group2.getGroupId(), 0, file,
-				LayoutsImportStrategy.DO_NOT_OVERWRITE, true);
-		}
-		finally {
-			ServiceContextThreadLocal.popServiceContext();
-		}
+		List<LayoutsImporterResultEntry> layoutsImporterResultEntries =
+			_importFile(
+				file, LayoutsImportStrategy.DO_NOT_OVERWRITE, 0,
+				_serviceContext2);
 
 		Assert.assertEquals(
 			layoutsImporterResultEntries.toString(), 1,
@@ -492,9 +481,8 @@ public class LayoutsImporterTest {
 			LayoutPageTemplateEntryTypeConstants.BASIC);
 
 		List<LayoutsImporterResultEntry> layoutsImporterResultEntries =
-			_layoutsImporter.importFile(
-				TestPropsValues.getUserId(), _group1.getGroupId(), 0, file,
-				LayoutsImportStrategy.OVERWRITE, true);
+			_importFile(
+				file, LayoutsImportStrategy.OVERWRITE, 0, _serviceContext1);
 
 		_assertLayoutPageTemplateEntry(
 			fragmentEntryLink,
@@ -525,6 +513,72 @@ public class LayoutsImporterTest {
 
 		_testImportLayoutPageTemplateEntryWithItemSelectorTypeFragmentConfigurationField(
 			_jsonFactory.createJSONObject());
+	}
+
+	@Test
+	@TestInfo("LPD-86505")
+	public void testImportLayoutPageTemplateEntryWithMasterLayoutAndChildLayout()
+		throws Exception {
+
+		_importFile(
+			_getFile(_RESOURCES_PATH_MASTER_PAGES),
+			LayoutsImportStrategy.OVERWRITE,
+			LayoutPageTemplateConstants.
+				PARENT_LAYOUT_PAGE_TEMPLATE_COLLECTION_ID_DEFAULT,
+			_serviceContext1);
+
+		LayoutPageTemplateEntry masterLayoutPageTemplateEntry =
+			_layoutPageTemplateEntryLocalService.fetchLayoutPageTemplateEntry(
+				_group1.getGroupId(),
+				LayoutPageTemplateConstants.
+					PARENT_LAYOUT_PAGE_TEMPLATE_COLLECTION_ID_DEFAULT,
+				"Default Master Page",
+				LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT);
+
+		Layout masterPublishedLayout = _layoutLocalService.getLayout(
+			masterLayoutPageTemplateEntry.getPlid());
+
+		Layout masterDraftLayout = masterPublishedLayout.fetchDraftLayout();
+
+		ContentLayoutTestUtil.addPortletToLayout(
+			masterDraftLayout,
+			LayoutPageTemplateAdminWebPortletKeys.
+				LAYOUT_PAGE_TEMPLATE_ADMIN_WEB_NONINSTANCEABLE_TEST_PORTLET);
+
+		ContentLayoutTestUtil.publishLayout(
+			masterDraftLayout, masterPublishedLayout);
+
+		Layout childLayout = LayoutTestUtil.addTypeContentLayout(
+			_group1, false, false,
+			masterLayoutPageTemplateEntry.getExternalReferenceCode());
+
+		PortletPreferencesFactoryUtil.getLayoutPortletSetup(
+			childLayout,
+			LayoutPageTemplateAdminWebPortletKeys.
+				LAYOUT_PAGE_TEMPLATE_ADMIN_WEB_NONINSTANCEABLE_TEST_PORTLET);
+
+		List<PortletPreferences> portletPreferences =
+			_portletPreferencesLocalService.getPortletPreferences(
+				PortletKeys.PREFS_OWNER_ID_DEFAULT,
+				PortletKeys.PREFS_OWNER_TYPE_LAYOUT, childLayout.getPlid());
+
+		Assert.assertEquals(
+			portletPreferences.toString(), 1, portletPreferences.size());
+
+		_importFile(
+			_getFile(_RESOURCES_PATH_MASTER_PAGES),
+			LayoutsImportStrategy.OVERWRITE,
+			LayoutPageTemplateConstants.
+				PARENT_LAYOUT_PAGE_TEMPLATE_COLLECTION_ID_DEFAULT,
+			_serviceContext1);
+
+		portletPreferences =
+			_portletPreferencesLocalService.getPortletPreferences(
+				PortletKeys.PREFS_OWNER_ID_DEFAULT,
+				PortletKeys.PREFS_OWNER_TYPE_LAYOUT, childLayout.getPlid());
+
+		Assert.assertEquals(
+			portletPreferences.toString(), 0, portletPreferences.size());
 	}
 
 	@Test
@@ -594,9 +648,9 @@ public class LayoutsImporterTest {
 			LayoutPageTemplateEntryTypeConstants.BASIC);
 
 		List<LayoutsImporterResultEntry> layoutsImporterResultEntries =
-			_layoutsImporter.importFile(
-				TestPropsValues.getUserId(), _group2.getGroupId(), 0, file,
-				LayoutsImportStrategy.DO_NOT_OVERWRITE, true);
+			_importFile(
+				file, LayoutsImportStrategy.DO_NOT_OVERWRITE, 0,
+				_serviceContext2);
 
 		LayoutsImporterResultEntry layoutsImporterResultEntry =
 			layoutsImporterResultEntries.get(0);
@@ -657,9 +711,9 @@ public class LayoutsImporterTest {
 			LayoutPageTemplateEntryTypeConstants.BASIC);
 
 		List<LayoutsImporterResultEntry> layoutsImporterResultEntries =
-			_layoutsImporter.importFile(
-				TestPropsValues.getUserId(), _group2.getGroupId(), 0, file,
-				LayoutsImportStrategy.DO_NOT_OVERWRITE, true);
+			_importFile(
+				file, LayoutsImportStrategy.DO_NOT_OVERWRITE, 0,
+				_serviceContext2);
 
 		LayoutsImporterResultEntry layoutsImporterResultEntry =
 			layoutsImporterResultEntries.get(0);
@@ -736,9 +790,9 @@ public class LayoutsImporterTest {
 			_serviceContext2, styleBookEntry.getStyleBookEntryKey());
 
 		List<LayoutsImporterResultEntry> layoutsImporterResultEntries =
-			_layoutsImporter.importFile(
-				TestPropsValues.getUserId(), _group2.getGroupId(), 0, file,
-				LayoutsImportStrategy.DO_NOT_OVERWRITE, true);
+			_importFile(
+				file, LayoutsImportStrategy.DO_NOT_OVERWRITE, 0,
+				_serviceContext2);
 
 		Assert.assertEquals(
 			layoutsImporterResultEntries.toString(), 1,
@@ -811,9 +865,9 @@ public class LayoutsImporterTest {
 			fragmentEntry, _serviceContext2);
 
 		List<LayoutsImporterResultEntry> layoutsImporterResultEntries =
-			_layoutsImporter.importFile(
-				TestPropsValues.getUserId(), _group2.getGroupId(), 0, file,
-				LayoutsImportStrategy.DO_NOT_OVERWRITE, true);
+			_importFile(
+				file, LayoutsImportStrategy.DO_NOT_OVERWRITE, 0,
+				_serviceContext2);
 
 		_assertLayoutPageTemplateEntry(
 			configurationJSONObject, editableValuesJSONObject, curFragmentEntry,
@@ -965,6 +1019,37 @@ public class LayoutsImporterTest {
 		finally {
 			ServiceContextThreadLocal.popServiceContext();
 		}
+	}
+
+	@Test
+	@TestInfo("LPD-86505")
+	public void testImportUtilityPageEntryIsApprovedAndCanBeSetAsDefault()
+		throws Exception {
+
+		_importFile(
+			_getFile(_RESOURCES_PATH_UTILITY_PAGES),
+			LayoutsImportStrategy.OVERWRITE,
+			LayoutPageTemplateConstants.
+				PARENT_LAYOUT_PAGE_TEMPLATE_COLLECTION_ID_DEFAULT,
+			_serviceContext1);
+
+		LayoutUtilityPageEntry layoutUtilityPageEntry =
+			_layoutUtilityPageEntryLocalService.
+				getLayoutUtilityPageEntryByExternalReferenceCode(
+					"test-default-utility-page", _group1.getGroupId());
+
+		Layout layout = _layoutLocalService.getLayout(
+			layoutUtilityPageEntry.getPlid());
+
+		Assert.assertTrue(layout.isPublished());
+
+		layoutUtilityPageEntry =
+			_layoutUtilityPageEntryLocalService.
+				setDefaultLayoutUtilityPageEntry(
+					layoutUtilityPageEntry.getLayoutUtilityPageEntryId());
+
+		Assert.assertTrue(
+			layoutUtilityPageEntry.isDefaultLayoutUtilityPageEntry());
 	}
 
 	@Test
@@ -1348,10 +1433,9 @@ public class LayoutsImporterTest {
 					ContentLayoutTestUtil.addFragmentEntryLinkToLayout(
 						null, fragmentEntry.getCss(),
 						fragmentEntry.getConfiguration(),
-						fragmentEntry.getExternalReferenceCode(),
-						fragmentEntry.getScopeERC(), fragmentEntry.getHtml(),
-						fragmentEntry.getJs(), draftLayout,
-						fragmentEntry.getFragmentEntryKey(),
+						fragmentEntry.getExternalReferenceCode(), null,
+						fragmentEntry.getHtml(), fragmentEntry.getJs(),
+						draftLayout, fragmentEntry.getFragmentEntryKey(),
 						_segmentsExperienceLocalService.
 							fetchDefaultSegmentsExperienceId(
 								draftLayout.getPlid()),
@@ -1510,9 +1594,11 @@ public class LayoutsImporterTest {
 			_fragmentEntryLinkLocalService.addFragmentEntryLink(
 				null, TestPropsValues.getUserId(), _group1.getGroupId(), null,
 				fragmentEntry.getExternalReferenceCode(),
-				fragmentEntry.getScopeERC(), segmentsExperienceId,
-				draftLayout.getPlid(), fragmentEntry.getCss(),
-				fragmentEntry.getHtml(), fragmentEntry.getConfiguration(),
+				ScopeUtil.getItemScopeExternalReferenceCode(
+					fragmentEntry.getGroupId(), _group1.getGroupId()),
+				segmentsExperienceId, draftLayout.getPlid(),
+				fragmentEntry.getCss(), fragmentEntry.getHtml(),
+				fragmentEntry.getConfiguration(),
 				fragmentEntry.getConfiguration(), editableValues,
 				StringPool.BLANK, 0, fragmentEntry.getFragmentEntryKey(),
 				fragmentEntry.getType(), _serviceContext1);
@@ -1543,9 +1629,10 @@ public class LayoutsImporterTest {
 			_fragmentEntryLinkLocalService.addFragmentEntryLink(
 				null, TestPropsValues.getUserId(), _group1.getGroupId(), null,
 				fragmentEntry.getExternalReferenceCode(),
-				fragmentEntry.getScopeERC(), defaultSegmentsExperienceId,
-				layoutPageTemplateEntry.getPlid(), StringPool.BLANK, html,
-				StringPool.BLANK,
+				ScopeUtil.getItemScopeExternalReferenceCode(
+					fragmentEntry.getGroupId(), _group1.getGroupId()),
+				defaultSegmentsExperienceId, layoutPageTemplateEntry.getPlid(),
+				StringPool.BLANK, html, StringPool.BLANK,
 				_read("export_import_fragment_field_text_config.json"),
 				_read("export_import_fragment_field_text_editable_values.json"),
 				StringPool.BLANK, 0, null, fragmentEntry.getType(),
@@ -1753,9 +1840,14 @@ public class LayoutsImporterTest {
 		Assert.assertEquals(
 			fragmentEntry.getExternalReferenceCode(),
 			fragmentEntryLink.getFragmentEntryERC());
-		Assert.assertEquals(
-			fragmentEntry.getGroupId(),
-			fragmentEntryLink.getFragmentEntryGroupId());
+
+		Long groupId = ScopeUtil.getItemGroupId(
+			fragmentEntryLink.getCompanyId(),
+			fragmentEntryLink.getFragmentEntryScopeERC(),
+			fragmentEntryLink.getGroupId());
+
+		Assert.assertEquals(fragmentEntry.getGroupId(), groupId.longValue());
+
 		Assert.assertTrue(
 			fragmentEntryLink.getConfiguration(),
 			JSONUtil.equals(
@@ -2085,6 +2177,24 @@ public class LayoutsImporterTest {
 		return JSONUtil.put("successMessage", successMessageJSONObject);
 	}
 
+	private List<LayoutsImporterResultEntry> _importFile(
+			File file, LayoutsImportStrategy layoutsImportStrategy,
+			long layoutPageTemplateCollectionId, ServiceContext serviceContext)
+		throws Exception {
+
+		ServiceContextThreadLocal.pushServiceContext(serviceContext);
+
+		try {
+			return _layoutsImporter.importFile(
+				TestPropsValues.getUserId(), serviceContext.getScopeGroupId(),
+				layoutPageTemplateCollectionId, file, layoutsImportStrategy,
+				true);
+		}
+		finally {
+			ServiceContextThreadLocal.popServiceContext();
+		}
+	}
+
 	private String _read(String fileName) throws Exception {
 		return new String(
 			FileUtil.getBytes(getClass(), "dependencies/" + fileName));
@@ -2132,9 +2242,11 @@ public class LayoutsImporterTest {
 			_fragmentEntryLinkLocalService.addFragmentEntryLink(
 				null, TestPropsValues.getUserId(), _group1.getGroupId(), null,
 				fragmentEntry.getExternalReferenceCode(),
-				fragmentEntry.getScopeERC(), segmentsExperienceId,
-				draftLayout.getPlid(), fragmentEntry.getCss(),
-				fragmentEntry.getHtml(), fragmentEntry.getConfiguration(),
+				ScopeUtil.getItemScopeExternalReferenceCode(
+					fragmentEntry.getGroupId(), _group1.getGroupId()),
+				segmentsExperienceId, draftLayout.getPlid(),
+				fragmentEntry.getCss(), fragmentEntry.getHtml(),
+				fragmentEntry.getConfiguration(),
 				fragmentEntry.getConfiguration(),
 				JSONUtil.put(
 					FragmentEntryProcessorConstants.
@@ -2162,9 +2274,9 @@ public class LayoutsImporterTest {
 			fragmentEntry, _serviceContext2);
 
 		List<LayoutsImporterResultEntry> layoutsImporterResultEntries =
-			_layoutsImporter.importFile(
-				TestPropsValues.getUserId(), _group2.getGroupId(), 0, file,
-				LayoutsImportStrategy.DO_NOT_OVERWRITE, true);
+			_importFile(
+				file, LayoutsImportStrategy.DO_NOT_OVERWRITE, 0,
+				_serviceContext2);
 
 		_assertLayoutPageTemplateEntry(
 			configurationJSONObject,
@@ -2387,6 +2499,10 @@ public class LayoutsImporterTest {
 		"com/liferay/layout/page/template/admin/web/internal/importer/test" +
 			"/dependencies/page-templates";
 
+	private static final String _RESOURCES_PATH_UTILITY_PAGES =
+		"com/liferay/layout/page/template/admin/web/internal/importer/test" +
+			"/dependencies/utility-pages";
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		LayoutsImporterTest.class);
 
@@ -2460,7 +2576,14 @@ public class LayoutsImporterTest {
 	private LayoutStructureProvider _layoutStructureProvider;
 
 	@Inject
+	private LayoutUtilityPageEntryLocalService
+		_layoutUtilityPageEntryLocalService;
+
+	@Inject
 	private Portal _portal;
+
+	@Inject
+	private PortletPreferencesLocalService _portletPreferencesLocalService;
 
 	@Inject
 	private ResourcePermissionLocalService _resourcePermissionLocalService;

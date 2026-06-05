@@ -12,6 +12,7 @@ import {classicPageTest} from '../../../../frontend-editor-ckeditor-sample-web/f
 export const test = mergeTests(
 	classicPageTest,
 	featureFlagsTest({
+		'LPD-11235': {enabled: true},
 		'LPS-178052': {enabled: true},
 	}),
 	loginTest()
@@ -272,5 +273,25 @@ test(
 				name: 'Sample document for editor',
 			})
 		).toBeVisible();
+	}
+);
+
+test(
+	'Check source mode content displays correctly',
+	{tag: '@LPD-79554'},
+	async ({classicPage: _classicPage, page}) => {
+		const sourceButton = page.getByLabel('Source');
+
+		await sourceButton.click();
+
+		await page.locator('div:nth-child(2) > .CodeMirror-line').click();
+
+		await page.keyboard.press('$');
+
+		await page.keyboard.press('Backspace');
+
+		await sourceButton.click();
+
+		await expect(page.getByText('$')).not.toBeVisible();
 	}
 );

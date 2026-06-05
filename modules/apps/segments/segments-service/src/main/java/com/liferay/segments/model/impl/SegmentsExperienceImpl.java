@@ -36,37 +36,14 @@ import java.util.Objects;
 public class SegmentsExperienceImpl extends SegmentsExperienceBaseImpl {
 
 	@Override
-	public long getSegmentsEntryGroupId() {
-		Long groupId = ScopeUtil.getItemGroupId(
-			getCompanyId(), getSegmentsEntryScopeERC(), getGroupId());
-
-		if (groupId == null) {
-			return 0;
-		}
-
-		return groupId;
-	}
-
-	@Override
 	public long getSegmentsEntryId() {
 		if (hasDefaultSegmentsEntry()) {
 			return SegmentsEntryConstants.ID_DEFAULT;
 		}
 
-		SegmentsEntry segmentsEntry =
-			SegmentsEntryLocalServiceUtil.
-				fetchSegmentsEntryByExternalReferenceCode(
-					getSegmentsEntryERC(), getSegmentsEntryGroupId());
+		SegmentsEntry segmentsEntry = _getSegmentsEntry();
 
 		if (segmentsEntry == null) {
-			if (_log.isWarnEnabled()) {
-				_log.warn(
-					StringBundler.concat(
-						"Unable to get segments entry with external reference ",
-						"code ", getSegmentsEntryERC(), " and group ID ",
-						getSegmentsEntryGroupId()));
-			}
-
 			return SegmentsEntryConstants.ID_MISSING;
 		}
 
@@ -79,20 +56,9 @@ public class SegmentsExperienceImpl extends SegmentsExperienceBaseImpl {
 			return SegmentsEntryConstants.getDefaultSegmentsEntryName(locale);
 		}
 
-		SegmentsEntry segmentsEntry =
-			SegmentsEntryLocalServiceUtil.
-				fetchSegmentsEntryByExternalReferenceCode(
-					getSegmentsEntryERC(), getSegmentsEntryGroupId());
+		SegmentsEntry segmentsEntry = _getSegmentsEntry();
 
 		if (segmentsEntry == null) {
-			if (_log.isWarnEnabled()) {
-				_log.warn(
-					StringBundler.concat(
-						"Unable to get segments entry with external reference ",
-						"code ", getSegmentsEntryERC(), " and group ID ",
-						getSegmentsEntryGroupId()));
-			}
-
 			return StringPool.BLANK;
 		}
 
@@ -165,6 +131,43 @@ public class SegmentsExperienceImpl extends SegmentsExperienceBaseImpl {
 		}
 
 		return getPlid();
+	}
+
+	private SegmentsEntry _getSegmentsEntry() {
+		Long groupId = ScopeUtil.getItemGroupId(
+			getCompanyId(), getSegmentsEntryScopeERC(), getGroupId());
+
+		if (groupId == null) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(
+					StringBundler.concat(
+						"Unable to resolve group ID for segments experience ",
+						getSegmentsExperienceId(),
+						" with segments entry scope external reference code ",
+						getSegmentsEntryScopeERC()));
+			}
+
+			return null;
+		}
+
+		SegmentsEntry segmentsEntry =
+			SegmentsEntryLocalServiceUtil.
+				fetchSegmentsEntryByExternalReferenceCode(
+					getSegmentsEntryERC(), groupId);
+
+		if (segmentsEntry == null) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(
+					StringBundler.concat(
+						"Unable to get segments entry with external reference ",
+						"code ", getSegmentsEntryERC(), " and group ID ",
+						groupId));
+			}
+
+			return null;
+		}
+
+		return segmentsEntry;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

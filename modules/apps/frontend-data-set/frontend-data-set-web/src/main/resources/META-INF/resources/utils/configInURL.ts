@@ -9,15 +9,11 @@ import {EConfigInURLBehavior, IConfigInURL} from './types';
 
 export const FDS_CONFIG_PARAM_NAME = '_fdsConfig';
 
-function getConfigParamName(id: string): string {
+export function getConfigParamName(id: string): string {
 	return `${id}${FDS_CONFIG_PARAM_NAME}`;
 }
 
 export function readConfigFromURL(id: string): Partial<IConfigInURL> | null {
-	if (!Liferay.FeatureFlags['LPD-22473']) {
-		return null;
-	}
-
 	const params = new URLSearchParams(window.location.search);
 
 	const configParam = params.get(getConfigParamName(id));
@@ -46,11 +42,7 @@ export function writeConfigInURL(
 	config: Partial<IConfigInURL>,
 	configInURLBehavior: EConfigInURLBehavior
 ) {
-	if (
-		!config ||
-		configInURLBehavior === EConfigInURLBehavior.OFF ||
-		!Liferay.FeatureFlags['LPD-22473']
-	) {
+	if (!config || configInURLBehavior === EConfigInURLBehavior.OFF) {
 		return;
 	}
 
@@ -79,10 +71,7 @@ export function writeConfigInURL(
 
 	params.set(
 		fdsConfigParamName,
-		JsonURL.stringify(
-			sortObjectKeys({...(currentConfig || {}), ...config}),
-			{AQF: true, noEmptyComposite: true}
-		) || ''
+		serializeFDSConfig({...(currentConfig || {}), ...config})
 	);
 
 	const urlParams = decodeFdsConfigParam(fdsConfigParamName, params);
@@ -123,6 +112,15 @@ export function writeConfigInURL(
 			path
 		);
 	}
+}
+
+export function serializeFDSConfig(config: Partial<IConfigInURL>) {
+	return (
+		JsonURL.stringify(sortObjectKeys(config), {
+			AQF: true,
+			noEmptyComposite: true,
+		}) || ''
+	);
 }
 
 export function contains(

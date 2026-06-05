@@ -288,3 +288,4 @@ public class QueryResponseSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1484842040

@@ -485,6 +485,14 @@ public class CommerceInventoryReplenishmentItemLocalServiceWrapper
 	}
 
 	@Override
+	public java.util.List<Long> getCommerceInventoryWarehouseIds(
+		long companyId, String sku, String unitOfMeasureKey) {
+
+		return _commerceInventoryReplenishmentItemLocalService.
+			getCommerceInventoryWarehouseIds(companyId, sku, unitOfMeasureKey);
+	}
+
+	@Override
 	public com.liferay.portal.kernel.dao.orm.ExportActionableDynamicQuery
 		getExportActionableDynamicQuery(
 			com.liferay.exportimport.kernel.lar.PortletDataContext
@@ -588,3 +596,4 @@ public class CommerceInventoryReplenishmentItemLocalServiceWrapper
 		_commerceInventoryReplenishmentItemLocalService;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:1365321228

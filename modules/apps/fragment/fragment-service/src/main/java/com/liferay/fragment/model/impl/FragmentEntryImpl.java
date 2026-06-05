@@ -20,10 +20,8 @@ import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.portletfilerepository.PortletFileRepositoryUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
-import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -46,13 +44,6 @@ public class FragmentEntryImpl extends FragmentEntryBaseImpl {
 	@Override
 	public String getContent() {
 		return StringPool.BLANK;
-	}
-
-	@Override
-	public int getGlobalUsageCount() {
-		return FragmentEntryLinkLocalServiceUtil.
-			getFragmentEntryLinksCountByFragmentEntryERC(
-				getExternalReferenceCode(), getScopeERC());
 	}
 
 	@Override
@@ -96,29 +87,6 @@ public class FragmentEntryImpl extends FragmentEntryBaseImpl {
 		return StringPool.BLANK;
 	}
 
-	@Override
-	public String getScopeERC() {
-		if (getFragmentEntryId() == 0) {
-			return null;
-		}
-
-		try {
-			Group companyGroup = GroupLocalServiceUtil.getCompanyGroup(
-				getCompanyId());
-
-			if ((companyGroup != null) &&
-				(getGroupId() == companyGroup.getGroupId())) {
-
-				return companyGroup.getExternalReferenceCode();
-			}
-		}
-		catch (PortalException portalException) {
-			throw new RuntimeException(portalException);
-		}
-
-		return null;
-	}
-
 	@JSON
 	@Override
 	public int getStatus() {
@@ -136,9 +104,17 @@ public class FragmentEntryImpl extends FragmentEntryBaseImpl {
 
 	@Override
 	public int getUsageCount() {
-		return FragmentEntryLinkLocalServiceUtil.
-			getAllFragmentEntryLinksCountByFragmentEntryERC(
-				getGroupId(), getExternalReferenceCode(), getScopeERC());
+		try {
+			return FragmentEntryLinkLocalServiceUtil.
+				getAllFragmentEntryLinksCountByFragmentEntry(this);
+		}
+		catch (PortalException portalException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug("Unable to get usage count ", portalException);
+			}
+		}
+
+		return 0;
 	}
 
 	@Override

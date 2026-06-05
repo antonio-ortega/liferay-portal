@@ -18,7 +18,6 @@ import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
-import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.test.rule.Inject;
 
 import java.util.List;
@@ -41,8 +40,8 @@ public abstract class BaseTableReferenceDefinitionTestCase {
 	@Test
 	public void testDiscardCTEntry() throws Exception {
 		_ctCollection = _ctCollectionService.addCTCollection(
-			null, TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
-			0, RandomTestUtil.randomString(), RandomTestUtil.randomString());
+			null, 0, RandomTestUtil.randomString(),
+			RandomTestUtil.randomString());
 
 		try (SafeCloseable safeCloseable =
 				CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
@@ -92,18 +91,18 @@ public abstract class BaseTableReferenceDefinitionTestCase {
 	protected Group group;
 
 	@Inject
-	private static ClassNameLocalService _classNameLocalService;
-
-	@Inject
-	private static CTCollectionLocalService _ctCollectionLocalService;
-
-	@Inject
-	private static CTCollectionService _ctCollectionService;
-
-	@Inject
-	private static CTEntryLocalService _ctEntryLocalService;
+	private ClassNameLocalService _classNameLocalService;
 
 	@DeleteAfterTestRun
 	private CTCollection _ctCollection;
+
+	@Inject
+	private CTCollectionLocalService _ctCollectionLocalService;
+
+	@Inject
+	private CTCollectionService _ctCollectionService;
+
+	@Inject
+	private CTEntryLocalService _ctEntryLocalService;
 
 }

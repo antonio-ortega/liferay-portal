@@ -364,3 +364,4 @@ public interface CPTaxCategoryLocalService
 		throws E;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-1136660263

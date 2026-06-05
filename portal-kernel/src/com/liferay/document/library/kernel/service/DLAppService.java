@@ -2034,3 +2034,4 @@ public interface DLAppService extends BaseService {
 		throws PortalException;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:1492789591

@@ -8,6 +8,7 @@ package com.liferay.commerce.pricing.web.internal.portlet.action;
 import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.currency.service.CommerceCurrencyLocalService;
 import com.liferay.commerce.price.list.exception.CommercePriceListCurrencyException;
+import com.liferay.commerce.price.list.exception.CommercePriceListExpirationDateException;
 import com.liferay.commerce.price.list.exception.CommercePriceListParentPriceListGroupIdException;
 import com.liferay.commerce.price.list.exception.NoSuchPriceListException;
 import com.liferay.commerce.price.list.model.CommercePriceList;
@@ -84,6 +85,8 @@ public class EditCommercePriceListMVCActionCommand
 				actionResponse.setRenderParameter("mvcPath", "/error.jsp");
 			}
 			else if (exception instanceof CommercePriceListCurrencyException ||
+					 exception instanceof
+						 CommercePriceListExpirationDateException ||
 					 exception instanceof
 						 CommercePriceListParentPriceListGroupIdException ||
 					 exception instanceof NoSuchCatalogException) {
@@ -239,21 +242,25 @@ public class EditCommercePriceListMVCActionCommand
 			String type = ParamUtil.getString(actionRequest, "type");
 
 			return _commercePriceListService.addCommercePriceList(
-				null, commerceCatalogGroupId, commerceCurrency.getCode(),
-				netPrice, type, parentCommercePriceListId, false, name,
-				priority, displayDateMonth, displayDateDay, displayDateYear,
-				displayDateHour, displayDateMinute, expirationDateMonth,
-				expirationDateDay, expirationDateYear, expirationDateHour,
-				expirationDateMinute, neverExpire, serviceContext);
+				null, commerceCatalogGroupId, parentCommercePriceListId, false,
+				commerceCurrency.getCode(), displayDateDay, displayDateHour,
+				displayDateMinute, displayDateMonth, displayDateYear,
+				expirationDateDay, expirationDateHour, expirationDateMinute,
+				expirationDateMonth, expirationDateYear, name, netPrice,
+				neverExpire, priority, type, serviceContext);
 		}
 
+		CommercePriceList commercePriceList =
+			_commercePriceListService.getCommercePriceList(commercePriceListId);
+
 		return _commercePriceListService.updateCommercePriceList(
-			commercePriceListId, commerceCurrency.getCode(), netPrice,
-			parentCommercePriceListId, name, priority, displayDateMonth,
-			displayDateDay, displayDateYear, displayDateHour, displayDateMinute,
-			expirationDateMonth, expirationDateDay, expirationDateYear,
-			expirationDateHour, expirationDateMinute, neverExpire,
-			serviceContext);
+			commercePriceListId, parentCommercePriceListId,
+			commercePriceList.isCatalogBasePriceList(),
+			commerceCurrency.getCode(), displayDateDay, displayDateHour,
+			displayDateMinute, displayDateMonth, displayDateYear,
+			expirationDateDay, expirationDateHour, expirationDateMinute,
+			expirationDateMonth, expirationDateYear, name, netPrice,
+			neverExpire, priority, commercePriceList.getType(), serviceContext);
 	}
 
 	@Reference

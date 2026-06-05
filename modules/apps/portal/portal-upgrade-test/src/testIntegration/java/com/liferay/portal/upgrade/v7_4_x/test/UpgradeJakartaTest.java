@@ -66,6 +66,7 @@ import com.liferay.portal.kernel.upgrade.util.UpgradeProcessUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.ScopeUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
@@ -193,6 +194,7 @@ public class UpgradeJakartaTest {
 			_upgradeProcess.upgrade();
 
 			try (Connection connection = DataAccess.getConnection();
+
 				PreparedStatement preparedStatement =
 					connection.prepareStatement(
 						"select dictionary from Configuration_ where " +
@@ -204,8 +206,9 @@ public class UpgradeJakartaTest {
 					Assert.assertTrue(resultSet.next());
 
 					Assert.assertEquals(
-						resultSet.getString(1), "key=" + _JAKARTA_CLASS_NAME,
-						resultSet.getString(1));
+						resultSet.getString("dictionary"),
+						"key=" + _JAKARTA_CLASS_NAME,
+						resultSet.getString("dictionary"));
 				}
 			}
 		}
@@ -235,17 +238,21 @@ public class UpgradeJakartaTest {
 			_upgradeProcess.upgrade();
 
 			try (Connection connection = DataAccess.getConnection();
+
 				PreparedStatement preparedStatement =
 					connection.prepareStatement(
 						StringBundler.concat(
 							"select largeAttributeValue from ",
 							"DDMFieldAttribute where fieldAttributeId = ",
 							"10000"));
+
 				ResultSet resultSet = preparedStatement.executeQuery()) {
 
 				Assert.assertTrue(resultSet.next());
 
-				Assert.assertEquals(_JAKARTA_IMPORT, resultSet.getString(1));
+				Assert.assertEquals(
+					_JAKARTA_IMPORT,
+					resultSet.getString("largeAttributeValue"));
 			}
 		}
 		finally {
@@ -409,7 +416,8 @@ public class UpgradeJakartaTest {
 			_fragmentEntryLinkLocalService.addFragmentEntryLink(
 				null, TestPropsValues.getUserId(), _group.getGroupId(), null,
 				fragmentEntry.getExternalReferenceCode(),
-				fragmentEntry.getScopeERC(),
+				ScopeUtil.getItemScopeExternalReferenceCode(
+					fragmentEntry.getGroupId(), _group.getGroupId()),
 				_segmentsExperienceLocalService.
 					fetchDefaultSegmentsExperienceId(_layout.getPlid()),
 				_layout.getPlid(), fragmentEntry.getCss(), _JAVAX_HTML,

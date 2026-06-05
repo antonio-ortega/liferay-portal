@@ -16,13 +16,13 @@ import com.liferay.depot.service.DepotEntryService;
 import com.liferay.exportimport.data.handler.base.BaseStagedModelDataHandler;
 import com.liferay.exportimport.kernel.lar.ExportImportPathUtil;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
-import com.liferay.exportimport.kernel.lar.PortletDataHandlerControl;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandler;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.ListUtil;
@@ -161,19 +161,7 @@ public class AssetTagStagedModelDataHandler
 		AssetTag existingAssetTag = fetchExistingStagedModel(
 			assetTag, portletDataContext.getScopeGroupId());
 
-		Map<String, String[]> parameterMap =
-			portletDataContext.getParameterMap();
-
-		boolean hasMergeParameter = parameterMap.containsKey(
-			PortletDataHandlerControl.getNamespacedName(
-				AssetTagsPortletDataHandler.NAMESPACE, "merge-tags-by-name"));
-
-		if (portletDataContext.getBooleanParameter(
-				AssetTagsPortletDataHandler.NAMESPACE, "merge-tags-by-name",
-				false) ||
-			(!hasMergeParameter &&
-			 AssetTagsServiceConfigurationValues.STAGING_MERGE_TAGS_BY_NAME)) {
-
+		if (AssetTagsServiceConfigurationValues.STAGING_MERGE_TAGS_BY_NAME) {
 			AssetTag fetchedAssetTag = _assetTagLocalService.fetchTag(
 				portletDataContext.getScopeGroupId(), assetTag.getName());
 
@@ -185,8 +173,6 @@ public class AssetTagStagedModelDataHandler
 		AssetTag importedAssetTag = null;
 
 		if (existingAssetTag == null) {
-			serviceContext.setUuid(assetTag.getUuid());
-
 			importedAssetTag = _assetTagLocalService.addTag(
 				assetTag.getExternalReferenceCode(), userId,
 				portletDataContext.getScopeGroupId(),
@@ -215,6 +201,12 @@ public class AssetTagStagedModelDataHandler
 					serviceContext);
 			}
 		}
+
+		importedAssetTag.setUuid(assetTag.getUuid());
+		importedAssetTag.setModifiedDate(assetTag.getModifiedDate());
+
+		importedAssetTag = _assetTagLocalService.updateAssetTag(
+			importedAssetTag);
 
 		Group group = _groupLocalService.fetchGroup(
 			portletDataContext.getScopeGroupId());
@@ -255,7 +247,7 @@ public class AssetTagStagedModelDataHandler
 				assetTag.getTagId());
 
 		for (AssetTagGroupRel assetTagGroupRel : assetTagGroupRels) {
-			if (assetTagGroupRel.getGroupId() == _GROUP_ID_ALL) {
+			if (assetTagGroupRel.getGroupId() == GroupConstants.GROUP_ID_ALL) {
 				continue;
 			}
 
@@ -334,14 +326,12 @@ public class AssetTagStagedModelDataHandler
 		}
 
 		if (groupIds.isEmpty()) {
-			groupIds.add(_GROUP_ID_ALL);
+			groupIds.add(GroupConstants.GROUP_ID_ALL);
 		}
 
 		_assetTagGroupRelLocalService.setAssetTagGroupRels(
 			importedTagId, ListUtil.toLongArray(groupIds, Long::longValue));
 	}
-
-	private static final long _GROUP_ID_ALL = -1L;
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		AssetTagStagedModelDataHandler.class);

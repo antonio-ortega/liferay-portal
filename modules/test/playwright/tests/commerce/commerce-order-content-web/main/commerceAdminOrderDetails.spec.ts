@@ -6,9 +6,9 @@
 import {expect, mergeTests} from '@playwright/test';
 
 import {apiHelpersTest} from '../../../../fixtures/apiHelpersTest';
-import {applicationsMenuPageTest} from '../../../../fixtures/applicationsMenuPageTest';
 import {commercePagesTest} from '../../../../fixtures/commercePagesTest';
 import {dataApiHelpersTest} from '../../../../fixtures/dataApiHelpersTest';
+import {globalMenuPagesTest} from '../../../../fixtures/globalMenuPagesTest';
 import {isolatedSiteTest} from '../../../../fixtures/isolatedSiteTest';
 import {loginTest} from '../../../../fixtures/loginTest';
 import {getRandomInt} from '../../../../utils/getRandomInt';
@@ -22,9 +22,9 @@ import {miniumSetUp} from '../../utils/commerce';
 
 export const test = mergeTests(
 	apiHelpersTest,
-	applicationsMenuPageTest,
 	commercePagesTest,
 	dataApiHelpersTest,
+	globalMenuPagesTest,
 	isolatedSiteTest,
 	loginTest()
 );
@@ -38,11 +38,9 @@ test(
 		commerceAdminOrdersPage,
 		page,
 	}) => {
-		const site = await apiHelpers.headlessSite.createSite({
+		const site = await apiHelpers.headlessAdminSite.postSite({
 			name: getRandomString(),
 		});
-
-		apiHelpers.data.push({id: site.id, type: 'site'});
 
 		const channel =
 			await apiHelpers.headlessCommerceAdminChannel.postChannel({
@@ -193,11 +191,9 @@ test('LPD-26244 Split order items are shown on admin order details page when sho
 	commerceAdminOrderDetailsPage,
 	commerceAdminOrdersPage,
 }) => {
-	const site = await apiHelpers.headlessSite.createSite({
+	const site = await apiHelpers.headlessAdminSite.postSite({
 		name: getRandomString(),
 	});
-
-	apiHelpers.data.push({id: site.id, type: 'site'});
 
 	const channel = await apiHelpers.headlessCommerceAdminChannel.postChannel({
 		siteGroupId: site.id,
@@ -328,11 +324,9 @@ test(
 		commerceAdminShipmentsPage,
 		page,
 	}) => {
-		const site = await apiHelpers.headlessSite.createSite({
+		const site = await apiHelpers.headlessAdminSite.postSite({
 			name: getRandomString(),
 		});
-
-		apiHelpers.data.push({id: site.id, type: 'site'});
 
 		const channel =
 			await apiHelpers.headlessCommerceAdminChannel.postChannel({
@@ -589,14 +583,14 @@ test(
 
 test('COMMERCE-11888. As a supplier user, I can edit the order details, payments and shipments', async ({
 	apiHelpers,
-	applicationsMenuPage,
 	commerceAdminChannelDetailsPage,
 	commerceAdminChannelsPage,
 	commerceAdminOrderDetailsPage,
 	commerceAdminOrdersPage,
+	globalMenuPage,
 	page,
 }) => {
-	test.setTimeout(180000);
+	test.setTimeout(120000);
 
 	const {channel} = await miniumSetUp(apiHelpers);
 
@@ -755,7 +749,7 @@ test('COMMERCE-11888. As a supplier user, I can edit the order details, payments
 	await performLogout(page);
 	await performLoginViaApi({page, screenName: 'demo.unprivileged'});
 
-	await applicationsMenuPage.goToCommerceOrders(false);
+	await globalMenuPage.goToCommerce('Orders');
 
 	await (
 		await commerceAdminOrdersPage.tableRowLink({
@@ -841,6 +835,10 @@ test('COMMERCE-11888. As a supplier user, I can edit the order details, payments
 		)
 	).click();
 
+	await expect(
+		commerceAdminOrderDetailsPage.selectPaymentTerms
+	).toBeVisible();
+
 	await commerceAdminOrderDetailsPage.selectPaymentTerms.click();
 	await commerceAdminOrderDetailsPage.selectPaymentTerms.selectOption(
 		paymentTerm1.id.toString()
@@ -889,9 +887,15 @@ test('COMMERCE-11888. As a supplier user, I can edit the order details, payments
 
 	await commerceAdminOrderDetailsPage.orderSummaryLink.click();
 
+	await expect(
+		commerceAdminOrderDetailsPage.orderSummarySubtotalInput
+	).toBeVisible();
+
 	await commerceAdminOrderDetailsPage.orderSummarySubtotalInput.fill('2');
 
 	await commerceAdminOrderDetailsPage.orderSummarySaveButton.click();
+
+	await page.waitForLoadState('domcontentloaded');
 
 	await expect(
 		await commerceAdminOrderDetailsPage.orderSummarySubtotal
@@ -950,11 +954,9 @@ test('LPD-30856 Can update order status by deleting unshipped items', async ({
 	commerceAdminShipmentsPage,
 	page,
 }) => {
-	const site = await apiHelpers.headlessSite.createSite({
+	const site = await apiHelpers.headlessAdminSite.postSite({
 		name: getRandomString(),
 	});
-
-	apiHelpers.data.push({id: site.id, type: 'site'});
 
 	const channel = await apiHelpers.headlessCommerceAdminChannel.postChannel({
 		siteGroupId: site.id,
@@ -1078,7 +1080,7 @@ test('LPD-30856 Can update order status by deleting unshipped items', async ({
 		)
 	).check();
 	await commerceAdminShipmentsPage.shipmentsItemSubmitButton.click();
-	await commerceAdminShipmentsPage.productEllipsis.click();
+	await commerceAdminShipmentsPage.productEllipsis(sku1.sku).click();
 	await commerceAdminShipmentsPage.editProductMenuItem.click();
 	await commerceAdminShipmentsPage.addQuantityInShipment.fill('1');
 	await commerceAdminShipmentsPage.editProductSaveButton.click();
@@ -1143,11 +1145,9 @@ test('COMMERCE-7982 Can Edit Order Measurement Unit', async ({
 	commerceAdminOrdersPage,
 	page,
 }) => {
-	const site = await apiHelpers.headlessSite.createSite({
+	const site = await apiHelpers.headlessAdminSite.postSite({
 		name: getRandomString(),
 	});
-
-	apiHelpers.data.push({id: site.id, type: 'site'});
 
 	const channel = await apiHelpers.headlessCommerceAdminChannel.postChannel({
 		siteGroupId: site.id,

@@ -392,6 +392,18 @@ public class FileInstallDeployTest {
 								dictionaryKey, StringPool.EQUAL,
 								StringPool.QUOTE, dictionaryValue,
 								StringPool.QUOTE);
+
+							if (dictionaryKey.equals(
+									ExtendedObjectClassDefinition.Scope.GROUP.
+										getPropertyKey())) {
+
+								content = StringBundler.concat(
+									content, StringPool.RETURN_NEW_LINE,
+									ExtendedObjectClassDefinition.Scope.COMPANY.
+										getPropertyKey(),
+									StringPool.EQUAL, StringPool.QUOTE,
+									_company.getCompanyId(), StringPool.QUOTE);
+							}
 						}
 
 						Files.write(path, content.getBytes());
@@ -420,6 +432,18 @@ public class FileInstallDeployTest {
 							content, StringPool.RETURN_NEW_LINE, dictionaryKey,
 							StringPool.EQUAL, StringPool.QUOTE, dictionaryValue,
 							StringPool.QUOTE);
+
+						if (dictionaryKey.equals(
+								ExtendedObjectClassDefinition.Scope.GROUP.
+									getPropertyKey())) {
+
+							content = StringBundler.concat(
+								content, StringPool.RETURN_NEW_LINE,
+								ExtendedObjectClassDefinition.Scope.COMPANY.
+									getPropertyKey(),
+								StringPool.EQUAL, StringPool.QUOTE,
+								_company.getCompanyId(), StringPool.QUOTE);
+						}
 					}
 
 					Files.write(path, content.getBytes());
@@ -503,9 +527,6 @@ public class FileInstallDeployTest {
 
 	private static final String _TEST_VALUE_2 = "testValue2";
 
-	@Inject
-	private static ConfigurationAdmin _configurationAdmin;
-
 	static {
 		Package pkg = FileInstallDeployTest.class.getPackage();
 
@@ -520,12 +541,16 @@ public class FileInstallDeployTest {
 	@Inject
 	private CompanyLocalService _companyLocalService;
 
+	@Inject
+	private ConfigurationAdmin _configurationAdmin;
+
 	private Group _group;
 
 	private class JarBuilder {
 
 		public void build() throws IOException {
 			try (OutputStream outputStream = Files.newOutputStream(_path);
+
 				JarOutputStream jarOutputStream = new JarOutputStream(
 					outputStream)) {
 

@@ -36,6 +36,24 @@ public class NotificationRecipientSettingUtil {
 	 */
 
 	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(List)
+	 */
+	public static void cacheResult(
+		List<NotificationRecipientSetting> notificationRecipientSettings) {
+
+		getPersistence().cacheResult(notificationRecipientSettings);
+	}
+
+	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(com.liferay.portal.kernel.model.BaseModel)
+	 */
+	public static void cacheResult(
+		NotificationRecipientSetting notificationRecipientSetting) {
+
+		getPersistence().cacheResult(notificationRecipientSetting);
+	}
+
+	/**
 	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#clearCache()
 	 */
 	public static void clearCache() {
@@ -117,58 +135,10 @@ public class NotificationRecipientSettingUtil {
 	}
 
 	/**
-	 * Returns all the notification recipient settings where uuid = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @return the matching notification recipient settings
-	 */
-	public static List<NotificationRecipientSetting> findByUuid(String uuid) {
-		return getPersistence().findByUuid(uuid);
-	}
-
-	/**
-	 * Returns a range of all the notification recipient settings where uuid = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>NotificationRecipientSettingModelImpl</code>.
-	 * </p>
-	 *
-	 * @param uuid the uuid
-	 * @param start the lower bound of the range of notification recipient settings
-	 * @param end the upper bound of the range of notification recipient settings (not inclusive)
-	 * @return the range of matching notification recipient settings
-	 */
-	public static List<NotificationRecipientSetting> findByUuid(
-		String uuid, int start, int end) {
-
-		return getPersistence().findByUuid(uuid, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the notification recipient settings where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>NotificationRecipientSettingModelImpl</code>.
-	 * </p>
-	 *
-	 * @param uuid the uuid
-	 * @param start the lower bound of the range of notification recipient settings
-	 * @param end the upper bound of the range of notification recipient settings (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching notification recipient settings
-	 */
-	public static List<NotificationRecipientSetting> findByUuid(
-		String uuid, int start, int end,
-		OrderByComparator<NotificationRecipientSetting> orderByComparator) {
-
-		return getPersistence().findByUuid(uuid, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the notification recipient settings where uuid = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>NotificationRecipientSettingModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.notification.model.impl.NotificationRecipientSettingModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -219,56 +189,6 @@ public class NotificationRecipientSettingUtil {
 	}
 
 	/**
-	 * Returns the last notification recipient setting in the ordered set where uuid = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching notification recipient setting
-	 * @throws NoSuchNotificationRecipientSettingException if a matching notification recipient setting could not be found
-	 */
-	public static NotificationRecipientSetting findByUuid_Last(
-			String uuid,
-			OrderByComparator<NotificationRecipientSetting> orderByComparator)
-		throws com.liferay.notification.exception.
-			NoSuchNotificationRecipientSettingException {
-
-		return getPersistence().findByUuid_Last(uuid, orderByComparator);
-	}
-
-	/**
-	 * Returns the last notification recipient setting in the ordered set where uuid = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching notification recipient setting, or <code>null</code> if a matching notification recipient setting could not be found
-	 */
-	public static NotificationRecipientSetting fetchByUuid_Last(
-		String uuid,
-		OrderByComparator<NotificationRecipientSetting> orderByComparator) {
-
-		return getPersistence().fetchByUuid_Last(uuid, orderByComparator);
-	}
-
-	/**
-	 * Returns the notification recipient settings before and after the current notification recipient setting in the ordered set where uuid = &#63;.
-	 *
-	 * @param notificationRecipientSettingId the primary key of the current notification recipient setting
-	 * @param uuid the uuid
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next notification recipient setting
-	 * @throws NoSuchNotificationRecipientSettingException if a notification recipient setting with the primary key could not be found
-	 */
-	public static NotificationRecipientSetting[] findByUuid_PrevAndNext(
-			long notificationRecipientSettingId, String uuid,
-			OrderByComparator<NotificationRecipientSetting> orderByComparator)
-		throws com.liferay.notification.exception.
-			NoSuchNotificationRecipientSettingException {
-
-		return getPersistence().findByUuid_PrevAndNext(
-			notificationRecipientSettingId, uuid, orderByComparator);
-	}
-
-	/**
 	 * Removes all the notification recipient settings where uuid = &#63; from the database.
 	 *
 	 * @param uuid the uuid
@@ -288,64 +208,10 @@ public class NotificationRecipientSettingUtil {
 	}
 
 	/**
-	 * Returns all the notification recipient settings where uuid = &#63; and companyId = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @return the matching notification recipient settings
-	 */
-	public static List<NotificationRecipientSetting> findByUuid_C(
-		String uuid, long companyId) {
-
-		return getPersistence().findByUuid_C(uuid, companyId);
-	}
-
-	/**
-	 * Returns a range of all the notification recipient settings where uuid = &#63; and companyId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>NotificationRecipientSettingModelImpl</code>.
-	 * </p>
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param start the lower bound of the range of notification recipient settings
-	 * @param end the upper bound of the range of notification recipient settings (not inclusive)
-	 * @return the range of matching notification recipient settings
-	 */
-	public static List<NotificationRecipientSetting> findByUuid_C(
-		String uuid, long companyId, int start, int end) {
-
-		return getPersistence().findByUuid_C(uuid, companyId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the notification recipient settings where uuid = &#63; and companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>NotificationRecipientSettingModelImpl</code>.
-	 * </p>
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param start the lower bound of the range of notification recipient settings
-	 * @param end the upper bound of the range of notification recipient settings (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching notification recipient settings
-	 */
-	public static List<NotificationRecipientSetting> findByUuid_C(
-		String uuid, long companyId, int start, int end,
-		OrderByComparator<NotificationRecipientSetting> orderByComparator) {
-
-		return getPersistence().findByUuid_C(
-			uuid, companyId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the notification recipient settings where uuid = &#63; and companyId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>NotificationRecipientSettingModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.notification.model.impl.NotificationRecipientSettingModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -401,61 +267,6 @@ public class NotificationRecipientSettingUtil {
 	}
 
 	/**
-	 * Returns the last notification recipient setting in the ordered set where uuid = &#63; and companyId = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching notification recipient setting
-	 * @throws NoSuchNotificationRecipientSettingException if a matching notification recipient setting could not be found
-	 */
-	public static NotificationRecipientSetting findByUuid_C_Last(
-			String uuid, long companyId,
-			OrderByComparator<NotificationRecipientSetting> orderByComparator)
-		throws com.liferay.notification.exception.
-			NoSuchNotificationRecipientSettingException {
-
-		return getPersistence().findByUuid_C_Last(
-			uuid, companyId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last notification recipient setting in the ordered set where uuid = &#63; and companyId = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching notification recipient setting, or <code>null</code> if a matching notification recipient setting could not be found
-	 */
-	public static NotificationRecipientSetting fetchByUuid_C_Last(
-		String uuid, long companyId,
-		OrderByComparator<NotificationRecipientSetting> orderByComparator) {
-
-		return getPersistence().fetchByUuid_C_Last(
-			uuid, companyId, orderByComparator);
-	}
-
-	/**
-	 * Returns the notification recipient settings before and after the current notification recipient setting in the ordered set where uuid = &#63; and companyId = &#63;.
-	 *
-	 * @param notificationRecipientSettingId the primary key of the current notification recipient setting
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next notification recipient setting
-	 * @throws NoSuchNotificationRecipientSettingException if a notification recipient setting with the primary key could not be found
-	 */
-	public static NotificationRecipientSetting[] findByUuid_C_PrevAndNext(
-			long notificationRecipientSettingId, String uuid, long companyId,
-			OrderByComparator<NotificationRecipientSetting> orderByComparator)
-		throws com.liferay.notification.exception.
-			NoSuchNotificationRecipientSettingException {
-
-		return getPersistence().findByUuid_C_PrevAndNext(
-			notificationRecipientSettingId, uuid, companyId, orderByComparator);
-	}
-
-	/**
 	 * Removes all the notification recipient settings where uuid = &#63; and companyId = &#63; from the database.
 	 *
 	 * @param uuid the uuid
@@ -477,65 +288,10 @@ public class NotificationRecipientSettingUtil {
 	}
 
 	/**
-	 * Returns all the notification recipient settings where notificationRecipientId = &#63;.
-	 *
-	 * @param notificationRecipientId the notification recipient ID
-	 * @return the matching notification recipient settings
-	 */
-	public static List<NotificationRecipientSetting>
-		findByNotificationRecipientId(long notificationRecipientId) {
-
-		return getPersistence().findByNotificationRecipientId(
-			notificationRecipientId);
-	}
-
-	/**
-	 * Returns a range of all the notification recipient settings where notificationRecipientId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>NotificationRecipientSettingModelImpl</code>.
-	 * </p>
-	 *
-	 * @param notificationRecipientId the notification recipient ID
-	 * @param start the lower bound of the range of notification recipient settings
-	 * @param end the upper bound of the range of notification recipient settings (not inclusive)
-	 * @return the range of matching notification recipient settings
-	 */
-	public static List<NotificationRecipientSetting>
-		findByNotificationRecipientId(
-			long notificationRecipientId, int start, int end) {
-
-		return getPersistence().findByNotificationRecipientId(
-			notificationRecipientId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the notification recipient settings where notificationRecipientId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>NotificationRecipientSettingModelImpl</code>.
-	 * </p>
-	 *
-	 * @param notificationRecipientId the notification recipient ID
-	 * @param start the lower bound of the range of notification recipient settings
-	 * @param end the upper bound of the range of notification recipient settings (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching notification recipient settings
-	 */
-	public static List<NotificationRecipientSetting>
-		findByNotificationRecipientId(
-			long notificationRecipientId, int start, int end,
-			OrderByComparator<NotificationRecipientSetting> orderByComparator) {
-
-		return getPersistence().findByNotificationRecipientId(
-			notificationRecipientId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the notification recipient settings where notificationRecipientId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>NotificationRecipientSettingModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.notification.model.impl.NotificationRecipientSettingModelImpl</code>.
 	 * </p>
 	 *
 	 * @param notificationRecipientId the notification recipient ID
@@ -593,65 +349,6 @@ public class NotificationRecipientSettingUtil {
 	}
 
 	/**
-	 * Returns the last notification recipient setting in the ordered set where notificationRecipientId = &#63;.
-	 *
-	 * @param notificationRecipientId the notification recipient ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching notification recipient setting
-	 * @throws NoSuchNotificationRecipientSettingException if a matching notification recipient setting could not be found
-	 */
-	public static NotificationRecipientSetting
-			findByNotificationRecipientId_Last(
-				long notificationRecipientId,
-				OrderByComparator<NotificationRecipientSetting>
-					orderByComparator)
-		throws com.liferay.notification.exception.
-			NoSuchNotificationRecipientSettingException {
-
-		return getPersistence().findByNotificationRecipientId_Last(
-			notificationRecipientId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last notification recipient setting in the ordered set where notificationRecipientId = &#63;.
-	 *
-	 * @param notificationRecipientId the notification recipient ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching notification recipient setting, or <code>null</code> if a matching notification recipient setting could not be found
-	 */
-	public static NotificationRecipientSetting
-		fetchByNotificationRecipientId_Last(
-			long notificationRecipientId,
-			OrderByComparator<NotificationRecipientSetting> orderByComparator) {
-
-		return getPersistence().fetchByNotificationRecipientId_Last(
-			notificationRecipientId, orderByComparator);
-	}
-
-	/**
-	 * Returns the notification recipient settings before and after the current notification recipient setting in the ordered set where notificationRecipientId = &#63;.
-	 *
-	 * @param notificationRecipientSettingId the primary key of the current notification recipient setting
-	 * @param notificationRecipientId the notification recipient ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next notification recipient setting
-	 * @throws NoSuchNotificationRecipientSettingException if a notification recipient setting with the primary key could not be found
-	 */
-	public static NotificationRecipientSetting[]
-			findByNotificationRecipientId_PrevAndNext(
-				long notificationRecipientSettingId,
-				long notificationRecipientId,
-				OrderByComparator<NotificationRecipientSetting>
-					orderByComparator)
-		throws com.liferay.notification.exception.
-			NoSuchNotificationRecipientSettingException {
-
-		return getPersistence().findByNotificationRecipientId_PrevAndNext(
-			notificationRecipientSettingId, notificationRecipientId,
-			orderByComparator);
-	}
-
-	/**
 	 * Removes all the notification recipient settings where notificationRecipientId = &#63; from the database.
 	 *
 	 * @param notificationRecipientId the notification recipient ID
@@ -693,19 +390,6 @@ public class NotificationRecipientSettingUtil {
 	}
 
 	/**
-	 * Returns the notification recipient setting where notificationRecipientId = &#63; and name = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
-	 *
-	 * @param notificationRecipientId the notification recipient ID
-	 * @param name the name
-	 * @return the matching notification recipient setting, or <code>null</code> if a matching notification recipient setting could not be found
-	 */
-	public static NotificationRecipientSetting fetchByNRI_N(
-		long notificationRecipientId, String name) {
-
-		return getPersistence().fetchByNRI_N(notificationRecipientId, name);
-	}
-
-	/**
 	 * Returns the notification recipient setting where notificationRecipientId = &#63; and name = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
 	 *
 	 * @param notificationRecipientId the notification recipient ID
@@ -744,28 +428,6 @@ public class NotificationRecipientSettingUtil {
 	 */
 	public static int countByNRI_N(long notificationRecipientId, String name) {
 		return getPersistence().countByNRI_N(notificationRecipientId, name);
-	}
-
-	/**
-	 * Caches the notification recipient setting in the entity cache if it is enabled.
-	 *
-	 * @param notificationRecipientSetting the notification recipient setting
-	 */
-	public static void cacheResult(
-		NotificationRecipientSetting notificationRecipientSetting) {
-
-		getPersistence().cacheResult(notificationRecipientSetting);
-	}
-
-	/**
-	 * Caches the notification recipient settings in the entity cache if it is enabled.
-	 *
-	 * @param notificationRecipientSettings the notification recipient settings
-	 */
-	public static void cacheResult(
-		List<NotificationRecipientSetting> notificationRecipientSettings) {
-
-		getPersistence().cacheResult(notificationRecipientSettings);
 	}
 
 	/**
@@ -831,86 +493,173 @@ public class NotificationRecipientSettingUtil {
 	}
 
 	/**
-	 * Returns all the notification recipient settings.
+	 * Returns the notification recipient setting where notificationRecipientId = &#63; and name = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
 	 *
-	 * @return the notification recipient settings
+	 * @param notificationRecipientId the notification recipient ID
+	 * @param name the name
+	 * @return the matching notification recipient setting, or <code>null</code> if a matching notification recipient setting could not be found
 	 */
-	public static List<NotificationRecipientSetting> findAll() {
-		return getPersistence().findAll();
+	public static NotificationRecipientSetting fetchByNRI_N(
+		long notificationRecipientId, String name) {
+
+		return getPersistence().fetchByNRI_N(notificationRecipientId, name);
 	}
 
 	/**
-	 * Returns a range of all the notification recipient settings.
+	 * Returns all the notification recipient settings where uuid = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @return the matching notification recipient settings
+	 */
+	public static List<NotificationRecipientSetting> findByUuid(String uuid) {
+		return getPersistence().findByUuid(uuid);
+	}
+
+	/**
+	 * Returns a range of all the notification recipient settings where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>NotificationRecipientSettingModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.notification.model.impl.NotificationRecipientSettingModelImpl</code>.
 	 * </p>
 	 *
+	 * @param uuid the uuid
 	 * @param start the lower bound of the range of notification recipient settings
 	 * @param end the upper bound of the range of notification recipient settings (not inclusive)
-	 * @return the range of notification recipient settings
+	 * @return the range of matching notification recipient settings
 	 */
-	public static List<NotificationRecipientSetting> findAll(
-		int start, int end) {
+	public static List<NotificationRecipientSetting> findByUuid(
+		String uuid, int start, int end) {
 
-		return getPersistence().findAll(start, end);
+		return getPersistence().findByUuid(uuid, start, end);
 	}
 
 	/**
-	 * Returns an ordered range of all the notification recipient settings.
+	 * Returns an ordered range of all the notification recipient settings where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>NotificationRecipientSettingModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.notification.model.impl.NotificationRecipientSettingModelImpl</code>.
 	 * </p>
 	 *
+	 * @param uuid the uuid
 	 * @param start the lower bound of the range of notification recipient settings
 	 * @param end the upper bound of the range of notification recipient settings (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of notification recipient settings
+	 * @return the ordered range of matching notification recipient settings
 	 */
-	public static List<NotificationRecipientSetting> findAll(
-		int start, int end,
+	public static List<NotificationRecipientSetting> findByUuid(
+		String uuid, int start, int end,
 		OrderByComparator<NotificationRecipientSetting> orderByComparator) {
 
-		return getPersistence().findAll(start, end, orderByComparator);
+		return getPersistence().findByUuid(uuid, start, end, orderByComparator);
 	}
 
 	/**
-	 * Returns an ordered range of all the notification recipient settings.
+	 * Returns all the notification recipient settings where uuid = &#63; and companyId = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @return the matching notification recipient settings
+	 */
+	public static List<NotificationRecipientSetting> findByUuid_C(
+		String uuid, long companyId) {
+
+		return getPersistence().findByUuid_C(uuid, companyId);
+	}
+
+	/**
+	 * Returns a range of all the notification recipient settings where uuid = &#63; and companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>NotificationRecipientSettingModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.notification.model.impl.NotificationRecipientSettingModelImpl</code>.
 	 * </p>
 	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of notification recipient settings
+	 * @param end the upper bound of the range of notification recipient settings (not inclusive)
+	 * @return the range of matching notification recipient settings
+	 */
+	public static List<NotificationRecipientSetting> findByUuid_C(
+		String uuid, long companyId, int start, int end) {
+
+		return getPersistence().findByUuid_C(uuid, companyId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the notification recipient settings where uuid = &#63; and companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.notification.model.impl.NotificationRecipientSettingModelImpl</code>.
+	 * </p>
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
 	 * @param start the lower bound of the range of notification recipient settings
 	 * @param end the upper bound of the range of notification recipient settings (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param useFinderCache whether to use the finder cache
-	 * @return the ordered range of notification recipient settings
+	 * @return the ordered range of matching notification recipient settings
 	 */
-	public static List<NotificationRecipientSetting> findAll(
-		int start, int end,
-		OrderByComparator<NotificationRecipientSetting> orderByComparator,
-		boolean useFinderCache) {
+	public static List<NotificationRecipientSetting> findByUuid_C(
+		String uuid, long companyId, int start, int end,
+		OrderByComparator<NotificationRecipientSetting> orderByComparator) {
 
-		return getPersistence().findAll(
-			start, end, orderByComparator, useFinderCache);
+		return getPersistence().findByUuid_C(
+			uuid, companyId, start, end, orderByComparator);
 	}
 
 	/**
-	 * Removes all the notification recipient settings from the database.
-	 */
-	public static void removeAll() {
-		getPersistence().removeAll();
-	}
-
-	/**
-	 * Returns the number of notification recipient settings.
+	 * Returns all the notification recipient settings where notificationRecipientId = &#63;.
 	 *
-	 * @return the number of notification recipient settings
+	 * @param notificationRecipientId the notification recipient ID
+	 * @return the matching notification recipient settings
 	 */
-	public static int countAll() {
-		return getPersistence().countAll();
+	public static List<NotificationRecipientSetting>
+		findByNotificationRecipientId(long notificationRecipientId) {
+
+		return getPersistence().findByNotificationRecipientId(
+			notificationRecipientId);
+	}
+
+	/**
+	 * Returns a range of all the notification recipient settings where notificationRecipientId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.notification.model.impl.NotificationRecipientSettingModelImpl</code>.
+	 * </p>
+	 *
+	 * @param notificationRecipientId the notification recipient ID
+	 * @param start the lower bound of the range of notification recipient settings
+	 * @param end the upper bound of the range of notification recipient settings (not inclusive)
+	 * @return the range of matching notification recipient settings
+	 */
+	public static List<NotificationRecipientSetting>
+		findByNotificationRecipientId(
+			long notificationRecipientId, int start, int end) {
+
+		return getPersistence().findByNotificationRecipientId(
+			notificationRecipientId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the notification recipient settings where notificationRecipientId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.notification.model.impl.NotificationRecipientSettingModelImpl</code>.
+	 * </p>
+	 *
+	 * @param notificationRecipientId the notification recipient ID
+	 * @param start the lower bound of the range of notification recipient settings
+	 * @param end the upper bound of the range of notification recipient settings (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching notification recipient settings
+	 */
+	public static List<NotificationRecipientSetting>
+		findByNotificationRecipientId(
+			long notificationRecipientId, int start, int end,
+			OrderByComparator<NotificationRecipientSetting> orderByComparator) {
+
+		return getPersistence().findByNotificationRecipientId(
+			notificationRecipientId, start, end, orderByComparator);
 	}
 
 	public static NotificationRecipientSettingPersistence getPersistence() {
@@ -927,3 +676,4 @@ public class NotificationRecipientSettingUtil {
 		_persistence;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:1024653308

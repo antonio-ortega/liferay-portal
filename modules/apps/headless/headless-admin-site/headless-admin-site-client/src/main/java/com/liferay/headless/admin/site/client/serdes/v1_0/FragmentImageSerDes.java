@@ -323,3 +323,4 @@ public class FragmentImageSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:1938237042

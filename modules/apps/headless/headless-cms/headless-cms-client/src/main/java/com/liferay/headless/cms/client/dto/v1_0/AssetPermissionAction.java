@@ -160,3 +160,4 @@ public abstract class AssetPermissionAction implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-900723077

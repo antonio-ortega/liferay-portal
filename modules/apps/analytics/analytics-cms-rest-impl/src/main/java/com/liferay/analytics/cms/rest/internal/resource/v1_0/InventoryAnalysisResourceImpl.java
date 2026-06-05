@@ -18,6 +18,7 @@ import com.liferay.asset.kernel.model.AssetTagGroupRelTable;
 import com.liferay.asset.kernel.model.AssetTagTable;
 import com.liferay.asset.kernel.model.AssetVocabularyGroupRelTable;
 import com.liferay.asset.kernel.model.AssetVocabularyTable;
+import com.liferay.object.constants.ObjectFolderConstants;
 import com.liferay.object.model.ObjectDefinitionTable;
 import com.liferay.object.model.ObjectEntryTable;
 import com.liferay.object.model.ObjectEntryVersionTable;
@@ -30,6 +31,7 @@ import com.liferay.petra.sql.dsl.expression.Predicate;
 import com.liferay.petra.sql.dsl.query.FromStep;
 import com.liferay.petra.sql.dsl.query.GroupByStep;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.license.util.LicenseManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
@@ -47,6 +49,7 @@ import java.text.ParseException;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -71,6 +74,8 @@ public class InventoryAnalysisResourceImpl
 		throws Exception {
 
 		InventoryAnalysis inventoryAnalysis = new InventoryAnalysis();
+
+		LicenseManagerUtil.checkFreeTier();
 
 		Long[] groupIds = DepotEntryUtil.getGroupIds(
 			DepotEntryUtil.getDepotEntries(
@@ -102,14 +107,16 @@ public class InventoryAnalysisResourceImpl
 					inventoryAnalysisItem.setCount(() -> (Long)object[0]);
 					inventoryAnalysisItem.setKey(() -> (String)object[1]);
 					inventoryAnalysisItem.setTitle(
-						() -> GetterUtil.get(
-							_localization.getLocalization(
-								(String)object[2],
-								contextAcceptLanguage.getPreferredLocale(
-								).toString()),
-							LanguageUtil.get(
-								contextAcceptLanguage.getPreferredLocale(),
-								"unknown")));
+						() -> {
+							Locale preferredLocale =
+								contextAcceptLanguage.getPreferredLocale();
+
+							return GetterUtil.get(
+								_localization.getLocalization(
+									(String)object[2],
+									preferredLocale.toString()),
+								LanguageUtil.get(preferredLocale, "unknown"));
+						});
 
 					return inventoryAnalysisItem;
 				},
@@ -295,8 +302,12 @@ public class InventoryAnalysisResourceImpl
 		Long vocabularyId) {
 
 		Predicate predicate =
-			ObjectFolderTable.INSTANCE.externalReferenceCode.eq(
-				"L_CMS_CONTENT_STRUCTURES");
+			ObjectFolderTable.INSTANCE.externalReferenceCode.in(
+				new String[] {
+					ObjectFolderConstants.
+						EXTERNAL_REFERENCE_CODE_CONTENT_STRUCTURES,
+					ObjectFolderConstants.EXTERNAL_REFERENCE_CODE_FILE_TYPES
+				});
 
 		predicate = predicate.and(
 			ObjectEntryTable.INSTANCE.status.neq(

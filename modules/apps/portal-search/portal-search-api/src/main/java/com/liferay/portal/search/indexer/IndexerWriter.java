@@ -5,8 +5,8 @@
 
 package com.liferay.portal.search.indexer;
 
+import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.model.BaseModel;
-import com.liferay.portal.search.batch.BatchIndexingActionable;
 
 import java.util.Collection;
 
@@ -22,7 +22,7 @@ public interface IndexerWriter<T extends BaseModel<?>> {
 
 	public void delete(T baseModel);
 
-	public BatchIndexingActionable getBatchIndexingActionable();
+	public IndexableActionableDynamicQuery getIndexableActionableDynamicQuery();
 
 	public boolean isEnabled();
 
@@ -30,15 +30,17 @@ public interface IndexerWriter<T extends BaseModel<?>> {
 
 	public void reindex(long classPK);
 
-	public void reindex(String[] ids);
-
 	public void reindex(T baseModel);
 
 	public default void reindex(T baseModel, boolean notify) {
 		reindex(baseModel);
 	}
 
+	public void reindexCompany(long companyId);
+
 	public void setEnabled(boolean enabled);
+
+	public boolean shouldRun(long companyId);
 
 	public void updatePermissionFields(T baseModel);
 

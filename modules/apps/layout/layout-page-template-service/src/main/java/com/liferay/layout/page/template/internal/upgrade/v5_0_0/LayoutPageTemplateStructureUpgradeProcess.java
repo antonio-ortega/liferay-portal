@@ -22,7 +22,8 @@ public class LayoutPageTemplateStructureUpgradeProcess extends UpgradeProcess {
 	@Override
 	protected void doUpgrade() throws Exception {
 		try (PreparedStatement deletePreparedStatement =
-				connection.prepareStatement(
+				AutoBatchPreparedStatementUtil.autoBatch(
+					connection,
 					"delete from LayoutPageTemplateStructure where " +
 						"ctCollectionId = ? and " +
 							"layoutPageTemplateStructureId = ?");
@@ -50,12 +51,14 @@ public class LayoutPageTemplateStructureUpgradeProcess extends UpgradeProcess {
 					long plid = _getPlidFromLayoutPageTemplateEntry(
 						ctCollectionId, classPK);
 
-					if (_hasLayoutPageTemplateStructure(ctCollectionId, plid)) {
+					if ((plid == 0) ||
+						_hasLayoutPageTemplateStructure(ctCollectionId, plid)) {
+
 						deletePreparedStatement.setLong(1, ctCollectionId);
 						deletePreparedStatement.setLong(
 							2, layoutPageTemplateStructureId);
 
-						deletePreparedStatement.executeUpdate();
+						deletePreparedStatement.addBatch();
 
 						continue;
 					}
@@ -69,6 +72,8 @@ public class LayoutPageTemplateStructureUpgradeProcess extends UpgradeProcess {
 
 					preparedStatement2.addBatch();
 				}
+
+				deletePreparedStatement.executeBatch();
 
 				preparedStatement2.executeBatch();
 			}

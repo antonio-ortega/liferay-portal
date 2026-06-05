@@ -274,8 +274,8 @@ public class GetGroovyScriptUsesMVCResourceCommandTest {
 
 		ObjectDefinition objectDefinition =
 			_objectDefinitionLocalService.addCustomObjectDefinition(
-				null, userId, 0, null, false, true, false, true, false, false,
-				false, false, null,
+				null, userId, 0, null, true, false, true, false, true, false,
+				false, false, false, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				ObjectDefinitionTestUtil.getRandomName(), null, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
@@ -331,30 +331,26 @@ public class GetGroovyScriptUsesMVCResourceCommandTest {
 		throws Exception {
 
 		_workflowDefinitionManager.deployWorkflowDefinition(
-			null, companyId, userId,
+			_getContentBytes("workflow-definition-2.json"), companyId, null,
 			companyName + "PublishedGroovyWorkflowDefinition",
-			companyName + "PublishedGroovyWorkflowDefinition",
-			_getContentBytes("workflow-definition-2.json"));
+			companyName + "PublishedGroovyWorkflowDefinition", userId);
 		_workflowDefinitionManager.deployWorkflowDefinition(
-			null, companyId, userId,
+			_getContentBytes("workflow-definition-3.json"), companyId, null,
 			companyName + "PublishedJavaWorkflowDefinition",
-			companyName + "PublishedJavaWorkflowDefinition",
-			_getContentBytes("workflow-definition-3.json"));
+			companyName + "PublishedJavaWorkflowDefinition", userId);
 		_workflowDefinitionManager.deployWorkflowDefinition(
-			null, companyId, userId,
-			companyName + "PublishedWorkflowDefinition", StringUtil.randomId(),
-			_getContentBytes("workflow-definition-1.json"));
+			_getContentBytes("workflow-definition-1.json"), companyId, null,
+			StringUtil.randomId(), companyName + "PublishedWorkflowDefinition",
+			userId);
 
 		_workflowDefinitionManager.saveWorkflowDefinition(
-			null, companyId, userId,
-			companyName + "UnpublishedGroovyWorkflowDefinition",
+			_getContentBytes("workflow-definition-2.json"), companyId, null,
 			StringUtil.randomId(),
-			_getContentBytes("workflow-definition-2.json"));
+			companyName + "UnpublishedGroovyWorkflowDefinition", userId);
 		_workflowDefinitionManager.saveWorkflowDefinition(
-			null, companyId, userId,
-			companyName + "UnpublishedJavaWorkflowDefinition",
+			_getContentBytes("workflow-definition-3.json"), companyId, null,
 			StringUtil.randomId(),
-			_getContentBytes("workflow-definition-3.json"));
+			companyName + "UnpublishedJavaWorkflowDefinition", userId);
 	}
 
 	private byte[] _getContentBytes(String fileName) throws Exception {

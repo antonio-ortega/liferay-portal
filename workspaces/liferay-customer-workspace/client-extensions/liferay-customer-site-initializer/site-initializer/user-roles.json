@@ -1,5 +1,12 @@
 [
 	{
+		"emailAddress": "admin@liferay.com",
+		"roles": [
+			"Administrator",
+			"Liferay Staff"
+		]
+	},
+	{
 		"emailAddress": "customer@customer.com",
 		"roles": [
 			"Customer"
@@ -14,6 +21,7 @@
 	{
 		"emailAddress": "test@liferay.com",
 		"roles": [
+			"Administrator",
 			"Liferay Staff"
 		]
 	}

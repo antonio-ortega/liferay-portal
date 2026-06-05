@@ -7,18 +7,16 @@ package com.liferay.portal.search.test.util.groupby;
 
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.search.BooleanClauseOccur;
+import com.liferay.portal.kernel.search.BooleanQuery;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.GroupBy;
 import com.liferay.portal.kernel.search.Hits;
 import com.liferay.portal.kernel.search.QueryConfig;
 import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.generic.BooleanQueryImpl;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.search.groupby.GroupByRequest;
-import com.liferay.portal.search.groupby.GroupByRequestFactory;
 import com.liferay.portal.search.groupby.GroupByResponse;
-import com.liferay.portal.search.internal.groupby.GroupByRequestFactoryImpl;
 import com.liferay.portal.search.test.util.AssertUtils;
 import com.liferay.portal.search.test.util.indexing.BaseIndexingTestCase;
 import com.liferay.portal.search.test.util.indexing.DocumentCreationHelpers;
@@ -43,7 +41,7 @@ public abstract class BaseGroupByTestCase extends BaseIndexingTestCase {
 
 	@Test
 	public void testFieldNamesDefault() throws Exception {
-		indexDuplicates("one", 1);
+		indexDuplicates(1, "one");
 
 		assertSearch(
 			indexingTestHelper -> {
@@ -55,18 +53,17 @@ public abstract class BaseGroupByTestCase extends BaseIndexingTestCase {
 
 				indexingTestHelper.verify(
 					hits -> assertGroupedHitsFieldNames(
-						"one",
 						Arrays.asList(
 							"companyId", "entryClassName", "entryClassPK",
 							"groupId", SORT_FIELD, "timestamp", "uid",
 							"userName"),
-						hits, indexingTestHelper));
+						hits, indexingTestHelper, "one"));
 			});
 	}
 
 	@Test
 	public void testFieldNamesSame() throws Exception {
-		indexDuplicates("one", 1);
+		indexDuplicates(1, "one");
 
 		assertSearch(
 			indexingTestHelper -> {
@@ -78,7 +75,7 @@ public abstract class BaseGroupByTestCase extends BaseIndexingTestCase {
 
 				indexingTestHelper.verify(
 					hits -> assertGroupedHitsFieldNames(
-						"one", getFieldNames(hits), hits, indexingTestHelper));
+						getFieldNames(hits), hits, indexingTestHelper, "one"));
 			});
 	}
 
@@ -86,7 +83,7 @@ public abstract class BaseGroupByTestCase extends BaseIndexingTestCase {
 	public void testFieldNamesSameWithSelected() throws Exception {
 		String[] fieldNames = {Field.COMPANY_ID, Field.UID};
 
-		indexDuplicates("one", 1);
+		indexDuplicates(1, "one");
 
 		assertSearch(
 			indexingTestHelper -> {
@@ -104,14 +101,14 @@ public abstract class BaseGroupByTestCase extends BaseIndexingTestCase {
 
 				indexingTestHelper.verify(
 					hits -> assertGroupedHitsFieldNames(
-						"one", Arrays.asList(fieldNames), hits,
-						indexingTestHelper));
+						Arrays.asList(fieldNames), hits, indexingTestHelper,
+						"one"));
 			});
 	}
 
 	@Test
 	public void testFieldNamesSelected() throws Exception {
-		indexDuplicates("one", 1);
+		indexDuplicates(1, "one");
 
 		assertSearch(
 			indexingTestHelper -> {
@@ -131,14 +128,14 @@ public abstract class BaseGroupByTestCase extends BaseIndexingTestCase {
 
 				indexingTestHelper.verify(
 					hits -> assertGroupedHitsFieldNames(
-						"one", Arrays.asList(fieldNames), hits,
-						indexingTestHelper));
+						Arrays.asList(fieldNames), hits, indexingTestHelper,
+						"one"));
 			});
 	}
 
 	@Test
 	public void testGroupByDocsSize() throws Exception {
-		indexDuplicates("five", 5);
+		indexDuplicates(5, "five");
 
 		assertSearch(
 			indexingTestHelper -> {
@@ -193,9 +190,9 @@ public abstract class BaseGroupByTestCase extends BaseIndexingTestCase {
 			String key = entry.getKey();
 			Integer value = entry.getValue();
 
-			indexDuplicates(key, value);
+			indexDuplicates(value, key);
 
-			map2.put(key, getCountPairString(value, value - 1));
+			map2.put(key, getCountPairString(value - 1, value));
 		}
 
 		assertSearch(
@@ -242,7 +239,7 @@ public abstract class BaseGroupByTestCase extends BaseIndexingTestCase {
 			"two", 2
 		).build();
 
-		map1.forEach((key, value) -> indexDuplicates(key, value));
+		map1.forEach((key, value) -> indexDuplicates(value, key));
 
 		map1.remove("one", 1);
 
@@ -258,9 +255,8 @@ public abstract class BaseGroupByTestCase extends BaseIndexingTestCase {
 			indexingTestHelper -> {
 				indexingTestHelper.defineRequest(
 					searchRequestBuilder -> {
-						GroupByRequest groupByRequest =
-							groupByRequestFactory.getGroupByRequest(
-								GROUP_FIELD);
+						GroupByRequest groupByRequest = new GroupByRequest(
+							GROUP_FIELD);
 
 						setTermsSortsAndDocsSize(groupByRequest);
 
@@ -276,16 +272,15 @@ public abstract class BaseGroupByTestCase extends BaseIndexingTestCase {
 
 	@Test
 	public void testGroupByTermsSizeLessThanDefault() throws Exception {
-		indexDuplicates("one", 1);
-		indexDuplicates("two", 2);
+		indexDuplicates(1, "one");
+		indexDuplicates(2, "two");
 
 		assertSearch(
 			indexingTestHelper -> {
 				indexingTestHelper.defineRequest(
 					searchRequestBuilder -> {
-						GroupByRequest groupByRequest =
-							groupByRequestFactory.getGroupByRequest(
-								GROUP_FIELD);
+						GroupByRequest groupByRequest = new GroupByRequest(
+							GROUP_FIELD);
 
 						groupByRequest.setTermsSize(1);
 
@@ -345,7 +340,7 @@ public abstract class BaseGroupByTestCase extends BaseIndexingTestCase {
 			String key = entry.getKey();
 			Integer value = entry.getValue();
 
-			indexDuplicates(key, value);
+			indexDuplicates(value, key);
 
 			map2.put(key, getCountPairString(value, value));
 		}
@@ -354,9 +349,8 @@ public abstract class BaseGroupByTestCase extends BaseIndexingTestCase {
 			indexingTestHelper -> {
 				indexingTestHelper.defineRequest(
 					searchRequestBuilder -> {
-						GroupByRequest groupByRequest =
-							groupByRequestFactory.getGroupByRequest(
-								GROUP_FIELD);
+						GroupByRequest groupByRequest = new GroupByRequest(
+							GROUP_FIELD);
 
 						groupByRequest.setTermsSize(11);
 
@@ -374,16 +368,15 @@ public abstract class BaseGroupByTestCase extends BaseIndexingTestCase {
 
 	@Test
 	public void testGroupByTermsStart() throws Exception {
-		indexDuplicates("one", 1);
-		indexDuplicates("two", 2);
+		indexDuplicates(1, "one");
+		indexDuplicates(2, "two");
 
 		assertSearch(
 			indexingTestHelper -> {
 				indexingTestHelper.defineRequest(
 					searchRequestBuilder -> {
-						GroupByRequest groupByRequest =
-							groupByRequestFactory.getGroupByRequest(
-								GROUP_FIELD);
+						GroupByRequest groupByRequest = new GroupByRequest(
+							GROUP_FIELD);
 
 						groupByRequest.setTermsSorts(
 							new Sort(SORT_FIELD, Sort.STRING_TYPE, true));
@@ -411,9 +404,9 @@ public abstract class BaseGroupByTestCase extends BaseIndexingTestCase {
 	protected void assertGroupByDocsSortsScoreField(boolean desc)
 		throws Exception {
 
-		indexDuplicates("one", 1);
-		indexDuplicates("two", 2);
-		indexDuplicates("three", 3);
+		indexDuplicates(1, "one");
+		indexDuplicates(2, "two");
+		indexDuplicates(3, "three");
 
 		assertSearch(
 			indexingTestHelper -> {
@@ -422,7 +415,7 @@ public abstract class BaseGroupByTestCase extends BaseIndexingTestCase {
 						Sort[] sorts = new Sort[1];
 
 						sorts[0] = new Sort(
-							"scoreField", Sort.SCORE_TYPE, desc);
+							"scoreField", Sort.SCORE_TYPE, !desc);
 
 						GroupBy groupBy = new GroupBy(GROUP_FIELD);
 
@@ -432,29 +425,28 @@ public abstract class BaseGroupByTestCase extends BaseIndexingTestCase {
 						searchContext.setGroupBy(groupBy);
 					});
 
-				BooleanQueryImpl booleanQueryImpl = new BooleanQueryImpl();
+				BooleanQuery booleanQuery = new BooleanQuery();
 
-				booleanQueryImpl.addExactTerm(SORT_FIELD, "3");
-				booleanQueryImpl.addExactTerm(SORT_FIELD, "2");
+				booleanQuery.addExactTerm(SORT_FIELD, "3");
+				booleanQuery.addExactTerm(SORT_FIELD, "2");
 
-				booleanQueryImpl.add(
-					getDefaultQuery(), BooleanClauseOccur.MUST);
+				booleanQuery.add(getDefaultQuery(), BooleanClauseOccur.MUST);
 
-				indexingTestHelper.setQuery(booleanQueryImpl);
+				indexingTestHelper.setQuery(booleanQuery);
 
 				indexingTestHelper.search();
 
 				indexingTestHelper.verify(
-					hits -> assertGroupsSorted(hits, true, 3));
+					hits -> assertGroupsSorted(desc, hits, 3));
 			});
 	}
 
 	protected void assertGroupByDocsSortsSortField(boolean desc)
 		throws Exception {
 
-		indexDuplicates("one", 2);
-		indexDuplicates("two", 2);
-		indexDuplicates("three", 3);
+		indexDuplicates(2, "one");
+		indexDuplicates(2, "two");
+		indexDuplicates(3, "three");
 
 		assertSearch(
 			indexingTestHelper -> {
@@ -475,13 +467,13 @@ public abstract class BaseGroupByTestCase extends BaseIndexingTestCase {
 				indexingTestHelper.search();
 
 				indexingTestHelper.verify(
-					hits -> assertGroupsSorted(hits, desc, 3));
+					hits -> assertGroupsSorted(desc, hits, 3));
 			});
 	}
 
 	protected void assertGroupedHitsFieldNames(
-		String key, Collection<String> expectedFieldNames, Hits hits,
-		IndexingTestHelper indexingTestHelper) {
+		Collection<String> expectedFieldNames, Hits hits,
+		IndexingTestHelper indexingTestHelper, String key) {
 
 		Map<String, Hits> groupedHitsMap = hits.getGroupedHits();
 
@@ -518,7 +510,7 @@ public abstract class BaseGroupByTestCase extends BaseIndexingTestCase {
 
 		for (Map.Entry<String, Hits> entry : hitsMap.entrySet()) {
 			actualCountsList.add(
-				getCountPairString(entry.getKey(), entry.getValue()));
+				getCountPairString(entry.getValue(), entry.getKey()));
 		}
 
 		AssertUtils.assertEquals(
@@ -527,7 +519,7 @@ public abstract class BaseGroupByTestCase extends BaseIndexingTestCase {
 	}
 
 	protected void assertGroupsSorted(
-		Hits hits, boolean desc, int minDocCount) {
+		boolean desc, Hits hits, int minDocCount) {
 
 		Map<String, Hits> groupedHits = hits.getGroupedHits();
 
@@ -581,18 +573,18 @@ public abstract class BaseGroupByTestCase extends BaseIndexingTestCase {
 	protected String getCountPairString(Hits hits) {
 		Document[] docs = hits.getDocs();
 
-		return getCountPairString(hits.getLength(), docs.length);
+		return getCountPairString(docs.length, hits.getLength());
 	}
 
-	protected String getCountPairString(int hitsCount, int docsCount) {
-		return hitsCount + StringPool.PIPE + docsCount;
-	}
-
-	protected String getCountPairString(String key, Hits hits) {
+	protected String getCountPairString(Hits hits, String key) {
 		Document[] docs = hits.getDocs();
 
 		return key + StringPool.PIPE +
-			getCountPairString(hits.getLength(), docs.length);
+			getCountPairString(docs.length, hits.getLength());
+	}
+
+	protected String getCountPairString(int docsCount, int hitsCount) {
+		return hitsCount + StringPool.PIPE + docsCount;
 	}
 
 	protected Collection<String> getFieldNames(Hits hits) {
@@ -609,7 +601,7 @@ public abstract class BaseGroupByTestCase extends BaseIndexingTestCase {
 		return fields.keySet();
 	}
 
-	protected void indexDuplicates(String name, int count) {
+	protected void indexDuplicates(int count, String name) {
 		String field = GROUP_FIELD;
 
 		for (int i = 1; i <= count; i++) {
@@ -637,9 +629,6 @@ public abstract class BaseGroupByTestCase extends BaseIndexingTestCase {
 
 	protected static final String SORT_FIELD =
 		Field.USER_ID + StringPool.UNDERLINE + Field.SORTABLE_FIELD_SUFFIX;
-
-	protected final GroupByRequestFactory groupByRequestFactory =
-		new GroupByRequestFactoryImpl();
 
 	private boolean _shouldIgnoreSearchEngineGlitchAndRetry(
 		RuntimeException runtimeException) {

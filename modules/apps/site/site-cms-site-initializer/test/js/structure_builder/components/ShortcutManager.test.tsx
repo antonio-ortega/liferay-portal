@@ -18,14 +18,15 @@ import {
 	StructureChild,
 } from '../../../../src/main/resources/META-INF/resources/js/structure_builder/types/Structure';
 import {Uuid} from '../../../../src/main/resources/META-INF/resources/js/structure_builder/types/Uuid';
-import {deleteSelection} from '../../../../src/main/resources/META-INF/resources/js/structure_builder/utils/deleteSelection';
 import {Field} from '../../../../src/main/resources/META-INF/resources/js/structure_builder/utils/field';
 import getUuid from '../../../../src/main/resources/META-INF/resources/js/structure_builder/utils/getUuid';
+import handleDeleteChildren from '../../../../src/main/resources/META-INF/resources/js/structure_builder/utils/handleDeleteChildren';
+import handlePublishStructure from '../../../../src/main/resources/META-INF/resources/js/structure_builder/utils/handlePublishStructure';
+import handleSaveStructure from '../../../../src/main/resources/META-INF/resources/js/structure_builder/utils/handleSaveStructure';
 import isReferenced from '../../../../src/main/resources/META-INF/resources/js/structure_builder/utils/isReferenced';
 import isRenamable from '../../../../src/main/resources/META-INF/resources/js/structure_builder/utils/isRenamable';
+import openHelpModal from '../../../../src/main/resources/META-INF/resources/js/structure_builder/utils/openHelpModal';
 import openReferencedStructureModal from '../../../../src/main/resources/META-INF/resources/js/structure_builder/utils/openReferencedStructureModal';
-import {publishStructure} from '../../../../src/main/resources/META-INF/resources/js/structure_builder/utils/publishStructure';
-import {saveStructure} from '../../../../src/main/resources/META-INF/resources/js/structure_builder/utils/saveStructure';
 import {MockCacheProvider} from '../mocks/MockCacheProvider';
 import {MockStateProvider} from '../mocks/MockStateProvider';
 
@@ -44,10 +45,18 @@ jest.mock(
 );
 
 jest.mock(
-	'../../../../src/main/resources/META-INF/resources/js/structure_builder/utils/deleteSelection',
-	() => ({
-		deleteSelection: jest.fn(),
-	})
+	'../../../../src/main/resources/META-INF/resources/js/structure_builder/utils/handleDeleteChildren',
+	() => jest.fn()
+);
+
+jest.mock(
+	'../../../../src/main/resources/META-INF/resources/js/structure_builder/utils/handlePublishStructure',
+	() => jest.fn()
+);
+
+jest.mock(
+	'../../../../src/main/resources/META-INF/resources/js/structure_builder/utils/handleSaveStructure',
+	() => jest.fn()
 );
 
 jest.mock(
@@ -61,22 +70,13 @@ jest.mock(
 );
 
 jest.mock(
-	'../../../../src/main/resources/META-INF/resources/js/structure_builder/utils/openReferencedStructureModal',
+	'../../../../src/main/resources/META-INF/resources/js/structure_builder/utils/openHelpModal',
 	() => jest.fn()
 );
 
 jest.mock(
-	'../../../../src/main/resources/META-INF/resources/js/structure_builder/utils/publishStructure',
-	() => ({
-		publishStructure: jest.fn(),
-	})
-);
-
-jest.mock(
-	'../../../../src/main/resources/META-INF/resources/js/structure_builder/utils/saveStructure',
-	() => ({
-		saveStructure: jest.fn(),
-	})
+	'../../../../src/main/resources/META-INF/resources/js/structure_builder/utils/openReferencedStructureModal',
+	() => jest.fn()
 );
 
 const FIELD_UUID = getUuid();
@@ -106,7 +106,7 @@ const renderComponent = ({
 	selection?: State['selection'];
 } = {}) => {
 	return render(
-		<MockCacheProvider objectDefinitions={{}}>
+		<MockCacheProvider objectDefinitions={{}} spaces={[]}>
 			<MockStateProvider
 				state={{
 					selection,
@@ -135,8 +135,8 @@ describe('ShortcutManager', () => {
 		fireEvent.keyDown(document.body, {code: 'KeyD', ctrlKey: true});
 
 		expect(mockDispatch).toHaveBeenCalledWith({
-			type: 'duplicate-child',
-			uuid: FIELD_UUID,
+			type: 'duplicate-children',
+			uuids: [FIELD_UUID],
 		});
 	});
 
@@ -171,20 +171,20 @@ describe('ShortcutManager', () => {
 		});
 	});
 
-	it('executes deleteSelection with Backspace when selection exists', () => {
+	it('executes handleDeleteChildren with Backspace when selection exists', () => {
 		renderComponent({selection: [FIELD_UUID]});
 
 		fireEvent.keyDown(document.body, {code: 'Backspace'});
 
-		expect(deleteSelection).toHaveBeenCalled();
+		expect(handleDeleteChildren).toHaveBeenCalled();
 	});
 
-	it('executes deleteSelection with Delete when selection exists', () => {
+	it('executes handleDeleteChildren with Delete when selection exists', () => {
 		renderComponent({selection: [FIELD_UUID]});
 
 		fireEvent.keyDown(document.body, {code: 'Delete'});
 
-		expect(deleteSelection).toHaveBeenCalled();
+		expect(handleDeleteChildren).toHaveBeenCalled();
 	});
 
 	it('opens referenced structures modal with Shift+Enter', () => {
@@ -202,6 +202,7 @@ describe('ShortcutManager', () => {
 
 		expect(mockDispatch).toHaveBeenCalledWith({
 			type: 'add-repeatable-group',
+			uuids: [FIELD_UUID],
 		});
 	});
 
@@ -227,7 +228,7 @@ describe('ShortcutManager', () => {
 
 		fireEvent.keyDown(document.body, {code: 'KeyS', ctrlKey: true});
 
-		expect(saveStructure).toHaveBeenCalled();
+		expect(handleSaveStructure).toHaveBeenCalled();
 	});
 
 	it('executes publish structure with Ctrl+P', () => {
@@ -235,6 +236,14 @@ describe('ShortcutManager', () => {
 
 		fireEvent.keyDown(document.body, {code: 'KeyP', ctrlKey: true});
 
-		expect(publishStructure).toHaveBeenCalled();
+		expect(handlePublishStructure).toHaveBeenCalled();
+	});
+
+	it('opens help modal with Shift+?', () => {
+		renderComponent();
+
+		fireEvent.keyDown(document.body, {key: '?', shiftKey: true});
+
+		expect(openHelpModal).toHaveBeenCalled();
 	});
 });

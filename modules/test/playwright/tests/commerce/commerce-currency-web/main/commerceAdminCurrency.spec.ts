@@ -6,9 +6,9 @@
 import {expect, mergeTests} from '@playwright/test';
 
 import {accountsPagesTest} from '../../../../fixtures/accountsPagesTest';
-import {applicationsMenuPageTest} from '../../../../fixtures/applicationsMenuPageTest';
 import {commercePagesTest} from '../../../../fixtures/commercePagesTest';
 import {dataApiHelpersTest} from '../../../../fixtures/dataApiHelpersTest';
+import {globalMenuPagesTest} from '../../../../fixtures/globalMenuPagesTest';
 import {loginTest} from '../../../../fixtures/loginTest';
 import {usersAndOrganizationsPagesTest} from '../../../../fixtures/usersAndOrganizationsPagesTest';
 import {getRandomInt} from '../../../../utils/getRandomInt';
@@ -18,9 +18,9 @@ import {miniumSetUp} from '../../utils/commerce';
 
 export const test = mergeTests(
 	accountsPagesTest,
-	applicationsMenuPageTest,
 	commercePagesTest,
 	dataApiHelpersTest,
+	globalMenuPagesTest,
 	loginTest(),
 	usersAndOrganizationsPagesTest
 );
@@ -209,9 +209,9 @@ test('COMMERCE-5839 As a system admin i want to be able to create / update and d
 test('COMMERCE-9936 A disabled default currency should not be usable', async ({
 	accountsPage,
 	apiHelpers,
-	applicationsMenuPage,
 	commerceChannelDefaultsPage,
 	editAccountPage,
+	globalMenuPage,
 	page,
 }) => {
 	test.setTimeout(180000);
@@ -245,7 +245,7 @@ test('COMMERCE-9936 A disabled default currency should not be usable', async ({
 			}
 		);
 
-		await applicationsMenuPage.goToSite(site.name);
+		await globalMenuPage.goToSite(site.name);
 
 		await expect(page.getByText('$ 24.00')).toBeVisible();
 	}

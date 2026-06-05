@@ -33,51 +33,10 @@ public interface WorkflowMetricsSLADefinitionPersistence
 	 */
 
 	/**
-	 * Returns all the workflow metrics sla definitions where uuid = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @return the matching workflow metrics sla definitions
-	 */
-	public java.util.List<WorkflowMetricsSLADefinition> findByUuid(String uuid);
-
-	/**
-	 * Returns a range of all the workflow metrics sla definitions where uuid = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>WorkflowMetricsSLADefinitionModelImpl</code>.
-	 * </p>
-	 *
-	 * @param uuid the uuid
-	 * @param start the lower bound of the range of workflow metrics sla definitions
-	 * @param end the upper bound of the range of workflow metrics sla definitions (not inclusive)
-	 * @return the range of matching workflow metrics sla definitions
-	 */
-	public java.util.List<WorkflowMetricsSLADefinition> findByUuid(
-		String uuid, int start, int end);
-
-	/**
 	 * Returns an ordered range of all the workflow metrics sla definitions where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>WorkflowMetricsSLADefinitionModelImpl</code>.
-	 * </p>
-	 *
-	 * @param uuid the uuid
-	 * @param start the lower bound of the range of workflow metrics sla definitions
-	 * @param end the upper bound of the range of workflow metrics sla definitions (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching workflow metrics sla definitions
-	 */
-	public java.util.List<WorkflowMetricsSLADefinition> findByUuid(
-		String uuid, int start, int end,
-		com.liferay.portal.kernel.util.OrderByComparator
-			<WorkflowMetricsSLADefinition> orderByComparator);
-
-	/**
-	 * Returns an ordered range of all the workflow metrics sla definitions where uuid = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>WorkflowMetricsSLADefinitionModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.workflow.metrics.model.impl.WorkflowMetricsSLADefinitionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -120,47 +79,6 @@ public interface WorkflowMetricsSLADefinitionPersistence
 			<WorkflowMetricsSLADefinition> orderByComparator);
 
 	/**
-	 * Returns the last workflow metrics sla definition in the ordered set where uuid = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching workflow metrics sla definition
-	 * @throws NoSuchSLADefinitionException if a matching workflow metrics sla definition could not be found
-	 */
-	public WorkflowMetricsSLADefinition findByUuid_Last(
-			String uuid,
-			com.liferay.portal.kernel.util.OrderByComparator
-				<WorkflowMetricsSLADefinition> orderByComparator)
-		throws NoSuchSLADefinitionException;
-
-	/**
-	 * Returns the last workflow metrics sla definition in the ordered set where uuid = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching workflow metrics sla definition, or <code>null</code> if a matching workflow metrics sla definition could not be found
-	 */
-	public WorkflowMetricsSLADefinition fetchByUuid_Last(
-		String uuid,
-		com.liferay.portal.kernel.util.OrderByComparator
-			<WorkflowMetricsSLADefinition> orderByComparator);
-
-	/**
-	 * Returns the workflow metrics sla definitions before and after the current workflow metrics sla definition in the ordered set where uuid = &#63;.
-	 *
-	 * @param workflowMetricsSLADefinitionId the primary key of the current workflow metrics sla definition
-	 * @param uuid the uuid
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next workflow metrics sla definition
-	 * @throws NoSuchSLADefinitionException if a workflow metrics sla definition with the primary key could not be found
-	 */
-	public WorkflowMetricsSLADefinition[] findByUuid_PrevAndNext(
-			long workflowMetricsSLADefinitionId, String uuid,
-			com.liferay.portal.kernel.util.OrderByComparator
-				<WorkflowMetricsSLADefinition> orderByComparator)
-		throws NoSuchSLADefinitionException;
-
-	/**
 	 * Removes all the workflow metrics sla definitions where uuid = &#63; from the database.
 	 *
 	 * @param uuid the uuid
@@ -185,16 +103,6 @@ public interface WorkflowMetricsSLADefinitionPersistence
 	 */
 	public WorkflowMetricsSLADefinition findByUUID_G(String uuid, long groupId)
 		throws NoSuchSLADefinitionException;
-
-	/**
-	 * Returns the workflow metrics sla definition where uuid = &#63; and groupId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
-	 *
-	 * @param uuid the uuid
-	 * @param groupId the group ID
-	 * @return the matching workflow metrics sla definition, or <code>null</code> if a matching workflow metrics sla definition could not be found
-	 */
-	public WorkflowMetricsSLADefinition fetchByUUID_G(
-		String uuid, long groupId);
 
 	/**
 	 * Returns the workflow metrics sla definition where uuid = &#63; and groupId = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
@@ -228,55 +136,10 @@ public interface WorkflowMetricsSLADefinitionPersistence
 	public int countByUUID_G(String uuid, long groupId);
 
 	/**
-	 * Returns all the workflow metrics sla definitions where uuid = &#63; and companyId = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @return the matching workflow metrics sla definitions
-	 */
-	public java.util.List<WorkflowMetricsSLADefinition> findByUuid_C(
-		String uuid, long companyId);
-
-	/**
-	 * Returns a range of all the workflow metrics sla definitions where uuid = &#63; and companyId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>WorkflowMetricsSLADefinitionModelImpl</code>.
-	 * </p>
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param start the lower bound of the range of workflow metrics sla definitions
-	 * @param end the upper bound of the range of workflow metrics sla definitions (not inclusive)
-	 * @return the range of matching workflow metrics sla definitions
-	 */
-	public java.util.List<WorkflowMetricsSLADefinition> findByUuid_C(
-		String uuid, long companyId, int start, int end);
-
-	/**
 	 * Returns an ordered range of all the workflow metrics sla definitions where uuid = &#63; and companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>WorkflowMetricsSLADefinitionModelImpl</code>.
-	 * </p>
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param start the lower bound of the range of workflow metrics sla definitions
-	 * @param end the upper bound of the range of workflow metrics sla definitions (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching workflow metrics sla definitions
-	 */
-	public java.util.List<WorkflowMetricsSLADefinition> findByUuid_C(
-		String uuid, long companyId, int start, int end,
-		com.liferay.portal.kernel.util.OrderByComparator
-			<WorkflowMetricsSLADefinition> orderByComparator);
-
-	/**
-	 * Returns an ordered range of all the workflow metrics sla definitions where uuid = &#63; and companyId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>WorkflowMetricsSLADefinitionModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.workflow.metrics.model.impl.WorkflowMetricsSLADefinitionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -322,50 +185,6 @@ public interface WorkflowMetricsSLADefinitionPersistence
 			<WorkflowMetricsSLADefinition> orderByComparator);
 
 	/**
-	 * Returns the last workflow metrics sla definition in the ordered set where uuid = &#63; and companyId = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching workflow metrics sla definition
-	 * @throws NoSuchSLADefinitionException if a matching workflow metrics sla definition could not be found
-	 */
-	public WorkflowMetricsSLADefinition findByUuid_C_Last(
-			String uuid, long companyId,
-			com.liferay.portal.kernel.util.OrderByComparator
-				<WorkflowMetricsSLADefinition> orderByComparator)
-		throws NoSuchSLADefinitionException;
-
-	/**
-	 * Returns the last workflow metrics sla definition in the ordered set where uuid = &#63; and companyId = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching workflow metrics sla definition, or <code>null</code> if a matching workflow metrics sla definition could not be found
-	 */
-	public WorkflowMetricsSLADefinition fetchByUuid_C_Last(
-		String uuid, long companyId,
-		com.liferay.portal.kernel.util.OrderByComparator
-			<WorkflowMetricsSLADefinition> orderByComparator);
-
-	/**
-	 * Returns the workflow metrics sla definitions before and after the current workflow metrics sla definition in the ordered set where uuid = &#63; and companyId = &#63;.
-	 *
-	 * @param workflowMetricsSLADefinitionId the primary key of the current workflow metrics sla definition
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next workflow metrics sla definition
-	 * @throws NoSuchSLADefinitionException if a workflow metrics sla definition with the primary key could not be found
-	 */
-	public WorkflowMetricsSLADefinition[] findByUuid_C_PrevAndNext(
-			long workflowMetricsSLADefinitionId, String uuid, long companyId,
-			com.liferay.portal.kernel.util.OrderByComparator
-				<WorkflowMetricsSLADefinition> orderByComparator)
-		throws NoSuchSLADefinitionException;
-
-	/**
 	 * Removes all the workflow metrics sla definitions where uuid = &#63; and companyId = &#63; from the database.
 	 *
 	 * @param uuid the uuid
@@ -393,16 +212,6 @@ public interface WorkflowMetricsSLADefinitionPersistence
 	public WorkflowMetricsSLADefinition findByWMSLAD_A(
 			long workflowMetricsSLADefinitionId, boolean active)
 		throws NoSuchSLADefinitionException;
-
-	/**
-	 * Returns the workflow metrics sla definition where workflowMetricsSLADefinitionId = &#63; and active = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
-	 *
-	 * @param workflowMetricsSLADefinitionId the workflow metrics sla definition ID
-	 * @param active the active
-	 * @return the matching workflow metrics sla definition, or <code>null</code> if a matching workflow metrics sla definition could not be found
-	 */
-	public WorkflowMetricsSLADefinition fetchByWMSLAD_A(
-		long workflowMetricsSLADefinitionId, boolean active);
 
 	/**
 	 * Returns the workflow metrics sla definition where workflowMetricsSLADefinitionId = &#63; and active = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
@@ -438,55 +247,10 @@ public interface WorkflowMetricsSLADefinitionPersistence
 		long workflowMetricsSLADefinitionId, boolean active);
 
 	/**
-	 * Returns all the workflow metrics sla definitions where companyId = &#63; and status = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param status the status
-	 * @return the matching workflow metrics sla definitions
-	 */
-	public java.util.List<WorkflowMetricsSLADefinition> findByC_S(
-		long companyId, int status);
-
-	/**
-	 * Returns a range of all the workflow metrics sla definitions where companyId = &#63; and status = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>WorkflowMetricsSLADefinitionModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param status the status
-	 * @param start the lower bound of the range of workflow metrics sla definitions
-	 * @param end the upper bound of the range of workflow metrics sla definitions (not inclusive)
-	 * @return the range of matching workflow metrics sla definitions
-	 */
-	public java.util.List<WorkflowMetricsSLADefinition> findByC_S(
-		long companyId, int status, int start, int end);
-
-	/**
 	 * Returns an ordered range of all the workflow metrics sla definitions where companyId = &#63; and status = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>WorkflowMetricsSLADefinitionModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param status the status
-	 * @param start the lower bound of the range of workflow metrics sla definitions
-	 * @param end the upper bound of the range of workflow metrics sla definitions (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching workflow metrics sla definitions
-	 */
-	public java.util.List<WorkflowMetricsSLADefinition> findByC_S(
-		long companyId, int status, int start, int end,
-		com.liferay.portal.kernel.util.OrderByComparator
-			<WorkflowMetricsSLADefinition> orderByComparator);
-
-	/**
-	 * Returns an ordered range of all the workflow metrics sla definitions where companyId = &#63; and status = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>WorkflowMetricsSLADefinitionModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.workflow.metrics.model.impl.WorkflowMetricsSLADefinitionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -532,50 +296,6 @@ public interface WorkflowMetricsSLADefinitionPersistence
 			<WorkflowMetricsSLADefinition> orderByComparator);
 
 	/**
-	 * Returns the last workflow metrics sla definition in the ordered set where companyId = &#63; and status = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param status the status
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching workflow metrics sla definition
-	 * @throws NoSuchSLADefinitionException if a matching workflow metrics sla definition could not be found
-	 */
-	public WorkflowMetricsSLADefinition findByC_S_Last(
-			long companyId, int status,
-			com.liferay.portal.kernel.util.OrderByComparator
-				<WorkflowMetricsSLADefinition> orderByComparator)
-		throws NoSuchSLADefinitionException;
-
-	/**
-	 * Returns the last workflow metrics sla definition in the ordered set where companyId = &#63; and status = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param status the status
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching workflow metrics sla definition, or <code>null</code> if a matching workflow metrics sla definition could not be found
-	 */
-	public WorkflowMetricsSLADefinition fetchByC_S_Last(
-		long companyId, int status,
-		com.liferay.portal.kernel.util.OrderByComparator
-			<WorkflowMetricsSLADefinition> orderByComparator);
-
-	/**
-	 * Returns the workflow metrics sla definitions before and after the current workflow metrics sla definition in the ordered set where companyId = &#63; and status = &#63;.
-	 *
-	 * @param workflowMetricsSLADefinitionId the primary key of the current workflow metrics sla definition
-	 * @param companyId the company ID
-	 * @param status the status
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next workflow metrics sla definition
-	 * @throws NoSuchSLADefinitionException if a workflow metrics sla definition with the primary key could not be found
-	 */
-	public WorkflowMetricsSLADefinition[] findByC_S_PrevAndNext(
-			long workflowMetricsSLADefinitionId, long companyId, int status,
-			com.liferay.portal.kernel.util.OrderByComparator
-				<WorkflowMetricsSLADefinition> orderByComparator)
-		throws NoSuchSLADefinitionException;
-
-	/**
 	 * Removes all the workflow metrics sla definitions where companyId = &#63; and status = &#63; from the database.
 	 *
 	 * @param companyId the company ID
@@ -593,58 +313,10 @@ public interface WorkflowMetricsSLADefinitionPersistence
 	public int countByC_S(long companyId, int status);
 
 	/**
-	 * Returns all the workflow metrics sla definitions where companyId = &#63; and active = &#63; and processId = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param active the active
-	 * @param processId the process ID
-	 * @return the matching workflow metrics sla definitions
-	 */
-	public java.util.List<WorkflowMetricsSLADefinition> findByC_A_P(
-		long companyId, boolean active, long processId);
-
-	/**
-	 * Returns a range of all the workflow metrics sla definitions where companyId = &#63; and active = &#63; and processId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>WorkflowMetricsSLADefinitionModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param active the active
-	 * @param processId the process ID
-	 * @param start the lower bound of the range of workflow metrics sla definitions
-	 * @param end the upper bound of the range of workflow metrics sla definitions (not inclusive)
-	 * @return the range of matching workflow metrics sla definitions
-	 */
-	public java.util.List<WorkflowMetricsSLADefinition> findByC_A_P(
-		long companyId, boolean active, long processId, int start, int end);
-
-	/**
 	 * Returns an ordered range of all the workflow metrics sla definitions where companyId = &#63; and active = &#63; and processId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>WorkflowMetricsSLADefinitionModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param active the active
-	 * @param processId the process ID
-	 * @param start the lower bound of the range of workflow metrics sla definitions
-	 * @param end the upper bound of the range of workflow metrics sla definitions (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching workflow metrics sla definitions
-	 */
-	public java.util.List<WorkflowMetricsSLADefinition> findByC_A_P(
-		long companyId, boolean active, long processId, int start, int end,
-		com.liferay.portal.kernel.util.OrderByComparator
-			<WorkflowMetricsSLADefinition> orderByComparator);
-
-	/**
-	 * Returns an ordered range of all the workflow metrics sla definitions where companyId = &#63; and active = &#63; and processId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>WorkflowMetricsSLADefinitionModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.workflow.metrics.model.impl.WorkflowMetricsSLADefinitionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -693,54 +365,6 @@ public interface WorkflowMetricsSLADefinitionPersistence
 			<WorkflowMetricsSLADefinition> orderByComparator);
 
 	/**
-	 * Returns the last workflow metrics sla definition in the ordered set where companyId = &#63; and active = &#63; and processId = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param active the active
-	 * @param processId the process ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching workflow metrics sla definition
-	 * @throws NoSuchSLADefinitionException if a matching workflow metrics sla definition could not be found
-	 */
-	public WorkflowMetricsSLADefinition findByC_A_P_Last(
-			long companyId, boolean active, long processId,
-			com.liferay.portal.kernel.util.OrderByComparator
-				<WorkflowMetricsSLADefinition> orderByComparator)
-		throws NoSuchSLADefinitionException;
-
-	/**
-	 * Returns the last workflow metrics sla definition in the ordered set where companyId = &#63; and active = &#63; and processId = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param active the active
-	 * @param processId the process ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching workflow metrics sla definition, or <code>null</code> if a matching workflow metrics sla definition could not be found
-	 */
-	public WorkflowMetricsSLADefinition fetchByC_A_P_Last(
-		long companyId, boolean active, long processId,
-		com.liferay.portal.kernel.util.OrderByComparator
-			<WorkflowMetricsSLADefinition> orderByComparator);
-
-	/**
-	 * Returns the workflow metrics sla definitions before and after the current workflow metrics sla definition in the ordered set where companyId = &#63; and active = &#63; and processId = &#63;.
-	 *
-	 * @param workflowMetricsSLADefinitionId the primary key of the current workflow metrics sla definition
-	 * @param companyId the company ID
-	 * @param active the active
-	 * @param processId the process ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next workflow metrics sla definition
-	 * @throws NoSuchSLADefinitionException if a workflow metrics sla definition with the primary key could not be found
-	 */
-	public WorkflowMetricsSLADefinition[] findByC_A_P_PrevAndNext(
-			long workflowMetricsSLADefinitionId, long companyId, boolean active,
-			long processId,
-			com.liferay.portal.kernel.util.OrderByComparator
-				<WorkflowMetricsSLADefinition> orderByComparator)
-		throws NoSuchSLADefinitionException;
-
-	/**
 	 * Removes all the workflow metrics sla definitions where companyId = &#63; and active = &#63; and processId = &#63; from the database.
 	 *
 	 * @param companyId the company ID
@@ -760,63 +384,10 @@ public interface WorkflowMetricsSLADefinitionPersistence
 	public int countByC_A_P(long companyId, boolean active, long processId);
 
 	/**
-	 * Returns all the workflow metrics sla definitions where companyId = &#63; and active = &#63; and name = &#63; and processId = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param active the active
-	 * @param name the name
-	 * @param processId the process ID
-	 * @return the matching workflow metrics sla definitions
-	 */
-	public java.util.List<WorkflowMetricsSLADefinition> findByC_A_N_P(
-		long companyId, boolean active, String name, long processId);
-
-	/**
-	 * Returns a range of all the workflow metrics sla definitions where companyId = &#63; and active = &#63; and name = &#63; and processId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>WorkflowMetricsSLADefinitionModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param active the active
-	 * @param name the name
-	 * @param processId the process ID
-	 * @param start the lower bound of the range of workflow metrics sla definitions
-	 * @param end the upper bound of the range of workflow metrics sla definitions (not inclusive)
-	 * @return the range of matching workflow metrics sla definitions
-	 */
-	public java.util.List<WorkflowMetricsSLADefinition> findByC_A_N_P(
-		long companyId, boolean active, String name, long processId, int start,
-		int end);
-
-	/**
 	 * Returns an ordered range of all the workflow metrics sla definitions where companyId = &#63; and active = &#63; and name = &#63; and processId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>WorkflowMetricsSLADefinitionModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param active the active
-	 * @param name the name
-	 * @param processId the process ID
-	 * @param start the lower bound of the range of workflow metrics sla definitions
-	 * @param end the upper bound of the range of workflow metrics sla definitions (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching workflow metrics sla definitions
-	 */
-	public java.util.List<WorkflowMetricsSLADefinition> findByC_A_N_P(
-		long companyId, boolean active, String name, long processId, int start,
-		int end,
-		com.liferay.portal.kernel.util.OrderByComparator
-			<WorkflowMetricsSLADefinition> orderByComparator);
-
-	/**
-	 * Returns an ordered range of all the workflow metrics sla definitions where companyId = &#63; and active = &#63; and name = &#63; and processId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>WorkflowMetricsSLADefinitionModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.workflow.metrics.model.impl.WorkflowMetricsSLADefinitionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -869,57 +440,6 @@ public interface WorkflowMetricsSLADefinitionPersistence
 			<WorkflowMetricsSLADefinition> orderByComparator);
 
 	/**
-	 * Returns the last workflow metrics sla definition in the ordered set where companyId = &#63; and active = &#63; and name = &#63; and processId = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param active the active
-	 * @param name the name
-	 * @param processId the process ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching workflow metrics sla definition
-	 * @throws NoSuchSLADefinitionException if a matching workflow metrics sla definition could not be found
-	 */
-	public WorkflowMetricsSLADefinition findByC_A_N_P_Last(
-			long companyId, boolean active, String name, long processId,
-			com.liferay.portal.kernel.util.OrderByComparator
-				<WorkflowMetricsSLADefinition> orderByComparator)
-		throws NoSuchSLADefinitionException;
-
-	/**
-	 * Returns the last workflow metrics sla definition in the ordered set where companyId = &#63; and active = &#63; and name = &#63; and processId = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param active the active
-	 * @param name the name
-	 * @param processId the process ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching workflow metrics sla definition, or <code>null</code> if a matching workflow metrics sla definition could not be found
-	 */
-	public WorkflowMetricsSLADefinition fetchByC_A_N_P_Last(
-		long companyId, boolean active, String name, long processId,
-		com.liferay.portal.kernel.util.OrderByComparator
-			<WorkflowMetricsSLADefinition> orderByComparator);
-
-	/**
-	 * Returns the workflow metrics sla definitions before and after the current workflow metrics sla definition in the ordered set where companyId = &#63; and active = &#63; and name = &#63; and processId = &#63;.
-	 *
-	 * @param workflowMetricsSLADefinitionId the primary key of the current workflow metrics sla definition
-	 * @param companyId the company ID
-	 * @param active the active
-	 * @param name the name
-	 * @param processId the process ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next workflow metrics sla definition
-	 * @throws NoSuchSLADefinitionException if a workflow metrics sla definition with the primary key could not be found
-	 */
-	public WorkflowMetricsSLADefinition[] findByC_A_N_P_PrevAndNext(
-			long workflowMetricsSLADefinitionId, long companyId, boolean active,
-			String name, long processId,
-			com.liferay.portal.kernel.util.OrderByComparator
-				<WorkflowMetricsSLADefinition> orderByComparator)
-		throws NoSuchSLADefinitionException;
-
-	/**
 	 * Removes all the workflow metrics sla definitions where companyId = &#63; and active = &#63; and name = &#63; and processId = &#63; from the database.
 	 *
 	 * @param companyId the company ID
@@ -943,63 +463,10 @@ public interface WorkflowMetricsSLADefinitionPersistence
 		long companyId, boolean active, String name, long processId);
 
 	/**
-	 * Returns all the workflow metrics sla definitions where companyId = &#63; and active = &#63; and processId = &#63; and status = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param active the active
-	 * @param processId the process ID
-	 * @param status the status
-	 * @return the matching workflow metrics sla definitions
-	 */
-	public java.util.List<WorkflowMetricsSLADefinition> findByC_A_P_S(
-		long companyId, boolean active, long processId, int status);
-
-	/**
-	 * Returns a range of all the workflow metrics sla definitions where companyId = &#63; and active = &#63; and processId = &#63; and status = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>WorkflowMetricsSLADefinitionModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param active the active
-	 * @param processId the process ID
-	 * @param status the status
-	 * @param start the lower bound of the range of workflow metrics sla definitions
-	 * @param end the upper bound of the range of workflow metrics sla definitions (not inclusive)
-	 * @return the range of matching workflow metrics sla definitions
-	 */
-	public java.util.List<WorkflowMetricsSLADefinition> findByC_A_P_S(
-		long companyId, boolean active, long processId, int status, int start,
-		int end);
-
-	/**
 	 * Returns an ordered range of all the workflow metrics sla definitions where companyId = &#63; and active = &#63; and processId = &#63; and status = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>WorkflowMetricsSLADefinitionModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param active the active
-	 * @param processId the process ID
-	 * @param status the status
-	 * @param start the lower bound of the range of workflow metrics sla definitions
-	 * @param end the upper bound of the range of workflow metrics sla definitions (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching workflow metrics sla definitions
-	 */
-	public java.util.List<WorkflowMetricsSLADefinition> findByC_A_P_S(
-		long companyId, boolean active, long processId, int status, int start,
-		int end,
-		com.liferay.portal.kernel.util.OrderByComparator
-			<WorkflowMetricsSLADefinition> orderByComparator);
-
-	/**
-	 * Returns an ordered range of all the workflow metrics sla definitions where companyId = &#63; and active = &#63; and processId = &#63; and status = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>WorkflowMetricsSLADefinitionModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.workflow.metrics.model.impl.WorkflowMetricsSLADefinitionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -1052,57 +519,6 @@ public interface WorkflowMetricsSLADefinitionPersistence
 			<WorkflowMetricsSLADefinition> orderByComparator);
 
 	/**
-	 * Returns the last workflow metrics sla definition in the ordered set where companyId = &#63; and active = &#63; and processId = &#63; and status = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param active the active
-	 * @param processId the process ID
-	 * @param status the status
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching workflow metrics sla definition
-	 * @throws NoSuchSLADefinitionException if a matching workflow metrics sla definition could not be found
-	 */
-	public WorkflowMetricsSLADefinition findByC_A_P_S_Last(
-			long companyId, boolean active, long processId, int status,
-			com.liferay.portal.kernel.util.OrderByComparator
-				<WorkflowMetricsSLADefinition> orderByComparator)
-		throws NoSuchSLADefinitionException;
-
-	/**
-	 * Returns the last workflow metrics sla definition in the ordered set where companyId = &#63; and active = &#63; and processId = &#63; and status = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param active the active
-	 * @param processId the process ID
-	 * @param status the status
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching workflow metrics sla definition, or <code>null</code> if a matching workflow metrics sla definition could not be found
-	 */
-	public WorkflowMetricsSLADefinition fetchByC_A_P_S_Last(
-		long companyId, boolean active, long processId, int status,
-		com.liferay.portal.kernel.util.OrderByComparator
-			<WorkflowMetricsSLADefinition> orderByComparator);
-
-	/**
-	 * Returns the workflow metrics sla definitions before and after the current workflow metrics sla definition in the ordered set where companyId = &#63; and active = &#63; and processId = &#63; and status = &#63;.
-	 *
-	 * @param workflowMetricsSLADefinitionId the primary key of the current workflow metrics sla definition
-	 * @param companyId the company ID
-	 * @param active the active
-	 * @param processId the process ID
-	 * @param status the status
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next workflow metrics sla definition
-	 * @throws NoSuchSLADefinitionException if a workflow metrics sla definition with the primary key could not be found
-	 */
-	public WorkflowMetricsSLADefinition[] findByC_A_P_S_PrevAndNext(
-			long workflowMetricsSLADefinitionId, long companyId, boolean active,
-			long processId, int status,
-			com.liferay.portal.kernel.util.OrderByComparator
-				<WorkflowMetricsSLADefinition> orderByComparator)
-		throws NoSuchSLADefinitionException;
-
-	/**
 	 * Removes all the workflow metrics sla definitions where companyId = &#63; and active = &#63; and processId = &#63; and status = &#63; from the database.
 	 *
 	 * @param companyId the company ID
@@ -1143,7 +559,7 @@ public interface WorkflowMetricsSLADefinitionPersistence
 	 * Returns a range of all the workflow metrics sla definitions where companyId = &#63; and active = &#63; and processId = &#63; and processVersion &ne; &#63; and status = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>WorkflowMetricsSLADefinitionModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.workflow.metrics.model.impl.WorkflowMetricsSLADefinitionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -1163,7 +579,7 @@ public interface WorkflowMetricsSLADefinitionPersistence
 	 * Returns an ordered range of all the workflow metrics sla definitions where companyId = &#63; and active = &#63; and processId = &#63; and processVersion &ne; &#63; and status = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>WorkflowMetricsSLADefinitionModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.workflow.metrics.model.impl.WorkflowMetricsSLADefinitionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -1186,7 +602,7 @@ public interface WorkflowMetricsSLADefinitionPersistence
 	 * Returns an ordered range of all the workflow metrics sla definitions where companyId = &#63; and active = &#63; and processId = &#63; and processVersion &ne; &#63; and status = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>WorkflowMetricsSLADefinitionModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.workflow.metrics.model.impl.WorkflowMetricsSLADefinitionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -1244,62 +660,6 @@ public interface WorkflowMetricsSLADefinitionPersistence
 			<WorkflowMetricsSLADefinition> orderByComparator);
 
 	/**
-	 * Returns the last workflow metrics sla definition in the ordered set where companyId = &#63; and active = &#63; and processId = &#63; and processVersion &ne; &#63; and status = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param active the active
-	 * @param processId the process ID
-	 * @param processVersion the process version
-	 * @param status the status
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching workflow metrics sla definition
-	 * @throws NoSuchSLADefinitionException if a matching workflow metrics sla definition could not be found
-	 */
-	public WorkflowMetricsSLADefinition findByC_A_P_NotPV_S_Last(
-			long companyId, boolean active, long processId,
-			String processVersion, int status,
-			com.liferay.portal.kernel.util.OrderByComparator
-				<WorkflowMetricsSLADefinition> orderByComparator)
-		throws NoSuchSLADefinitionException;
-
-	/**
-	 * Returns the last workflow metrics sla definition in the ordered set where companyId = &#63; and active = &#63; and processId = &#63; and processVersion &ne; &#63; and status = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param active the active
-	 * @param processId the process ID
-	 * @param processVersion the process version
-	 * @param status the status
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching workflow metrics sla definition, or <code>null</code> if a matching workflow metrics sla definition could not be found
-	 */
-	public WorkflowMetricsSLADefinition fetchByC_A_P_NotPV_S_Last(
-		long companyId, boolean active, long processId, String processVersion,
-		int status,
-		com.liferay.portal.kernel.util.OrderByComparator
-			<WorkflowMetricsSLADefinition> orderByComparator);
-
-	/**
-	 * Returns the workflow metrics sla definitions before and after the current workflow metrics sla definition in the ordered set where companyId = &#63; and active = &#63; and processId = &#63; and processVersion &ne; &#63; and status = &#63;.
-	 *
-	 * @param workflowMetricsSLADefinitionId the primary key of the current workflow metrics sla definition
-	 * @param companyId the company ID
-	 * @param active the active
-	 * @param processId the process ID
-	 * @param processVersion the process version
-	 * @param status the status
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next workflow metrics sla definition
-	 * @throws NoSuchSLADefinitionException if a workflow metrics sla definition with the primary key could not be found
-	 */
-	public WorkflowMetricsSLADefinition[] findByC_A_P_NotPV_S_PrevAndNext(
-			long workflowMetricsSLADefinitionId, long companyId, boolean active,
-			long processId, String processVersion, int status,
-			com.liferay.portal.kernel.util.OrderByComparator
-				<WorkflowMetricsSLADefinition> orderByComparator)
-		throws NoSuchSLADefinitionException;
-
-	/**
 	 * Removes all the workflow metrics sla definitions where companyId = &#63; and active = &#63; and processId = &#63; and processVersion &ne; &#63; and status = &#63; from the database.
 	 *
 	 * @param companyId the company ID
@@ -1325,23 +685,6 @@ public interface WorkflowMetricsSLADefinitionPersistence
 	public int countByC_A_P_NotPV_S(
 		long companyId, boolean active, long processId, String processVersion,
 		int status);
-
-	/**
-	 * Caches the workflow metrics sla definition in the entity cache if it is enabled.
-	 *
-	 * @param workflowMetricsSLADefinition the workflow metrics sla definition
-	 */
-	public void cacheResult(
-		WorkflowMetricsSLADefinition workflowMetricsSLADefinition);
-
-	/**
-	 * Caches the workflow metrics sla definitions in the entity cache if it is enabled.
-	 *
-	 * @param workflowMetricsSLADefinitions the workflow metrics sla definitions
-	 */
-	public void cacheResult(
-		java.util.List<WorkflowMetricsSLADefinition>
-			workflowMetricsSLADefinitions);
 
 	/**
 	 * Creates a new workflow metrics sla definition with the primary key. Does not add the workflow metrics sla definition to the database.
@@ -1387,72 +730,397 @@ public interface WorkflowMetricsSLADefinitionPersistence
 		long workflowMetricsSLADefinitionId);
 
 	/**
-	 * Returns all the workflow metrics sla definitions.
+	 * Returns the workflow metrics sla definition where uuid = &#63; and groupId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
 	 *
-	 * @return the workflow metrics sla definitions
+	 * @param uuid the uuid
+	 * @param groupId the group ID
+	 * @return the matching workflow metrics sla definition, or <code>null</code> if a matching workflow metrics sla definition could not be found
 	 */
-	public java.util.List<WorkflowMetricsSLADefinition> findAll();
+	public default WorkflowMetricsSLADefinition fetchByUUID_G(
+		String uuid, long groupId) {
+
+		return fetchByUUID_G(uuid, groupId, true);
+	}
 
 	/**
-	 * Returns a range of all the workflow metrics sla definitions.
+	 * Returns the workflow metrics sla definition where workflowMetricsSLADefinitionId = &#63; and active = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	 *
+	 * @param workflowMetricsSLADefinitionId the workflow metrics sla definition ID
+	 * @param active the active
+	 * @return the matching workflow metrics sla definition, or <code>null</code> if a matching workflow metrics sla definition could not be found
+	 */
+	public default WorkflowMetricsSLADefinition fetchByWMSLAD_A(
+		long workflowMetricsSLADefinitionId, boolean active) {
+
+		return fetchByWMSLAD_A(workflowMetricsSLADefinitionId, active, true);
+	}
+
+	/**
+	 * Returns all the workflow metrics sla definitions where uuid = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @return the matching workflow metrics sla definitions
+	 */
+	public default java.util.List<WorkflowMetricsSLADefinition> findByUuid(
+		String uuid) {
+
+		return findByUuid(
+			uuid, com.liferay.portal.kernel.dao.orm.QueryUtil.ALL_POS,
+			com.liferay.portal.kernel.dao.orm.QueryUtil.ALL_POS, null, true);
+	}
+
+	/**
+	 * Returns a range of all the workflow metrics sla definitions where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>WorkflowMetricsSLADefinitionModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.workflow.metrics.model.impl.WorkflowMetricsSLADefinitionModelImpl</code>.
 	 * </p>
 	 *
+	 * @param uuid the uuid
 	 * @param start the lower bound of the range of workflow metrics sla definitions
 	 * @param end the upper bound of the range of workflow metrics sla definitions (not inclusive)
-	 * @return the range of workflow metrics sla definitions
+	 * @return the range of matching workflow metrics sla definitions
 	 */
-	public java.util.List<WorkflowMetricsSLADefinition> findAll(
-		int start, int end);
+	public default java.util.List<WorkflowMetricsSLADefinition> findByUuid(
+		String uuid, int start, int end) {
+
+		return findByUuid(uuid, start, end, null, true);
+	}
 
 	/**
-	 * Returns an ordered range of all the workflow metrics sla definitions.
+	 * Returns an ordered range of all the workflow metrics sla definitions where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>WorkflowMetricsSLADefinitionModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.workflow.metrics.model.impl.WorkflowMetricsSLADefinitionModelImpl</code>.
 	 * </p>
 	 *
+	 * @param uuid the uuid
 	 * @param start the lower bound of the range of workflow metrics sla definitions
 	 * @param end the upper bound of the range of workflow metrics sla definitions (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of workflow metrics sla definitions
+	 * @return the ordered range of matching workflow metrics sla definitions
 	 */
-	public java.util.List<WorkflowMetricsSLADefinition> findAll(
-		int start, int end,
+	public default java.util.List<WorkflowMetricsSLADefinition> findByUuid(
+		String uuid, int start, int end,
 		com.liferay.portal.kernel.util.OrderByComparator
-			<WorkflowMetricsSLADefinition> orderByComparator);
+			<WorkflowMetricsSLADefinition> orderByComparator) {
+
+		return findByUuid(uuid, start, end, orderByComparator, true);
+	}
 
 	/**
-	 * Returns an ordered range of all the workflow metrics sla definitions.
+	 * Returns all the workflow metrics sla definitions where uuid = &#63; and companyId = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @return the matching workflow metrics sla definitions
+	 */
+	public default java.util.List<WorkflowMetricsSLADefinition> findByUuid_C(
+		String uuid, long companyId) {
+
+		return findByUuid_C(
+			uuid, companyId,
+			com.liferay.portal.kernel.dao.orm.QueryUtil.ALL_POS,
+			com.liferay.portal.kernel.dao.orm.QueryUtil.ALL_POS, null, true);
+	}
+
+	/**
+	 * Returns a range of all the workflow metrics sla definitions where uuid = &#63; and companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>WorkflowMetricsSLADefinitionModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.workflow.metrics.model.impl.WorkflowMetricsSLADefinitionModelImpl</code>.
 	 * </p>
 	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of workflow metrics sla definitions
+	 * @param end the upper bound of the range of workflow metrics sla definitions (not inclusive)
+	 * @return the range of matching workflow metrics sla definitions
+	 */
+	public default java.util.List<WorkflowMetricsSLADefinition> findByUuid_C(
+		String uuid, long companyId, int start, int end) {
+
+		return findByUuid_C(uuid, companyId, start, end, null, true);
+	}
+
+	/**
+	 * Returns an ordered range of all the workflow metrics sla definitions where uuid = &#63; and companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.workflow.metrics.model.impl.WorkflowMetricsSLADefinitionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
 	 * @param start the lower bound of the range of workflow metrics sla definitions
 	 * @param end the upper bound of the range of workflow metrics sla definitions (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param useFinderCache whether to use the finder cache
-	 * @return the ordered range of workflow metrics sla definitions
+	 * @return the ordered range of matching workflow metrics sla definitions
 	 */
-	public java.util.List<WorkflowMetricsSLADefinition> findAll(
-		int start, int end,
+	public default java.util.List<WorkflowMetricsSLADefinition> findByUuid_C(
+		String uuid, long companyId, int start, int end,
 		com.liferay.portal.kernel.util.OrderByComparator
-			<WorkflowMetricsSLADefinition> orderByComparator,
-		boolean useFinderCache);
+			<WorkflowMetricsSLADefinition> orderByComparator) {
+
+		return findByUuid_C(
+			uuid, companyId, start, end, orderByComparator, true);
+	}
 
 	/**
-	 * Removes all the workflow metrics sla definitions from the database.
-	 */
-	public void removeAll();
-
-	/**
-	 * Returns the number of workflow metrics sla definitions.
+	 * Returns all the workflow metrics sla definitions where companyId = &#63; and status = &#63;.
 	 *
-	 * @return the number of workflow metrics sla definitions
+	 * @param companyId the company ID
+	 * @param status the status
+	 * @return the matching workflow metrics sla definitions
 	 */
-	public int countAll();
+	public default java.util.List<WorkflowMetricsSLADefinition> findByC_S(
+		long companyId, int status) {
+
+		return findByC_S(
+			companyId, status,
+			com.liferay.portal.kernel.dao.orm.QueryUtil.ALL_POS,
+			com.liferay.portal.kernel.dao.orm.QueryUtil.ALL_POS, null, true);
+	}
+
+	/**
+	 * Returns a range of all the workflow metrics sla definitions where companyId = &#63; and status = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.workflow.metrics.model.impl.WorkflowMetricsSLADefinitionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param status the status
+	 * @param start the lower bound of the range of workflow metrics sla definitions
+	 * @param end the upper bound of the range of workflow metrics sla definitions (not inclusive)
+	 * @return the range of matching workflow metrics sla definitions
+	 */
+	public default java.util.List<WorkflowMetricsSLADefinition> findByC_S(
+		long companyId, int status, int start, int end) {
+
+		return findByC_S(companyId, status, start, end, null, true);
+	}
+
+	/**
+	 * Returns an ordered range of all the workflow metrics sla definitions where companyId = &#63; and status = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.workflow.metrics.model.impl.WorkflowMetricsSLADefinitionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param status the status
+	 * @param start the lower bound of the range of workflow metrics sla definitions
+	 * @param end the upper bound of the range of workflow metrics sla definitions (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching workflow metrics sla definitions
+	 */
+	public default java.util.List<WorkflowMetricsSLADefinition> findByC_S(
+		long companyId, int status, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator
+			<WorkflowMetricsSLADefinition> orderByComparator) {
+
+		return findByC_S(
+			companyId, status, start, end, orderByComparator, true);
+	}
+
+	/**
+	 * Returns all the workflow metrics sla definitions where companyId = &#63; and active = &#63; and processId = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param active the active
+	 * @param processId the process ID
+	 * @return the matching workflow metrics sla definitions
+	 */
+	public default java.util.List<WorkflowMetricsSLADefinition> findByC_A_P(
+		long companyId, boolean active, long processId) {
+
+		return findByC_A_P(
+			companyId, active, processId,
+			com.liferay.portal.kernel.dao.orm.QueryUtil.ALL_POS,
+			com.liferay.portal.kernel.dao.orm.QueryUtil.ALL_POS, null, true);
+	}
+
+	/**
+	 * Returns a range of all the workflow metrics sla definitions where companyId = &#63; and active = &#63; and processId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.workflow.metrics.model.impl.WorkflowMetricsSLADefinitionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param active the active
+	 * @param processId the process ID
+	 * @param start the lower bound of the range of workflow metrics sla definitions
+	 * @param end the upper bound of the range of workflow metrics sla definitions (not inclusive)
+	 * @return the range of matching workflow metrics sla definitions
+	 */
+	public default java.util.List<WorkflowMetricsSLADefinition> findByC_A_P(
+		long companyId, boolean active, long processId, int start, int end) {
+
+		return findByC_A_P(
+			companyId, active, processId, start, end, null, true);
+	}
+
+	/**
+	 * Returns an ordered range of all the workflow metrics sla definitions where companyId = &#63; and active = &#63; and processId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.workflow.metrics.model.impl.WorkflowMetricsSLADefinitionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param active the active
+	 * @param processId the process ID
+	 * @param start the lower bound of the range of workflow metrics sla definitions
+	 * @param end the upper bound of the range of workflow metrics sla definitions (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching workflow metrics sla definitions
+	 */
+	public default java.util.List<WorkflowMetricsSLADefinition> findByC_A_P(
+		long companyId, boolean active, long processId, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator
+			<WorkflowMetricsSLADefinition> orderByComparator) {
+
+		return findByC_A_P(
+			companyId, active, processId, start, end, orderByComparator, true);
+	}
+
+	/**
+	 * Returns all the workflow metrics sla definitions where companyId = &#63; and active = &#63; and name = &#63; and processId = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param active the active
+	 * @param name the name
+	 * @param processId the process ID
+	 * @return the matching workflow metrics sla definitions
+	 */
+	public default java.util.List<WorkflowMetricsSLADefinition> findByC_A_N_P(
+		long companyId, boolean active, String name, long processId) {
+
+		return findByC_A_N_P(
+			companyId, active, name, processId,
+			com.liferay.portal.kernel.dao.orm.QueryUtil.ALL_POS,
+			com.liferay.portal.kernel.dao.orm.QueryUtil.ALL_POS, null, true);
+	}
+
+	/**
+	 * Returns a range of all the workflow metrics sla definitions where companyId = &#63; and active = &#63; and name = &#63; and processId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.workflow.metrics.model.impl.WorkflowMetricsSLADefinitionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param active the active
+	 * @param name the name
+	 * @param processId the process ID
+	 * @param start the lower bound of the range of workflow metrics sla definitions
+	 * @param end the upper bound of the range of workflow metrics sla definitions (not inclusive)
+	 * @return the range of matching workflow metrics sla definitions
+	 */
+	public default java.util.List<WorkflowMetricsSLADefinition> findByC_A_N_P(
+		long companyId, boolean active, String name, long processId, int start,
+		int end) {
+
+		return findByC_A_N_P(
+			companyId, active, name, processId, start, end, null, true);
+	}
+
+	/**
+	 * Returns an ordered range of all the workflow metrics sla definitions where companyId = &#63; and active = &#63; and name = &#63; and processId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.workflow.metrics.model.impl.WorkflowMetricsSLADefinitionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param active the active
+	 * @param name the name
+	 * @param processId the process ID
+	 * @param start the lower bound of the range of workflow metrics sla definitions
+	 * @param end the upper bound of the range of workflow metrics sla definitions (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching workflow metrics sla definitions
+	 */
+	public default java.util.List<WorkflowMetricsSLADefinition> findByC_A_N_P(
+		long companyId, boolean active, String name, long processId, int start,
+		int end,
+		com.liferay.portal.kernel.util.OrderByComparator
+			<WorkflowMetricsSLADefinition> orderByComparator) {
+
+		return findByC_A_N_P(
+			companyId, active, name, processId, start, end, orderByComparator,
+			true);
+	}
+
+	/**
+	 * Returns all the workflow metrics sla definitions where companyId = &#63; and active = &#63; and processId = &#63; and status = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param active the active
+	 * @param processId the process ID
+	 * @param status the status
+	 * @return the matching workflow metrics sla definitions
+	 */
+	public default java.util.List<WorkflowMetricsSLADefinition> findByC_A_P_S(
+		long companyId, boolean active, long processId, int status) {
+
+		return findByC_A_P_S(
+			companyId, active, processId, status,
+			com.liferay.portal.kernel.dao.orm.QueryUtil.ALL_POS,
+			com.liferay.portal.kernel.dao.orm.QueryUtil.ALL_POS, null, true);
+	}
+
+	/**
+	 * Returns a range of all the workflow metrics sla definitions where companyId = &#63; and active = &#63; and processId = &#63; and status = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.workflow.metrics.model.impl.WorkflowMetricsSLADefinitionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param active the active
+	 * @param processId the process ID
+	 * @param status the status
+	 * @param start the lower bound of the range of workflow metrics sla definitions
+	 * @param end the upper bound of the range of workflow metrics sla definitions (not inclusive)
+	 * @return the range of matching workflow metrics sla definitions
+	 */
+	public default java.util.List<WorkflowMetricsSLADefinition> findByC_A_P_S(
+		long companyId, boolean active, long processId, int status, int start,
+		int end) {
+
+		return findByC_A_P_S(
+			companyId, active, processId, status, start, end, null, true);
+	}
+
+	/**
+	 * Returns an ordered range of all the workflow metrics sla definitions where companyId = &#63; and active = &#63; and processId = &#63; and status = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.workflow.metrics.model.impl.WorkflowMetricsSLADefinitionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param active the active
+	 * @param processId the process ID
+	 * @param status the status
+	 * @param start the lower bound of the range of workflow metrics sla definitions
+	 * @param end the upper bound of the range of workflow metrics sla definitions (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching workflow metrics sla definitions
+	 */
+	public default java.util.List<WorkflowMetricsSLADefinition> findByC_A_P_S(
+		long companyId, boolean active, long processId, int status, int start,
+		int end,
+		com.liferay.portal.kernel.util.OrderByComparator
+			<WorkflowMetricsSLADefinition> orderByComparator) {
+
+		return findByC_A_P_S(
+			companyId, active, processId, status, start, end, orderByComparator,
+			true);
+	}
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-912480248

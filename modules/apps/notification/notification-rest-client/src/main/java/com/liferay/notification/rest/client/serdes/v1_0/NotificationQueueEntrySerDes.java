@@ -558,3 +558,4 @@ public class NotificationQueueEntrySerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-84282449

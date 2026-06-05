@@ -6,15 +6,15 @@
 import {expect, mergeTests} from '@playwright/test';
 
 import {apiHelpersTest} from '../../../../fixtures/apiHelpersTest';
-import {applicationsMenuPageTest} from '../../../../fixtures/applicationsMenuPageTest';
 import {commercePagesTest} from '../../../../fixtures/commercePagesTest';
 import {dataApiHelpersTest} from '../../../../fixtures/dataApiHelpersTest';
+import {globalMenuPagesTest} from '../../../../fixtures/globalMenuPagesTest';
 import {loginTest} from '../../../../fixtures/loginTest';
 import {waitForAlert} from '../../../../utils/waitForAlert';
 
 export const test = mergeTests(
 	apiHelpersTest,
-	applicationsMenuPageTest,
+	globalMenuPagesTest,
 	commercePagesTest,
 	dataApiHelpersTest,
 	loginTest()
@@ -22,8 +22,8 @@ export const test = mergeTests(
 
 test('LPD-21637 Virtual item details section visible for product and sku', async ({
 	apiHelpers,
-	applicationsMenuPage,
 	commerceAdminProductPage,
+	globalMenuPage,
 	page,
 }) => {
 	const catalog = await apiHelpers.headlessCommerceAdminCatalog.postCatalog();
@@ -43,7 +43,7 @@ test('LPD-21637 Virtual item details section visible for product and sku', async
 			],
 		});
 
-	await applicationsMenuPage.goToProducts();
+	await globalMenuPage.goToCommerce('Products');
 
 	await commerceAdminProductPage.managementToolbarSearchInput.fill(
 		virtualProduct.name.en_US

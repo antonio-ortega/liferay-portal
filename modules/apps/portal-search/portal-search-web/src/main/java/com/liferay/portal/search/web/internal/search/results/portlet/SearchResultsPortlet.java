@@ -27,7 +27,6 @@ import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.search.legacy.document.DocumentBuilderFactory;
 import com.liferay.portal.search.searcher.SearchRequest;
 import com.liferay.portal.search.searcher.SearchResponse;
 import com.liferay.portal.search.summary.SummaryBuilderFactory;
@@ -112,10 +111,6 @@ public class SearchResultsPortlet extends MVCPortlet {
 		super.render(renderRequest, renderResponse);
 	}
 
-	protected String getCurrentURL(RenderRequest renderRequest) {
-		return _portal.getCurrentURL(renderRequest);
-	}
-
 	protected HttpServletRequest getHttpServletRequest(
 		RenderRequest renderRequest) {
 
@@ -169,9 +164,6 @@ public class SearchResultsPortlet extends MVCPortlet {
 	protected AssetEntryLocalService assetEntryLocalService;
 
 	protected AssetRendererFactoryLookup assetRendererFactoryLookup;
-
-	@Reference
-	protected DocumentBuilderFactory documentBuilderFactory;
 
 	@Reference
 	protected FastDateFormatFactory fastDateFormatFactory;
@@ -333,12 +325,8 @@ public class SearchResultsPortlet extends MVCPortlet {
 			assetRendererFactoryLookup
 		).setClassNameLocalService(
 			_classNameLocalService
-		).setCurrentURL(
-			getCurrentURL(renderRequest)
 		).setDocument(
 			document
-		).setDocumentBuilderFactory(
-			documentBuilderFactory
 		).setFastDateFormatFactory(
 			fastDateFormatFactory
 		).setGroupLocalService(

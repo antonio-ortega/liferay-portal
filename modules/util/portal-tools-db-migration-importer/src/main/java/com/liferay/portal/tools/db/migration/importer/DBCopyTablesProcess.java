@@ -5,11 +5,12 @@
 
 package com.liferay.portal.tools.db.migration.importer;
 
+import com.liferay.petra.io.unsync.UnsyncBufferedReader;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.dao.jdbc.postgresql.PostgreSQLJDBCUtil;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.io.unsync.UnsyncBufferedReader;
 import com.liferay.portal.kernel.module.framework.ThrowableCollector;
 import com.liferay.portal.kernel.util.Base64;
 import com.liferay.portal.kernel.util.DateUtil;
@@ -47,6 +48,7 @@ import java.util.TreeSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.sql.DataSource;
 
@@ -58,8 +60,22 @@ public class DBCopyTablesProcess {
 	public DBCopyTablesProcess(
 		DataSource sourceDataSource, DataSource targetDataSource) {
 
+		this(null, sourceDataSource, targetDataSource);
+	}
+
+	public DBCopyTablesProcess(
+		String partitionName, DataSource sourceDataSource,
+		DataSource targetDataSource) {
+
 		_sourceDataSource = sourceDataSource;
 		_targetDataSource = targetDataSource;
+
+		if (partitionName == null) {
+			_partitionMessage = " in the default schema";
+		}
+		else {
+			_partitionMessage = " in partition " + partitionName;
+		}
 	}
 
 	public void run() throws Exception {
@@ -76,14 +92,7 @@ public class DBCopyTablesProcess {
 		List<String> targetColumnNames = _targetColumnNamesMap.get(
 			targetTableName);
 
-		if (sourceColumnNames.size() > targetColumnNames.size()) {
-			throw new IllegalStateException(
-				StringBundler.concat(
-					"Source table ", targetTableName, " has ",
-					sourceColumnNames.size(), " but target table name has ",
-					targetColumnNames.size(), " columns"));
-		}
-		else if (sourceColumnNames.size() < targetColumnNames.size()) {
+		if (sourceColumnNames.size() < targetColumnNames.size()) {
 			Set<String> sourceColumnNamesSet = new TreeSet<String>(
 				String.CASE_INSENSITIVE_ORDER) {
 
@@ -151,6 +160,9 @@ public class DBCopyTablesProcess {
 
 		targetTableNames.retainAll(sourceTableNames);
 
+		_validateTables(sourceTableNames, targetTableNames);
+
+		AtomicInteger count = new AtomicInteger();
 		Iterator<String> sourceIterator = sourceTableNames.iterator();
 		Iterator<String> targetIterator = targetTableNames.iterator();
 
@@ -165,6 +177,14 @@ public class DBCopyTablesProcess {
 					() -> {
 						try {
 							_copyTable(sourceTableName, targetTableName);
+
+							if ((count.incrementAndGet() % 10) == 0) {
+								System.out.println(
+									StringBundler.concat(
+										"Copied ", count, " tables out of ",
+										sourceTableNames.size(),
+										_partitionMessage));
+							}
 						}
 						catch (Exception exception) {
 							throwableCollector.collect(exception);
@@ -175,6 +195,8 @@ public class DBCopyTablesProcess {
 		for (Future<?> future : futures) {
 			future.get();
 		}
+
+		System.out.println("All tables copied" + _partitionMessage);
 
 		Throwable throwable = throwableCollector.getThrowable();
 
@@ -286,6 +308,7 @@ public class DBCopyTablesProcess {
 			}
 
 			try (Reader reader = value.getCharacterStream();
+
 				UnsyncBufferedReader unsyncBufferedReader =
 					new UnsyncBufferedReader(reader)) {
 
@@ -383,7 +406,7 @@ public class DBCopyTablesProcess {
 			if ((targetType == Types.LONGNVARCHAR) ||
 				(targetType == Types.VARCHAR)) {
 
-				preparedStatement.setString(index, value);
+				preparedStatement.setString(index, _getSanitizedString(value));
 
 				return;
 			}
@@ -425,6 +448,10 @@ public class DBCopyTablesProcess {
 		}
 
 		_setColumn(index, preparedStatement, targetType, valueString);
+	}
+
+	private String _getSanitizedString(String value) {
+		return StringUtil.removeSubstring(value, StringPool.NULL_CHAR);
 	}
 
 	private Set<String> _getViews(DataSource dataSource) throws Exception {
@@ -512,7 +539,7 @@ public class DBCopyTablesProcess {
 		else if ((targetType == Types.LONGVARCHAR) ||
 				 (targetType == Types.VARCHAR)) {
 
-			preparedStatement.setString(index, value);
+			preparedStatement.setString(index, _getSanitizedString(value));
 		}
 		else if (targetType == Types.DOUBLE) {
 			preparedStatement.setDouble(index, GetterUtil.getDouble(value));
@@ -537,8 +564,45 @@ public class DBCopyTablesProcess {
 		}
 	}
 
+	private void _validateTables(
+		Set<String> sourceTableNames, Set<String> targetTableNames) {
+
+		StringBundler sb = new StringBundler();
+
+		Iterator<String> sourceIterator = sourceTableNames.iterator();
+		Iterator<String> targetIterator = targetTableNames.iterator();
+
+		while (sourceIterator.hasNext()) {
+			String sourceTableName = sourceIterator.next();
+			String targetTableName = targetIterator.next();
+
+			List<String> sourceColumnNames = _sourceColumnNamesMap.get(
+				sourceTableName);
+			List<String> targetColumnNames = _targetColumnNamesMap.get(
+				targetTableName);
+
+			if (sourceColumnNames.size() > targetColumnNames.size()) {
+				sb.append("Source table ");
+				sb.append(sourceTableName);
+				sb.append(" has ");
+				sb.append(sourceColumnNames.size());
+				sb.append(" columns, but target table ");
+				sb.append(targetTableName);
+				sb.append(" has only ");
+				sb.append(targetColumnNames.size());
+				sb.append(_partitionMessage);
+				sb.append(StringPool.NEW_LINE);
+			}
+		}
+
+		if (sb.length() > 0) {
+			throw new IllegalArgumentException(sb.toString());
+		}
+	}
+
 	private static final int _SQL_TYPE_ORACLE_BINARY_DOUBLE = 101;
 
+	private final String _partitionMessage;
 	private final Map<String, List<String>> _sourceColumnNamesMap =
 		new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 	private final Map<String, Integer> _sourceColumnsType = new HashMap<>();

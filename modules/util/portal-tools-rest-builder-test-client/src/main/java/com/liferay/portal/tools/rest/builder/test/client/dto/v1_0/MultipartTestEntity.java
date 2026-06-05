@@ -139,3 +139,4 @@ public class MultipartTestEntity implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1288027102

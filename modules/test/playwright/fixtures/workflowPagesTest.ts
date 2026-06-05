@@ -26,11 +26,17 @@ import {ProcessMetricsPage} from '../pages/portal-workflow-metrics-web/ProcessMe
 import {WorkflowTaskDetailsPage} from '../pages/portal-workflow-task-web/WorkflowTaskDetailsPage';
 import {WorkflowTasksPage} from '../pages/portal-workflow-task-web/WorkflowTasksPage';
 import {WorkflowPage} from '../pages/portal-workflow-web/WorkflowPage';
+import {GlobalMenuPage} from '../pages/product-navigation-applications-menu/GlobalMenuPage';
+import {PersonalMenuPage} from '../pages/users-admin-web/PersonalMenuPage';
 
 const workflowPagesTest = test.extend<{
 	actionPage: ActionPage;
 	actionReassignmentPage: ActionReassignmentPage;
 	allItemsPage: AllItemsPage;
+	assignWorkflowToAssetType: (
+		workflowDefinitionName: string,
+		assetType: string
+	) => Promise<void>;
 	conditionNode: ConditionNode;
 	configurationTabPage: ConfigurationTabPage;
 	definitionInfoPage: DefinitionInfoPage;
@@ -40,6 +46,7 @@ const workflowPagesTest = test.extend<{
 	notificationSectionPage: NotificationSectionPage;
 	performanceByAssigneePage: PerformanceByAssigneePage;
 	performanceByStepPage: PerformanceByStepPage;
+	personalMenuPage: PersonalMenuPage;
 	processBuilderPage: ProcessBuilderPage;
 	processMetricsPage: ProcessMetricsPage;
 	scriptManagementPage: ScriptManagementPage;
@@ -58,6 +65,31 @@ const workflowPagesTest = test.extend<{
 	},
 	allItemsPage: async ({page}, use) => {
 		await use(new AllItemsPage(page));
+	},
+	assignWorkflowToAssetType: async ({configurationTabPage, page}, use) => {
+		const assignedAssetTypes: string[] = [];
+		const globalMenuPage = new GlobalMenuPage(page);
+
+		await use(async (workflowDefinitionName, assetType) => {
+			await globalMenuPage.goToApplications('Process Builder');
+
+			await configurationTabPage.configurationTabLink.click();
+
+			await configurationTabPage.assignWorkflowToAssetType(
+				workflowDefinitionName,
+				assetType
+			);
+
+			assignedAssetTypes.push(assetType);
+		});
+
+		for (const assetType of assignedAssetTypes.reverse()) {
+			await globalMenuPage.goToApplications('Process Builder');
+
+			await configurationTabPage.configurationTabLink.click();
+
+			await configurationTabPage.unassignWorkflowFromAssetType(assetType);
+		}
 	},
 	conditionNode: async ({page}, use) => {
 		await use(new ConditionNode(page));
@@ -85,6 +117,9 @@ const workflowPagesTest = test.extend<{
 	},
 	performanceByStepPage: async ({page}, use) => {
 		await use(new PerformanceByStepPage(page));
+	},
+	personalMenuPage: async ({page}, use) => {
+		await use(new PersonalMenuPage(page));
 	},
 	processBuilderPage: async ({page}, use) => {
 		await use(new ProcessBuilderPage(page));

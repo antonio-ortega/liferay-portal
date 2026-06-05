@@ -36,6 +36,20 @@ public class SystemEventUtil {
 	 */
 
 	/**
+	 * @see BasePersistence#cacheResult(List)
+	 */
+	public static void cacheResult(List<SystemEvent> systemEvents) {
+		getPersistence().cacheResult(systemEvents);
+	}
+
+	/**
+	 * @see BasePersistence#cacheResult(com.liferay.portal.kernel.model.BaseModel)
+	 */
+	public static void cacheResult(SystemEvent systemEvent) {
+		getPersistence().cacheResult(systemEvent);
+	}
+
+	/**
 	 * @see BasePersistence#clearCache()
 	 */
 	public static void clearCache() {
@@ -111,59 +125,10 @@ public class SystemEventUtil {
 	}
 
 	/**
-	 * Returns all the system events where groupId = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @return the matching system events
-	 */
-	public static List<SystemEvent> findByGroupId(long groupId) {
-		return getPersistence().findByGroupId(groupId);
-	}
-
-	/**
-	 * Returns a range of all the system events where groupId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SystemEventModelImpl</code>.
-	 * </p>
-	 *
-	 * @param groupId the group ID
-	 * @param start the lower bound of the range of system events
-	 * @param end the upper bound of the range of system events (not inclusive)
-	 * @return the range of matching system events
-	 */
-	public static List<SystemEvent> findByGroupId(
-		long groupId, int start, int end) {
-
-		return getPersistence().findByGroupId(groupId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the system events where groupId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SystemEventModelImpl</code>.
-	 * </p>
-	 *
-	 * @param groupId the group ID
-	 * @param start the lower bound of the range of system events
-	 * @param end the upper bound of the range of system events (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching system events
-	 */
-	public static List<SystemEvent> findByGroupId(
-		long groupId, int start, int end,
-		OrderByComparator<SystemEvent> orderByComparator) {
-
-		return getPersistence().findByGroupId(
-			groupId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the system events where groupId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SystemEventModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.model.impl.SystemEventModelImpl</code>.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -212,52 +177,6 @@ public class SystemEventUtil {
 	}
 
 	/**
-	 * Returns the last system event in the ordered set where groupId = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching system event
-	 * @throws NoSuchSystemEventException if a matching system event could not be found
-	 */
-	public static SystemEvent findByGroupId_Last(
-			long groupId, OrderByComparator<SystemEvent> orderByComparator)
-		throws com.liferay.portal.kernel.exception.NoSuchSystemEventException {
-
-		return getPersistence().findByGroupId_Last(groupId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last system event in the ordered set where groupId = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching system event, or <code>null</code> if a matching system event could not be found
-	 */
-	public static SystemEvent fetchByGroupId_Last(
-		long groupId, OrderByComparator<SystemEvent> orderByComparator) {
-
-		return getPersistence().fetchByGroupId_Last(groupId, orderByComparator);
-	}
-
-	/**
-	 * Returns the system events before and after the current system event in the ordered set where groupId = &#63;.
-	 *
-	 * @param systemEventId the primary key of the current system event
-	 * @param groupId the group ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next system event
-	 * @throws NoSuchSystemEventException if a system event with the primary key could not be found
-	 */
-	public static SystemEvent[] findByGroupId_PrevAndNext(
-			long systemEventId, long groupId,
-			OrderByComparator<SystemEvent> orderByComparator)
-		throws com.liferay.portal.kernel.exception.NoSuchSystemEventException {
-
-		return getPersistence().findByGroupId_PrevAndNext(
-			systemEventId, groupId, orderByComparator);
-	}
-
-	/**
 	 * Removes all the system events where groupId = &#63; from the database.
 	 *
 	 * @param groupId the group ID
@@ -277,65 +196,10 @@ public class SystemEventUtil {
 	}
 
 	/**
-	 * Returns all the system events where groupId = &#63; and systemEventSetKey = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param systemEventSetKey the system event set key
-	 * @return the matching system events
-	 */
-	public static List<SystemEvent> findByG_S(
-		long groupId, long systemEventSetKey) {
-
-		return getPersistence().findByG_S(groupId, systemEventSetKey);
-	}
-
-	/**
-	 * Returns a range of all the system events where groupId = &#63; and systemEventSetKey = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SystemEventModelImpl</code>.
-	 * </p>
-	 *
-	 * @param groupId the group ID
-	 * @param systemEventSetKey the system event set key
-	 * @param start the lower bound of the range of system events
-	 * @param end the upper bound of the range of system events (not inclusive)
-	 * @return the range of matching system events
-	 */
-	public static List<SystemEvent> findByG_S(
-		long groupId, long systemEventSetKey, int start, int end) {
-
-		return getPersistence().findByG_S(
-			groupId, systemEventSetKey, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the system events where groupId = &#63; and systemEventSetKey = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SystemEventModelImpl</code>.
-	 * </p>
-	 *
-	 * @param groupId the group ID
-	 * @param systemEventSetKey the system event set key
-	 * @param start the lower bound of the range of system events
-	 * @param end the upper bound of the range of system events (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching system events
-	 */
-	public static List<SystemEvent> findByG_S(
-		long groupId, long systemEventSetKey, int start, int end,
-		OrderByComparator<SystemEvent> orderByComparator) {
-
-		return getPersistence().findByG_S(
-			groupId, systemEventSetKey, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the system events where groupId = &#63; and systemEventSetKey = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SystemEventModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.model.impl.SystemEventModelImpl</code>.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -391,59 +255,6 @@ public class SystemEventUtil {
 	}
 
 	/**
-	 * Returns the last system event in the ordered set where groupId = &#63; and systemEventSetKey = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param systemEventSetKey the system event set key
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching system event
-	 * @throws NoSuchSystemEventException if a matching system event could not be found
-	 */
-	public static SystemEvent findByG_S_Last(
-			long groupId, long systemEventSetKey,
-			OrderByComparator<SystemEvent> orderByComparator)
-		throws com.liferay.portal.kernel.exception.NoSuchSystemEventException {
-
-		return getPersistence().findByG_S_Last(
-			groupId, systemEventSetKey, orderByComparator);
-	}
-
-	/**
-	 * Returns the last system event in the ordered set where groupId = &#63; and systemEventSetKey = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param systemEventSetKey the system event set key
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching system event, or <code>null</code> if a matching system event could not be found
-	 */
-	public static SystemEvent fetchByG_S_Last(
-		long groupId, long systemEventSetKey,
-		OrderByComparator<SystemEvent> orderByComparator) {
-
-		return getPersistence().fetchByG_S_Last(
-			groupId, systemEventSetKey, orderByComparator);
-	}
-
-	/**
-	 * Returns the system events before and after the current system event in the ordered set where groupId = &#63; and systemEventSetKey = &#63;.
-	 *
-	 * @param systemEventId the primary key of the current system event
-	 * @param groupId the group ID
-	 * @param systemEventSetKey the system event set key
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next system event
-	 * @throws NoSuchSystemEventException if a system event with the primary key could not be found
-	 */
-	public static SystemEvent[] findByG_S_PrevAndNext(
-			long systemEventId, long groupId, long systemEventSetKey,
-			OrderByComparator<SystemEvent> orderByComparator)
-		throws com.liferay.portal.kernel.exception.NoSuchSystemEventException {
-
-		return getPersistence().findByG_S_PrevAndNext(
-			systemEventId, groupId, systemEventSetKey, orderByComparator);
-	}
-
-	/**
 	 * Removes all the system events where groupId = &#63; and systemEventSetKey = &#63; from the database.
 	 *
 	 * @param groupId the group ID
@@ -465,68 +276,10 @@ public class SystemEventUtil {
 	}
 
 	/**
-	 * Returns all the system events where groupId = &#63; and classNameId = &#63; and classPK = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param classNameId the class name ID
-	 * @param classPK the class pk
-	 * @return the matching system events
-	 */
-	public static List<SystemEvent> findByG_C_C(
-		long groupId, long classNameId, long classPK) {
-
-		return getPersistence().findByG_C_C(groupId, classNameId, classPK);
-	}
-
-	/**
-	 * Returns a range of all the system events where groupId = &#63; and classNameId = &#63; and classPK = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SystemEventModelImpl</code>.
-	 * </p>
-	 *
-	 * @param groupId the group ID
-	 * @param classNameId the class name ID
-	 * @param classPK the class pk
-	 * @param start the lower bound of the range of system events
-	 * @param end the upper bound of the range of system events (not inclusive)
-	 * @return the range of matching system events
-	 */
-	public static List<SystemEvent> findByG_C_C(
-		long groupId, long classNameId, long classPK, int start, int end) {
-
-		return getPersistence().findByG_C_C(
-			groupId, classNameId, classPK, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the system events where groupId = &#63; and classNameId = &#63; and classPK = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SystemEventModelImpl</code>.
-	 * </p>
-	 *
-	 * @param groupId the group ID
-	 * @param classNameId the class name ID
-	 * @param classPK the class pk
-	 * @param start the lower bound of the range of system events
-	 * @param end the upper bound of the range of system events (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching system events
-	 */
-	public static List<SystemEvent> findByG_C_C(
-		long groupId, long classNameId, long classPK, int start, int end,
-		OrderByComparator<SystemEvent> orderByComparator) {
-
-		return getPersistence().findByG_C_C(
-			groupId, classNameId, classPK, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the system events where groupId = &#63; and classNameId = &#63; and classPK = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SystemEventModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.model.impl.SystemEventModelImpl</code>.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -585,62 +338,6 @@ public class SystemEventUtil {
 	}
 
 	/**
-	 * Returns the last system event in the ordered set where groupId = &#63; and classNameId = &#63; and classPK = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param classNameId the class name ID
-	 * @param classPK the class pk
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching system event
-	 * @throws NoSuchSystemEventException if a matching system event could not be found
-	 */
-	public static SystemEvent findByG_C_C_Last(
-			long groupId, long classNameId, long classPK,
-			OrderByComparator<SystemEvent> orderByComparator)
-		throws com.liferay.portal.kernel.exception.NoSuchSystemEventException {
-
-		return getPersistence().findByG_C_C_Last(
-			groupId, classNameId, classPK, orderByComparator);
-	}
-
-	/**
-	 * Returns the last system event in the ordered set where groupId = &#63; and classNameId = &#63; and classPK = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param classNameId the class name ID
-	 * @param classPK the class pk
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching system event, or <code>null</code> if a matching system event could not be found
-	 */
-	public static SystemEvent fetchByG_C_C_Last(
-		long groupId, long classNameId, long classPK,
-		OrderByComparator<SystemEvent> orderByComparator) {
-
-		return getPersistence().fetchByG_C_C_Last(
-			groupId, classNameId, classPK, orderByComparator);
-	}
-
-	/**
-	 * Returns the system events before and after the current system event in the ordered set where groupId = &#63; and classNameId = &#63; and classPK = &#63;.
-	 *
-	 * @param systemEventId the primary key of the current system event
-	 * @param groupId the group ID
-	 * @param classNameId the class name ID
-	 * @param classPK the class pk
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next system event
-	 * @throws NoSuchSystemEventException if a system event with the primary key could not be found
-	 */
-	public static SystemEvent[] findByG_C_C_PrevAndNext(
-			long systemEventId, long groupId, long classNameId, long classPK,
-			OrderByComparator<SystemEvent> orderByComparator)
-		throws com.liferay.portal.kernel.exception.NoSuchSystemEventException {
-
-		return getPersistence().findByG_C_C_PrevAndNext(
-			systemEventId, groupId, classNameId, classPK, orderByComparator);
-	}
-
-	/**
 	 * Removes all the system events where groupId = &#63; and classNameId = &#63; and classPK = &#63; from the database.
 	 *
 	 * @param groupId the group ID
@@ -668,73 +365,10 @@ public class SystemEventUtil {
 	}
 
 	/**
-	 * Returns all the system events where groupId = &#63; and classNameId = &#63; and classPK = &#63; and type = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param classNameId the class name ID
-	 * @param classPK the class pk
-	 * @param type the type
-	 * @return the matching system events
-	 */
-	public static List<SystemEvent> findByG_C_C_T(
-		long groupId, long classNameId, long classPK, int type) {
-
-		return getPersistence().findByG_C_C_T(
-			groupId, classNameId, classPK, type);
-	}
-
-	/**
-	 * Returns a range of all the system events where groupId = &#63; and classNameId = &#63; and classPK = &#63; and type = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SystemEventModelImpl</code>.
-	 * </p>
-	 *
-	 * @param groupId the group ID
-	 * @param classNameId the class name ID
-	 * @param classPK the class pk
-	 * @param type the type
-	 * @param start the lower bound of the range of system events
-	 * @param end the upper bound of the range of system events (not inclusive)
-	 * @return the range of matching system events
-	 */
-	public static List<SystemEvent> findByG_C_C_T(
-		long groupId, long classNameId, long classPK, int type, int start,
-		int end) {
-
-		return getPersistence().findByG_C_C_T(
-			groupId, classNameId, classPK, type, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the system events where groupId = &#63; and classNameId = &#63; and classPK = &#63; and type = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SystemEventModelImpl</code>.
-	 * </p>
-	 *
-	 * @param groupId the group ID
-	 * @param classNameId the class name ID
-	 * @param classPK the class pk
-	 * @param type the type
-	 * @param start the lower bound of the range of system events
-	 * @param end the upper bound of the range of system events (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching system events
-	 */
-	public static List<SystemEvent> findByG_C_C_T(
-		long groupId, long classNameId, long classPK, int type, int start,
-		int end, OrderByComparator<SystemEvent> orderByComparator) {
-
-		return getPersistence().findByG_C_C_T(
-			groupId, classNameId, classPK, type, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the system events where groupId = &#63; and classNameId = &#63; and classPK = &#63; and type = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SystemEventModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.model.impl.SystemEventModelImpl</code>.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -796,66 +430,6 @@ public class SystemEventUtil {
 	}
 
 	/**
-	 * Returns the last system event in the ordered set where groupId = &#63; and classNameId = &#63; and classPK = &#63; and type = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param classNameId the class name ID
-	 * @param classPK the class pk
-	 * @param type the type
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching system event
-	 * @throws NoSuchSystemEventException if a matching system event could not be found
-	 */
-	public static SystemEvent findByG_C_C_T_Last(
-			long groupId, long classNameId, long classPK, int type,
-			OrderByComparator<SystemEvent> orderByComparator)
-		throws com.liferay.portal.kernel.exception.NoSuchSystemEventException {
-
-		return getPersistence().findByG_C_C_T_Last(
-			groupId, classNameId, classPK, type, orderByComparator);
-	}
-
-	/**
-	 * Returns the last system event in the ordered set where groupId = &#63; and classNameId = &#63; and classPK = &#63; and type = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param classNameId the class name ID
-	 * @param classPK the class pk
-	 * @param type the type
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching system event, or <code>null</code> if a matching system event could not be found
-	 */
-	public static SystemEvent fetchByG_C_C_T_Last(
-		long groupId, long classNameId, long classPK, int type,
-		OrderByComparator<SystemEvent> orderByComparator) {
-
-		return getPersistence().fetchByG_C_C_T_Last(
-			groupId, classNameId, classPK, type, orderByComparator);
-	}
-
-	/**
-	 * Returns the system events before and after the current system event in the ordered set where groupId = &#63; and classNameId = &#63; and classPK = &#63; and type = &#63;.
-	 *
-	 * @param systemEventId the primary key of the current system event
-	 * @param groupId the group ID
-	 * @param classNameId the class name ID
-	 * @param classPK the class pk
-	 * @param type the type
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next system event
-	 * @throws NoSuchSystemEventException if a system event with the primary key could not be found
-	 */
-	public static SystemEvent[] findByG_C_C_T_PrevAndNext(
-			long systemEventId, long groupId, long classNameId, long classPK,
-			int type, OrderByComparator<SystemEvent> orderByComparator)
-		throws com.liferay.portal.kernel.exception.NoSuchSystemEventException {
-
-		return getPersistence().findByG_C_C_T_PrevAndNext(
-			systemEventId, groupId, classNameId, classPK, type,
-			orderByComparator);
-	}
-
-	/**
 	 * Removes all the system events where groupId = &#63; and classNameId = &#63; and classPK = &#63; and type = &#63; from the database.
 	 *
 	 * @param groupId the group ID
@@ -883,24 +457,6 @@ public class SystemEventUtil {
 
 		return getPersistence().countByG_C_C_T(
 			groupId, classNameId, classPK, type);
-	}
-
-	/**
-	 * Caches the system event in the entity cache if it is enabled.
-	 *
-	 * @param systemEvent the system event
-	 */
-	public static void cacheResult(SystemEvent systemEvent) {
-		getPersistence().cacheResult(systemEvent);
-	}
-
-	/**
-	 * Caches the system events in the entity cache if it is enabled.
-	 *
-	 * @param systemEvents the system events
-	 */
-	public static void cacheResult(List<SystemEvent> systemEvents) {
-		getPersistence().cacheResult(systemEvents);
 	}
 
 	/**
@@ -954,82 +510,228 @@ public class SystemEventUtil {
 	}
 
 	/**
-	 * Returns all the system events.
+	 * Returns all the system events where groupId = &#63;.
 	 *
-	 * @return the system events
+	 * @param groupId the group ID
+	 * @return the matching system events
 	 */
-	public static List<SystemEvent> findAll() {
-		return getPersistence().findAll();
+	public static List<SystemEvent> findByGroupId(long groupId) {
+		return getPersistence().findByGroupId(groupId);
 	}
 
 	/**
-	 * Returns a range of all the system events.
+	 * Returns a range of all the system events where groupId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SystemEventModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.model.impl.SystemEventModelImpl</code>.
 	 * </p>
 	 *
+	 * @param groupId the group ID
 	 * @param start the lower bound of the range of system events
 	 * @param end the upper bound of the range of system events (not inclusive)
-	 * @return the range of system events
+	 * @return the range of matching system events
 	 */
-	public static List<SystemEvent> findAll(int start, int end) {
-		return getPersistence().findAll(start, end);
+	public static List<SystemEvent> findByGroupId(
+		long groupId, int start, int end) {
+
+		return getPersistence().findByGroupId(groupId, start, end);
 	}
 
 	/**
-	 * Returns an ordered range of all the system events.
+	 * Returns an ordered range of all the system events where groupId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SystemEventModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.model.impl.SystemEventModelImpl</code>.
 	 * </p>
 	 *
-	 * @param start the lower bound of the range of system events
-	 * @param end the upper bound of the range of system events (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of system events
-	 */
-	public static List<SystemEvent> findAll(
-		int start, int end, OrderByComparator<SystemEvent> orderByComparator) {
-
-		return getPersistence().findAll(start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the system events.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SystemEventModelImpl</code>.
-	 * </p>
-	 *
+	 * @param groupId the group ID
 	 * @param start the lower bound of the range of system events
 	 * @param end the upper bound of the range of system events (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param useFinderCache whether to use the finder cache
-	 * @return the ordered range of system events
+	 * @return the ordered range of matching system events
 	 */
-	public static List<SystemEvent> findAll(
-		int start, int end, OrderByComparator<SystemEvent> orderByComparator,
-		boolean useFinderCache) {
+	public static List<SystemEvent> findByGroupId(
+		long groupId, int start, int end,
+		OrderByComparator<SystemEvent> orderByComparator) {
 
-		return getPersistence().findAll(
-			start, end, orderByComparator, useFinderCache);
+		return getPersistence().findByGroupId(
+			groupId, start, end, orderByComparator);
 	}
 
 	/**
-	 * Removes all the system events from the database.
-	 */
-	public static void removeAll() {
-		getPersistence().removeAll();
-	}
-
-	/**
-	 * Returns the number of system events.
+	 * Returns all the system events where groupId = &#63; and systemEventSetKey = &#63;.
 	 *
-	 * @return the number of system events
+	 * @param groupId the group ID
+	 * @param systemEventSetKey the system event set key
+	 * @return the matching system events
 	 */
-	public static int countAll() {
-		return getPersistence().countAll();
+	public static List<SystemEvent> findByG_S(
+		long groupId, long systemEventSetKey) {
+
+		return getPersistence().findByG_S(groupId, systemEventSetKey);
+	}
+
+	/**
+	 * Returns a range of all the system events where groupId = &#63; and systemEventSetKey = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.model.impl.SystemEventModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param systemEventSetKey the system event set key
+	 * @param start the lower bound of the range of system events
+	 * @param end the upper bound of the range of system events (not inclusive)
+	 * @return the range of matching system events
+	 */
+	public static List<SystemEvent> findByG_S(
+		long groupId, long systemEventSetKey, int start, int end) {
+
+		return getPersistence().findByG_S(
+			groupId, systemEventSetKey, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the system events where groupId = &#63; and systemEventSetKey = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.model.impl.SystemEventModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param systemEventSetKey the system event set key
+	 * @param start the lower bound of the range of system events
+	 * @param end the upper bound of the range of system events (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching system events
+	 */
+	public static List<SystemEvent> findByG_S(
+		long groupId, long systemEventSetKey, int start, int end,
+		OrderByComparator<SystemEvent> orderByComparator) {
+
+		return getPersistence().findByG_S(
+			groupId, systemEventSetKey, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns all the system events where groupId = &#63; and classNameId = &#63; and classPK = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param classNameId the class name ID
+	 * @param classPK the class pk
+	 * @return the matching system events
+	 */
+	public static List<SystemEvent> findByG_C_C(
+		long groupId, long classNameId, long classPK) {
+
+		return getPersistence().findByG_C_C(groupId, classNameId, classPK);
+	}
+
+	/**
+	 * Returns a range of all the system events where groupId = &#63; and classNameId = &#63; and classPK = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.model.impl.SystemEventModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param classNameId the class name ID
+	 * @param classPK the class pk
+	 * @param start the lower bound of the range of system events
+	 * @param end the upper bound of the range of system events (not inclusive)
+	 * @return the range of matching system events
+	 */
+	public static List<SystemEvent> findByG_C_C(
+		long groupId, long classNameId, long classPK, int start, int end) {
+
+		return getPersistence().findByG_C_C(
+			groupId, classNameId, classPK, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the system events where groupId = &#63; and classNameId = &#63; and classPK = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.model.impl.SystemEventModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param classNameId the class name ID
+	 * @param classPK the class pk
+	 * @param start the lower bound of the range of system events
+	 * @param end the upper bound of the range of system events (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching system events
+	 */
+	public static List<SystemEvent> findByG_C_C(
+		long groupId, long classNameId, long classPK, int start, int end,
+		OrderByComparator<SystemEvent> orderByComparator) {
+
+		return getPersistence().findByG_C_C(
+			groupId, classNameId, classPK, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns all the system events where groupId = &#63; and classNameId = &#63; and classPK = &#63; and type = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param classNameId the class name ID
+	 * @param classPK the class pk
+	 * @param type the type
+	 * @return the matching system events
+	 */
+	public static List<SystemEvent> findByG_C_C_T(
+		long groupId, long classNameId, long classPK, int type) {
+
+		return getPersistence().findByG_C_C_T(
+			groupId, classNameId, classPK, type);
+	}
+
+	/**
+	 * Returns a range of all the system events where groupId = &#63; and classNameId = &#63; and classPK = &#63; and type = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.model.impl.SystemEventModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param classNameId the class name ID
+	 * @param classPK the class pk
+	 * @param type the type
+	 * @param start the lower bound of the range of system events
+	 * @param end the upper bound of the range of system events (not inclusive)
+	 * @return the range of matching system events
+	 */
+	public static List<SystemEvent> findByG_C_C_T(
+		long groupId, long classNameId, long classPK, int type, int start,
+		int end) {
+
+		return getPersistence().findByG_C_C_T(
+			groupId, classNameId, classPK, type, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the system events where groupId = &#63; and classNameId = &#63; and classPK = &#63; and type = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.model.impl.SystemEventModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param classNameId the class name ID
+	 * @param classPK the class pk
+	 * @param type the type
+	 * @param start the lower bound of the range of system events
+	 * @param end the upper bound of the range of system events (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching system events
+	 */
+	public static List<SystemEvent> findByG_C_C_T(
+		long groupId, long classNameId, long classPK, int type, int start,
+		int end, OrderByComparator<SystemEvent> orderByComparator) {
+
+		return getPersistence().findByG_C_C_T(
+			groupId, classNameId, classPK, type, start, end, orderByComparator);
 	}
 
 	public static SystemEventPersistence getPersistence() {
@@ -1043,3 +745,4 @@ public class SystemEventUtil {
 	private static volatile SystemEventPersistence _persistence;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-129003929

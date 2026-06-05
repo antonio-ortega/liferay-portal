@@ -39,6 +39,11 @@ resource "kubernetes_manifest" "infrastructure_applicationset" {
 					annotations={
 						"argocd.argoproj.io/compare-options"="IgnoreExtraneous"
 					}
+					labels=merge(
+						local.common_labels,
+						{
+							"app.kubernetes.io/name"=var.infrastructure_git_repo_config.target.name
+						})
 					name=var.infrastructure_git_repo_config.target.name
 				}
 				spec={
@@ -57,8 +62,24 @@ resource "kubernetes_manifest" "infrastructure_applicationset" {
 											value=var.infrastructure_git_repo_config.target.slugEnvironmentId
 										},
 										{
+											name="gateway.className"
+											value=local.gateway_class_name
+										},
+										{
+											name="gateway.name"
+											value=local.gateway_name
+										},
+										{
 											name="projectId"
 											value=var.infrastructure_git_repo_config.target.slugProjectId
+										},
+										{
+											name="region"
+											value=var.region
+										},
+										{
+											name="secretStoreName"
+											value=local.secret_store_name
 										},
 									]
 									valueFiles=[
@@ -66,11 +87,11 @@ resource "kubernetes_manifest" "infrastructure_applicationset" {
 										"$values/{{path}}/${var.infrastructure_git_repo_config.source_paths.values_filename}",
 									]
 								}
-								repoURL=var.infrastructure_helm_chart_config.repo_url
-								targetRevision=var.infrastructure_helm_chart_config.target_revision
+								repoURL=var.infrastructure_helm_chart_config.chart_url
+								targetRevision=var.infrastructure_helm_chart_version
 							},
 							var.infrastructure_helm_chart_config.path == null ? {
-								chart=var.infrastructure_helm_chart_config.chart
+								chart=var.infrastructure_helm_chart_config.chart_name
 							} : {
 								path=var.infrastructure_helm_chart_config.path
 							}
@@ -86,8 +107,15 @@ resource "kubernetes_manifest" "infrastructure_applicationset" {
 							prune=true
 							selfHeal=true
 						}
+						managedNamespaceMetadata={
+							labels = {
+								"pod-security.kubernetes.io/enforce"="restricted"
+							}
+						}
 						syncOptions=[
 							"CreateNamespace=true",
+							"IgnoreExtraneous=true",
+							"RespectIgnoreDifferences=true",
 							"SkipDryRunOnMissingResource=true"
 						]
 					}
@@ -120,22 +148,34 @@ resource "kubernetes_manifest" "infrastructure_appproject" {
 					kind="*"
 				},
 			]
-			description="ArgoCD Project for Liferay Cloud Native infrastructure."
+			description="ArgoCD project for Liferay could native infrastructure."
 			destinations=[
 				{
-					namespace="liferay-*"
+					namespace="cluster-bootstrap-system"
+					server="https://kubernetes.default.svc"
+				},
+				{
+					namespace="elastic-system"
+					server="https://kubernetes.default.svc"
+				},
+				{
+					namespace=local.liferay_namespace_pattern
 					server="https://kubernetes.default.svc"
 				},
 				{
 					namespace=var.crossplane_namespace
 					server="https://kubernetes.default.svc"
 				},
+				{
+					namespace=var.gateway_namespace
+					server="https://kubernetes.default.svc"
+				},
 			]
 			sourceRepos=[
-				"${var.infrastructure_helm_chart_config.repo_url}",
-				"${var.infrastructure_helm_chart_config.repo_url}/*",
-				"${var.infrastructure_provider_helm_chart_config.repo_url}",
-				"${var.infrastructure_provider_helm_chart_config.repo_url}/*",
+				var.infrastructure_helm_chart_config.chart_url,
+				"${var.infrastructure_helm_chart_config.chart_url}/*",
+				var.infrastructure_provider_helm_chart_config.chart_url,
+				"${var.infrastructure_provider_helm_chart_config.chart_url}/*",
 				local.infrastructure_git_repo_url,
 			]
 		}
@@ -172,53 +212,91 @@ resource "kubernetes_manifest" "infrastructure_provider_application" {
 				server="https://kubernetes.default.svc"
 			}
 			project=local.infrastructure_appproject_name
-			source=merge(
-				{
-					helm={
-						parameters=[
-							{
-								name="aws.accountId"
-								value=local.account_id
-							},
-							{
-								name="aws.clusterName"
-								value=local.cluster_name
-							},
-							{
-								name="aws.nodesSecurityGroupId"
-								value=data.aws_eks_cluster.cluster.vpc_config[0].cluster_security_group_id
-							},
-							{
-								name="aws.privateSubnetIds"
-								value=jsonencode(data.aws_subnets.private.ids)
-							},
-							{
-								name="aws.vpcId"
-								value=data.aws_vpc.current.id
-							},
-							{
-								name="crossplaneNamespace"
-								value=var.crossplane_namespace
-							},
-							{
-								name="deploymentName"
-								value=var.deployment_name
-							},
-							{
-								name="liferayServiceAccountRoleName"
-								value=local.liferay_service_account_role_name
-							},
-						]
+			sources=[
+				merge(
+					{
+						helm={
+							parameters=[
+								{
+									name="aws.accountId"
+									value=local.account_id
+								},
+								{
+									name="aws.clusterName"
+									value=local.cluster_name
+								},
+								{
+									name="aws.nodesSecurityGroupId"
+									value=data.aws_eks_cluster.cluster.vpc_config[0].cluster_security_group_id
+								},
+								{
+									name="aws.oidcProvider"
+									value=local.oidc_provider
+								},
+								{
+									name="aws.privateSubnetIds"
+									value=jsonencode(data.aws_subnets.private.ids)
+								},
+								{
+									name="aws.vpcId"
+									value=data.aws_vpc.current.id
+								},
+								{
+									name="crossplaneNamespace"
+									value=var.crossplane_namespace
+								},
+								{
+									name="deploymentName"
+									value=var.deployment_name
+								},
+								{
+									name="gateway.className"
+									value=local.gateway_class_name
+								},
+								{
+									name="gateway.envoyProxyRoleArn"
+									value=data.aws_iam_role.envoy_proxy_role.arn
+								},
+								{
+									name="gateway.namespace"
+									value=var.gateway_namespace
+								},
+								{
+									name="liferayServiceAccountRoleName"
+									value=local.liferay_service_account_role_name
+								},
+							]
+							valueFiles=[
+								"$values/${var.infrastructure_git_repo_config.source_paths.system}/${var.infrastructure_git_repo_config.source_paths.infrastructure_provider_values_filename}",
+							]
+						}
+						repoURL=var.infrastructure_provider_helm_chart_config.chart_url
+						targetRevision=var.infrastructure_provider_helm_chart_version
+					},
+					var.infrastructure_provider_helm_chart_config.path == null ? {
+						chart=var.infrastructure_provider_helm_chart_config.chart_name
+					} : {
+						path=var.infrastructure_provider_helm_chart_config.path
 					}
-					repoURL=var.infrastructure_provider_helm_chart_config.repo_url
-					targetRevision=var.infrastructure_provider_helm_chart_config.target_revision
+				),
+				merge(
+					{
+						kustomize={}
+						repoURL=var.infrastructure_provider_helm_chart_config.chart_url
+						targetRevision=var.infrastructure_provider_helm_chart_version
+					},
+					var.infrastructure_provider_helm_chart_config.path == null ? {
+						chart=var.infrastructure_provider_helm_chart_config.chart_name
+					} : {
+						path=var.infrastructure_provider_helm_chart_config.path
+					},
+				),
+				{
+					ref="values"
+					repoURL=local.infrastructure_git_repo_url
+					targetRevision=var.infrastructure_git_repo_config.revision
 				},
-				var.infrastructure_provider_helm_chart_config.path == null ? {
-					chart=var.infrastructure_provider_helm_chart_config.chart
-				} : {
-					path=var.infrastructure_provider_helm_chart_config.path
-				}
-			)
+			]
 			syncPolicy={
 				automated={
 					prune=true
@@ -273,6 +351,11 @@ resource "kubernetes_manifest" "liferay_applicationset" {
 					annotations={
 						"argocd.argoproj.io/compare-options"="IgnoreExtraneous"
 					}
+					labels=merge(
+						local.common_labels,
+						{
+							"app.kubernetes.io/name"=var.liferay_git_repo_config.target.name
+						})
 					name=var.liferay_git_repo_config.target.name
 				}
 				spec={
@@ -287,28 +370,52 @@ resource "kubernetes_manifest" "liferay_applicationset" {
 								helm={
 									parameters=[
 										{
-											name="${local.liferay_helm_chart_config.values_scope_prefix}serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
-											value="arn:aws:iam::${local.account_id}:role/${var.deployment_name}-irsa"
+											name="${local.liferay_helm_chart_config.values_scope_prefix}network.gatewayName"
+											value=local.gateway_name
 										},
 										{
-											name="${local.liferay_helm_chart_config.values_scope_prefix}serviceAccount.create"
+											name="${local.liferay_helm_chart_config.values_scope_prefix}networkPolicy.cluster.kubernetesEndpointCidrs"
+											value=join(",", local.eks_endpoint_cidrs)
+										},
+										{
+											name="global.aws.accountId"
+											value=local.account_id
+										},
+										{
+											name="global.deploymentName"
+											value=var.deployment_name
+										},
+										{
+											name="global.environmentId"
+											value=var.liferay_git_repo_config.target.slugEnvironmentId
+										},
+										{
+											name="global.liferayServiceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
+											value=data.aws_iam_role.liferay_irsa.arn
+										},
+										{
+											name="global.liferayServiceAccount.create"
 											value=true
 										},
 										{
-											name="${local.liferay_helm_chart_config.values_scope_prefix}serviceAccount.name"
+											name="global.liferayServiceAccount.name"
 											value="liferay-default"
 										},
-									]
+										{
+											name="global.projectId"
+											value=var.liferay_git_repo_config.target.slugProjectId
+										},
+									],
 									valueFiles=[
 										"$values/${var.liferay_git_repo_config.source_paths.base}/${var.liferay_git_repo_config.source_paths.values_filename}",
 										"$values/{{path}}/${var.liferay_git_repo_config.source_paths.values_filename}",
 									]
 								}
-								repoURL=local.liferay_helm_chart_config.repo_url
-								targetRevision=local.liferay_helm_chart_config.target_revision
+								repoURL=local.liferay_helm_chart_config.chart_url
+								targetRevision=var.liferay_helm_chart_version
 							},
 							local.liferay_helm_chart_config.path == null ? {
-								chart=local.liferay_helm_chart_config.chart
+								chart=local.liferay_helm_chart_config.chart_name
 							} : {
 								path=local.liferay_helm_chart_config.path
 							}
@@ -331,6 +438,11 @@ resource "kubernetes_manifest" "liferay_applicationset" {
 						automated={
 							prune=true
 							selfHeal=true
+						}
+						managedNamespaceMetadata={
+							labels = {
+								"pod-security.kubernetes.io/enforce"="restricted"
+							}
 						}
 						syncOptions=[
 							"CreateNamespace=true",
@@ -370,16 +482,16 @@ resource "kubernetes_manifest" "liferay_appproject" {
 					kind="*"
 				},
 			]
-			description="ArgoCD Project for Liferay Cloud Native applications."
+			description="ArgoCD project for Liferay cloud native applications."
 			destinations=[
 				{
-					namespace="liferay-*"
+					namespace=local.liferay_namespace_pattern
 					server="https://kubernetes.default.svc"
 				},
 			]
 			sourceRepos=[
-				"${local.liferay_helm_chart_config.repo_url}",
-				"${local.liferay_helm_chart_config.repo_url}/*",
+				local.liferay_helm_chart_config.chart_url,
+				"${local.liferay_helm_chart_config.chart_url}/*",
 				var.liferay_git_repo_url,
 			]
 		}

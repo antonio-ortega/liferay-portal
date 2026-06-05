@@ -404,3 +404,4 @@ public class NotificationRecipientWrapper
 	}
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-225684247

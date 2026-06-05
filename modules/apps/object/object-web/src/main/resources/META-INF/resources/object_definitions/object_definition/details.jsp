@@ -25,11 +25,13 @@ portletDisplay.setURLBack(
 renderResponse.setTitle(LanguageUtil.format(request, "edit-x", objectDefinition.getLabel(locale, true), false));
 %>
 
-<div id="<portlet:namespace />EditObjectDefinition">
+<div class="edit-object-definition-wrapper" id="<portlet:namespace />EditObjectDefinition">
 	<react:component
 		module="{EditObjectDetails} from object-web"
 		props='<%=
 			HashMapBuilder.<String, Object>put(
+				"allowStandaloneObjectEntry", objectDefinition.isAllowStandaloneObjectEntry()
+			).put(
 				"backURL", portletDisplay.getURLBack()
 			).put(
 				"companies", objectDefinitionsDetailsDisplayContext.getScopeJSONArray("company")

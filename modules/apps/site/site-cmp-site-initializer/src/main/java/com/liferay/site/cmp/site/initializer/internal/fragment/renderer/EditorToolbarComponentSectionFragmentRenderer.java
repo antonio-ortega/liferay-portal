@@ -122,11 +122,10 @@ public class EditorToolbarComponentSectionFragmentRenderer
 					return baseViewProjectURL + objectEntry.getObjectEntryId();
 				}
 
-				String baseViewTaskURL = ActionUtil.getBaseViewTaskURL(
-					objectDefinition, themeDisplay);
-
-				return baseViewTaskURL + objectEntry.getObjectEntryId();
+				return null;
 			}
+		).put(
+			"isNew", objectEntry.isDraft()
 		).put(
 			"title",
 			() -> {
@@ -135,10 +134,13 @@ public class EditorToolbarComponentSectionFragmentRenderer
 						"L_CMP_PROJECT")) {
 
 					return LanguageUtil.get(
-						themeDisplay.getLocale(), "new-project");
+						themeDisplay.getLocale(),
+						objectEntry.isDraft() ? "new-project" : "edit-project");
 				}
 
-				return LanguageUtil.get(themeDisplay.getLocale(), "new-task");
+				return LanguageUtil.get(
+					themeDisplay.getLocale(),
+					objectEntry.isDraft() ? "new-task" : "edit-task");
 			}
 		).build();
 	}

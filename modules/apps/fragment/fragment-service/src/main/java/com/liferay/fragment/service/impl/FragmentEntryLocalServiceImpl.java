@@ -27,7 +27,8 @@ import com.liferay.portal.aop.AopService;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.dao.orm.custom.sql.CustomSQL;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
-import com.liferay.portal.kernel.dao.orm.Criterion;
+import com.liferay.portal.kernel.dao.orm.Conjunction;
+import com.liferay.portal.kernel.dao.orm.Disjunction;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.WildcardMode;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -35,6 +36,7 @@ import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.ModelHintsUtil;
 import com.liferay.portal.kernel.model.Repository;
 import com.liferay.portal.kernel.model.ResourceConstants;
@@ -44,11 +46,13 @@ import com.liferay.portal.kernel.portletfilerepository.PortletFileRepository;
 import com.liferay.portal.kernel.portletfilerepository.PortletFileRepositoryUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.Folder;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
+import com.liferay.portal.kernel.util.GroupThreadLocal;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -300,14 +304,9 @@ public class FragmentEntryLocalServiceImpl
 	public FragmentEntry deleteFragmentEntry(FragmentEntry fragmentEntry)
 		throws PortalException {
 
-		long fragmentEntryLinkCount =
-			_fragmentEntryLinkLocalService.
-				getFragmentEntryLinksCountByFragmentEntryERC(
-					fragmentEntry.getGroupId(),
-					fragmentEntry.getExternalReferenceCode(),
-					fragmentEntry.getScopeERC(), false);
+		if (!GroupThreadLocal.isDeleteInProcess() &&
+			(fragmentEntry.getUsageCount() > 0)) {
 
-		if (fragmentEntryLinkCount > 0) {
 			throw new RequiredFragmentEntryException();
 		}
 
@@ -316,11 +315,8 @@ public class FragmentEntryLocalServiceImpl
 			ResourceConstants.SCOPE_INDIVIDUAL,
 			fragmentEntry.getFragmentEntryId());
 
-		_fragmentEntryLinkLocalService.
-			deleteFragmentEntryLinksByFragmentEntryERC(
-				fragmentEntry.getGroupId(),
-				fragmentEntry.getExternalReferenceCode(),
-				fragmentEntry.getScopeERC(), true);
+		_fragmentEntryLinkLocalService.deleteFragmentEntryLinksByFragmentEntry(
+			fragmentEntry, true);
 
 		if (fragmentEntry.getPreviewFileEntryId() > 0) {
 			boolean deletePreviewFileEntry = true;
@@ -968,31 +964,39 @@ public class FragmentEntryLocalServiceImpl
 		ActionableDynamicQuery actionableDynamicQuery =
 			_fragmentEntryLinkLocalService.getActionableDynamicQuery();
 
+		Group group = _groupLocalService.getGroup(fragmentEntry.getGroupId());
+
 		actionableDynamicQuery.setAddCriteriaMethod(
 			dynamicQuery -> {
-				Criterion fragmentEntryERCRestriction =
+				Conjunction conjunction = RestrictionsFactoryUtil.conjunction();
+
+				conjunction.add(
 					RestrictionsFactoryUtil.eq(
 						"fragmentEntryERC",
-						fragmentEntry.getExternalReferenceCode());
+						fragmentEntry.getExternalReferenceCode()));
 
-				String fragmentEntryScopeERC = fragmentEntry.getScopeERC();
+				Disjunction disjunction = RestrictionsFactoryUtil.disjunction();
 
-				Criterion scopeERCRestriction;
+				disjunction.add(
+					RestrictionsFactoryUtil.eq(
+						"fragmentEntryScopeERC",
+						group.getExternalReferenceCode()));
 
-				if (Validator.isNotNull(fragmentEntryScopeERC)) {
-					scopeERCRestriction = RestrictionsFactoryUtil.eq(
-						"fragmentEntryScopeERC", fragmentEntryScopeERC);
-				}
-				else {
-					scopeERCRestriction = RestrictionsFactoryUtil.and(
-						RestrictionsFactoryUtil.isNull("fragmentEntryScopeERC"),
-						RestrictionsFactoryUtil.eq(
-							"groupId", fragmentEntry.getGroupId()));
-				}
+				Conjunction innerConjunction =
+					RestrictionsFactoryUtil.conjunction();
 
-				dynamicQuery.add(
-					RestrictionsFactoryUtil.and(
-						fragmentEntryERCRestriction, scopeERCRestriction));
+				innerConjunction.add(
+					RestrictionsFactoryUtil.eq(
+						"groupId", fragmentEntry.getGroupId()));
+
+				innerConjunction.add(
+					RestrictionsFactoryUtil.isNull("fragmentEntryScopeERC"));
+
+				disjunction.add(innerConjunction);
+
+				conjunction.add(disjunction);
+
+				dynamicQuery.add(conjunction);
 			});
 
 		actionableDynamicQuery.setPerformActionMethod(
@@ -1085,7 +1089,7 @@ public class FragmentEntryLocalServiceImpl
 			groupId, fragmentEntryKey);
 
 		if (fragmentEntry != null) {
-			throw new DuplicateFragmentEntryKeyException();
+			throw new DuplicateFragmentEntryKeyException(fragmentEntryKey);
 		}
 	}
 
@@ -1115,6 +1119,9 @@ public class FragmentEntryLocalServiceImpl
 
 	@Reference
 	private FragmentEntryValidator _fragmentEntryValidator;
+
+	@Reference
+	private GroupLocalService _groupLocalService;
 
 	@Reference
 	private JSONFactory _jsonFactory;

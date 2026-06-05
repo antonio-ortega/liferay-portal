@@ -3,10 +3,12 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {sessionStorage, sub} from 'frontend-js-web';
+import {openToast} from 'frontend-js-components-web';
+import {sub} from 'frontend-js-web';
 import React from 'react';
 
 import {IAssetFile, IAssetObjectEntry} from '../../../common/types/AssetType';
+import {FDS_EVENT_UPDATE_DISPLAY} from '../../../common/utils/constants';
 import {openCMSModal} from '../../../common/utils/openCMSModal';
 import FilePreviewerModalContent from '../../modal/FilePreviewerModalContent';
 import confirmAndDeleteEntryAction from '../../props_transformer/actions/confirmAndDeleteEntryAction';
@@ -58,24 +60,32 @@ export const VERSION_ACTIONS: any = {
 	[COPY]: {
 		action: (
 			event: React.MouseEvent<HTMLAnchorElement>,
-			objectEntry: IAssetObjectEntry
+			objectEntry: IAssetObjectEntry,
+			refreshData: () => {},
+			objectEntryTitle: string,
+			dataSetId?: string
 		) => {
 			event?.preventDefault();
 
 			executeAsyncItemAction({
 				method: objectEntry.actions.copy.method,
 				refreshData: (responseData) => {
-					sessionStorage.setItem(
-						'com.liferay.site.cms.site.initializer.successMessage',
-						sub(
+					openToast({
+						message: sub(
 							Liferay.Language.get(
 								'version-x-successfully-copied-as-x'
 							),
 							objectEntry.systemProperties.version.number,
-							`<strong>"${responseData.title}"</strong>`
+							`<strong>"${Liferay.Util.escapeHTML(responseData.title)}"</strong>`
 						),
-						sessionStorage.TYPES.NECESSARY
-					);
+						type: 'success',
+					});
+
+					if (dataSetId) {
+						Liferay.fire(FDS_EVENT_UPDATE_DISPLAY, {
+							id: dataSetId,
+						});
+					}
 				},
 				showToast: false,
 				url: objectEntry.actions.copy.href,
@@ -88,7 +98,9 @@ export const VERSION_ACTIONS: any = {
 		action: (
 			event: React.MouseEvent<HTMLAnchorElement>,
 			objectEntry: IAssetObjectEntry,
-			loadData: () => {}
+			loadData: () => {},
+			objectEntryTitle: string,
+			dataSetId?: string
 		) => {
 			event?.preventDefault();
 
@@ -96,8 +108,9 @@ export const VERSION_ACTIONS: any = {
 				bodyHTML: sub(
 					Liferay.Language.get('delete-version-confirmation'),
 					`<strong>${sub(Liferay.Language.get('version-x'), objectEntry.systemProperties.version.number)}</strong>`,
-					objectEntry.title
+					Liferay.Util.escapeHTML(objectEntryTitle)
 				),
+				dataSetId,
 				deleteAction: objectEntry.actions.delete,
 				loadData,
 				successMessage: sub(
@@ -117,13 +130,23 @@ export const VERSION_ACTIONS: any = {
 		action: (
 			event: React.MouseEvent<HTMLAnchorElement>,
 			objectEntry: IAssetObjectEntry,
-			refreshData: () => {}
+			refreshData: (responseData: any) => {},
+			objectEntryTitle: string,
+			dataSetId?: string
 		) => {
 			event?.preventDefault();
 
 			executeAsyncItemAction({
 				method: objectEntry.actions.expire.method,
-				refreshData,
+				refreshData: (responseData) => {
+					refreshData?.(responseData);
+
+					if (dataSetId) {
+						Liferay.fire(FDS_EVENT_UPDATE_DISPLAY, {
+							id: dataSetId,
+						});
+					}
+				},
 				successMessage: sub(
 					Liferay.Language.get('expire-version-success-message'),
 					`<strong>${sub(Liferay.Language.get('version-x'), objectEntry.systemProperties.version.number)}</strong>`
@@ -184,13 +207,23 @@ export const VERSION_ACTIONS: any = {
 		action: (
 			event: React.MouseEvent<HTMLAnchorElement>,
 			objectEntry: IAssetObjectEntry,
-			refreshData: () => {}
+			refreshData: (responseData: any) => {},
+			objectEntryTitle: string,
+			dataSetId?: string
 		) => {
-			event.preventDefault();
+			event?.preventDefault();
 
 			executeAsyncItemAction({
 				method: objectEntry.actions.restore.method,
-				refreshData,
+				refreshData: (responseData) => {
+					refreshData?.(responseData);
+
+					if (dataSetId) {
+						Liferay.fire(FDS_EVENT_UPDATE_DISPLAY, {
+							id: dataSetId,
+						});
+					}
+				},
 				successMessage: sub(
 					Liferay.Language.get('restore-version-success-message'),
 					`<strong>${sub(Liferay.Language.get('version-x'), objectEntry.systemProperties.version.number)}</strong>`

@@ -8,6 +8,7 @@ import MembershipMetrics from '../components/MembershipMetrics';
 import NoResultsDisplay from 'shared/components/NoResultsDisplay';
 import React, {useMemo, useState} from 'react';
 import SearchableEntityTable from 'shared/components/SearchableEntityTable';
+import SegmentActivationCard from 'segment/components/SegmentActivationCard';
 import URLConstants from 'shared/util/url-constants';
 import {createOrderIOMap, NAME} from 'shared/util/pagination';
 import {
@@ -21,9 +22,8 @@ import {membershipChangesColumns} from 'shared/util/table-columns';
 import {ReferencedObjectsProvider} from 'segment/segment-editor/dynamic/context/referencedObjects';
 import {ReportContainer} from 'shared/components/download-report/DownloadPDFReport';
 import {Segment} from 'shared/util/records';
-import {SegmentActivationCard} from 'segment/components/SegmentActivationCard';
 import {SegmentGrowthChart} from 'segment/components/Growth';
-import {SegmentTypes} from 'shared/util/constants';
+import {SegmentTypes, TimeIntervals} from 'shared/util/constants';
 import {Text} from '@clayui/core';
 import {useRequest} from 'shared/hooks/useRequest';
 import {useStatefulPagination} from 'shared/hooks/useStatefulPagination';
@@ -109,7 +109,18 @@ interface IOverviewProps {
 	segment: Segment;
 }
 
-const SelectedPointInfo = ({dateRange, onClear, selectedPointState}) => {
+const SelectedPointInfo = ({
+	dateRange,
+	onClear,
+	selectedPointState
+}: {
+	dateRange: string | null;
+	onClear: () => void;
+	selectedPointState: {
+		hasSelectedPoint: boolean;
+		selectedPoint: number | null;
+	};
+}) => {
 	const membersLanguageKey = selectedPointState.hasSelectedPoint
 		? Liferay.Language.get('members-on')
 		: Liferay.Language.get('members-from');
@@ -141,20 +152,23 @@ const RealTimeSegmentOverview: React.FC<IOverviewProps> = ({
 	groupId,
 	segment
 }) => {
-	const fetchMembers = params => getMembershipChanges(params);
+	const fetchMembers = (params: Record<string, any>) =>
+		getMembershipChanges(params as Data);
 
-	const {
-		activationStatus,
-		criteriaString,
-		id,
-		includeAnonymousUsers
-	} = segment;
+	const {activation, criteriaString, id, includeAnonymousUsers, sequential} =
+		segment;
 
 	const {timeZoneId} = useTimeZone();
 
 	const {data, loading} = useRequest({
 		dataSourceFn: fetchMembershipChangesAggregations,
-		variables: {channelId, groupId, id, interval: 'day', max: 30}
+		variables: {
+			channelId,
+			groupId,
+			id,
+			interval: TimeIntervals.Day,
+			max: 30
+		}
 	});
 
 	const [selectedPointState, setSelectedPointState] = useState<{
@@ -167,7 +181,10 @@ const RealTimeSegmentOverview: React.FC<IOverviewProps> = ({
 
 	const dateRange = useMemo(() => {
 		if (data) {
-			if (selectedPointState.hasSelectedPoint) {
+			if (
+				selectedPointState.hasSelectedPoint &&
+				selectedPointState.selectedPoint !== null
+			) {
 				return `${formatUTCDate(
 					data[selectedPointState.selectedPoint].intervalInitDate,
 					CUSTOM_DATE_FORMAT
@@ -202,7 +219,7 @@ const RealTimeSegmentOverview: React.FC<IOverviewProps> = ({
 		return columns;
 	};
 
-	const paginationParams = useStatefulPagination(null, {
+	const paginationParams = useStatefulPagination(undefined, {
 		initialOrderIOMap: createOrderIOMap(NAME)
 	});
 
@@ -230,7 +247,9 @@ const RealTimeSegmentOverview: React.FC<IOverviewProps> = ({
 
 	const selectedDate = useMemo(
 		() =>
-			selectedPointState.hasSelectedPoint && data
+			selectedPointState.hasSelectedPoint &&
+			data &&
+			selectedPointState.selectedPoint !== null
 				? formatUTCDate(
 						data[selectedPointState.selectedPoint].intervalInitDate,
 						ISO_8601_DATE_FORMAT
@@ -245,8 +264,8 @@ const RealTimeSegmentOverview: React.FC<IOverviewProps> = ({
 
 	const selectedFilters = {
 		profileTypes:
-			paginationParams.filterBy.get('profileTypes')?.toArray() || [],
-		types: paginationParams.filterBy.get('types')?.toArray() || []
+			paginationParams.filterBy?.get('profileTypes')?.toArray() || [],
+		types: paginationParams.filterBy?.get('types')?.toArray() || []
 	};
 
 	const handleClearDateSelection = () => {
@@ -255,8 +274,8 @@ const RealTimeSegmentOverview: React.FC<IOverviewProps> = ({
 			selectedPoint: null
 		});
 
-		paginationParams.onFilterByChange(
-			paginationParams.filterBy.delete('types')
+		paginationParams.onFilterByChange?.(
+			paginationParams.filterBy?.delete('types')
 		);
 	};
 
@@ -264,16 +283,19 @@ const RealTimeSegmentOverview: React.FC<IOverviewProps> = ({
 		<div>
 			<ReferencedObjectsProvider segment={segment}>
 				<CriteriaCard
-					criteriaString={criteriaString}
+					channelId={channelId}
+					criteriaString={criteriaString ?? ''}
+					groupId={groupId}
 					includeAnonymousUsers={includeAnonymousUsers}
 					segmentType={SegmentTypes.RealTime}
+					sequential={sequential}
 					timeZoneId={timeZoneId}
 				/>
 			</ReferencedObjectsProvider>
 
-			{activationStatus && (
+			{activation && (
 				<SegmentActivationCard
-					segmentActivation={activationStatus}
+					segmentActivation={activation}
 					segmentType={SegmentTypes.RealTime}
 				/>
 			)}
@@ -301,7 +323,7 @@ const RealTimeSegmentOverview: React.FC<IOverviewProps> = ({
 							<div className='segment-growth-chart-container'>
 								<SegmentGrowthChart
 									alwaysShowSelectedTooltip
-									data={data?.map(item => ({
+									data={data?.map((item: any) => ({
 										added: item.addedIndividualsCount,
 										anonymousCount:
 											item.anonymousIndividualsCount,
@@ -331,7 +353,8 @@ const RealTimeSegmentOverview: React.FC<IOverviewProps> = ({
 										});
 									}}
 									selectedPoint={
-										selectedPointState.selectedPoint
+										selectedPointState.selectedPoint ??
+										undefined
 									}
 								/>
 							</div>

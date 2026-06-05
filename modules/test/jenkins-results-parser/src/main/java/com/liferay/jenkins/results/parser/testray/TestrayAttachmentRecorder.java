@@ -5,7 +5,6 @@
 
 package com.liferay.jenkins.results.parser.testray;
 
-import com.liferay.jenkins.results.parser.AxisBuild;
 import com.liferay.jenkins.results.parser.Build;
 import com.liferay.jenkins.results.parser.BuildDatabase;
 import com.liferay.jenkins.results.parser.BuildDatabaseUtil;
@@ -31,7 +30,7 @@ import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
 
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
@@ -148,13 +147,7 @@ public class TestrayAttachmentRecorder {
 
 			sb.append(_build.getJobVariant());
 
-			if (_build instanceof AxisBuild) {
-				AxisBuild axisBuild = (AxisBuild)_build;
-
-				sb.append("/");
-				sb.append(axisBuild.getAxisNumber());
-			}
-			else if (_build instanceof DownstreamBuild) {
+			if (_build instanceof DownstreamBuild) {
 				DownstreamBuild downstreamBuild = (DownstreamBuild)_build;
 
 				sb.append("/");
@@ -440,12 +433,7 @@ public class TestrayAttachmentRecorder {
 	private void _recordFailureMessages() {
 		String batchName = null;
 
-		if (_build instanceof AxisBuild) {
-			AxisBuild axisBuild = (AxisBuild)_build;
-
-			batchName = axisBuild.getBatchName();
-		}
-		else if (_build instanceof DownstreamBuild) {
+		if (_build instanceof DownstreamBuild) {
 			DownstreamBuild downstreamBuild = (DownstreamBuild)_build;
 
 			batchName = downstreamBuild.getBatchName();
@@ -938,7 +926,7 @@ public class TestrayAttachmentRecorder {
 
 		for (String warning : warnings) {
 			sb.append("<pre>");
-			sb.append(StringEscapeUtils.escapeHtml(warning));
+			sb.append(StringEscapeUtils.escapeHtml4(warning));
 			sb.append("</pre>\n");
 		}
 

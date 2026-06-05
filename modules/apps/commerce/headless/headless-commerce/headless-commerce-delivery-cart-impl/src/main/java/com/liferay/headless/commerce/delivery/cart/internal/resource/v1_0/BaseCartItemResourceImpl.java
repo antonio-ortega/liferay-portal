@@ -5,6 +5,7 @@
 
 package com.liferay.headless.commerce.delivery.cart.internal.resource.v1_0;
 
+import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.headless.commerce.delivery.cart.dto.v1_0.CartItem;
 import com.liferay.headless.commerce.delivery.cart.resource.v1_0.CartItemResource;
 import com.liferay.petra.function.UnsafeBiConsumer;
@@ -76,7 +77,7 @@ public abstract class BaseCartItemResourceImpl
 	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-commerce-delivery-cart/v1.0/cart-items/{cartItemId}'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
-		description = "Deletes an Cart Item by ID."
+		description = "Deletes the cart item addressed by its internal identifier. Triggers cart pricing recalculation through the cart context."
 	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
@@ -151,7 +152,7 @@ public abstract class BaseCartItemResourceImpl
 	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-commerce-delivery-cart/v1.0/cart-items/by-externalReferenceCode/{externalReferenceCode}'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
-		description = "Deletes a Cart Item by external reference code."
+		description = "Deletes the cart item addressed by external reference code. The deletion runs through the cart context bound to the parent cart, so cascading inventory and pricing recalculations on the cart fire as a side effect."
 	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
@@ -184,7 +185,7 @@ public abstract class BaseCartItemResourceImpl
 	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-delivery-cart/v1.0/carts/by-externalReferenceCode/{externalReferenceCode}/items'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
-		description = "Retrieve cart items of a Cart."
+		description = "Lists the top-level cart item rows on the cart addressed by external reference code (children of bundle items are excluded). Filterable by quantity, name, sku, and unitOfMeasure via CartItemEntityModel; searchable through the cart item index; restrictable to a specific SKU via skuId."
 	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
@@ -242,7 +243,7 @@ public abstract class BaseCartItemResourceImpl
 	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-delivery-cart/v1.0/cart-items/{cartItemId}'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
-		description = "Retrieve information of the given Cart"
+		description = "Retrieves a single cart item by ID."
 	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
@@ -275,7 +276,7 @@ public abstract class BaseCartItemResourceImpl
 	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-delivery-cart/v1.0/cart-items/by-externalReferenceCode/{externalReferenceCode}'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
-		description = "Retrieve information of the given Cart Item by external reference code."
+		description = "Retrieves a single cart item by external reference code."
 	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
@@ -310,7 +311,7 @@ public abstract class BaseCartItemResourceImpl
 	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-delivery-cart/v1.0/carts/{cartId}/items'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
-		description = "Retrieve cart items of a Cart."
+		description = "Lists the top-level cart item rows on the cart addressed by ID (children of bundle items are excluded). Filterable by quantity, name, sku, and unitOfMeasure via CartItemEntityModel; searchable; restrictable to a specific SKU via skuId."
 	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
@@ -366,7 +367,7 @@ public abstract class BaseCartItemResourceImpl
 	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-commerce-delivery-cart/v1.0/cart-items/{cartItemId}' -d $'{"cartItems": ___, "customFields": ___, "deliveryGroup": ___, "deliveryGroupName": ___, "errorMessages": ___, "options": ___, "price": ___, "productId": ___, "quantity": ___, "replacedSkuExternalReferenceCode": ___, "replacedSkuId": ___, "requestedDeliveryDate": ___, "settings": ___, "shippingAddress": ___, "shippingAddressExternalReferenceCode": ___, "shippingAddressId": ___, "skuId": ___, "skuUnitOfMeasure": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
-		description = "Retrieve information of the given Cart."
+		description = "Updates the cart item addressed by ID with JSON Merge Patch semantics (only supplied fields are modified). Mutates quantity, skuId, shippingAddressId, requestedDeliveryDate, and customFields; cart pricing is recalculated as a side effect."
 	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
@@ -462,7 +463,7 @@ public abstract class BaseCartItemResourceImpl
 	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-commerce-delivery-cart/v1.0/cart-items/by-externalReferenceCode/{externalReferenceCode}' -d $'{"cartItems": ___, "customFields": ___, "deliveryGroup": ___, "deliveryGroupName": ___, "errorMessages": ___, "options": ___, "price": ___, "productId": ___, "quantity": ___, "replacedSkuExternalReferenceCode": ___, "replacedSkuId": ___, "requestedDeliveryDate": ___, "settings": ___, "shippingAddress": ___, "shippingAddressExternalReferenceCode": ___, "shippingAddressId": ___, "skuId": ___, "skuUnitOfMeasure": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
-		description = "Update the provided Cart Item by external reference code."
+		description = "Updates the cart item addressed by external reference code with JSON Merge Patch semantics. Mutates quantity, skuId, shippingAddressId, requestedDeliveryDate, and customFields; recalculates parent cart pricing as a side effect."
 	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
@@ -562,7 +563,7 @@ public abstract class BaseCartItemResourceImpl
 	 * curl -X 'POST' 'http://localhost:8080/o/headless-commerce-delivery-cart/v1.0/carts/by-externalReferenceCode/{externalReferenceCode}/items' -d $'{"cartItems": ___, "customFields": ___, "deliveryGroup": ___, "deliveryGroupName": ___, "errorMessages": ___, "options": ___, "price": ___, "productId": ___, "quantity": ___, "replacedSkuExternalReferenceCode": ___, "replacedSkuId": ___, "requestedDeliveryDate": ___, "settings": ___, "shippingAddress": ___, "shippingAddressExternalReferenceCode": ___, "shippingAddressId": ___, "skuId": ___, "skuUnitOfMeasure": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
-		description = "Add new Item to a Cart, return the whole Cart updated."
+		description = "Adds a new cart item to the cart addressed by external reference code. CartItem.skuId is required. Triggers cart pricing recalculation."
 	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
@@ -599,7 +600,7 @@ public abstract class BaseCartItemResourceImpl
 	 * curl -X 'POST' 'http://localhost:8080/o/headless-commerce-delivery-cart/v1.0/carts/{cartId}/items' -d $'{"cartItems": ___, "customFields": ___, "deliveryGroup": ___, "deliveryGroupName": ___, "errorMessages": ___, "options": ___, "price": ___, "productId": ___, "quantity": ___, "replacedSkuExternalReferenceCode": ___, "replacedSkuId": ___, "requestedDeliveryDate": ___, "settings": ___, "shippingAddress": ___, "shippingAddressExternalReferenceCode": ___, "shippingAddressId": ___, "skuId": ___, "skuUnitOfMeasure": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
-		description = "Add new Items to a Cart, return the whole Cart updated."
+		description = "Adds a new cart item to the cart addressed by ID. CartItem.skuId is required. Triggers cart pricing recalculation."
 	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
@@ -634,7 +635,7 @@ public abstract class BaseCartItemResourceImpl
 	 * curl -X 'PUT' 'http://localhost:8080/o/headless-commerce-delivery-cart/v1.0/cart-items/{cartItemId}' -d $'{"cartItems": ___, "customFields": ___, "deliveryGroup": ___, "deliveryGroupName": ___, "errorMessages": ___, "options": ___, "price": ___, "productId": ___, "quantity": ___, "replacedSkuExternalReferenceCode": ___, "replacedSkuId": ___, "requestedDeliveryDate": ___, "settings": ___, "shippingAddress": ___, "shippingAddressExternalReferenceCode": ___, "shippingAddressId": ___, "skuId": ___, "skuUnitOfMeasure": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
-		description = "update the given Cart."
+		description = "Replaces the cart item addressed by ID; cart pricing is recalculated as a side effect."
 	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
@@ -713,7 +714,7 @@ public abstract class BaseCartItemResourceImpl
 	 * curl -X 'PUT' 'http://localhost:8080/o/headless-commerce-delivery-cart/v1.0/cart-items/by-externalReferenceCode/{externalReferenceCode}' -d $'{"cartItems": ___, "customFields": ___, "deliveryGroup": ___, "deliveryGroupName": ___, "errorMessages": ___, "options": ___, "price": ___, "productId": ___, "quantity": ___, "replacedSkuExternalReferenceCode": ___, "replacedSkuId": ___, "requestedDeliveryDate": ___, "settings": ___, "shippingAddress": ___, "shippingAddressExternalReferenceCode": ___, "shippingAddressId": ___, "skuId": ___, "skuUnitOfMeasure": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
-		description = "Update the provided Cart Item by external reference code."
+		description = "Replaces the cart item addressed by external reference code. PUT is upsert when the externalReferenceCode is unknown; the cart pricing is recalculated as a side effect."
 	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
@@ -896,6 +897,15 @@ public abstract class BaseCartItemResourceImpl
 			@Override
 			public Locale getPreferredLocale() {
 				return LocaleUtil.fromLanguageId(languageId);
+			}
+
+			@Override
+			public boolean isAcceptAllLanguages() {
+				if (ExportImportThreadLocal.isExportInProcess()) {
+					return true;
+				}
+
+				return AcceptLanguage.super.isAcceptAllLanguages();
 			}
 
 		};
@@ -1512,3 +1522,4 @@ public abstract class BaseCartItemResourceImpl
 		LogFactoryUtil.getLog(BaseCartItemResourceImpl.class);
 
 }
+// LIFERAY-REST-BUILDER-HASH:1926598369

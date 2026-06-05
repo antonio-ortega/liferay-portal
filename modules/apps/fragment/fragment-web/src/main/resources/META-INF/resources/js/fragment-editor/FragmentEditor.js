@@ -99,7 +99,7 @@ const FragmentEditor = ({
 
 	const handlePublishClick = () => {
 		if (
-			Liferay.FeatureFlags['LPD-40535'] &&
+			!Liferay.FeatureFlags['LPD-40535'] &&
 			(widgetRegex.test(html) ||
 				html.includes('[@liferay_portlet["runtime"]'))
 		) {
@@ -111,6 +111,8 @@ const FragmentEditor = ({
 	};
 
 	const publish = () => {
+		setChangesStatus(CHANGES_STATUS.saving);
+
 		const formData = new FormData();
 
 		formData.append(`${namespace}fragmentEntryId`, fragmentEntryId);

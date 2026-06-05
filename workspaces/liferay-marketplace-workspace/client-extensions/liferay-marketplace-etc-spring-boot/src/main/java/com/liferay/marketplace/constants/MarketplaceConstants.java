@@ -64,14 +64,22 @@ public class MarketplaceConstants {
 
 	public static final String ORDER_STATUS_PROCESSING_LABEL = "Processing";
 
+	public static final String PAYMENT_STATUS_COMPLETED_LABEL = "Completed";
+
+	public static final String PAYMENT_STATUS_NOT_REQUIRED_LABEL =
+		"Not Required";
+
+	public static final String PAYMENT_STATUS_PENDING_LABEL = "Pending";
+
 	public static final String PUBSUB_TOPIC_NAME_KORONEIKI_ACCOUNT_CREATE =
 		"koroneiki.account.create";
 
 	public static final String PUBSUB_TOPIC_NAME_KORONEIKI_ACCOUNT_UPDATE =
 		"koroneiki.account.update";
 
-	public static final String PUBSUB_TOPIC_NAME_KORONEIKI_ENTITLEMENT_CREATE =
-		"koroneiki.entitlement.create";
+	public static final String
+		PUBSUB_TOPIC_NAME_KORONEIKI_PRODUCT_PURCHASE_CREATE =
+			"koroneiki.productpurchase.create";
 
 	public static String getOrderPaymentMethodLabel(String paymentMethod) {
 		if (Objects.equals(paymentMethod, ORDER_PAYMENT_METHOD_MONEY_ORDER)) {
@@ -80,6 +88,22 @@ public class MarketplaceConstants {
 
 		if (Objects.equals(paymentMethod, ORDER_PAYMENT_METHOD_PAYPAL)) {
 			return ORDER_PAYMENT_METHOD_PAYPAL_LABEL;
+		}
+
+		return null;
+	}
+
+	public static String getOrderPaymentStatusLabel(int paymentStatus) {
+		if (paymentStatus == ORDER_PAYMENT_STATUS_COMPLETED) {
+			return PAYMENT_STATUS_COMPLETED_LABEL;
+		}
+
+		if (paymentStatus == ORDER_PAYMENT_STATUS_NOT_REQUIRED) {
+			return PAYMENT_STATUS_NOT_REQUIRED_LABEL;
+		}
+
+		if (paymentStatus == ORDER_PAYMENT_STATUS_PENDING) {
+			return PAYMENT_STATUS_PENDING_LABEL;
 		}
 
 		return null;

@@ -560,11 +560,10 @@ public class BookmarksEntryLocalServiceImpl
 				updateBookmarksEntry(entry);
 
 				if (!reindex) {
-					return;
+					return null;
 				}
 
-				indexableActionableDynamicQuery.addDocuments(
-					indexer.getDocument(entry));
+				return indexer.getDocument(entry);
 			});
 
 		indexableActionableDynamicQuery.performActions();

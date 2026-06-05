@@ -9,12 +9,16 @@ import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.service.DepotEntryLocalService;
 import com.liferay.expando.kernel.service.ExpandoColumnLocalService;
 import com.liferay.expando.kernel.service.ExpandoTableLocalService;
+import com.liferay.exportimport.constants.ExportImportConstants;
+import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.exportimport.vulcan.batch.engine.ExportImportVulcanBatchEngineTaskItemDelegate;
 import com.liferay.headless.common.spi.odata.entity.EntityFieldsUtil;
 import com.liferay.headless.common.spi.service.context.ServiceContextBuilder;
 import com.liferay.headless.object.dto.v1_0.ObjectEntryFolder;
 import com.liferay.headless.object.internal.odata.entity.v1_0.ObjectEntryFolderEntityModel;
 import com.liferay.headless.object.resource.v1_0.ObjectEntryFolderResource;
+import com.liferay.object.constants.ObjectActionKeys;
+import com.liferay.object.constants.ObjectConstants;
 import com.liferay.object.constants.ObjectEntryFolderConstants;
 import com.liferay.object.constants.ObjectPortletKeys;
 import com.liferay.object.exception.NoSuchObjectEntryFolderException;
@@ -34,7 +38,10 @@ import com.liferay.portal.kernel.search.filter.BooleanFilter;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.search.filter.TermFilter;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
+import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
+import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
@@ -56,6 +63,7 @@ import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 import com.liferay.portal.vulcan.util.SearchUtil;
 import com.liferay.sharing.configuration.SharingConfiguration;
 import com.liferay.sharing.configuration.SharingConfigurationFactory;
+import com.liferay.sharing.security.permission.SharingPermission;
 import com.liferay.trash.TrashHelper;
 
 import jakarta.ws.rs.NotSupportedException;
@@ -192,18 +200,26 @@ public class ObjectEntryFolderResourceImpl
 	}
 
 	@Override
-	public ExportImportDescriptor getExportImportDescriptor() {
-		return new ExportImportDescriptor() {
+	public ExportImportDescriptor<com.liferay.object.model.ObjectEntryFolder>
+		getExportImportDescriptor() {
+
+		return new ExportImportDescriptor<>() {
 
 			@Override
-			public String getLabelLanguageKey() {
-				return "objectEntryFolders";
+			public String getKey() {
+				return ObjectEntryFolderResourceImpl.class.getName();
 			}
 
 			@Override
-			public String getModelClassName() {
-				return com.liferay.object.model.ObjectEntryFolder.class.
-					getName();
+			public String getLabelLanguageKey() {
+				return "model.resource.com.liferay.object.entry.folder";
+			}
+
+			@Override
+			public Class<com.liferay.object.model.ObjectEntryFolder>
+				getModelClass() {
+
+				return com.liferay.object.model.ObjectEntryFolder.class;
 			}
 
 			@Override
@@ -212,15 +228,15 @@ public class ObjectEntryFolderResourceImpl
 			}
 
 			@Override
-			public String getResourceClassName() {
-				return ObjectEntryFolderResourceImpl.class.getName();
-			}
-
-			@Override
 			public ExportImportVulcanBatchEngineTaskItemDelegate.Scope
 				getScope() {
 
 				return Scope.DEPOT;
+			}
+
+			@Override
+			public String getSectionKey() {
+				return ExportImportConstants.SECTION_KEY_OBJECTS;
 			}
 
 		};
@@ -270,16 +286,21 @@ public class ObjectEntryFolderResourceImpl
 		return SearchUtil.search(
 			HashMapBuilder.put(
 				"create",
-				addAction(
-					ActionKeys.ADD_FOLDER, "postScopeScopeKeyObjectEntryFolder",
-					com.liferay.object.model.ObjectEntryFolder.class.getName(),
-					groupId)
-			).put(
-				"get",
-				addAction(
-					ActionKeys.VIEW, "getScopeScopeKeyObjectEntryFoldersPage",
-					com.liferay.object.model.ObjectEntryFolder.class.getName(),
-					groupId)
+				() -> {
+					if (!_objectEntryFolderPortletResourcePermission.contains(
+							PermissionThreadLocal.getPermissionChecker(),
+							groupId,
+							ObjectActionKeys.ADD_OBJECT_ENTRY_FOLDER)) {
+
+						return null;
+					}
+
+					return addAction(
+						ObjectActionKeys.ADD_OBJECT_ENTRY_FOLDER, null,
+						"postScopeScopeKeyObjectEntryFolder", null,
+						ObjectConstants.RESOURCE_NAME_OBJECT_ENTRY_FOLDER,
+						groupId);
+				}
 			).build(),
 			booleanQuery -> {
 				if (!GetterUtil.getBoolean(flatten)) {
@@ -585,16 +606,33 @@ public class ObjectEntryFolderResourceImpl
 			Map<String, Serializable> parameters, String search)
 		throws Exception {
 
-		if (parameters.containsKey("siteId")) {
-			return getScopeScopeKeyObjectEntryFoldersPage(
-				parameters.get(
-					"siteId"
-				).toString(),
-				false, search, null, filter, pagination, sorts);
+		if (!parameters.containsKey("siteId")) {
+			throw new NotSupportedException(
+				"One of the following parameters must be specified: [siteId]");
 		}
 
-		throw new NotSupportedException(
-			"One of the following parameters must be specified: [siteId]");
+		BooleanFilter booleanFilter = new BooleanFilter();
+
+		if (filter != null) {
+			booleanFilter.add(filter, BooleanClauseOccur.MUST);
+		}
+
+		booleanFilter.add(
+			new TermFilter(
+				"externalReferenceCode",
+				ObjectEntryFolderConstants.EXTERNAL_REFERENCE_CODE_CONTENTS),
+			BooleanClauseOccur.MUST_NOT);
+		booleanFilter.add(
+			new TermFilter(
+				"externalReferenceCode",
+				ObjectEntryFolderConstants.EXTERNAL_REFERENCE_CODE_FILES),
+			BooleanClauseOccur.MUST_NOT);
+
+		return getScopeScopeKeyObjectEntryFoldersPage(
+			parameters.get(
+				"siteId"
+			).toString(),
+			false, search, null, booleanFilter, pagination, sorts);
 	}
 
 	@Override
@@ -755,7 +793,8 @@ public class ObjectEntryFolderResourceImpl
 						parentObjectEntryFolderExternalReferenceCode, groupId,
 						contextUser.getCompanyId());
 
-		if ((parentObjectEntryFolderId != null) &&
+		if (!ExportImportThreadLocal.isImportInProcess() &&
+			(parentObjectEntryFolderId != null) &&
 			(serviceBuilderObjectEntryFolder != null) &&
 			(serviceBuilderObjectEntryFolder.getObjectEntryFolderId() !=
 				parentObjectEntryFolderId)) {
@@ -833,6 +872,31 @@ public class ObjectEntryFolderResourceImpl
 					addAction(
 						ActionKeys.DELETE, serviceBuilderObjectEntryFolder,
 						"deleteObjectEntryFolder")
+				).put(
+					"duplicate",
+					() -> {
+						if (!FeatureFlagManagerUtil.isEnabled(
+								contextCompany.getCompanyId(), "LPD-17564")) {
+
+							return null;
+						}
+
+						return ActionUtil.addAction(
+							ActionKeys.UPDATE,
+							ObjectEntryFolderResourceImpl.class,
+							serviceBuilderObjectEntryFolder.
+								getObjectEntryFolderId(),
+							"postObjectEntryFolderByParentObjectEntryFolder" +
+								"Copy",
+							null, _objectEntryFolderModelResourcePermission,
+							HashMapBuilder.put(
+								"parentObjectEntryFolderId",
+								String.valueOf(
+									serviceBuilderObjectEntryFolder.
+										getParentObjectEntryFolderId())
+							).build(),
+							contextUriInfo);
+					}
 				).put(
 					"get",
 					addAction(
@@ -940,12 +1004,21 @@ public class ObjectEntryFolderResourceImpl
 							_sharingConfigurationFactory.
 								getGroupSharingConfiguration(group);
 
-						if (!sharingConfiguration.isEnabled()) {
+						if (!sharingConfiguration.isEnabled() ||
+							!_sharingPermission.containsSharePermission(
+								PermissionThreadLocal.getPermissionChecker(),
+								_classNameLocalService.getClassNameId(
+									serviceBuilderObjectEntryFolder.
+										getModelClassName()),
+								serviceBuilderObjectEntryFolder.
+									getObjectEntryFolderId(),
+								group.getGroupId())) {
+
 							return null;
 						}
 
 						return addAction(
-							ActionKeys.VIEW, serviceBuilderObjectEntryFolder,
+							ActionKeys.UPDATE, serviceBuilderObjectEntryFolder,
 							"getObjectEntryFolder");
 					}
 				).put(
@@ -1011,6 +1084,9 @@ public class ObjectEntryFolderResourceImpl
 		ObjectEntryFolderResourceImpl.class);
 
 	@Reference
+	private ClassNameLocalService _classNameLocalService;
+
+	@Reference
 	private DepotEntryLocalService _depotEntryLocalService;
 
 	@Reference
@@ -1041,6 +1117,10 @@ public class ObjectEntryFolderResourceImpl
 	private ModelResourcePermission<com.liferay.object.model.ObjectEntryFolder>
 		_objectEntryFolderModelResourcePermission;
 
+	@Reference(target = "(resource.name=com.liferay.object.entry.folder)")
+	private PortletResourcePermission
+		_objectEntryFolderPortletResourcePermission;
+
 	@Reference
 	private ObjectEntryFolderService _objectEntryFolderService;
 
@@ -1049,6 +1129,9 @@ public class ObjectEntryFolderResourceImpl
 
 	@Reference
 	private SharingConfigurationFactory _sharingConfigurationFactory;
+
+	@Reference
+	private SharingPermission _sharingPermission;
 
 	@Reference
 	private TrashHelper _trashHelper;

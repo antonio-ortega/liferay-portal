@@ -32,6 +32,7 @@ import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.odata.entity.EntityField;
@@ -103,7 +104,8 @@ public abstract class BaseMessageResourceTestCase {
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
 		).endpoint(
-			testCompany.getVirtualHostname(), 8080, "http"
+			testCompany.getVirtualHostname(),
+			PortalUtil.getPortalServerPort(false), "http"
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -165,6 +167,7 @@ public abstract class BaseMessageResourceTestCase {
 
 		Message message = randomMessage();
 
+		message.setChatbotExternalReferenceCode(regex);
 		message.setText(regex);
 
 		String json = MessageSerDes.toJSON(message);
@@ -173,6 +176,7 @@ public abstract class BaseMessageResourceTestCase {
 
 		message = MessageSerDes.toDTO(json);
 
+		Assert.assertEquals(regex, message.getChatbotExternalReferenceCode());
 		Assert.assertEquals(regex, message.getText());
 	}
 
@@ -272,6 +276,17 @@ public abstract class BaseMessageResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"chatbotExternalReferenceCode",
+					additionalAssertFieldName)) {
+
+				if (message.getChatbotExternalReferenceCode() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("context", additionalAssertFieldName)) {
 				if (message.getContext() == null) {
 					valid = false;
@@ -280,8 +295,10 @@ public abstract class BaseMessageResourceTestCase {
 				continue;
 			}
 
-			if (Objects.equals("scope", additionalAssertFieldName)) {
-				if (message.getScope() == null) {
+			if (Objects.equals(
+					"instructionDefinitionScope", additionalAssertFieldName)) {
+
+				if (message.getInstructionDefinitionScope() == null) {
 					valid = false;
 				}
 
@@ -421,6 +438,20 @@ public abstract class BaseMessageResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"chatbotExternalReferenceCode",
+					additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						message1.getChatbotExternalReferenceCode(),
+						message2.getChatbotExternalReferenceCode())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("context", additionalAssertFieldName)) {
 				if (!equals(
 						(Map)message1.getContext(),
@@ -432,9 +463,12 @@ public abstract class BaseMessageResourceTestCase {
 				continue;
 			}
 
-			if (Objects.equals("scope", additionalAssertFieldName)) {
+			if (Objects.equals(
+					"instructionDefinitionScope", additionalAssertFieldName)) {
+
 				if (!Objects.deepEquals(
-						message1.getScope(), message2.getScope())) {
+						message1.getInstructionDefinitionScope(),
+						message2.getInstructionDefinitionScope())) {
 
 					return false;
 				}
@@ -564,12 +598,58 @@ public abstract class BaseMessageResourceTestCase {
 				"Invalid entity field " + entityFieldName);
 		}
 
+		if (entityFieldName.equals("chatbotExternalReferenceCode")) {
+			Object object = message.getChatbotExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
+
+			return sb.toString();
+		}
+
 		if (entityFieldName.equals("context")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
 		}
 
-		if (entityFieldName.equals("scope")) {
+		if (entityFieldName.equals("instructionDefinitionScope")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
 		}
@@ -633,7 +713,9 @@ public abstract class BaseMessageResourceTestCase {
 			).toString(),
 			"application/json");
 		httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
-		httpInvoker.path("http://localhost:8080/o/graphql");
+		httpInvoker.path(
+			"http://localhost:" + PortalUtil.getPortalServerPort(false) +
+				"/o/graphql");
 		httpInvoker.userNameAndPassword(
 			"test@liferay.com:" + PropsValues.DEFAULT_ADMIN_PASSWORD);
 
@@ -665,6 +747,8 @@ public abstract class BaseMessageResourceTestCase {
 	protected Message randomMessage() throws Exception {
 		return new Message() {
 			{
+				chatbotExternalReferenceCode = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
 				text = StringUtil.toLowerCase(RandomTestUtil.randomString());
 			}
 		};
@@ -890,3 +974,4 @@ public abstract class BaseMessageResourceTestCase {
 		_messageResource;
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1692514399

@@ -16,6 +16,7 @@ export class PendingOrdersPage extends CommerceDNDTablePage {
 	readonly approveButton: Locator;
 	readonly checkoutButton: Locator;
 	readonly createDateSortButton: Locator;
+	readonly deleteMenuItem: Locator;
 	readonly doneButton: Locator;
 	readonly editMenuItem: Locator;
 	readonly errorMessageCloseButton: Locator;
@@ -63,11 +64,16 @@ export class PendingOrdersPage extends CommerceDNDTablePage {
 			exact: true,
 			name: 'Done',
 		});
+		this.deleteMenuItem = page.getByRole('menuitem', {
+			exact: true,
+			name: 'Delete',
+		});
 		this.editMenuItem = page.getByRole('menuitem', {
 			exact: true,
 			name: 'Edit',
 		});
 		this.errorMessageCloseButton = page.getByRole('button', {
+			exact: true,
 			name: 'Close',
 		});
 		this.layoutsPage = new CommerceLayoutsPage(page);
@@ -81,7 +87,9 @@ export class PendingOrdersPage extends CommerceDNDTablePage {
 			name: 'Edit',
 		});
 		this.orderItemExpandButton = (productName) =>
-			page.getByRole('gridcell', {name: productName}).getByRole('button');
+			page
+				.getByRole('gridcell', {exact: true, name: productName})
+				.getByRole('button');
 		this.orderItemsTable = page.locator(
 			'#portlet_com_liferay_commerce_order_content_web_internal_portlet_CommerceOpenOrderContentPortlet .fds table'
 		);
@@ -107,7 +115,7 @@ export class PendingOrdersPage extends CommerceDNDTablePage {
 			if (orderItemsTableRow && orderItemsTableRow.column) {
 				return orderItemsTableRow.row.getByRole('button', {
 					exact: true,
-					name: 'Actions',
+					name: `${productName} Actions`,
 				});
 			}
 

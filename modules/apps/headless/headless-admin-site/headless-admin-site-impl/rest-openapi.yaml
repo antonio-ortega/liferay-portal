@@ -74,9 +74,25 @@ components:
             description:
                 A fragment editable element value of type background image.
             type: object
+        BackgroundImageValue:
+            # @review
+            description:
+                The background image value.
+            discriminator:
+                mapping:
+                    Direct: "#/components/schemas/DirectBackgroundImageValue"
+                    Mapped: "#/components/schemas/MappedBackgroundImageValue"
+                propertyName: type
+            properties:
+                type:
+                    # @review
+                    description:
+                        The background image's type.
+                    enum: [Direct, Mapped]
+                    type: string
         BasicFragmentInstancePageElementDefinition:
             allOf:
-                -   $ref: "#/components/schemas/PageElementDefinition"                               
+                -   $ref: "#/components/schemas/PageElementDefinition"
                 -   properties:
                         fragmentInstance:
                             $ref: "#/components/schemas/FragmentInstance"
@@ -86,7 +102,7 @@ components:
             # @review
             description:
                 The page element definition of a basic fragment instance.
-            type: object  
+            type: object
         BasicLayout:
             properties:
                 align:
@@ -347,13 +363,14 @@ components:
                 mapping:
                     Collection: "#/components/schemas/CollectionItemExternalReference"
                     CollectionProvider: "#/components/schemas/ClassNameReference"
+                    RepeatableFieldsCollectionProvider: "#/components/schemas/RepeatableFieldsCollectionProviderReference"
                 propertyName: collectionType
             properties:
                 collectionType:
                     # @review
                     description:
-                        The collection's type (Collection, CollectionProvider).
-                    enum: [Collection, CollectionProvider]
+                        The collection's type (Collection, CollectionProvider, RepeatableFieldsCollectionProvider).
+                    enum: [Collection, CollectionProvider, RepeatableFieldsCollectionProvider]
                     type: string
             type: object
         CollectionSettings:
@@ -424,11 +441,11 @@ components:
             allOf:
                 -   $ref: "#/components/schemas/PageElementDefinition"
                 -   properties:
-                        backgroundFragmentImage:
-                            $ref: "#/components/schemas/FragmentImage"
+                        backgroundImageValue:
+                            $ref: "#/components/schemas/BackgroundImageValue"
                             # @review
                             description:
-                                The fragment's background image.
+                                The background image.
                         contentVisibility:
                             # @review
                             description:
@@ -486,6 +503,11 @@ components:
                             items:
                                 $ref: "#/components/schemas/CustomMetaTag"
                             type: array
+                        defaultAssetPublisherPortletId:
+                            # @review
+                            description:
+                                The portlet ID of the asset publisher configured as the default for this page, if any.
+                            type: string
                         openGraphSettings:
                             $ref: "#/components/schemas/OpenGraphSettings"
                             # @review
@@ -516,11 +538,6 @@ components:
                             type: array
                         settings:
                             $ref: "#/components/schemas/Settings"
-                        siteTemplatePageSpecificationExternalReferenceCode:
-                            # @review
-                            description:
-                                The site template page specification's external reference code.
-                            type: string
             # @review
             description:
                 A page specification of a content page. A content page will contain 1 page specification for its draft
@@ -579,6 +596,24 @@ components:
                         The localized custom meta tag's values.
                     type: object
             type: object
+        DateFragmentEditableElementValue:
+            allOf:
+                -   $ref: "#/components/schemas/FragmentEditableElementValue"
+                -   properties:
+                        date:
+                            $ref: "#/components/schemas/FragmentMappedValue"
+                            # @review
+                            description:
+                                The mapped date value of the date fragment editable element.
+                        dateFormat:
+                            $ref: "#/components/schemas/FragmentInlineValue"
+                            # @review
+                            description:
+                                The localized date format patterns. When absent, the Default format is used.
+            # @review
+            description:
+                A fragment editable element value of type date.
+            type: object
         DefaultFragmentReference:
             allOf:
                 -   $ref: "#/components/schemas/FragmentReference"
@@ -593,6 +628,16 @@ components:
                 A reference to a default fragment (provided out-of-the-box).
             required:
                 -   defaultFragmentKey
+            type: object
+        DirectBackgroundImageValue:
+            allOf:
+                -   $ref: "#/components/schemas/BackgroundImageValue"
+                -   properties:
+                        imageValue:
+                            $ref: "#/components/schemas/ImageValue"
+            # @review
+            description:
+                A background image value of type direct.
             type: object
         DirectFragmentImageValue:
             allOf:
@@ -1052,7 +1097,7 @@ components:
                     $ref: "#/components/schemas/SuccessFormContainerSubmissionResult"
                     description:
                         The definition of the result when a form container submission is successful.
-            type: object            
+            type: object
         FormContainerContextReference:
             # @review
             allOf:
@@ -1066,11 +1111,11 @@ components:
             allOf:
                 -   $ref: "#/components/schemas/PageElementDefinition"
                 -   properties:
-                        backgroundFragmentImage:
-                            $ref: "#/components/schemas/FragmentImage"
+                        backgroundImageValue:
+                            $ref: "#/components/schemas/BackgroundImageValue"
                             # @review
                             description:
-                                The fragment's background image.
+                                The background image.
                         cssClasses:
                             # @review
                             description:
@@ -1125,13 +1170,13 @@ components:
             type: object
         FormFragmentInstancePageElementDefinition:
             allOf:
-                -   $ref: "#/components/schemas/PageElementDefinition"                                  
+                -   $ref: "#/components/schemas/PageElementDefinition"
                 -   properties:
                         fieldKey:
                             # @review
                             description:
                                 The mapped field key.
-                            type: string                     
+                            type: string
                         fragmentInstance:
                             $ref: "#/components/schemas/FragmentInstance"
                             # @review
@@ -1143,47 +1188,47 @@ components:
                             # @review
                             description:
                                 The localized help texts of the form fragment.
-                            type: object                                
+                            type: object
                         label_i18n:
                             additionalProperties:
                                 type: string
                             # @review
                             description:
                                 The localized labels of the form fragment.
-                            type: object                   
+                            type: object
                         markAsRequired:
                             # @review
                             description:
                                 Whether to mark as required.
-                            type: boolean              
+                            type: boolean
                         readOnlyField:
                             # @review
                             description:
                                 Whether to render as read-only field.
-                            type: boolean                        
+                            type: boolean
                         showHelpText:
                             # @review
                             description:
                                 Whether to show the help text.
-                            type: boolean                        
+                            type: boolean
                         showLabel:
                             # @review
                             description:
                                 Whether to show the label.
-                            type: boolean   
+                            type: boolean
             # @review
             description:
                 The page element definition of a form fragment instance.
-            type: object          
+            type: object
         FormStepContainerPageElementDefinition:
             allOf:
                 -   $ref: "#/components/schemas/PageElementDefinition"
                 -   properties:
-                        backgroundFragmentImage:
-                            $ref: "#/components/schemas/FragmentImage"
+                        backgroundImageValue:
+                            $ref: "#/components/schemas/BackgroundImageValue"
                             # @review
                             description:
-                                The fragment's background image.
+                                The background image.
                         cssClasses:
                             # @review
                             description:
@@ -1209,84 +1254,6 @@ components:
             description:
                 The page element definition of a form step.
             type: object
-        FragmentComposition:
-            # @review
-            description:
-                A composition of fragments that can be added to a site page.
-            properties:
-                creator:
-                    $ref: ../../headless-admin-user/headless-admin-user-impl/rest-openapi.yaml#Creator
-                    # @review
-                    description:
-                        The fragment composition's creator. It is not returned by default. It can be embedded via
-                        nestedFields.
-                    readOnly: true
-                dateCreated:
-                    description:
-                        The structured content's creation date.
-                    format: date-time
-                    type: string
-                dateModified:
-                    description:
-                        The last time any field of the structured content was changed.
-                    format: date-time
-                    type: string
-                datePublished:
-                    description:
-                        The structured content's most recent publication date.
-                    format: date-time
-                    type: string
-                description:
-                    # @review
-                    description:
-                        The description of this fragment composition.
-                    type: string
-                externalReferenceCode:
-                    # @review
-                    description:
-                        The external reference code of this fragment composition.
-                    type: string
-                fragmentSetExternalReferenceCode:
-                    # @review
-                    description:
-                        The external reference code of the fragment set this fragment composition belongs to.
-                    type: string
-                key:
-                    # @review
-                    description:
-                        The fragment composition's key.
-                    type: string
-                name:
-                    # @review
-                    description:
-                        The fragment composition's name.
-                    type: string
-                pageElement:
-                    $ref: "#/components/schemas/PageElement"
-                    # @review
-                    description:
-                        The fragment composition's page element, whose definition must be of type
-                        ContainerPageElementDefinition.
-                thumbnail:
-                    $ref: "#/components/schemas/ItemExternalReference"
-                    # @review
-                    description:
-                        The fragment composition's thumbnail.
-            type: object
-        FragmentCompositionInstancePageElementDefinition:
-            allOf:
-                -   $ref: "#/components/schemas/PageElementDefinition"
-                -   properties:
-                        fragmentComposition:
-                            $ref: "#/components/schemas/ItemExternalReference"
-                            # @review
-                            description:
-                                The reference to the fragment composition that will be used to generate the page element
-                                of type container that will be added.
-            # @review
-            description:
-                The page element definition of a fragment composition instance.
-            type: object
         FragmentConfigurationFieldValue:
             # @review
             description:
@@ -1302,6 +1269,7 @@ components:
                     Length: "#/components/schemas/LengthFragmentConfigurationFieldValue"
                     NavigationMenu: "#/components/schemas/NavigationMenuFragmentConfigurationFieldValue"
                     Select: "#/components/schemas/SelectFragmentConfigurationFieldValue"
+                    TargetCollectionDisplay: "#/components/schemas/TargetCollectionDisplayFragmentConfigurationFieldValue"
                     Text: "#/components/schemas/TextFragmentConfigurationFieldValue"
                     URL: "#/components/schemas/URLFragmentConfigurationFieldValue"
                     Video: "#/components/schemas/VideoFragmentConfigurationFieldValue"
@@ -1311,8 +1279,8 @@ components:
                     # @review
                     description:
                         The configuration field's type (category, checkbox, collection, colorPalette, colorPicker, item,
-                        length, navigationMenu, select, text, URL, video).
-                    enum: [Category, Checkbox, Collection, ColorPalette, ColorPicker, Item, Length, NavigationMenu, Select, Text, URL, Video]
+                        length, navigationMenu, select, targetCollectionDisplay, text, URL, video).
+                    enum: [Category, Checkbox, Collection, ColorPalette, ColorPicker, Item, Length, NavigationMenu, Select, TargetCollectionDisplay, Text, URL, Video]
                     type: string
             required:
                 -   type
@@ -1351,6 +1319,7 @@ components:
                 mapping:
                     Action: "#/components/schemas/ActionFragmentEditableElementValue"
                     BackgroundImage: "#/components/schemas/BackgroundImageFragmentEditableElementValue"
+                    Date: "#/components/schemas/DateFragmentEditableElementValue"
                     HTML: "#/components/schemas/HTMLFragmentEditableElementValue"
                     Image: "#/components/schemas/ImageFragmentEditableElementValue"
                     Link: "#/components/schemas/LinkFragmentEditableElementValue"
@@ -1365,6 +1334,7 @@ components:
                     enum:
                         -   Action
                         -   BackgroundImage
+                        -   Date
                         -   HTML
                         -   Image
                         -   Link
@@ -1469,11 +1439,11 @@ components:
             description:
                 A fragment instance.
             properties:
-                backgroundFragmentImage:
-                    $ref: "#/components/schemas/FragmentImage"
+                backgroundImageValue:
+                    $ref: "#/components/schemas/BackgroundImageValue"
                     # @review
                     description:
-                        The fragment's background image.
+                        The background image.
                 configuration:
                     # @review
                     description:
@@ -1927,11 +1897,11 @@ components:
             allOf:
                 -   $ref: "#/components/schemas/PageElementDefinition"
                 -   properties:
-                        backgroundFragmentImage:
-                            $ref: "#/components/schemas/FragmentImage"
+                        backgroundImageValue:
+                            $ref: "#/components/schemas/BackgroundImageValue"
                             # @review
                             description:
-                                The fragment's background image.
+                                The background image.
                         cssClasses:
                             # @review
                             description:
@@ -2032,13 +2002,13 @@ components:
         HTMLFragmentInlineValue:
             # @review
             allOf:
+                -   $ref: "#/components/schemas/HTMLFragmentValue"
                 -   properties:
                         fragmentInlineValue:
                             $ref: "#/components/schemas/FragmentInlineValue"
                             # @review
                             description:
                                 The fragment inline value.
-                -   $ref: "#/components/schemas/HTMLFragmentValue"
             # @review
             description:
                 An inline value of a fragment HTML element.
@@ -2046,13 +2016,13 @@ components:
         HTMLFragmentMappedValue:
             # @review
             allOf:
+                -   $ref: "#/components/schemas/HTMLFragmentValue"
                 -   properties:
                         fragmentMappedValue:
                             $ref: "#/components/schemas/FragmentMappedValue"
                             # @review
                             description:
                                 The fragment mapped value.
-                -   $ref: "#/components/schemas/HTMLFragmentValue"
             # @review
             description:
                 A mapped value of a fragment HTML element.
@@ -2085,6 +2055,14 @@ components:
             properties:
                 htmlTag:
                     enum: [Article, Aside, Div, Footer, Header, Nav, Section]
+                    type: string
+            type: object
+        IconImageURL:
+            # @review
+            description:
+                An Icon Image URL.
+            properties:
+                url:
                     type: string
             type: object
         ImageFragmentEditableElementValue:
@@ -2288,6 +2266,16 @@ components:
             description:
                 The collection display's list style.
             type: object
+        MappedBackgroundImageValue:
+            allOf:
+                -   $ref: "#/components/schemas/BackgroundImageValue"
+                -   properties:
+                        fragmentMappedValue:
+                            $ref: "#/components/schemas/FragmentMappedValue"
+            # @review
+            description:
+                A mapped background image value.
+            type: object
         MappedFragmentImageValue:
             allOf:
                 -   $ref: "#/components/schemas/FragmentImageValue"
@@ -2365,12 +2353,12 @@ components:
                     items:
                         type: permission
                     type: array
-                taxonomyCategoryItemExternalReferences:
+                taxonomyCategoryBriefs:
                     # @review
                     description:
-                        The external references to the associated categories.
+                        The taxonomy categories associated with this page.
                     items:
-                        $ref: "#/components/schemas/ItemExternalReference"
+                        $ref: "#/components/schemas/TaxonomyCategoryBrief"
                     type: array
                 thumbnailURLReference:
                     $ref: "#/components/schemas/ThumbnailURLReference"
@@ -2802,7 +2790,6 @@ components:
                     FormFragment: "#/components/schemas/FormFragmentInstancePageElementDefinition"
                     FormStep: "#/components/schemas/FormStepPageElementDefinition"
                     FormStepContainer: "#/components/schemas/FormStepContainerPageElementDefinition"
-                    FragmentComposition: "#/components/schemas/FragmentCompositionInstancePageElementDefinition"
                     FragmentDropZone: "#/components/schemas/FragmentDropZonePageElementDefinition"
                     Grid: "#/components/schemas/GridPageElementDefinition"
                     Module: "#/components/schemas/ModulePageElementDefinition"
@@ -2814,7 +2801,7 @@ components:
                     description:
                         The page element definition's type (basic fragment, collection display, collection item,
                         container, drop zone, form container, form fragment, form step, form step container, fragment
-                        composition, fragment drop zone, grid,  module or widget).
+                        drop zone, grid,  module or widget).
                     enum:
                         -   BasicFragment
                         -   CollectionDisplay
@@ -2825,7 +2812,6 @@ components:
                         -   FormFragment
                         -   FormStep
                         -   FormStepContainer
-                        -   FragmentComposition
                         -   FragmentDropZone
                         -   Grid
                         -   Module
@@ -2859,13 +2845,6 @@ components:
                         The page elements in the experience.
                     items:
                         $ref: "#/components/schemas/PageElement"
-                    type: array
-                pageRules:
-                    # @review
-                    description:
-                        The page rules in the experience.
-                    items:
-                        $ref: "#/components/schemas/PageRule"
                     type: array
                 pageSpecificationExternalReferenceCode:
                     # @review
@@ -2905,94 +2884,6 @@ components:
                 title:
                     description:
                         The title or name of the entity that this navigation menu item is set to.
-                    type: string
-            type: object
-        PageRule:
-            # @review
-            description:
-                The definition of a page rule.
-            properties:
-                conditionType:
-                    # @review
-                    description:
-                        The custom name of a Page rule.
-                    enum: [All, Any]
-                    type: string
-                externalReferenceCode:
-                    # @review
-                    description:
-                        The page rule external reference code.
-                    type: string
-                name:
-                    # @review
-                    description:
-                        The custom name of a page rule.
-                    type: string
-                pageRuleActions:
-                    # @review
-                    description:
-                        A list of actions of a page rule.
-                    items:
-                        $ref: "#/components/schemas/PageRuleAction"
-                    type: array
-                pageRuleConditions:
-                    # @review
-                    description:
-                        A list of conditions of a page rule.
-                    items:
-                        $ref: "#/components/schemas/PageRuleCondition"
-                    type: array
-            type: object
-        PageRuleAction:
-            # @review
-            description:
-                The definition of a page rule action.
-            properties:
-                action:
-                    # @review
-                    description:
-                        The page rule action's action.
-                    type: string
-                externalReferenceCode:
-                    # @review
-                    description:
-                        The page rule action's external reference code.
-                    type: string
-                itemId:
-                    # @review
-                    description:
-                        The page rule action's item ID.
-                    type: string
-                type:
-                    # @review
-                    description:
-                        The page rule action's type.
-                    type: string
-            type: object
-        PageRuleCondition:
-            # @review
-            description:
-                The definition of a Page Rule Condition.
-            properties:
-                condition:
-                    # @review
-                    description:
-                        The page rule condition's description.
-                    type: string
-                externalReferenceCode:
-                    # @review
-                    description:
-                        The page rule condition's external reference code.
-                    type: string
-                type:
-                    # @review
-                    description:
-                        The page rule condition's type.
-                    type: string
-                value:
-                    # @review
-                    description:
-                        The page rule condition's value.
                     type: string
             type: object
         PageSetPageSettings:
@@ -3076,6 +2967,11 @@ components:
                 externalReferenceCode:
                     description:
                         The page specification's external reference code, unique per site.
+                    type: string
+                siteTemplatePageSpecificationExternalReferenceCode:
+                    # @review
+                    description:
+                        The site template page specification's external reference code.
                     type: string
                 status:
                     # @review
@@ -3174,12 +3070,12 @@ components:
                     items:
                         type: permission
                     type: array
-                taxonomyCategoryItemExternalReferences:
+                taxonomyCategoryBriefs:
                     # @review
                     description:
-                        The external references to the associated categories.
+                        The taxonomy categories associated with this page.
                     items:
-                        $ref: "#/components/schemas/ItemExternalReference"
+                        $ref: "#/components/schemas/TaxonomyCategoryBrief"
                     type: array
                 thumbnailURLReference:
                     $ref: "#/components/schemas/ThumbnailURLReference"
@@ -3319,6 +3215,23 @@ components:
                     enum: [like, stacked-stars, stars, thumbs]
                     type: string
             type: object
+        RepeatableFieldsCollectionProviderReference:
+            allOf:
+                -   $ref: "#/components/schemas/CollectionReference"
+                -   properties:
+                        className:
+                            type: string
+                        fieldName:
+                            type: string
+                        subTypeExternalReference:
+                            $ref: "#/components/schemas/ItemExternalReference"
+            # @review
+            description:
+                A unique reference to a repeatable fields collection which remains constant across environments.
+            required:
+                -   className
+                -   fieldName
+            type: object
         SEOSettings:
             # @review
             description:
@@ -3417,6 +3330,11 @@ components:
                     items:
                         $ref: "#/components/schemas/ClientExtension"
                     type: array
+                iconImageURL:
+                    $ref: "#/components/schemas/IconImageURL"
+                    # @review
+                    description:
+                        The IconImage of the page specification.
                 javascript:
                     # @review
                     description:
@@ -3678,12 +3596,12 @@ components:
                     items:
                         type: permission
                     type: array
-                taxonomyCategoryItemExternalReferences:
+                taxonomyCategoryBriefs:
                     # @review
                     description:
-                        The external references to the associated categories.
+                        The taxonomy categories associated with this page.
                     items:
-                        $ref: "#/components/schemas/ItemExternalReference"
+                        $ref: "#/components/schemas/TaxonomyCategoryBrief"
                     type: array
                 type:
                     enum:
@@ -3757,6 +3675,58 @@ components:
                         parentSitePageExternalReferenceCode:
                             type: string
                     type: object
+        SiteTemplate:
+            # @review
+            description:
+                Represents a site template.
+            properties:
+                active:
+                    description:
+                        Allow site administrators to create sites from this site template.
+                    type: boolean
+                defaultLanguageId:
+                    example: en_US
+                    type: string
+                description:
+                    description:
+                        The site template's description.
+                    type: string
+                description_i18n:
+                    additionalProperties:
+                        type: string
+                    description:
+                        The localized descriptions of the site template.
+                    type: object
+                id:
+                    format: int64
+                    readOnly: true
+                    type: integer
+                name:
+                    description:
+                        The site template's name.
+                    type: string
+                name_i18n:
+                    additionalProperties:
+                        type: string
+                    description:
+                        The localized names of the site template.
+                    type: object
+                pagesUpdateable:
+                    description:
+                        Allow site administrators to add, remove, or configure applications and change page properties.
+                    type: boolean
+                permissions:
+                    items:
+                        type: permission
+                    type: array
+                siteExternalReferenceCode:
+                    description:
+                        The external reference code of the site associated with the site template.
+                    readOnly: true
+                    type: string
+            required:
+                -   name
+            type: object
         SitemapSettings:
             # @review
             description:
@@ -3885,6 +3855,65 @@ components:
                 showNotification:
                     type: boolean
             type: object
+        TargetCollectionDisplayFragmentConfigurationFieldValue:
+            allOf:
+                -   $ref: "#/components/schemas/FragmentConfigurationFieldValue"
+                -   properties:
+                        value:
+                            # @review
+                            description:
+                                The page element external reference codes of the target collection displays.
+                            items:
+                                type: string
+                            type: array
+                        value_i18n:
+                            additionalProperties:
+                                items:
+                                    type: string
+                                type: array
+                            # @review
+                            description:
+                                The localized page element external reference codes of the target collection displays.
+                            type: object
+            # @review
+            description:
+                The value of a fragment configuration field of type target collection display.
+            type: object
+        TaxonomyCategoryBrief:
+            # @review
+            properties:
+                parentTaxonomyCategory:
+                    description:
+                        The category's parent category.
+                    properties:
+                        externalReferenceCode:
+                            # @review
+                            description:
+                                The parent taxonomy category's external reference code.
+                            type: string
+                    type: object
+                parentTaxonomyVocabulary:
+                    description:
+                        The parent category's `TaxonomyVocabulary`.
+                    properties:
+                        externalReferenceCode:
+                            # @review
+                            description:
+                                The parent category's `TaxonomyVocabulary` external reference code.
+                            type: string
+                    type: object
+                scope:
+                    type: scope
+                taxonomyCategoryExternalReferenceCode:
+                    # @review
+                    description:
+                        The category's external reference code.
+                    type:
+                        string
+            required:
+                -   parentTaxonomyVocabulary
+                -   taxonomyCategoryExternalReferenceCode
+            type: object
         TemplateListStyle:
             # @review
             allOf:
@@ -4003,13 +4032,30 @@ components:
                     type: string
             type: object
         ThumbnailURLReference:
-            # @review
             description:
-                A unique reference to a URL which remains constant across environments.
+                A reference to a thumbnail file. On read, `externalReferenceCode` and `url` are populated from the
+                underlying file entry; during a staging export, `url` is a `lar://` URL pointing at bytes embedded in
+                the LAR archive. On write, the binary source is resolved by the precedence `externalReferenceCode` →
+                `fileBase64` → `url`. An `externalReferenceCode` that resolves to an existing file binds it; otherwise a
+                new file is materialized from `fileBase64` (or downloaded from `url` when `fileBase64` is absent),
+                carrying the supplied or server-generated `externalReferenceCode`.
             properties:
                 externalReferenceCode:
+                    description:
+                        The thumbnail file's external reference code. On write, the canonical identifier of the file to
+                        bind.
                     type: string
+                fileBase64:
+                    description:
+                        Base64-encoded file content. Used to create a new file when `externalReferenceCode` does not
+                        resolve in the destination.
+                    type: string
+                    writeOnly: true
                 url:
+                    description:
+                        A URL the thumbnail can be fetched from. On read, the canonical URL of the stored file. On
+                        write, used to download bytes (supports `http://`, `https://` and `lar://`) when
+                        `externalReferenceCode` does not resolve and `fileBase64` is absent.
                     type: string
             type: object
         URLActionInteraction:
@@ -4174,7 +4220,7 @@ components:
                     # @review
                     description:
                         The utility page's type.
-                    enum: [CookiePolicy, CreateAccount, Error, ErrorCode404, ErrorCode500, ForgotPassword, Login, TermsOfUse]
+                    enum: [CookiePolicy, CreateAccount, Error, ErrorCode404, ErrorCode500, ErrorCode503, ForgotPassword, Login, TermsOfUse]
                     type: string
                 utilityPageSettings:
                     $ref: "#/components/schemas/UtilityPageSettings"
@@ -4326,11 +4372,11 @@ components:
             allOf:
                 -   $ref: "#/components/schemas/PageElementDefinition"
                 -   properties:
-                        backgroundFragmentImage:
-                            $ref: "#/components/schemas/FragmentImage"
+                        backgroundImageValue:
+                            $ref: "#/components/schemas/BackgroundImageValue"
                             # @review
                             description:
-                                The fragment's background image.
+                                The background image.
                         cssClasses:
                             # @review
                             description:
@@ -4705,6 +4751,11 @@ components:
                             items:
                                 type: string
                             type: array
+                        defaultAssetPublisherPortletId:
+                            # @review
+                            description:
+                                The portlet ID of the asset publisher configured as the default for this page, if any.
+                            type: string
                         inheritChanges:
                             # @review
                             description:
@@ -4740,11 +4791,6 @@ components:
                 -   properties:
                         settings:
                             $ref: "#/components/schemas/Settings"
-                        siteTemplatePageSpecificationExternalReferenceCode:
-                            # @review
-                            description:
-                                The site template page specification's external reference code.
-                            type: string
                         widgetPageSections:
                             # @review
                             description:
@@ -4862,7 +4908,7 @@ components:
 info:
     description:
         "A Java client JAR is available for use with the group ID 'com.liferay', artifact ID
-        'com.liferay.headless.admin.site.client', and version '1.0.23'."
+        'com.liferay.headless.admin.site.client', and version '1.0.30'."
     license:
         name: Apache 2.0
         url: http://www.apache.org/licenses/LICENSE-2.0.html
@@ -5699,262 +5745,6 @@ paths:
                         application/json: {}
                         application/xml: {}
             tags: ["DisplayPageTemplate"]
-    "/sites/{siteExternalReferenceCode}/fragment-compositions":
-        get:
-            # @review
-            description:
-                Retrieves the fragment compositions of the site.
-            operationId: getSiteFragmentCompositionsPage
-            parameters:
-                -   in: path
-                    name: siteExternalReferenceCode
-                    required: true
-                    schema:
-                        type: string
-                -   in: query
-                    name: fields
-                    schema:
-                        type: string
-                -   in: query
-                    name: filter
-                    schema:
-                        type: string
-                -   in: query
-                    name: nestedFields
-                    schema:
-                        type: string
-                -   in: query
-                    name: page
-                    schema:
-                        type: integer
-                -   in: query
-                    name: pageSize
-                    schema:
-                        type: integer
-                -   in: query
-                    name: restrictFields
-                    schema:
-                        type: string
-                -   in: query
-                    name: search
-                    schema:
-                        type: string
-                -   in: query
-                    name: sort
-                    schema:
-                        type: string
-            responses:
-                200:
-                    content:
-                        application/json:
-                            schema:
-                                items:
-                                    $ref: "#/components/schemas/FragmentComposition"
-                                type: array
-                        application/xml:
-                            schema:
-                                items:
-                                    $ref: "#/components/schemas/FragmentComposition"
-                                type: array
-            tags: ["FragmentComposition"]
-        post:
-            # @review
-            description:
-                Adds a new fragment composition. If the page element of the fragment composition does not contain a
-                definition property and contains an external reference code, the page element will be retrieved based on
-                the externalReferenceCode and used for creating the fragment composition.
-            operationId: postSiteFragmentComposition
-            parameters:
-                -   in: path
-                    name: siteExternalReferenceCode
-                    required: true
-                    schema:
-                        type: string
-                -   in: query
-                    name: saveInlineContent
-                    required: true
-                    schema:
-                        default: false
-                        type: boolean
-                -   in: query
-                    name: saveMapping
-                    required: true
-                    schema:
-                        default: false
-                        type: boolean
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: "#/components/schemas/FragmentComposition"
-                    application/xml:
-                        schema:
-                            $ref: "#/components/schemas/FragmentComposition"
-            responses:
-                200:
-                    content:
-                        application/json:
-                            schema:
-                                $ref: "#/components/schemas/FragmentComposition"
-                        application/xml:
-                            schema:
-                                $ref: "#/components/schemas/FragmentComposition"
-            # @review
-            tags: ["FragmentComposition"]
-    "/sites/{siteExternalReferenceCode}/fragment-compositions/{fragmentCompositionExternalReferenceCode}":
-        delete:
-            # @review
-            description:
-                Deletes a specific fragment composition of a site.
-            operationId: deleteSiteFragmentComposition
-            parameters:
-                -   in: path
-                    name: siteExternalReferenceCode
-                    required: true
-                    schema:
-                        type: string
-                -   in: path
-                    name: fragmentCompositionExternalReferenceCode
-                    required: true
-                    schema:
-                        type: string
-            responses:
-                204:
-                    content:
-                        application/json: {}
-                        application/xml: {}
-            tags: ["FragmentComposition"]
-        get:
-            # @review
-            description:
-                Retrieves a specific fragment composition of a site.
-            operationId: getSiteFragmentComposition
-            parameters:
-                -   in: path
-                    name: siteExternalReferenceCode
-                    required: true
-                    schema:
-                        type: string
-                -   in: path
-                    name: fragmentCompositionExternalReferenceCode
-                    required: true
-                    schema:
-                        type: string
-                -   in: query
-                    name: fields
-                    schema:
-                        type: string
-                -   in: query
-                    name: nestedFields
-                    schema:
-                        type: string
-                -   in: query
-                    name: restrictFields
-                    schema:
-                        type: string
-            responses:
-                200:
-                    content:
-                        application/json:
-                            schema:
-                                $ref: "#/components/schemas/FragmentComposition"
-                        application/xml:
-                            schema:
-                                $ref: "#/components/schemas/FragmentComposition"
-            tags: ["FragmentComposition"]
-        patch:
-            # @review
-            description:
-                Updates only the fields received in the request body, leaving any other fields untouched.
-            operationId: patchSiteFragmentComposition
-            parameters:
-                -   in: path
-                    name: siteExternalReferenceCode
-                    required: true
-                    schema:
-                        type: string
-                -   in: path
-                    name: fragmentCompositionExternalReferenceCode
-                    required: true
-                    schema:
-                        type: string
-                -   in: query
-                    name: fields
-                    schema:
-                        type: string
-                -   in: query
-                    name: nestedFields
-                    schema:
-                        type: string
-                -   in: query
-                    name: restrictFields
-                    schema:
-                        type: string
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: "#/components/schemas/FragmentComposition"
-                    application/xml:
-                        schema:
-                            $ref: "#/components/schemas/FragmentComposition"
-            responses:
-                200:
-                    content:
-                        application/json:
-                            schema:
-                                $ref: "#/components/schemas/FragmentComposition"
-                        application/xml:
-                            schema:
-                                $ref: "#/components/schemas/FragmentComposition"
-            tags: ["FragmentComposition"]
-        put:
-            # @review
-            description:
-                Updates the fragment composition with the given external reference code, or creates it if it does not
-                exist.
-            operationId: putSiteFragmentComposition
-            parameters:
-                -   in: path
-                    name: siteExternalReferenceCode
-                    required: true
-                    schema:
-                        type: string
-                -   in: path
-                    name: fragmentCompositionExternalReferenceCode
-                    required: true
-                    schema:
-                        type: string
-                -   in: query
-                    name: fields
-                    schema:
-                        type: string
-                -   in: query
-                    name: nestedFields
-                    schema:
-                        type: string
-                -   in: query
-                    name: restrictFields
-                    schema:
-                        type: string
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: "#/components/schemas/FragmentComposition"
-                    application/xml:
-                        schema:
-                            $ref: "#/components/schemas/FragmentComposition"
-            responses:
-                200:
-                    content:
-                        application/json:
-                            schema:
-                                $ref: "#/components/schemas/FragmentComposition"
-                        application/xml:
-                            schema:
-                                $ref: "#/components/schemas/FragmentComposition"
-            tags: ["FragmentComposition"]
     "/sites/{siteExternalReferenceCode}/master-pages":
         get:
             # @review
@@ -6752,796 +6542,6 @@ paths:
                             schema:
                                 $ref: "#/components/schemas/PageExperience"
             tags: ["PageExperience"]
-    "/sites/{siteExternalReferenceCode}/page-experiences/{pageExperienceExternalReferenceCode}/page-rules":
-        get:
-            # @review
-            description:
-                Retrieves all the page rules within an experience in a page specification of a site page.
-            operationId: getSitePageExperiencePageRulesPage
-            parameters:
-                -   in: path
-                    name: siteExternalReferenceCode
-                    required: true
-                    schema:
-                        type: string
-                -   in: path
-                    name: pageExperienceExternalReferenceCode
-                    schema:
-                        type: string
-                -   in: query
-                    name: fields
-                    schema:
-                        type: string
-                -   in: query
-                    name: flatten
-                    schema:
-                        type: boolean
-                -   in: query
-                    name: nestedFields
-                    schema:
-                        type: string
-                -   in: query
-                    name: restrictFields
-                    schema:
-                        type: string
-            responses:
-                200:
-                    content:
-                        application/json:
-                            schema:
-                                items:
-                                    $ref: "#/components/schemas/PageRule"
-                                type: array
-                        application/xml:
-                            schema:
-                                items:
-                                    $ref: "#/components/schemas/PageRule"
-                                type: array
-            # @review
-            tags: ["PageRule"]
-        post:
-            # @review
-            description:
-                Adds a new page rule to an experience in a page specification in draft status of a site page.
-            operationId: postSitePageExperiencePageRule
-            parameters:
-                -   in: path
-                    name: siteExternalReferenceCode
-                    required: true
-                    schema:
-                        type: string
-                -   in: path
-                    name: pageExperienceExternalReferenceCode
-                    schema:
-                        type: string
-                -   in: query
-                    name: fields
-                    schema:
-                        type: string
-                -   in: query
-                    name: nestedFields
-                    schema:
-                        type: string
-                -   in: query
-                    name: restrictFields
-                    schema:
-                        type: string
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: "#/components/schemas/PageRule"
-                    application/xml:
-                        schema:
-                            $ref: "#/components/schemas/PageRule"
-            responses:
-                200:
-                    content:
-                        application/json:
-                            schema:
-                                $ref: "#/components/schemas/PageRule"
-                        application/xml:
-                            schema:
-                                $ref: "#/components/schemas/PageRule"
-            # @review
-            tags: ["PageRule"]
-    "/sites/{siteExternalReferenceCode}/page-rule-actions/{pageRuleActionExternalReferenceCode}":
-        delete:
-            # @review
-            description:
-                Deletes a page rule action within a page rule of an experience of a specific page specification of a
-                site page within a site.
-            operationId: deleteSitePageRuleAction
-            parameters:
-                -   in: path
-                    name: siteExternalReferenceCode
-                    required: true
-                    schema:
-                        type: string
-                -   in: path
-                    name: pageRuleActionExternalReferenceCode
-                    required: true
-                    schema:
-                        type: string
-                -   in: query
-                    name: fields
-                    schema:
-                        type: string
-                -   in: query
-                    name: nestedFields
-                    schema:
-                        type: string
-                -   in: query
-                    name: restrictFields
-                    schema:
-                        type: string
-            responses:
-                204:
-                    content:
-                        application/json: {}
-                        application/xml: {}
-            tags: ["PageRuleAction"]
-        get:
-            # @review
-            description:
-                Retrieves a page rule action within a page rule of an experience of a specific page specification of a
-                site page within a site.
-            operationId: getSitePageRuleAction
-            parameters:
-                -   in: path
-                    name: siteExternalReferenceCode
-                    required: true
-                    schema:
-                        type: string
-                -   in: path
-                    name: pageRuleActionExternalReferenceCode
-                    required: true
-                    schema:
-                        type: string
-                -   in: query
-                    name: fields
-                    schema:
-                        type: string
-                -   in: query
-                    name: nestedFields
-                    schema:
-                        type: string
-                -   in: query
-                    name: restrictFields
-                    schema:
-                        type: string
-            responses:
-                200:
-                    content:
-                        application/json:
-                            schema:
-                                $ref: "#/components/schemas/PageRuleAction"
-                        application/xml:
-                            schema:
-                                $ref: "#/components/schemas/PageRuleAction"
-            tags: ["PageRuleAction"]
-        patch:
-            # @review
-            description:
-                Updates a page rule action within a page rule of an experience of a specific page specification of a
-                site page within a site. Updates only the fields received in the request body, leaving any other fields
-                untouched.
-            operationId: patchSitePageRuleAction
-            parameters:
-                -   in: path
-                    name: siteExternalReferenceCode
-                    required: true
-                    schema:
-                        type: string
-                -   in: path
-                    name: pageRuleActionExternalReferenceCode
-                    required: true
-                    schema:
-                        type: string
-                -   in: query
-                    name: fields
-                    schema:
-                        type: string
-                -   in: query
-                    name: nestedFields
-                    schema:
-                        type: string
-                -   in: query
-                    name: restrictFields
-                    schema:
-                        type: string
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: "#/components/schemas/PageRuleAction"
-                    application/xml:
-                        schema:
-                            $ref: "#/components/schemas/PageRuleAction"
-            responses:
-                200:
-                    content:
-                        application/json:
-                            schema:
-                                $ref: "#/components/schemas/PageRuleAction"
-                        application/xml:
-                            schema:
-                                $ref: "#/components/schemas/PageRuleAction"
-            tags: ["PageRuleAction"]
-        put:
-            # @review
-            description:
-                Updates a page rule action within a page rule of an experience of a specific page specification of a
-                site page within a site.
-            operationId: putSitePageRuleAction
-            parameters:
-                -   in: path
-                    name: siteExternalReferenceCode
-                    required: true
-                    schema:
-                        type: string
-                -   in: path
-                    name: pageRuleActionExternalReferenceCode
-                    required: true
-                    schema:
-                        type: string
-                -   in: query
-                    name: fields
-                    schema:
-                        type: string
-                -   in: query
-                    name: nestedFields
-                    schema:
-                        type: string
-                -   in: query
-                    name: restrictFields
-                    schema:
-                        type: string
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: "#/components/schemas/PageRuleAction"
-                    application/xml:
-                        schema:
-                            $ref: "#/components/schemas/PageRuleAction"
-            responses:
-                200:
-                    content:
-                        application/json:
-                            schema:
-                                $ref: "#/components/schemas/PageRuleAction"
-                        application/xml:
-                            schema:
-                                $ref: "#/components/schemas/PageRuleAction"
-            tags: ["PageRuleAction"]
-    "/sites/{siteExternalReferenceCode}/page-rule-conditions/{pageRuleConditionExternalReferenceCode}":
-        delete:
-            # @review
-            description:
-                Deletes a page rule condition within a page rule of an experience of a specific page specification of a
-                site page within a site.
-            operationId: deleteSitePageRuleCondition
-            parameters:
-                -   in: path
-                    name: siteExternalReferenceCode
-                    required: true
-                    schema:
-                        type: string
-                -   in: path
-                    name: pageRuleConditionExternalReferenceCode
-                    required: true
-                    schema:
-                        type: string
-                -   in: query
-                    name: fields
-                    schema:
-                        type: string
-                -   in: query
-                    name: nestedFields
-                    schema:
-                        type: string
-                -   in: query
-                    name: restrictFields
-                    schema:
-                        type: string
-            responses:
-                204:
-                    content:
-                        application/json: {}
-                        application/xml: {}
-            tags: ["PageRuleCondition"]
-        get:
-            # @review
-            description:
-                Retrieves a page rule condition within a page rule of an experience of a specific page specification of
-                a site page within a site.
-            operationId: getSitePageRuleCondition
-            parameters:
-                -   in: path
-                    name: siteExternalReferenceCode
-                    required: true
-                    schema:
-                        type: string
-                -   in: path
-                    name: pageRuleConditionExternalReferenceCode
-                    required: true
-                    schema:
-                        type: string
-                -   in: query
-                    name: fields
-                    schema:
-                        type: string
-                -   in: query
-                    name: nestedFields
-                    schema:
-                        type: string
-                -   in: query
-                    name: restrictFields
-                    schema:
-                        type: string
-            responses:
-                200:
-                    content:
-                        application/json:
-                            schema:
-                                $ref: "#/components/schemas/PageRuleCondition"
-                        application/xml:
-                            schema:
-                                $ref: "#/components/schemas/PageRuleCondition"
-            tags: ["PageRuleCondition"]
-        patch:
-            # @review
-            description:
-                Updates a page rule condition within a page rule of an experience of a specific page specification of a
-                site page within a site. Updates only the fields received in the request body, leaving any other fields
-                untouched.
-            operationId: patchSitePageRuleCondition
-            parameters:
-                -   in: path
-                    name: siteExternalReferenceCode
-                    required: true
-                    schema:
-                        type: string
-                -   in: path
-                    name: pageRuleConditionExternalReferenceCode
-                    required: true
-                    schema:
-                        type: string
-                -   in: query
-                    name: fields
-                    schema:
-                        type: string
-                -   in: query
-                    name: nestedFields
-                    schema:
-                        type: string
-                -   in: query
-                    name: restrictFields
-                    schema:
-                        type: string
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: "#/components/schemas/PageRuleCondition"
-                    application/xml:
-                        schema:
-                            $ref: "#/components/schemas/PageRuleCondition"
-            responses:
-                200:
-                    content:
-                        application/json:
-                            schema:
-                                $ref: "#/components/schemas/PageRuleCondition"
-                        application/xml:
-                            schema:
-                                $ref: "#/components/schemas/PageRuleCondition"
-            tags: ["PageRuleCondition"]
-        put:
-            # @review
-            description:
-                Updates a page rule condition within a page rule of an experience of a specific page specification of a
-                site page within a site.
-            operationId: putSitePageRuleCondition
-            parameters:
-                -   in: path
-                    name: siteExternalReferenceCode
-                    required: true
-                    schema:
-                        type: string
-                -   in: path
-                    name: pageRuleConditionExternalReferenceCode
-                    required: true
-                    schema:
-                        type: string
-                -   in: query
-                    name: fields
-                    schema:
-                        type: string
-                -   in: query
-                    name: nestedFields
-                    schema:
-                        type: string
-                -   in: query
-                    name: restrictFields
-                    schema:
-                        type: string
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: "#/components/schemas/PageRuleCondition"
-                    application/xml:
-                        schema:
-                            $ref: "#/components/schemas/PageRuleCondition"
-            responses:
-                200:
-                    content:
-                        application/json:
-                            schema:
-                                $ref: "#/components/schemas/PageRuleCondition"
-                        application/xml:
-                            schema:
-                                $ref: "#/components/schemas/PageRuleCondition"
-            tags: ["PageRuleCondition"]
-    "/sites/{siteExternalReferenceCode}/page-rules/{pageRuleExternalReferenceCode}":
-        delete:
-            # @review
-            description:
-                Deletes a page rule within an experience of a specific page specification of a site page within a site.
-            operationId: deleteSitePageRule
-            parameters:
-                -   in: path
-                    name: siteExternalReferenceCode
-                    required: true
-                    schema:
-                        type: string
-                -   in: path
-                    name: pageRuleExternalReferenceCode
-                    required: true
-                    schema:
-                        type: string
-                -   in: query
-                    name: fields
-                    schema:
-                        type: string
-                -   in: query
-                    name: nestedFields
-                    schema:
-                        type: string
-                -   in: query
-                    name: restrictFields
-                    schema:
-                        type: string
-            responses:
-                204:
-                    content:
-                        application/json: {}
-                        application/xml: {}
-            tags: ["PageRule"]
-        get:
-            # @review
-            description:
-                Retrieves page rule within an experience of a specific page specification of a site page within a site.
-            operationId: getSitePageRule
-            parameters:
-                -   in: path
-                    name: siteExternalReferenceCode
-                    required: true
-                    schema:
-                        type: string
-                -   in: path
-                    name: pageRuleExternalReferenceCode
-                    required: true
-                    schema:
-                        type: string
-                -   in: query
-                    name: fields
-                    schema:
-                        type: string
-                -   in: query
-                    name: nestedFields
-                    schema:
-                        type: string
-                -   in: query
-                    name: restrictFields
-                    schema:
-                        type: string
-            responses:
-                200:
-                    content:
-                        application/json:
-                            schema:
-                                $ref: "#/components/schemas/PageRule"
-                        application/xml:
-                            schema:
-                                $ref: "#/components/schemas/PageRule"
-            tags: ["PageRule"]
-        patch:
-            # @review
-            description:
-                Updates a page rule within an experience of a specific page specification of a site page within a site.
-                Updates only the fields received in the request body, leaving any other fields untouched.
-            operationId: patchSitePageRule
-            parameters:
-                -   in: path
-                    name: siteExternalReferenceCode
-                    required: true
-                    schema:
-                        type: string
-                -   in: path
-                    name: pageRuleExternalReferenceCode
-                    required: true
-                    schema:
-                        type: string
-                -   in: query
-                    name: fields
-                    schema:
-                        type: string
-                -   in: query
-                    name: nestedFields
-                    schema:
-                        type: string
-                -   in: query
-                    name: restrictFields
-                    schema:
-                        type: string
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: "#/components/schemas/PageRule"
-                    application/xml:
-                        schema:
-                            $ref: "#/components/schemas/PageRule"
-            responses:
-                200:
-                    content:
-                        application/json:
-                            schema:
-                                $ref: "#/components/schemas/PageRule"
-                        application/xml:
-                            schema:
-                                $ref: "#/components/schemas/PageRule"
-            tags: ["PageRule"]
-        put:
-            # @review
-            description:
-                Updates a page rule within an experience of a specific page specification of a site page within a site.
-            operationId: putSitePageRule
-            parameters:
-                -   in: path
-                    name: siteExternalReferenceCode
-                    required: true
-                    schema:
-                        type: string
-                -   in: path
-                    name: pageRuleExternalReferenceCode
-                    required: true
-                    schema:
-                        type: string
-                -   in: query
-                    name: fields
-                    schema:
-                        type: string
-                -   in: query
-                    name: nestedFields
-                    schema:
-                        type: string
-                -   in: query
-                    name: restrictFields
-                    schema:
-                        type: string
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: "#/components/schemas/PageRule"
-                    application/xml:
-                        schema:
-                            $ref: "#/components/schemas/PageRule"
-            responses:
-                200:
-                    content:
-                        application/json:
-                            schema:
-                                $ref: "#/components/schemas/PageRule"
-                        application/xml:
-                            schema:
-                                $ref: "#/components/schemas/PageRule"
-            tags: ["PageRule"]
-    "/sites/{siteExternalReferenceCode}/page-rules/{pageRuleExternalReferenceCode}/page-rule-actions":
-        get:
-            # @review
-            description:
-                Retrieves all the page rule action actions within an experience in a page specification of a site page.
-            operationId: getSitePageRulePageRuleActionsPage
-            parameters:
-                -   in: path
-                    name: siteExternalReferenceCode
-                    required: true
-                    schema:
-                        type: string
-                -   in: path
-                    name: pageRuleExternalReferenceCode
-                    required: true
-                    schema:
-                        type: string
-                -   in: query
-                    name: fields
-                    schema:
-                        type: string
-                -   in: query
-                    name: flatten
-                    schema:
-                        type: boolean
-                -   in: query
-                    name: nestedFields
-                    schema:
-                        type: string
-                -   in: query
-                    name: restrictFields
-                    schema:
-                        type: string
-            responses:
-                200:
-                    content:
-                        application/json:
-                            schema:
-                                items:
-                                    $ref: "#/components/schemas/PageRuleAction"
-                                type: array
-                        application/xml:
-                            schema:
-                                items:
-                                    $ref: "#/components/schemas/PageRuleAction"
-                                type: array
-            # @review
-            tags: ["PageRuleAction"]
-        post:
-            # @review
-            description:
-                Adds a new page rule action to a page rule in an experience in a page specification in draft status of a
-                site page.
-            operationId: postSitePageRulePageRuleAction
-            parameters:
-                -   in: path
-                    name: siteExternalReferenceCode
-                    required: true
-                    schema:
-                        type: string
-                -   in: path
-                    name: pageRuleExternalReferenceCode
-                    schema:
-                        type: string
-                -   in: query
-                    name: fields
-                    schema:
-                        type: string
-                -   in: query
-                    name: nestedFields
-                    schema:
-                        type: string
-                -   in: query
-                    name: restrictFields
-                    schema:
-                        type: string
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: "#/components/schemas/PageRuleAction"
-                    application/xml:
-                        schema:
-                            $ref: "#/components/schemas/PageRuleAction"
-            responses:
-                200:
-                    content:
-                        application/json:
-                            schema:
-                                $ref: "#/components/schemas/PageRuleAction"
-                        application/xml:
-                            schema:
-                                $ref: "#/components/schemas/PageRuleAction"
-            # @review
-            tags: ["PageRuleAction"]
-    "/sites/{siteExternalReferenceCode}/page-rules/{pageRuleExternalReferenceCode}/page-rule-conditions":
-        get:
-            # @review
-            description:
-                Retrieves all the page rule condition conditions within an experience in a page specification of a site
-                page.
-            operationId: getSitePageRulePageRuleConditionsPage
-            parameters:
-                -   in: path
-                    name: siteExternalReferenceCode
-                    required: true
-                    schema:
-                        type: string
-                -   in: path
-                    name: pageRuleExternalReferenceCode
-                    required: true
-                    schema:
-                        type: string
-                -   in: query
-                    name: fields
-                    schema:
-                        type: string
-                -   in: query
-                    name: flatten
-                    schema:
-                        type: boolean
-                -   in: query
-                    name: nestedFields
-                    schema:
-                        type: string
-                -   in: query
-                    name: restrictFields
-                    schema:
-                        type: string
-            responses:
-                200:
-                    content:
-                        application/json:
-                            schema:
-                                items:
-                                    $ref: "#/components/schemas/PageRuleCondition"
-                                type: array
-                        application/xml:
-                            schema:
-                                items:
-                                    $ref: "#/components/schemas/PageRuleCondition"
-                                type: array
-            # @review
-            tags: ["PageRuleCondition"]
-        post:
-            # @review
-            description:
-                Adds a new page rule condition to a page rule in an experience in a page specification in draft status
-                of a site page.
-            operationId: postSitePageRulePageRuleCondition
-            parameters:
-                -   in: path
-                    name: siteExternalReferenceCode
-                    required: true
-                    schema:
-                        type: string
-                -   in: path
-                    name: pageRuleExternalReferenceCode
-                    schema:
-                        type: string
-                -   in: query
-                    name: fields
-                    schema:
-                        type: string
-                -   in: query
-                    name: nestedFields
-                    schema:
-                        type: string
-                -   in: query
-                    name: restrictFields
-                    schema:
-                        type: string
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: "#/components/schemas/PageRuleCondition"
-                    application/xml:
-                        schema:
-                            $ref: "#/components/schemas/PageRuleCondition"
-            responses:
-                200:
-                    content:
-                        application/json:
-                            schema:
-                                $ref: "#/components/schemas/PageRuleCondition"
-                        application/xml:
-                            schema:
-                                $ref: "#/components/schemas/PageRuleCondition"
-            # @review
-            tags: ["PageRuleCondition"]
     "/sites/{siteExternalReferenceCode}/page-specifications/{pageSpecificationExternalReferenceCode}":
         delete:
             # @review
@@ -8100,76 +7100,6 @@ paths:
                         application/xml:
                             schema:
                                 $ref: "#/components/schemas/PageElement"
-            tags: ["PageElement"]
-    "/sites/{siteExternalReferenceCode}/page-specifications/{pageSpecificationExternalReferenceCode}/page-experiences/{pageExperienceExternalReferenceCode}/page-elements/{pageElementExternalReferenceCode}/fragment-compositions":
-        post:
-            # @review
-            description:
-                Adds a new fragment composition under a page element of an experience in a page specification of a site
-                page. If successful, the response will contain the page element in which the fragment composition is
-                converted.
-            operationId: postSitePageSpecificationPageExperiencePageElementFragmentComposition
-            parameters:
-                -   in: path
-                    name: siteExternalReferenceCode
-                    required: true
-                    schema:
-                        type: string
-                -   in: path
-                    name: pageSpecificationExternalReferenceCode
-                    required: true
-                    schema:
-                        type: string
-                -   in: path
-                    name: pageExperienceExternalReferenceCode
-                    required: true
-                    schema:
-                        type: string
-                -   in: path
-                    name: pageElementExternalReferenceCode
-                    required: true
-                    schema:
-                        type: string
-                -   in: query
-                    name: fields
-                    schema:
-                        type: string
-                -   in: query
-                    name: nestedFields
-                    schema:
-                        type: string
-                -   in: query
-                    description:
-                        The 0-based position with respect to the page element's children where the fragment composition
-                        will be added (0 for before the first child, 1 for before the second child, ...). If not
-                        specified when adding a fragment composition the fragment composition will be added at the last
-                        valid position.
-                    name: position
-                    schema:
-                        minimum: 0
-                        type: integer
-                -   in: query
-                    name: restrictFields
-                    schema:
-                        type: string
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: "#/components/schemas/FragmentComposition"
-                    application/xml:
-                        schema:
-                            $ref: "#/components/schemas/FragmentComposition"
-            responses:
-                200:
-                    content:
-                        application/json:
-                            schema:
-                                $ref: "#/components/schemas/PageElement"
-                        application/xml:
-                            schema:
-                                $ref: "#/components/schemas/PageElement"
-            # @review
             tags: ["PageElement"]
     "/sites/{siteExternalReferenceCode}/page-specifications/{pageSpecificationExternalReferenceCode}/page-experiences/{pageExperienceExternalReferenceCode}/page-elements/{pageElementExternalReferenceCode}/page-elements":
         get:
@@ -9113,7 +8043,7 @@ paths:
         get:
             # @review
             description:
-                Retrieves the public pages of the site
+                Retrieves the private or public pages of the site
             operationId: getSiteSitePagesPage
             parameters:
                 -   in: path
@@ -9147,6 +8077,11 @@ paths:
                     name: pageSize
                     schema:
                         type: integer
+                -   in: query
+                    name: privateLayout
+                    schema:
+                        default: false
+                        type: boolean
                 -   in: query
                     name: restrictFields
                     schema:
@@ -9184,6 +8119,11 @@ paths:
                     required: true
                     schema:
                         type: string
+                -   in: query
+                    name: privateLayout
+                    schema:
+                        default: false
+                        type: boolean
             requestBody:
                 content:
                     application/json:
@@ -9289,6 +8229,11 @@ paths:
                     schema:
                         type: string
                 -   in: query
+                    name: privateLayout
+                    schema:
+                        default: false
+                        type: boolean
+                -   in: query
                     name: restrictFields
                     schema:
                         type: string
@@ -9334,6 +8279,11 @@ paths:
                     name: nestedFields
                     schema:
                         type: string
+                -   in: query
+                    name: privateLayout
+                    schema:
+                        default: false
+                        type: boolean
                 -   in: query
                     name: restrictFields
                     schema:
@@ -10478,6 +9428,40 @@ paths:
                         application/json: {}
                         application/xml: {}
             tags: ["UtilityPage"]
+    /site-templates:
+        get:
+            description:
+                Retrieves the site templates. Results can be paginated.
+            operationId: getSiteTemplatesPage
+            parameters:
+                -   in: query
+                    name: active
+                    schema:
+                        type: boolean
+                -   in: query
+                    name: page
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    schema:
+                        type: integer
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/SiteTemplate"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/SiteTemplate"
+                                type: array
+                    description:
+                        default response
+            tags: ["SiteTemplate"]
     /sites:
         get:
             description:
@@ -10632,6 +9616,59 @@ paths:
                         application/xml:
                             schema:
                                 $ref: "#/components/schemas/Site"
+            tags: ["Site"]
+    /sites/{siteExternalReferenceCode}/activate:
+        put:
+            description:
+                Activates a site.
+            operationId: putSiteActivate
+            parameters:
+                -   in: path
+                    name: siteExternalReferenceCode
+                    required: true
+                    schema:
+                        type: string
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                        application/xml: {}
+                    description:
+                        default response
+                403:
+                    description:
+                        Forbidden
+                404:
+                    description:
+                        The specified Site was not found
+            tags: ["Site"]
+    /sites/{siteExternalReferenceCode}/deactivate:
+        put:
+            description:
+                Deactivates a site.
+            operationId: putSiteDeactivate
+            parameters:
+                -   in: path
+                    name: siteExternalReferenceCode
+                    required: true
+                    schema:
+                        type: string
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                        application/xml: {}
+                    description:
+                        default response
+                403:
+                    description:
+                        Forbidden
+                404:
+                    description:
+                        The specified Site was not found
+                405:
+                    description:
+                        System sites cannot be deactivated
             tags: ["Site"]
     /sites/{siteExternalReferenceCode}/site-initializer:
         get:

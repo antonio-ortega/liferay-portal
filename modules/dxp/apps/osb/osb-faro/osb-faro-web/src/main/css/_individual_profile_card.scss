@@ -1,13 +1,6 @@
 .individual-profile-card-root {
 	.individuals-activities-chart {
 		padding: 0 $listPadding;
-
-		.analytics-tooltip-chart-row {
-			.informative-text {
-				color: $info;
-				margin-top: 24px;
-			}
-		}
 	}
 
 	.selected-info {
@@ -33,6 +26,14 @@
 				font-weight: $fontWeightBold;
 				line-height: 24px;
 			}
+		}
+
+		.events-count-circle {
+			background-color: $chartBlue;
+			border-radius: 50%;
+			display: inline-block;
+			height: 8px;
+			width: 8px;
 		}
 	}
 }

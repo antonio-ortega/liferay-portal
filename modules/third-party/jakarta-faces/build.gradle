@@ -1,5 +1,34 @@
+ext {
+	jakartaFacesModule = true
+}
+
+if (JavaVersion.current() != JavaVersion.VERSION_17) {
+	throw new GradleException("Project ${project.name} requires JDK 17.")
+}
+
 apply from: "../../build-jakarta-transformer.gradle"
 
 dependencies {
-	compileOnly group: "com.liferay", name: "javax.faces", transitive: false, version: "2.2.20.LIFERAY-PATCHED-1"
+	compileOnly group: "com.liferay", name: "jakarta.faces", transitive: false, version: "2.3.21.LIFERAY-PATCHED-4"
+}
+
+jar {
+	doLast {
+		File jarFile = archiveFile.get().asFile
+		File tempDir = file("$buildDir/tmp/jarExtract")
+
+		copy {
+			eachFile {
+				if (it.path.contains("javax.faces")) {
+					it.path = it.path.replace("javax.faces", "jakarta.faces")
+				}
+			}
+
+			from zipTree(jarFile)
+			includeEmptyDirs = false
+			into tempDir
+		}
+
+		ant.jar(basedir: tempDir, destfile: jarFile, manifest: file("$tempDir/META-INF/MANIFEST.MF"))
+	}
 }

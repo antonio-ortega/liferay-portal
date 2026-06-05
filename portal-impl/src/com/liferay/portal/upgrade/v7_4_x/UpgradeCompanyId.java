@@ -133,12 +133,11 @@ public class UpgradeCompanyId extends BaseCompanyIdUpgradeProcess {
 			try (PreparedStatement preparedStatement =
 					connection.prepareStatement(
 						"select distinct companyId from " + foreignTableName);
+
 				ResultSet resultSet = preparedStatement.executeQuery()) {
 
 				while (resultSet.next()) {
-					long companyId = resultSet.getLong(1);
-
-					companyIds.add(companyId);
+					companyIds.add(resultSet.getLong("companyId"));
 				}
 			}
 

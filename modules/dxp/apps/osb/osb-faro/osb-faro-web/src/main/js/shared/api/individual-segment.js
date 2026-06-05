@@ -58,17 +58,21 @@ export function fetchMembershipMetrics({groupId, individualSegmentId}) {
 export function create({
 	channelId = '',
 	criteriaString = '',
+	externalReferenceCode = '',
 	groupId,
 	includeAnonymousUsers = false,
 	name,
-	segmentType
+	segmentType,
+	sequential = false
 }) {
 	const data = {
 		channelId,
+		externalReferenceCode,
 		filter: criteriaString,
 		includeAnonymousUsers,
 		name,
-		segmentType
+		segmentType,
+		sequential
 	};
 
 	return sendRequest({
@@ -81,18 +85,22 @@ export function create({
 export function update({
 	channelId = '',
 	criteriaString = '',
+	externalReferenceCode = '',
 	groupId,
 	id,
 	includeAnonymousUsers = false,
 	name,
-	segmentType
+	segmentType,
+	sequential = false
 }) {
 	const data = {
 		channelId,
+		externalReferenceCode,
 		filter: criteriaString,
 		includeAnonymousUsers,
 		name,
-		segmentType
+		segmentType,
+		sequential
 	};
 
 	return sendRequest({
@@ -253,18 +261,13 @@ export function searchUnassigned({
 	});
 }
 
-export function updateSegmentActivationStatus({
+export function updateSegmentActivation({
 	groupId,
 	segmentActivation,
 	segmentId
 }) {
-	const {
-		frequencyType,
-		scheduleEndDate,
-		scheduleStartDate,
-		scheduleType,
-		segmentActivationId
-	} = segmentActivation;
+	const {frequencyType, scheduleEndDate, scheduleStartDate, scheduleType} =
+		segmentActivation;
 
 	const data = {
 		frequencyType,
@@ -278,6 +281,6 @@ export function updateSegmentActivationStatus({
 	return sendRequest({
 		data,
 		method: 'PUT',
-		path: `contacts/${groupId}/individual_segment/${segmentId}/activation/${segmentActivationId}`
+		path: `contacts/${groupId}/individual_segment/${segmentId}/activation`
 	});
 }

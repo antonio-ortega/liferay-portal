@@ -8,6 +8,7 @@ import ClayForm from '@clayui/form';
 import ClayIcon from '@clayui/icon';
 import ClayModal from '@clayui/modal';
 import ClayMultiSelect from '@clayui/multi-select';
+import {isNullOrUndefined} from '@liferay/layout-js-components-web';
 import classNames from 'classnames';
 import {FieldFeedback, openModal, useId} from 'frontend-js-components-web';
 import React, {Dispatch, useState} from 'react';
@@ -33,11 +34,13 @@ type Item = {
 export default function openReferencedStructureModal({
 	dispatch,
 	objectDefinitions,
+	parentUuid,
 	status,
 	structure,
 }: {
 	dispatch: Dispatch<Action>;
 	objectDefinitions: ObjectDefinitions;
+	parentUuid: Uuid;
 	status: CacheStatus;
 	structure: Structure;
 }) {
@@ -56,6 +59,7 @@ export default function openReferencedStructureModal({
 				closeModal={closeModal}
 				objectDefinitions={objectDefinitions}
 				onAdd={addReferencedStructures}
+				parentUuid={parentUuid}
 				status={status}
 				structure={structure}
 			/>
@@ -63,16 +67,18 @@ export default function openReferencedStructureModal({
 	});
 }
 
-function ReferencedStructureModal({
+export function ReferencedStructureModal({
 	closeModal,
 	objectDefinitions,
 	onAdd,
+	parentUuid,
 	status,
 	structure,
 }: {
 	closeModal: () => void;
 	objectDefinitions: ObjectDefinitions;
 	onAdd: (referencedStructures: ReferencedStructure[]) => void;
+	parentUuid: Uuid;
 	status: CacheStatus;
 	structure: Structure;
 }) {
@@ -80,6 +86,7 @@ function ReferencedStructureModal({
 	const [hasError, setHasError] = useState(false);
 
 	const id = useId();
+	const sourceItems = getItems(objectDefinitions, structure.erc);
 
 	return (
 		<>
@@ -113,11 +120,23 @@ function ReferencedStructureModal({
 						items={selection}
 						loadingState={status === 'saving' ? 1 : 0}
 						onItemsChange={(selection: Item[]) => {
-							setSelection(selection);
+							const newSelection = selection
+								.map((item) =>
+									sourceItems.find(
+										(sourceItem) =>
+											sourceItem.label.toLowerCase() ===
+											item.label.toLowerCase()
+									)
+								)
+								.filter(
+									(item): item is Item =>
+										!isNullOrUndefined(item)
+								);
 
-							setHasError(!selection.length);
+							setSelection(newSelection);
+							setHasError(!newSelection.length);
 						}}
-						sourceItems={getItems(objectDefinitions, structure.erc)}
+						sourceItems={sourceItems}
 					/>
 
 					{hasError ? (
@@ -153,8 +172,8 @@ function ReferencedStructureModal({
 								const structures = buildStructures(
 									selection,
 									objectDefinitions,
-									structure.uuid,
-									structure.erc
+									structure.erc,
+									parentUuid
 								);
 
 								onAdd(structures);
@@ -183,7 +202,6 @@ function getItems(
 
 	for (const objectDefinition of Object.values(objectDefinitions)) {
 		if (
-			objectDefinition.system ||
 			objectDefinition.externalReferenceCode === mainStructureERC ||
 			objectDefinition.objectFolderExternalReferenceCode ===
 				'L_CMS_STRUCTURE_REPEATABLE_GROUPS' ||
@@ -215,6 +233,10 @@ function hasCircularDependency(
 	}
 
 	for (const relationship of objectDefinition.objectRelationships) {
+		if (relationship.deletionType !== 'cascade') {
+			continue;
+		}
+
 		if (
 			relationship.objectDefinitionExternalReferenceCode2 ===
 			mainStructureERC
@@ -241,8 +263,8 @@ function hasCircularDependency(
 function buildStructures(
 	selection: Item[],
 	objectDefinitions: ObjectDefinitions,
-	mainStructureUuid: Uuid,
-	mainStructureERC: Structure['erc']
+	mainStructureERC: Structure['erc'],
+	parentUuid: Uuid
 ) {
 	const ercs = selection.map(({value}) => value);
 
@@ -251,7 +273,7 @@ function buildStructures(
 			ancestors: [mainStructureERC],
 			erc,
 			objectDefinitions,
-			parent: mainStructureUuid,
+			parent: parentUuid,
 			relationshipERC: getRandomId(),
 			relationshipName: getRandomName(),
 		});

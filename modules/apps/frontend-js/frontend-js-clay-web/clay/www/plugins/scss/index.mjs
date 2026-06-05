@@ -6,7 +6,9 @@ import fs from 'node:fs';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export function buildIcons() {
-	const path = join(clay.srcDir, 'images', 'icons');
+	const path = process.env.NODE_ENV === 'development' ?
+		join(__dirname, '..', '..', '..', 'clay-css', 'src', 'images', 'icons') :
+		join(clay.srcDir, 'images', 'icons');
 	const staticPath = join(__dirname, '../..', 'public');
 
 	const REGEX_FILE_EXT_SVG = /(?:flags-|\.svg$)/g;
@@ -19,6 +21,10 @@ export function buildIcons() {
 	let strSprite = `<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">`;
 
 	files.forEach((file) => {
+		if (file.endsWith('icons.svg')) {
+			return;
+		}
+
 		let icon = fs.readFileSync(join(path, file), 'utf8').toString();
 
 		const id = file.replace(REGEX_FILE_EXT_SVG, '').toLowerCase();

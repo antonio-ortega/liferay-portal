@@ -42,13 +42,22 @@ export class ContentsPage {
 	readonly page: Page;
 
 	readonly newButton: Locator;
+	readonly previewButton: Locator;
 	readonly publishButton: Locator;
 	readonly apiHelpers: ApiHelpers;
+
 	constructor(page: Page) {
 		this.page = page;
 
 		this.apiHelpers = new ApiHelpers(page);
-		this.newButton = page.getByTestId('fdsCreationActionButton').first();
+		this.newButton = page.locator(
+			'[data-testid="fdsCreationActionButton"]'
+		);
+		this.previewButton = page
+			.locator('.content-editor__toolbar')
+			.getByRole('button', {
+				name: 'Preview',
+			});
 		this.publishButton = page
 			.getByText('Publish', {exact: true})
 			.or(page.getByText('Submit for Workflow', {exact: true}));
@@ -106,6 +115,17 @@ export class ContentsPage {
 
 			await this.page.getByRole('button', {name: 'Save'}).click();
 		}
+
+		await this.page
+			.locator('.cms-control-menu')
+			.getByText('Edit')
+			.or(this.page.locator('.cms-control-menu').getByText('New'))
+			.waitFor();
+
+		await this.page
+			.locator('.loading-animation')
+			.nth(0)
+			.waitFor({state: 'hidden'});
 	}
 
 	async createFolder(folderName: string, spaceName?: string) {
@@ -120,8 +140,12 @@ export class ContentsPage {
 		await this.page.getByLabel('NameRequired').fill(folderName);
 
 		if (spaceName) {
-			await this.page.getByLabel('SpaceMandatory').click();
-			await this.page.getByRole('option', {name: spaceName}).click();
+			const spaceSelector = this.page.getByLabel('SpaceMandatory');
+
+			if (await spaceSelector.isVisible()) {
+				await spaceSelector.click();
+				await this.page.getByRole('option', {name: spaceName}).click();
+			}
 		}
 
 		await this.page.getByRole('button', {name: 'Save'}).click();
@@ -167,14 +191,16 @@ export class ContentsPage {
 
 		await this.page.getByRole('menuitem', {name: 'Delete'}).click();
 
-		await this.page.getByRole('button', {name: 'Delete Folder'}).click();
-
 		if (recycleBinEnabled) {
 			await waitForAlert(this.page, `Success:${folderName} was moved`, {
 				autoClose: false,
 			});
 		}
 		else {
+			await this.page
+				.getByRole('button', {name: 'Delete Folder'})
+				.click();
+
 			await waitForAlert(
 				this.page,
 				`Success:${folderName} has been permanently deleted.`
@@ -261,14 +287,14 @@ export class ContentsPage {
 	}
 
 	async saveContentAsDraft() {
-		await clickAndExpectToBeVisible({
-			target: this.newButton,
-			timeout: 5000,
-			trigger: this.page.getByRole('button', {
+		await this.page
+			.getByRole('button', {
 				exact: true,
 				name: 'Save as Draft',
-			}),
-		});
+			})
+			.click();
+
+		await waitForAlert(this.page, 'The draft was saved successfully');
 	}
 
 	async shareContent(title: string) {

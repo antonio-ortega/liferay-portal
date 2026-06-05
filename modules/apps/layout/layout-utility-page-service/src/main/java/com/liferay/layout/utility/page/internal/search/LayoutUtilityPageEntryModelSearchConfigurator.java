@@ -5,11 +5,9 @@
 
 package com.liferay.layout.utility.page.internal.search;
 
-import com.liferay.layout.utility.page.internal.search.spi.model.index.contributor.LayoutUtilityPageEntryModelIndexerWriterContributor;
 import com.liferay.layout.utility.page.model.LayoutUtilityPageEntry;
 import com.liferay.layout.utility.page.service.LayoutUtilityPageEntryLocalService;
 import com.liferay.portal.kernel.search.Field;
-import com.liferay.portal.search.batch.DynamicQueryBatchIndexingActionableFactory;
 import com.liferay.portal.search.spi.model.index.contributor.ModelIndexerWriterContributor;
 import com.liferay.portal.search.spi.model.registrar.ModelSearchConfigurator;
 
@@ -51,15 +49,10 @@ public class LayoutUtilityPageEntryModelSearchConfigurator
 
 	@Activate
 	protected void activate() {
-		_modelIndexWriterContributor =
-			new LayoutUtilityPageEntryModelIndexerWriterContributor(
-				_dynamicQueryBatchIndexingActionableFactory,
-				_layoutUtilityPageEntryLocalService);
+		_modelIndexWriterContributor = new ModelIndexerWriterContributor<>(
+			_layoutUtilityPageEntryLocalService::
+				getIndexableActionableDynamicQuery);
 	}
-
-	@Reference
-	private DynamicQueryBatchIndexingActionableFactory
-		_dynamicQueryBatchIndexingActionableFactory;
 
 	@Reference
 	private LayoutUtilityPageEntryLocalService

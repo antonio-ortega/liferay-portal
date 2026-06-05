@@ -36,6 +36,20 @@ public class SXPElementUtil {
 	 */
 
 	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(List)
+	 */
+	public static void cacheResult(List<SXPElement> sxpElements) {
+		getPersistence().cacheResult(sxpElements);
+	}
+
+	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(com.liferay.portal.kernel.model.BaseModel)
+	 */
+	public static void cacheResult(SXPElement sxpElement) {
+		getPersistence().cacheResult(sxpElement);
+	}
+
+	/**
 	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#clearCache()
 	 */
 	public static void clearCache() {
@@ -111,56 +125,10 @@ public class SXPElementUtil {
 	}
 
 	/**
-	 * Returns all the sxp elements where uuid = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @return the matching sxp elements
-	 */
-	public static List<SXPElement> findByUuid(String uuid) {
-		return getPersistence().findByUuid(uuid);
-	}
-
-	/**
-	 * Returns a range of all the sxp elements where uuid = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SXPElementModelImpl</code>.
-	 * </p>
-	 *
-	 * @param uuid the uuid
-	 * @param start the lower bound of the range of sxp elements
-	 * @param end the upper bound of the range of sxp elements (not inclusive)
-	 * @return the range of matching sxp elements
-	 */
-	public static List<SXPElement> findByUuid(String uuid, int start, int end) {
-		return getPersistence().findByUuid(uuid, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the sxp elements where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SXPElementModelImpl</code>.
-	 * </p>
-	 *
-	 * @param uuid the uuid
-	 * @param start the lower bound of the range of sxp elements
-	 * @param end the upper bound of the range of sxp elements (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching sxp elements
-	 */
-	public static List<SXPElement> findByUuid(
-		String uuid, int start, int end,
-		OrderByComparator<SXPElement> orderByComparator) {
-
-		return getPersistence().findByUuid(uuid, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the sxp elements where uuid = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SXPElementModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.search.experiences.model.impl.SXPElementModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -209,86 +177,10 @@ public class SXPElementUtil {
 	}
 
 	/**
-	 * Returns the last sxp element in the ordered set where uuid = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching sxp element
-	 * @throws NoSuchSXPElementException if a matching sxp element could not be found
-	 */
-	public static SXPElement findByUuid_Last(
-			String uuid, OrderByComparator<SXPElement> orderByComparator)
-		throws com.liferay.search.experiences.exception.
-			NoSuchSXPElementException {
-
-		return getPersistence().findByUuid_Last(uuid, orderByComparator);
-	}
-
-	/**
-	 * Returns the last sxp element in the ordered set where uuid = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching sxp element, or <code>null</code> if a matching sxp element could not be found
-	 */
-	public static SXPElement fetchByUuid_Last(
-		String uuid, OrderByComparator<SXPElement> orderByComparator) {
-
-		return getPersistence().fetchByUuid_Last(uuid, orderByComparator);
-	}
-
-	/**
-	 * Returns the sxp elements before and after the current sxp element in the ordered set where uuid = &#63;.
-	 *
-	 * @param sxpElementId the primary key of the current sxp element
-	 * @param uuid the uuid
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next sxp element
-	 * @throws NoSuchSXPElementException if a sxp element with the primary key could not be found
-	 */
-	public static SXPElement[] findByUuid_PrevAndNext(
-			long sxpElementId, String uuid,
-			OrderByComparator<SXPElement> orderByComparator)
-		throws com.liferay.search.experiences.exception.
-			NoSuchSXPElementException {
-
-		return getPersistence().findByUuid_PrevAndNext(
-			sxpElementId, uuid, orderByComparator);
-	}
-
-	/**
-	 * Returns all the sxp elements that the user has permission to view where uuid = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @return the matching sxp elements that the user has permission to view
-	 */
-	public static List<SXPElement> filterFindByUuid(String uuid) {
-		return getPersistence().filterFindByUuid(uuid);
-	}
-
-	/**
-	 * Returns a range of all the sxp elements that the user has permission to view where uuid = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SXPElementModelImpl</code>.
-	 * </p>
-	 *
-	 * @param uuid the uuid
-	 * @param start the lower bound of the range of sxp elements
-	 * @param end the upper bound of the range of sxp elements (not inclusive)
-	 * @return the range of matching sxp elements that the user has permission to view
-	 */
-	public static List<SXPElement> filterFindByUuid(
-		String uuid, int start, int end) {
-
-		return getPersistence().filterFindByUuid(uuid, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the sxp elements that the user has permissions to view where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SXPElementModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.search.experiences.model.impl.SXPElementModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -303,25 +195,6 @@ public class SXPElementUtil {
 
 		return getPersistence().filterFindByUuid(
 			uuid, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns the sxp elements before and after the current sxp element in the ordered set of sxp elements that the user has permission to view where uuid = &#63;.
-	 *
-	 * @param sxpElementId the primary key of the current sxp element
-	 * @param uuid the uuid
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next sxp element
-	 * @throws NoSuchSXPElementException if a sxp element with the primary key could not be found
-	 */
-	public static SXPElement[] filterFindByUuid_PrevAndNext(
-			long sxpElementId, String uuid,
-			OrderByComparator<SXPElement> orderByComparator)
-		throws com.liferay.search.experiences.exception.
-			NoSuchSXPElementException {
-
-		return getPersistence().filterFindByUuid_PrevAndNext(
-			sxpElementId, uuid, orderByComparator);
 	}
 
 	/**
@@ -354,62 +227,10 @@ public class SXPElementUtil {
 	}
 
 	/**
-	 * Returns all the sxp elements where uuid = &#63; and companyId = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @return the matching sxp elements
-	 */
-	public static List<SXPElement> findByUuid_C(String uuid, long companyId) {
-		return getPersistence().findByUuid_C(uuid, companyId);
-	}
-
-	/**
-	 * Returns a range of all the sxp elements where uuid = &#63; and companyId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SXPElementModelImpl</code>.
-	 * </p>
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param start the lower bound of the range of sxp elements
-	 * @param end the upper bound of the range of sxp elements (not inclusive)
-	 * @return the range of matching sxp elements
-	 */
-	public static List<SXPElement> findByUuid_C(
-		String uuid, long companyId, int start, int end) {
-
-		return getPersistence().findByUuid_C(uuid, companyId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the sxp elements where uuid = &#63; and companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SXPElementModelImpl</code>.
-	 * </p>
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param start the lower bound of the range of sxp elements
-	 * @param end the upper bound of the range of sxp elements (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching sxp elements
-	 */
-	public static List<SXPElement> findByUuid_C(
-		String uuid, long companyId, int start, int end,
-		OrderByComparator<SXPElement> orderByComparator) {
-
-		return getPersistence().findByUuid_C(
-			uuid, companyId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the sxp elements where uuid = &#63; and companyId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SXPElementModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.search.experiences.model.impl.SXPElementModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -465,97 +286,10 @@ public class SXPElementUtil {
 	}
 
 	/**
-	 * Returns the last sxp element in the ordered set where uuid = &#63; and companyId = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching sxp element
-	 * @throws NoSuchSXPElementException if a matching sxp element could not be found
-	 */
-	public static SXPElement findByUuid_C_Last(
-			String uuid, long companyId,
-			OrderByComparator<SXPElement> orderByComparator)
-		throws com.liferay.search.experiences.exception.
-			NoSuchSXPElementException {
-
-		return getPersistence().findByUuid_C_Last(
-			uuid, companyId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last sxp element in the ordered set where uuid = &#63; and companyId = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching sxp element, or <code>null</code> if a matching sxp element could not be found
-	 */
-	public static SXPElement fetchByUuid_C_Last(
-		String uuid, long companyId,
-		OrderByComparator<SXPElement> orderByComparator) {
-
-		return getPersistence().fetchByUuid_C_Last(
-			uuid, companyId, orderByComparator);
-	}
-
-	/**
-	 * Returns the sxp elements before and after the current sxp element in the ordered set where uuid = &#63; and companyId = &#63;.
-	 *
-	 * @param sxpElementId the primary key of the current sxp element
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next sxp element
-	 * @throws NoSuchSXPElementException if a sxp element with the primary key could not be found
-	 */
-	public static SXPElement[] findByUuid_C_PrevAndNext(
-			long sxpElementId, String uuid, long companyId,
-			OrderByComparator<SXPElement> orderByComparator)
-		throws com.liferay.search.experiences.exception.
-			NoSuchSXPElementException {
-
-		return getPersistence().findByUuid_C_PrevAndNext(
-			sxpElementId, uuid, companyId, orderByComparator);
-	}
-
-	/**
-	 * Returns all the sxp elements that the user has permission to view where uuid = &#63; and companyId = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @return the matching sxp elements that the user has permission to view
-	 */
-	public static List<SXPElement> filterFindByUuid_C(
-		String uuid, long companyId) {
-
-		return getPersistence().filterFindByUuid_C(uuid, companyId);
-	}
-
-	/**
-	 * Returns a range of all the sxp elements that the user has permission to view where uuid = &#63; and companyId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SXPElementModelImpl</code>.
-	 * </p>
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param start the lower bound of the range of sxp elements
-	 * @param end the upper bound of the range of sxp elements (not inclusive)
-	 * @return the range of matching sxp elements that the user has permission to view
-	 */
-	public static List<SXPElement> filterFindByUuid_C(
-		String uuid, long companyId, int start, int end) {
-
-		return getPersistence().filterFindByUuid_C(uuid, companyId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the sxp elements that the user has permissions to view where uuid = &#63; and companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SXPElementModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.search.experiences.model.impl.SXPElementModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -571,26 +305,6 @@ public class SXPElementUtil {
 
 		return getPersistence().filterFindByUuid_C(
 			uuid, companyId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns the sxp elements before and after the current sxp element in the ordered set of sxp elements that the user has permission to view where uuid = &#63; and companyId = &#63;.
-	 *
-	 * @param sxpElementId the primary key of the current sxp element
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next sxp element
-	 * @throws NoSuchSXPElementException if a sxp element with the primary key could not be found
-	 */
-	public static SXPElement[] filterFindByUuid_C_PrevAndNext(
-			long sxpElementId, String uuid, long companyId,
-			OrderByComparator<SXPElement> orderByComparator)
-		throws com.liferay.search.experiences.exception.
-			NoSuchSXPElementException {
-
-		return getPersistence().filterFindByUuid_C_PrevAndNext(
-			sxpElementId, uuid, companyId, orderByComparator);
 	}
 
 	/**
@@ -626,59 +340,10 @@ public class SXPElementUtil {
 	}
 
 	/**
-	 * Returns all the sxp elements where companyId = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @return the matching sxp elements
-	 */
-	public static List<SXPElement> findByCompanyId(long companyId) {
-		return getPersistence().findByCompanyId(companyId);
-	}
-
-	/**
-	 * Returns a range of all the sxp elements where companyId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SXPElementModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param start the lower bound of the range of sxp elements
-	 * @param end the upper bound of the range of sxp elements (not inclusive)
-	 * @return the range of matching sxp elements
-	 */
-	public static List<SXPElement> findByCompanyId(
-		long companyId, int start, int end) {
-
-		return getPersistence().findByCompanyId(companyId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the sxp elements where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SXPElementModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param start the lower bound of the range of sxp elements
-	 * @param end the upper bound of the range of sxp elements (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching sxp elements
-	 */
-	public static List<SXPElement> findByCompanyId(
-		long companyId, int start, int end,
-		OrderByComparator<SXPElement> orderByComparator) {
-
-		return getPersistence().findByCompanyId(
-			companyId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the sxp elements where companyId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SXPElementModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.search.experiences.model.impl.SXPElementModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -729,88 +394,10 @@ public class SXPElementUtil {
 	}
 
 	/**
-	 * Returns the last sxp element in the ordered set where companyId = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching sxp element
-	 * @throws NoSuchSXPElementException if a matching sxp element could not be found
-	 */
-	public static SXPElement findByCompanyId_Last(
-			long companyId, OrderByComparator<SXPElement> orderByComparator)
-		throws com.liferay.search.experiences.exception.
-			NoSuchSXPElementException {
-
-		return getPersistence().findByCompanyId_Last(
-			companyId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last sxp element in the ordered set where companyId = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching sxp element, or <code>null</code> if a matching sxp element could not be found
-	 */
-	public static SXPElement fetchByCompanyId_Last(
-		long companyId, OrderByComparator<SXPElement> orderByComparator) {
-
-		return getPersistence().fetchByCompanyId_Last(
-			companyId, orderByComparator);
-	}
-
-	/**
-	 * Returns the sxp elements before and after the current sxp element in the ordered set where companyId = &#63;.
-	 *
-	 * @param sxpElementId the primary key of the current sxp element
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next sxp element
-	 * @throws NoSuchSXPElementException if a sxp element with the primary key could not be found
-	 */
-	public static SXPElement[] findByCompanyId_PrevAndNext(
-			long sxpElementId, long companyId,
-			OrderByComparator<SXPElement> orderByComparator)
-		throws com.liferay.search.experiences.exception.
-			NoSuchSXPElementException {
-
-		return getPersistence().findByCompanyId_PrevAndNext(
-			sxpElementId, companyId, orderByComparator);
-	}
-
-	/**
-	 * Returns all the sxp elements that the user has permission to view where companyId = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @return the matching sxp elements that the user has permission to view
-	 */
-	public static List<SXPElement> filterFindByCompanyId(long companyId) {
-		return getPersistence().filterFindByCompanyId(companyId);
-	}
-
-	/**
-	 * Returns a range of all the sxp elements that the user has permission to view where companyId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SXPElementModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param start the lower bound of the range of sxp elements
-	 * @param end the upper bound of the range of sxp elements (not inclusive)
-	 * @return the range of matching sxp elements that the user has permission to view
-	 */
-	public static List<SXPElement> filterFindByCompanyId(
-		long companyId, int start, int end) {
-
-		return getPersistence().filterFindByCompanyId(companyId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the sxp elements that the user has permissions to view where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SXPElementModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.search.experiences.model.impl.SXPElementModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -825,25 +412,6 @@ public class SXPElementUtil {
 
 		return getPersistence().filterFindByCompanyId(
 			companyId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns the sxp elements before and after the current sxp element in the ordered set of sxp elements that the user has permission to view where companyId = &#63;.
-	 *
-	 * @param sxpElementId the primary key of the current sxp element
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next sxp element
-	 * @throws NoSuchSXPElementException if a sxp element with the primary key could not be found
-	 */
-	public static SXPElement[] filterFindByCompanyId_PrevAndNext(
-			long sxpElementId, long companyId,
-			OrderByComparator<SXPElement> orderByComparator)
-		throws com.liferay.search.experiences.exception.
-			NoSuchSXPElementException {
-
-		return getPersistence().filterFindByCompanyId_PrevAndNext(
-			sxpElementId, companyId, orderByComparator);
 	}
 
 	/**
@@ -876,62 +444,10 @@ public class SXPElementUtil {
 	}
 
 	/**
-	 * Returns all the sxp elements where companyId = &#63; and readOnly = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param readOnly the read only
-	 * @return the matching sxp elements
-	 */
-	public static List<SXPElement> findByC_R(long companyId, boolean readOnly) {
-		return getPersistence().findByC_R(companyId, readOnly);
-	}
-
-	/**
-	 * Returns a range of all the sxp elements where companyId = &#63; and readOnly = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SXPElementModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param readOnly the read only
-	 * @param start the lower bound of the range of sxp elements
-	 * @param end the upper bound of the range of sxp elements (not inclusive)
-	 * @return the range of matching sxp elements
-	 */
-	public static List<SXPElement> findByC_R(
-		long companyId, boolean readOnly, int start, int end) {
-
-		return getPersistence().findByC_R(companyId, readOnly, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the sxp elements where companyId = &#63; and readOnly = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SXPElementModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param readOnly the read only
-	 * @param start the lower bound of the range of sxp elements
-	 * @param end the upper bound of the range of sxp elements (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching sxp elements
-	 */
-	public static List<SXPElement> findByC_R(
-		long companyId, boolean readOnly, int start, int end,
-		OrderByComparator<SXPElement> orderByComparator) {
-
-		return getPersistence().findByC_R(
-			companyId, readOnly, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the sxp elements where companyId = &#63; and readOnly = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SXPElementModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.search.experiences.model.impl.SXPElementModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -987,98 +503,10 @@ public class SXPElementUtil {
 	}
 
 	/**
-	 * Returns the last sxp element in the ordered set where companyId = &#63; and readOnly = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param readOnly the read only
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching sxp element
-	 * @throws NoSuchSXPElementException if a matching sxp element could not be found
-	 */
-	public static SXPElement findByC_R_Last(
-			long companyId, boolean readOnly,
-			OrderByComparator<SXPElement> orderByComparator)
-		throws com.liferay.search.experiences.exception.
-			NoSuchSXPElementException {
-
-		return getPersistence().findByC_R_Last(
-			companyId, readOnly, orderByComparator);
-	}
-
-	/**
-	 * Returns the last sxp element in the ordered set where companyId = &#63; and readOnly = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param readOnly the read only
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching sxp element, or <code>null</code> if a matching sxp element could not be found
-	 */
-	public static SXPElement fetchByC_R_Last(
-		long companyId, boolean readOnly,
-		OrderByComparator<SXPElement> orderByComparator) {
-
-		return getPersistence().fetchByC_R_Last(
-			companyId, readOnly, orderByComparator);
-	}
-
-	/**
-	 * Returns the sxp elements before and after the current sxp element in the ordered set where companyId = &#63; and readOnly = &#63;.
-	 *
-	 * @param sxpElementId the primary key of the current sxp element
-	 * @param companyId the company ID
-	 * @param readOnly the read only
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next sxp element
-	 * @throws NoSuchSXPElementException if a sxp element with the primary key could not be found
-	 */
-	public static SXPElement[] findByC_R_PrevAndNext(
-			long sxpElementId, long companyId, boolean readOnly,
-			OrderByComparator<SXPElement> orderByComparator)
-		throws com.liferay.search.experiences.exception.
-			NoSuchSXPElementException {
-
-		return getPersistence().findByC_R_PrevAndNext(
-			sxpElementId, companyId, readOnly, orderByComparator);
-	}
-
-	/**
-	 * Returns all the sxp elements that the user has permission to view where companyId = &#63; and readOnly = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param readOnly the read only
-	 * @return the matching sxp elements that the user has permission to view
-	 */
-	public static List<SXPElement> filterFindByC_R(
-		long companyId, boolean readOnly) {
-
-		return getPersistence().filterFindByC_R(companyId, readOnly);
-	}
-
-	/**
-	 * Returns a range of all the sxp elements that the user has permission to view where companyId = &#63; and readOnly = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SXPElementModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param readOnly the read only
-	 * @param start the lower bound of the range of sxp elements
-	 * @param end the upper bound of the range of sxp elements (not inclusive)
-	 * @return the range of matching sxp elements that the user has permission to view
-	 */
-	public static List<SXPElement> filterFindByC_R(
-		long companyId, boolean readOnly, int start, int end) {
-
-		return getPersistence().filterFindByC_R(
-			companyId, readOnly, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the sxp elements that the user has permissions to view where companyId = &#63; and readOnly = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SXPElementModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.search.experiences.model.impl.SXPElementModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -1094,26 +522,6 @@ public class SXPElementUtil {
 
 		return getPersistence().filterFindByC_R(
 			companyId, readOnly, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns the sxp elements before and after the current sxp element in the ordered set of sxp elements that the user has permission to view where companyId = &#63; and readOnly = &#63;.
-	 *
-	 * @param sxpElementId the primary key of the current sxp element
-	 * @param companyId the company ID
-	 * @param readOnly the read only
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next sxp element
-	 * @throws NoSuchSXPElementException if a sxp element with the primary key could not be found
-	 */
-	public static SXPElement[] filterFindByC_R_PrevAndNext(
-			long sxpElementId, long companyId, boolean readOnly,
-			OrderByComparator<SXPElement> orderByComparator)
-		throws com.liferay.search.experiences.exception.
-			NoSuchSXPElementException {
-
-		return getPersistence().filterFindByC_R_PrevAndNext(
-			sxpElementId, companyId, readOnly, orderByComparator);
 	}
 
 	/**
@@ -1149,62 +557,10 @@ public class SXPElementUtil {
 	}
 
 	/**
-	 * Returns all the sxp elements where companyId = &#63; and type = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param type the type
-	 * @return the matching sxp elements
-	 */
-	public static List<SXPElement> findByC_T(long companyId, int type) {
-		return getPersistence().findByC_T(companyId, type);
-	}
-
-	/**
-	 * Returns a range of all the sxp elements where companyId = &#63; and type = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SXPElementModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param type the type
-	 * @param start the lower bound of the range of sxp elements
-	 * @param end the upper bound of the range of sxp elements (not inclusive)
-	 * @return the range of matching sxp elements
-	 */
-	public static List<SXPElement> findByC_T(
-		long companyId, int type, int start, int end) {
-
-		return getPersistence().findByC_T(companyId, type, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the sxp elements where companyId = &#63; and type = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SXPElementModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param type the type
-	 * @param start the lower bound of the range of sxp elements
-	 * @param end the upper bound of the range of sxp elements (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching sxp elements
-	 */
-	public static List<SXPElement> findByC_T(
-		long companyId, int type, int start, int end,
-		OrderByComparator<SXPElement> orderByComparator) {
-
-		return getPersistence().findByC_T(
-			companyId, type, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the sxp elements where companyId = &#63; and type = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SXPElementModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.search.experiences.model.impl.SXPElementModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -1260,95 +616,10 @@ public class SXPElementUtil {
 	}
 
 	/**
-	 * Returns the last sxp element in the ordered set where companyId = &#63; and type = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param type the type
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching sxp element
-	 * @throws NoSuchSXPElementException if a matching sxp element could not be found
-	 */
-	public static SXPElement findByC_T_Last(
-			long companyId, int type,
-			OrderByComparator<SXPElement> orderByComparator)
-		throws com.liferay.search.experiences.exception.
-			NoSuchSXPElementException {
-
-		return getPersistence().findByC_T_Last(
-			companyId, type, orderByComparator);
-	}
-
-	/**
-	 * Returns the last sxp element in the ordered set where companyId = &#63; and type = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param type the type
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching sxp element, or <code>null</code> if a matching sxp element could not be found
-	 */
-	public static SXPElement fetchByC_T_Last(
-		long companyId, int type,
-		OrderByComparator<SXPElement> orderByComparator) {
-
-		return getPersistence().fetchByC_T_Last(
-			companyId, type, orderByComparator);
-	}
-
-	/**
-	 * Returns the sxp elements before and after the current sxp element in the ordered set where companyId = &#63; and type = &#63;.
-	 *
-	 * @param sxpElementId the primary key of the current sxp element
-	 * @param companyId the company ID
-	 * @param type the type
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next sxp element
-	 * @throws NoSuchSXPElementException if a sxp element with the primary key could not be found
-	 */
-	public static SXPElement[] findByC_T_PrevAndNext(
-			long sxpElementId, long companyId, int type,
-			OrderByComparator<SXPElement> orderByComparator)
-		throws com.liferay.search.experiences.exception.
-			NoSuchSXPElementException {
-
-		return getPersistence().findByC_T_PrevAndNext(
-			sxpElementId, companyId, type, orderByComparator);
-	}
-
-	/**
-	 * Returns all the sxp elements that the user has permission to view where companyId = &#63; and type = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param type the type
-	 * @return the matching sxp elements that the user has permission to view
-	 */
-	public static List<SXPElement> filterFindByC_T(long companyId, int type) {
-		return getPersistence().filterFindByC_T(companyId, type);
-	}
-
-	/**
-	 * Returns a range of all the sxp elements that the user has permission to view where companyId = &#63; and type = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SXPElementModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param type the type
-	 * @param start the lower bound of the range of sxp elements
-	 * @param end the upper bound of the range of sxp elements (not inclusive)
-	 * @return the range of matching sxp elements that the user has permission to view
-	 */
-	public static List<SXPElement> filterFindByC_T(
-		long companyId, int type, int start, int end) {
-
-		return getPersistence().filterFindByC_T(companyId, type, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the sxp elements that the user has permissions to view where companyId = &#63; and type = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SXPElementModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.search.experiences.model.impl.SXPElementModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -1364,26 +635,6 @@ public class SXPElementUtil {
 
 		return getPersistence().filterFindByC_T(
 			companyId, type, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns the sxp elements before and after the current sxp element in the ordered set of sxp elements that the user has permission to view where companyId = &#63; and type = &#63;.
-	 *
-	 * @param sxpElementId the primary key of the current sxp element
-	 * @param companyId the company ID
-	 * @param type the type
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next sxp element
-	 * @throws NoSuchSXPElementException if a sxp element with the primary key could not be found
-	 */
-	public static SXPElement[] filterFindByC_T_PrevAndNext(
-			long sxpElementId, long companyId, int type,
-			OrderByComparator<SXPElement> orderByComparator)
-		throws com.liferay.search.experiences.exception.
-			NoSuchSXPElementException {
-
-		return getPersistence().filterFindByC_T_PrevAndNext(
-			sxpElementId, companyId, type, orderByComparator);
 	}
 
 	/**
@@ -1419,68 +670,10 @@ public class SXPElementUtil {
 	}
 
 	/**
-	 * Returns all the sxp elements where companyId = &#63; and type = &#63; and status = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param type the type
-	 * @param status the status
-	 * @return the matching sxp elements
-	 */
-	public static List<SXPElement> findByC_T_S(
-		long companyId, int type, int status) {
-
-		return getPersistence().findByC_T_S(companyId, type, status);
-	}
-
-	/**
-	 * Returns a range of all the sxp elements where companyId = &#63; and type = &#63; and status = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SXPElementModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param type the type
-	 * @param status the status
-	 * @param start the lower bound of the range of sxp elements
-	 * @param end the upper bound of the range of sxp elements (not inclusive)
-	 * @return the range of matching sxp elements
-	 */
-	public static List<SXPElement> findByC_T_S(
-		long companyId, int type, int status, int start, int end) {
-
-		return getPersistence().findByC_T_S(
-			companyId, type, status, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the sxp elements where companyId = &#63; and type = &#63; and status = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SXPElementModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param type the type
-	 * @param status the status
-	 * @param start the lower bound of the range of sxp elements
-	 * @param end the upper bound of the range of sxp elements (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching sxp elements
-	 */
-	public static List<SXPElement> findByC_T_S(
-		long companyId, int type, int status, int start, int end,
-		OrderByComparator<SXPElement> orderByComparator) {
-
-		return getPersistence().findByC_T_S(
-			companyId, type, status, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the sxp elements where companyId = &#63; and type = &#63; and status = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SXPElementModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.search.experiences.model.impl.SXPElementModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -1540,103 +733,10 @@ public class SXPElementUtil {
 	}
 
 	/**
-	 * Returns the last sxp element in the ordered set where companyId = &#63; and type = &#63; and status = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param type the type
-	 * @param status the status
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching sxp element
-	 * @throws NoSuchSXPElementException if a matching sxp element could not be found
-	 */
-	public static SXPElement findByC_T_S_Last(
-			long companyId, int type, int status,
-			OrderByComparator<SXPElement> orderByComparator)
-		throws com.liferay.search.experiences.exception.
-			NoSuchSXPElementException {
-
-		return getPersistence().findByC_T_S_Last(
-			companyId, type, status, orderByComparator);
-	}
-
-	/**
-	 * Returns the last sxp element in the ordered set where companyId = &#63; and type = &#63; and status = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param type the type
-	 * @param status the status
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching sxp element, or <code>null</code> if a matching sxp element could not be found
-	 */
-	public static SXPElement fetchByC_T_S_Last(
-		long companyId, int type, int status,
-		OrderByComparator<SXPElement> orderByComparator) {
-
-		return getPersistence().fetchByC_T_S_Last(
-			companyId, type, status, orderByComparator);
-	}
-
-	/**
-	 * Returns the sxp elements before and after the current sxp element in the ordered set where companyId = &#63; and type = &#63; and status = &#63;.
-	 *
-	 * @param sxpElementId the primary key of the current sxp element
-	 * @param companyId the company ID
-	 * @param type the type
-	 * @param status the status
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next sxp element
-	 * @throws NoSuchSXPElementException if a sxp element with the primary key could not be found
-	 */
-	public static SXPElement[] findByC_T_S_PrevAndNext(
-			long sxpElementId, long companyId, int type, int status,
-			OrderByComparator<SXPElement> orderByComparator)
-		throws com.liferay.search.experiences.exception.
-			NoSuchSXPElementException {
-
-		return getPersistence().findByC_T_S_PrevAndNext(
-			sxpElementId, companyId, type, status, orderByComparator);
-	}
-
-	/**
-	 * Returns all the sxp elements that the user has permission to view where companyId = &#63; and type = &#63; and status = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param type the type
-	 * @param status the status
-	 * @return the matching sxp elements that the user has permission to view
-	 */
-	public static List<SXPElement> filterFindByC_T_S(
-		long companyId, int type, int status) {
-
-		return getPersistence().filterFindByC_T_S(companyId, type, status);
-	}
-
-	/**
-	 * Returns a range of all the sxp elements that the user has permission to view where companyId = &#63; and type = &#63; and status = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SXPElementModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param type the type
-	 * @param status the status
-	 * @param start the lower bound of the range of sxp elements
-	 * @param end the upper bound of the range of sxp elements (not inclusive)
-	 * @return the range of matching sxp elements that the user has permission to view
-	 */
-	public static List<SXPElement> filterFindByC_T_S(
-		long companyId, int type, int status, int start, int end) {
-
-		return getPersistence().filterFindByC_T_S(
-			companyId, type, status, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the sxp elements that the user has permissions to view where companyId = &#63; and type = &#63; and status = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SXPElementModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.search.experiences.model.impl.SXPElementModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -1653,27 +753,6 @@ public class SXPElementUtil {
 
 		return getPersistence().filterFindByC_T_S(
 			companyId, type, status, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns the sxp elements before and after the current sxp element in the ordered set of sxp elements that the user has permission to view where companyId = &#63; and type = &#63; and status = &#63;.
-	 *
-	 * @param sxpElementId the primary key of the current sxp element
-	 * @param companyId the company ID
-	 * @param type the type
-	 * @param status the status
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next sxp element
-	 * @throws NoSuchSXPElementException if a sxp element with the primary key could not be found
-	 */
-	public static SXPElement[] filterFindByC_T_S_PrevAndNext(
-			long sxpElementId, long companyId, int type, int status,
-			OrderByComparator<SXPElement> orderByComparator)
-		throws com.liferay.search.experiences.exception.
-			NoSuchSXPElementException {
-
-		return getPersistence().filterFindByC_T_S_PrevAndNext(
-			sxpElementId, companyId, type, status, orderByComparator);
 	}
 
 	/**
@@ -1728,19 +807,6 @@ public class SXPElementUtil {
 	}
 
 	/**
-	 * Returns the sxp element where externalReferenceCode = &#63; and companyId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
-	 *
-	 * @param externalReferenceCode the external reference code
-	 * @param companyId the company ID
-	 * @return the matching sxp element, or <code>null</code> if a matching sxp element could not be found
-	 */
-	public static SXPElement fetchByERC_C(
-		String externalReferenceCode, long companyId) {
-
-		return getPersistence().fetchByERC_C(externalReferenceCode, companyId);
-	}
-
-	/**
 	 * Returns the sxp element where externalReferenceCode = &#63; and companyId = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
 	 *
 	 * @param externalReferenceCode the external reference code
@@ -1781,24 +847,6 @@ public class SXPElementUtil {
 		String externalReferenceCode, long companyId) {
 
 		return getPersistence().countByERC_C(externalReferenceCode, companyId);
-	}
-
-	/**
-	 * Caches the sxp element in the entity cache if it is enabled.
-	 *
-	 * @param sxpElement the sxp element
-	 */
-	public static void cacheResult(SXPElement sxpElement) {
-		getPersistence().cacheResult(sxpElement);
-	}
-
-	/**
-	 * Caches the sxp elements in the entity cache if it is enabled.
-	 *
-	 * @param sxpElements the sxp elements
-	 */
-	public static void cacheResult(List<SXPElement> sxpElements) {
-		getPersistence().cacheResult(sxpElements);
 	}
 
 	/**
@@ -1854,82 +902,511 @@ public class SXPElementUtil {
 	}
 
 	/**
-	 * Returns all the sxp elements.
+	 * Returns the sxp element where externalReferenceCode = &#63; and companyId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
 	 *
-	 * @return the sxp elements
+	 * @param externalReferenceCode the external reference code
+	 * @param companyId the company ID
+	 * @return the matching sxp element, or <code>null</code> if a matching sxp element could not be found
 	 */
-	public static List<SXPElement> findAll() {
-		return getPersistence().findAll();
+	public static SXPElement fetchByERC_C(
+		String externalReferenceCode, long companyId) {
+
+		return getPersistence().fetchByERC_C(externalReferenceCode, companyId);
 	}
 
 	/**
-	 * Returns a range of all the sxp elements.
+	 * Returns all the sxp elements where uuid = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @return the matching sxp elements
+	 */
+	public static List<SXPElement> findByUuid(String uuid) {
+		return getPersistence().findByUuid(uuid);
+	}
+
+	/**
+	 * Returns a range of all the sxp elements where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SXPElementModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.search.experiences.model.impl.SXPElementModelImpl</code>.
 	 * </p>
 	 *
+	 * @param uuid the uuid
 	 * @param start the lower bound of the range of sxp elements
 	 * @param end the upper bound of the range of sxp elements (not inclusive)
-	 * @return the range of sxp elements
+	 * @return the range of matching sxp elements
 	 */
-	public static List<SXPElement> findAll(int start, int end) {
-		return getPersistence().findAll(start, end);
+	public static List<SXPElement> findByUuid(String uuid, int start, int end) {
+		return getPersistence().findByUuid(uuid, start, end);
 	}
 
 	/**
-	 * Returns an ordered range of all the sxp elements.
+	 * Returns an ordered range of all the sxp elements where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SXPElementModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.search.experiences.model.impl.SXPElementModelImpl</code>.
 	 * </p>
 	 *
+	 * @param uuid the uuid
 	 * @param start the lower bound of the range of sxp elements
 	 * @param end the upper bound of the range of sxp elements (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of sxp elements
+	 * @return the ordered range of matching sxp elements
 	 */
-	public static List<SXPElement> findAll(
-		int start, int end, OrderByComparator<SXPElement> orderByComparator) {
+	public static List<SXPElement> findByUuid(
+		String uuid, int start, int end,
+		OrderByComparator<SXPElement> orderByComparator) {
 
-		return getPersistence().findAll(start, end, orderByComparator);
+		return getPersistence().findByUuid(uuid, start, end, orderByComparator);
 	}
 
 	/**
-	 * Returns an ordered range of all the sxp elements.
+	 * Returns all the sxp elements that the user has permission to view where uuid = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @return the matching sxp elements that the user has permission to view
+	 */
+	public static List<SXPElement> filterFindByUuid(String uuid) {
+		return getPersistence().filterFindByUuid(uuid);
+	}
+
+	/**
+	 * Returns a range of all the sxp elements that the user has permission to view where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SXPElementModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.search.experiences.model.impl.SXPElementModelImpl</code>.
 	 * </p>
 	 *
+	 * @param uuid the uuid
+	 * @param start the lower bound of the range of sxp elements
+	 * @param end the upper bound of the range of sxp elements (not inclusive)
+	 * @return the range of matching sxp elements that the user has permission to view
+	 */
+	public static List<SXPElement> filterFindByUuid(
+		String uuid, int start, int end) {
+
+		return getPersistence().filterFindByUuid(uuid, start, end);
+	}
+
+	/**
+	 * Returns all the sxp elements where uuid = &#63; and companyId = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @return the matching sxp elements
+	 */
+	public static List<SXPElement> findByUuid_C(String uuid, long companyId) {
+		return getPersistence().findByUuid_C(uuid, companyId);
+	}
+
+	/**
+	 * Returns a range of all the sxp elements where uuid = &#63; and companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.search.experiences.model.impl.SXPElementModelImpl</code>.
+	 * </p>
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of sxp elements
+	 * @param end the upper bound of the range of sxp elements (not inclusive)
+	 * @return the range of matching sxp elements
+	 */
+	public static List<SXPElement> findByUuid_C(
+		String uuid, long companyId, int start, int end) {
+
+		return getPersistence().findByUuid_C(uuid, companyId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the sxp elements where uuid = &#63; and companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.search.experiences.model.impl.SXPElementModelImpl</code>.
+	 * </p>
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
 	 * @param start the lower bound of the range of sxp elements
 	 * @param end the upper bound of the range of sxp elements (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param useFinderCache whether to use the finder cache
-	 * @return the ordered range of sxp elements
+	 * @return the ordered range of matching sxp elements
 	 */
-	public static List<SXPElement> findAll(
-		int start, int end, OrderByComparator<SXPElement> orderByComparator,
-		boolean useFinderCache) {
+	public static List<SXPElement> findByUuid_C(
+		String uuid, long companyId, int start, int end,
+		OrderByComparator<SXPElement> orderByComparator) {
 
-		return getPersistence().findAll(
-			start, end, orderByComparator, useFinderCache);
+		return getPersistence().findByUuid_C(
+			uuid, companyId, start, end, orderByComparator);
 	}
 
 	/**
-	 * Removes all the sxp elements from the database.
-	 */
-	public static void removeAll() {
-		getPersistence().removeAll();
-	}
-
-	/**
-	 * Returns the number of sxp elements.
+	 * Returns all the sxp elements that the user has permission to view where uuid = &#63; and companyId = &#63;.
 	 *
-	 * @return the number of sxp elements
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @return the matching sxp elements that the user has permission to view
 	 */
-	public static int countAll() {
-		return getPersistence().countAll();
+	public static List<SXPElement> filterFindByUuid_C(
+		String uuid, long companyId) {
+
+		return getPersistence().filterFindByUuid_C(uuid, companyId);
+	}
+
+	/**
+	 * Returns a range of all the sxp elements that the user has permission to view where uuid = &#63; and companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.search.experiences.model.impl.SXPElementModelImpl</code>.
+	 * </p>
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of sxp elements
+	 * @param end the upper bound of the range of sxp elements (not inclusive)
+	 * @return the range of matching sxp elements that the user has permission to view
+	 */
+	public static List<SXPElement> filterFindByUuid_C(
+		String uuid, long companyId, int start, int end) {
+
+		return getPersistence().filterFindByUuid_C(uuid, companyId, start, end);
+	}
+
+	/**
+	 * Returns all the sxp elements where companyId = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @return the matching sxp elements
+	 */
+	public static List<SXPElement> findByCompanyId(long companyId) {
+		return getPersistence().findByCompanyId(companyId);
+	}
+
+	/**
+	 * Returns a range of all the sxp elements where companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.search.experiences.model.impl.SXPElementModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of sxp elements
+	 * @param end the upper bound of the range of sxp elements (not inclusive)
+	 * @return the range of matching sxp elements
+	 */
+	public static List<SXPElement> findByCompanyId(
+		long companyId, int start, int end) {
+
+		return getPersistence().findByCompanyId(companyId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the sxp elements where companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.search.experiences.model.impl.SXPElementModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of sxp elements
+	 * @param end the upper bound of the range of sxp elements (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching sxp elements
+	 */
+	public static List<SXPElement> findByCompanyId(
+		long companyId, int start, int end,
+		OrderByComparator<SXPElement> orderByComparator) {
+
+		return getPersistence().findByCompanyId(
+			companyId, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns all the sxp elements that the user has permission to view where companyId = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @return the matching sxp elements that the user has permission to view
+	 */
+	public static List<SXPElement> filterFindByCompanyId(long companyId) {
+		return getPersistence().filterFindByCompanyId(companyId);
+	}
+
+	/**
+	 * Returns a range of all the sxp elements that the user has permission to view where companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.search.experiences.model.impl.SXPElementModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of sxp elements
+	 * @param end the upper bound of the range of sxp elements (not inclusive)
+	 * @return the range of matching sxp elements that the user has permission to view
+	 */
+	public static List<SXPElement> filterFindByCompanyId(
+		long companyId, int start, int end) {
+
+		return getPersistence().filterFindByCompanyId(companyId, start, end);
+	}
+
+	/**
+	 * Returns all the sxp elements where companyId = &#63; and readOnly = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param readOnly the read only
+	 * @return the matching sxp elements
+	 */
+	public static List<SXPElement> findByC_R(long companyId, boolean readOnly) {
+		return getPersistence().findByC_R(companyId, readOnly);
+	}
+
+	/**
+	 * Returns a range of all the sxp elements where companyId = &#63; and readOnly = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.search.experiences.model.impl.SXPElementModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param readOnly the read only
+	 * @param start the lower bound of the range of sxp elements
+	 * @param end the upper bound of the range of sxp elements (not inclusive)
+	 * @return the range of matching sxp elements
+	 */
+	public static List<SXPElement> findByC_R(
+		long companyId, boolean readOnly, int start, int end) {
+
+		return getPersistence().findByC_R(companyId, readOnly, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the sxp elements where companyId = &#63; and readOnly = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.search.experiences.model.impl.SXPElementModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param readOnly the read only
+	 * @param start the lower bound of the range of sxp elements
+	 * @param end the upper bound of the range of sxp elements (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching sxp elements
+	 */
+	public static List<SXPElement> findByC_R(
+		long companyId, boolean readOnly, int start, int end,
+		OrderByComparator<SXPElement> orderByComparator) {
+
+		return getPersistence().findByC_R(
+			companyId, readOnly, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns all the sxp elements that the user has permission to view where companyId = &#63; and readOnly = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param readOnly the read only
+	 * @return the matching sxp elements that the user has permission to view
+	 */
+	public static List<SXPElement> filterFindByC_R(
+		long companyId, boolean readOnly) {
+
+		return getPersistence().filterFindByC_R(companyId, readOnly);
+	}
+
+	/**
+	 * Returns a range of all the sxp elements that the user has permission to view where companyId = &#63; and readOnly = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.search.experiences.model.impl.SXPElementModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param readOnly the read only
+	 * @param start the lower bound of the range of sxp elements
+	 * @param end the upper bound of the range of sxp elements (not inclusive)
+	 * @return the range of matching sxp elements that the user has permission to view
+	 */
+	public static List<SXPElement> filterFindByC_R(
+		long companyId, boolean readOnly, int start, int end) {
+
+		return getPersistence().filterFindByC_R(
+			companyId, readOnly, start, end);
+	}
+
+	/**
+	 * Returns all the sxp elements where companyId = &#63; and type = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param type the type
+	 * @return the matching sxp elements
+	 */
+	public static List<SXPElement> findByC_T(long companyId, int type) {
+		return getPersistence().findByC_T(companyId, type);
+	}
+
+	/**
+	 * Returns a range of all the sxp elements where companyId = &#63; and type = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.search.experiences.model.impl.SXPElementModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param type the type
+	 * @param start the lower bound of the range of sxp elements
+	 * @param end the upper bound of the range of sxp elements (not inclusive)
+	 * @return the range of matching sxp elements
+	 */
+	public static List<SXPElement> findByC_T(
+		long companyId, int type, int start, int end) {
+
+		return getPersistence().findByC_T(companyId, type, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the sxp elements where companyId = &#63; and type = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.search.experiences.model.impl.SXPElementModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param type the type
+	 * @param start the lower bound of the range of sxp elements
+	 * @param end the upper bound of the range of sxp elements (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching sxp elements
+	 */
+	public static List<SXPElement> findByC_T(
+		long companyId, int type, int start, int end,
+		OrderByComparator<SXPElement> orderByComparator) {
+
+		return getPersistence().findByC_T(
+			companyId, type, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns all the sxp elements that the user has permission to view where companyId = &#63; and type = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param type the type
+	 * @return the matching sxp elements that the user has permission to view
+	 */
+	public static List<SXPElement> filterFindByC_T(long companyId, int type) {
+		return getPersistence().filterFindByC_T(companyId, type);
+	}
+
+	/**
+	 * Returns a range of all the sxp elements that the user has permission to view where companyId = &#63; and type = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.search.experiences.model.impl.SXPElementModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param type the type
+	 * @param start the lower bound of the range of sxp elements
+	 * @param end the upper bound of the range of sxp elements (not inclusive)
+	 * @return the range of matching sxp elements that the user has permission to view
+	 */
+	public static List<SXPElement> filterFindByC_T(
+		long companyId, int type, int start, int end) {
+
+		return getPersistence().filterFindByC_T(companyId, type, start, end);
+	}
+
+	/**
+	 * Returns all the sxp elements where companyId = &#63; and type = &#63; and status = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param type the type
+	 * @param status the status
+	 * @return the matching sxp elements
+	 */
+	public static List<SXPElement> findByC_T_S(
+		long companyId, int type, int status) {
+
+		return getPersistence().findByC_T_S(companyId, type, status);
+	}
+
+	/**
+	 * Returns a range of all the sxp elements where companyId = &#63; and type = &#63; and status = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.search.experiences.model.impl.SXPElementModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param type the type
+	 * @param status the status
+	 * @param start the lower bound of the range of sxp elements
+	 * @param end the upper bound of the range of sxp elements (not inclusive)
+	 * @return the range of matching sxp elements
+	 */
+	public static List<SXPElement> findByC_T_S(
+		long companyId, int type, int status, int start, int end) {
+
+		return getPersistence().findByC_T_S(
+			companyId, type, status, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the sxp elements where companyId = &#63; and type = &#63; and status = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.search.experiences.model.impl.SXPElementModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param type the type
+	 * @param status the status
+	 * @param start the lower bound of the range of sxp elements
+	 * @param end the upper bound of the range of sxp elements (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching sxp elements
+	 */
+	public static List<SXPElement> findByC_T_S(
+		long companyId, int type, int status, int start, int end,
+		OrderByComparator<SXPElement> orderByComparator) {
+
+		return getPersistence().findByC_T_S(
+			companyId, type, status, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns all the sxp elements that the user has permission to view where companyId = &#63; and type = &#63; and status = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param type the type
+	 * @param status the status
+	 * @return the matching sxp elements that the user has permission to view
+	 */
+	public static List<SXPElement> filterFindByC_T_S(
+		long companyId, int type, int status) {
+
+		return getPersistence().filterFindByC_T_S(companyId, type, status);
+	}
+
+	/**
+	 * Returns a range of all the sxp elements that the user has permission to view where companyId = &#63; and type = &#63; and status = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.search.experiences.model.impl.SXPElementModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param type the type
+	 * @param status the status
+	 * @param start the lower bound of the range of sxp elements
+	 * @param end the upper bound of the range of sxp elements (not inclusive)
+	 * @return the range of matching sxp elements that the user has permission to view
+	 */
+	public static List<SXPElement> filterFindByC_T_S(
+		long companyId, int type, int status, int start, int end) {
+
+		return getPersistence().filterFindByC_T_S(
+			companyId, type, status, start, end);
 	}
 
 	public static SXPElementPersistence getPersistence() {
@@ -1943,3 +1420,4 @@ public class SXPElementUtil {
 	private static volatile SXPElementPersistence _persistence;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-1844060934

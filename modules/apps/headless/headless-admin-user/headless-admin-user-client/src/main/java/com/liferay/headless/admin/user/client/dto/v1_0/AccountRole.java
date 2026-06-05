@@ -221,3 +221,4 @@ public class AccountRole implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-959737879

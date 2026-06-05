@@ -120,3 +120,4 @@ public class HighlightField implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1450144640

@@ -166,3 +166,4 @@ public class BulkActionItem implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-273237495

@@ -23,8 +23,6 @@ export const test = mergeTests(
 	dataApiHelpersTest,
 	featureFlagsTest({
 		'LPD-17564': {enabled: true}, // CMS 2.0
-		'LPD-37320': {enabled: true}, // Unified Query Builder
-		'LPD-41306': {enabled: true}, // Headless Site API
 		'LPS-178052': {enabled: true}, // Headless Site Page API
 	}),
 	isolatedSiteTest,
@@ -123,23 +121,13 @@ test.describe('Site Scope', () => {
 	let site2: any;
 
 	test.beforeEach(async ({apiHelpers}) => {
-		site1 = await apiHelpers.headlessSite.createSite({
+		site1 = await apiHelpers.headlessAdminSite.postSite({
 			name: `Site1 ${getRandomInt()}`,
 		});
 
-		site2 = await apiHelpers.headlessSite.createSite({
+		site2 = await apiHelpers.headlessAdminSite.postSite({
 			name: `Site2 ${getRandomInt()}`,
 		});
-	});
-
-	test.afterEach(async ({apiHelpers}) => {
-		if (site1.id) {
-			await apiHelpers.headlessSite.deleteSite(site1.id);
-		}
-
-		if (site2.id) {
-			await apiHelpers.headlessSite.deleteSite(site2.id);
-		}
 	});
 
 	test('Scope selection persists after saving blueprint', async ({
@@ -248,7 +236,11 @@ test.describe('Site Scope', () => {
 		});
 
 		await test.step('Remove first site from blueprint scope', async () => {
+			await editSXPBlueprintPage.closePreviewSidebar();
+
 			await editSXPBlueprintPage.removeScope({label: site1.name});
+
+			await editSXPBlueprintPage.openPreviewSidebar();
 		});
 
 		await test.step('Verify web content is no longer shown in blueprint preview', async () => {

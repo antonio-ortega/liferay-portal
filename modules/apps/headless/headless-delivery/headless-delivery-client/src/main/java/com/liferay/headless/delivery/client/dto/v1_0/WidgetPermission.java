@@ -99,3 +99,4 @@ public class WidgetPermission implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-949484427

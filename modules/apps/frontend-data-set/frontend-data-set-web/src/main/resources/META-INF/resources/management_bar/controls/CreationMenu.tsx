@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
+import ClayButton from '@clayui/button';
 import ClayDropDown from '@clayui/drop-down';
 import ClayIcon from '@clayui/icon';
 import {LinkOrButton} from '@clayui/shared';
@@ -21,7 +21,11 @@ const MEDIUM_BREAKPOINT = 768;
 
 const DropdownTrigger = React.forwardRef(
 	(
-		{inEmptyState, ...otherProps}: {inEmptyState: boolean},
+		{
+			hideManagementBarInEmptyState = false,
+			inEmptyState,
+			...otherProps
+		}: {hideManagementBarInEmptyState?: boolean; inEmptyState: boolean},
 		ref: Ref<HTMLButtonElement>
 	) => {
 		const {width} = useWindowSize();
@@ -32,39 +36,57 @@ const DropdownTrigger = React.forwardRef(
 					{...otherProps}
 					className={!inEmptyState ? 'nav-btn px-3' : undefined}
 					data-testid="fdsCreationActionButton"
-					displayType={inEmptyState ? 'secondary' : 'primary'}
+					displayType={
+						inEmptyState && hideManagementBarInEmptyState
+							? 'primary'
+							: 'secondary'
+					}
 					ref={ref}
 				>
-					<span className="inline-item-before">
+					<span className="inline-item inline-item-before">
 						{Liferay.Language.get('new')}
 					</span>
 
-					<span className="d-inline-flex inline-item-after">
-						<ClayIcon symbol="caret-bottom" />
-					</span>
+					<ClayIcon
+						className="inline-item inline-item-after"
+						symbol="caret-bottom"
+					/>
 				</ClayButton>
 			);
 		}
 		else {
 			return (
-				<ClayButtonWithIcon
+				<ClayButton
 					{...otherProps}
 					aria-label={Liferay.Language.get('new')}
 					className="nav-btn nav-btn-monospaced"
 					data-testid="fdsCreationActionButton"
+					displayType={
+						inEmptyState && hideManagementBarInEmptyState
+							? 'primary'
+							: 'secondary'
+					}
 					ref={ref}
-					symbol="plus"
 					title={Liferay.Language.get('new')}
-				/>
+				>
+					<ClayIcon className="inline-item ml-2 mr-2" symbol="plus" />
+
+					<ClayIcon
+						className="inline-item mr-2"
+						symbol="caret-bottom"
+					/>
+				</ClayButton>
 			);
 		}
 	}
 );
 
 const DropDown = ({
+	hideManagementBarInEmptyState = false,
 	inEmptyState,
 	primaryItems,
 }: {
+	hideManagementBarInEmptyState?: boolean;
 	inEmptyState: boolean;
 	primaryItems: Array<ICreationActionItem>;
 }) => {
@@ -78,7 +100,14 @@ const DropDown = ({
 		<ClayDropDown
 			active={active}
 			onActiveChange={setActive}
-			trigger={<DropdownTrigger inEmptyState={inEmptyState} />}
+			trigger={
+				<DropdownTrigger
+					hideManagementBarInEmptyState={
+						hideManagementBarInEmptyState
+					}
+					inEmptyState={inEmptyState}
+				/>
+			}
 		>
 			<ClayDropDown.ItemList>
 				{primaryItems.map((item, i) => (
@@ -187,11 +216,7 @@ function CreationButton({
 			})}
 			title={firstItem.label}
 		>
-			{isMobile ? (
-				<ClayIcon symbol="plus" />
-			) : (
-				Liferay.Language.get('new')
-			)}
+			{isMobile ? <ClayIcon symbol="plus" /> : firstItem.label}
 
 			{newTabIcon}
 		</LinkOrButton>
@@ -199,9 +224,11 @@ function CreationButton({
 }
 
 function CreationMenu({
+	hideManagementBarInEmptyState = false,
 	inEmptyState,
 	primaryItems,
 }: {
+	hideManagementBarInEmptyState?: boolean;
 	inEmptyState: boolean;
 	primaryItems: Array<ICreationActionItem>;
 }) {
@@ -218,6 +245,9 @@ function CreationMenu({
 			<li className="nav-item">
 				{primaryItems.length > 1 ? (
 					<DropDown
+						hideManagementBarInEmptyState={
+							hideManagementBarInEmptyState
+						}
 						inEmptyState={inEmptyState}
 						primaryItems={primaryItems}
 					/>

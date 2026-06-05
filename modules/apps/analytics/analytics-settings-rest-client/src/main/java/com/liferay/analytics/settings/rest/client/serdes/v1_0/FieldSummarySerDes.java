@@ -277,3 +277,4 @@ public class FieldSummarySerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:827781728

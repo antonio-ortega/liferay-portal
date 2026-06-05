@@ -3,7 +3,7 @@ $tooltip-border-radius: $border-radius !default;
 $tooltip-box-shadow: null !default;
 $tooltip-color: $white !default;
 $tooltip-font-size: $font-size-sm !default;
-$tooltip-margin: 0 !default;
+$tooltip-margin: 0rem !default;
 $tooltip-max-width: 200px !default;
 $tooltip-opacity: 0.9 !default;
 $tooltip-padding-x: 0.5rem !default;
@@ -46,14 +46,17 @@ $tooltip: map-deep-merge(
 		word-spacing: normal,
 		word-wrap: break-word,
 		z-index: $zindex-tooltip,
+
 		show: (
 			opacity: $tooltip-opacity,
 		),
+
 		arrow: (
 			display: block,
 			height: $tooltip-arrow-height,
 			position: absolute,
 			width: $tooltip-arrow-width,
+
 			before: (
 				border-color: transparent,
 				border-style: solid,
@@ -88,25 +91,25 @@ $clay-tooltip-bottom: () !default;
 $clay-tooltip-bottom: map-deep-merge(
 	(
 		padding-top: $tooltip-arrow-height,
+
 		arrow: (
 			left: 50%,
-			margin-left: math-sign($tooltip-arrow-width * 0.5),
-			top: 0,
+			margin-left: calc(#{$tooltip-arrow-width} * -0.5),
+			top: 0rem,
+
 			before: (
 				border-bottom-color: $tooltip-arrow-color,
-				border-width: 0
-					(
-						$tooltip-arrow-width * 0.5,
-					)
+				border-width: 0rem calc(#{$tooltip-arrow-width} * 0.5)
 					$tooltip-arrow-height,
-				bottom: 0,
+				bottom: 0rem,
 			),
 		),
+
 		tooltip-arrow: (
 			border-bottom-color: transparent,
 			border-right-color: transparent,
 			left: 50%,
-			top: 0,
+			top: 0rem,
 		),
 	),
 	$clay-tooltip-bottom
@@ -119,7 +122,7 @@ $clay-tooltip-bottom-left: map-deep-merge(
 	(
 		arrow: (
 			left: $tooltip-arrow-offset,
-			margin-left: 0,
+			margin-left: 0rem,
 		),
 	),
 	$clay-tooltip-bottom-left
@@ -132,7 +135,7 @@ $clay-tooltip-bottom-right: map-deep-merge(
 	(
 		arrow: (
 			left: auto,
-			margin-left: 0,
+			margin-left: 0rem,
 			right: $tooltip-arrow-offset,
 		),
 	),
@@ -145,29 +148,26 @@ $clay-tooltip-left: () !default;
 $clay-tooltip-left: map-deep-merge(
 	(
 		padding-right: $tooltip-arrow-height,
+
 		arrow: (
 			height: $tooltip-arrow-width,
-			margin-top: math-sign($tooltip-arrow-width * 0.5),
-			right: 0,
+			margin-top: calc(#{$tooltip-arrow-width} * -0.5),
+			right: 0rem,
 			top: 50%,
 			width: $tooltip-arrow-height,
+
 			before: (
 				border-left-color: $tooltip-arrow-color,
-				border-width: (
-					$tooltip-arrow-width * 0.5,
-				)
-				0
-				(
-					$tooltip-arrow-width * 0.5,
-				)
-				$tooltip-arrow-height,
-				left: 0,
+				border-width: calc(#{$tooltip-arrow-width} * 0.5) 0
+					calc(#{$tooltip-arrow-width} * 0.5) $tooltip-arrow-height,
+				left: 0rem,
 			),
 		),
+
 		tooltip-arrow: (
 			border-bottom-color: transparent,
 			border-left-color: transparent,
-			right: 0,
+			right: 0rem,
 			top: 50%,
 		),
 	),
@@ -181,7 +181,7 @@ $clay-tooltip-left-bottom: map-deep-merge(
 	(
 		arrow: (
 			bottom: $tooltip-arrow-offset,
-			margin-top: 0,
+			margin-top: 0rem,
 			top: auto,
 		),
 	),
@@ -194,7 +194,7 @@ $clay-tooltip-left-top: () !default;
 $clay-tooltip-left-top: map-deep-merge(
 	(
 		arrow: (
-			margin-top: 0,
+			margin-top: 0rem,
 			top: $tooltip-arrow-offset,
 		),
 	),
@@ -207,29 +207,27 @@ $clay-tooltip-right: () !default;
 $clay-tooltip-right: map-deep-merge(
 	(
 		padding-left: $tooltip-arrow-height,
+
 		arrow: (
 			height: $tooltip-arrow-width,
-			left: 0,
-			margin-top: math-sign($tooltip-arrow-width * 0.5),
+			left: 0rem,
+			margin-top: calc(#{$tooltip-arrow-width} * -0.5),
 			width: $tooltip-arrow-height,
 			top: 50%,
+
 			before: (
 				border-right-color: $tooltip-arrow-color,
-				border-width: (
-					$tooltip-arrow-width * 0.5,
-				)
-				$tooltip-arrow-height
-				(
-					$tooltip-arrow-width * 0.5,
-				)
-				0,
-				right: 0,
+				border-width: calc(#{$tooltip-arrow-width} * 0.5)
+					$tooltip-arrow-height calc(#{$tooltip-arrow-width} * 0.5)
+					0rem,
+				right: 0rem,
 			),
 		),
+
 		tooltip-arrow: (
 			border-right-color: transparent,
 			border-top-color: transparent,
-			left: 0,
+			left: 0rem,
 			top: 50%,
 		),
 	),
@@ -243,7 +241,7 @@ $clay-tooltip-right-bottom: map-deep-merge(
 	(
 		arrow: (
 			bottom: $tooltip-arrow-offset,
-			margin-top: 0,
+			margin-top: 0rem,
 			top: auto,
 		),
 	),
@@ -256,7 +254,7 @@ $clay-tooltip-right-top: () !default;
 $clay-tooltip-right-top: map-deep-merge(
 	(
 		arrow: (
-			margin-top: 0,
+			margin-top: 0rem,
 			top: $tooltip-arrow-offset,
 		),
 	),
@@ -269,24 +267,23 @@ $clay-tooltip-top: () !default;
 $clay-tooltip-top: map-deep-merge(
 	(
 		padding-bottom: $tooltip-arrow-height,
+
 		arrow: (
-			bottom: 0,
+			bottom: 0rem,
 			left: 50%,
-			margin-left: math-sign($tooltip-arrow-width * 0.5),
+			margin-left: calc(#{$tooltip-arrow-width} * -0.5),
 			before: (
 				border-top-color: $tooltip-arrow-color,
 				border-width: $tooltip-arrow-height
-					(
-						$tooltip-arrow-width * 0.5,
-					)
-					0,
-				top: 0,
+					calc(#{$tooltip-arrow-width} * 0.5) 0rem,
+				top: 0rem,
 			),
 		),
+
 		tooltip-arrow: (
 			border-left-color: transparent,
 			border-top-color: transparent,
-			bottom: 0,
+			bottom: 0rem,
 			left: 50%,
 		),
 	),
@@ -300,7 +297,7 @@ $clay-tooltip-top-left: map-deep-merge(
 	(
 		arrow: (
 			left: $tooltip-arrow-offset,
-			margin-left: 0,
+			margin-left: 0rem,
 		),
 	),
 	$clay-tooltip-top-left
@@ -313,7 +310,7 @@ $clay-tooltip-top-right: map-deep-merge(
 	(
 		arrow: (
 			left: auto,
-			margin-left: 0,
+			margin-left: 0rem,
 			right: $tooltip-arrow-offset,
 		),
 	),

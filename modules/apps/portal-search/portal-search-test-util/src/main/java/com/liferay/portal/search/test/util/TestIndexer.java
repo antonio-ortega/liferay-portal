@@ -54,7 +54,7 @@ public class TestIndexer extends BaseIndexer<Object> {
 	}
 
 	@Override
-	protected void doReindex(String[] ids) {
+	protected void doReindexCompany(long companyId) {
 	}
 
 	private final String _className;

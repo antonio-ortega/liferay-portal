@@ -150,7 +150,8 @@ public class HelpCenterUtil {
 				patcherConfiguration.supportLiferayURL(),
 				StringPool.FORWARD_SLASH,
 				patcherConfiguration.supportLiferayAccountSearchAPIEndpoint(),
-				accountEntryCode));
+				StringPool.APOSTROPHE + accountEntryCode +
+					StringPool.APOSTROPHE));
 		options.setPost(false);
 
 		String responseString = _sendRequest(options);
@@ -168,19 +169,9 @@ public class HelpCenterUtil {
 			return 0;
 		}
 
-		for (int i = 0; i < itemsJSONArray.length(); i++) {
-			JSONObject itemJSONObject = itemsJSONArray.getJSONObject(i);
+		JSONObject itemJSONObject = itemsJSONArray.getJSONObject(0);
 
-			if (itemJSONObject.has("code")) {
-				String code = itemJSONObject.getString("code");
-
-				if (code.equals(accountEntryCode)) {
-					return itemJSONObject.getLong("id");
-				}
-			}
-		}
-
-		return 0;
+		return itemJSONObject.getLong("id");
 	}
 
 	protected static void completeUpload(

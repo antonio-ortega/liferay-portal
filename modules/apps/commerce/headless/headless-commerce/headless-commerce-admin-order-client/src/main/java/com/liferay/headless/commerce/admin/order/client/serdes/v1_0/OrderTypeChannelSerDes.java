@@ -390,3 +390,4 @@ public class OrderTypeChannelSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-969205795

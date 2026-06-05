@@ -47,3 +47,4 @@ public interface CommerceAddressRestrictionService extends BaseService {
 	public String getOSGiServiceIdentifier();
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-314137418

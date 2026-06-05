@@ -278,3 +278,4 @@ public class PolicySerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1913152941

@@ -30,7 +30,7 @@ portletDisplay.setURLBack(String.valueOf(renderResponse.createRenderURL()));
 	bean="<%= cpOption %>"
 	beanIdLabel="id"
 	externalReferenceCode="<%= cpOption.getExternalReferenceCode() %>"
-	externalReferenceCodeEditUrl="<%= editCPOptionExternalReferenceCodeURL %>"
+	externalReferenceCodeEditURL="<%= editCPOptionExternalReferenceCodeURL %>"
 	model="<%= CPOption.class %>"
 	title="<%= cpOption.getName(locale) %>"
 	wrapperCssClasses="side-panel-top-anchor"
@@ -109,7 +109,6 @@ portletDisplay.setURLBack(String.valueOf(renderResponse.createRenderURL()));
 					creationMenu="<%= cpOptionDisplayContext.getOptionValueCreationMenu(cpOptionId) %>"
 					fdsActionDropdownItems="<%= cpOptionDisplayContext.getOptionValueFDSActionDropdownItems() %>"
 					id="<%= CommerceOptionFDSNames.OPTION_VALUES %>"
-					itemsPerPage="<%= 10 %>"
 					style="stacked"
 				/>
 			</commerce-ui:panel>

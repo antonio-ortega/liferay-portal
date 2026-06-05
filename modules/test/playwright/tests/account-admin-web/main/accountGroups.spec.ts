@@ -11,11 +11,7 @@ import {featureFlagsTest} from '../../../fixtures/featureFlagsTest';
 import {loginTest} from '../../../fixtures/loginTest';
 import {usersAndOrganizationsPagesTest} from '../../../fixtures/usersAndOrganizationsPagesTest';
 import getRandomString from '../../../utils/getRandomString';
-import {
-	performLoginViaApi,
-	performLogout,
-	userData,
-} from '../../../utils/performLogin';
+import {performUserSwitch, userData} from '../../../utils/performLogin';
 import {waitForAlert} from '../../../utils/waitForAlert';
 
 export const test = mergeTests(
@@ -23,7 +19,6 @@ export const test = mergeTests(
 	dataApiHelpersTest,
 	featureFlagsTest({
 		'LPD-35443': {enabled: true},
-		'LPD-35914': {enabled: true},
 	}),
 	loginTest(),
 	usersAndOrganizationsPagesTest
@@ -962,8 +957,7 @@ test('User without Assign Account permission can not assign/unassign account to 
 		userAccount.id
 	);
 
-	await performLogout(page);
-	await performLoginViaApi({page, screenName: userAccount.alternateName});
+	await performUserSwitch(page, userAccount.alternateName);
 
 	await accountGroupsPage.goto(false);
 
@@ -1057,8 +1051,7 @@ test('User with Assign Account permission can assign/unassign account to an acco
 		userAccount.id
 	);
 
-	await performLogout(page);
-	await performLoginViaApi({page, screenName: userAccount.alternateName});
+	await performUserSwitch(page, userAccount.alternateName);
 
 	await accountGroupsPage.goto(false);
 
@@ -1169,8 +1162,7 @@ test('User without View Account permission can not view accounts in an account g
 		userAccount.id
 	);
 
-	await performLogout(page);
-	await performLoginViaApi({page, screenName: userAccount.alternateName});
+	await performUserSwitch(page, userAccount.alternateName);
 
 	await accountGroupsPage.goto(false);
 
@@ -1248,8 +1240,7 @@ test('User with View Account permission can view accounts in an account group', 
 		userAccount.id
 	);
 
-	await performLogout(page);
-	await performLoginViaApi({page, screenName: userAccount.alternateName});
+	await performUserSwitch(page, userAccount.alternateName);
 
 	await accountGroupsPage.goto(false);
 
@@ -1316,8 +1307,7 @@ test('User with Access in Control Panel permission can view account groups secti
 		userAccount.id
 	);
 
-	await performLogout(page);
-	await performLoginViaApi({page, screenName: userAccount.alternateName});
+	await performUserSwitch(page, userAccount.alternateName);
 
 	await accountGroupsPage.goto(false);
 
@@ -1383,8 +1373,7 @@ test(
 			userAccount.id
 		);
 
-		await performLogout(page);
-		await performLoginViaApi({page, screenName: userAccount.alternateName});
+		await performUserSwitch(page, userAccount.alternateName);
 
 		await accountGroupsPage.goto(false);
 
@@ -1647,8 +1636,7 @@ test(
 			userAccount.id
 		);
 
-		await performLogout(page);
-		await performLoginViaApi({page, screenName: userAccount.alternateName});
+		await performUserSwitch(page, userAccount.alternateName);
 
 		await accountGroupsPage.goto(false);
 		await accountGroupsPage.accountGroupLink(accountGroup.name).click();

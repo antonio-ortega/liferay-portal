@@ -137,6 +137,27 @@ public class Settings implements Cloneable, Serializable {
 
 	protected ClientExtension[] globalJSClientExtensions;
 
+	public IconImageURL getIconImageURL() {
+		return iconImageURL;
+	}
+
+	public void setIconImageURL(IconImageURL iconImageURL) {
+		this.iconImageURL = iconImageURL;
+	}
+
+	public void setIconImageURL(
+		UnsafeSupplier<IconImageURL, Exception> iconImageURLUnsafeSupplier) {
+
+		try {
+			iconImageURL = iconImageURLUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected IconImageURL iconImageURL;
+
 	public String getJavascript() {
 		return javascript;
 	}
@@ -333,3 +354,4 @@ public class Settings implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:472063387

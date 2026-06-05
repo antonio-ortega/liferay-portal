@@ -377,3 +377,4 @@ public class PortalInstanceSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:1493873890

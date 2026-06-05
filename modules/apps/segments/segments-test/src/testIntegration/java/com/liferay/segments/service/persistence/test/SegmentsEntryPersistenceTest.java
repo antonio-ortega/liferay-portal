@@ -283,19 +283,6 @@ public class SegmentsEntryPersistenceTest {
 	}
 
 	@Test
-	public void testCountByCompanyId() throws Exception {
-		_persistence.countByCompanyId(RandomTestUtil.nextLong());
-
-		_persistence.countByCompanyId(0L);
-	}
-
-	@Test
-	public void testCountByCompanyIdArrayable() throws Exception {
-		_persistence.countByCompanyId(
-			new long[] {RandomTestUtil.nextLong(), 0L});
-	}
-
-	@Test
 	public void testCountByActive() throws Exception {
 		_persistence.countByActive(RandomTestUtil.randomBoolean());
 
@@ -348,7 +335,30 @@ public class SegmentsEntryPersistenceTest {
 	public void testCountByG_SRCArrayable() throws Exception {
 		_persistence.countByG_SRC(
 			new long[] {RandomTestUtil.nextLong(), 0L},
-			RandomTestUtil.randomString());
+			new String[] {
+				RandomTestUtil.randomString(), "", "null", null, null
+			});
+	}
+
+	@Test
+	public void testCountByG_A_SRC() throws Exception {
+		_persistence.countByG_A_SRC(
+			RandomTestUtil.nextLong(), RandomTestUtil.randomBoolean(), "");
+
+		_persistence.countByG_A_SRC(0L, RandomTestUtil.randomBoolean(), "null");
+
+		_persistence.countByG_A_SRC(
+			0L, RandomTestUtil.randomBoolean(), (String)null);
+	}
+
+	@Test
+	public void testCountByG_A_SRCArrayable() throws Exception {
+		_persistence.countByG_A_SRC(
+			new long[] {RandomTestUtil.nextLong(), 0L},
+			RandomTestUtil.randomBoolean(),
+			new String[] {
+				RandomTestUtil.randomString(), "", "null", null, null
+			});
 	}
 
 	@Test
@@ -765,3 +775,4 @@ public class SegmentsEntryPersistenceTest {
 	private ClassLoader _dynamicQueryClassLoader;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-1054229648

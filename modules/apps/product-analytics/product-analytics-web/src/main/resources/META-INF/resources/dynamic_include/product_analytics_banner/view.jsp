@@ -7,8 +7,25 @@
 
 <%@ include file="/dynamic_include/init.jsp" %>
 
-<liferay-portlet:runtime
-	portletName="<%= ProductAnalyticsPortletKeys.PRODUCT_ANALYTICS_BANNER %>"
-/>
+<%
+ProductAnalyticsConfigurationDisplayContext productAnalyticsConfigurationDisplayContext = (ProductAnalyticsConfigurationDisplayContext)request.getAttribute(ProductAnalyticsWebKeys.PRODUCT_ANALYTICS_CONFIGURATION_DISPLAY_CONTEXT);
+%>
 
 <aui:script src="https://storage.googleapis.com/liferaycloud-cdn-product-experience-manager-assets-prd/self-hosted-script/product-analytics-script.umd.min.js" type="text/javascript"></aui:script>
+
+<aui:script type="module">
+	window.productAnalyticsScript = new window.productAnalyticsScript({
+		consentRenewalPeriod:
+			'<%= productAnalyticsConfigurationDisplayContext.getConsentRenewalPeriod() %>',
+		lastModified:
+			'<%= productAnalyticsConfigurationDisplayContext.getLastModified() %>',
+	});
+
+	window.productAnalyticsScript.startTrackingJourney();
+
+	Liferay.on('endNavigate', () => {
+		window.productAnalyticsScript.dispose();
+
+		window.productAnalyticsScript.startTrackingJourney();
+	});
+</aui:script>

@@ -36,7 +36,10 @@ describe('importZipFile', () => {
 	it('handle successful import', async () => {
 		const mockResponse = {
 			json: () =>
-				Promise.resolve({importResults: {test: 'result'}, valid: true}),
+				Promise.resolve({
+					hasConflicts: false,
+					importResults: {test: 'result'},
+				}),
 			ok: true,
 		};
 
@@ -50,7 +53,10 @@ describe('importZipFile', () => {
 		);
 
 		expect(mockProps.handleResponse).toHaveBeenCalledWith(
-			{importResults: {test: 'result'}, valid: true},
+			{
+				hasConflicts: false,
+				importResults: {test: 'result'},
+			},
 			mockProps.file
 		);
 
@@ -126,7 +132,10 @@ describe('importZipFile', () => {
 	it('pass overwrite strategy if provided', async () => {
 		const mockResponse = {
 			json: () =>
-				Promise.resolve({importResults: {test: 'result'}, valid: true}),
+				Promise.resolve({
+					hasConflicts: false,
+					importResults: {test: 'result'},
+				}),
 			ok: true,
 		};
 
@@ -151,6 +160,34 @@ describe('importZipFile', () => {
 		);
 	});
 
+	it('shows the generic error toast when the JSON response contains an error', async () => {
+		const mockResponse = {
+			json: () =>
+				Promise.resolve({
+					error: 'specific-backend-error',
+					hasConflicts: false,
+					importResults: {},
+					needsFragmentCollection: false,
+				}),
+			ok: true,
+		};
+
+		fetch.mockResolvedValue(mockResponse);
+
+		await importZipFile(mockProps);
+
+		expect(mockProps.handleResponse).not.toHaveBeenCalled();
+		expect(openToast).toHaveBeenCalledWith({
+			message: sub(
+				Liferay.Language.get(
+					'something-went-wrong-and-the-x-could-not-be-imported'
+				),
+				mockProps.file.name
+			),
+			type: 'danger',
+		});
+	});
+
 	it('handle undefined file name', async () => {
 		const nullNameFile = new File(['test'], undefined, {
 			type: 'application/zip',
@@ -170,7 +207,7 @@ describe('importZipFile', () => {
 				Liferay.Language.get(
 					'something-went-wrong-and-the-x-could-not-be-imported'
 				),
-				''
+				nullNameFile.name
 			),
 			type: 'danger',
 		});

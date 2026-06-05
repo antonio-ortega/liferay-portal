@@ -276,3 +276,4 @@ public class DataSourceSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-2130159165

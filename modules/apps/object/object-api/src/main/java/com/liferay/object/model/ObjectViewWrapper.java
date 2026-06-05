@@ -595,3 +595,4 @@ public class ObjectViewWrapper
 	}
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-604722883

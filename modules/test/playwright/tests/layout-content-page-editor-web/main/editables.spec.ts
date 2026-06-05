@@ -22,7 +22,7 @@ import getPageDefinition from './utils/getPageDefinition';
 const test = mergeTests(
 	apiHelpersTest,
 	featureFlagsTest({
-		'LPD-11235': {enabled: true},
+		'LPD-11235': {enabled: false},
 		'LPS-178052': {enabled: true},
 	}),
 	isolatedSiteTest,
@@ -34,7 +34,7 @@ const test = mergeTests(
 const testWithCKEditor4 = mergeTests(
 	test,
 	featureFlagsTest({
-		'LPD-11235': {enabled: false},
+		'LPD-11235': {enabled: true},
 		'LPS-178052': {enabled: true},
 	})
 );
@@ -610,7 +610,7 @@ test(
 			fragmentId: paragraphId,
 		});
 
-		await expect(richTexteditable.locator('p')).toHaveCount(0);
+		await expect(richTexteditable.locator('p')).toHaveCount(1);
 
 		await richTexteditable.click();
 
@@ -754,5 +754,78 @@ test(
 				timeout: 1000,
 			});
 		}).toPass();
+	}
+);
+
+test(
+	'Mapping a link to an image editable does not shift it past its sibling',
+	{tag: '@LPD-90335'},
+	async ({apiHelpers, page, site}) => {
+
+		// Create a custom fragment with an image editable followed by a sibling
+
+		const customFragmentHtml = `
+			<div class="link-mapping-order-fragment">
+				<img 
+					data-lfr-editable-id="link_editable" 
+					data-lfr-editable-type="image" 
+					src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=" 
+				/>
+				<p class="sibling-paragraph">Sibling Element</p>
+			</div>`;
+
+		const {fragmentCollectionId} =
+			await apiHelpers.jsonWebServicesFragmentCollection.addFragmentCollection(
+				{
+					groupId: site.id,
+					name: getRandomString(),
+				}
+			);
+
+		const fragmentEntryName = getRandomString();
+
+		await apiHelpers.jsonWebServicesFragmentEntry.addFragmentEntry({
+			fragmentCollectionId,
+			groupId: site.id,
+			html: customFragmentHtml,
+			name: fragmentEntryName,
+		});
+
+		// Add a page that uses the fragment and maps the link
+
+		const fragmentDefinition = getFragmentDefinition({
+			fragmentFields: [
+				{
+					id: 'link_editable',
+					value: {
+						fragmentLink: {
+							value: {
+								href: {value: 'https://www.liferay.com'},
+							},
+						},
+					},
+				} as any,
+			],
+			id: getRandomString(),
+			key: fragmentEntryName,
+		});
+
+		const layout = await apiHelpers.headlessDelivery.createSitePage({
+			pageDefinition: getPageDefinition([fragmentDefinition]),
+			siteId: site.id,
+			title: getRandomString(),
+		});
+
+		// View the rendered page
+
+		await page.goto(`/web${site.friendlyUrlPath}${layout.friendlyUrlPath}`);
+
+		// The sibling paragraph must remain the last child of the fragment root
+
+		const lastChildClass = await page
+			.locator('.link-mapping-order-fragment')
+			.evaluate((element) => element.lastElementChild?.className);
+
+		expect(lastChildClass).toBe('sibling-paragraph');
 	}
 );

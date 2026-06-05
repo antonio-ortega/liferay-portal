@@ -5,6 +5,7 @@
 
 package com.liferay.headless.commerce.delivery.catalog.internal.resource.v1_0;
 
+import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.Channel;
 import com.liferay.headless.commerce.delivery.catalog.resource.v1_0.ChannelResource;
 import com.liferay.petra.function.UnsafeBiConsumer;
@@ -71,6 +72,9 @@ public abstract class BaseChannelResourceImpl
 	 *
 	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-delivery-catalog/v1.0/channels'  -u 'test@liferay.com:test'
 	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Lists CommerceChannel entries visible to the caller. Calls Vulcan SearchUtil.search over the CommerceChannel index scoped to the request company; converts each hit through ChannelDTOConverter. Validation -- None (returns empty page when no matches). List query support — filterable and sortable fields -- ChannelEntityModel (siteGroupId, name); search fields -- indexed channel fields."
+	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
@@ -266,6 +270,15 @@ public abstract class BaseChannelResourceImpl
 			@Override
 			public Locale getPreferredLocale() {
 				return LocaleUtil.fromLanguageId(languageId);
+			}
+
+			@Override
+			public boolean isAcceptAllLanguages() {
+				if (ExportImportThreadLocal.isExportInProcess()) {
+					return true;
+				}
+
+				return AcceptLanguage.super.isAcceptAllLanguages();
 			}
 
 		};
@@ -839,3 +852,4 @@ public abstract class BaseChannelResourceImpl
 		LogFactoryUtil.getLog(BaseChannelResourceImpl.class);
 
 }
+// LIFERAY-REST-BUILDER-HASH:1338564980

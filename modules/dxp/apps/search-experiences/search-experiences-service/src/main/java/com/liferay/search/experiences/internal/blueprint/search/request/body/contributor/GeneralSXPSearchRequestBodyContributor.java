@@ -5,8 +5,6 @@
 
 package com.liferay.search.experiences.internal.blueprint.search.request.body.contributor;
 
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
-import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -15,7 +13,7 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.search.asset.AssetSubtypeIdentifier;
 import com.liferay.portal.search.asset.AssetSubtypeIdentifierBuilder;
 import com.liferay.portal.search.filter.ComplexQueryPartBuilderFactory;
-import com.liferay.portal.search.query.Queries;
+import com.liferay.portal.search.query.QueriesUtil;
 import com.liferay.portal.search.query.TermsQuery;
 import com.liferay.portal.search.searcher.SearchRequestBuilder;
 import com.liferay.search.experiences.internal.blueprint.parameter.SXPParameterData;
@@ -36,12 +34,10 @@ public class GeneralSXPSearchRequestBodyContributor
 
 	public GeneralSXPSearchRequestBodyContributor(
 		AssetSubtypeIdentifierBuilder assetSubtypeIdentifierBuilder,
-		ComplexQueryPartBuilderFactory complexQueryPartBuilderFactory,
-		Queries queries) {
+		ComplexQueryPartBuilderFactory complexQueryPartBuilderFactory) {
 
 		_assetSubtypeIdentifierBuilder = assetSubtypeIdentifierBuilder;
 		_complexQueryPartBuilderFactory = complexQueryPartBuilderFactory;
-		_queries = queries;
 	}
 
 	@Override
@@ -145,11 +141,8 @@ public class GeneralSXPSearchRequestBodyContributor
 					"assetSubtypeIdentifiersMap", assetSubtypeIdentifiersMap));
 		}
 
-		if (ArrayUtil.isNotEmpty(generalConfiguration.getScope()) &&
-			FeatureFlagManagerUtil.isEnabled(
-				CompanyThreadLocal.getCompanyId(), "LPD-37320")) {
-
-			TermsQuery termsQuery = _queries.terms(
+		if (ArrayUtil.isNotEmpty(generalConfiguration.getScope())) {
+			TermsQuery termsQuery = QueriesUtil.terms(
 				"scopeGroupExternalReferenceCode");
 
 			termsQuery.addValues((Object[])generalConfiguration.getScope());
@@ -183,6 +176,5 @@ public class GeneralSXPSearchRequestBodyContributor
 	private final AssetSubtypeIdentifierBuilder _assetSubtypeIdentifierBuilder;
 	private final ComplexQueryPartBuilderFactory
 		_complexQueryPartBuilderFactory;
-	private final Queries _queries;
 
 }

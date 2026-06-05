@@ -6,8 +6,8 @@
 import {expect, mergeTests} from '@playwright/test';
 
 import {apiHelpersTest} from '../../../fixtures/apiHelpersTest';
-import {applicationsMenuPageTest} from '../../../fixtures/applicationsMenuPageTest';
 import {changeTrackingPagesTest} from '../../../fixtures/changeTrackingPagesTest';
+import {globalMenuPagesTest} from '../../../fixtures/globalMenuPagesTest';
 import {isolatedSiteTest} from '../../../fixtures/isolatedSiteTest';
 import {pageEditorPagesTest} from '../../../fixtures/pageEditorPagesTest';
 import {pagesAdminPagesTest} from '../../../fixtures/pagesAdminPagesTest';
@@ -20,11 +20,11 @@ import {blogsPagesTest} from '../../blogs-web/main/fixtures/blogsPagesTest';
 import {journalPagesTest} from '../../journal-web/main/fixtures/journalPagesTest';
 
 export const test = mergeTests(
-	applicationsMenuPageTest,
-	isolatedSiteTest,
 	apiHelpersTest,
 	blogsPagesTest,
 	changeTrackingPagesTest,
+	globalMenuPagesTest,
+	isolatedSiteTest,
 	journalPagesTest,
 	pagesAdminPagesTest,
 	pageEditorPagesTest,
@@ -32,9 +32,9 @@ export const test = mergeTests(
 );
 
 test('LPD-42499 Assert correct message appears in Checking changes page', async ({
-	applicationsMenuPage,
 	changeTrackingPage,
 	ctCollection,
+	globalMenuPage,
 	page,
 	pageEditorPage,
 	pagesAdminPage,
@@ -43,7 +43,7 @@ test('LPD-42499 Assert correct message appears in Checking changes page', async 
 }) => {
 	await changeTrackingPage.workOnPublication(ctCollection);
 
-	await applicationsMenuPage.goToSite(site.name);
+	await globalMenuPage.goToSite(site.name);
 
 	const layoutTitle = getRandomString();
 
@@ -212,13 +212,18 @@ test('Publish Parallel Publications', async ({
 
 	await waitForAlert(page, `Success:${title2} was created successfully.`);
 
-	await apiHelpers.headlessChangeTracking.publishCTCollection(
-		ctCollection.body.id
-	);
+	await Promise.all([
+		apiHelpers.headlessChangeTracking.publishCTCollection(
+			ctCollection.body.id
+		),
+		apiHelpers.headlessChangeTracking.publishCTCollection(
+			ctCollection2.body.id
+		),
+	]);
 
-	await apiHelpers.headlessChangeTracking.publishCTCollection(
-		ctCollection2.body.id
-	);
+	await changeTrackingPage.assertStatus('Published', ctCollection.body.name);
+
+	await changeTrackingPage.assertStatus('Published', ctCollection2.body.name);
 
 	await journalPage.goto(site.friendlyUrlPath);
 

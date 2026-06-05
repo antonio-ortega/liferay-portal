@@ -44,14 +44,18 @@ import com.liferay.layout.util.structure.FragmentStyledLayoutStructureItem;
 import com.liferay.layout.util.structure.LayoutStructure;
 import com.liferay.layout.util.structure.LayoutStructureItem;
 import com.liferay.layout.util.structure.RowStyledLayoutStructureItem;
+import com.liferay.object.constants.ObjectDefinitionSettingConstants;
 import com.liferay.object.constants.ObjectEntryFolderConstants;
 import com.liferay.object.constants.ObjectFolderConstants;
 import com.liferay.object.model.ObjectDefinition;
+import com.liferay.object.model.ObjectDefinitionSetting;
 import com.liferay.object.model.ObjectEntryFolder;
 import com.liferay.object.service.ObjectDefinitionLocalServiceUtil;
 import com.liferay.object.service.ObjectDefinitionServiceUtil;
+import com.liferay.object.service.ObjectDefinitionSettingLocalServiceUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.petra.string.StringUtil;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
@@ -73,10 +77,13 @@ import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.Constants;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.ScopeUtil;
+import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -213,12 +220,7 @@ public class ActionUtil {
 			formManager, "INPUTS-inline-text-input",
 			infoForm.getInfoField("ObjectField_title"), layout, layoutStructure,
 			formStyledLayoutStructureItem, false, segmentsExperienceId,
-			serviceContext,
-			JSONUtil.put(
-				"marginBottom", "5"
-			).put(
-				"marginLeft", "-16px"
-			));
+			serviceContext, JSONUtil.put("marginBottom", "5"));
 
 		FragmentEntryLink fragmentEntryLink = _addFragmentEntryLink(
 			StringPool.BLANK, fragmentEntryLinkService,
@@ -251,7 +253,7 @@ public class ActionUtil {
 				layout.getCompanyId(), layoutPageTemplateEntry.getClassName());
 
 		layoutStructure = _addInputFragmentEntryLinks(
-			addedFragmentEntryLinks, fragmentEntryLinkListenerRegistry,
+			addedFragmentEntryLinks, true, fragmentEntryLinkListenerRegistry,
 			fragmentEntryLinkService, formManager, fragmentRendererRegistry,
 			(InfoFieldSet)infoForm.getInfoFieldSetEntry(
 				objectDefinition.getName()),
@@ -356,7 +358,7 @@ public class ActionUtil {
 			JSONUtil.put("marginBottom", "24px"));
 
 		layoutStructure = _addInputFragmentEntryLinks(
-			addedFragmentEntryLinks, fragmentEntryLinkListenerRegistry,
+			addedFragmentEntryLinks, false, fragmentEntryLinkListenerRegistry,
 			fragmentEntryLinkService, formManager, fragmentRendererRegistry,
 			(InfoFieldSet)infoForm.getInfoFieldSetEntry(name), layout,
 			layoutStructure, formStyledLayoutStructureItem, name, true, false,
@@ -419,7 +421,7 @@ public class ActionUtil {
 			JSONUtil.put("marginBottom", "24px"));
 
 		layoutStructure = _addInputFragmentEntryLinks(
-			addedFragmentEntryLinks, fragmentEntryLinkListenerRegistry,
+			addedFragmentEntryLinks, false, fragmentEntryLinkListenerRegistry,
 			fragmentEntryLinkService, formManager, fragmentRendererRegistry,
 			(InfoFieldSet)infoForm.getInfoFieldSetEntry(name), layout,
 			layoutStructure, formStyledLayoutStructureItem, name, false, false,
@@ -472,6 +474,45 @@ public class ActionUtil {
 		}
 	}
 
+	public static List<Long> getAcceptedDepotEntryGroupIds(
+		List<Long> depotEntryGroupIds, long objectDefinitionId) {
+
+		ObjectDefinitionSetting acceptAllGroupsSetting =
+			ObjectDefinitionSettingLocalServiceUtil.
+				fetchObjectDefinitionSetting(
+					objectDefinitionId,
+					ObjectDefinitionSettingConstants.NAME_ACCEPT_ALL_GROUPS);
+
+		if ((acceptAllGroupsSetting != null) &&
+			GetterUtil.getBoolean(acceptAllGroupsSetting.getValue())) {
+
+			return depotEntryGroupIds;
+		}
+
+		ObjectDefinitionSetting acceptedGroupIdsSetting =
+			ObjectDefinitionSettingLocalServiceUtil.
+				fetchObjectDefinitionSetting(
+					objectDefinitionId,
+					ObjectDefinitionSettingConstants.NAME_ACCEPTED_GROUP_IDS);
+
+		if ((acceptedGroupIdsSetting == null) ||
+			Validator.isNull(acceptedGroupIdsSetting.getValue())) {
+
+			return depotEntryGroupIds;
+		}
+
+		List<Long> acceptedGroupIds = new ArrayList<>();
+
+		for (String groupId :
+				StringUtil.split(acceptedGroupIdsSetting.getValue())) {
+
+			acceptedGroupIds.add(GetterUtil.getLong(groupId));
+		}
+
+		return new ArrayList<>(
+			SetUtil.intersect(acceptedGroupIds, depotEntryGroupIds));
+	}
+
 	public static List<DropdownItem> getAllSectionCreationMenuDropdownItems(
 		HttpServletRequest httpServletRequest) {
 
@@ -519,15 +560,6 @@ public class ActionUtil {
 		return StringBundler.concat(
 			themeDisplay.getPathFriendlyURLPublic(),
 			GroupConstants.CMS_FRIENDLY_URL, "/add-space-members");
-	}
-
-	public static String getBaseBulkActionTaskReportURL(
-		String className, ThemeDisplay themeDisplay) {
-
-		return StringBundler.concat(
-			themeDisplay.getPathFriendlyURLPublic(),
-			GroupConstants.CMS_FRIENDLY_URL, "/e/bulk-action-task/",
-			PortalUtil.getClassNameId(className));
 	}
 
 	public static String getBaseSpaceSettingsURL(ThemeDisplay themeDisplay) {
@@ -1079,8 +1111,8 @@ public class ActionUtil {
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			LayoutPageTemplateEntryLocalServiceUtil.addLayoutPageTemplateEntry(
 				null, serviceContext.getUserId(), groupId, 0, null, classNameId,
-				0, name, LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE, 0,
-				true, 0, 0, 0, WorkflowConstants.STATUS_APPROVED,
+				null, name, LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE,
+				0, true, 0, 0, 0, WorkflowConstants.STATUS_APPROVED,
 				serviceContext);
 
 		Layout layout = LayoutLocalServiceUtil.getLayout(
@@ -1174,14 +1206,15 @@ public class ActionUtil {
 		return fragmentEntryLinkService.addFragmentEntryLink(
 			null, layout.getGroupId(), null,
 			fragmentEntry.getExternalReferenceCode(),
-			fragmentEntry.getScopeERC(), segmentsExperienceId, layout.getPlid(),
-			fragmentEntry.getCss(), fragmentEntry.getHtml(),
-			fragmentEntry.getJs(), fragmentEntry.getConfiguration(),
-			editableValues, StringPool.BLANK, 0, contributedRendererKey,
-			fragmentEntry.getType(), serviceContext);
+			ScopeUtil.getItemScopeExternalReferenceCode(
+				fragmentEntry.getGroupId(), layout.getGroupId()),
+			segmentsExperienceId, layout.getPlid(), fragmentEntry.getCss(),
+			fragmentEntry.getHtml(), fragmentEntry.getJs(),
+			fragmentEntry.getConfiguration(), editableValues, StringPool.BLANK,
+			0, contributedRendererKey, fragmentEntry.getType(), serviceContext);
 	}
 
-	private static LayoutStructure _addInputFragmentEntryLink(
+	private static void _addInputFragmentEntryLink(
 			List<FragmentEntryLink> addedFragmentEntryLinks,
 			JSONObject configurationJSONObject, FormManager formManager,
 			String fragmentEntryKey, InfoField<?> infoField, Layout layout,
@@ -1192,7 +1225,7 @@ public class ActionUtil {
 		throws Exception {
 
 		if (infoField == null) {
-			return layoutStructure;
+			return;
 		}
 
 		FragmentStyledLayoutStructureItem fragmentStyledLayoutStructureItem =
@@ -1202,7 +1235,7 @@ public class ActionUtil {
 				serviceContext);
 
 		if (fragmentStyledLayoutStructureItem == null) {
-			return layoutStructure;
+			return;
 		}
 
 		fragmentStyledLayoutStructureItem.updateItemConfig(
@@ -1233,12 +1266,10 @@ public class ActionUtil {
 		if (fragmentEntryLink != null) {
 			addedFragmentEntryLinks.add(fragmentEntryLink);
 		}
-
-		return layoutStructure;
 	}
 
 	private static LayoutStructure _addInputFragmentEntryLinks(
-			List<FragmentEntryLink> addedFragmentEntryLinks,
+			List<FragmentEntryLink> addedFragmentEntryLinks, boolean editMode,
 			FragmentEntryLinkListenerRegistry fragmentEntryLinkListenerRegistry,
 			FragmentEntryLinkService fragmentEntryLinkService,
 			FormManager formManager,
@@ -1360,7 +1391,32 @@ public class ActionUtil {
 				if (RelationshipInfoFieldType.INSTANCE ==
 						infoField.getInfoFieldType()) {
 
-					continue;
+					if (!editMode) {
+						continue;
+					}
+
+					InfoField<RelationshipInfoFieldType> relationshipInfoField =
+						(InfoField<RelationshipInfoFieldType>)infoField;
+
+					if (relationshipInfoField.getAttribute(
+							RelationshipInfoFieldType.INHERITANCE)) {
+
+						continue;
+					}
+
+					if (relationshipInfoField.getAttribute(
+							RelationshipInfoFieldType.MULTIPLE)) {
+
+						_addInputFragmentEntryLink(
+							addedFragmentEntryLinks, null, formManager,
+							"INPUTS-multiselector-dropdown",
+							(InfoField<?>)infoFieldSetEntry, layout,
+							layoutStructure, layoutStructureItem, readOnly,
+							segmentsExperienceId, serviceContext,
+							stylesJSONObject);
+
+						continue;
+					}
 				}
 
 				_addInputFragmentEntryLink(
@@ -1371,12 +1427,13 @@ public class ActionUtil {
 			}
 			else if (infoFieldSetEntry instanceof InfoFieldSet) {
 				layoutStructure = _addInputFragmentEntryLinks(
-					addedFragmentEntryLinks, fragmentEntryLinkListenerRegistry,
-					fragmentEntryLinkService, formManager,
-					fragmentRendererRegistry, (InfoFieldSet)infoFieldSetEntry,
-					layout, layoutStructure, layoutStructureItem,
-					objectDefinitionName, readOnly, repeatable,
-					segmentsExperienceId, serviceContext, stylesJSONObject);
+					addedFragmentEntryLinks, editMode,
+					fragmentEntryLinkListenerRegistry, fragmentEntryLinkService,
+					formManager, fragmentRendererRegistry,
+					(InfoFieldSet)infoFieldSetEntry, layout, layoutStructure,
+					layoutStructureItem, objectDefinitionName, readOnly,
+					repeatable, segmentsExperienceId, serviceContext,
+					stylesJSONObject);
 			}
 		}
 
@@ -1400,7 +1457,7 @@ public class ActionUtil {
 				null, serviceContext.getUserId(), groupId, 0,
 				_TRANSLATION_LAYOUT_PAGE_TEMPLATE_ENTRY_KEY_PREFIX +
 					classNameId,
-				classNameId, 0,
+				classNameId, null,
 				_TRANSLATION_LAYOUT_PAGE_TEMPLATE_ENTRY_KEY_PREFIX +
 					objectDefinitionName,
 				LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE, 0, true, 0,

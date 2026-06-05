@@ -8,12 +8,15 @@ import {Form, Formik, FormikConfig, FormikHelpers, FormikValues} from 'formik';
 import React, {ReactElement, useState} from 'react';
 
 import Footer from './Footer';
-import {FormikDebug} from './forms/FormikDebug';
+import SectionHeader from './SectionHeader';
+import {FormikDebug} from './forms/formik';
 
 interface WizardStepProps {
 	actionButton?: React.ReactElement;
 	children: React.ReactNode;
 	description: string;
+	initialValues?: FormikValues;
+	isStepValid?: (values: FormikValues) => boolean;
 	onSubmit?: FormikConfig<FormikValues>['onSubmit'];
 	title: string;
 	validate?: FormikConfig<FormikValues>['validate'];
@@ -29,9 +32,7 @@ export function Wizard({
 	debug = process.env.NODE_ENV === 'development',
 }: {
 	backURL: string;
-	children:
-		| React.ReactElement<WizardStepProps>
-		| React.ReactElement<WizardStepProps>[];
+	children: React.ReactElement<WizardStepProps>[];
 	debug?: boolean;
 }) {
 	const [stepNumber, setStepNumber] = useState(0);
@@ -44,10 +45,24 @@ export function Wizard({
 	const totalSteps = steps.length;
 
 	const step = steps[stepNumber] as React.ReactElement<WizardStepProps>;
-	const {actionButton, description, onSubmit, title, validate} = step.props;
+
+	const {actionButton, description, isStepValid, onSubmit, title, validate} =
+		step.props;
+
+	const initialValues = steps.reduce(
+		(accumulator, {props}) => ({
+			...accumulator,
+			...props.initialValues,
+		}),
+		{} as FormikValues
+	);
 
 	const next = () => {
 		setStepNumber((stepNumber) => Math.min(stepNumber + 1, totalSteps - 1));
+	};
+
+	const previous = () => {
+		setStepNumber((stepNumber) => Math.max(stepNumber - 1, 0));
 	};
 
 	const handleSubmit = async (
@@ -68,9 +83,10 @@ export function Wizard({
 
 	return (
 		<Formik
-			initialValues={formState}
+			initialValues={{...initialValues, ...formState}}
 			onSubmit={handleSubmit}
 			validate={validate}
+			validateOnMount
 		>
 			{(formik) => (
 				<Form noValidate>
@@ -105,27 +121,20 @@ export function Wizard({
 						})}
 					</ClayMultiStepNav>
 
-					<header className="mb-1 sheet-header">
-						<div className="mb-1 sheet-title">{title}</div>
-
-						{description && (
-							<p className="sheet-text text-secondary">
-								{description}
-							</p>
-						)}
-					</header>
+					<SectionHeader subtitle={description} title={title} />
 
 					{step}
 
 					<Footer
 						actionButton={actionButton}
 						backURL={backURL}
-						continueDisabled={formik.isSubmitting}
-						onPrevious={
-							stepNumber > 0
-								? () => setStepNumber(stepNumber - 1)
-								: undefined
+						continueDisabled={
+							formik.isSubmitting ||
+							(isStepValid
+								? !isStepValid(formik.values)
+								: !formik.isValid)
 						}
+						onPrevious={stepNumber > 0 ? previous : undefined}
 					/>
 
 					{debug && <FormikDebug />}

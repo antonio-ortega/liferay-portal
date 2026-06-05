@@ -20,18 +20,30 @@ import com.liferay.portal.search.engine.adapter.document.UpdateByQueryDocumentRe
 import com.liferay.portal.search.engine.adapter.document.UpdateByQueryDocumentResponse;
 import com.liferay.portal.search.engine.adapter.document.UpdateDocumentRequest;
 import com.liferay.portal.search.engine.adapter.document.UpdateDocumentResponse;
-
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
+import com.liferay.portal.search.solr8.internal.connection.SolrClientManager;
 
 /**
  * @author Bryan Engler
  */
-@Component(
-	property = "search.engine.impl=Solr",
-	service = DocumentRequestExecutor.class
-)
 public class SolrDocumentRequestExecutor implements DocumentRequestExecutor {
+
+	public SolrDocumentRequestExecutor(
+		String defaultCollection, SolrClientManager solrClientManager) {
+
+		_bulkDocumentRequestExecutor = new BulkDocumentRequestExecutor(
+			defaultCollection, solrClientManager);
+		_deleteByQueryDocumentRequestExecutor =
+			new DeleteByQueryDocumentRequestExecutor(
+				defaultCollection, solrClientManager);
+		_deleteDocumentRequestExecutor = new DeleteDocumentRequestExecutor(
+			solrClientManager);
+		_getDocumentRequestExecutor = new GetDocumentRequestExecutor(
+			solrClientManager);
+		_indexDocumentRequestExecutor = new IndexDocumentRequestExecutor(
+			solrClientManager);
+		_updateDocumentRequestExecutor = new UpdateDocumentRequestExecutor(
+			solrClientManager);
+	}
 
 	@Override
 	public BulkDocumentResponse executeBulkDocumentRequest(
@@ -84,27 +96,15 @@ public class SolrDocumentRequestExecutor implements DocumentRequestExecutor {
 		return _updateDocumentRequestExecutor.execute(updateDocumentRequest);
 	}
 
-	@Reference
-	private BulkDocumentRequestExecutor _bulkDocumentRequestExecutor;
-
-	@Reference
-	private DeleteByQueryDocumentRequestExecutor
+	private final BulkDocumentRequestExecutor _bulkDocumentRequestExecutor;
+	private final DeleteByQueryDocumentRequestExecutor
 		_deleteByQueryDocumentRequestExecutor;
-
-	@Reference
-	private DeleteDocumentRequestExecutor _deleteDocumentRequestExecutor;
-
-	@Reference
-	private GetDocumentRequestExecutor _getDocumentRequestExecutor;
-
-	@Reference
-	private IndexDocumentRequestExecutor _indexDocumentRequestExecutor;
-
-	@Reference
-	private UpdateByQueryDocumentRequestExecutor
-		_updateByQueryDocumentRequestExecutor;
-
-	@Reference
-	private UpdateDocumentRequestExecutor _updateDocumentRequestExecutor;
+	private final DeleteDocumentRequestExecutor _deleteDocumentRequestExecutor;
+	private final GetDocumentRequestExecutor _getDocumentRequestExecutor;
+	private final IndexDocumentRequestExecutor _indexDocumentRequestExecutor;
+	private final UpdateByQueryDocumentRequestExecutor
+		_updateByQueryDocumentRequestExecutor =
+			new UpdateByQueryDocumentRequestExecutor();
+	private final UpdateDocumentRequestExecutor _updateDocumentRequestExecutor;
 
 }

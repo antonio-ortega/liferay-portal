@@ -8,15 +8,14 @@ package com.liferay.portal.scripting.internal;
 import com.liferay.osgi.service.tracker.collections.map.ServiceReferenceMapperFactory;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
+import com.liferay.petra.io.unsync.UnsyncStringReader;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.scripting.Scripting;
 import com.liferay.portal.kernel.scripting.ScriptingException;
 import com.liferay.portal.kernel.scripting.ScriptingExecutor;
-import com.liferay.portal.kernel.scripting.ScriptingValidator;
 import com.liferay.portal.kernel.scripting.UnsupportedLanguageException;
 
 import java.io.IOException;
@@ -41,23 +40,11 @@ import org.osgi.service.component.annotations.Deactivate;
 public class ScriptingImpl implements Scripting {
 
 	@Override
-	public void clearCache(String language) throws ScriptingException {
-		ScriptingExecutor scriptingExecutor =
-			_scriptingExecutorsServiceTrackerMap.getService(language);
-
-		if (scriptingExecutor == null) {
-			throw new UnsupportedLanguageException(language);
-		}
-
-		scriptingExecutor.clearCache();
-	}
-
-	@Override
 	public ScriptingExecutor createScriptingExecutor(
 		String language, boolean executeInSeparateThread) {
 
-		ScriptingExecutor scriptingExecutor =
-			_scriptingExecutorsServiceTrackerMap.getService(language);
+		ScriptingExecutor scriptingExecutor = _serviceTrackerMap.getService(
+			language);
 
 		return scriptingExecutor.newInstance(executeInSeparateThread);
 	}
@@ -68,8 +55,8 @@ public class ScriptingImpl implements Scripting {
 			Set<String> outputNames, String language, String script)
 		throws ScriptingException {
 
-		ScriptingExecutor scriptingExecutor =
-			_scriptingExecutorsServiceTrackerMap.getService(language);
+		ScriptingExecutor scriptingExecutor = _serviceTrackerMap.getService(
+			language);
 
 		if (scriptingExecutor == null) {
 			throw new UnsupportedLanguageException(language);
@@ -106,41 +93,32 @@ public class ScriptingImpl implements Scripting {
 
 	@Override
 	public Set<String> getSupportedLanguages() {
-		return _scriptingExecutorsServiceTrackerMap.keySet();
+		return _serviceTrackerMap.keySet();
 	}
 
 	@Override
 	public void validate(String language, String script)
 		throws ScriptingException {
 
-		ScriptingValidator scriptingValidator =
-			_scriptingValidatorsServiceTrackerMap.getService(language);
+		ScriptingExecutor scriptingExecutor = _serviceTrackerMap.getService(
+			language);
 
-		scriptingValidator.validate(script);
+		scriptingExecutor.validate(script);
 	}
 
 	@Activate
 	protected void activate(BundleContext bundleContext) {
-		_scriptingExecutorsServiceTrackerMap =
-			ServiceTrackerMapFactory.openSingleValueMap(
-				bundleContext, ScriptingExecutor.class, null,
-				ServiceReferenceMapperFactory.create(
-					bundleContext,
-					(scriptingExecutor, emitter) -> emitter.emit(
-						scriptingExecutor.getLanguage())));
-		_scriptingValidatorsServiceTrackerMap =
-			ServiceTrackerMapFactory.openSingleValueMap(
-				bundleContext, ScriptingValidator.class, null,
-				ServiceReferenceMapperFactory.create(
-					bundleContext,
-					(scriptingValidator, emitter) -> emitter.emit(
-						scriptingValidator.getLanguage())));
+		_serviceTrackerMap = ServiceTrackerMapFactory.openSingleValueMap(
+			bundleContext, ScriptingExecutor.class, null,
+			ServiceReferenceMapperFactory.create(
+				bundleContext,
+				(scriptingExecutor, emitter) -> emitter.emit(
+					scriptingExecutor.getLanguage())));
 	}
 
 	@Deactivate
 	protected void deactivate() {
-		_scriptingExecutorsServiceTrackerMap.close();
-		_scriptingValidatorsServiceTrackerMap.close();
+		_serviceTrackerMap.close();
 	}
 
 	private String _getErrorMessage(String script, Exception exception) {
@@ -184,9 +162,6 @@ public class ScriptingImpl implements Scripting {
 
 	private static final Log _log = LogFactoryUtil.getLog(ScriptingImpl.class);
 
-	private ServiceTrackerMap<String, ScriptingExecutor>
-		_scriptingExecutorsServiceTrackerMap;
-	private ServiceTrackerMap<String, ScriptingValidator>
-		_scriptingValidatorsServiceTrackerMap;
+	private ServiceTrackerMap<String, ScriptingExecutor> _serviceTrackerMap;
 
 }

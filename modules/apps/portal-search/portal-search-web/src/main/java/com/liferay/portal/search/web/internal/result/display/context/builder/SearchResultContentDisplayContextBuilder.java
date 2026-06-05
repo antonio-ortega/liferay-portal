@@ -20,6 +20,7 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.search.web.internal.result.display.context.SearchResultContentDisplayContext;
 
+import jakarta.portlet.PortletURL;
 import jakarta.portlet.RenderRequest;
 import jakarta.portlet.RenderResponse;
 
@@ -73,26 +74,30 @@ public class SearchResultContentDisplayContextBuilder {
 				hasEditPermission);
 
 			if (hasEditPermission) {
-				ThemeDisplay themeDisplay =
-					(ThemeDisplay)_renderRequest.getAttribute(
-						WebKeys.THEME_DISPLAY);
+				PortletURL editPortletURL = assetRenderer.getURLEdit(
+					_portal.getLiferayPortletRequest(_renderRequest),
+					_portal.getLiferayPortletResponse(_renderResponse));
 
-				searchResultContentDisplayContext.setIconEditTarget(title);
-				searchResultContentDisplayContext.setIconURLString(
-					PortletURLBuilder.create(
-						assetRenderer.getURLEdit(
-							_portal.getLiferayPortletRequest(_renderRequest),
-							_portal.getLiferayPortletResponse(_renderResponse))
-					).setRedirect(
-						themeDisplay.getURLCurrent()
-					).setPortletResource(
-						() -> {
-							PortletDisplay portletDisplay =
-								themeDisplay.getPortletDisplay();
+				if (editPortletURL != null) {
+					ThemeDisplay themeDisplay =
+						(ThemeDisplay)_renderRequest.getAttribute(
+							WebKeys.THEME_DISPLAY);
 
-							return portletDisplay.getId();
-						}
-					).buildString());
+					searchResultContentDisplayContext.setIconEditTarget(title);
+					searchResultContentDisplayContext.setIconURLString(
+						PortletURLBuilder.create(
+							editPortletURL
+						).setRedirect(
+							themeDisplay.getURLCurrent()
+						).setPortletResource(
+							() -> {
+								PortletDisplay portletDisplay =
+									themeDisplay.getPortletDisplay();
+
+								return portletDisplay.getId();
+							}
+						).buildString());
+				}
 			}
 
 			searchResultContentDisplayContext.setShowExtraInfo(

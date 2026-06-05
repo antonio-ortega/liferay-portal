@@ -21,8 +21,6 @@ import com.liferay.commerce.shipping.engine.internal.configuration.FunctionComme
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.catapult.PortalCatapult;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
-import com.liferay.portal.kernel.dao.orm.QueryUtil;
-import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
@@ -32,7 +30,6 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.UserService;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -184,51 +181,15 @@ public class FunctionCommerceShippingEngine implements CommerceShippingEngine {
 	}
 
 	@Deactivate
-	protected void deactivate() throws PortalException {
-		String key = getKey();
-
-		if (key == null) {
-			return;
-		}
-
-		List<CommerceShippingMethod> commerceShippingMethods =
-			_commerceShippingMethodLocalService.getCommerceShippingMethods(
-				QueryUtil.ALL_POS, QueryUtil.ALL_POS);
-
-		for (CommerceShippingMethod commerceShippingMethod :
-				commerceShippingMethods) {
-
-			if (key.equals(commerceShippingMethod.getEngineKey())) {
-				_commerceShippingMethodLocalService.
-					deleteCommerceShippingMethod(
-						commerceShippingMethod.getCommerceShippingMethodId());
-			}
-		}
+	protected void deactivate() {
+		_functionCommerceShippingEngineConfiguration = null;
 	}
 
 	@Modified
-	protected void modified(Map<String, Object> properties)
-		throws PortalException {
-
+	protected void modified(Map<String, Object> properties) {
 		_functionCommerceShippingEngineConfiguration =
 			ConfigurableUtil.createConfigurable(
 				FunctionCommerceShippingEngineConfiguration.class, properties);
-
-		List<CommerceShippingMethod> commerceShippingMethods =
-			_commerceShippingMethodLocalService.getCommerceShippingMethods(
-				QueryUtil.ALL_POS, QueryUtil.ALL_POS);
-
-		for (CommerceShippingMethod commerceShippingMethod :
-				commerceShippingMethods) {
-
-			String key = (String)properties.get("key");
-
-			if (key.equals(commerceShippingMethod.getEngineKey())) {
-				_commerceShippingMethodLocalService.
-					deleteCommerceShippingMethod(
-						commerceShippingMethod.getCommerceShippingMethodId());
-			}
-		}
 	}
 
 	private JSONObject _getCommerceOrderJSONObject(CommerceOrder commerceOrder)
@@ -336,8 +297,8 @@ public class FunctionCommerceShippingEngine implements CommerceShippingEngine {
 			object -> {
 				JSONObject shippingOptionJSONObject = (JSONObject)object;
 
-				BigDecimal amount = (BigDecimal)GetterUtil.getNumber(
-					shippingOptionJSONObject.get("amount"));
+				BigDecimal amount = new BigDecimal(
+					shippingOptionJSONObject.getString("amount", "0"));
 
 				String currencyCode = shippingOptionJSONObject.getString(
 					"currencyCode");

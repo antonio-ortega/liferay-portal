@@ -26,14 +26,14 @@ import com.liferay.portal.search.aggregation.metrics.ScriptedMetricAggregationRe
 import com.liferay.portal.search.aggregation.metrics.TopHitsAggregationResult;
 import com.liferay.portal.search.aggregation.pipeline.BucketSelectorPipelineAggregation;
 import com.liferay.portal.search.aggregation.pipeline.BucketSortPipelineAggregation;
-import com.liferay.portal.search.engine.adapter.search.SearchRequestExecutor;
+import com.liferay.portal.search.engine.adapter.SearchEngineAdapter;
 import com.liferay.portal.search.engine.adapter.search.SearchSearchRequest;
 import com.liferay.portal.search.engine.adapter.search.SearchSearchResponse;
 import com.liferay.portal.search.hits.SearchHit;
 import com.liferay.portal.search.hits.SearchHits;
 import com.liferay.portal.search.index.IndexNameBuilder;
 import com.liferay.portal.search.query.BooleanQuery;
-import com.liferay.portal.search.query.Queries;
+import com.liferay.portal.search.query.QueriesUtil;
 import com.liferay.portal.search.query.TermsQuery;
 import com.liferay.portal.search.script.Scripts;
 import com.liferay.portal.search.sort.FieldSort;
@@ -109,7 +109,7 @@ public class TaskResourceImpl extends BaseTaskResourceImpl {
 		searchSearchRequest.setSize(1);
 
 		SearchSearchResponse searchSearchResponse =
-			_searchRequestExecutor.executeSearchRequest(searchSearchRequest);
+			_searchEngineAdapter.execute(searchSearchRequest);
 
 		SearchHits searchHits = searchSearchResponse.getSearchHits();
 
@@ -267,12 +267,12 @@ public class TaskResourceImpl extends BaseTaskResourceImpl {
 	private BooleanQuery _createAssigneeIdsTermsBooleanQuery(
 		Long[] assigneeIds) {
 
-		BooleanQuery booleanQuery = _queries.booleanQuery();
+		BooleanQuery booleanQuery = QueriesUtil.booleanQuery();
 
 		if (ArrayUtil.contains(assigneeIds, -1L)) {
-			BooleanQuery shouldBooleanQuery = _queries.booleanQuery();
+			BooleanQuery shouldBooleanQuery = QueriesUtil.booleanQuery();
 
-			TermsQuery termsQuery = _queries.terms("assigneeIds");
+			TermsQuery termsQuery = QueriesUtil.terms("assigneeIds");
 
 			termsQuery.addValues(
 				transform(
@@ -281,15 +281,15 @@ public class TaskResourceImpl extends BaseTaskResourceImpl {
 
 			shouldBooleanQuery.addMustQueryClauses(
 				termsQuery,
-				_queries.term("assigneeType", Role.class.getName()));
+				QueriesUtil.term("assigneeType", Role.class.getName()));
 
 			booleanQuery.addShouldQueryClauses(shouldBooleanQuery);
 		}
 
 		if (!ArrayUtil.contains(assigneeIds, -1L) || (assigneeIds.length > 1)) {
-			BooleanQuery shouldBooleanQuery = _queries.booleanQuery();
+			BooleanQuery shouldBooleanQuery = QueriesUtil.booleanQuery();
 
-			TermsQuery termsQuery = _queries.terms("assigneeIds");
+			TermsQuery termsQuery = QueriesUtil.terms("assigneeIds");
 
 			termsQuery.addValues(
 				transform(
@@ -305,7 +305,7 @@ public class TaskResourceImpl extends BaseTaskResourceImpl {
 
 			shouldBooleanQuery.addMustQueryClauses(
 				termsQuery,
-				_queries.term("assigneeType", User.class.getName()));
+				QueriesUtil.term("assigneeType", User.class.getName()));
 
 			booleanQuery.addShouldQueryClauses(shouldBooleanQuery);
 		}
@@ -314,46 +314,46 @@ public class TaskResourceImpl extends BaseTaskResourceImpl {
 	}
 
 	private BooleanQuery _createBooleanQuery(long processId) {
-		BooleanQuery booleanQuery = _queries.booleanQuery();
+		BooleanQuery booleanQuery = QueriesUtil.booleanQuery();
 
-		booleanQuery.addMustNotQueryClauses(_queries.term("taskId", 0));
+		booleanQuery.addMustNotQueryClauses(QueriesUtil.term("taskId", 0));
 
 		return booleanQuery.addMustQueryClauses(
-			_queries.term("completed", Boolean.FALSE),
-			_queries.term("deleted", Boolean.FALSE),
-			_queries.term("processId", processId));
+			QueriesUtil.term("completed", Boolean.FALSE),
+			QueriesUtil.term("deleted", Boolean.FALSE),
+			QueriesUtil.term("processId", processId));
 	}
 
 	private BooleanQuery _createBooleanQuery(long processId, String version) {
-		BooleanQuery booleanQuery = _queries.booleanQuery();
+		BooleanQuery booleanQuery = QueriesUtil.booleanQuery();
 
 		return booleanQuery.addMustQueryClauses(
-			_queries.term("deleted", Boolean.FALSE),
-			_queries.term("processId", processId),
-			_queries.term("version", version));
+			QueriesUtil.term("deleted", Boolean.FALSE),
+			QueriesUtil.term("processId", processId),
+			QueriesUtil.term("version", version));
 	}
 
 	private BooleanQuery _createBooleanQuery(
 		Long[] assigneeIds, Long[] instanceIds, Long processId) {
 
-		BooleanQuery filterBooleanQuery = _queries.booleanQuery();
+		BooleanQuery filterBooleanQuery = QueriesUtil.booleanQuery();
 
-		BooleanQuery booleanQuery = _queries.booleanQuery();
+		BooleanQuery booleanQuery = QueriesUtil.booleanQuery();
 
-		BooleanQuery slaTaskResultsBooleanQuery = _queries.booleanQuery();
+		BooleanQuery slaTaskResultsBooleanQuery = QueriesUtil.booleanQuery();
 
 		slaTaskResultsBooleanQuery.addFilterQueryClauses(
-			_queries.term(
+			QueriesUtil.term(
 				"_index",
 				_indexNameBuilder.getIndexName(contextCompany.getCompanyId()) +
 					WorkflowMetricsIndexNameConstants.SUFFIX_SLA_TASK_RESULT));
 		slaTaskResultsBooleanQuery.addMustQueryClauses(
 			_createSLATaskResultsBooleanQuery(instanceIds, processId));
 
-		BooleanQuery tasksBooleanQuery = _queries.booleanQuery();
+		BooleanQuery tasksBooleanQuery = QueriesUtil.booleanQuery();
 
 		tasksBooleanQuery.addFilterQueryClauses(
-			_queries.term(
+			QueriesUtil.term(
 				"_index",
 				_indexNameBuilder.getIndexName(contextCompany.getCompanyId()) +
 					WorkflowMetricsIndexNameConstants.SUFFIX_TASK));
@@ -370,7 +370,8 @@ public class TaskResourceImpl extends BaseTaskResourceImpl {
 
 		BucketSelectorPipelineAggregation bucketSelectorPipelineAggregation =
 			_aggregations.bucketSelector(
-				"bucketSelector", _scripts.script("params.taskCount > 0"));
+				"bucketSelector",
+				Scripts.INSTANCE.script("params.taskCount > 0"));
 
 		bucketSelectorPipelineAggregation.addBucketPath(
 			"taskCount", "taskCount.value");
@@ -399,7 +400,7 @@ public class TaskResourceImpl extends BaseTaskResourceImpl {
 	private BooleanQuery _createFilterBooleanQuery(
 		long processId, String version) {
 
-		BooleanQuery booleanQuery = _queries.booleanQuery();
+		BooleanQuery booleanQuery = QueriesUtil.booleanQuery();
 
 		booleanQuery.addShouldQueryClauses(_createBooleanQuery(processId));
 
@@ -410,9 +411,9 @@ public class TaskResourceImpl extends BaseTaskResourceImpl {
 	private BooleanQuery _createInstanceIdsTermsBooleanQuery(
 		Long[] instanceIds) {
 
-		BooleanQuery booleanQuery = _queries.booleanQuery();
+		BooleanQuery booleanQuery = QueriesUtil.booleanQuery();
 
-		TermsQuery termsQuery = _queries.terms("instanceId");
+		TermsQuery termsQuery = QueriesUtil.terms("instanceId");
 
 		termsQuery.addValues(
 			transform(instanceIds, String::valueOf, Object.class));
@@ -423,11 +424,11 @@ public class TaskResourceImpl extends BaseTaskResourceImpl {
 	private BooleanQuery _createSLATaskResultsBooleanQuery(
 		Long[] instanceIds, Long processId) {
 
-		BooleanQuery booleanQuery = _queries.booleanQuery();
+		BooleanQuery booleanQuery = QueriesUtil.booleanQuery();
 
 		booleanQuery.addMustNotQueryClauses(
-			_queries.term("slaDefinitionId", 0),
-			_queries.term("status", WorkflowMetricsSLAStatus.NEW.name()));
+			QueriesUtil.term("slaDefinitionId", 0),
+			QueriesUtil.term("status", WorkflowMetricsSLAStatus.NEW.name()));
 
 		if (instanceIds != null) {
 			booleanQuery.addMustQueryClauses(
@@ -436,47 +437,48 @@ public class TaskResourceImpl extends BaseTaskResourceImpl {
 
 		if (processId != null) {
 			booleanQuery.addMustQueryClauses(
-				_queries.term("processId", processId));
+				QueriesUtil.term("processId", processId));
 		}
 
 		return booleanQuery.addMustQueryClauses(
-			_queries.term("companyId", contextCompany.getCompanyId()),
-			_queries.term("deleted", Boolean.FALSE),
-			_queries.term("instanceCompleted", Boolean.FALSE));
+			QueriesUtil.term("companyId", contextCompany.getCompanyId()),
+			QueriesUtil.term("deleted", Boolean.FALSE),
+			QueriesUtil.term("instanceCompleted", Boolean.FALSE));
 	}
 
 	private BooleanQuery _createTasksBooleanQuery(
 		long processId, long taskId, String version) {
 
-		BooleanQuery booleanQuery = _queries.booleanQuery();
+		BooleanQuery booleanQuery = QueriesUtil.booleanQuery();
 
 		return booleanQuery.addMustQueryClauses(
-			_queries.term("active", Boolean.TRUE),
-			_queries.term("companyId", contextCompany.getCompanyId()),
-			_queries.term("deleted", Boolean.FALSE),
-			_queries.term("processId", processId),
-			_queries.term("taskId", taskId), _queries.term("version", version));
+			QueriesUtil.term("active", Boolean.TRUE),
+			QueriesUtil.term("companyId", contextCompany.getCompanyId()),
+			QueriesUtil.term("deleted", Boolean.FALSE),
+			QueriesUtil.term("processId", processId),
+			QueriesUtil.term("taskId", taskId),
+			QueriesUtil.term("version", version));
 	}
 
 	private BooleanQuery _createTasksBooleanQuery(
 		long processId, String version) {
 
-		BooleanQuery booleanQuery = _queries.booleanQuery();
+		BooleanQuery booleanQuery = QueriesUtil.booleanQuery();
 
 		booleanQuery.addFilterQueryClauses(
 			_createFilterBooleanQuery(processId, version));
 
 		return booleanQuery.addMustQueryClauses(
-			_queries.term("companyId", contextCompany.getCompanyId()),
-			_queries.term("deleted", Boolean.FALSE));
+			QueriesUtil.term("companyId", contextCompany.getCompanyId()),
+			QueriesUtil.term("deleted", Boolean.FALSE));
 	}
 
 	private BooleanQuery _createTasksBooleanQuery(
 		Long[] assigneeIds, Long[] instanceIds, Long processId) {
 
-		BooleanQuery booleanQuery = _queries.booleanQuery();
+		BooleanQuery booleanQuery = QueriesUtil.booleanQuery();
 
-		booleanQuery.addMustNotQueryClauses(_queries.term("taskId", 0));
+		booleanQuery.addMustNotQueryClauses(QueriesUtil.term("taskId", 0));
 
 		if (instanceIds != null) {
 			booleanQuery.addMustQueryClauses(
@@ -485,15 +487,15 @@ public class TaskResourceImpl extends BaseTaskResourceImpl {
 
 		if (processId != null) {
 			booleanQuery.addMustQueryClauses(
-				_queries.term("processId", processId));
+				QueriesUtil.term("processId", processId));
 		}
 
 		return booleanQuery.addMustQueryClauses(
 			_createAssigneeIdsTermsBooleanQuery(assigneeIds),
-			_queries.term("companyId", contextCompany.getCompanyId()),
-			_queries.term("completed", Boolean.FALSE),
-			_queries.term("deleted", Boolean.FALSE),
-			_queries.term("instanceCompleted", Boolean.FALSE));
+			QueriesUtil.term("companyId", contextCompany.getCompanyId()),
+			QueriesUtil.term("completed", Boolean.FALSE),
+			QueriesUtil.term("deleted", Boolean.FALSE),
+			QueriesUtil.term("instanceCompleted", Boolean.FALSE));
 	}
 
 	private SearchSearchResponse _getSearchSearchResponse(
@@ -531,7 +533,7 @@ public class TaskResourceImpl extends BaseTaskResourceImpl {
 		searchSearchRequest.setQuery(
 			_createBooleanQuery(assigneeIds, instanceIds, processId));
 
-		return _searchRequestExecutor.executeSearchRequest(searchSearchRequest);
+		return _searchEngineAdapter.execute(searchSearchRequest);
 	}
 
 	private int _getTaskCount(SearchSearchResponse searchSearchResponse) {
@@ -543,7 +545,7 @@ public class TaskResourceImpl extends BaseTaskResourceImpl {
 				"taskCount");
 
 		return GetterUtil.getInteger(
-			scriptedMetricAggregationResult.getValue());
+			String.valueOf(scriptedMetricAggregationResult.getValue()));
 	}
 
 	private List<Task> _getTasks(long processId) {
@@ -565,7 +567,7 @@ public class TaskResourceImpl extends BaseTaskResourceImpl {
 					contextCompany.getCompanyId(), processId)));
 
 		SearchSearchResponse searchSearchResponse =
-			_searchRequestExecutor.executeSearchRequest(searchSearchRequest);
+			_searchEngineAdapter.execute(searchSearchRequest);
 
 		Map<String, AggregationResult> aggregationResultsMap =
 			searchSearchResponse.getAggregationResultsMap();
@@ -595,11 +597,12 @@ public class TaskResourceImpl extends BaseTaskResourceImpl {
 			"instanceIdTaskId", null);
 
 		termsAggregation.setScript(
-			_scripts.script("doc['instanceId'].value + doc['taskId'].value"));
+			Scripts.INSTANCE.script(
+				"doc['instanceId'].value + doc['taskId'].value"));
 
 		FilterAggregation indexFilterAggregation = _aggregations.filter(
 			"index",
-			_queries.term(
+			QueriesUtil.term(
 				"_index",
 				_indexNameBuilder.getIndexName(contextCompany.getCompanyId()) +
 					WorkflowMetricsIndexNameConstants.SUFFIX_TASK));
@@ -633,7 +636,7 @@ public class TaskResourceImpl extends BaseTaskResourceImpl {
 			_createBooleanQuery(assigneeIds, instanceIds, processId));
 
 		SearchSearchResponse searchSearchResponse =
-			_searchRequestExecutor.executeSearchRequest(searchSearchRequest);
+			_searchEngineAdapter.execute(searchSearchRequest);
 
 		Map<String, AggregationResult> aggregationResultsMap =
 			searchSearchResponse.getAggregationResultsMap();
@@ -738,16 +741,10 @@ public class TaskResourceImpl extends BaseTaskResourceImpl {
 	private Portal _portal;
 
 	@Reference
-	private Queries _queries;
-
-	@Reference
 	private ResourceHelper _resourceHelper;
 
 	@Reference
-	private Scripts _scripts;
-
-	@Reference
-	private SearchRequestExecutor _searchRequestExecutor;
+	private SearchEngineAdapter _searchEngineAdapter;
 
 	@Reference
 	private Sorts _sorts;

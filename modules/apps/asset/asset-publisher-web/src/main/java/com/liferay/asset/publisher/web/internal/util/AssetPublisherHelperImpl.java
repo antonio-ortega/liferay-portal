@@ -30,7 +30,6 @@ import com.liferay.info.pagination.Pagination;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
 import com.liferay.petra.function.transform.TransformUtil;
-import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -170,37 +169,10 @@ public class AssetPublisherHelperImpl implements AssetPublisherHelper {
 	public List<AssetEntry> getAssetEntries(
 			PortletRequest portletRequest,
 			PortletPreferences portletPreferences,
-			PermissionChecker permissionChecker, long[] groupIds,
-			boolean deleteMissingAssetEntries, boolean checkPermission)
-		throws Exception {
-
-		return getAssetEntries(
-			portletRequest, portletPreferences, permissionChecker, groupIds,
-			deleteMissingAssetEntries, checkPermission, false);
-	}
-
-	@Override
-	public List<AssetEntry> getAssetEntries(
-			PortletRequest portletRequest,
-			PortletPreferences portletPreferences,
-			PermissionChecker permissionChecker, long[] groupIds,
-			boolean deleteMissingAssetEntries, boolean checkPermission,
-			boolean includeNonvisibleAssets)
-		throws Exception {
-
-		return getAssetEntries(
-			portletRequest, portletPreferences, permissionChecker, groupIds,
-			deleteMissingAssetEntries, checkPermission, includeNonvisibleAssets,
-			AssetRendererFactory.TYPE_LATEST_APPROVED);
-	}
-
-	@Override
-	public List<AssetEntry> getAssetEntries(
-			PortletRequest portletRequest,
-			PortletPreferences portletPreferences,
-			PermissionChecker permissionChecker, long[] groupIds,
-			boolean deleteMissingAssetEntries, boolean checkPermission,
-			boolean includeNonvisibleAssets, int type)
+			PermissionChecker permissionChecker, long companyId,
+			long[] groupIds, boolean checkPermission,
+			boolean deleteMissingAssetEntries, boolean includeNonvisibleAssets,
+			int type)
 		throws Exception {
 
 		List<AssetEntry> assetEntries = new ArrayList<>();
@@ -265,9 +237,7 @@ public class AssetPublisherHelperImpl implements AssetPublisherHelper {
 					getAssetRendererFactoryByClassName(
 						assetEntry.getClassName());
 
-			if (!assetRendererFactory.isActive(
-					permissionChecker.getCompanyId())) {
-
+			if (!assetRendererFactory.isActive(companyId)) {
 				if (deleteMissingAssetEntries) {
 					missingAssetEntryUuids.add(assetEntryUuid);
 				}
@@ -304,13 +274,69 @@ public class AssetPublisherHelperImpl implements AssetPublisherHelper {
 				missingAssetEntryUuids, portletPreferences);
 
 			if (!missingAssetEntryUuids.isEmpty()) {
-				SessionMessages.add(
-					portletRequest, "deletedMissingAssetEntries",
-					missingAssetEntryUuids);
+				if (_log.isDebugEnabled()) {
+					String deletedAssetEntries = ListUtil.toString(
+						missingAssetEntryUuids, StringPool.BLANK);
+
+					_log.debug(
+						"Removing out of scope asset entries: " +
+							deletedAssetEntries);
+				}
+
+				if (portletRequest != null) {
+					SessionMessages.add(
+						portletRequest, "deletedMissingAssetEntries",
+						missingAssetEntryUuids);
+				}
 			}
 		}
 
 		return assetEntries;
+	}
+
+	@Override
+	public List<AssetEntry> getAssetEntries(
+			PortletRequest portletRequest,
+			PortletPreferences portletPreferences,
+			PermissionChecker permissionChecker, long[] groupIds,
+			boolean deleteMissingAssetEntries, boolean checkPermission)
+		throws Exception {
+
+		return getAssetEntries(
+			portletRequest, portletPreferences, permissionChecker, groupIds,
+			deleteMissingAssetEntries, checkPermission, false);
+	}
+
+	@Override
+	public List<AssetEntry> getAssetEntries(
+			PortletRequest portletRequest,
+			PortletPreferences portletPreferences,
+			PermissionChecker permissionChecker, long[] groupIds,
+			boolean deleteMissingAssetEntries, boolean checkPermission,
+			boolean includeNonvisibleAssets)
+		throws Exception {
+
+		return getAssetEntries(
+			portletRequest, portletPreferences, permissionChecker, groupIds,
+			deleteMissingAssetEntries, checkPermission, includeNonvisibleAssets,
+			AssetRendererFactory.TYPE_LATEST_APPROVED);
+	}
+
+	@Override
+	public List<AssetEntry> getAssetEntries(
+			PortletRequest portletRequest,
+			PortletPreferences portletPreferences,
+			PermissionChecker permissionChecker, long[] groupIds,
+			boolean deleteMissingAssetEntries, boolean checkPermission,
+			boolean includeNonvisibleAssets, int type)
+		throws Exception {
+
+		long companyId = permissionChecker.getCompanyId();
+
+		return getAssetEntries(
+			portletRequest, portletPreferences, permissionChecker, companyId,
+			groupIds, checkPermission, deleteMissingAssetEntries,
+			includeNonvisibleAssets, type);
 	}
 
 	@Override
@@ -408,13 +434,8 @@ public class AssetPublisherHelperImpl implements AssetPublisherHelper {
 				AssetRendererFactoryRegistryUtil.getClassNameIds(
 					layout.getCompanyId());
 
-			try (SafeCloseable safeCloseable =
-					FF_LPD_39304_CompanyTemporarySwapper.
-						setCompanyIdWithSafeCloseable(layout.getCompanyId())) {
-
-				assetEntryQuery.setClassNameIds(
-					getClassNameIds(portletPreferences, availableClassNameIds));
-			}
+			assetEntryQuery.setClassNameIds(
+				getClassNameIds(portletPreferences, availableClassNameIds));
 		}
 
 		assetEntryQuery.setClassTypeIds(
@@ -1227,8 +1248,7 @@ public class AssetPublisherHelperImpl implements AssetPublisherHelper {
 		return _segmentsEntryRetriever.getSegmentsEntryIds(
 			themeDisplay.getScopeGroupId(), themeDisplay.getUserId(),
 			_requestContextMapper.map(
-				_portal.getHttpServletRequest(portletRequest)),
-			new long[0]);
+				_portal.getHttpServletRequest(portletRequest)));
 	}
 
 	private long[] _getSiteGroupIds(long[] groupIds) {

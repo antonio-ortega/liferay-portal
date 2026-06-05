@@ -203,3 +203,4 @@ public class ReplenishmentItem implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:1814132499

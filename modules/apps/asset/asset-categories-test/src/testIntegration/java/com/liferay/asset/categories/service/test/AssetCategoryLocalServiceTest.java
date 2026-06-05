@@ -11,6 +11,7 @@ import com.liferay.asset.category.property.model.AssetCategoryProperty;
 import com.liferay.asset.category.property.service.AssetCategoryPropertyLocalService;
 import com.liferay.asset.kernel.exception.AssetCategoryLimitException;
 import com.liferay.asset.kernel.exception.AssetCategoryNameException;
+import com.liferay.asset.kernel.exception.AssetCategoryParentCategoryIdException;
 import com.liferay.asset.kernel.exception.DuplicateCategoryException;
 import com.liferay.asset.kernel.exception.DuplicateCategoryExternalReferenceCodeException;
 import com.liferay.asset.kernel.exception.NoSuchCategoryException;
@@ -18,6 +19,7 @@ import com.liferay.asset.kernel.exception.NoSuchVocabularyException;
 import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.model.AssetCategoryConstants;
 import com.liferay.asset.kernel.model.AssetVocabulary;
+import com.liferay.asset.kernel.model.AssetVocabularyConstants;
 import com.liferay.asset.kernel.service.AssetCategoryLocalService;
 import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
 import com.liferay.asset.test.util.AssetTestUtil;
@@ -693,7 +695,183 @@ public class AssetCategoryLocalServiceTest {
 					_group.getGroupId());
 
 			Assert.assertEquals(
+				AssetCategoryConstants.EMPTY_PARENT_CATEGORY_ID,
+				assetCategory.getParentCategoryId());
+			Assert.assertEquals(
+				AssetVocabularyConstants.EMPTY_VOCABULARY_ID,
+				assetCategory.getVocabularyId());
+			Assert.assertEquals(
 				WorkflowConstants.STATUS_EMPTY, assetCategory.getStatus());
+		}
+	}
+
+	@Test
+	public void testGetOrAddEmptyCategoryWithAncestors() throws Exception {
+
+		// Lazy referencing disabled
+
+		try {
+			_assetCategoryLocalService.getOrAddEmptyCategoryWithAncestors(
+				RandomTestUtil.randomString(), TestPropsValues.getUserId(),
+				_group.getGroupId(), RandomTestUtil.randomString(),
+				RandomTestUtil.randomString());
+
+			Assert.fail();
+		}
+		catch (NoSuchCategoryException noSuchCategoryException) {
+			Assert.assertNotNull(noSuchCategoryException);
+		}
+
+		// Lazy referencing enabled
+
+		try (SafeCloseable safeCloseable =
+				LazyReferencingThreadLocal.setEnabledWithSafeCloseable(true)) {
+
+			String parentCategoryExternalReferenceCode = StringPool.BLANK;
+			String vocabularyExternalReferenceCode = StringPool.BLANK;
+
+			AssetCategory assetCategory =
+				_assetCategoryLocalService.getOrAddEmptyCategoryWithAncestors(
+					RandomTestUtil.randomString(), TestPropsValues.getUserId(),
+					_group.getGroupId(), parentCategoryExternalReferenceCode,
+					vocabularyExternalReferenceCode);
+
+			Assert.assertEquals(
+				AssetCategoryConstants.DEFAULT_PARENT_CATEGORY_ID,
+				assetCategory.getParentCategoryId());
+			Assert.assertEquals(
+				AssetVocabularyConstants.EMPTY_VOCABULARY_ID,
+				assetCategory.getVocabularyId());
+			Assert.assertEquals(
+				WorkflowConstants.STATUS_EMPTY, assetCategory.getStatus());
+
+			parentCategoryExternalReferenceCode = null;
+			vocabularyExternalReferenceCode = RandomTestUtil.randomString();
+
+			assetCategory =
+				_assetCategoryLocalService.getOrAddEmptyCategoryWithAncestors(
+					RandomTestUtil.randomString(), TestPropsValues.getUserId(),
+					_group.getGroupId(), parentCategoryExternalReferenceCode,
+					vocabularyExternalReferenceCode);
+
+			Assert.assertEquals(
+				AssetCategoryConstants.DEFAULT_PARENT_CATEGORY_ID,
+				assetCategory.getParentCategoryId());
+			Assert.assertEquals(
+				WorkflowConstants.STATUS_EMPTY, assetCategory.getStatus());
+
+			AssetVocabulary assetVocabulary =
+				_assetVocabularyLocalService.
+					fetchAssetVocabularyByExternalReferenceCode(
+						vocabularyExternalReferenceCode, _group.getGroupId());
+
+			Assert.assertEquals(
+				WorkflowConstants.STATUS_EMPTY, assetVocabulary.getStatus());
+
+			Assert.assertEquals(
+				assetVocabulary.getVocabularyId(),
+				assetCategory.getVocabularyId());
+
+			parentCategoryExternalReferenceCode = RandomTestUtil.randomString();
+			vocabularyExternalReferenceCode = StringPool.BLANK;
+
+			assetCategory =
+				_assetCategoryLocalService.getOrAddEmptyCategoryWithAncestors(
+					RandomTestUtil.randomString(), TestPropsValues.getUserId(),
+					_group.getGroupId(), parentCategoryExternalReferenceCode,
+					vocabularyExternalReferenceCode);
+
+			Assert.assertEquals(
+				AssetVocabularyConstants.EMPTY_VOCABULARY_ID,
+				assetCategory.getVocabularyId());
+
+			AssetCategory parentAssetCategory =
+				_assetCategoryLocalService.
+					getAssetCategoryByExternalReferenceCode(
+						parentCategoryExternalReferenceCode,
+						_group.getGroupId());
+
+			Assert.assertEquals(
+				assetCategory.getParentCategoryId(),
+				parentAssetCategory.getCategoryId());
+			Assert.assertEquals(
+				AssetCategoryConstants.DEFAULT_PARENT_CATEGORY_ID,
+				parentAssetCategory.getParentCategoryId());
+			Assert.assertEquals(
+				WorkflowConstants.STATUS_EMPTY,
+				parentAssetCategory.getStatus());
+
+			parentCategoryExternalReferenceCode = RandomTestUtil.randomString();
+			vocabularyExternalReferenceCode = RandomTestUtil.randomString();
+
+			assetCategory =
+				_assetCategoryLocalService.getOrAddEmptyCategoryWithAncestors(
+					RandomTestUtil.randomString(), TestPropsValues.getUserId(),
+					_group.getGroupId(), parentCategoryExternalReferenceCode,
+					vocabularyExternalReferenceCode);
+
+			parentAssetCategory =
+				_assetCategoryLocalService.
+					getAssetCategoryByExternalReferenceCode(
+						parentCategoryExternalReferenceCode,
+						_group.getGroupId());
+
+			long previousParentAssetCategoryId =
+				parentAssetCategory.getCategoryId();
+
+			Assert.assertEquals(
+				previousParentAssetCategoryId,
+				assetCategory.getParentCategoryId());
+
+			assetVocabulary =
+				_assetVocabularyLocalService.
+					fetchAssetVocabularyByExternalReferenceCode(
+						vocabularyExternalReferenceCode, _group.getGroupId());
+
+			long previousVocabularyId = assetVocabulary.getVocabularyId();
+
+			Assert.assertEquals(
+				previousVocabularyId, assetCategory.getVocabularyId());
+
+			assetCategory =
+				_assetCategoryLocalService.getOrAddEmptyCategoryWithAncestors(
+					RandomTestUtil.randomString(), TestPropsValues.getUserId(),
+					_group.getGroupId(), StringPool.BLANK,
+					vocabularyExternalReferenceCode);
+
+			Assert.assertEquals(
+				AssetCategoryConstants.DEFAULT_PARENT_CATEGORY_ID,
+				assetCategory.getParentCategoryId());
+			Assert.assertEquals(
+				previousVocabularyId, assetCategory.getVocabularyId());
+
+			assetCategory =
+				_assetCategoryLocalService.getOrAddEmptyCategoryWithAncestors(
+					assetCategory.getExternalReferenceCode(),
+					TestPropsValues.getUserId(), _group.getGroupId(),
+					parentCategoryExternalReferenceCode,
+					RandomTestUtil.randomString());
+
+			Assert.assertNotEquals(
+				previousParentAssetCategoryId,
+				assetCategory.getParentCategoryId());
+			Assert.assertEquals(
+				previousVocabularyId, assetCategory.getVocabularyId());
+
+			try {
+				_assetCategoryLocalService.getOrAddEmptyCategoryWithAncestors(
+					RandomTestUtil.randomString(), TestPropsValues.getUserId(),
+					_group.getGroupId(),
+					assetCategory.getExternalReferenceCode(),
+					RandomTestUtil.randomString());
+
+				Assert.fail();
+			}
+			catch (AssetCategoryParentCategoryIdException
+						assetCategoryParentCategoryIdException) {
+
+				Assert.assertNotNull(assetCategoryParentCategoryIdException);
+			}
 		}
 	}
 

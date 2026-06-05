@@ -61,6 +61,7 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.ScopeUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.segments.model.SegmentsExperience;
@@ -380,10 +381,16 @@ public class FragmentLayoutStructureItemImporter
 				freeMarkerFragmentEntryProcessorJSONObject);
 		}
 
+		String rendererKey = null;
+
 		if (fragmentEntry != null) {
 			FragmentCollection fragmentCollection =
 				_fragmentCollectionService.fetchFragmentCollection(
 					fragmentEntry.getFragmentCollectionId());
+
+			if (fragmentEntry.getFragmentEntryId() == 0) {
+				rendererKey = fragmentKey;
+			}
 
 			defaultEditableValuesJSONObject =
 				_fragmentEntryProcessorRegistry.
@@ -392,8 +399,11 @@ public class FragmentLayoutStructureItemImporter
 							layout.getCompanyId(), configuration,
 							fragmentEntryProcessorValuesJSONObject.toString(),
 							fragmentCollection, fragmentEntry.getHtml(),
-							fragmentKey, type),
+							rendererKey, type),
 						configurationJSONObject);
+		}
+		else {
+			rendererKey = fragmentRenderer.getKey();
 		}
 
 		Map<String, String> editableTypes =
@@ -446,7 +456,8 @@ public class FragmentLayoutStructureItemImporter
 
 		if (fragmentEntry != null) {
 			fragmentEntryERC = fragmentEntry.getExternalReferenceCode();
-			fragmentEntryScopeERC = fragmentEntry.getScopeERC();
+			fragmentEntryScopeERC = ScopeUtil.getItemScopeExternalReferenceCode(
+				fragmentEntry.getGroupId(), layoutGroup.getGroupId());
 		}
 
 		String namespace = StringUtil.randomId();
@@ -477,7 +488,7 @@ public class FragmentLayoutStructureItemImporter
 				null, serviceContext.getUserId(), layout.getGroupId(), null,
 				fragmentEntryERC, fragmentEntryScopeERC, segmentsExperienceId,
 				layout.getPlid(), css, html, js, configuration,
-				jsonObject.toString(), namespace, position, fragmentKey, type,
+				jsonObject.toString(), namespace, position, rendererKey, type,
 				serviceContext);
 
 		List<Object> widgetInstances = (List<Object>)definitionMap.get(

@@ -10,9 +10,6 @@ import com.liferay.osb.patcher.model.PatcherProductVersion;
 import com.liferay.osb.patcher.service.PatcherAccountLocalService;
 import com.liferay.osb.patcher.util.PatcherProductVersionUtil;
 import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
-import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.BaseIndexer;
 import com.liferay.portal.kernel.search.BooleanQuery;
 import com.liferay.portal.kernel.search.Document;
@@ -22,7 +19,6 @@ import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.Summary;
 import com.liferay.portal.kernel.search.filter.BooleanFilter;
-import com.liferay.portal.kernel.util.GetterUtil;
 
 import jakarta.portlet.PortletRequest;
 import jakarta.portlet.PortletResponse;
@@ -122,33 +118,11 @@ public class PatcherAccountIndexer extends BaseIndexer<PatcherAccount> {
 	}
 
 	@Override
-	protected void doReindex(String[] ids) throws Exception {
-		long companyId = GetterUtil.getLong(ids[0]);
+	protected IndexableActionableDynamicQuery
+		getIndexableActionableDynamicQuery() {
 
-		IndexableActionableDynamicQuery indexableActionableDynamicQuery =
-			_patcherAccountLocalService.getIndexableActionableDynamicQuery();
-
-		indexableActionableDynamicQuery.setCompanyId(companyId);
-		indexableActionableDynamicQuery.setPerformActionMethod(
-			(PatcherAccount patcherAccount) -> {
-				try {
-					indexableActionableDynamicQuery.addDocuments(
-						getDocument(patcherAccount));
-				}
-				catch (PortalException portalException) {
-					if (_log.isWarnEnabled()) {
-						_log.warn(
-							"Unable to index patcher account " + patcherAccount,
-							portalException);
-					}
-				}
-			});
-
-		indexableActionableDynamicQuery.performActions();
+		return _patcherAccountLocalService.getIndexableActionableDynamicQuery();
 	}
-
-	private static final Log _log = LogFactoryUtil.getLog(
-		PatcherAccountIndexer.class);
 
 	@Reference
 	private IndexWriterHelper _indexWriterHelper;

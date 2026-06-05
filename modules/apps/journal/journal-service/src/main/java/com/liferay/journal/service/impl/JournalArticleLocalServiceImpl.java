@@ -52,6 +52,7 @@ import com.liferay.expando.kernel.service.ExpandoRowLocalService;
 import com.liferay.expando.kernel.util.ExpandoBridgeUtil;
 import com.liferay.exportimport.kernel.exception.ExportImportContentValidationException;
 import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
+import com.liferay.friendly.url.constants.FriendlyURLEntryConstants;
 import com.liferay.friendly.url.exception.NoSuchFriendlyURLEntryLocalizationException;
 import com.liferay.friendly.url.model.FriendlyURLEntry;
 import com.liferay.friendly.url.model.FriendlyURLEntryLocalization;
@@ -1156,7 +1157,8 @@ public class JournalArticleLocalServiceImpl
 
 			if (!friendlyURLEntries.isEmpty()) {
 				friendlyURLEntryLocalService.deleteFriendlyURLEntry(
-					article.getGroupId(), JournalArticle.class,
+					article.getGroupId(),
+					_classNameLocalService.getClassNameId(JournalArticle.class),
 					article.getResourcePrimKey());
 			}
 
@@ -1630,7 +1632,11 @@ public class JournalArticleLocalServiceImpl
 
 		FriendlyURLEntry friendlyURLEntry =
 			friendlyURLEntryLocalService.fetchFriendlyURLEntry(
-				groupId, JournalArticle.class, urlTitle);
+				groupId,
+				_classNameLocalService.getClassNameId(JournalArticle.class),
+				FriendlyURLEntryConstants.
+					FRIENDLY_URL_ENTRY_PARENT_CLASS_PK_DEFAULT,
+				urlTitle);
 
 		if (friendlyURLEntry != null) {
 			JournalArticle article = fetchLatestArticle(
@@ -1869,7 +1875,11 @@ public class JournalArticleLocalServiceImpl
 
 		FriendlyURLEntry friendlyURLEntry =
 			friendlyURLEntryLocalService.fetchFriendlyURLEntry(
-				groupId, JournalArticle.class, urlTitle);
+				groupId,
+				_classNameLocalService.getClassNameId(JournalArticle.class),
+				FriendlyURLEntryConstants.
+					FRIENDLY_URL_ENTRY_PARENT_CLASS_PK_DEFAULT,
+				urlTitle);
 
 		if (friendlyURLEntry != null) {
 			JournalArticle article = fetchLatestArticle(
@@ -2060,7 +2070,11 @@ public class JournalArticleLocalServiceImpl
 
 		FriendlyURLEntry friendlyURLEntry =
 			friendlyURLEntryLocalService.fetchFriendlyURLEntry(
-				groupId, JournalArticle.class, urlTitle);
+				groupId,
+				_classNameLocalService.getClassNameId(JournalArticle.class),
+				FriendlyURLEntryConstants.
+					FRIENDLY_URL_ENTRY_PARENT_CLASS_PK_DEFAULT,
+				urlTitle);
 
 		if (friendlyURLEntry != null) {
 			return getLatestArticle(
@@ -3153,7 +3167,11 @@ public class JournalArticleLocalServiceImpl
 
 		FriendlyURLEntry friendlyURLEntry =
 			friendlyURLEntryLocalService.fetchFriendlyURLEntry(
-				groupId, JournalArticle.class, urlTitle);
+				groupId,
+				_classNameLocalService.getClassNameId(JournalArticle.class),
+				FriendlyURLEntryConstants.
+					FRIENDLY_URL_ENTRY_PARENT_CLASS_PK_DEFAULT,
+				urlTitle);
 
 		if (friendlyURLEntry != null) {
 			articles = journalArticlePersistence.findByR_ST(
@@ -3464,7 +3482,11 @@ public class JournalArticleLocalServiceImpl
 
 		FriendlyURLEntry friendlyURLEntry =
 			friendlyURLEntryLocalService.fetchFriendlyURLEntry(
-				groupId, JournalArticle.class, urlTitle);
+				groupId,
+				_classNameLocalService.getClassNameId(JournalArticle.class),
+				FriendlyURLEntryConstants.
+					FRIENDLY_URL_ENTRY_PARENT_CLASS_PK_DEFAULT,
+				urlTitle);
 
 		if (friendlyURLEntry != null) {
 			article = fetchLatestArticle(friendlyURLEntry.getClassPK(), status);
@@ -4272,7 +4294,10 @@ public class JournalArticleLocalServiceImpl
 
 		FriendlyURLEntry friendlyURLEntry =
 			friendlyURLEntryLocalService.fetchFriendlyURLEntry(
-				article.getGroupId(), JournalArticle.class,
+				article.getGroupId(),
+				_classNameLocalService.getClassNameId(JournalArticle.class),
+				FriendlyURLEntryConstants.
+					FRIENDLY_URL_ENTRY_PARENT_CLASS_PK_DEFAULT,
 				article.getUrlTitle());
 
 		if (friendlyURLEntry == null) {
@@ -4448,14 +4473,13 @@ public class JournalArticleLocalServiceImpl
 				updateJournalArticle(article);
 
 				if (!reindex) {
-					return;
+					return null;
 				}
 
 				indexableActionableDynamicQuery.setCompanyId(
 					article.getCompanyId());
 
-				indexableActionableDynamicQuery.addDocuments(
-					indexer.getDocument(article));
+				return indexer.getDocument(article);
 			});
 
 		indexableActionableDynamicQuery.performActions();
@@ -4715,19 +4739,6 @@ public class JournalArticleLocalServiceImpl
 
 		if (displayDate == null) {
 			displayDate = article.getDisplayDate();
-
-			if ((displayDate != null) && displayDate.before(new Date())) {
-				displayDate = article.getDisplayDate();
-			}
-			else {
-				Calendar calendar = CalendarFactoryUtil.getCalendar(
-					user.getTimeZone());
-
-				calendar.set(Calendar.SECOND, 0);
-				calendar.set(Calendar.MILLISECOND, 0);
-
-				displayDate = calendar.getTime();
-			}
 		}
 
 		Date expirationDate = null;
@@ -6088,8 +6099,7 @@ public class JournalArticleLocalServiceImpl
 					updatePreviousApprovedArticle(article);
 
 					if (indexer != null) {
-						indexableActionableDynamicQuery.addDocuments(
-							indexer.getDocument(article));
+						return indexer.getDocument(article);
 					}
 				}
 				catch (PortalException portalException) {
@@ -6099,9 +6109,9 @@ public class JournalArticleLocalServiceImpl
 							portalException);
 					}
 				}
+
+				return null;
 			});
-		indexableActionableDynamicQuery.setTransactionConfig(
-			DefaultActionableDynamicQuery.REQUIRES_NEW_TRANSACTION_CONFIG);
 
 		indexableActionableDynamicQuery.performActions();
 	}
@@ -7525,7 +7535,11 @@ public class JournalArticleLocalServiceImpl
 
 		targetArticle.setModifiedDate(modifiedDate);
 
-		targetArticle.setExternalReferenceCode(targetArticleId);
+		if (!newArticle) {
+			targetArticle.setExternalReferenceCode(
+				sourceArticle.getExternalReferenceCode());
+		}
+
 		targetArticle.setFolderId(sourceArticle.getFolderId());
 		targetArticle.setTreePath(sourceArticle.getTreePath());
 		targetArticle.setArticleId(targetArticleId);
@@ -8600,6 +8614,8 @@ public class JournalArticleLocalServiceImpl
 			ddmStructureId);
 
 		DDMForm ddmForm = ddmStructure.getDDMForm();
+
+		ddmForm.setAllowInvalidAvailableLocalesForProperty(true);
 
 		Map<String, DDMFormField> ddmFormFieldsMap =
 			ddmForm.getDDMFormFieldsMap(true);

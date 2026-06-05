@@ -318,3 +318,4 @@ public interface ObjectFieldSettingLocalService
 		ObjectFieldSetting objectFieldSetting);
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-2031305935

@@ -12,8 +12,8 @@ import {accountSettingsPagesTest} from '../../../fixtures/accountSettingsPagesTe
 import {apiHelpersTest} from '../../../fixtures/apiHelpersTest';
 import {changeTrackingPagesTest} from '../../../fixtures/changeTrackingPagesTest';
 import {dataApiHelpersTest} from '../../../fixtures/dataApiHelpersTest';
-import {featureFlagsTest} from '../../../fixtures/featureFlagsTest';
 import {documentLibraryPagesTest} from '../../../fixtures/documentLibraryPages.fixtures';
+import {featureFlagsTest} from '../../../fixtures/featureFlagsTest';
 import {isolatedSiteTest} from '../../../fixtures/isolatedSiteTest';
 import {pageEditorPagesTest} from '../../../fixtures/pageEditorPagesTest';
 import {pagesAdminPagesTest} from '../../../fixtures/pagesAdminPagesTest';
@@ -35,6 +35,8 @@ export const test = mergeTests(
 	documentLibraryPagesTest,
 	featureFlagsTest({
 		'LPD-34594': {enabled: true},
+		'LPD-35013': {enabled: true},
+		'LPD-84028': {enabled: true},
 		'LPS-164563': {enabled: true},
 	}),
 	isolatedSiteTest,
@@ -203,22 +205,24 @@ test('LPD-29088 Assert Publication Overview panel is visible', async ({
 }) => {
 	await changeTrackingPage.workOnProduction();
 
-	const site1 = await apiHelpers.headlessSite.createSite({
+	const site1 = await apiHelpers.headlessAdminSite.postSite({
 		name: getRandomString(),
 	});
-	apiHelpers.data.push({id: site1.id, type: 'site'});
 
-	const site2 = await apiHelpers.headlessSite.createSite({
+	const site2 = await apiHelpers.headlessAdminSite.postSite({
 		name: getRandomString(),
 	});
-	apiHelpers.data.push({id: site2.id, type: 'site'});
 
 	await changeTrackingPage.workOnPublication(ctCollection);
 
 	await page.goto(`/group/guest${PORTLET_URLS.tagsAdmin}`);
 	await page.getByRole('link', {name: 'Add Tag'}).click();
 	await page.getByPlaceholder('Name').fill(getRandomString());
-	await page.getByRole('button', {name: 'Save'}).click();
+
+	await Promise.all([
+		page.waitForLoadState('load'),
+		page.getByRole('button', {name: 'Save'}).click(),
+	]);
 
 	await apiHelpers.headlessDelivery.postMessageBoardThread({
 		articleBody: getRandomString(),
@@ -239,7 +243,7 @@ test('LPD-29088 Assert Publication Overview panel is visible', async ({
 
 	await changeTrackingPage.goToReviewChanges(ctCollection.body.name);
 
-	await expect(page.getByText('Liferay DXP (1): Tag (1)')).toBeVisible();
+	await expect(page.getByText('Liferay DXP Site (1): Tag (1)')).toBeVisible();
 	await expect(
 		page.getByText(
 			site1.name +
@@ -256,7 +260,7 @@ test('LPD-29088 Assert Publication Overview panel is visible', async ({
 
 	await changeTrackingPage.goToReviewChangesHistory(ctCollection.body.name);
 
-	await expect(page.getByText('Liferay DXP (1): Tag (1)')).toBeVisible();
+	await expect(page.getByText('Liferay DXP Site (1): Tag (1)')).toBeVisible();
 	await expect(
 		page.getByText(
 			site1.name +
@@ -585,15 +589,23 @@ test('LPD-62112 Cannot Preview Pending Version of Page in a Publication', async 
 
 	await changeTrackingPage.reviewChange('Home');
 
-	await page.locator('.btn-outline-secondary').click();
+	await page.locator('.dropdown-toggle.btn-outline-secondary').click();
 
 	await page.getByRole('menuitem', {name: ctCollection.body.name}).click();
 
-	const publicationIFrame = page.frameLocator('iframe[src*="preview"]');
+	const previewContent = page.locator('.publications-render-view-content');
 
-	const newHeading = publicationIFrame.getByText('Edited');
+	await expect(previewContent.getByText('Edited')).toBeVisible();
 
-	await expect(newHeading).toBeVisible();
+	// Disable workflow for Content Pages
+
+	await changeTrackingPage.workOnProduction();
+
+	await workflowPage.goto();
+
+	await workflowPage.changeWorkflow('Content Page', 'No Workflow', {
+		disable: true,
+	});
 });
 
 test.describe('Publications with incomplete status tests', () => {
@@ -623,28 +635,18 @@ test.describe('Publications with incomplete status tests', () => {
 		}
 	);
 
-	test.afterEach(async ({apiHelpers, page, workflowPage}) => {
+	test.afterEach(async ({apiHelpers, workflowPage}) => {
 		await apiHelpers.headlessChangeTracking.checkoutCTCollection(0);
 
 		await workflowPage.goto();
 
-		const row = await page
-			.getByRole('row')
-			.filter({hasText: 'Web Content Article'});
-
-		const workflowEnabled = await row
-			.getByTitle('Workflow Definition')
-			.filter({hasText: 'Single Approver'});
-
-		if (await workflowEnabled.isVisible()) {
-			await workflowPage.changeWorkflow(
-				'Web Content Article',
-				'No Workflow',
-				{
-					disable: true,
-				}
-			);
-		}
+		await workflowPage.changeWorkflow(
+			'Web Content Article',
+			'No Workflow',
+			{
+				disable: true,
+			}
+		);
 	});
 
 	test('LPD-73271 Can view CTEntry actions in review changes page', async ({
@@ -789,6 +791,7 @@ test.describe('Publications with incomplete status tests', () => {
 		ctCollection,
 		journalEditArticlePage,
 		page,
+		workflowPage,
 	}) => {
 		const ctCollection2 =
 			await apiHelpers.headlessChangeTracking.createCTCollection(
@@ -797,6 +800,16 @@ test.describe('Publications with incomplete status tests', () => {
 
 		await apiHelpers.headlessChangeTracking.checkoutCTCollection(
 			ctCollection2.body.id
+		);
+
+		await workflowPage.goto();
+
+		await workflowPage.changeWorkflow(
+			'Web Content Article',
+			'No Workflow',
+			{
+				disable: true,
+			}
 		);
 
 		const journalArticleTitle = getRandomString();
@@ -812,7 +825,7 @@ test.describe('Publications with incomplete status tests', () => {
 			`Success:${journalArticleTitle} was created successfully.`
 		);
 
-		changeTrackingPage.goToReviewChanges(ctCollection2.body.name);
+		await changeTrackingPage.goToReviewChanges(ctCollection2.body.name);
 
 		const firstDropdown = page
 			.locator('.cell-item-actions .dropdown svg.lexicon-icon-ellipsis-v')
@@ -836,14 +849,8 @@ test.describe('Publications with incomplete status tests', () => {
 
 		await expect(publicationSelector).toBeVisible();
 
-		const publicationsOptions = await page.locator(
-			'#_com_liferay_change_tracking_web_portlet_PublicationsPortlet_toPublication > option'
-		);
-
-		await expect(publicationsOptions).toHaveText([
-			'None',
-			ctCollection.body.name,
-		]);
+		await expect(publicationSelector).toContainText('None');
+		await expect(publicationSelector).toContainText(ctCollection.body.name);
 
 		await apiHelpers.headlessChangeTracking.deleteCTCollection(
 			ctCollection2.body.id
@@ -888,9 +895,73 @@ test('LPD-62940 Assert download button is visible and functional in the data tab
 
 	await documentLibraryEditFilePage.publishButton.click();
 
+	await waitForAlert(page, 'Success:Your request completed successfully.');
+
 	await changeTrackingPage.goToReviewChanges(ctCollection.body.name);
 	await changeTrackingPage.reviewChange('astronaut2');
+
+	await expect(
+		page
+			.locator('td.publications-render-view-content')
+			.filter({has: page.locator('img[src*="astronaut"]')})
+			.first()
+	).toBeVisible();
+
+	await changeTrackingPage.selectRenderView('Production');
+
+	await expect(
+		page
+			.locator('td.publications-render-view-content')
+			.filter({has: page.locator('img[src*="astronaut"]')})
+	).toBeVisible();
+
+	await changeTrackingPage.selectRenderView(ctCollection.body.name);
+
+	await expect(
+		page
+			.locator('td.publications-render-view-content')
+			.filter({has: page.locator('img[src*="astronaut"]')})
+	).toBeVisible();
+
 	await changeTrackingPage.selectTab('Data');
+
+	await changeTrackingPage.selectRenderView('Unified View');
+
+	await expect(
+		page.locator(
+			'td.publications-key-td:has-text("Title") + td .diff-html-added'
+		)
+	).toHaveText('astronaut2');
+
+	await changeTrackingPage.selectRenderView('Split View');
+
+	await expect(
+		page
+			.locator('td.publications-key-td:has-text("Title") + td')
+			.filter({has: page.getByText('astronaut.png', {exact: true})})
+	).toBeVisible();
+
+	await expect(
+		page
+			.locator('td.publications-key-td:has-text("Title") + td')
+			.filter({has: page.getByText('astronaut2', {exact: true})})
+	).toBeVisible();
+
+	await changeTrackingPage.selectRenderView('Production');
+
+	await expect(
+		page
+			.locator('td.publications-key-td:has-text("Title") + td')
+			.filter({has: page.getByText('astronaut.png', {exact: true})})
+	).toBeVisible();
+
+	await changeTrackingPage.selectRenderView(ctCollection.body.name);
+
+	await expect(
+		page
+			.locator('td.publications-key-td:has-text("Title") + td')
+			.filter({has: page.getByText('astronaut2', {exact: true})})
+	).toBeVisible();
 
 	const downloadPromise = page.waitForEvent('download');
 
@@ -905,4 +976,394 @@ test('LPD-62940 Assert download button is visible and functional in the data tab
 
 	const download = await downloadPromise;
 	expect(download.suggestedFilename()).toEqual('astronaut.png');
+});
+
+test('LPD-78919 Unified view in FragmentEntryLink review page is shown', async ({
+	changeTrackingPage,
+	ctCollection,
+	page,
+	pageEditorPage,
+}) => {
+	await changeTrackingPage.workOnPublication(ctCollection);
+
+	await test.step('Go to home edit page', async () => {
+		await page.goto(`/web/guest/home?p_l_mode=edit`);
+	});
+
+	const headingId = await pageEditorPage.getFragmentId('Paragraph');
+
+	await pageEditorPage.editTextEditable(headingId, 'element-text', 'Edited');
+
+	await pageEditorPage.publishPage();
+
+	await changeTrackingPage.goToReviewChanges(ctCollection.body.name);
+
+	await page
+		.getByRole('row')
+		.filter({hasText: 'Fragment Entry Link'})
+		.getByRole('link')
+		.first()
+		.click();
+
+	const renderViewDropdown = page.locator(
+		'.publications-render-view-divider .dropdown'
+	);
+
+	await renderViewDropdown.waitFor({state: 'visible', timeout: 15000});
+
+	await clickAndExpectToBeVisible({
+		autoClick: true,
+		target: page.getByRole('menuitem', {name: 'Unified View'}),
+		trigger: renderViewDropdown,
+	});
+});
+
+test('LPD-79249 Test XSS vulnerability when moving a change to a ctCollection with malicious name', async ({
+	apiHelpers,
+	changeTrackingPage,
+	ctCollection,
+	page,
+}) => {
+	await apiHelpers.headlessChangeTracking.checkoutCTCollection(
+		ctCollection.body.id
+	);
+
+	const site =
+		await apiHelpers.headlessAdminUser.getSiteByFriendlyUrlPath('guest');
+
+	await apiHelpers.headlessDelivery.postDocument(
+		site.id,
+		createReadStream(path.join(__dirname, '/dependencies/attachment.txt'))
+	);
+
+	await apiHelpers.headlessChangeTracking.createCTCollection(
+		`AnyName<script>alert('test');</script>`
+	);
+
+	await changeTrackingPage.goToReviewChanges(ctCollection.body.name);
+
+	const firstDropdown = page
+		.locator('.cell-item-actions .dropdown svg.lexicon-icon-ellipsis-v')
+		.first();
+	await firstDropdown.waitFor();
+	await firstDropdown.click();
+
+	page.on('dialog', async (dialog) => {
+		if (dialog.type() === 'alert') {
+			throw new Error('XSS');
+		}
+	});
+
+	await clickAndExpectToBeVisible({
+		autoClick: true,
+		target: page.getByRole('menuitem', {name: 'Move Changes'}),
+		trigger: firstDropdown,
+	});
+
+	await expect(
+		page.getByRole('heading', {name: 'Moved Changes'})
+	).toBeVisible();
+});
+
+test('LPD-82268 FragmentEntryLink change displays the fragment related to the published page', async ({
+	apiHelpers,
+	changeTrackingPage,
+	ctCollection,
+	page,
+	pageEditorPage,
+	pagesAdminPage,
+}) => {
+	const site =
+		await apiHelpers.headlessAdminUser.getSiteByFriendlyUrlPath('guest');
+
+	await pagesAdminPage.goto(site.friendlyUrlPath);
+
+	await page
+		.getByTestId('creationMenuNewButton')
+		.locator('visible=true')
+		.click();
+
+	const pageTitle = getRandomString();
+
+	await pagesAdminPage.addPage({
+		name: pageTitle,
+	});
+
+	await pageEditorPage.addFragment('Basic Components', 'Heading');
+
+	await pageEditorPage.publishPage();
+
+	await changeTrackingPage.workOnPublication(ctCollection);
+
+	await pagesAdminPage.goto(site.friendlyUrlPath);
+	await pagesAdminPage.clickOnAction('Edit', pageTitle);
+
+	const headingId = await pageEditorPage.getFragmentId('Heading');
+
+	await pageEditorPage.editTextEditable(headingId, 'element-text', 'Edited');
+
+	await pageEditorPage.publishPage();
+
+	await changeTrackingPage.goToReviewChanges(ctCollection.body.name);
+
+	await expect(
+		page.getByRole('link', {name: `Heading for ${pageTitle}`})
+	).toBeVisible();
+});
+
+test('LPD-86809 Web content change details display diff preview', async ({
+	changeTrackingPage,
+	ctCollection,
+	journalEditArticlePage,
+	page,
+}) => {
+	await changeTrackingPage.workOnProduction();
+
+	await journalEditArticlePage.goto();
+
+	const title = getRandomString();
+
+	await journalEditArticlePage.fillTitle(title);
+
+	const content = getRandomString();
+
+	await journalEditArticlePage.journalPage.fillArticleContent(content);
+
+	await journalEditArticlePage.publishArticle();
+
+	await waitForAlert(page, `Success:${title} was created successfully.`);
+
+	await changeTrackingPage.workOnPublication(ctCollection);
+
+	await journalEditArticlePage.editArticle(title);
+
+	const editedTitle = title + ' Edited';
+
+	await journalEditArticlePage.fillTitle(editedTitle);
+
+	const editedContent = content + ' Edited';
+
+	await journalEditArticlePage.journalPage.articleContentTextBox.click();
+	await journalEditArticlePage.journalPage.articleContentTextBox.selectText();
+	await journalEditArticlePage.journalPage.articleContentTextBox.press(
+		'Backspace'
+	);
+	await journalEditArticlePage.journalPage.articleContentTextBox.pressSequentially(
+		editedContent
+	);
+
+	await journalEditArticlePage.publishArticle(true);
+
+	await waitForAlert(
+		page,
+		`Success:${editedTitle} was updated successfully.`
+	);
+
+	await changeTrackingPage.goToReviewChanges(ctCollection.body.name);
+
+	await changeTrackingPage.reviewChange(editedTitle);
+
+	await changeTrackingPage.selectRenderView('Unified View');
+
+	await expect(
+		page.locator('.diff-html-added').filter({hasText: 'Edited'})
+	).toBeVisible();
+
+	await changeTrackingPage.selectRenderView('Split View');
+
+	await expect(
+		page
+			.locator('td.publications-render-view-content')
+			.filter({has: page.getByText(content, {exact: true})})
+	).toBeVisible();
+
+	await expect(
+		page
+			.locator('td.publications-render-view-content')
+			.filter({has: page.getByText(editedContent, {exact: true})})
+	).toBeVisible();
+
+	await changeTrackingPage.selectRenderView('Version: 1.0 (Production)');
+
+	await expect(
+		page
+			.locator('td.publications-render-view-content')
+			.filter({has: page.getByText(content, {exact: true})})
+	).toBeVisible();
+
+	await changeTrackingPage.selectRenderView(
+		`Version: 1.1 (${ctCollection.body.name})`
+	);
+
+	await expect(
+		page
+			.locator('td.publications-render-view-content')
+			.filter({has: page.getByText(editedContent, {exact: true})})
+	).toBeVisible();
+
+	await changeTrackingPage.selectTab('Data');
+
+	await changeTrackingPage.selectRenderView('Unified View');
+
+	await expect(
+		page.locator(
+			'td.publications-key-td:has-text("Name") + td .diff-html-added'
+		)
+	).toHaveText('Edited');
+
+	await changeTrackingPage.selectRenderView('Split View');
+
+	await expect(
+		page
+			.locator('td.publications-key-td:has-text("Name") + td')
+			.filter({has: page.getByText(title, {exact: true})})
+	).toBeVisible();
+
+	await expect(
+		page
+			.locator('td.publications-key-td:has-text("Name") + td')
+			.filter({has: page.getByText(editedTitle, {exact: true})})
+	).toBeVisible();
+
+	await changeTrackingPage.selectRenderView('Version: 1.0 (Production)');
+
+	await expect(
+		page
+			.locator('td.publications-key-td:has-text("Name") + td')
+			.filter({has: page.getByText(title, {exact: true})})
+	).toBeVisible();
+
+	await changeTrackingPage.selectRenderView(
+		`Version: 1.1 (${ctCollection.body.name})`
+	);
+
+	await expect(
+		page
+			.locator('td.publications-key-td:has-text("Name") + td')
+			.filter({has: page.getByText(editedTitle, {exact: true})})
+	).toBeVisible();
+
+	await changeTrackingPage.selectTab('Parents');
+
+	await expect(
+		page.locator('tr').filter({hasText: 'Site'}).locator('+ tr')
+	).toHaveText('Guest');
+
+	await changeTrackingPage.selectTab('Children');
+
+	await expect(
+		page
+			.locator('tr')
+			.filter({hasText: 'Web Content Translation'})
+			.locator('+ tr')
+			.getByText(editedTitle, {exact: true})
+	).toBeVisible();
+});
+
+test('LPS-179026 Can preview changes for WikiPages', async ({
+	apiHelpers,
+	changeTrackingPage,
+	ctCollection,
+	page,
+}) => {
+	const site =
+		await apiHelpers.headlessAdminUser.getSiteByFriendlyUrlPath('guest');
+
+	const wikiNode = await apiHelpers.headlessDelivery.postWikiNode(site.id);
+
+	const wikiPageContent = 'Wiki Page Content';
+	const wikiPageTitle = 'Wiki Page Title';
+
+	const wikiPage = await apiHelpers.headlessDelivery.postWikiPage(
+		wikiNode.id,
+		{
+			content: wikiPageContent,
+			headline: wikiPageTitle,
+		}
+	);
+
+	await changeTrackingPage.workOnPublication(ctCollection);
+
+	const wikiPageContentEdited = wikiPageContent + ' Edited';
+
+	await apiHelpers.put(
+		`${apiHelpers.baseUrl}headless-delivery/v1.0/wiki-pages/${wikiPage.id}`,
+		{
+			data: {
+				content: wikiPageContentEdited,
+				encodingFormat: 'plain_text',
+				headline: wikiPageTitle,
+			},
+			failOnStatusCode: true,
+		}
+	);
+
+	await apiHelpers.post(
+		`${apiHelpers.baseUrl}headless-delivery/v1.0/wiki-pages/${wikiPage.id}/wiki-page-attachments`,
+		{
+			failOnStatusCode: true,
+			headers: {
+				...(await apiHelpers.getCSRFTokenHeader()),
+			},
+			multipart: {
+				file: createReadStream(
+					path.join(__dirname, '/dependencies/attachment.txt')
+				),
+			},
+		}
+	);
+
+	await changeTrackingPage.goToReviewChanges(ctCollection.body.name);
+
+	await changeTrackingPage.reviewChange(wikiPageTitle);
+
+	await changeTrackingPage.selectRenderView('Unified View');
+
+	await expect(
+		page.locator('.diff-html-added').filter({hasText: 'Edited'})
+	).toBeVisible();
+
+	await expect(
+		page.locator('.diff-html-added').filter({hasText: 'Attachments'})
+	).toBeVisible();
+
+	await changeTrackingPage.selectRenderView('Split View');
+
+	await expect(
+		page
+			.locator('td.publications-render-view-content')
+			.filter({has: page.getByText(wikiPageContent, {exact: true})})
+	).toBeVisible();
+
+	await expect(
+		page
+			.locator('td.publications-render-view-content')
+			.filter({has: page.getByText(wikiPageContentEdited, {exact: true})})
+	).toBeVisible();
+
+	await expect(
+		page.locator('td.publications-render-view-content .page-attachments')
+	).toBeVisible();
+
+	await changeTrackingPage.selectRenderView('Version: 1.0 (Production)');
+
+	await expect(
+		page
+			.locator('td.publications-render-view-content')
+			.filter({has: page.getByText(wikiPageContent, {exact: true})})
+	).toBeVisible();
+
+	await changeTrackingPage.selectRenderView(
+		`Version: 1.1 (${ctCollection.body.name})`
+	);
+
+	await expect(
+		page
+			.locator('td.publications-render-view-content')
+			.filter({has: page.getByText(wikiPageContentEdited, {exact: true})})
+	).toBeVisible();
+
+	await expect(
+		page.locator('td.publications-render-view-content .page-attachments')
+	).toBeVisible();
 });

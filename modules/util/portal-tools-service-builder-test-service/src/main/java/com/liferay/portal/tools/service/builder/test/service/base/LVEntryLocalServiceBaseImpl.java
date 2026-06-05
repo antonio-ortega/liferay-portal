@@ -1219,8 +1219,8 @@ public abstract class LVEntryLocalServiceBaseImpl
 		draftLVEntry.setHeadId(publishedLVEntry.getPrimaryKey());
 		draftLVEntry.setDefaultLanguageId(
 			publishedLVEntry.getDefaultLanguageId());
-		draftLVEntry.setCompanyId(publishedLVEntry.getCompanyId());
 		draftLVEntry.setGroupId(publishedLVEntry.getGroupId());
+		draftLVEntry.setCompanyId(publishedLVEntry.getCompanyId());
 		draftLVEntry.setUniqueGroupKey(publishedLVEntry.getUniqueGroupKey());
 
 		draftLVEntry.resetOriginalValues();
@@ -1514,3 +1514,4 @@ public abstract class LVEntryLocalServiceBaseImpl
 	}
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-1540283516

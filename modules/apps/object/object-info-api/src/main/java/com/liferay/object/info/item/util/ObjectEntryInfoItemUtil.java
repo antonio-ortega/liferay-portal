@@ -13,6 +13,7 @@ import com.liferay.object.rest.manager.v1_0.ObjectEntryManager;
 import com.liferay.object.rest.manager.v1_0.ObjectEntryManagerRegistry;
 import com.liferay.object.scope.ObjectScopeProvider;
 import com.liferay.object.scope.ObjectScopeProviderRegistry;
+import com.liferay.object.service.ObjectEntryLocalServiceUtil;
 import com.liferay.object.service.ObjectEntryVersionLocalServiceUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -65,6 +66,12 @@ public class ObjectEntryInfoItemUtil {
 			new DefaultDTOConverterContext(
 				false, null, null, null, null, themeDisplay.getLocale(), null,
 				themeDisplay.getUser());
+
+		if (serviceBuilderObjectEntry.getHeadObjectEntryId() > 0) {
+			serviceBuilderObjectEntry =
+				ObjectEntryLocalServiceUtil.fetchObjectEntry(
+					serviceBuilderObjectEntry.getHeadObjectEntryId());
+		}
 
 		ObjectEntryVersion objectEntryVersion =
 			ObjectEntryVersionLocalServiceUtil.fetchObjectEntryVersion(

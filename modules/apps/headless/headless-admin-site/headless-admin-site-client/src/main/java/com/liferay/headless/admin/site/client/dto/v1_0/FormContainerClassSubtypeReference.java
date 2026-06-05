@@ -108,3 +108,4 @@ public class FormContainerClassSubtypeReference
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-975636092

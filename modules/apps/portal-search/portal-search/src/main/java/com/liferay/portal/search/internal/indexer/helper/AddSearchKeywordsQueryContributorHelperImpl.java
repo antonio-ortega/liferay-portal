@@ -9,18 +9,17 @@ import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerList;
 import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerListFactory;
 import com.liferay.portal.kernel.search.BooleanClauseOccur;
 import com.liferay.portal.kernel.search.BooleanQuery;
-import com.liferay.portal.kernel.search.ParseException;
 import com.liferay.portal.kernel.search.SearchContext;
-import com.liferay.portal.kernel.search.generic.StringQuery;
+import com.liferay.portal.kernel.search.StringQuery;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.search.constants.SearchContextAttributes;
 import com.liferay.portal.search.internal.indexer.IncludeExcludeUtil;
 import com.liferay.portal.search.internal.indexer.IndexerProvidedClausesUtil;
-import com.liferay.portal.search.internal.util.SearchStringUtil;
 import com.liferay.portal.search.spi.model.query.contributor.HighlightFieldNamesQueryConfigContributor;
 import com.liferay.portal.search.spi.model.query.contributor.KeywordQueryContributor;
 import com.liferay.portal.search.spi.model.query.contributor.helper.KeywordQueryContributorHelper;
+import com.liferay.portal.search.util.SearchStringUtil;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -138,13 +137,7 @@ public class AddSearchKeywordsQueryContributorHelperImpl
 			return;
 		}
 
-		try {
-			booleanQuery.add(
-				new StringQuery(keywords), BooleanClauseOccur.MUST);
-		}
-		catch (ParseException parseException) {
-			throw new RuntimeException(parseException);
-		}
+		booleanQuery.add(new StringQuery(keywords), BooleanClauseOccur.MUST);
 	}
 
 	private String _getClassName(Object object) {

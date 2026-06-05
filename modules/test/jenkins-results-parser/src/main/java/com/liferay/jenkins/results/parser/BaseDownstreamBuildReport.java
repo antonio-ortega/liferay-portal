@@ -52,6 +52,23 @@ public abstract class BaseDownstreamBuildReport
 	}
 
 	@Override
+	public List<FailureReport> getFailureReports() {
+		List<FailureReport> failureReports = new ArrayList<>(
+			super.getFailureReports());
+
+		for (TestReport testReport : getTestReports()) {
+			if (!testReport.isFailing()) {
+				continue;
+			}
+
+			failureReports.add(
+				FailureReportFactory.newFailureReport(this, null, testReport));
+		}
+
+		return failureReports;
+	}
+
+	@Override
 	public String getJobVariant() {
 		Map<String, String> buildParameters = getBuildParameters();
 
@@ -105,19 +122,27 @@ public abstract class BaseDownstreamBuildReport
 
 	@Override
 	public List<TestReport> getTestReports() {
+		if (_testReports != null) {
+			return _testReports;
+		}
+
 		List<TestReport> testReports = new ArrayList<>();
 
 		JSONObject buildReportJSONObject = getBuildReportJSONObject();
 
 		if (buildReportJSONObject == null) {
-			return testReports;
+			_testReports = testReports;
+
+			return _testReports;
 		}
 
 		JSONArray testResultsJSONArray = buildReportJSONObject.optJSONArray(
 			"testResults");
 
 		if (testResultsJSONArray == null) {
-			return testReports;
+			_testReports = testReports;
+
+			return _testReports;
 		}
 
 		for (int i = 0; i < testResultsJSONArray.length(); i++) {
@@ -126,7 +151,9 @@ public abstract class BaseDownstreamBuildReport
 					this, testResultsJSONArray.getJSONObject(i)));
 		}
 
-		return testReports;
+		_testReports = testReports;
+
+		return _testReports;
 	}
 
 	@Override
@@ -189,6 +216,7 @@ public abstract class BaseDownstreamBuildReport
 	private final boolean _buildCached;
 	private final JSONObject _buildReportJSONObject;
 	private Map<String, TestClassReport> _testClassReportsMap;
+	private List<TestReport> _testReports;
 	private final TopLevelBuildReport _topLevelBuildReport;
 
 }

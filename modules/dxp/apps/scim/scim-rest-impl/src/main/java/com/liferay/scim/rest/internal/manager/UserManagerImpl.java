@@ -531,22 +531,22 @@ public class UserManagerImpl implements UserManager {
 		com.liferay.portal.kernel.model.User portalUser = _fetchPortalUser(
 			scimClientOAuth2ApplicationConfiguration, scimUser);
 
-		Calendar birthdayCalendar = CalendarFactoryUtil.getCalendar();
+		Calendar calendar = CalendarFactoryUtil.getCalendar();
 
-		birthdayCalendar.setTime(scimUser.getBirthday());
-
-		int birthdayMonth = birthdayCalendar.get(Calendar.MONTH);
-		int birthdayDay = birthdayCalendar.get(Calendar.DAY_OF_MONTH);
-		int birthdayYear = birthdayCalendar.get(Calendar.YEAR);
+		calendar.setTime(scimUser.getBirthday());
 
 		if (portalUser == null) {
 			portalUser = _addPortalUser(
-				birthdayMonth, birthdayDay, birthdayYear,
+				calendar.get(Calendar.MONTH),
+				calendar.get(Calendar.DAY_OF_MONTH),
+				calendar.get(Calendar.YEAR),
 				scimClientOAuth2ApplicationConfiguration, scimUser);
 		}
 		else {
 			portalUser = _updatePortalUser(
-				birthdayMonth, birthdayDay, birthdayYear, portalUser, scimUser,
+				calendar.get(Calendar.MONTH),
+				calendar.get(Calendar.DAY_OF_MONTH),
+				calendar.get(Calendar.YEAR), portalUser, scimUser,
 				scimClientOAuth2ApplicationConfiguration);
 		}
 
@@ -913,6 +913,11 @@ public class UserManagerImpl implements UserManager {
 			ReflectionUtil.throwException(exception);
 		}
 
+		ScimClientOAuth2ApplicationConfiguration
+			scimClientOAuth2ApplicationConfiguration =
+				ScimUtil.getScimClientOAuth2ApplicationConfiguration(
+					serviceContext.getCompanyId(), _configurationAdmin);
+
 		Predicate predicate = ExpandoValueTable.INSTANCE.columnId.eq(
 			expandoColumn.getColumnId()
 		).and(
@@ -920,9 +925,8 @@ public class UserManagerImpl implements UserManager {
 				ExpandoValueTable.INSTANCE.data
 			).eq(
 				ScimClientUtil.generateScimClientId(
-					ScimUtil.getScimClientOAuth2ApplicationConfiguration(
-						serviceContext.getCompanyId(), _configurationAdmin
-					).oAuth2ApplicationName())
+					scimClientOAuth2ApplicationConfiguration.
+						oAuth2ApplicationName())
 			)
 		);
 
@@ -1278,8 +1282,8 @@ public class UserManagerImpl implements UserManager {
 			portalUser.getUserId(), scimUser.getPassword(), StringPool.BLANK,
 			StringPool.BLANK, false, portalUser.getReminderQueryQuestion(),
 			portalUser.getReminderQueryAnswer(), scimUser.getScreenName(),
-			scimUser.getEmailAddresses()[0], false, null,
-			portalUser.getLanguageId(), scimUser.getTimeZoneId(),
+			scimUser.getEmailAddresses()[0], portalUser.getPortraitId() != 0,
+			null, portalUser.getLanguageId(), scimUser.getTimeZoneId(),
 			portalUser.getGreeting(), portalUser.getComments(),
 			scimUser.getFirstName(), scimUser.getMiddleName(),
 			scimUser.getLastName(), scimUser.getPrefix(), scimUser.getSuffix(),

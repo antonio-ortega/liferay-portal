@@ -5,14 +5,14 @@
 
 package com.liferay.portal.workflow.metrics.rest.internal.resource.v1_0;
 
-import com.liferay.portal.search.engine.adapter.search.SearchRequestExecutor;
+import com.liferay.portal.search.engine.adapter.SearchEngineAdapter;
 import com.liferay.portal.search.engine.adapter.search.SearchSearchRequest;
 import com.liferay.portal.search.engine.adapter.search.SearchSearchResponse;
 import com.liferay.portal.search.hits.SearchHit;
 import com.liferay.portal.search.hits.SearchHits;
 import com.liferay.portal.search.index.IndexNameBuilder;
 import com.liferay.portal.search.query.BooleanQuery;
-import com.liferay.portal.search.query.Queries;
+import com.liferay.portal.search.query.QueriesUtil;
 import com.liferay.portal.search.sort.SortOrder;
 import com.liferay.portal.search.sort.Sorts;
 import com.liferay.portal.workflow.metrics.rest.dto.v1_0.SLAResult;
@@ -47,22 +47,22 @@ public class SLAResultResourceImpl extends BaseSLAResultResourceImpl {
 			_indexNameBuilder.getIndexName(contextCompany.getCompanyId()) +
 				WorkflowMetricsIndexNameConstants.SUFFIX_SLA_INSTANCE_RESULT);
 
-		BooleanQuery booleanQuery = _queries.booleanQuery();
+		BooleanQuery booleanQuery = QueriesUtil.booleanQuery();
 
-		BooleanQuery filterBooleanQuery = _queries.booleanQuery();
+		BooleanQuery filterBooleanQuery = QueriesUtil.booleanQuery();
 
 		searchSearchRequest.setQuery(
 			booleanQuery.addFilterQueryClauses(
 				filterBooleanQuery.addMustQueryClauses(
-					_queries.term("deleted", false),
-					_queries.term("processId", processId)),
+					QueriesUtil.term("deleted", false),
+					QueriesUtil.term("processId", processId)),
 				filterBooleanQuery.addMustNotQueryClauses(
-					_queries.term("instanceId", 0))));
+					QueriesUtil.term("instanceId", 0))));
 
 		searchSearchRequest.setSize(1);
 
 		SearchSearchResponse searchSearchResponses =
-			_searchRequestExecutor.executeSearchRequest(searchSearchRequest);
+			_searchEngineAdapter.execute(searchSearchRequest);
 
 		SearchHits searchHits = searchSearchResponses.getSearchHits();
 
@@ -85,10 +85,7 @@ public class SLAResultResourceImpl extends BaseSLAResultResourceImpl {
 	private IndexNameBuilder _indexNameBuilder;
 
 	@Reference
-	private Queries _queries;
-
-	@Reference
-	private SearchRequestExecutor _searchRequestExecutor;
+	private SearchEngineAdapter _searchEngineAdapter;
 
 	@Reference
 	private Sorts _sorts;

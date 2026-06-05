@@ -175,3 +175,4 @@ public interface DiscountOrderTypeResource {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:170153615

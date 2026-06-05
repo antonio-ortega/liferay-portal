@@ -6,11 +6,18 @@
 package com.liferay.object.service.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.asset.kernel.model.AssetCategoryConstants;
+import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
+import com.liferay.asset.test.util.AssetTestUtil;
+import com.liferay.depot.constants.DepotConstants;
 import com.liferay.depot.constants.DepotRolesConstants;
-import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
+import com.liferay.depot.model.DepotEntry;
+import com.liferay.depot.service.DepotEntryLocalService;
 import com.liferay.exportimport.report.constants.ExportImportReportEntryConstants;
 import com.liferay.exportimport.report.model.ExportImportReportEntry;
 import com.liferay.exportimport.report.service.ExportImportReportEntryLocalService;
+import com.liferay.exportimport.test.util.ExportImportConfigurationTemporarySwapper;
+import com.liferay.object.constants.ObjectActionKeys;
 import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.constants.ObjectEntryFolderConstants;
 import com.liferay.object.constants.ObjectFieldConstants;
@@ -32,7 +39,6 @@ import com.liferay.object.service.ObjectEntryLocalService;
 import com.liferay.object.test.util.ObjectEntryFolderTestUtil;
 import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringBundler;
-import com.liferay.portal.kernel.lazy.referencing.LazyReferencingThreadLocal;
 import com.liferay.portal.kernel.model.BaseModelListener;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.ModelListener;
@@ -61,6 +67,7 @@ import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
+import com.liferay.site.cms.site.initializer.util.RoleUtil;
 import com.liferay.trash.model.TrashEntry;
 import com.liferay.trash.service.TrashEntryLocalService;
 
@@ -99,6 +106,16 @@ public class ObjectEntryFolderLocalServiceTest {
 
 	@Before
 	public void setUp() throws Exception {
+		_depotEntry = _depotEntryLocalService.addDepotEntry(
+			HashMapBuilder.put(
+				LocaleUtil.getDefault(), RandomTestUtil.randomString()
+			).build(),
+			HashMapBuilder.put(
+				LocaleUtil.getDefault(), RandomTestUtil.randomString()
+			).build(),
+			DepotConstants.TYPE_SPACE,
+			ServiceContextTestUtil.getServiceContext());
+
 		_group = GroupTestUtil.addGroup();
 
 		_objectDefinition = _addObjectDefinition();
@@ -195,24 +212,69 @@ public class ObjectEntryFolderLocalServiceTest {
 			DepotRolesConstants.ASSET_LIBRARY_ADMINISTRATOR);
 
 		Assert.assertTrue(
-			_resourcePermissionLocalService.hasResourcePermission(
-				TestPropsValues.getCompanyId(),
-				ObjectEntryFolder.class.getName(),
-				ResourceConstants.SCOPE_INDIVIDUAL,
-				String.valueOf(objectEntryFolder.getObjectEntryFolderId()),
-				role.getRoleId(), ActionKeys.ADD_ENTRY));
+			_hasResourcePermission(
+				ActionKeys.ADD_ENTRY, objectEntryFolder, role));
+		Assert.assertTrue(
+			_hasResourcePermission(
+				ObjectActionKeys.ADD_OBJECT_ENTRY_FOLDER, objectEntryFolder,
+				role));
 
 		role = _roleLocalService.fetchRole(
 			TestPropsValues.getCompanyId(),
 			DepotRolesConstants.ASSET_LIBRARY_CONTENT_REVIEWER);
 
 		Assert.assertTrue(
-			_resourcePermissionLocalService.hasResourcePermission(
-				TestPropsValues.getCompanyId(),
-				ObjectEntryFolder.class.getName(),
-				ResourceConstants.SCOPE_INDIVIDUAL,
-				String.valueOf(objectEntryFolder.getObjectEntryFolderId()),
-				role.getRoleId(), ActionKeys.ADD_ENTRY));
+			_hasResourcePermission(
+				ActionKeys.ADD_ENTRY, objectEntryFolder, role));
+		Assert.assertTrue(
+			_hasResourcePermission(
+				ObjectActionKeys.ADD_OBJECT_ENTRY_FOLDER, objectEntryFolder,
+				role));
+
+		role = _roleLocalService.fetchRole(
+			TestPropsValues.getCompanyId(),
+			DepotRolesConstants.ASSET_LIBRARY_MEMBER);
+
+		Assert.assertTrue(
+			_hasResourcePermission(ActionKeys.VIEW, objectEntryFolder, role));
+
+		role = RoleUtil.getOrAddCMSAdministratorRole(
+			TestPropsValues.getCompanyId(), TestPropsValues.getUserId());
+
+		Assert.assertFalse(
+			_hasResourcePermission(
+				ActionKeys.ADD_ENTRY, objectEntryFolder, role));
+		Assert.assertFalse(
+			_hasResourcePermission(
+				ObjectActionKeys.ADD_OBJECT_ENTRY_FOLDER, objectEntryFolder,
+				role));
+
+		DepotEntry depotEntry = _getDepotEntry();
+
+		objectEntryFolder =
+			_objectEntryFolderLocalService.
+				getObjectEntryFolderByExternalReferenceCode(
+					"L_CONTENTS", depotEntry.getGroupId(),
+					depotEntry.getCompanyId());
+
+		Assert.assertTrue(
+			_hasResourcePermission(
+				ActionKeys.ADD_ENTRY, objectEntryFolder, role));
+		Assert.assertTrue(
+			_hasResourcePermission(
+				ObjectActionKeys.ADD_OBJECT_ENTRY_FOLDER, objectEntryFolder,
+				role));
+
+		AssetTestUtil.addVocabulary(
+			_depotEntry.getGroupId(), AssetCategoryConstants.ALL_CLASS_NAME_ID,
+			AssetCategoryConstants.ALL_CLASS_TYPE_PK, true);
+
+		_objectEntryFolderLocalService.addObjectEntryFolder(
+			StringUtil.randomString(), _depotEntry.getGroupId(),
+			TestPropsValues.getUserId(),
+			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+			RandomTestUtil.randomString(), null, StringUtil.randomString(),
+			new ServiceContext());
 	}
 
 	@FeatureFlag("LPD-17564")
@@ -369,13 +431,11 @@ public class ObjectEntryFolderLocalServiceTest {
 
 		// Lazy referencing enabled
 
-		try (SafeCloseable safeCloseable =
-				LazyReferencingThreadLocal.setEnabledWithSafeCloseable(true)) {
+		long exportImportConfigurationId = RandomTestUtil.randomLong();
 
-			long exportImportConfigurationId = RandomTestUtil.randomLong();
-
-			ExportImportThreadLocal.setExportImportConfigurationId(
-				exportImportConfigurationId);
+		try (AutoCloseable autoCloseable =
+				new ExportImportConfigurationTemporarySwapper(
+					exportImportConfigurationId)) {
 
 			ObjectEntryFolder objectEntryFolder =
 				_objectEntryFolderLocalService.getOrAddEmptyObjectEntryFolder(
@@ -503,6 +563,21 @@ public class ObjectEntryFolderLocalServiceTest {
 		_assertObjectEntryStatus(
 			WorkflowConstants.STATUS_IN_TRASH, objectEntry3.getObjectEntryId());
 
+		objectEntryFolder1 =
+			_objectEntryFolderLocalService.moveObjectEntryFolderToTrash(
+				TestPropsValues.getUserId(),
+				_updateObjectEntryFolder(
+					objectEntryFolder2.getName(), objectEntryFolder1),
+				ServiceContextTestUtil.getServiceContext());
+
+		Assert.assertEquals(
+			objectEntryFolder1.getParentObjectEntryFolderId(),
+			objectEntryFolder2.getParentObjectEntryFolderId());
+		Assert.assertEquals(
+			objectEntryFolder1.getName(), objectEntryFolder2.getName());
+		Assert.assertEquals(
+			objectEntryFolder1.getStatus(), objectEntryFolder2.getStatus());
+
 		_objectEntryFolderLocalService.deleteObjectEntryFolder(
 			objectEntryFolder2.getObjectEntryFolderId());
 
@@ -559,6 +634,10 @@ public class ObjectEntryFolderLocalServiceTest {
 		_objectEntryFolderLocalService.deleteObjectEntryFolder(
 			objectEntryFolder1.getObjectEntryFolderId());
 
+		ObjectEntryFolder objectEntryFolder3 = _updateObjectEntryFolder(
+			objectEntryFolder2.getName(),
+			ObjectEntryFolderTestUtil.addObjectEntryFolder(group.getGroupId()));
+
 		objectEntryFolder2 =
 			_objectEntryFolderLocalService.restoreObjectEntryFolderFromTrash(
 				TestPropsValues.getUserId(), objectEntryFolder2,
@@ -567,6 +646,9 @@ public class ObjectEntryFolderLocalServiceTest {
 		Assert.assertEquals(
 			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
 			objectEntryFolder2.getParentObjectEntryFolderId());
+		Assert.assertEquals(
+			objectEntryFolder3.getName() + " (Copy)",
+			objectEntryFolder2.getName());
 
 		Assert.assertNull(
 			_trashEntryLocalService.fetchEntry(
@@ -710,8 +792,8 @@ public class ObjectEntryFolderLocalServiceTest {
 	private ObjectDefinition _addObjectDefinition() throws Exception {
 		ObjectDefinition objectDefinition =
 			_objectDefinitionLocalService.addCustomObjectDefinition(
-				null, TestPropsValues.getUserId(), 0, null, false, true, false,
-				false, false, false, false, false, null,
+				null, TestPropsValues.getUserId(), 0, null, true, false, true,
+				false, false, false, false, false, false, null,
 				LocalizedMapUtil.getLocalizedMap(StringUtil.randomString()),
 				"A" + StringUtil.randomString(), null, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
@@ -774,6 +856,31 @@ public class ObjectEntryFolderLocalServiceTest {
 			objectEntryId);
 
 		Assert.assertEquals(expectedStatus, objectEntry.getStatus());
+	}
+
+	private DepotEntry _getDepotEntry() throws Exception {
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext();
+
+		serviceContext.setAddGroupPermissions(false);
+		serviceContext.setAddGuestPermissions(false);
+
+		return _depotEntryLocalService.addDepotEntry(
+			HashMapBuilder.put(
+				LocaleUtil.getDefault(), RandomTestUtil.randomString()
+			).build(),
+			null, DepotConstants.TYPE_SPACE, serviceContext);
+	}
+
+	private boolean _hasResourcePermission(
+			String actionId, ObjectEntryFolder objectEntryFolder, Role role)
+		throws Exception {
+
+		return _resourcePermissionLocalService.hasResourcePermission(
+			TestPropsValues.getCompanyId(), ObjectEntryFolder.class.getName(),
+			ResourceConstants.SCOPE_INDIVIDUAL,
+			String.valueOf(objectEntryFolder.getObjectEntryFolderId()),
+			role.getRoleId(), actionId);
 	}
 
 	private void _testCopyObjectEntryFolder(long groupId) throws Exception {
@@ -1057,6 +1164,24 @@ public class ObjectEntryFolderLocalServiceTest {
 			_objectEntryLocalService.getObjectEntryFolderObjectEntriesCount(
 				groupId, objectEntryFolder1.getObjectEntryFolderId()));
 	}
+
+	private ObjectEntryFolder _updateObjectEntryFolder(
+		String name, ObjectEntryFolder objectEntryFolder) {
+
+		objectEntryFolder.setName(name);
+
+		return _objectEntryFolderLocalService.updateObjectEntryFolder(
+			objectEntryFolder);
+	}
+
+	@Inject
+	private AssetVocabularyLocalService _assetVocabularyLocalService;
+
+	@DeleteAfterTestRun
+	private DepotEntry _depotEntry;
+
+	@Inject
+	private DepotEntryLocalService _depotEntryLocalService;
 
 	@Inject
 	private ExportImportReportEntryLocalService

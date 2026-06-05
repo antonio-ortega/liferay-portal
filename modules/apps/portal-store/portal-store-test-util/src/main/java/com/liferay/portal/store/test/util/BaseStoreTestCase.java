@@ -6,15 +6,33 @@
 package com.liferay.portal.store.test.util;
 
 import com.liferay.document.library.kernel.exception.NoSuchFileException;
+import com.liferay.document.library.kernel.model.DLFileEntry;
+import com.liferay.document.library.kernel.model.DLFileVersion;
+import com.liferay.document.library.kernel.service.DLTrashLocalServiceUtil;
 import com.liferay.document.library.kernel.store.Store;
+import com.liferay.document.library.test.util.DLAppTestUtil;
 import com.liferay.petra.io.unsync.UnsyncByteArrayInputStream;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.test.ReflectionTestUtil;
+import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.trash.TrashHandler;
+import com.liferay.portal.kernel.trash.TrashHandlerRegistryUtil;
+import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.SetUtil;
+import com.liferay.portal.test.log.LogCapture;
+import com.liferay.portal.test.log.LoggerTestUtil;
+import com.liferay.portlet.documentlibrary.store.DLStoreImpl;
 
 import java.io.InputStream;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 
 import org.junit.After;
@@ -31,12 +49,13 @@ public abstract class BaseStoreTestCase {
 	public void setUp() {
 		_companyId = RandomTestUtil.nextLong();
 		_repositoryId = RandomTestUtil.nextLong();
+
 		_store = getStore();
 	}
 
 	@After
-	public void tearDown() {
-		_store.deleteDirectory(_companyId, _repositoryId, StringPool.SLASH);
+	public void tearDown() throws PortalException {
+		_store.deleteDirectory(_companyId);
 	}
 
 	@Test
@@ -50,6 +69,34 @@ public abstract class BaseStoreTestCase {
 		Assert.assertTrue(
 			_store.hasFile(
 				_companyId, _repositoryId, fileName, Store.VERSION_DEFAULT));
+	}
+
+	@Test
+	public void testDeleteCompanyDirectory() throws Exception {
+		String dirName = RandomTestUtil.randomString();
+
+		String fileName1 = dirName + "/" + RandomTestUtil.randomString();
+
+		_store.addFile(
+			_companyId, _repositoryId, fileName1, Store.VERSION_DEFAULT,
+			new UnsyncByteArrayInputStream(DATA_VERSION));
+
+		long repositoryId = RandomTestUtil.nextLong();
+
+		String fileName2 = dirName + "/" + RandomTestUtil.randomString();
+
+		_store.addFile(
+			_companyId, repositoryId, fileName2, Store.VERSION_DEFAULT,
+			new UnsyncByteArrayInputStream(DATA_VERSION));
+
+		_store.deleteDirectory(_companyId);
+
+		Assert.assertFalse(
+			_store.hasFile(
+				_companyId, _repositoryId, fileName1, Store.VERSION_DEFAULT));
+		Assert.assertFalse(
+			_store.hasFile(
+				_companyId, repositoryId, fileName2, Store.VERSION_DEFAULT));
 	}
 
 	@Test
@@ -124,6 +171,58 @@ public abstract class BaseStoreTestCase {
 				_companyId, _repositoryId, fileName, Store.VERSION_DEFAULT));
 		Assert.assertTrue(
 			_store.hasFile(_companyId, _repositoryId, fileName, "1.1"));
+	}
+
+	@Test
+	public void testDeleteTrashEntry() throws Exception {
+		Store originalStore = ReflectionTestUtil.getFieldValue(
+			DLStoreImpl.class, "_wrappedStore");
+
+		DLStoreImpl.setStore(_store);
+
+		try {
+			Group group = GroupTestUtil.addGroup();
+
+			FileEntry fileEntry = DLAppTestUtil.addFileEntry(
+				group.getGroupId());
+
+			DLFileEntry dlFileEntry = (DLFileEntry)fileEntry.getModel();
+
+			DLFileVersion dlFileVersion = dlFileEntry.getFileVersion();
+
+			Assert.assertTrue(
+				_store.hasFile(
+					dlFileEntry.getCompanyId(),
+					dlFileEntry.getDataRepositoryId(), dlFileEntry.getName(),
+					dlFileVersion.getStoreFileName()));
+
+			DLTrashLocalServiceUtil.moveFileEntryToTrash(
+				dlFileEntry.getUserId(), dlFileEntry.getRepositoryId(),
+				dlFileEntry.getFileEntryId());
+
+			Assert.assertTrue(
+				_store.hasFile(
+					dlFileEntry.getCompanyId(),
+					dlFileEntry.getDataRepositoryId(), dlFileEntry.getName(),
+					dlFileVersion.getStoreFileName()));
+
+			TrashHandler trashHandler =
+				TrashHandlerRegistryUtil.getTrashHandler(
+					DLFileEntry.class.getName());
+
+			trashHandler.deleteTrashEntry(dlFileEntry.getPrimaryKey());
+
+			Assert.assertFalse(
+				_store.hasFile(
+					dlFileEntry.getCompanyId(),
+					dlFileEntry.getDataRepositoryId(), dlFileEntry.getName(),
+					dlFileVersion.getStoreFileName()));
+
+			GroupTestUtil.deleteGroup(group);
+		}
+		finally {
+			DLStoreImpl.setStore(originalStore);
+		}
 	}
 
 	@Test
@@ -353,6 +452,37 @@ public abstract class BaseStoreTestCase {
 		}
 	}
 
+	@Test
+	public void testVerifyCompanyStores() throws Exception {
+		String fileName = RandomTestUtil.randomString();
+		String warnMessage = StringBundler.concat(
+			"Manually remove unused store ", _companyId,
+			" that belongs to company ", _companyId,
+			" if it is no longer used anywhere else");
+
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				getStoreClassName(), LoggerTestUtil.WARN)) {
+
+			_store.verifyCompanyStores();
+
+			List<String> messages = logCapture.getMessages();
+
+			Assert.assertFalse(
+				messages.toString(), messages.contains(warnMessage));
+
+			_store.addFile(
+				_companyId, _repositoryId, fileName, Store.VERSION_DEFAULT,
+				new UnsyncByteArrayInputStream(DATA_VERSION));
+
+			_store.verifyCompanyStores();
+
+			messages = logCapture.getMessages();
+
+			Assert.assertTrue(
+				messages.toString(), messages.contains(warnMessage));
+		}
+	}
+
 	protected void addVersions(String fileName, int newVersionCount)
 		throws Exception {
 
@@ -366,6 +496,10 @@ public abstract class BaseStoreTestCase {
 	}
 
 	protected abstract Store getStore();
+
+	protected String getStoreClassName() {
+		return PropsUtil.get(PropsKeys.DL_STORE_IMPL);
+	}
 
 	protected static final byte[] DATA_VERSION =
 		new byte[BaseStoreTestCase._DATA_SIZE];

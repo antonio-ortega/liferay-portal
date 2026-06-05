@@ -121,3 +121,4 @@ public class ExperimentRun implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:521023846

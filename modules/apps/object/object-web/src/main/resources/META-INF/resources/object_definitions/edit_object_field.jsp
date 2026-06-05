@@ -27,6 +27,8 @@ ObjectField objectField = (ObjectField)request.getAttribute(ObjectWebKeys.OBJECT
 		).put(
 			"ckEditor5Config", objectDefinitionsFieldsDisplayContext.getEditorConfig()
 		).put(
+			"countries", objectDefinitionsFieldsDisplayContext.getCountries(objectField)
+		).put(
 			"creationLanguageId", objectDefinition.getDefaultLanguageId()
 		).put(
 			"decimalSeparator", String.valueOf(decimalFormatSymbols.getDecimalSeparator())
@@ -38,6 +40,8 @@ ObjectField objectField = (ObjectField)request.getAttribute(ObjectWebKeys.OBJECT
 			"forbiddenLastChars", objectDefinitionsFieldsDisplayContext.getForbiddenLastCharacters()
 		).put(
 			"forbiddenNames", PropsUtil.getArray(PropsKeys.DL_NAME_BLACKLIST)
+		).put(
+			"hasDepotEntry", objectDefinitionsFieldsDisplayContext.hasDepotEntry()
 		).put(
 			"isDefaultStorageType", objectDefinition.isDefaultStorageType()
 		).put(

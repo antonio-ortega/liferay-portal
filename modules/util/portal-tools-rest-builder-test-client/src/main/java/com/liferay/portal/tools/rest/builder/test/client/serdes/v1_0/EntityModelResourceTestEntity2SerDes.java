@@ -239,3 +239,4 @@ public class EntityModelResourceTestEntity2SerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-476091595

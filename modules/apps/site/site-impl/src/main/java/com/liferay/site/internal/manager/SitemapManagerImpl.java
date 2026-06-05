@@ -5,7 +5,10 @@
 
 package com.liferay.site.internal.manager;
 
+import com.liferay.asset.kernel.model.AssetCategory;
+import com.liferay.journal.model.JournalArticle;
 import com.liferay.layout.admin.kernel.model.LayoutTypePortletConstants;
+import com.liferay.object.model.ObjectEntry;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
 import com.liferay.petra.function.transform.TransformUtil;
@@ -21,12 +24,14 @@ import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutSet;
 import com.liferay.portal.kernel.model.LayoutTypeController;
 import com.liferay.portal.kernel.module.util.SystemBundleUtil;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.LayoutSetLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.DateUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MapUtil;
@@ -41,7 +46,9 @@ import com.liferay.portal.kernel.xml.Document;
 import com.liferay.portal.kernel.xml.Element;
 import com.liferay.portal.kernel.xml.SAXReader;
 import com.liferay.portal.util.LayoutTypeControllerTracker;
+import com.liferay.redirect.provider.RedirectProvider;
 import com.liferay.site.configuration.manager.SitemapConfigurationManager;
+import com.liferay.site.constants.SitemapConstants;
 import com.liferay.site.manager.SitemapManager;
 import com.liferay.site.provider.SitemapURLProvider;
 
@@ -55,6 +62,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
@@ -73,7 +81,33 @@ public class SitemapManagerImpl implements SitemapManager {
 	public void addURLElement(
 		Element element, String url,
 		UnicodeProperties typeSettingsUnicodeProperties, Date modifiedDate,
-		String canonicalURL, Map<Locale, String> alternateURLs) {
+		String canonicalURL, Map<Locale, String> alternateURLs, long groupId) {
+
+		String path = HttpComponentsUtil.getPath(url);
+		String contextPath = _portal.getPathContext();
+
+		if (Validator.isNotNull(contextPath) && path.startsWith(contextPath)) {
+			path = path.substring(contextPath.length());
+		}
+
+		String friendlyURL = _getFriendlyURL(path, groupId);
+
+		if (friendlyURL.startsWith(StringPool.SLASH)) {
+			friendlyURL = friendlyURL.substring(1);
+		}
+
+		String fullURL = path;
+
+		if (fullURL.startsWith(StringPool.SLASH)) {
+			fullURL = fullURL.substring(1);
+		}
+
+		RedirectProvider.Redirect redirect = _redirectProvider.getRedirect(
+			groupId, friendlyURL, fullURL, null);
+
+		if (redirect != null) {
+			return;
+		}
 
 		Element urlElement = element.addElement("url");
 
@@ -185,6 +219,16 @@ public class SitemapManagerImpl implements SitemapManager {
 	}
 
 	@Override
+	public String getAssetTypeClassName(String assetTypeKey) {
+		return _assetTypeClassNames.get(assetTypeKey);
+	}
+
+	@Override
+	public Map<String, String> getAssetTypeKeys() {
+		return _assetTypeKeys;
+	}
+
+	@Override
 	public String getSitemap(
 			long groupId, boolean privateLayout, ThemeDisplay themeDisplay)
 		throws PortalException {
@@ -197,6 +241,37 @@ public class SitemapManagerImpl implements SitemapManager {
 			String layoutUuid, long groupId, boolean privateLayout,
 			ThemeDisplay themeDisplay)
 		throws PortalException {
+
+		return getSitemap(
+			null, layoutUuid, groupId, privateLayout, themeDisplay);
+	}
+
+	@Override
+	public String getSitemap(
+			String assetType, String layoutUuid, long groupId,
+			boolean privateLayout, ThemeDisplay themeDisplay)
+		throws PortalException {
+
+		if (Validator.isNotNull(assetType)) {
+			long companyId = themeDisplay.getCompanyId();
+
+			SitemapURLProvider sitemapURLProvider =
+				_serviceTrackerMap.getService(assetType);
+
+			if ((sitemapURLProvider == null) ||
+				!_sitemapConfigurationManager.xmlSitemapIndexCompanyEnabled(
+					companyId) ||
+				!StringUtil.equals(
+					_sitemapConfigurationManager.xmlSitemapIndexMode(companyId),
+					SitemapConstants.INDEX_MODE_ASSET_TYPE) ||
+				!sitemapURLProvider.isInclude(companyId, groupId)) {
+
+				return null;
+			}
+
+			return _getAssetTypeSitemap(
+				groupId, privateLayout, themeDisplay, assetType);
+		}
 
 		if (Validator.isNull(layoutUuid) &&
 			_sitemapConfigurationManager.xmlSitemapIndexCompanyEnabled(
@@ -225,25 +300,186 @@ public class SitemapManagerImpl implements SitemapManager {
 		_serviceTrackerMap.close();
 	}
 
-	private String _getIndexSitemap(
-			long groupId, boolean privateLayout, ThemeDisplay themeDisplay)
-		throws PortalException {
+	private Document _createSitemapDocument(
+		String rootElementName, String rootElementNamespace) {
 
 		Document document = _saxReader.createDocument();
 
 		document.setXMLEncoding(StringPool.UTF8);
 
 		Element rootElement = document.addElement(
-			"sitemapindex", "http://www.sitemaps.org/schemas/sitemap/0.9");
+			rootElementName, rootElementNamespace);
 
 		rootElement.addAttribute("xmlns:xhtml", "http://www.w3.org/1999/xhtml");
+		rootElement.addAttribute(
+			"xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
+		rootElement.addAttribute(
+			"xsi:schemaLocation",
+			"http://www.w3.org/1999/xhtml " +
+				"http://www.w3.org/2002/08/xhtml/xhtml1-strict.xsd");
+
+		return document;
+	}
+
+	private Date _getAssetTypeGroupLastModifiedDate(
+			String className, long companyId, long groupId)
+		throws PortalException {
+
+		SitemapURLProvider sitemapURLProvider = _serviceTrackerMap.getService(
+			className);
+
+		if (sitemapURLProvider == null) {
+			return null;
+		}
+
+		return sitemapURLProvider.getLastModifiedDate(companyId, groupId);
+	}
+
+	private String _getAssetTypeSitemap(
+			long groupId, boolean privateLayout, ThemeDisplay themeDisplay,
+			String assetType)
+		throws PortalException {
+
+		Document document = _createSitemapDocument(
+			"urlset", "http://www.sitemaps.org/schemas/sitemap/0.9");
+
+		Element rootElement = document.getRootElement();
 
 		_initEntriesAndSize(rootElement);
 
-		for (LayoutSet layoutSet :
+		SitemapURLProvider sitemapURLProvider = _serviceTrackerMap.getService(
+			assetType);
+
+		for (LayoutSet curLayoutSet :
 				_getLayoutSets(groupId, null, privateLayout, themeDisplay)) {
 
-			_visitLayoutSet(rootElement, layoutSet, themeDisplay);
+			sitemapURLProvider.visitLayoutSet(
+				rootElement, curLayoutSet, themeDisplay);
+		}
+
+		_removeEntriesAndSize(rootElement);
+
+		return document.asXML();
+	}
+
+	private String _getFriendlyURL(String path, long groupId) {
+		int[] groupFriendlyURLIndex = _portal.getGroupFriendlyURLIndex(path);
+
+		if (groupFriendlyURLIndex != null) {
+			if (groupFriendlyURLIndex[1] < path.length()) {
+				return path.substring(groupFriendlyURLIndex[1]);
+			}
+
+			return StringPool.BLANK;
+		}
+
+		long companyId = CompanyThreadLocal.getCompanyId();
+
+		if (companyId == 0) {
+			try {
+				Group group = _groupLocalService.getGroup(groupId);
+
+				companyId = group.getCompanyId();
+			}
+			catch (PortalException portalException) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(portalException);
+				}
+
+				companyId = 0;
+			}
+		}
+
+		for (Locale availableLocale :
+				_language.getAvailableLocales(companyId)) {
+
+			String i18nPath =
+				StringPool.SLASH + LocaleUtil.toLanguageId(availableLocale);
+
+			if (path.startsWith(i18nPath + StringPool.SLASH) ||
+				path.equals(i18nPath)) {
+
+				path = path.substring(i18nPath.length());
+
+				groupFriendlyURLIndex = _portal.getGroupFriendlyURLIndex(path);
+
+				if (groupFriendlyURLIndex != null) {
+					if (groupFriendlyURLIndex[1] < path.length()) {
+						return path.substring(groupFriendlyURLIndex[1]);
+					}
+
+					return StringPool.BLANK;
+				}
+
+				return path;
+			}
+		}
+
+		return path;
+	}
+
+	private String _getIndexSitemap(
+			long groupId, boolean privateLayout, ThemeDisplay themeDisplay)
+		throws PortalException {
+
+		Document document = _createSitemapDocument(
+			"sitemapindex", "http://www.sitemaps.org/schemas/sitemap/0.9");
+
+		Element rootElement = document.getRootElement();
+
+		_initEntriesAndSize(rootElement);
+
+		if (StringUtil.equals(
+				_sitemapConfigurationManager.xmlSitemapIndexMode(
+					themeDisplay.getCompanyId()),
+				SitemapConstants.INDEX_MODE_ASSET_TYPE)) {
+
+			String portalURL = themeDisplay.getPortalURL();
+
+			for (Map.Entry<String, String> entry : _assetTypeKeys.entrySet()) {
+				String className = entry.getKey();
+
+				SitemapURLProvider sitemapURLProvider =
+					_serviceTrackerMap.getService(className);
+
+				if ((sitemapURLProvider == null) ||
+					!sitemapURLProvider.isInclude(
+						themeDisplay.getCompanyId(), groupId)) {
+
+					continue;
+				}
+
+				Element sitemapElement = rootElement.addElement("sitemap");
+
+				Element locationElement = sitemapElement.addElement("loc");
+
+				locationElement.addText(
+					StringBundler.concat(
+						portalURL, _portal.getPathContext(), "/sitemap-",
+						entry.getValue(), ".xml?groupId=", groupId,
+						"&privateLayout=", privateLayout));
+
+				Date lastModifiedDate = _getAssetTypeGroupLastModifiedDate(
+					className, themeDisplay.getCompanyId(), groupId);
+
+				if (lastModifiedDate != null) {
+					Element lastModifiedElement = sitemapElement.addElement(
+						"lastmod");
+
+					DateFormat w3cDateFormat = DateUtil.getISO8601Format();
+
+					lastModifiedElement.addText(
+						w3cDateFormat.format(lastModifiedDate));
+				}
+			}
+		}
+		else {
+			for (LayoutSet layoutSet :
+					_getLayoutSets(
+						groupId, null, privateLayout, themeDisplay)) {
+
+				_visitLayoutSet(rootElement, layoutSet, themeDisplay);
+			}
 		}
 
 		_removeEntriesAndSize(rootElement);
@@ -319,30 +555,16 @@ public class SitemapManagerImpl implements SitemapManager {
 			ThemeDisplay themeDisplay)
 		throws PortalException {
 
-		Document document = _saxReader.createDocument();
-
-		document.setXMLEncoding(StringPool.UTF8);
-
-		Element rootElement = document.addElement(
+		Document document = _createSitemapDocument(
 			"urlset", "http://www.sitemaps.org/schemas/sitemap/0.9");
 
-		rootElement.addAttribute(
-			"xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
-		rootElement.addAttribute(
-			"xsi:schemaLocation",
-			"http://www.w3.org/1999/xhtml " +
-				"http://www.w3.org/2002/08/xhtml/xhtml1-strict.xsd");
-		rootElement.addAttribute("xmlns:xhtml", "http://www.w3.org/1999/xhtml");
+		Element rootElement = document.getRootElement();
 
 		_initEntriesAndSize(rootElement);
 
 		_visitLayoutSets(
 			_getLayoutSets(groupId, layoutUuid, privateLayout, themeDisplay),
 			layoutUuid, rootElement, themeDisplay);
-
-		if (!rootElement.hasContent()) {
-			return StringPool.BLANK;
-		}
 
 		_removeEntriesAndSize(rootElement);
 
@@ -563,8 +785,23 @@ public class SitemapManagerImpl implements SitemapManager {
 	private static final Log _log = LogFactoryUtil.getLog(
 		SitemapManagerImpl.class.getName());
 
+	private static final Map<String, String> _assetTypeClassNames;
+	private static final Map<String, String> _assetTypeKeys = Map.of(
+		AssetCategory.class.getName(), "categories",
+		JournalArticle.class.getName(), "web-content", Layout.class.getName(),
+		"pages", ObjectEntry.class.getName(), "object-entries");
 	private static final BundleContext _bundleContext =
 		SystemBundleUtil.getBundleContext();
+
+	static {
+		Map<String, String> assetTypeClassNames = new ConcurrentHashMap<>();
+
+		for (Map.Entry<String, String> entry : _assetTypeKeys.entrySet()) {
+			assetTypeClassNames.put(entry.getValue(), entry.getKey());
+		}
+
+		_assetTypeClassNames = Collections.unmodifiableMap(assetTypeClassNames);
+	}
 
 	@Reference
 	private GroupLocalService _groupLocalService;
@@ -580,6 +817,9 @@ public class SitemapManagerImpl implements SitemapManager {
 
 	@Reference
 	private Portal _portal;
+
+	@Reference
+	private RedirectProvider _redirectProvider;
 
 	@Reference
 	private SAXReader _saxReader;

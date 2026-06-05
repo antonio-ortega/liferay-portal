@@ -9,6 +9,7 @@ import com.liferay.jenkins.results.parser.Dom4JUtil;
 import com.liferay.jenkins.results.parser.JenkinsConsoleTextLoader;
 import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil;
 import com.liferay.jenkins.results.parser.Job;
+import com.liferay.jenkins.results.parser.TestSuiteJob;
 import com.liferay.jenkins.results.parser.TopLevelBuildReport;
 
 import java.io.File;
@@ -21,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
-import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
 
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
@@ -125,8 +126,19 @@ public abstract class BaseStandaloneBuildTestrayCaseResult
 	public void recordTestrayCaseResult(Job job) {
 		TestrayBuild testrayBuild = getTestrayBuild();
 
-		TestrayRun testrayRun = TestrayFactory.newTestrayRun(
-			testrayBuild, getBatchName(), job.getJobPropertiesFiles());
+		TestrayRun testrayRun = null;
+
+		if (job instanceof TestSuiteJob) {
+			TestSuiteJob testSuiteJob = (TestSuiteJob)job;
+
+			testrayRun = TestrayFactory.newTestrayRun(
+				testrayBuild, getBatchName(), testSuiteJob.getTestSuiteName(),
+				job.getJobPropertiesFiles());
+		}
+		else {
+			testrayRun = TestrayFactory.newTestrayRun(
+				testrayBuild, getBatchName(), job.getJobPropertiesFiles());
+		}
 
 		long start = JenkinsResultsParserUtil.getCurrentTimeMillis();
 
@@ -239,7 +251,7 @@ public abstract class BaseStandaloneBuildTestrayCaseResult
 							warningsPropertyElement.addElement("value");
 
 						warningPropertyElement.addText(
-							StringEscapeUtils.escapeHtml(warning));
+							StringEscapeUtils.escapeHtml4(warning));
 					}
 				}
 

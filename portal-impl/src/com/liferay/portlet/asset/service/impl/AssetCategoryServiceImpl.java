@@ -8,6 +8,9 @@ package com.liferay.portlet.asset.service.impl;
 import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.model.AssetCategoryConstants;
 import com.liferay.asset.kernel.model.AssetCategoryDisplay;
+import com.liferay.asset.kernel.model.AssetVocabulary;
+import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
+import com.liferay.portal.kernel.bean.BeanReference;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
@@ -298,6 +301,7 @@ public class AssetCategoryServiceImpl extends AssetCategoryServiceBaseImpl {
 			parentCategoryId);
 	}
 
+	@Override
 	public AssetCategory getOrAddEmptyCategory(
 			String externalReferenceCode, long groupId)
 		throws PortalException {
@@ -315,6 +319,42 @@ public class AssetCategoryServiceImpl extends AssetCategoryServiceBaseImpl {
 
 		return assetCategoryLocalService.getOrAddEmptyCategory(
 			externalReferenceCode, getUserId(), groupId);
+	}
+
+	@Override
+	public AssetCategory getOrAddEmptyCategoryWithAncestors(
+			String externalReferenceCode, long groupId,
+			String parentCategoryExternalReferenceCode,
+			String vocabularyExternalReferenceCode)
+		throws PortalException {
+
+		AssetCategory category =
+			assetCategoryService.fetchCategoryByExternalReferenceCode(
+				externalReferenceCode, groupId);
+
+		if (category != null) {
+			return category;
+		}
+
+		AssetCategoriesPermission.check(
+			getPermissionChecker(), groupId, ActionKeys.ADD_CATEGORY);
+
+		if (Validator.isNotNull(vocabularyExternalReferenceCode)) {
+			AssetVocabulary assetVocabulary =
+				_assetVocabularyLocalService.
+					fetchAssetVocabularyByExternalReferenceCode(
+						vocabularyExternalReferenceCode, groupId);
+
+			if (assetVocabulary == null) {
+				AssetCategoriesPermission.check(
+					getPermissionChecker(), groupId, ActionKeys.ADD_VOCABULARY);
+			}
+		}
+
+		return assetCategoryLocalService.getOrAddEmptyCategoryWithAncestors(
+			externalReferenceCode, getUserId(), groupId,
+			parentCategoryExternalReferenceCode,
+			vocabularyExternalReferenceCode);
 	}
 
 	@Override
@@ -666,5 +706,8 @@ public class AssetCategoryServiceImpl extends AssetCategoryServiceBaseImpl {
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		AssetCategoryServiceImpl.class);
+
+	@BeanReference(type = AssetVocabularyLocalService.class)
+	private AssetVocabularyLocalService _assetVocabularyLocalService;
 
 }

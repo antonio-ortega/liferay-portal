@@ -164,10 +164,12 @@ public class SearchEngineAdapterTest {
 
 			String message = runtimeException.getMessage();
 
-			if (isSearchEngine("Elasticsearch7")) {
+			if (isSearchEngine("Elasticsearch", 8)) {
 				Assert.assertTrue(
 					message,
-					message.contains("reason=no such index [" + index + "]"));
+					message.contains(
+						"[index_not_found_exception] no such index [" + index +
+							"]"));
 			}
 			else if (isSearchEngine("OpenSearch")) {
 				Assert.assertTrue(
@@ -227,19 +229,21 @@ public class SearchEngineAdapterTest {
 	}
 
 	protected boolean isSearchEngine(String engine) {
+		return isSearchEngine(engine, null);
+	}
+
+	protected boolean isSearchEngine(String engine, Integer majorVersion) {
+		if (majorVersion != null) {
+			String version = _searchEngineInformation.getClientVersionString();
+
+			if (!version.startsWith(String.valueOf(majorVersion))) {
+				return false;
+			}
+		}
+
 		SearchEngine searchEngine = _searchEngineHelper.getSearchEngine();
 
 		String vendor = searchEngine.getVendor();
-
-		if (engine.equals("Elasticsearch7")) {
-			String version = _searchEngineInformation.getClientVersionString();
-
-			if (vendor.equals("Elasticsearch") && version.startsWith("7")) {
-				return true;
-			}
-
-			return false;
-		}
 
 		return vendor.equals(engine);
 	}
@@ -279,7 +283,7 @@ public class SearchEngineAdapterTest {
 			String uid, boolean refresh)
 		throws Exception {
 
-		DocumentBuilder documentBuilder = _documentBuilderFactory.builder();
+		DocumentBuilder documentBuilder = DocumentBuilderFactory.builder();
 
 		documentBuilder.setValue("uid", uid);
 		documentBuilder.setValue("field1", "bravo");
@@ -313,7 +317,7 @@ public class SearchEngineAdapterTest {
 			String uid, String field2Value, String field3value, boolean upsert)
 		throws Exception {
 
-		DocumentBuilder documentBuilder = _documentBuilderFactory.builder();
+		DocumentBuilder documentBuilder = DocumentBuilderFactory.builder();
 
 		documentBuilder.setValue("uid", uid);
 		documentBuilder.setValue("field2", field2Value);
@@ -330,15 +334,12 @@ public class SearchEngineAdapterTest {
 	}
 
 	@Inject
-	private static DocumentBuilderFactory _documentBuilderFactory;
+	private SearchEngineAdapter _searchEngineAdapter;
 
 	@Inject
-	private static SearchEngineAdapter _searchEngineAdapter;
+	private SearchEngineHelper _searchEngineHelper;
 
 	@Inject
-	private static SearchEngineHelper _searchEngineHelper;
-
-	@Inject
-	private static SearchEngineInformation _searchEngineInformation;
+	private SearchEngineInformation _searchEngineInformation;
 
 }

@@ -39,6 +39,7 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.model.impl.LayoutSetImpl;
@@ -84,7 +85,7 @@ public class
 				DisplayPageTemplateTestUtil.addDisplayPageTemplate(
 					_group.getGroupId(),
 					_portal.getClassNameId(JournalArticle.class.getName()),
-					journalArticle.getDDMStructureId(), true,
+					journalArticle.getDDMStructureKey(), true,
 					WorkflowConstants.STATUS_APPROVED);
 
 			ServiceContext serviceContext =
@@ -118,7 +119,9 @@ public class
 
 			themeDisplay.setRequest(mockHttpServletRequest);
 
-			themeDisplay.setURLCurrent("http://localhost:8080/currentURL");
+			themeDisplay.setURLCurrent(
+				"http://localhost:" + PortalUtil.getPortalServerPort(false) +
+					"/currentURL");
 
 			serviceContext.setRequest(mockHttpServletRequest);
 
@@ -214,7 +217,7 @@ public class
 				DisplayPageTemplateTestUtil.addDisplayPageTemplate(
 					_group.getGroupId(),
 					_portal.getClassNameId(JournalArticle.class.getName()),
-					journalArticle.getDDMStructureId(), true,
+					journalArticle.getDDMStructureKey(), true,
 					WorkflowConstants.STATUS_APPROVED);
 
 			_assetDisplayPageEntryLocalService.addAssetDisplayPageEntry(
@@ -245,7 +248,9 @@ public class
 
 			themeDisplay.setRequest(mockHttpServletRequest);
 
-			themeDisplay.setURLCurrent("http://localhost:8080/currentURL");
+			themeDisplay.setURLCurrent(
+				"http://localhost:" + PortalUtil.getPortalServerPort(false) +
+					"/currentURL");
 
 			serviceContext.setRequest(mockHttpServletRequest);
 

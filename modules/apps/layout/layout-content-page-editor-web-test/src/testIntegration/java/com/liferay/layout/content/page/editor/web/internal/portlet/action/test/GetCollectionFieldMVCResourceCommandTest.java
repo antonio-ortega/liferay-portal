@@ -67,7 +67,6 @@ import com.liferay.portal.kernel.util.LocaleThreadLocal;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.ScopeUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
@@ -462,9 +461,7 @@ public class GetCollectionFieldMVCResourceCommandTest {
 		SegmentsExperience segmentsExperience1 =
 			_segmentsExperienceLocalService.addSegmentsExperience(
 				null, TestPropsValues.getUserId(), layout.getGroupId(),
-				segmentsEntry1.getExternalReferenceCode(),
-				ScopeUtil.getItemScopeExternalReferenceCode(
-					segmentsEntry1.getGroupId(), layout.getGroupId()),
+				segmentsEntry1.getExternalReferenceCode(), null,
 				layout.getPlid(),
 				HashMapBuilder.put(
 					LocaleUtil.getDefault(), RandomTestUtil.randomString()
@@ -477,9 +474,7 @@ public class GetCollectionFieldMVCResourceCommandTest {
 		SegmentsExperience segmentsExperience2 =
 			_segmentsExperienceLocalService.addSegmentsExperience(
 				null, TestPropsValues.getUserId(), layout.getGroupId(),
-				segmentsEntry2.getExternalReferenceCode(),
-				ScopeUtil.getItemScopeExternalReferenceCode(
-					segmentsEntry2.getGroupId(), layout.getGroupId()),
+				segmentsEntry2.getExternalReferenceCode(), null,
 				layout.getPlid(),
 				HashMapBuilder.put(
 					LocaleUtil.getDefault(), RandomTestUtil.randomString()
@@ -730,9 +725,6 @@ public class GetCollectionFieldMVCResourceCommandTest {
 			clazz.getResourceAsStream("dependencies/" + fileName));
 	}
 
-	@Inject(filter = "ddm.form.deserializer.type=json")
-	private static DDMFormDeserializer _jsonDDMFormDeserializer;
-
 	@Inject
 	private AssetEntryLocalService _assetEntryLocalService;
 
@@ -750,6 +742,10 @@ public class GetCollectionFieldMVCResourceCommandTest {
 
 	private ServiceRegistration<InfoCollectionProvider<?>>
 		_infoCollectionProviderServiceRegistration;
+
+	@Inject(filter = "ddm.form.deserializer.type=json")
+	private DDMFormDeserializer _jsonDDMFormDeserializer;
+
 	private Layout _layout;
 
 	@Inject(

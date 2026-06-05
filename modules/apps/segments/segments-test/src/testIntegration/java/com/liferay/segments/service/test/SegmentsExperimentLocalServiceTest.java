@@ -28,7 +28,6 @@ import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
-import com.liferay.portal.kernel.util.ScopeUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
@@ -334,9 +333,7 @@ public class SegmentsExperimentLocalServiceTest {
 		SegmentsExperience variantSegmentsExperience1 =
 			_segmentsExperienceLocalService.addSegmentsExperience(
 				null, TestPropsValues.getUserId(), _group.getGroupId(),
-				segmentsEntry.getExternalReferenceCode(),
-				ScopeUtil.getItemScopeExternalReferenceCode(
-					segmentsEntry.getGroupId(), _group.getGroupId()),
+				segmentsEntry.getExternalReferenceCode(), null,
 				_draftLayout.getPlid(), RandomTestUtil.randomLocaleStringMap(),
 				false, new UnicodeProperties(true),
 				ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
@@ -352,9 +349,7 @@ public class SegmentsExperimentLocalServiceTest {
 		SegmentsExperience variantSegmentsExperience2 =
 			_segmentsExperienceLocalService.addSegmentsExperience(
 				null, TestPropsValues.getUserId(), _group.getGroupId(),
-				segmentsEntry.getExternalReferenceCode(),
-				ScopeUtil.getItemScopeExternalReferenceCode(
-					segmentsEntry.getGroupId(), _group.getGroupId()),
+				segmentsEntry.getExternalReferenceCode(), null,
 				_draftLayout.getPlid(), RandomTestUtil.randomLocaleStringMap(),
 				false, new UnicodeProperties(true),
 				ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
@@ -391,14 +386,12 @@ public class SegmentsExperimentLocalServiceTest {
 			_segmentsEntryLocalService.
 				fetchSegmentsEntryByExternalReferenceCode(
 					segmentsExperience.getSegmentsEntryERC(),
-					segmentsExperience.getSegmentsEntryGroupId());
+					segmentsExperience.getGroupId());
 
 		segmentsExperience =
 			_segmentsExperienceLocalService.addSegmentsExperience(
 				null, TestPropsValues.getUserId(), _group.getGroupId(),
-				segmentsEntry.getExternalReferenceCode(),
-				ScopeUtil.getItemScopeExternalReferenceCode(
-					segmentsEntry.getGroupId(), _group.getGroupId()),
+				segmentsEntry.getExternalReferenceCode(), null,
 				segmentsExperiment.getPlid(),
 				RandomTestUtil.randomLocaleStringMap(), false,
 				new UnicodeProperties(true),
@@ -429,16 +422,12 @@ public class SegmentsExperimentLocalServiceTest {
 		SegmentsExperience segmentsExperience1 =
 			SegmentsTestUtil.addSegmentsExperience(
 				_group.getGroupId(), segmentsEntry.getExternalReferenceCode(),
-				ScopeUtil.getItemScopeExternalReferenceCode(
-					segmentsEntry.getGroupId(), _group.getGroupId()),
-				_layout.getPlid());
+				null, _layout.getPlid());
 
 		SegmentsExperience segmentsExperience2 =
 			SegmentsTestUtil.addSegmentsExperience(
 				_group.getGroupId(), segmentsEntry.getExternalReferenceCode(),
-				ScopeUtil.getItemScopeExternalReferenceCode(
-					segmentsEntry.getGroupId(), _group.getGroupId()),
-				_layout.getPlid());
+				null, _layout.getPlid());
 
 		SegmentsExperiment segmentsExperiment1 = _addSegmentsExperiment(
 			segmentsExperience1);
@@ -513,14 +502,12 @@ public class SegmentsExperimentLocalServiceTest {
 			_segmentsEntryLocalService.
 				fetchSegmentsEntryByExternalReferenceCode(
 					segmentsExperience.getSegmentsEntryERC(),
-					segmentsExperience.getSegmentsEntryGroupId());
+					segmentsExperience.getGroupId());
 
 		segmentsExperience =
 			_segmentsExperienceLocalService.addSegmentsExperience(
 				null, TestPropsValues.getUserId(), _group.getGroupId(),
-				segmentsEntry.getExternalReferenceCode(),
-				ScopeUtil.getItemScopeExternalReferenceCode(
-					segmentsEntry.getGroupId(), _group.getGroupId()),
+				segmentsEntry.getExternalReferenceCode(), null,
 				segmentsExperiment.getPlid(),
 				RandomTestUtil.randomLocaleStringMap(), false,
 				new UnicodeProperties(true),
@@ -742,9 +729,7 @@ public class SegmentsExperimentLocalServiceTest {
 		SegmentsExperience segmentsExperience1 =
 			_segmentsExperienceLocalService.addSegmentsExperience(
 				null, TestPropsValues.getUserId(), _group.getGroupId(),
-				segmentsEntry.getExternalReferenceCode(),
-				ScopeUtil.getItemScopeExternalReferenceCode(
-					segmentsEntry.getGroupId(), _group.getGroupId()),
+				segmentsEntry.getExternalReferenceCode(), null,
 				_draftLayout.getPlid(), RandomTestUtil.randomLocaleStringMap(),
 				1, true, new UnicodeProperties(true),
 				ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
@@ -754,9 +739,7 @@ public class SegmentsExperimentLocalServiceTest {
 		SegmentsExperience segmentsExperience2 =
 			_segmentsExperienceLocalService.addSegmentsExperience(
 				null, TestPropsValues.getUserId(), _group.getGroupId(),
-				segmentsEntry.getExternalReferenceCode(),
-				ScopeUtil.getItemScopeExternalReferenceCode(
-					segmentsEntry.getGroupId(), _group.getGroupId()),
+				segmentsEntry.getExternalReferenceCode(), null,
 				_draftLayout.getPlid(), RandomTestUtil.randomLocaleStringMap(),
 				-1, true, new UnicodeProperties(true),
 				ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
@@ -766,9 +749,7 @@ public class SegmentsExperimentLocalServiceTest {
 		SegmentsExperience segmentsExperience3 =
 			_segmentsExperienceLocalService.addSegmentsExperience(
 				null, TestPropsValues.getUserId(), _group.getGroupId(),
-				segmentsEntry.getExternalReferenceCode(),
-				ScopeUtil.getItemScopeExternalReferenceCode(
-					segmentsEntry.getGroupId(), _group.getGroupId()),
+				segmentsEntry.getExternalReferenceCode(), null,
 				_draftLayout.getPlid(), RandomTestUtil.randomLocaleStringMap(),
 				-2, true, new UnicodeProperties(true),
 				ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
@@ -781,9 +762,7 @@ public class SegmentsExperimentLocalServiceTest {
 		SegmentsExperience variantSegmentsExperience =
 			_segmentsExperienceLocalService.appendSegmentsExperience(
 				TestPropsValues.getUserId(), _group.getGroupId(),
-				segmentsEntry.getExternalReferenceCode(),
-				ScopeUtil.getItemScopeExternalReferenceCode(
-					segmentsEntry.getGroupId(), _group.getGroupId()),
+				segmentsEntry.getExternalReferenceCode(), null,
 				_draftLayout.getPlid(), RandomTestUtil.randomLocaleStringMap(),
 				false,
 				ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
@@ -847,9 +826,7 @@ public class SegmentsExperimentLocalServiceTest {
 		SegmentsExperience segmentsExperience1 =
 			_segmentsExperienceLocalService.addSegmentsExperience(
 				null, TestPropsValues.getUserId(), _group.getGroupId(),
-				segmentsEntry.getExternalReferenceCode(),
-				ScopeUtil.getItemScopeExternalReferenceCode(
-					segmentsEntry.getGroupId(), _group.getGroupId()),
+				segmentsEntry.getExternalReferenceCode(), null,
 				_draftLayout.getPlid(), RandomTestUtil.randomLocaleStringMap(),
 				2, true, new UnicodeProperties(true),
 				ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
@@ -859,9 +836,7 @@ public class SegmentsExperimentLocalServiceTest {
 		SegmentsExperience segmentsExperience2 =
 			_segmentsExperienceLocalService.addSegmentsExperience(
 				null, TestPropsValues.getUserId(), _group.getGroupId(),
-				segmentsEntry.getExternalReferenceCode(),
-				ScopeUtil.getItemScopeExternalReferenceCode(
-					segmentsEntry.getGroupId(), _group.getGroupId()),
+				segmentsEntry.getExternalReferenceCode(), null,
 				_draftLayout.getPlid(), RandomTestUtil.randomLocaleStringMap(),
 				1, true, new UnicodeProperties(true),
 				ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
@@ -871,9 +846,7 @@ public class SegmentsExperimentLocalServiceTest {
 		SegmentsExperience segmentsExperience3 =
 			_segmentsExperienceLocalService.addSegmentsExperience(
 				null, TestPropsValues.getUserId(), _group.getGroupId(),
-				segmentsEntry.getExternalReferenceCode(),
-				ScopeUtil.getItemScopeExternalReferenceCode(
-					segmentsEntry.getGroupId(), _group.getGroupId()),
+				segmentsEntry.getExternalReferenceCode(), null,
 				_draftLayout.getPlid(), RandomTestUtil.randomLocaleStringMap(),
 				-1, true, new UnicodeProperties(true),
 				ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
@@ -886,9 +859,7 @@ public class SegmentsExperimentLocalServiceTest {
 		SegmentsExperience variantSegmentsExperience =
 			_segmentsExperienceLocalService.appendSegmentsExperience(
 				TestPropsValues.getUserId(), _group.getGroupId(),
-				segmentsEntry.getExternalReferenceCode(),
-				ScopeUtil.getItemScopeExternalReferenceCode(
-					segmentsEntry.getGroupId(), _group.getGroupId()),
+				segmentsEntry.getExternalReferenceCode(), null,
 				_draftLayout.getPlid(), RandomTestUtil.randomLocaleStringMap(),
 				false,
 				ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
@@ -952,9 +923,7 @@ public class SegmentsExperimentLocalServiceTest {
 		SegmentsExperience segmentsExperience1 =
 			_segmentsExperienceLocalService.addSegmentsExperience(
 				null, TestPropsValues.getUserId(), _group.getGroupId(),
-				segmentsEntry.getExternalReferenceCode(),
-				ScopeUtil.getItemScopeExternalReferenceCode(
-					segmentsEntry.getGroupId(), _group.getGroupId()),
+				segmentsEntry.getExternalReferenceCode(), null,
 				_draftLayout.getPlid(), RandomTestUtil.randomLocaleStringMap(),
 				1, true, new UnicodeProperties(true),
 				ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
@@ -964,9 +933,7 @@ public class SegmentsExperimentLocalServiceTest {
 		SegmentsExperience segmentsExperience2 =
 			_segmentsExperienceLocalService.addSegmentsExperience(
 				null, TestPropsValues.getUserId(), _group.getGroupId(),
-				segmentsEntry.getExternalReferenceCode(),
-				ScopeUtil.getItemScopeExternalReferenceCode(
-					segmentsEntry.getGroupId(), _group.getGroupId()),
+				segmentsEntry.getExternalReferenceCode(), null,
 				_draftLayout.getPlid(), RandomTestUtil.randomLocaleStringMap(),
 				-1, true, new UnicodeProperties(true),
 				ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
@@ -987,9 +954,7 @@ public class SegmentsExperimentLocalServiceTest {
 		SegmentsExperience variantSegmentsExperience =
 			_segmentsExperienceLocalService.appendSegmentsExperience(
 				TestPropsValues.getUserId(), _group.getGroupId(),
-				segmentsEntry.getExternalReferenceCode(),
-				ScopeUtil.getItemScopeExternalReferenceCode(
-					segmentsEntry.getGroupId(), _group.getGroupId()),
+				segmentsEntry.getExternalReferenceCode(), null,
 				_draftLayout.getPlid(), RandomTestUtil.randomLocaleStringMap(),
 				false,
 				ServiceContextTestUtil.getServiceContext(_group.getGroupId()));

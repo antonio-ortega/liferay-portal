@@ -186,3 +186,4 @@ public class FrequentPatternRecommendation implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:674781493

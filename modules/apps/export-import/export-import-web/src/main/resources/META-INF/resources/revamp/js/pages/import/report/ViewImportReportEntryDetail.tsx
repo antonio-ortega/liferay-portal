@@ -8,7 +8,7 @@ import ClayLayout from '@clayui/layout';
 import ClayLink from '@clayui/link';
 import ClayLoadingIndicator from '@clayui/loading-indicator';
 import {openModal} from 'frontend-js-components-web';
-import {fetch} from 'frontend-js-web';
+import {escapeHTML, fetch} from 'frontend-js-web';
 import React, {useEffect, useState} from 'react';
 
 import formatDate from '../../../utils/formatDate';
@@ -32,6 +32,35 @@ function DetailViewDefinitionCol({
 			<div className="sheet-text">{body}</div>
 		</ClayLayout.Col>
 	);
+}
+
+function openStackTraceModal(stackTraceMessage?: string) {
+	const modalProps = stackTraceMessage
+		? {
+				bodyHTML: `<div class="bg-dark border border-light p-4 rounded"><p class="text-white">${escapeHTML(stackTraceMessage)}</p></div>`,
+				size: 'full-screen' as const,
+				title: Liferay.Language.get('stack-trace'),
+			}
+		: {
+				bodyHTML: Liferay.Language.get(
+					'this-error-was-detected-as-a-controlled-validation-error-during-the-import-process-and-did-not-originate-from-a-system-exception.-because-of-this-no-stack-trace-was-generated'
+				),
+				status: 'info' as const,
+				title: Liferay.Language.get('no-stack-trace-available'),
+			};
+
+	openModal({
+		...modalProps,
+		buttons: [
+			{
+				displayType: 'secondary',
+				label: Liferay.Language.get('close'),
+				onClick: ({processClose}: {processClose: Function}) => {
+					processClose();
+				},
+			},
+		],
+	});
 }
 
 interface ReportEntryDetail {
@@ -81,33 +110,6 @@ export function ViewImportReportEntryDetail({
 			});
 		});
 	}, [apiURL]);
-
-	function openStackTraceModal({
-		stackTraceMessage,
-	}: {
-		stackTraceMessage: string;
-	}) {
-		openModal({
-			bodyHTML: `
-				<div class="bg-dark border border-light p-4 rounded">
-					<p class="text-white">
-                        ${stackTraceMessage}
-					</p>
-				</div>
-			`,
-			buttons: [
-				{
-					displayType: 'secondary',
-					label: Liferay.Language.get('close'),
-					onClick: ({processClose}: {processClose: Function}) => {
-						processClose();
-					},
-				},
-			],
-			size: 'full-screen',
-			title: Liferay.Language.get('stack-trace'),
-		});
-	}
 
 	const {
 		classExternalReferenceCode,
@@ -186,10 +188,9 @@ export function ViewImportReportEntryDetail({
 										<ClayButton
 											displayType="secondary"
 											onClick={() =>
-												openStackTraceModal({
-													stackTraceMessage:
-														errorStacktrace,
-												})
+												openStackTraceModal(
+													errorStacktrace
+												)
 											}
 										>
 											{Liferay.Language.get(

@@ -44,24 +44,25 @@ public class ApplicationsMenuDisplayContext {
 				WebKeys.THEME_DISPLAY);
 
 		return HashMapBuilder.<String, Object>put(
-			"liferayLogoURL",
+			"defaultLogoURL",
 			() -> {
-				LiferayPortletURL applicationsMenuLiferayLogoURL =
+				LiferayPortletURL applicationsMenuDefaultLogoURL =
 					PortletURLFactoryUtil.create(
 						_httpServletRequest,
 						ProductNavigationApplicationsMenuPortletKeys.
 							PRODUCT_NAVIGATION_APPLICATIONS_MENU,
 						PortletRequest.RESOURCE_PHASE);
 
-				applicationsMenuLiferayLogoURL.setResourceID(
-					"/applications_menu/liferay_logo");
+				applicationsMenuDefaultLogoURL.setResourceID(
+					"/applications_menu/default_logo");
 
-				return applicationsMenuLiferayLogoURL.toString();
+				return applicationsMenuDefaultLogoURL.toString();
 			}
 		).put(
 			"liferayName",
 			GetterUtil.getString(
-				PropsValues.APPLICATIONS_MENU_DEFAULT_LIFERAY_NAME, "Liferay")
+				PropsValues.APPLICATIONS_MENU_DEFAULT_LIFERAY_NAME,
+				"Liferay DXP")
 		).put(
 			"panelAppsURL",
 			() -> {
@@ -93,7 +94,7 @@ public class ApplicationsMenuDisplayContext {
 				).put(
 					"logoURL",
 					StringBundler.concat(
-						themeDisplay.getPathImage(), "/company_logo?img_id=",
+						themeDisplay.getPathImage(), "/liferay_logo?img_id=",
 						company.getLogoId(), "&t=",
 						WebServerServletTokenUtil.getToken(company.getLogoId()))
 				).put(

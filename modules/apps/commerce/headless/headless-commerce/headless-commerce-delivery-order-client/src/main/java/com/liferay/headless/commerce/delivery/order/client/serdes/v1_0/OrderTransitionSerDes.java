@@ -342,3 +342,4 @@ public class OrderTransitionSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1082753950

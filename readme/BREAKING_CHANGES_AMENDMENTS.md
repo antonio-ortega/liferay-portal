@@ -9,11 +9,11 @@ LPD-16086: Prevent to compute values for item selector and URL fields. This comm
 
 ## What modules/apps/headless/headless-delivery/headless-delivery-impl/src/main/java/com/liferay/headless/delivery/internal/dto/v1_0/mapper/PageFragmentInstanceDefinitionMapper.java
 
-Consumers of the PageFragmentInstanceDefinitionMapper (specifically for item selector and URL fields) will no longer receive the fully computed values directly in the response. Instead, consumers must now use the classPK (or externalReferenceCode if applicable) from the response to retrieve all necessary information for the referenced resource via the appropriate Liferay services.
+PageFragmentInstanceDefinitionMapper no longer returns fully computed values in the response directly (for item selector and URL fields). Instead, use the class PK (or external reference code, if applicable) from the response to retrieve all necessary information for the referenced resource, via the appropriate Liferay service.
 
 ## Why
 
-This change is needed to make the import process work.
+This change fixes an issue with page imports.
 ```
 
 ----
@@ -639,15 +639,15 @@ LPD-47825 portal-search-web: skip deprecation for internal interface
 
 ## What modules/apps/portal-search/portal-search-web/src/main/java/com/liferay/portal/search/web/internal/category/facet/portlet/CategoryFacetPortletPreferences.java
 
-Vocabulary Ids were removed from the CategoryFacetPortletPreferences and replaced by a GroupExternalReferenceCode VocabularyExternalReferenceCode pair. Category Facet Widget Display Templates using portletPreferences.getValues() will no longer be able to return vocabularyIds from the CategoryFacetPortletPreferences.
+Vocabulary IDs are removed from CategoryFacetPortletPreferences and replaced by a paired GroupExternalReferenceCode and VocabularyExternalReferenceCode. Category Facet Widget Display Templates using portletPreferences.getValues() no longer return vocabulary IDs from the CategoryFacetPortletPreferences.
 
 ## Why
 
-Vocabulary Ids were replaced by a External Reference Codes in Category Facet Portlet Preferences for better data preservation during imports, exports, and data migration.
+Vocabulary IDs were replaced by external reference codes in Category Facet Portlet Preferences for better data preservation during imports, exports, and data migration.
 
 ## Alternatives
 
-Vocabulary ids to all vocabularies related to the returned categories are available through the AssetCategoriesSearchFacetDisplayContext: use `assetCategoriesSearchFacetDisplayContext.getVocabularyIds()`.
+Vocabulary IDs for all vocabularies related to the returned categories are available through the AssetCategoriesSearchFacetDisplayContext: use assetCategoriesSearchFacetDisplayContext.getVocabularyIds().
 ```
 
 ----
@@ -663,13 +663,89 @@ LPD-77861 Semantic versioning (gw baseline)
 
 ## What modules/apps/frontend-taglib/frontend-taglib-clay/src/main/java/com/liferay/frontend/taglib/clay/servlet/taglib/VerticalNavTag.java
 
-It adds new attributes to the VerticalNavTag in the Clay Taglib. More specifically, it adds the `collapse`, `displayType`, and `size` properties.
+The collapse, displayType, and size attributes are added to VerticalNavTag.
 
 ## Why
 
-These attributes were added so we can have more flexibility while using Clay components, enabling developers to configure different aspects of the VerticalNavTag element independently. Before, we have internal conditionals to produce these attributes automatically (e.g., `collapse` used to depend of the `displayType`), but it wasn't enough to meet the component requirements.
+These attributes were added for more flexibility when using Clay components, enabling developers to configure different aspects of the VerticalNavTag element independently. Previously, internal conditionals could produce these attributes automatically (e.g., collapse depended on the displayType), but more flexibility is necessary.
 
 ## Alternatives
 
-The `displayType` attribute shouldn't be an issue, since it defaults to "transparent". The `size` attribute is being used as a replacement to the `large` flag. This flag is deprecated. If `size` isn't provided, the component uses `large` as a fallback, so it should still work as before. `collapse` is a new control and it is disabled by default. If this previous behavior is missing, please, provide `collapse` with true.
+The displayType attribute always works, since it defaults to "transparent". The size attribute is used as a replacement for the deprecated large flag. If the size attribute isn't provided, the large flag still works as a fallback. The collapse attribute is a new control and it's disabled by default. Provide collapse with true if the previous behavior is missing.
+```
+
+----
+
+# 37cfb5472d42205e47807e06ff6a20fe096609bf
+
+The commit message is missing the required breaking change format. The correct message is:
+
+```
+LPD-59218 Semantic versioning
+
+# breaking
+
+## What portal-kernel/src/com/liferay/portal/kernel/util/Props.java
+
+The interface com.liferay.portal.kernel.util.Props has been removed. Its methods (contains, get, getArray, getProperties) are now directly available as static methods on com.liferay.portal.kernel.util.PropsUtil.
+
+## Why
+
+Props was a redundant indirection layer. PropsUtil already provided the same static API, and PropsImpl simply delegated back to PropsUtil. Removing Props eliminates the unnecessary interface and simplifies the properties access pattern.
+
+----
+
+# breaking
+
+## What portal-impl/src/com/liferay/portal/util/PropsImpl.java
+
+The class com.liferay.portal.util.PropsImpl has been removed. It was the sole implementation of com.liferay.portal.kernel.util.Props, which has also been removed.
+
+## Why
+
+PropsImpl was a pass-through that delegated every call to com.liferay.portal.util.PropsUtil. With Props and PropsUtil merged into com.liferay.portal.kernel.util.PropsUtil, this class is no longer needed.
+
+----
+
+# breaking
+
+## What portal-impl/src/com/liferay/portal/util/PropsUtil.java
+
+The class com.liferay.portal.util.PropsUtil has been removed. All of its functionality has been merged into com.liferay.portal.kernel.util.PropsUtil. Additionally, PropsUtil.getProps() and PropsUtil.setProps(Props) have been removed from the kernel PropsUtil. The properties are now initialized directly and cannot be swapped at runtime.
+
+## Why
+
+Having two PropsUtil classes (portal-impl and portal-kernel) with an intermediate Props interface created unnecessary complexity. The portal-kernel PropsUtil now loads properties directly via ConfigurationFactoryImpl, removing the need for runtime Props injection via setProps().
+
+## Alternatives
+
+Update imports from com.liferay.portal.util.PropsUtil to com.liferay.portal.kernel.util.PropsUtil. Replace PropsUtil.getProps() calls with direct PropsUtil static method calls. Remove PropsUtil.setProps() calls as they are no longer needed.
+
+----
+
+# breaking
+
+## What portal-impl/src/com/liferay/portal/util/PropsFiles.java
+
+The class com.liferay.portal.util.PropsFiles has been removed. Its constants (CAPTCHA, CONTENT_TYPES, PORTAL) have been inlined into ConfigurationFactoryImpl.
+
+## Why
+
+PropsFiles only held three string constants and was referenced in a single place. Inlining them eliminates a trivial class.
+
+----
+
+# breaking
+
+## What portal-test/src/com/liferay/portal/test/rule/InitializeKernelUtilTestRule.java
+
+InitializeKernelUtilTestRule now extends AbstractTestRule<Map<String, String>, Map<String, String>> instead of AbstractTestRule<Void, Properties>. The beforeClass method now returns Map<String, String> instead of Void, and afterClass/afterMethod accept Map<String, String> instead of Void/Properties. The rule no longer calls PropsUtil.setProps() or uses reflection to call addProperties/removeProperties.
+
+## Why
+
+With the removal of the Props interface and PropsUtil.setProps(), the test rule can no longer swap in a new PropsImpl. Instead it saves and restores individual property values via PropsUtil.set(String, String) and PropsUtil.get(String).
+
+## Alternatives
+
+Use PropsUtil.set(String, String) to set individual properties and PropsUtil.get(String) to read them back, instead of the former Props-based swapping pattern.
 ```

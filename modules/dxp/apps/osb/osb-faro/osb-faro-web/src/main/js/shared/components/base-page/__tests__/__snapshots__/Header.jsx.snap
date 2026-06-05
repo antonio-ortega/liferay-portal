@@ -15,6 +15,7 @@ exports[`BasePage.Header NavBar renders NavBar 1`] = `
           aria-expanded="false"
           aria-label="Open Menu, Current Page: Test"
           class="navbar-toggler navbar-toggler-link collapsed btn btn-unstyled"
+          data-testid="navbarToggler"
           type="button"
         >
           <span
@@ -76,6 +77,7 @@ exports[`BasePage.Header NavBar renders NavBar w/o routeQueries 1`] = `
           aria-expanded="false"
           aria-label="Open Menu, Current Page: Test"
           class="navbar-toggler navbar-toggler-link collapsed btn btn-unstyled"
+          data-testid="navbarToggler"
           type="button"
         >
           <span
@@ -137,6 +139,7 @@ exports[`BasePage.Header NavBar renders NavBar with deprecated label 1`] = `
           aria-expanded="false"
           aria-label="Open Menu, Current Page: Test"
           class="navbar-toggler navbar-toggler-link collapsed btn btn-unstyled"
+          data-testid="navbarToggler"
           type="button"
         >
           <span
@@ -231,6 +234,61 @@ exports[`BasePage.Header TitleSection renders TitleSection w/ Title 1`] = `
         />
       </h1>
       Test Test
+    </span>
+  </div>
+</div>
+`;
+
+exports[`BasePage.Header TitleSection renders TitleSection w/ label & no subtitle 1`] = `
+<div>
+  <div
+    class="header-section title-section"
+  >
+    <span
+      class="align-items-center d-flex"
+    >
+      <h1
+        class="title text-truncate"
+      >
+        <span
+          class="text-truncate"
+          data-tooltip="false"
+          title=""
+        />
+      </h1>
+      Test Test
+    </span>
+  </div>
+</div>
+`;
+
+exports[`BasePage.Header TitleSection renders TitleSection w/ subtitle & label 1`] = `
+<div>
+  <div
+    class="header-section title-section subtitle"
+  >
+    <span
+      class="align-items-center d-flex"
+    >
+      <h1
+        class="title text-truncate"
+      >
+        <span
+          class="text-truncate"
+          data-tooltip="false"
+          title=""
+        />
+      </h1>
+      Test Test
+    </span>
+    <span
+      class="label mb-4 label-info"
+    >
+      <span
+        class="label-item label-item-expand"
+      >
+        Test Label
+      </span>
     </span>
   </div>
 </div>

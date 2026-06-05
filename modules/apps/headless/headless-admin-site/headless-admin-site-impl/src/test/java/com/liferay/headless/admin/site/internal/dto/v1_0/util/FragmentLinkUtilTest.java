@@ -22,6 +22,7 @@ import com.liferay.info.item.InfoItemServiceRegistry;
 import com.liferay.info.item.provider.InfoItemDetailsProvider;
 import com.liferay.info.item.provider.InfoItemObjectProvider;
 import com.liferay.journal.model.JournalArticle;
+import com.liferay.layout.util.structure.LayoutStructure;
 import com.liferay.portal.json.JSONFactoryImpl;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
@@ -38,10 +39,12 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
+import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
 import com.liferay.portal.vulcan.scope.Scope;
 
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -65,6 +68,8 @@ public class FragmentLinkUtilTest {
 
 	@BeforeClass
 	public static void setUpClass() {
+		_mockDTOConverterContextAttributes();
+
 		JSONFactoryUtil jsonFactoryUtil = new JSONFactoryUtil();
 
 		jsonFactoryUtil.setJSONFactory(new JSONFactoryImpl());
@@ -109,7 +114,7 @@ public class FragmentLinkUtilTest {
 		Assert.assertEquals(
 			_getFragmentLink(null, null, null, localizedValues, null),
 			FragmentLinkUtil.toFragmentLink(
-				_COMPANY_ID, _infoItemServiceRegistry,
+				_COMPANY_ID, _dtoConverterContext, _infoItemServiceRegistry,
 				JSONUtil.put(
 					"href",
 					JSONUtil.put(
@@ -128,7 +133,7 @@ public class FragmentLinkUtilTest {
 		Assert.assertEquals(
 			_getFragmentLink(null, null, "FileEntry_fileName", null, null),
 			FragmentLinkUtil.toFragmentLink(
-				_COMPANY_ID, _infoItemServiceRegistry,
+				_COMPANY_ID, _dtoConverterContext, _infoItemServiceRegistry,
 				JSONUtil.put(
 					"mappedField", "FileEntry_fileName"
 				).put(
@@ -171,7 +176,7 @@ public class FragmentLinkUtilTest {
 				journalArticleExternalReferenceCode, "JournalArticle_title",
 				null, null),
 			FragmentLinkUtil.toFragmentLink(
-				_COMPANY_ID, _infoItemServiceRegistry,
+				_COMPANY_ID, _dtoConverterContext, _infoItemServiceRegistry,
 				JSONUtil.put(
 					"className", JournalArticle.class.getName()
 				).put(
@@ -230,7 +235,7 @@ public class FragmentLinkUtilTest {
 				journalArticleExternalReferenceCode, "JournalArticle_title",
 				null, Scope.of(_ITEM_GROUP_ID, LocaleUtil.getDefault())),
 			FragmentLinkUtil.toFragmentLink(
-				_COMPANY_ID, _infoItemServiceRegistry,
+				_COMPANY_ID, _dtoConverterContext, _infoItemServiceRegistry,
 				JSONUtil.put(
 					"className", JournalArticle.class.getName()
 				).put(
@@ -300,7 +305,7 @@ public class FragmentLinkUtilTest {
 				Layout.class.getName(), layoutExternalReferenceCode, null, null,
 				null),
 			FragmentLinkUtil.toFragmentLink(
-				_COMPANY_ID, _infoItemServiceRegistry,
+				_COMPANY_ID, _dtoConverterContext, _infoItemServiceRegistry,
 				JSONUtil.put(
 					"layout",
 					JSONUtil.put(
@@ -364,7 +369,7 @@ public class FragmentLinkUtilTest {
 				Layout.class.getName(), layoutExternalReferenceCode, null, null,
 				Scope.of(_ITEM_GROUP_ID, LocaleUtil.getDefault())),
 			FragmentLinkUtil.toFragmentLink(
-				_COMPANY_ID, _infoItemServiceRegistry,
+				_COMPANY_ID, _dtoConverterContext, _infoItemServiceRegistry,
 				JSONUtil.put(
 					"layout",
 					JSONUtil.put(
@@ -412,7 +417,7 @@ public class FragmentLinkUtilTest {
 				journalArticleExternalReferenceCode, "JournalArticle_title",
 				null, null),
 			FragmentLinkUtil.toFragmentLink(
-				_COMPANY_ID, _infoItemServiceRegistry,
+				_COMPANY_ID, _dtoConverterContext, _infoItemServiceRegistry,
 				JSONUtil.put(
 					"className", JournalArticle.class.getName()
 				).put(
@@ -456,7 +461,7 @@ public class FragmentLinkUtilTest {
 				journalArticleExternalReferenceCode, "JournalArticle_title",
 				null, Scope.of(_ITEM_GROUP_ID, LocaleUtil.getDefault())),
 			FragmentLinkUtil.toFragmentLink(
-				_COMPANY_ID, _infoItemServiceRegistry,
+				_COMPANY_ID, _dtoConverterContext, _infoItemServiceRegistry,
 				JSONUtil.put(
 					"className", JournalArticle.class.getName()
 				).put(
@@ -498,7 +503,7 @@ public class FragmentLinkUtilTest {
 				Layout.class.getName(), layoutExternalReferenceCode, null, null,
 				null),
 			FragmentLinkUtil.toFragmentLink(
-				_COMPANY_ID, _infoItemServiceRegistry,
+				_COMPANY_ID, _dtoConverterContext, _infoItemServiceRegistry,
 				JSONUtil.put(
 					"layout",
 					JSONUtil.put(
@@ -533,7 +538,7 @@ public class FragmentLinkUtilTest {
 				Layout.class.getName(), layoutExternalReferenceCode, null, null,
 				Scope.of(_ITEM_GROUP_ID, LocaleUtil.getDefault())),
 			FragmentLinkUtil.toFragmentLink(
-				_COMPANY_ID, _infoItemServiceRegistry,
+				_COMPANY_ID, _dtoConverterContext, _infoItemServiceRegistry,
 				JSONUtil.put(
 					"layout",
 					JSONUtil.put(
@@ -1011,6 +1016,26 @@ public class FragmentLinkUtilTest {
 			).toString());
 	}
 
+	private static void _mockDTOConverterContextAttributes() {
+		Mockito.when(
+			_dtoConverterContext.getAttribute(Mockito.anyString())
+		).thenAnswer(
+			invocationOnMock -> {
+				String name = invocationOnMock.getArgument(0, String.class);
+
+				if (Objects.equals(name, "layoutPlid")) {
+					return RandomTestUtil.randomLong();
+				}
+
+				if (Objects.equals(LayoutStructure.class.getName(), name)) {
+					return Mockito.mock(LayoutStructure.class);
+				}
+
+				return null;
+			}
+		);
+	}
+
 	private static void _mockGroup(
 		String externalReferenceCode, long groupId, int type) {
 
@@ -1164,9 +1189,18 @@ public class FragmentLinkUtilTest {
 
 		Mockito.when(
 			_infoItemServiceRegistry.getFirstInfoItemService(
-				Mockito.any(), Mockito.any(), Mockito.any())
+				Mockito.eq(InfoItemDetailsProvider.class), Mockito.any(),
+				Mockito.any())
 		).thenReturn(
-			infoItemObjectProvider, infoItemDetailsProvider
+			infoItemDetailsProvider
+		);
+
+		Mockito.when(
+			_infoItemServiceRegistry.getFirstInfoItemService(
+				Mockito.eq(InfoItemObjectProvider.class), Mockito.any(),
+				Mockito.any())
+		).thenReturn(
+			infoItemObjectProvider
 		);
 
 		Mockito.when(
@@ -1213,6 +1247,8 @@ public class FragmentLinkUtilTest {
 
 	private static final long _SCOPE_GROUP_ID = RandomTestUtil.randomLong();
 
+	private static final DTOConverterContext _dtoConverterContext =
+		Mockito.mock(DTOConverterContext.class);
 	private static final MockedStatic<GroupLocalServiceUtil>
 		_groupLocalServiceUtilMockedStatic = Mockito.mockStatic(
 			GroupLocalServiceUtil.class);

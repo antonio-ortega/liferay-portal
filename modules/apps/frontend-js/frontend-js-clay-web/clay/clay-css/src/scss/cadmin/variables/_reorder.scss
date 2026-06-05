@@ -11,12 +11,13 @@ $cadmin-clay-reorder: map-deep-merge(
 $cadmin-clay-reorder-input-inset: () !default;
 $cadmin-clay-reorder-input-inset: map-deep-merge(
 	(
-		margin-bottom: 0,
-		margin-top: 0,
+		margin-bottom: 0px,
+		margin-top: 0px,
 		overflow: auto,
 		padding-bottom: $cadmin-input-padding-y,
 		padding-top: $cadmin-input-padding-y,
 		width: 100%,
+
 		focus: (
 			background-color: transparent,
 			box-shadow: none,
@@ -28,11 +29,11 @@ $cadmin-clay-reorder-input-inset: map-deep-merge(
 $cadmin-clay-reorder-underlay: () !default;
 $cadmin-clay-reorder-underlay: map-deep-merge(
 	(
-		bottom: 0,
-		left: 0,
+		bottom: 0px,
+		left: 0px,
 		position: absolute,
-		right: 0,
-		top: 0,
+		right: 0px,
+		top: 0px,
 		z-index: -1,
 	),
 	$cadmin-clay-reorder-underlay
@@ -43,6 +44,7 @@ $cadmin-clay-reorder-underlay-focus: map-deep-merge(
 	(
 		background-color: $cadmin-input-focus-bg,
 		border-color: $cadmin-input-focus-border-color,
+		box-shadow: $cadmin-input-focus-box-shadow,
 	),
 	$cadmin-clay-reorder-underlay-focus
 );

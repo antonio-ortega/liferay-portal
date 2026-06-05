@@ -258,3 +258,4 @@ public class SegmentUserSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-673765089

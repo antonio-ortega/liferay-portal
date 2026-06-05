@@ -39,22 +39,34 @@ export class StyleBooksPage {
 		await this.page.getByRole('menuitem', {name: nextPage}).click();
 	}
 
-	async create(styleBookName: string, baseThemeName?: string) {
+	async clickOnAction(styleBookName: string, action: string) {
+		const card = this.getStyleBookCard(styleBookName);
+
+		await clickAndExpectToBeVisible({
+			autoClick: true,
+			target: this.page.getByRole('menuitem', {name: action}),
+			trigger: card.getByLabel('More actions'),
+		});
+	}
+
+	async create(styleBookName: string, baseThemeName = 'Classic Theme') {
 		await this.page.getByRole('button', {exact: true, name: 'Add'}).click();
 
 		await this.page
 			.getByRole('textbox', {name: 'Name'})
 			.fill(styleBookName);
 
-		if (baseThemeName) {
-			await this.page.getByLabel('Create Style Book For').click();
+		await this.page.getByLabel('Create Style Book For').click();
 
-			await this.page.getByRole('option', {name: baseThemeName}).click();
-		}
+		await this.page.getByRole('option', {name: baseThemeName}).click();
 
 		await this.page.getByRole('button', {name: 'Save'}).click();
 
 		await waitForAlert(this.page);
+
+		await expect(
+			this.page.getByTestId('styleBookEditorSidebarContent')
+		).toBeVisible();
 	}
 
 	getStyleBookCard(styleBookName: string) {
@@ -80,9 +92,7 @@ export class StyleBooksPage {
 	async delete(styleBookName: string) {
 		await this.search(styleBookName);
 
-		await this.page.getByLabel('More actions').click();
-
-		await this.page.getByRole('menuitem', {name: 'Delete'}).click();
+		await this.clickOnAction(styleBookName, 'Delete');
 
 		await this.page.getByRole('button', {name: 'Delete'}).click();
 	}
@@ -90,9 +100,7 @@ export class StyleBooksPage {
 	async edit(styleBookName: string) {
 		await this.search(styleBookName);
 
-		await this.page.getByLabel('More actions').click();
-
-		await this.page.getByRole('menuitem', {name: 'Edit'}).click();
+		await this.clickOnAction(styleBookName, 'Edit');
 	}
 
 	async importStyleBookFile(fileName: string, filePath: string) {
@@ -124,15 +132,13 @@ export class StyleBooksPage {
 	async markAsDefault(styleBookName: string) {
 		await this.search(styleBookName);
 
-		await this.page.getByLabel('More actions').click();
+		const confirmationDialog = this.page
+			.waitForEvent('dialog')
+			.then(async (dialog) => await dialog.accept());
 
-		this.page.once('dialog', (dialog) => {
-			dialog.accept();
-		});
+		await this.clickOnAction(styleBookName, 'Mark as Default');
 
-		await this.page
-			.getByRole('menuitem', {exact: false, name: 'Mark as Default'})
-			.click();
+		await confirmationDialog;
 	}
 
 	async clickOnPublishAction(action: string) {
@@ -165,6 +171,20 @@ export class StyleBooksPage {
 		await waitForAlert(this.page);
 	}
 
+	async rename(styleBookName: string, newStyleBookName: string) {
+		await this.search(styleBookName);
+
+		await this.clickOnAction(styleBookName, 'Rename');
+
+		await this.page
+			.getByRole('textbox', {name: 'Name'})
+			.fill(newStyleBookName);
+
+		await this.page.getByRole('button', {name: 'Save'}).click();
+
+		await waitForAlert(this.page);
+	}
+
 	async search(styleBookName: string) {
 		await this.searchInput.fill(styleBookName);
 
@@ -180,7 +200,7 @@ export class StyleBooksPage {
 			.locator('.style-book-editor__sidebar-content .form-control-select')
 			.click();
 
-		await this.page.getByText(category).click();
+		await this.page.getByRole('menuitem', {name: category}).click();
 	}
 
 	async updateTokenInput(label: string, value: string, section?: string) {
@@ -210,11 +230,9 @@ export class StyleBooksPage {
 			? this.page.locator('.panel').filter({hasText: section})
 			: this.page;
 
-		const labelLocator = '[aria-label="' + label + '"]';
-
 		const colorInput = parentElement
-			.locator(labelLocator)
-			.locator('.layout__color-picker__input');
+			.getByLabel(label, {exact: true})
+			.getByLabel('Color selection is');
 
 		await fillAndClickOutside(this.page, colorInput, colorHEX);
 	}

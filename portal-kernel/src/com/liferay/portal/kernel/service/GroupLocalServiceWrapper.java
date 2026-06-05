@@ -1519,6 +1519,13 @@ public class GroupLocalServiceWrapper
 		return _groupLocalService.getUserGroupsRelatedGroups(userGroups);
 	}
 
+	@Override
+	public java.util.Map<Long, long[]> getUserInheritedSiteGroupIds(
+		long companyId) {
+
+		return _groupLocalService.getUserInheritedSiteGroupIds(companyId);
+	}
+
 	/**
 	 * Returns the range of all groups associated with the user's organization
 	 * groups, including the ancestors of the organization groups, unless portal
@@ -1660,6 +1667,11 @@ public class GroupLocalServiceWrapper
 	@Override
 	public boolean isLiveGroupActive(Group group) {
 		return _groupLocalService.isLiveGroupActive(group);
+	}
+
+	@Override
+	public boolean isMaintenanceMode(Group group) {
+		return _groupLocalService.isMaintenanceMode(group);
 	}
 
 	/**
@@ -2885,3 +2897,4 @@ public class GroupLocalServiceWrapper
 	private GroupLocalService _groupLocalService;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:484951056

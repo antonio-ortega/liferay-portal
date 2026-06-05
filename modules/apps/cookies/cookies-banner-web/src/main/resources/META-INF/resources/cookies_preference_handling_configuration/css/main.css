@@ -1,0 +1,27 @@
+.floating-icon-custom {
+    background-color: var(--gray-400);
+    height: 60px;
+    transition: background-color 0.2s ease;
+    width: 60px;
+}
+
+.floating-icon-custom:hover {
+    background-color: var(--gray-700);
+}
+
+.floating-icon-custom .lexicon-icon {
+    height: 30px;
+    width: 30px;
+}
+
+.form-group-autofit {
+	margin-bottom: 0;
+}
+
+.form-group-autofit .form-group {
+	margin-bottom: 5px;
+}
+
+.form-text {
+	margin-top: 5px;
+}

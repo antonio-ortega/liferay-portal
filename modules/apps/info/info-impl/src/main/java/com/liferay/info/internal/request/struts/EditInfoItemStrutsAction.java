@@ -10,18 +10,20 @@ import com.liferay.fragment.contributor.FragmentCollectionContributorRegistry;
 import com.liferay.fragment.model.FragmentEntry;
 import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.service.FragmentEntryLinkLocalService;
-import com.liferay.fragment.service.FragmentEntryLocalService;
 import com.liferay.fragment.util.configuration.FragmentConfigurationField;
 import com.liferay.fragment.util.configuration.FragmentEntryConfigurationParser;
+import com.liferay.info.exception.InfoFormFileUploadException;
 import com.liferay.info.exception.InfoFormInvalidGroupException;
 import com.liferay.info.exception.InfoFormInvalidLayoutModeException;
 import com.liferay.info.exception.InfoFormPrincipalException;
+import com.liferay.info.exception.InfoFormUploadRequestSizeException;
 import com.liferay.info.exception.InfoFormValidationException;
 import com.liferay.info.exception.NoSuchInfoItemException;
 import com.liferay.info.field.InfoField;
 import com.liferay.info.field.InfoFieldValue;
 import com.liferay.info.field.RelatedInfoFieldValue;
 import com.liferay.info.field.type.DateInfoFieldType;
+import com.liferay.info.field.type.DateTimeInfoFieldType;
 import com.liferay.info.field.type.RelationshipInfoFieldType;
 import com.liferay.info.internal.request.helper.InfoRequestFieldValuesProviderHelper;
 import com.liferay.info.item.ClassPKInfoItemIdentifier;
@@ -44,6 +46,7 @@ import com.liferay.layout.util.structure.FragmentStyledLayoutStructureItem;
 import com.liferay.layout.util.structure.LayoutStructure;
 import com.liferay.layout.util.structure.LayoutStructureItem;
 import com.liferay.layout.util.structure.LayoutStructureItemUtil;
+import com.liferay.petra.io.DummyOutputStream;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.captcha.CaptchaException;
 import com.liferay.portal.kernel.exception.InfoFormException;
@@ -62,6 +65,7 @@ import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.servlet.SessionMessages;
 import com.liferay.portal.kernel.struts.StrutsAction;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.upload.UploadException;
 import com.liferay.portal.kernel.upload.UploadServletRequest;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -77,7 +81,13 @@ import com.liferay.staging.StagingGroupHelper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import java.io.IOException;
+import java.io.InputStream;
+
 import java.text.SimpleDateFormat;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -106,6 +116,32 @@ public class EditInfoItemStrutsAction implements StrutsAction {
 
 		String formItemId = ParamUtil.getString(
 			httpServletRequest, "formItemId");
+
+		UploadException uploadException =
+			(UploadException)httpServletRequest.getAttribute(
+				WebKeys.UPLOAD_EXCEPTION);
+
+		if (uploadException != null) {
+			InfoFormException infoFormException;
+
+			if (uploadException.isExceededUploadRequestSizeLimit()) {
+				infoFormException = new InfoFormUploadRequestSizeException();
+			}
+			else {
+				infoFormException = new InfoFormFileUploadException();
+			}
+
+			SessionErrors.add(
+				httpServletRequest, formItemId, infoFormException);
+
+			_drainHttpServletRequestBody(httpServletRequest);
+
+			httpServletResponse.sendRedirect(
+				_portal.escapeRedirect(
+					httpServletRequest.getHeader(HttpHeaders.REFERER)));
+
+			return null;
+		}
 
 		Map<String, InfoFieldValue<Object>> infoFieldValues = null;
 
@@ -443,6 +479,19 @@ public class EditInfoItemStrutsAction implements StrutsAction {
 			status);
 	}
 
+	private void _drainHttpServletRequestBody(
+		HttpServletRequest httpServletRequest) {
+
+		try (InputStream inputStream = httpServletRequest.getInputStream()) {
+			inputStream.transferTo(new DummyOutputStream());
+		}
+		catch (IOException ioException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(ioException);
+			}
+		}
+	}
+
 	private FragmentEntryLink _getCaptchaFragmentEntryLink(
 			String formItemId, LayoutStructure layoutStructure)
 		throws InfoFormException {
@@ -479,11 +528,7 @@ public class EditInfoItemStrutsAction implements StrutsAction {
 				continue;
 			}
 
-			if (_isCaptchaFragmentEntry(
-					fragmentEntryLink.getFragmentEntryGroupId(),
-					fragmentEntryLink.getFragmentEntryERC(),
-					fragmentEntryLink.getRendererKey())) {
-
+			if (_isCaptchaFragmentEntry(fragmentEntryLink)) {
 				return fragmentEntryLink;
 			}
 		}
@@ -598,6 +643,19 @@ public class EditInfoItemStrutsAction implements StrutsAction {
 			}
 		}
 
+		if (infoField.getInfoFieldType() == DateTimeInfoFieldType.INSTANCE) {
+			Object dateTimeValue = infoFieldValue.getValue();
+
+			if (!(dateTimeValue instanceof LocalDateTime)) {
+				return null;
+			}
+
+			DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(
+				"yyyy-MM-dd'T'HH:mm");
+
+			return dateTimeFormatter.format((LocalDateTime)dateTimeValue);
+		}
+
 		Object value = infoFieldValue.getValue();
 
 		if (value instanceof List) {
@@ -619,22 +677,16 @@ public class EditInfoItemStrutsAction implements StrutsAction {
 	}
 
 	private boolean _isCaptchaFragmentEntry(
-		long fragmentEntryGroupId, String fragmentEntryERC,
-		String rendererKey) {
+		FragmentEntryLink fragmentEntryLink) {
 
-		FragmentEntry fragmentEntry = null;
+		FragmentEntry fragmentEntry = fragmentEntryLink.fetchFragmentEntry();
 
-		if (Validator.isNotNull(rendererKey)) {
+		if ((fragmentEntry == null) &&
+			Validator.isNotNull(fragmentEntryLink.getRendererKey())) {
+
 			fragmentEntry =
 				_fragmentCollectionContributorRegistry.getFragmentEntry(
-					rendererKey);
-		}
-
-		if ((fragmentEntry == null) && (fragmentEntryERC != null)) {
-			fragmentEntry =
-				_fragmentEntryLocalService.
-					fetchFragmentEntryByExternalReferenceCode(
-						fragmentEntryERC, fragmentEntryGroupId);
+					fragmentEntryLink.getRendererKey());
 		}
 
 		if ((fragmentEntry == null) ||
@@ -748,9 +800,6 @@ public class EditInfoItemStrutsAction implements StrutsAction {
 
 	@Reference
 	private FragmentEntryLinkLocalService _fragmentEntryLinkLocalService;
-
-	@Reference
-	private FragmentEntryLocalService _fragmentEntryLocalService;
 
 	@Reference
 	private InfoItemServiceRegistry _infoItemServiceRegistry;

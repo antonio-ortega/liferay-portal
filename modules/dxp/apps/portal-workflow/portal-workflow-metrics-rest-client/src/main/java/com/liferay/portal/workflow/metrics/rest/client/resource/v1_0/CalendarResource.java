@@ -377,3 +377,4 @@ public interface CalendarResource {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:207858190

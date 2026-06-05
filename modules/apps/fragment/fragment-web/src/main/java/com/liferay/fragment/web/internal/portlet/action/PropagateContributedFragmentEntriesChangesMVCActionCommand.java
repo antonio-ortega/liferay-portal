@@ -6,12 +6,13 @@
 package com.liferay.fragment.web.internal.portlet.action;
 
 import com.liferay.configuration.admin.constants.ConfigurationAdminPortletKeys;
+import com.liferay.fragment.configuration.FragmentServiceConfiguration;
 import com.liferay.fragment.contributor.FragmentCollectionContributorRegistry;
 import com.liferay.fragment.model.FragmentEntry;
 import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.service.FragmentEntryLinkLocalService;
-import com.liferay.fragment.web.internal.configuration.helper.FragmentServiceConfigurationHelper;
 import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClassDefinition;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
@@ -27,6 +28,7 @@ import com.liferay.portal.kernel.service.PortalPreferencesLocalService;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.TransactionConfig;
 import com.liferay.portal.kernel.transaction.TransactionInvokerUtil;
+import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortletKeys;
@@ -38,6 +40,7 @@ import jakarta.portlet.PortletPreferences;
 
 import jakarta.servlet.http.HttpServletResponse;
 
+import java.util.Dictionary;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
@@ -117,7 +120,9 @@ public class PropagateContributedFragmentEntriesChangesMVCActionCommand
 			actionableDynamicQuery.setPerformActionMethod(
 				(FragmentEntryLink fragmentEntryLink) ->
 					_fragmentEntryLinkLocalService.updateLatestChanges(
-						fragmentEntry, fragmentEntryLink));
+						fragmentEntry,
+						_fragmentEntryLinkLocalService.getFragmentEntryLink(
+							fragmentEntryLink.getFragmentEntryLinkId())));
 
 			actionableDynamicQuery.performActions();
 		}
@@ -143,14 +148,26 @@ public class PropagateContributedFragmentEntriesChangesMVCActionCommand
 				"Invalid scope primary key 0 for scope " + scope);
 		}
 
-		boolean propagateChanges = ParamUtil.getBoolean(
-			actionRequest, "propagateChanges");
-		boolean propagateContributedFragmentChanges = ParamUtil.getBoolean(
-			actionRequest, "propagateContributedFragmentChanges");
+		Dictionary<String, Object> properties =
+			HashMapDictionaryBuilder.<String, Object>put(
+				"propagateChanges",
+				ParamUtil.getBoolean(actionRequest, "propagateChanges")
+			).put(
+				"propagateContributedFragmentChanges",
+				ParamUtil.getBoolean(
+					actionRequest, "propagateContributedFragmentChanges")
+			).build();
 
-		_fragmentServiceConfigurationHelper.updatePropagateChanges(
-			propagateChanges, propagateContributedFragmentChanges, scope,
-			scopePK);
+		if (scope.equals(
+				ExtendedObjectClassDefinition.Scope.COMPANY.getValue())) {
+
+			_configurationProvider.saveCompanyConfiguration(
+				FragmentServiceConfiguration.class, scopePK, properties);
+		}
+		else {
+			_configurationProvider.saveSystemConfiguration(
+				FragmentServiceConfiguration.class, properties);
+		}
 	}
 
 	private void _updatePropagateContributedFragmentChangesPortletPreference(
@@ -177,15 +194,14 @@ public class PropagateContributedFragmentEntriesChangesMVCActionCommand
 			Propagation.REQUIRED, new Class<?>[] {Exception.class});
 
 	@Reference
+	private ConfigurationProvider _configurationProvider;
+
+	@Reference
 	private FragmentCollectionContributorRegistry
 		_fragmentCollectionContributorRegistry;
 
 	@Reference
 	private FragmentEntryLinkLocalService _fragmentEntryLinkLocalService;
-
-	@Reference
-	private FragmentServiceConfigurationHelper
-		_fragmentServiceConfigurationHelper;
 
 	@Reference
 	private JSONFactory _jsonFactory;

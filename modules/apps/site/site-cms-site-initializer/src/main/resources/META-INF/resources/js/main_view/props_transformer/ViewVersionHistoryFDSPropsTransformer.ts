@@ -3,30 +3,40 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {IInternalRenderer, replaceTokens} from '@liferay/frontend-data-set-web';
+import {
+	IBulkActionItem,
+	IInternalRenderer,
+	replaceTokens,
+} from '@liferay/frontend-data-set-web';
 import {navigate, sessionStorage, sub} from 'frontend-js-web';
 
+import StatusLabel from '../../common/components/StatusLabel';
 import {openCMSModal} from '../../common/utils/openCMSModal';
 import FilePreviewerModalContent from '../modal/FilePreviewerModalContent';
 import confirmAndDeleteEntryAction from './actions/confirmAndDeleteEntryAction';
+import deleteAssetVersionBulkAction from './actions/deleteAssetVersionBulkAction';
 import expireEntriesBulkAction from './actions/expireEntriesBulkAction';
 import AssetVersionRenderer from './cell_renderers/AssetVersionRenderer';
 import AuthorRenderer from './cell_renderers/AuthorRenderer';
 import VersionRenderer from './cell_renderers/VersionRenderer';
 import {executeAsyncItemAction} from './utils/executeAsyncItemAction';
+import transformFDSBulkActions from './utils/transformFDSBulkActions';
 
 export default function ViewVersionHistoryFDSPropsTransformer({
 	additionalProps,
+	bulkActions = [],
 	itemsActions = [],
 	...otherProps
 }: {
 	additionalProps: any;
 	apiURL?: string;
+	bulkActions: Array<IBulkActionItem>;
 	id?: string;
 	itemsActions?: any[];
 }) {
 	return {
 		...otherProps,
+		bulkActions: transformFDSBulkActions(bulkActions),
 		customRenderers: {
 			tableCell: [
 				{
@@ -44,8 +54,14 @@ export default function ViewVersionHistoryFDSPropsTransformer({
 					name: 'versionTableCellRenderer',
 					type: 'internal',
 				} as IInternalRenderer,
+				{
+					component: ({value}) => StatusLabel(value),
+					name: 'statusTableCellRenderer',
+					type: 'internal',
+				} as IInternalRenderer,
 			],
 		},
+		hideManagementBarInEmptyState: true,
 		itemsActions: itemsActions.map((action) => {
 			if (action?.data?.id === 'download') {
 				return {
@@ -56,7 +72,7 @@ export default function ViewVersionHistoryFDSPropsTransformer({
 			else if (action?.data?.id === 'view-content') {
 				return {
 					...action,
-					isVisible: (item: any) => Boolean(!item?.file?.link?.href),
+					isVisible: (item: any) => Boolean(!item?.file),
 				};
 			}
 			else if (action?.data?.id === 'view-file') {
@@ -205,7 +221,22 @@ export default function ViewVersionHistoryFDSPropsTransformer({
 			action: any;
 			selectedData: any;
 		}) => {
-			if (action?.data.id === 'expire') {
+			if (action?.data.id === 'delete') {
+				deleteAssetVersionBulkAction({
+					apiURL: otherProps.apiURL,
+					className: additionalProps.className,
+					classPK: additionalProps.classPK,
+					dataSetId: otherProps.id,
+					entryClassName: additionalProps.entryClassName,
+					objectEntryCurrentVersion:
+						additionalProps.objectEntryCurrentVersion,
+					objectEntryTitle: additionalProps.objectEntryTitle,
+					objectEntryVersionsCount:
+						additionalProps.objectEntryVersionsCount,
+					selectedData,
+				});
+			}
+			else if (action?.data.id === 'expire') {
 				expireEntriesBulkAction({
 					apiURL: otherProps.apiURL,
 					dataSetId: otherProps.id,

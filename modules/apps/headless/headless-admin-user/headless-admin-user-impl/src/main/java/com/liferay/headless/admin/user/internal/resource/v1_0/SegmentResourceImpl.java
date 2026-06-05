@@ -13,6 +13,7 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
+import com.liferay.segments.constants.SegmentsEntryConstants;
 import com.liferay.segments.context.RequestContextMapper;
 import com.liferay.segments.model.SegmentsEntry;
 import com.liferay.segments.provider.SegmentsEntryProviderRegistry;
@@ -41,10 +42,23 @@ public class SegmentResourceImpl extends BaseSegmentResourceImpl {
 		return Page.of(
 			transform(
 				_segmentsEntryService.getSegmentsEntries(
-					siteId, pagination.getStartPosition(),
-					pagination.getEndPosition(), null),
+					siteId,
+					new String[] {
+						SegmentsEntryConstants.SOURCE_ASAH_FARO_BACKEND,
+						SegmentsEntryConstants.SOURCE_DEFAULT,
+						SegmentsEntryConstants.SOURCE_REFERRED
+					},
+					pagination.getStartPosition(), pagination.getEndPosition(),
+					null),
 				this::_toSegment),
-			pagination, _segmentsEntryService.getSegmentsEntriesCount(siteId));
+			pagination,
+			_segmentsEntryService.getSegmentsEntriesCount(
+				siteId,
+				new String[] {
+					SegmentsEntryConstants.SOURCE_ASAH_FARO_BACKEND,
+					SegmentsEntryConstants.SOURCE_DEFAULT,
+					SegmentsEntryConstants.SOURCE_REFERRED
+				}));
 	}
 
 	@Override
@@ -59,8 +73,7 @@ public class SegmentResourceImpl extends BaseSegmentResourceImpl {
 				ArrayUtil.toArray(
 					_segmentsEntryProviderRegistry.getSegmentsEntryIds(
 						siteId, user.getModelClassName(), user.getPrimaryKey(),
-						_requestContextMapper.map(contextHttpServletRequest),
-						new long[0])),
+						_requestContextMapper.map(contextHttpServletRequest))),
 				segmentsEntryId -> _toSegment(
 					_segmentsEntryService.getSegmentsEntry(segmentsEntryId))));
 	}

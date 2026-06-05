@@ -50,6 +50,27 @@ public class StoreAreaAwareStoreWrapper implements Store {
 	}
 
 	@Override
+	public void deleteDirectory(long companyId) throws PortalException {
+		Store store = _storeSupplier.get();
+
+		if (_isStoreAreaSupported(companyId)) {
+			StoreAreaProcessor storeAreaProcessor =
+				_storeAreaProcessorSupplier.get();
+
+			if (storeAreaProcessor.copyDirectory(
+					companyId, _SOURCE_STORE_AREAS, StoreArea.DELETED)) {
+
+				StoreArea.runWithStoreAreas(
+					() -> store.deleteDirectory(companyId), StoreArea.LIVE,
+					StoreArea.NEW);
+			}
+		}
+		else {
+			store.deleteDirectory(companyId);
+		}
+	}
+
+	@Override
 	public void deleteDirectory(
 		long companyId, long repositoryId, String dirName) {
 
@@ -180,6 +201,22 @@ public class StoreAreaAwareStoreWrapper implements Store {
 		return store.hasFile(companyId, repositoryId, fileName, versionLabel);
 	}
 
+	@Override
+	public void verifyCompanyStores() throws PortalException {
+		Store store = _storeSupplier.get();
+		StoreAreaProcessor storeAreaProcessor =
+			_storeAreaProcessorSupplier.get();
+
+		if (storeAreaProcessor != null) {
+			for (StoreArea storeArea : _STORE_AREAS) {
+				StoreArea.withStoreArea(storeArea, store::verifyCompanyStores);
+			}
+		}
+		else {
+			store.verifyCompanyStores();
+		}
+	}
+
 	private String[] _getFileNames(
 		long companyId, long repositoryId, String dirName,
 		StoreArea... storeAreas) {
@@ -235,6 +272,10 @@ public class StoreAreaAwareStoreWrapper implements Store {
 
 	private static final StoreArea[] _SOURCE_STORE_AREAS = {
 		StoreArea.LIVE, StoreArea.NEW
+	};
+
+	private static final StoreArea[] _STORE_AREAS = {
+		StoreArea.DELETED, StoreArea.LIVE, StoreArea.NEW
 	};
 
 	private final Supplier<StoreAreaProcessor> _storeAreaProcessorSupplier;

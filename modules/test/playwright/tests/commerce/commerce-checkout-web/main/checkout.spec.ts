@@ -6,16 +6,17 @@
 import {expect, mergeTests} from '@playwright/test';
 
 import {accountsPagesTest} from '../../../../fixtures/accountsPagesTest';
-import {applicationsMenuPageTest} from '../../../../fixtures/applicationsMenuPageTest';
 import {commercePagesTest} from '../../../../fixtures/commercePagesTest';
 import {dataApiHelpersTest} from '../../../../fixtures/dataApiHelpersTest';
 import {displayPageTemplatesPagesTest} from '../../../../fixtures/displayPageTemplatesPagesTest';
 import {featureFlagsTest} from '../../../../fixtures/featureFlagsTest';
+import {globalMenuPagesTest} from '../../../../fixtures/globalMenuPagesTest';
 import {isolatedSiteTest} from '../../../../fixtures/isolatedSiteTest';
 import {loginTest} from '../../../../fixtures/loginTest';
 import {notificationPagesTest} from '../../../../fixtures/notificationPagesTest';
 import {pageEditorPagesTest} from '../../../../fixtures/pageEditorPagesTest';
 import {pageViewModePagesTest} from '../../../../fixtures/pageViewModePagesTest';
+import {productMenuPageTest} from '../../../../fixtures/productMenuPageTest';
 import {systemSettingsPageTest} from '../../../../fixtures/systemSettingsPageTest';
 import {liferayConfig} from '../../../../liferay.config';
 import {getRandomInt} from '../../../../utils/getRandomInt';
@@ -32,7 +33,6 @@ import {miniumSetUp} from '../../utils/commerce';
 import {getDateFormatted, setFutureDate} from '../../utils/date';
 
 export const test = mergeTests(
-	applicationsMenuPageTest,
 	accountsPagesTest,
 	commercePagesTest,
 	dataApiHelpersTest,
@@ -41,11 +41,13 @@ export const test = mergeTests(
 		'LPD-20379': {enabled: true},
 		'LPS-178052': {enabled: true},
 	}),
+	globalMenuPagesTest,
 	isolatedSiteTest,
 	loginTest(),
 	notificationPagesTest,
 	pageEditorPagesTest,
 	pageViewModePagesTest,
+	productMenuPageTest,
 	systemSettingsPageTest
 );
 
@@ -399,11 +401,9 @@ test(
 	}) => {
 		test.setTimeout(180000);
 
-		const site = await apiHelpers.headlessSite.createSite({
+		const site = await apiHelpers.headlessAdminSite.postSite({
 			name: getRandomString(),
 		});
-
-		apiHelpers.data.push({id: site.id, type: 'site'});
 
 		const channel =
 			await apiHelpers.headlessCommerceAdminChannel.postChannel({
@@ -960,8 +960,21 @@ test(
 				)
 			).toBeVisible();
 
+			await expect(
+				commerceAdminCatalogsPage.modalFieldName
+			).toBeVisible();
+
 			await commerceAdminCatalogsPage.modalFieldName.fill(catalog.name);
+
+			await expect(
+				commerceAdminCatalogsPage.modalSubmitButton
+			).toBeVisible();
+
 			await commerceAdminCatalogsPage.modalSubmitButton.click();
+
+			await expect(
+				commerceAdminCatalogsPage.modalSubmitButton
+			).not.toBeVisible();
 
 			catalog.id = parseInt(
 				await commerceAdminCatalogsPage.catalogId.textContent(),
@@ -1043,7 +1056,7 @@ test(
 			await waitForAlert(page);
 
 			await commerceAdminWarehouseEligibilityPage.linkTab.click();
-			await commerceAdminWarehouseEligibilityPage.specificChannelRadio.click();
+			await commerceAdminWarehouseEligibilityPage.specificChannelsRadio.click();
 			await commerceAdminWarehouseEligibilityPage.addChannels.fill(
 				channel.name
 			);
@@ -1088,6 +1101,8 @@ test(
 			apiHelpers.data.push({id: product1.id, type: 'product'});
 
 			await commerceAdminProductDetailsPage.publishLink.click();
+
+			await waitForAlert(page);
 
 			await expect(page.getByText('Approved')).toBeVisible();
 
@@ -1887,19 +1902,19 @@ test(
 	async ({
 		accountsPage,
 		apiHelpers,
-		applicationsMenuPage,
 		checkoutPage,
 		commerceAccountManagementPage,
 		commerceThemeMiniumCatalogPage,
 		commerceThemeMiniumPage,
 		editAccountChannelDefaultsPage,
 		editAccountPage,
+		globalMenuPage,
 		page,
 	}) => {
 		test.setTimeout(120000);
 
 		const initiateCheckout = async (site: string) => {
-			await applicationsMenuPage.goToSite(site);
+			await globalMenuPage.goToSite(site);
 
 			await page.waitForLoadState('networkidle');
 

@@ -16,12 +16,12 @@ import com.liferay.portal.search.aggregation.AggregationResult;
 import com.liferay.portal.search.aggregation.Aggregations;
 import com.liferay.portal.search.aggregation.bucket.TermsAggregation;
 import com.liferay.portal.search.aggregation.bucket.TermsAggregationResult;
-import com.liferay.portal.search.engine.adapter.search.SearchRequestExecutor;
+import com.liferay.portal.search.engine.adapter.SearchEngineAdapter;
 import com.liferay.portal.search.engine.adapter.search.SearchSearchRequest;
 import com.liferay.portal.search.engine.adapter.search.SearchSearchResponse;
 import com.liferay.portal.search.index.IndexNameBuilder;
 import com.liferay.portal.search.query.BooleanQuery;
-import com.liferay.portal.search.query.Queries;
+import com.liferay.portal.search.query.QueriesUtil;
 import com.liferay.portal.search.query.TermsQuery;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.workflow.metrics.rest.dto.v1_0.Assignee;
@@ -69,7 +69,7 @@ public class AssigneeResourceImpl extends BaseAssigneeResourceImpl {
 				assigneeBulkSelection.getInstanceIds(), processId));
 
 		SearchSearchResponse searchSearchResponse =
-			_searchRequestExecutor.executeSearchRequest(searchSearchRequest);
+			_searchEngineAdapter.execute(searchSearchRequest);
 
 		Map<String, AggregationResult> aggregationResultsMap =
 			searchSearchResponse.getAggregationResultsMap();
@@ -97,10 +97,10 @@ public class AssigneeResourceImpl extends BaseAssigneeResourceImpl {
 	private BooleanQuery _createTasksBooleanQuery(
 		Long[] instanceIds, long processId) {
 
-		BooleanQuery booleanQuery = _queries.booleanQuery();
+		BooleanQuery booleanQuery = QueriesUtil.booleanQuery();
 
 		if (ArrayUtil.isNotEmpty(instanceIds)) {
-			TermsQuery termsQuery = _queries.terms("instanceId");
+			TermsQuery termsQuery = QueriesUtil.terms("instanceId");
 
 			termsQuery.addValues(
 				transform(
@@ -117,13 +117,13 @@ public class AssigneeResourceImpl extends BaseAssigneeResourceImpl {
 			booleanQuery.addMustQueryClauses(termsQuery);
 		}
 
-		booleanQuery.addMustNotQueryClauses(_queries.term("taskId", "0"));
+		booleanQuery.addMustNotQueryClauses(QueriesUtil.term("taskId", "0"));
 
 		return booleanQuery.addMustQueryClauses(
-			_queries.term("assigneeType", User.class.getName()),
-			_queries.term("companyId", contextCompany.getCompanyId()),
-			_queries.term("deleted", Boolean.FALSE),
-			_queries.term("processId", processId));
+			QueriesUtil.term("assigneeType", User.class.getName()),
+			QueriesUtil.term("companyId", contextCompany.getCompanyId()),
+			QueriesUtil.term("deleted", Boolean.FALSE),
+			QueriesUtil.term("processId", processId));
 	}
 
 	@Reference
@@ -139,10 +139,7 @@ public class AssigneeResourceImpl extends BaseAssigneeResourceImpl {
 	private Portal _portal;
 
 	@Reference
-	private Queries _queries;
-
-	@Reference
-	private SearchRequestExecutor _searchRequestExecutor;
+	private SearchEngineAdapter _searchEngineAdapter;
 
 	@Reference
 	private UserLocalService _userLocalService;

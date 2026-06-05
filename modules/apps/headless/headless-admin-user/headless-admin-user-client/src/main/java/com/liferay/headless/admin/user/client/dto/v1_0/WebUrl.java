@@ -158,3 +158,4 @@ public class WebUrl implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:672663903

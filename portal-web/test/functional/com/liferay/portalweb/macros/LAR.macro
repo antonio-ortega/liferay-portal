@@ -121,12 +121,14 @@ definition {
 
 	@summary = "Default summary"
 	macro _exportSite(larFileName = null) {
-		if (isSet(larFileName)) {
-			Type(
-				inputFieldId = "ExportPortlet_name",
-				locator1 = "TextInput#INPUT_ID",
-				value1 = ${larFileName});
+		if (!(isSet(larFileName))) {
+			var larFileName = "Export Process";
 		}
+
+		Type(
+			inputFieldId = "ExportPortlet_name",
+			locator1 = "TextInput#INPUT_ID",
+			value1 = ${larFileName});
 
 		LAR.exportWithAssertionOnSuccess();
 	}
@@ -225,6 +227,24 @@ definition {
 	}
 
 	@summary = "Default summary"
+	macro _prepareImportFile(larFileName = null) {
+		var downloadsDir = PropsUtil.get("output.dir.name");
+
+		var files = FileUtil.listFiles(${downloadsDir});
+
+		echo("files: ${files}");
+
+		var fileExists = FileUtil.exists("${downloadsDir}/${larFileName}.crdownload");
+
+		if (${fileExists} == "true") {
+			var sourceFilePath = "${downloadsDir}/${larFileName}.crdownload";
+			var destFilePath = "${downloadsDir}/${larFileName}";
+
+			FileUtil.move(${sourceFilePath}, ${destFilePath});
+		}
+	}
+
+	@summary = "Default summary"
 	macro _selectImportFile(importValidationMissingItem = null, cannotImport = null, mirrorWithOverwriting = null, uploadFrom = null, importDeletions = null, importPermissions = null, larFileName = null, copyAsNew = null) {
 		SelectFrame(locator1 = "IFrame#CONFIGURATION");
 
@@ -236,6 +256,8 @@ definition {
 			UploadDependencyFile.uploadArchiveFile(fileName = ${larFileName});
 		}
 		else {
+			LAR._prepareImportFile(larFileName = ${larFileName});
+
 			UploadTempFile.uploadTempFileHiddenNoMouseOver(
 				locator1 = "TextInput#FILE",
 				value1 = ${larFileName});
@@ -346,6 +368,8 @@ definition {
 			UploadDependencyFile.uploadArchiveFile(fileName = ${larFileName});
 		}
 		else {
+			LAR._prepareImportFile(larFileName = ${larFileName});
+
 			UploadTempFile.uploadTempFileHiddenNoMouseOver(
 				locator1 = "TextInput#FILE",
 				value1 = ${larFileName});
@@ -406,6 +430,8 @@ definition {
 			UploadDependencyFile.uploadArchiveFile(fileName = ${larFileName});
 		}
 		else {
+			LAR._prepareImportFile(larFileName = ${larFileName});
+
 			UploadTempFile.uploadTempFileHiddenNoMouseOver(
 				locator1 = "TextInput#FILE",
 				value1 = ${larFileName});
@@ -686,7 +712,11 @@ definition {
 
 		var portalURL = JSONCompany.getPortalURL();
 
-		var larFileName = RegexUtil.replace(${valueName}, "${portalURL}/documents/portlet_file_entry/[0-9]*/([a-zA-z0-9_.-]*)[(0-9KB)]*", 1);
+		var sourceFileName = RegexUtil.replace(${valueName}, "${portalURL}/documents/portlet_file_entry/[0-9]*/([a-zA-z0-9_.-]*)[(0-9KB)]*", 1);
+
+		var titleName = RegexUtil.replace(${sourceFileName}, "(.*)-[0-9]+\.lar", 1);
+
+		var larFileName = "${titleName}.lar";
 
 		echo("lar file name ${larFileName}");
 

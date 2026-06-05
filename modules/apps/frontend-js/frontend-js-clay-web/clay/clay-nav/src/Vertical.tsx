@@ -30,6 +30,11 @@ interface IItem extends React.ComponentProps<typeof Nav.Item> {
 	 * Callback for when item is clicked.
 	 */
 	onClick?: () => void;
+
+	/**
+	 * Text value when the label isn't a string.
+	 */
+	textValue?: string;
 }
 
 interface IItemWithItems extends IItem {
@@ -89,9 +94,21 @@ interface IProps extends React.ComponentProps<typeof VerticalNav> {
 	large?: boolean;
 
 	/**
+	 * Flag to indicate if `nav-nested-margins` class should be applied.
+	 * It uses margin instead of padding to indent each nested navigation.
+	 */
+	nestMargins?: boolean;
+
+	/**
 	 * Path to the spritemap that Icon should use when referencing symbols.
 	 */
 	spritemap?: string;
+
+	/**
+	 * Flag to indicate if `nav-stacked` class should be applied. It doesn't
+	 * indent nested navigation.
+	 */
+	stacked?: boolean;
 
 	/**
 	 * Custom component that will be displayed on mobile resolutions that toggles the visibility of the navigation.
@@ -108,6 +125,8 @@ function ClayVerticalNav({
 	activeLabel,
 	children,
 	displayType,
+	nestMargins,
+	stacked,
 	triggerLabel = 'Menu',
 	...otherProps
 }: IProps) {
@@ -116,10 +135,13 @@ function ClayVerticalNav({
 		'ClayVerticalNav: The `activeLabel` API has been deprecated in favor of `triggerLabel` and will be removed in the next major release.'
 	);
 
-	if (children && !displayType) {
+	if (children) {
 		return (
 			<VerticalNav
 				{...otherProps}
+				displayType={displayType}
+				nestMargins={nestMargins}
+				stacked={stacked}
 				triggerLabel={activeLabel ?? triggerLabel}
 			>
 				{children}
@@ -128,7 +150,11 @@ function ClayVerticalNav({
 	}
 
 	return (
-		<VerticalNav {...otherProps} triggerLabel={activeLabel ?? triggerLabel}>
+		<VerticalNav
+			{...otherProps}
+			displayType={displayType}
+			triggerLabel={activeLabel ?? triggerLabel}
+		>
 			{(item) => (
 				<VerticalNav.Item
 					active={item.active}
@@ -136,6 +162,7 @@ function ClayVerticalNav({
 					initialExpanded={item.initialExpanded}
 					items={item.items}
 					onClick={item.onClick}
+					textValue={item.textValue}
 				>
 					{item.label}
 				</VerticalNav.Item>

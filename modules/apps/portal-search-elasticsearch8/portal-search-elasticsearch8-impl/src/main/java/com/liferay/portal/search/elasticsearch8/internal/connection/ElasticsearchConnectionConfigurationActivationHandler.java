@@ -31,13 +31,16 @@ public class ElasticsearchConnectionConfigurationActivationHandler {
 				ConfigurableUtil.createConfigurable(
 					ElasticsearchConnectionConfiguration.class, properties);
 
-		ElasticsearchConnectionBuilder elasticsearchConnectionBuilder =
-			new ElasticsearchConnectionBuilder();
+		ElasticsearchConnection.Builder builder =
+			new ElasticsearchConnection.Builder(
+				elasticsearchConnectionConfiguration::networkHostAddresses);
 
-		elasticsearchConnectionBuilder.active(
+		builder.active(
 			elasticsearchConnectionConfiguration.active()
 		).authenticationEnabled(
 			elasticsearchConnectionConfiguration.authenticationEnabled()
+		).compressionEnabled(
+			elasticsearchConnectionConfiguration.compressionEnabled()
 		).connectionId(
 			elasticsearchConnectionConfiguration.connectionId()
 		).httpSSLEnabled(
@@ -46,8 +49,6 @@ public class ElasticsearchConnectionConfigurationActivationHandler {
 			elasticsearchConnectionConfiguration.maxConnections()
 		).maxConnectionsPerRoute(
 			elasticsearchConnectionConfiguration.maxConnectionsPerRoute()
-		).networkHostAddresses(
-			elasticsearchConnectionConfiguration.networkHostAddresses()
 		).password(
 			elasticsearchConnectionConfiguration.password()
 		).proxyConfig(
@@ -63,7 +64,7 @@ public class ElasticsearchConnectionConfigurationActivationHandler {
 		);
 
 		elasticsearchConnectionManager.addElasticsearchConnection(
-			elasticsearchConnectionBuilder.build());
+			builder.build());
 	}
 
 	protected ProxyConfig createProxyConfig(

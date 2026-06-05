@@ -5,6 +5,7 @@
 
 package com.liferay.oauth.client.persistence.model;
 
+import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
@@ -34,6 +35,8 @@ public class OAuthClientEntryWrapper
 		Map<String, Object> attributes = new HashMap<String, Object>();
 
 		attributes.put("mvccVersion", getMvccVersion());
+		attributes.put("uuid", getUuid());
+		attributes.put("externalReferenceCode", getExternalReferenceCode());
 		attributes.put("oAuthClientEntryId", getOAuthClientEntryId());
 		attributes.put("companyId", getCompanyId());
 		attributes.put("userId", getUserId());
@@ -46,6 +49,7 @@ public class OAuthClientEntryWrapper
 		attributes.put("clientId", getClientId());
 		attributes.put("customClaimsJSON", getCustomClaimsJSON());
 		attributes.put("infoJSON", getInfoJSON());
+		attributes.put("matcherField", getMatcherField());
 		attributes.put("metadataCacheTime", getMetadataCacheTime());
 		attributes.put("oidcUserInfoMapperJSON", getOIDCUserInfoMapperJSON());
 		attributes.put(
@@ -60,6 +64,19 @@ public class OAuthClientEntryWrapper
 
 		if (mvccVersion != null) {
 			setMvccVersion(mvccVersion);
+		}
+
+		String uuid = (String)attributes.get("uuid");
+
+		if (uuid != null) {
+			setUuid(uuid);
+		}
+
+		String externalReferenceCode = (String)attributes.get(
+			"externalReferenceCode");
+
+		if (externalReferenceCode != null) {
+			setExternalReferenceCode(externalReferenceCode);
 		}
 
 		Long oAuthClientEntryId = (Long)attributes.get("oAuthClientEntryId");
@@ -128,6 +145,12 @@ public class OAuthClientEntryWrapper
 
 		if (infoJSON != null) {
 			setInfoJSON(infoJSON);
+		}
+
+		String matcherField = (String)attributes.get("matcherField");
+
+		if (matcherField != null) {
+			setMatcherField(matcherField);
 		}
 
 		Long metadataCacheTime = (Long)attributes.get("metadataCacheTime");
@@ -217,6 +240,16 @@ public class OAuthClientEntryWrapper
 	}
 
 	/**
+	 * Returns the external reference code of this o auth client entry.
+	 *
+	 * @return the external reference code of this o auth client entry
+	 */
+	@Override
+	public String getExternalReferenceCode() {
+		return model.getExternalReferenceCode();
+	}
+
+	/**
 	 * Returns the info json of this o auth client entry.
 	 *
 	 * @return the info json of this o auth client entry
@@ -224,6 +257,16 @@ public class OAuthClientEntryWrapper
 	@Override
 	public String getInfoJSON() {
 		return model.getInfoJSON();
+	}
+
+	/**
+	 * Returns the matcher field of this o auth client entry.
+	 *
+	 * @return the matcher field of this o auth client entry
+	 */
+	@Override
+	public String getMatcherField() {
+		return model.getMatcherField();
 	}
 
 	@Override
@@ -331,6 +374,16 @@ public class OAuthClientEntryWrapper
 		return model.getUserUuid();
 	}
 
+	/**
+	 * Returns the uuid of this o auth client entry.
+	 *
+	 * @return the uuid of this o auth client entry
+	 */
+	@Override
+	public String getUuid() {
+		return model.getUuid();
+	}
+
 	@Override
 	public void persist() {
 		model.persist();
@@ -397,6 +450,16 @@ public class OAuthClientEntryWrapper
 	}
 
 	/**
+	 * Sets the external reference code of this o auth client entry.
+	 *
+	 * @param externalReferenceCode the external reference code of this o auth client entry
+	 */
+	@Override
+	public void setExternalReferenceCode(String externalReferenceCode) {
+		model.setExternalReferenceCode(externalReferenceCode);
+	}
+
+	/**
 	 * Sets the info json of this o auth client entry.
 	 *
 	 * @param infoJSON the info json of this o auth client entry
@@ -404,6 +467,16 @@ public class OAuthClientEntryWrapper
 	@Override
 	public void setInfoJSON(String infoJSON) {
 		model.setInfoJSON(infoJSON);
+	}
+
+	/**
+	 * Sets the matcher field of this o auth client entry.
+	 *
+	 * @param matcherField the matcher field of this o auth client entry
+	 */
+	@Override
+	public void setMatcherField(String matcherField) {
+		model.setMatcherField(matcherField);
 	}
 
 	/**
@@ -508,9 +581,24 @@ public class OAuthClientEntryWrapper
 		model.setUserUuid(userUuid);
 	}
 
+	/**
+	 * Sets the uuid of this o auth client entry.
+	 *
+	 * @param uuid the uuid of this o auth client entry
+	 */
+	@Override
+	public void setUuid(String uuid) {
+		model.setUuid(uuid);
+	}
+
 	@Override
 	public String toXmlString() {
 		return model.toXmlString();
+	}
+
+	@Override
+	public StagedModelType getStagedModelType() {
+		return model.getStagedModelType();
 	}
 
 	@Override
@@ -519,3 +607,4 @@ public class OAuthClientEntryWrapper
 	}
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-1284682508

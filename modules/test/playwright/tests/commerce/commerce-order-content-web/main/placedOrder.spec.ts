@@ -5,10 +5,10 @@
 
 import {expect, mergeTests} from '@playwright/test';
 
-import {applicationsMenuPageTest} from '../../../../fixtures/applicationsMenuPageTest';
 import {commercePagesTest} from '../../../../fixtures/commercePagesTest';
 import {dataApiHelpersTest} from '../../../../fixtures/dataApiHelpersTest';
 import {featureFlagsTest} from '../../../../fixtures/featureFlagsTest';
+import {globalMenuPagesTest} from '../../../../fixtures/globalMenuPagesTest';
 import {instanceSettingsPagesTest} from '../../../../fixtures/instanceSettingsPagesTest';
 import {isolatedSiteTest} from '../../../../fixtures/isolatedSiteTest';
 import {loginTest} from '../../../../fixtures/loginTest';
@@ -38,7 +38,7 @@ import {
 } from '../../utils/date';
 
 export const test = mergeTests(
-	applicationsMenuPageTest,
+	globalMenuPagesTest,
 	commercePagesTest,
 	dataApiHelpersTest,
 	featureFlagsTest({
@@ -314,9 +314,9 @@ test(
 	{tag: ['@COMMERCE-12610', '@LPD-39379']},
 	async ({
 		apiHelpers,
-		applicationsMenuPage,
 		commerceAdminChannelsPage,
 		commerceAdminProductPage,
+		globalMenuPage,
 		page,
 		placedOrderPage,
 		placedOrdersPage,
@@ -562,7 +562,7 @@ test(
 			}
 		);
 
-		await applicationsMenuPage.goToProducts();
+		await globalMenuPage.goToCommerce('Products');
 
 		await commerceAdminProductPage.managementToolbarSearchInput.fill(
 			'ProductBundle'
@@ -763,7 +763,7 @@ test('LPD-26643 Reorder from placed orders details page', async ({
 
 	await checkoutPage.goToOrderDetailsButton.click();
 
-	await expect(page.getByText('U-joint')).toBeVisible();
+	await expect(page.getByRole('link', {name: 'U-joint'})).toBeVisible();
 
 	try {
 		await commerceAdminOrderDetailsPage.reorderButton.click();
@@ -772,7 +772,7 @@ test('LPD-26643 Reorder from placed orders details page', async ({
 
 		await commerceAdminOrderDetailsPage.checkoutButton.click();
 
-		await expect(page.getByText('U-joint')).toBeVisible();
+		await expect(page.getByRole('link', {name: 'U-joint'})).toBeVisible();
 
 		await checkoutPage.chooseShippingAddress({index: 1});
 
@@ -1533,10 +1533,10 @@ test('LPD-33658 Global Settings for order date configuration', async ({
 
 test('LPD-41952 Reorder from placed orders details page with different currency enabled', async ({
 	apiHelpers,
-	applicationsMenuPage,
 	commerceAccountManagementPage,
 	commerceAdminOrderDetailsPage,
 	commerceChannelDefaultsPage,
+	globalMenuPage,
 	page,
 	placedOrdersPage,
 }) => {
@@ -1620,7 +1620,7 @@ test('LPD-41952 Reorder from placed orders details page with different currency 
 		shippingAddressId: address.id,
 	});
 
-	await applicationsMenuPage.goToAccounts();
+	await globalMenuPage.goToControlPanel('Accounts');
 
 	await commerceAccountManagementPage
 		.accountsTableRowLink(account.id)

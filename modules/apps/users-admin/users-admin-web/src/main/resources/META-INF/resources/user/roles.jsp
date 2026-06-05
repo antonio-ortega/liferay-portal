@@ -114,17 +114,15 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 				/>
 			</liferay-ui:search-container-column-text>
 
-			<c:if test='<%= FeatureFlagManagerUtil.isEnabled("LPD-35914") %>'>
-				<liferay-ui:search-container-column-text
-					cssClass="table-cell-expand"
-					name="status"
-				>
-					<clay:label
-						displayType="<%= WorkflowConstants.getStatusStyle(role.getStatus()) %>"
-						label="<%= WorkflowConstants.getStatusLabel(role.getStatus()) %>"
-					/>
-				</liferay-ui:search-container-column-text>
-			</c:if>
+			<liferay-ui:search-container-column-text
+				cssClass="table-cell-expand"
+				name="status"
+			>
+				<clay:label
+					displayType="<%= WorkflowConstants.getStatusStyle(role.getStatus()) %>"
+					label="<%= WorkflowConstants.getStatusLabel(role.getStatus()) %>"
+				/>
+			</liferay-ui:search-container-column-text>
 
 			<liferay-ui:search-container-column-text>
 				<c:if test="<%= !portletName.equals(myAccountPortletId) && userDisplayContext.isAllowRemoveRole(role) %>">
@@ -346,17 +344,15 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 					value="<%= HtmlUtil.escape(userGroupRole.getGroup().getDescriptiveName(locale)) %>"
 				/>
 
-				<c:if test='<%= FeatureFlagManagerUtil.isEnabled("LPD-35914") %>'>
-					<liferay-ui:search-container-column-text
-						cssClass="table-cell-expand"
-						name="status"
-					>
-						<clay:label
-							displayType="<%= WorkflowConstants.getStatusStyle(role.getStatus()) %>"
-							label="<%= WorkflowConstants.getStatusLabel(role.getStatus()) %>"
-						/>
-					</liferay-ui:search-container-column-text>
-				</c:if>
+				<liferay-ui:search-container-column-text
+					cssClass="table-cell-expand"
+					name="status"
+				>
+					<clay:label
+						displayType="<%= WorkflowConstants.getStatusStyle(role.getStatus()) %>"
+						label="<%= WorkflowConstants.getStatusLabel(role.getStatus()) %>"
+					/>
+				</liferay-ui:search-container-column-text>
 
 				<%
 				boolean membershipProtected = false;
@@ -483,13 +479,15 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 						).setParameter(
 							"groupEventName", groupEventName
 						).setParameter(
+							"organizationId", ((organizationIds != null) && (organizationIds.length == 1)) ? String.valueOf(organizationIds[0]) : null
+						).setParameter(
 							"organizationIds", StringUtil.merge(organizationIds)
 						).setParameter(
 							"p_u_i_d", (selUser == null) ? "0" : String.valueOf(selUser.getUserId())
 						).setParameter(
 							"roleType", RoleConstants.TYPE_ORGANIZATION
 						).setParameter(
-							"step", "1"
+							"step", ((organizationIds != null) && (organizationIds.length == 1)) ? "2" : "1"
 						).setWindowState(
 							LiferayWindowState.POP_UP
 						).buildPortletURL();
@@ -607,17 +605,15 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 					/>
 				</liferay-ui:search-container-column-text>
 
-				<c:if test='<%= FeatureFlagManagerUtil.isEnabled("LPD-35914") %>'>
-					<liferay-ui:search-container-column-text
-						cssClass="table-cell-expand"
-						name="status"
-					>
-						<clay:label
-							displayType="<%= WorkflowConstants.getStatusStyle(role.getStatus()) %>"
-							label="<%= WorkflowConstants.getStatusLabel(role.getStatus()) %>"
-						/>
-					</liferay-ui:search-container-column-text>
-				</c:if>
+				<liferay-ui:search-container-column-text
+					cssClass="table-cell-expand"
+					name="status"
+				>
+					<clay:label
+						displayType="<%= WorkflowConstants.getStatusStyle(role.getStatus()) %>"
+						label="<%= WorkflowConstants.getStatusLabel(role.getStatus()) %>"
+					/>
+				</liferay-ui:search-container-column-text>
 
 				<%
 				boolean membershipProtected = false;

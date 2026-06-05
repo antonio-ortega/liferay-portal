@@ -30,9 +30,8 @@ import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.search.document.Document;
-import com.liferay.portal.search.document.DocumentBuilderFactory;
 import com.liferay.portal.search.model.uid.UIDFactory;
-import com.liferay.portal.search.query.Queries;
+import com.liferay.portal.search.query.QueriesUtil;
 import com.liferay.portal.search.searcher.SearchRequestBuilder;
 import com.liferay.portal.search.searcher.SearchRequestBuilderFactory;
 import com.liferay.portal.search.searcher.SearchResponse;
@@ -103,8 +102,7 @@ public class UserIndexerIndexedFieldsByAssociationTest {
 		_userGroups = userGroupSearchFixture.getUserGroups();
 
 		indexedFieldsFixture = new IndexedFieldsFixture(
-			_resourcePermissionLocalService, _searchEngineHelper, _uidFactory,
-			_documentBuilderFactory);
+			_resourcePermissionLocalService, _searchEngineHelper, _uidFactory);
 	}
 
 	@Test
@@ -247,7 +245,7 @@ public class UserIndexerIndexedFieldsByAssociationTest {
 			searchRequestBuilder.emptySearchEnabled(
 				true
 			).query(
-				_queries.term(Field.USER_ID, TestPropsValues.getUserId())
+				QueriesUtil.term(Field.USER_ID, TestPropsValues.getUserId())
 			).build());
 
 		List<Document> documents = searchResponse1.getDocuments();
@@ -271,7 +269,7 @@ public class UserIndexerIndexedFieldsByAssociationTest {
 
 		SearchResponse searchResponse2 = _searcher.search(
 			searchRequestBuilder.query(
-				_queries.term(Field.GROUP_ID, groupId)
+				QueriesUtil.term(Field.GROUP_ID, groupId)
 			).build());
 
 		DocumentsAssert.assertValuesIgnoreRelevance(
@@ -319,7 +317,7 @@ public class UserIndexerIndexedFieldsByAssociationTest {
 			).modelIndexerClasses(
 				user.getModelClass()
 			).query(
-				_queries.term(Field.ENTRY_CLASS_PK, user.getPrimaryKeyObj())
+				QueriesUtil.term(Field.ENTRY_CLASS_PK, user.getPrimaryKeyObj())
 			).build());
 
 		List<Document> documents = searchResponse.getDocuments();
@@ -341,54 +339,47 @@ public class UserIndexerIndexedFieldsByAssociationTest {
 
 	private static final String _CT_COLLECTION_ID = "ctCollectionId";
 
-	@Inject
-	private static DocumentBuilderFactory _documentBuilderFactory;
-
-	@Inject
-	private static GroupLocalService _groupLocalService;
-
-	@Inject
-	private static OrganizationLocalService _organizationLocalService;
-
-	@Inject
-	private static Queries _queries;
-
-	@Inject
-	private static ResourcePermissionLocalService
-		_resourcePermissionLocalService;
-
-	@Inject
-	private static SearchEngineHelper _searchEngineHelper;
-
-	@Inject
-	private static Searcher _searcher;
-
-	@Inject
-	private static SearchRequestBuilderFactory _searchRequestBuilderFactory;
-
-	@Inject
-	private static UIDFactory _uidFactory;
-
-	@Inject
-	private static UserGroupLocalService _userGroupLocalService;
-
-	@Inject
-	private static UserGroupRoleLocalService _userGroupRoleLocalService;
-
-	@Inject
-	private static UserLocalService _userLocalService;
-
 	@DeleteAfterTestRun
 	private List<Address> _addresses = new ArrayList<>();
+
+	@Inject
+	private GroupLocalService _groupLocalService;
 
 	@DeleteAfterTestRun
 	private List<Group> _groups;
 
+	@Inject
+	private OrganizationLocalService _organizationLocalService;
+
 	@DeleteAfterTestRun
 	private List<Organization> _organizations;
 
+	@Inject
+	private ResourcePermissionLocalService _resourcePermissionLocalService;
+
+	@Inject
+	private SearchEngineHelper _searchEngineHelper;
+
+	@Inject
+	private Searcher _searcher;
+
+	@Inject
+	private SearchRequestBuilderFactory _searchRequestBuilderFactory;
+
+	@Inject
+	private UIDFactory _uidFactory;
+
+	@Inject
+	private UserGroupLocalService _userGroupLocalService;
+
+	@Inject
+	private UserGroupRoleLocalService _userGroupRoleLocalService;
+
 	@DeleteAfterTestRun
 	private List<UserGroup> _userGroups;
+
+	@Inject
+	private UserLocalService _userLocalService;
 
 	@DeleteAfterTestRun
 	private List<User> _users;

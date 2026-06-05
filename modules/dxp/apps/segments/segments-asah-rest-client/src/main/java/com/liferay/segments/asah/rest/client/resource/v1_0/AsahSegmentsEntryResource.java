@@ -360,3 +360,4 @@ public interface AsahSegmentsEntryResource {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:2077426564

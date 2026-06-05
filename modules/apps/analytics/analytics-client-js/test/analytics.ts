@@ -8,8 +8,13 @@
 import fetchMock from 'fetch-mock';
 
 import AnalyticsClient from '../src/analytics';
+import {SegmentCachedData} from '../src/segment';
 import {Analytics as AnalyticsType} from '../src/types';
-import {getItem} from '../src/utils/storage';
+import {
+	ANALYTICS_BATCH_SEGMENT_EXTERNAL_REFERENCE_CODES,
+	THREE_HOURS_IN_MILLISECONDS,
+} from '../src/utils/constants';
+import {getItem, setItem} from '../src/utils/storage';
 import {DXP_APPLICATION_IDS} from '../src/utils/validators';
 import {
 	INITIAL_ANALYTICS_CONFIG,
@@ -25,6 +30,7 @@ const FLUSH_INTERVAL = 100;
 const INITIAL_CONFIG = {
 	...INITIAL_ANALYTICS_CONFIG,
 	endpointUrl: 'https://ac-server.io',
+	faroBackendUrl: 'https://ac-backend-server.io',
 	flushInterval: FLUSH_INTERVAL,
 };
 
@@ -166,23 +172,24 @@ describe('Analytics', () => {
 		Analytics.reset();
 		AnalyticsClient.dispose();
 
+		localStorage.removeItem(AnalyticsType.Keys.PrevEmailAddressHash);
+
 		Analytics = AnalyticsClient.create(INITIAL_CONFIG);
 
 		sendDummyEvents(Analytics, 1);
 
-		setTimeout(async () => {
+		await wait(FLUSH_INTERVAL * 2);
 
-			// Flush should have happened at least once
+		// Flush should have happened at least once
 
-			const userId = getItem(AnalyticsType.Keys.UserId);
+		const userId = getItem(AnalyticsType.Keys.UserId);
 
-			await Analytics.setIdentity({
-				email: 'john@liferay.com',
-				name: 'John',
-			});
+		await Analytics.setIdentity({
+			email: 'john@liferay.com',
+			name: 'John',
+		});
 
-			expect(getItem(AnalyticsType.Keys.UserId)).toEqual(userId);
-		}, FLUSH_INTERVAL * 2);
+		expect(getItem(AnalyticsType.Keys.UserId)).toEqual(userId);
 	});
 
 	it('replace the user id whenever the set identity hash is changed', async () => {
@@ -273,6 +280,161 @@ describe('Analytics', () => {
 		expect(getItem(AnalyticsType.Keys.UserId)).not.toEqual(userId);
 	});
 
+	describe('Demandbase account message', () => {
+		const COMPANY_PROFILE = {
+			company_name: 'Acme Corp',
+			industry: 'Software',
+			web_site: 'acme.com',
+		};
+
+		afterEach(() => {
+			delete (window as any).Demandbase;
+			localStorage.removeItem(AnalyticsType.Keys.DemandbaseAccount);
+			localStorage.removeItem(AnalyticsType.Queues.AccountMessage);
+		});
+
+		it('builds the demandbase-account endpoint from endpointUrl', () => {
+			expect(Analytics.config.demandbaseAccountEndpoint).toBe(
+				'https://ac-server.io/demandbase-account'
+			);
+		});
+
+		it('enqueues an account message when CompanyProfile is present', async () => {
+			(window as any).Demandbase = {
+				IpApi: {CompanyProfile: COMPANY_PROFILE},
+			};
+
+			await Analytics.setIdentity(ANALYTICS_IDENTITY);
+			await wait(10);
+
+			const items = Analytics[
+				AnalyticsType.Queues.AccountMessage
+			].getItems() as any[];
+
+			expect(items.length).toBe(1);
+			expect(items[0].userId).toBe(getItem(AnalyticsType.Keys.UserId));
+			expect(items[0]).toMatchObject(COMPANY_PROFILE);
+			expect(items[0].emailAddressHashed).toBe(
+				Analytics.config.identity.emailAddressHashed
+			);
+			expect(items[0].emailAddressHashed).toBeTruthy();
+		});
+
+		it('does not enqueue an account message when Demandbase is absent', async () => {
+			await Analytics.setIdentity(ANALYTICS_IDENTITY);
+			await wait(10);
+
+			const items =
+				Analytics[AnalyticsType.Queues.AccountMessage].getItems();
+
+			expect(items.length).toBe(0);
+		});
+
+		it('does not re-enqueue the account message for the same userId and profile', async () => {
+			(window as any).Demandbase = {
+				IpApi: {CompanyProfile: COMPANY_PROFILE},
+			};
+
+			await Analytics.setIdentity(ANALYTICS_IDENTITY);
+			await wait(10);
+
+			Analytics[AnalyticsType.Queues.AccountMessage].reset();
+
+			await Analytics.setIdentity(ANALYTICS_IDENTITY);
+			await wait(10);
+
+			const items =
+				Analytics[AnalyticsType.Queues.AccountMessage].getItems();
+
+			expect(items.length).toBe(0);
+		});
+
+		it('clears stored account state when Demandbase becomes unavailable', async () => {
+			(window as any).Demandbase = {
+				IpApi: {CompanyProfile: COMPANY_PROFILE},
+			};
+
+			await Analytics.setIdentity(ANALYTICS_IDENTITY);
+			await wait(10);
+
+			expect(getItem(AnalyticsType.Keys.DemandbaseAccount)).toBeTruthy();
+			expect(
+				Analytics[AnalyticsType.Queues.AccountMessage].getItems().length
+			).toBe(1);
+
+			delete (window as any).Demandbase;
+			jest.spyOn(
+				Analytics.demandbase,
+				'waitForReadiness'
+			).mockResolvedValue(null);
+
+			Analytics.demandbase.sendAccountMessage('any-user-id');
+			await wait(10);
+
+			expect(getItem(AnalyticsType.Keys.DemandbaseAccount)).toBeNull();
+			expect(
+				Analytics[AnalyticsType.Queues.AccountMessage].getItems().length
+			).toBe(0);
+		});
+
+		it('does not throw when reading Demandbase throws', async () => {
+			Object.defineProperty(window, 'Demandbase', {
+				configurable: true,
+				get() {
+					throw new Error('boom');
+				},
+			});
+
+			await expect(
+				Analytics.setIdentity(ANALYTICS_IDENTITY)
+			).resolves.toBeDefined();
+
+			await wait(10);
+		});
+
+		it('demandbase.waitForReadiness resolves immediately when CompanyProfile is available', async () => {
+			(window as any).Demandbase = {
+				IpApi: {CompanyProfile: COMPANY_PROFILE},
+			};
+
+			await expect(
+				Analytics.demandbase.waitForReadiness(100)
+			).resolves.toEqual(COMPANY_PROFILE);
+		});
+
+		it('demandbase.waitForReadiness resolves null on timeout when Demandbase never loads', async () => {
+			await expect(
+				Analytics.demandbase.waitForReadiness(50)
+			).resolves.toBeNull();
+		});
+
+		it('demandbase.waitForReadiness resolves via registerCallback when invoked', async () => {
+			let registered: ((data: unknown) => void) | undefined;
+
+			(window as any).Demandbase = {
+				IpApi: {CompanyProfile: undefined},
+				Utilities: {
+					Callbacks: {
+						registerCallback: (fn: (data: unknown) => void) => {
+							registered = fn;
+						},
+					},
+				},
+			};
+
+			const promise = Analytics.demandbase.waitForReadiness(2000);
+
+			setTimeout(() => {
+				(window as any).Demandbase.IpApi.CompanyProfile =
+					COMPANY_PROFILE;
+
+				registered?.(COMPANY_PROFILE);
+			}, 50);
+
+			await expect(promise).resolves.toEqual(COMPANY_PROFILE);
+		});
+	});
+
 	describe('send()', () => {
 		it('is exposed as an Analytics method', () => {
 			expect(typeof Analytics.send).toBe('function');
@@ -309,6 +471,171 @@ describe('Analytics', () => {
 			const events = Analytics.getEvents();
 
 			expect(events.length).toBeGreaterThanOrEqual(eventsNumber);
+		});
+	});
+
+	describe('getBatchSegmentExternalReferenceCodes()', () => {
+		it('is exposed as an Analytics method', () => {
+			expect(typeof Analytics.getBatchSegmentExternalReferenceCodes).toBe(
+				'function'
+			);
+		});
+
+		it('gets batch segment ids for the first time', async () => {
+			fetchMock.mock(/ac-backend-server/i, () =>
+				Promise.resolve([1, 2, 3])
+			);
+
+			Analytics = AnalyticsClient.create(INITIAL_CONFIG);
+
+			let analyticsBatchSegmentExternalReferenceCode =
+				getItem<SegmentCachedData>(
+					ANALYTICS_BATCH_SEGMENT_EXTERNAL_REFERENCE_CODES
+				);
+
+			expect(analyticsBatchSegmentExternalReferenceCode).toBeNull();
+
+			const result =
+				await Analytics.getBatchSegmentExternalReferenceCodes();
+
+			expect(result).toEqual([1, 2, 3]);
+
+			analyticsBatchSegmentExternalReferenceCode = getItem(
+				ANALYTICS_BATCH_SEGMENT_EXTERNAL_REFERENCE_CODES
+			);
+
+			const individualId = (Analytics as any)._getUserId();
+
+			expect(
+				analyticsBatchSegmentExternalReferenceCode?.[individualId]
+					?.segmentExternalReferenceCodes
+			).toEqual([1, 2, 3]);
+
+			const date = new Date();
+
+			const createDate =
+				analyticsBatchSegmentExternalReferenceCode?.[individualId]
+					?.createDate ?? 0;
+
+			expect(date.getTime()).toBeLessThan(
+				createDate + THREE_HOURS_IN_MILLISECONDS
+			);
+		});
+
+		it('gets batch segment ids when data is expired', async () => {
+			fetchMock.mock(/ac-backend-server/i, () =>
+				Promise.resolve([1, 2, 3])
+			);
+
+			Analytics = AnalyticsClient.create(INITIAL_CONFIG);
+
+			const individualId = (Analytics as any)._getUserId();
+
+			const date = new Date();
+
+			date.setHours(date.getHours() - 5);
+
+			setItem(ANALYTICS_BATCH_SEGMENT_EXTERNAL_REFERENCE_CODES, {
+				[individualId]: {
+					createDate: date.getTime(),
+					segmentExternalReferenceCodes: [1, 2],
+				},
+			});
+
+			const result =
+				await Analytics.getBatchSegmentExternalReferenceCodes();
+
+			expect(result).toEqual([1, 2, 3]);
+
+			const analyticsBatchSegmentExternalReferenceCode =
+				getItem<SegmentCachedData>(
+					ANALYTICS_BATCH_SEGMENT_EXTERNAL_REFERENCE_CODES
+				);
+
+			expect(
+				analyticsBatchSegmentExternalReferenceCode?.[individualId]
+					?.segmentExternalReferenceCodes
+			).toEqual([1, 2, 3]);
+
+			const createDate =
+				analyticsBatchSegmentExternalReferenceCode?.[individualId]
+					?.createDate ?? 0;
+
+			expect(date.getTime()).toBeLessThan(createDate);
+		});
+
+		it('gets batch segment ids when data is not expired', async () => {
+			fetchMock.mock(/ac-backend-server/i, () =>
+				Promise.resolve([1, 2, 3])
+			);
+
+			Analytics = AnalyticsClient.create(INITIAL_CONFIG);
+
+			const individualId = (Analytics as any)._getUserId();
+
+			const date = new Date();
+
+			date.setHours(date.getHours() - 1);
+
+			setItem(ANALYTICS_BATCH_SEGMENT_EXTERNAL_REFERENCE_CODES, {
+				[individualId]: {
+					createDate: date.getTime(),
+					segmentExternalReferenceCodes: [1, 2],
+				},
+			});
+
+			const result =
+				await Analytics.getBatchSegmentExternalReferenceCodes();
+
+			expect(result).toEqual([1, 2]);
+
+			const analyticsBatchSegmentExternalReferenceCode =
+				getItem<SegmentCachedData>(
+					ANALYTICS_BATCH_SEGMENT_EXTERNAL_REFERENCE_CODES
+				);
+
+			expect(
+				analyticsBatchSegmentExternalReferenceCode?.[individualId]
+					?.segmentExternalReferenceCodes
+			).toEqual([1, 2]);
+
+			const createDate =
+				analyticsBatchSegmentExternalReferenceCode?.[individualId]
+					?.createDate ?? 0;
+
+			expect(date.getTime()).toEqual(createDate);
+		});
+	});
+
+	describe('getRealTimeSegmentExternalReferenceCodes()', () => {
+		it('is exposed as an Analytics method', () => {
+			expect(
+				typeof Analytics.getRealTimeSegmentExternalReferenceCodes
+			).toBe('function');
+		});
+
+		it('gets real time segment ids and never caches data', async () => {
+			fetchMock.mock(/ac-backend-server/i, () =>
+				Promise.resolve([1, 2, 3])
+			);
+
+			Analytics = AnalyticsClient.create(INITIAL_CONFIG);
+
+			const result1 =
+				await Analytics.getRealTimeSegmentExternalReferenceCodes();
+
+			expect(result1).toEqual([1, 2, 3]);
+
+			fetchMock.restore();
+
+			fetchMock.mock(/ac-backend-server/i, () =>
+				Promise.resolve([4, 5, 6])
+			);
+
+			const result2 =
+				await Analytics.getRealTimeSegmentExternalReferenceCodes();
+
+			expect(result2).toEqual([4, 5, 6]);
 		});
 	});
 

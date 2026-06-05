@@ -10,12 +10,16 @@ export const PORTLET_URLS = {
 		'/group/control_panel/manage?p_p_id=com_liferay_configuration_admin_web_portlet_InstanceSettingsPortlet&p_p_lifecycle=0&p_p_state=maximized&p_p_mode=view&_com_liferay_configuration_admin_web_portlet_InstanceSettingsPortlet_mvcRenderCommandName=%2Fconfiguration_admin%2Fview_configuration_screen&_com_liferay_configuration_admin_web_portlet_InstanceSettingsPortlet_configurationScreenKey=analytics-cloud-connection',
 	announcements:
 		'/~/control_panel/manage?p_p_id=com_liferay_announcements_web_portlet_AnnouncementsAdminPortlet',
+	audiences:
+		'/~/control_panel/manage?p_p_id=com_liferay_segments_web_internal_portlet_AudiencesPortlet',
 	batchExportImport:
 		'/~/control_panel/manage?p_p_id=com_liferay_batch_planner_web_internal_portlet_BatchPlannerPortlet',
 	blogs: '/~/control_panel/manage?p_p_id=com_liferay_blogs_web_portlet_BlogsAdminPortlet',
 	bookmarks:
 		'/~/control_panel/manage?p_p_id=com_liferay_bookmarks_web_portlet_BookmarksAdminPortlet',
 	categoriesAdmin: '/~/control_panel/manage/-/categories_admin/vocabularies',
+	cmpProjects: 'web/cms/projects',
+	cmpTasks: 'web/cms/tasks',
 	cms: 'web/cms/home',
 	cmsAll: 'web/cms/all',
 	cmsAllSpaces: 'web/cms/all-spaces',
@@ -32,10 +36,12 @@ export const PORTLET_URLS = {
 	cmsStructureBuilder: 'web/cms/structure-builder',
 	cmsStructures: 'web/cms/structures',
 	cmsTags: 'web/cms/categorization/view-tags',
-	cmsViewFolder: 'web/cms/e/view-folder/',
+	cmsViewFolder: 'web/cms/e/view-folder',
 	cmsVocabularies: 'web/cms/categorization/view-vocabularies',
 	collections:
 		'/~/control_panel/manage?p_p_id=com_liferay_asset_list_web_portlet_AssetListPortlet',
+	commerceChannels:
+		'/group/guest/~/control_panel/manage?p_p_id=com_liferay_commerce_channel_web_internal_portlet_CommerceChannelsPortlet',
 	contentDashboard:
 		'/~/control_panel/manage?p_p_id=com_liferay_content_dashboard_web_portlet_ContentDashboardAdminPortlet',
 	depotAdmin:
@@ -74,15 +80,21 @@ export const PORTLET_URLS = {
 		'/~/control_panel/manage?p_p_id=com_liferay_portal_workflow_task_web_portlet_MyWorkflowTaskPortlet',
 	navigationMenus:
 		'/~/control_panel/manage?p_p_id=com_liferay_site_navigation_admin_web_portlet_SiteNavigationAdminPortlet',
+	notificationQueueEntries:
+		'/~/control_panel/manage?p_p_id=com_liferay_notification_web_internal_portlet_NotificationQueueEntriesPortlet',
 	notificationTemplates:
 		'/~/control_panel/manage?p_p_id=com_liferay_notification_web_internal_portlet_NotificationTemplatesPortlet',
 	notifications:
 		'/manage?p_p_id=com_liferay_notifications_web_portlet_NotificationsPortlet',
 	objects:
 		'/~/control_panel/manage?p_p_id=com_liferay_object_web_internal_object_definitions_portlet_ObjectDefinitionsPortlet',
+	organizations:
+		'/~/control_panel/manage?p_p_id=com_liferay_users_admin_web_portlet_UsersAdminPortlet&p_p_lifecycle=0&p_p_state=maximized&p_p_mode=view&_com_liferay_users_admin_web_portlet_UsersAdminPortlet_screenNavigationCategoryKey=organizations',
 	pageTemplates:
 		'/~/control_panel/manage?p_p_id=com_liferay_layout_page_template_admin_web_portlet_LayoutPageTemplatesPortlet&_com_liferay_layout_page_template_admin_web_portlet_LayoutPageTemplatesPortlet_tabs1=page-templates',
 	pages: '/~/control_panel/manage?p_p_id=com_liferay_layout_admin_web_portlet_GroupPagesPortlet',
+	picklists:
+		'/~/control_panel/manage?p_p_id=com_liferay_object_web_internal_list_type_portlet_portlet_ListTypeDefinitionsPortlet',
 	processBuilder:
 		'/~/control_panel/manage?p_p_id=com_liferay_portal_workflow_web_portlet_ControlPanelWorkflowPortlet',
 	publications:
@@ -121,6 +133,8 @@ export const PORTLET_URLS = {
 	teams: '/~/control_panel/manage/-/site_teams/teams',
 	templates:
 		'/~/control_panel/manage?p_p_id=com_liferay_template_web_internal_portlet_TemplatePortlet&p_p_lifecycle=0&p_p_state=maximized&p_p_mode=view',
+	translation:
+		'/~/control_panel/manage?p_p_id=com_liferay_translation_web_internal_portlet_TranslationPortlet',
 	utilityPages:
 		'/~/control_panel/manage?p_p_id=com_liferay_layout_admin_web_portlet_GroupPagesPortlet&_com_liferay_layout_admin_web_portlet_GroupPagesPortlet_tabs1=utility-pages',
 	widgetPageTemplates:

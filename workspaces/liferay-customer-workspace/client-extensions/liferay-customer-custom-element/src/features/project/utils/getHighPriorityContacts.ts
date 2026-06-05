@@ -21,7 +21,9 @@ interface IContact {
 	email: string;
 	filter?: string[];
 	filterId?: string;
+	firstName?: string;
 	label: string;
+	lastName?: string;
 }
 
 const addContactRoleLiferay = async (
@@ -50,12 +52,12 @@ const addContactRoleRaysource = (
 ): Promise<Response> => {
 	return addContactRoleNameByEmailByProject(
 		project.accountKey as string,
+		item.category.role,
 		encodeURI(item.email),
-		item.label,
-		item.label,
+		item.firstName || item.label.split(' ')[0],
+		item.lastName || item.label.split(' ').slice(1).join(' '),
 		oAuthToken,
-		provisioningServerAPI,
-		item.category.role
+		provisioningServerAPI
 	);
 };
 
@@ -77,6 +79,14 @@ const getAccountRolesId = async (
 };
 
 const getContactRoleByFilter = (filter: string): string | undefined => {
+	if (filter.includes('paas')) {
+		return 'PaaS User';
+	}
+
+	if (filter.includes('critical')) {
+		return 'Critical Incident Contact';
+	}
+
 	if (filter.includes('privacy')) {
 		return 'Data Breach Contact';
 	}
@@ -85,15 +95,12 @@ const getContactRoleByFilter = (filter: string): string | undefined => {
 		return 'Security Incident Contact';
 	}
 
-	if (filter.includes('critical')) {
-		return 'Critical Incident Contact';
-	}
-
 	return undefined;
 };
 
 const HIGH_PRIORITY_CONTACT_CATEGORIES = {
 	criticalIncident: i18n.translate('critical-incident'),
+	paasUser: i18n.translate('paas-user'),
 	privacyBreach: i18n.translate('privacy-breach'),
 	securityBreach: i18n.translate('security-breach'),
 };
@@ -124,17 +131,18 @@ const removeContactRoleRaysource = async (
 ): Promise<Response> => {
 	return await deleteContactRoleNameByEmailByProject(
 		project.accountKey as string,
+		item.filter as string[],
 		encodeURI(item.email),
 		oAuthToken,
-		provisioningServerAPI,
-		item.filter?.toString() as string
+		provisioningServerAPI
 	);
 };
 
 const rolesHighPriorityContact = [
-	'Data Breach Contact',
-	'Security Incident Contact',
 	'Critical Incident Contact',
+	'Data Breach Contact',
+	'PaaS User',
+	'Security Incident Contact',
 ];
 
 const updateLiferayContact = (

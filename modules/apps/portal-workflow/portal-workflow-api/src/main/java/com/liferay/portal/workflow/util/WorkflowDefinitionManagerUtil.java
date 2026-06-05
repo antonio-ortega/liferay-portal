@@ -10,6 +10,7 @@ import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.workflow.WorkflowDefinition;
 import com.liferay.portal.kernel.workflow.WorkflowException;
+import com.liferay.portal.workflow.constants.WorkflowDefinitionConstants;
 import com.liferay.portal.workflow.manager.WorkflowDefinitionManager;
 
 import java.util.List;
@@ -33,7 +34,7 @@ public class WorkflowDefinitionManagerUtil {
 			_workflowDefinitionManagerSnapshot.get();
 
 		return workflowDefinitionManager.deployWorkflowDefinition(
-			externalReferenceCode, companyId, userId, title, name, bytes);
+			bytes, companyId, externalReferenceCode, name, title, userId);
 	}
 
 	public static int getActiveWorkflowDefinitionsCount(long companyId)
@@ -65,7 +66,7 @@ public class WorkflowDefinitionManagerUtil {
 			_workflowDefinitionManagerSnapshot.get();
 
 		return workflowDefinitionManager.liberalGetActiveWorkflowDefinitions(
-			companyId, start, end, orderByComparator);
+			companyId, end, orderByComparator, start);
 	}
 
 	public static WorkflowDefinition liberalGetLatestWorkflowDefinition(
@@ -88,7 +89,8 @@ public class WorkflowDefinitionManagerUtil {
 			_workflowDefinitionManagerSnapshot.get();
 
 		return workflowDefinitionManager.liberalGetLatestWorkflowDefinitions(
-			companyId, start, end, orderByComparator);
+			companyId, end, orderByComparator,
+			WorkflowDefinitionConstants.SCOPE_ALL, start);
 	}
 
 	public static WorkflowDefinition liberalGetWorkflowDefinition(
@@ -111,7 +113,7 @@ public class WorkflowDefinitionManagerUtil {
 			_workflowDefinitionManagerSnapshot.get();
 
 		return workflowDefinitionManager.liberalGetWorkflowDefinitions(
-			companyId, name, start, end, orderByComparator);
+			companyId, end, name, orderByComparator, start);
 	}
 
 	/**
@@ -137,7 +139,7 @@ public class WorkflowDefinitionManagerUtil {
 			_workflowDefinitionManagerSnapshot.get();
 
 		return workflowDefinitionManager.saveWorkflowDefinition(
-			externalReferenceCode, companyId, userId, title, name, bytes);
+			bytes, companyId, externalReferenceCode, name, title, userId);
 	}
 
 	public static WorkflowDefinition updateActive(
@@ -149,7 +151,7 @@ public class WorkflowDefinitionManagerUtil {
 			_workflowDefinitionManagerSnapshot.get();
 
 		return workflowDefinitionManager.updateActive(
-			companyId, userId, name, version, active);
+			active, companyId, name, userId, version);
 	}
 
 	private static final Snapshot<WorkflowDefinitionManager>

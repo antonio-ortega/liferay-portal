@@ -319,3 +319,4 @@ public class EmailAddressSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1238201074

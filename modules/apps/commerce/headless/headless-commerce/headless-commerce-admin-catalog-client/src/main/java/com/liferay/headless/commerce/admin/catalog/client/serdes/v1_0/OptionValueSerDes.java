@@ -394,3 +394,4 @@ public class OptionValueSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1534894221

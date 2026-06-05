@@ -37,8 +37,19 @@ const ACTIONS = {
 		});
 	},
 
-	disablePropagation(itemData) {
-		submitForm(document.hrefFm, itemData.disablePropagationURL);
+	executeLayoutSetPrototypeSync(itemData) {
+		openConfirmModal({
+			message: Liferay.Language.get('site-template-sync-help'),
+			onConfirm: (isConfirmed) => {
+				if (isConfirmed) {
+					submitForm(
+						document.hrefFm,
+						itemData.executeLayoutSetPrototypeSyncURL
+					);
+				}
+			},
+			title: Liferay.Language.get('site-template-sync'),
+		});
 	},
 
 	permissions(itemData) {
@@ -53,10 +64,6 @@ const ACTIONS = {
 			title: Liferay.Language.get('permissions'),
 			uri: itemData.permissionsURL,
 		});
-	},
-
-	readyForPropagation(itemData) {
-		submitForm(document.hrefFm, itemData.readyForPropagationURL);
 	},
 };
 

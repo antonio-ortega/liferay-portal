@@ -140,7 +140,7 @@ public class UpgradeDocumentLibraryTest {
 
 			resultSet.next();
 
-			return resultSet.getString(1);
+			return resultSet.getString("value");
 		}
 	}
 
@@ -164,9 +164,9 @@ public class UpgradeDocumentLibraryTest {
 	private static final Version _ORIGINAL_SCHEMA_VERSION = new Version(
 		7, 0, 0);
 
-	private static Version _currentSchemaVersion;
 	private static StopWatch _originalStopWatch;
 
+	private Version _currentSchemaVersion;
 	private boolean _upgrading;
 
 }

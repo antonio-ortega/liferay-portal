@@ -7,11 +7,12 @@ import {Field} from './field';
 
 export function isFieldTextSearchable(field: Field) {
 	switch (field.type) {
-		case 'text':
+		case 'email':
 		case 'long-text':
+		case 'phone-number':
 		case 'rich-text':
-		case 'single-select':
-		case 'multiselect':
+		case 'select-from-list':
+		case 'text':
 		case 'upload':
 			return true;
 		case 'boolean':

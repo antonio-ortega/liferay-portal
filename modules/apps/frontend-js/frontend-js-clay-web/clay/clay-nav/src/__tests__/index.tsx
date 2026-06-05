@@ -178,7 +178,7 @@ describe('ClayVerticalNav', () => {
 		expect(first).toEqual(document.activeElement);
 	});
 
-	it('moves focus to parent if focus is on child when pressing left arrow key', () => {
+	it('move focus to parent if focus is on child when pressing left arrow key', () => {
 		const {getByText} = render(
 			<ClayVerticalNav
 				aria-label="vertical navbar"

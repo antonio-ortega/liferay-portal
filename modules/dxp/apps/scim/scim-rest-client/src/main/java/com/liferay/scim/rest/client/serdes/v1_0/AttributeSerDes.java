@@ -540,3 +540,4 @@ public class AttributeSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:1725048615

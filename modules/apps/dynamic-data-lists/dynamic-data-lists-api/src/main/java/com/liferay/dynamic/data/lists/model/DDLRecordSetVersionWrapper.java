@@ -988,3 +988,4 @@ public class DDLRecordSetVersionWrapper
 	}
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:580911299

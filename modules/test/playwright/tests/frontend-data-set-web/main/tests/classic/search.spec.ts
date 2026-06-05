@@ -17,7 +17,6 @@ const test = mergeTests(
 	apiHelpersTest,
 	fdsSamplePageTest,
 	featureFlagsTest({
-		'LPD-22473': {enabled: true},
 		'LPS-178052': {enabled: true},
 	}),
 	isolatedSiteTest,
@@ -119,8 +118,6 @@ test(
 			// FDS URL config will be set after page reload
 
 			await page.reload();
-
-			await page.waitForResponse((resp) => resp.status() === 200);
 
 			await waitForFDS({
 				empty: true,

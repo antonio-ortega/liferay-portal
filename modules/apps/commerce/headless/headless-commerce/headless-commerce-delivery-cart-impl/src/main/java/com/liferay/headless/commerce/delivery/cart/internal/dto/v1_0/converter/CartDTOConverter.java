@@ -44,6 +44,8 @@ import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Country;
 import com.liferay.portal.kernel.model.Region;
 import com.liferay.portal.kernel.module.service.Snapshot;
@@ -84,8 +86,12 @@ public class CartDTOConverter implements DTOConverter<CommerceOrder, Cart> {
 	public Cart toDTO(DTOConverterContext dtoConverterContext)
 		throws Exception {
 
-		CommerceOrder commerceOrder = _commerceOrderService.getCommerceOrder(
+		CommerceOrder commerceOrder = _getCommerceOrder(
 			(Long)dtoConverterContext.getId());
+
+		if (commerceOrder == null) {
+			return null;
+		}
 
 		CommerceShippingMethod commerceShippingMethod =
 			commerceOrder.getCommerceShippingMethod();
@@ -351,7 +357,8 @@ public class CartDTOConverter implements DTOConverter<CommerceOrder, Cart> {
 			price = BigDecimal.ZERO;
 		}
 
-		return _commercePriceFormatter.format(commerceCurrency, price, locale);
+		return _commercePriceFormatter.format(
+			commerceCurrency, true, locale, price);
 	}
 
 	private Attachment[] _getAttachments(CommerceOrder commerceOrder)
@@ -361,6 +368,19 @@ public class CartDTOConverter implements DTOConverter<CommerceOrder, Cart> {
 			commerceOrder.getAttachmentFileEntries(
 				QueryUtil.ALL_POS, QueryUtil.ALL_POS),
 			_attachmentDTOConverter::toDTO, Attachment.class);
+	}
+
+	private CommerceOrder _getCommerceOrder(long commerceOrderId) {
+		try {
+			return _commerceOrderService.getCommerceOrder(commerceOrderId);
+		}
+		catch (PortalException portalException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(portalException);
+			}
+		}
+
+		return null;
 	}
 
 	private String[] _getFormattedDiscountPercentages(
@@ -813,6 +833,9 @@ public class CartDTOConverter implements DTOConverter<CommerceOrder, Cart> {
 			}
 		};
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		CartDTOConverter.class);
 
 	private static final Snapshot<FriendlyURLSeparatorProvider>
 		_friendlyURLSeparatorProviderSnapshot = new Snapshot<>(

@@ -372,3 +372,4 @@ public class ProductContentRecommendationSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-158532566

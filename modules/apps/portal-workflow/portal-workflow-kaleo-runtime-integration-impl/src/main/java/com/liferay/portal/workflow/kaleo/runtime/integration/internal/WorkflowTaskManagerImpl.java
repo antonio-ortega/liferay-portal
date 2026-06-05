@@ -64,6 +64,7 @@ import com.liferay.portal.workflow.kaleo.runtime.util.comparator.KaleoTaskInstan
 import com.liferay.portal.workflow.kaleo.service.KaleoTaskAssignmentInstanceLocalService;
 import com.liferay.portal.workflow.kaleo.service.KaleoTaskAssignmentLocalService;
 import com.liferay.portal.workflow.kaleo.service.KaleoTaskInstanceTokenLocalService;
+import com.liferay.portal.workflow.kaleo.service.KaleoTaskInstanceTokenService;
 
 import java.io.Serializable;
 
@@ -341,7 +342,7 @@ public class WorkflowTaskManagerImpl implements WorkflowTaskManager {
 
 		try {
 			KaleoTaskInstanceToken kaleoTaskInstanceToken =
-				_kaleoTaskInstanceTokenLocalService.getKaleoTaskInstanceToken(
+				_kaleoTaskInstanceTokenService.getKaleoTaskInstanceToken(
 					workflowTaskId);
 
 			return _kaleoWorkflowModelConverter.toWorkflowTask(
@@ -740,45 +741,8 @@ public class WorkflowTaskManagerImpl implements WorkflowTaskManager {
 	public boolean isNotifiableUser(long userId, long workflowTaskId)
 		throws PortalException {
 
-		KaleoTaskInstanceToken kaleoTaskInstanceToken =
-			_kaleoTaskInstanceTokenLocalService.getKaleoTaskInstanceToken(
-				workflowTaskId);
-
-		Collection<KaleoTaskAssignment> kaleoTaskAssignments =
-			_aggregateKaleoTaskAssignmentSelector.getKaleoTaskAssignments(
-				_kaleoTaskAssignmentLocalService.getKaleoTaskAssignments(
-					kaleoTaskInstanceToken.getKaleoTaskId()),
-				_createExecutionContext(kaleoTaskInstanceToken));
-
-		for (KaleoTaskAssignment kaleoTaskAssignment : kaleoTaskAssignments) {
-			if (_isNotifiableUser(
-					kaleoTaskAssignment, kaleoTaskInstanceToken, userId)) {
-
-				return true;
-			}
-		}
-
-		// TODO Temporary workaround for LPS-188796
-
-		for (KaleoTaskAssignmentInstance kaleoTaskAssignmentInstance :
-				kaleoTaskInstanceToken.getKaleoTaskAssignmentInstances()) {
-
-			KaleoTaskAssignment kaleoTaskAssignment =
-				_kaleoTaskAssignmentLocalService.createKaleoTaskAssignment(0L);
-
-			kaleoTaskAssignment.setAssigneeClassName(
-				kaleoTaskAssignmentInstance.getAssigneeClassName());
-			kaleoTaskAssignment.setAssigneeClassPK(
-				kaleoTaskAssignmentInstance.getAssigneeClassPK());
-
-			if (_isNotifiableUser(
-					kaleoTaskAssignment, kaleoTaskInstanceToken, userId)) {
-
-				return true;
-			}
-		}
-
-		return false;
+		return _kaleoTaskInstanceTokenLocalService.isNotifiableUser(
+			userId, workflowTaskId);
 	}
 
 	@Override
@@ -1119,44 +1083,6 @@ public class WorkflowTaskManagerImpl implements WorkflowTaskManager {
 		return false;
 	}
 
-	private boolean _isNotifiableUser(
-			KaleoTaskAssignment kaleoTaskAssignment,
-			KaleoTaskInstanceToken kaleoTaskInstanceToken, long userId)
-		throws PortalException {
-
-		if (Objects.equals(
-				kaleoTaskAssignment.getAssigneeClassName(),
-				User.class.getName())) {
-
-			List<KaleoTaskAssignmentInstance> kaleoTaskAssignmentInstances =
-				_kaleoTaskAssignmentInstanceLocalService.
-					getKaleoTaskAssignmentInstances(
-						kaleoTaskInstanceToken.getKaleoTaskInstanceTokenId());
-
-			for (KaleoTaskAssignmentInstance kaleoTaskAssignmentInstance :
-					kaleoTaskAssignmentInstances) {
-
-				if (kaleoTaskAssignmentInstance.getAssigneeClassPK() ==
-						userId) {
-
-					return true;
-				}
-			}
-
-			return false;
-		}
-
-		User user = _userLocalService.getUser(userId);
-
-		for (Role role : user.getAllRoles()) {
-			if (role.getRoleId() == kaleoTaskAssignment.getAssigneeClassPK()) {
-				return true;
-			}
-		}
-
-		return false;
-	}
-
 	private void _populateAllowedUsers(
 			int actionType, Set<User> allowedUsers, long assignedUserId,
 			KaleoTaskAssignment kaleoTaskAssignment,
@@ -1347,6 +1273,9 @@ public class WorkflowTaskManagerImpl implements WorkflowTaskManager {
 	@Reference
 	private KaleoTaskInstanceTokenLocalService
 		_kaleoTaskInstanceTokenLocalService;
+
+	@Reference
+	private KaleoTaskInstanceTokenService _kaleoTaskInstanceTokenService;
 
 	@Reference
 	private KaleoWorkflowModelConverter _kaleoWorkflowModelConverter;

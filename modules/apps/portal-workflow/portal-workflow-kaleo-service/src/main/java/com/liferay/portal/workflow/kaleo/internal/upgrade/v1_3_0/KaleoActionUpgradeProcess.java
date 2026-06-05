@@ -21,18 +21,16 @@ public class KaleoActionUpgradeProcess extends UpgradeProcess {
 		try (PreparedStatement preparedStatement = connection.prepareStatement(
 				"select kaleoActionId, script from KaleoAction where script " +
 					"like '%WorkflowConstants.toStatus(%'");
+
 			ResultSet resultSet = preparedStatement.executeQuery()) {
 
 			while (resultSet.next()) {
-				long kaleoActionId = resultSet.getLong(1);
-
-				String script = resultSet.getString(2);
-
-				script = StringUtil.replace(
-					script, "WorkflowConstants.toStatus(",
-					"WorkflowConstants.getLabelStatus(");
-
-				_updateScript(kaleoActionId, script);
+				_updateScript(
+					resultSet.getLong("kaleoActionId"),
+					StringUtil.replace(
+						resultSet.getString("script"),
+						"WorkflowConstants.toStatus(",
+						"WorkflowConstants.getLabelStatus("));
 			}
 		}
 	}

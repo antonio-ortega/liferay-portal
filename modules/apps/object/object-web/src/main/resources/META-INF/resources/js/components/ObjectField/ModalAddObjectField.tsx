@@ -24,6 +24,7 @@ import {createResourceURL, fetch} from 'frontend-js-web';
 interface ModalAddObjectField {
 	baseResourceURL: string;
 	creationLanguageId: Liferay.Language.Locale;
+	hasDepotEntry?: boolean;
 	objectDefinitionExternalReferenceCode: string;
 	objectDefinitionName?: string;
 	onAfterSubmit: (value: ObjectField) => void;
@@ -33,6 +34,7 @@ interface ModalAddObjectField {
 export function ModalAddObjectField({
 	baseResourceURL,
 	creationLanguageId,
+	hasDepotEntry,
 	objectDefinitionExternalReferenceCode,
 	onAfterSubmit,
 	setVisible,
@@ -101,6 +103,7 @@ export function ModalAddObjectField({
 
 	const showEnableTranslationToggle =
 		values.businessType === 'LongText' ||
+		values.businessType === 'PhoneNumber' ||
 		values.businessType === 'RichText' ||
 		values.businessType === 'Text' ||
 		values.businessType === 'Attachment' ||
@@ -191,6 +194,7 @@ export function ModalAddObjectField({
 								className="lfr-objects__modal-add-object-field-form-base"
 								errors={errors}
 								handleChange={handleChange}
+								hasDepotEntry={hasDepotEntry}
 								objectDefinition={
 									objectDefinition as ObjectDefinition
 								}

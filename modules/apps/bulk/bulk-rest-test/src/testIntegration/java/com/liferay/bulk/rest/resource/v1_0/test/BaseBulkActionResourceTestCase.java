@@ -13,17 +13,26 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.bulk.rest.client.dto.v1_0.AssignStructureDefaultWorkflowBulkSelectionAction;
+import com.liferay.bulk.rest.client.dto.v1_0.AssignToObjectBulkSelectionAction;
 import com.liferay.bulk.rest.client.dto.v1_0.BulkAction;
 import com.liferay.bulk.rest.client.dto.v1_0.BulkActionTask;
-import com.liferay.bulk.rest.client.dto.v1_0.DefaultPermissionBulkAction;
-import com.liferay.bulk.rest.client.dto.v1_0.DeleteBulkAction;
-import com.liferay.bulk.rest.client.dto.v1_0.ExpireBulkAction;
-import com.liferay.bulk.rest.client.dto.v1_0.KeywordBulkAction;
-import com.liferay.bulk.rest.client.dto.v1_0.MoveBulkAction;
-import com.liferay.bulk.rest.client.dto.v1_0.PermissionBulkAction;
-import com.liferay.bulk.rest.client.dto.v1_0.ResetPermissionBulkAction;
-import com.liferay.bulk.rest.client.dto.v1_0.StatusBulkAction;
-import com.liferay.bulk.rest.client.dto.v1_0.TaxonomyCategoryBulkAction;
+import com.liferay.bulk.rest.client.dto.v1_0.CopyObjectBulkSelectionAction;
+import com.liferay.bulk.rest.client.dto.v1_0.DefaultPermissionObjectBulkSelectionAction;
+import com.liferay.bulk.rest.client.dto.v1_0.DeleteObjectAssetVersionBulkSelectionAction;
+import com.liferay.bulk.rest.client.dto.v1_0.DeleteObjectBulkSelectionAction;
+import com.liferay.bulk.rest.client.dto.v1_0.DeleteObjectEntryBulkSelectionAction;
+import com.liferay.bulk.rest.client.dto.v1_0.DueDateObjectBulkSelectionAction;
+import com.liferay.bulk.rest.client.dto.v1_0.DuplicateObjectBulkSelectionAction;
+import com.liferay.bulk.rest.client.dto.v1_0.EditObjectCategoriesBulkSelectionAction;
+import com.liferay.bulk.rest.client.dto.v1_0.EditObjectTagsBulkSelectionAction;
+import com.liferay.bulk.rest.client.dto.v1_0.ExpireObjectBulkSelectionAction;
+import com.liferay.bulk.rest.client.dto.v1_0.MoveObjectBulkSelectionAction;
+import com.liferay.bulk.rest.client.dto.v1_0.PermissionObjectBulkSelectionAction;
+import com.liferay.bulk.rest.client.dto.v1_0.ResetPermissionObjectBulkSelectionAction;
+import com.liferay.bulk.rest.client.dto.v1_0.RestoreObjectBulkSelectionAction;
+import com.liferay.bulk.rest.client.dto.v1_0.StatusObjectBulkSelectionAction;
+import com.liferay.bulk.rest.client.dto.v1_0.UpdateObjectValuesBulkSelectionAction;
 import com.liferay.bulk.rest.client.http.HttpInvoker;
 import com.liferay.bulk.rest.client.pagination.Page;
 import com.liferay.bulk.rest.client.resource.v1_0.BulkActionResource;
@@ -42,6 +51,7 @@ import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.odata.entity.EntityField;
@@ -114,7 +124,8 @@ public abstract class BaseBulkActionResourceTestCase {
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
 		).endpoint(
-			testCompany.getVirtualHostname(), 8080, "http"
+			testCompany.getVirtualHostname(),
+			PortalUtil.getPortalServerPort(false), "http"
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -298,15 +309,49 @@ public abstract class BaseBulkActionResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("workflow", additionalAssertFieldName)) {
+				if (!(bulkAction instanceof
+						AssignStructureDefaultWorkflowBulkSelectionAction)) {
+
+					continue;
+				}
+
+				if (((AssignStructureDefaultWorkflowBulkSelectionAction)
+						bulkAction).getWorkflow() == null) {
+
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("className", additionalAssertFieldName)) {
+				if (!(bulkAction instanceof
+						AssignToObjectBulkSelectionAction)) {
+
+					continue;
+				}
+
+				if (((AssignToObjectBulkSelectionAction)bulkAction).
+						getClassName() == null) {
+
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals(
-					"defaultPermissions", additionalAssertFieldName)) {
+					"externalReferenceCode", additionalAssertFieldName)) {
 
-				if (!(bulkAction instanceof DefaultPermissionBulkAction)) {
+				if (!(bulkAction instanceof
+						AssignToObjectBulkSelectionAction)) {
+
 					continue;
 				}
 
-				if (((DefaultPermissionBulkAction)bulkAction).
-						getDefaultPermissions() == null) {
+				if (((AssignToObjectBulkSelectionAction)bulkAction).
+						getExternalReferenceCode() == null) {
 
 					valid = false;
 				}
@@ -314,80 +359,14 @@ public abstract class BaseBulkActionResourceTestCase {
 				continue;
 			}
 
-			if (Objects.equals("depotGroupId", additionalAssertFieldName)) {
-				if (!(bulkAction instanceof DefaultPermissionBulkAction)) {
+			if (Objects.equals("name", additionalAssertFieldName)) {
+				if (!(bulkAction instanceof
+						AssignToObjectBulkSelectionAction)) {
+
 					continue;
 				}
 
-				if (((DefaultPermissionBulkAction)bulkAction).
-						getDepotGroupId() == null) {
-
-					valid = false;
-				}
-
-				continue;
-			}
-
-			if (Objects.equals("roleKey", additionalAssertFieldName)) {
-				if (!(bulkAction instanceof DefaultPermissionBulkAction)) {
-					continue;
-				}
-
-				if (((DefaultPermissionBulkAction)bulkAction).getRoleKey() ==
-						null) {
-
-					valid = false;
-				}
-
-				continue;
-			}
-
-			if (Objects.equals("treePath", additionalAssertFieldName)) {
-				if (!(bulkAction instanceof DefaultPermissionBulkAction)) {
-					continue;
-				}
-
-				if (((DefaultPermissionBulkAction)bulkAction).getTreePath() ==
-						null) {
-
-					valid = false;
-				}
-
-				continue;
-			}
-
-			if (Objects.equals("append", additionalAssertFieldName)) {
-				if (!(bulkAction instanceof KeywordBulkAction)) {
-					continue;
-				}
-
-				if (((KeywordBulkAction)bulkAction).getAppend() == null) {
-					valid = false;
-				}
-
-				continue;
-			}
-
-			if (Objects.equals("keywordsToAdd", additionalAssertFieldName)) {
-				if (!(bulkAction instanceof KeywordBulkAction)) {
-					continue;
-				}
-
-				if (((KeywordBulkAction)bulkAction).getKeywordsToAdd() ==
-						null) {
-
-					valid = false;
-				}
-
-				continue;
-			}
-
-			if (Objects.equals("keywordsToRemove", additionalAssertFieldName)) {
-				if (!(bulkAction instanceof KeywordBulkAction)) {
-					continue;
-				}
-
-				if (((KeywordBulkAction)bulkAction).getKeywordsToRemove() ==
+				if (((AssignToObjectBulkSelectionAction)bulkAction).getName() ==
 						null) {
 
 					valid = false;
@@ -399,12 +378,12 @@ public abstract class BaseBulkActionResourceTestCase {
 			if (Objects.equals(
 					"objectEntryFolderId", additionalAssertFieldName)) {
 
-				if (!(bulkAction instanceof MoveBulkAction)) {
+				if (!(bulkAction instanceof CopyObjectBulkSelectionAction)) {
 					continue;
 				}
 
-				if (((MoveBulkAction)bulkAction).getObjectEntryFolderId() ==
-						null) {
+				if (((CopyObjectBulkSelectionAction)bulkAction).
+						getObjectEntryFolderId() == null) {
 
 					valid = false;
 				}
@@ -412,13 +391,17 @@ public abstract class BaseBulkActionResourceTestCase {
 				continue;
 			}
 
-			if (Objects.equals("configuration", additionalAssertFieldName)) {
-				if (!(bulkAction instanceof PermissionBulkAction)) {
+			if (Objects.equals(
+					"defaultPermissions", additionalAssertFieldName)) {
+
+				if (!(bulkAction instanceof
+						DefaultPermissionObjectBulkSelectionAction)) {
+
 					continue;
 				}
 
-				if (((PermissionBulkAction)bulkAction).getConfiguration() ==
-						null) {
+				if (((DefaultPermissionObjectBulkSelectionAction)bulkAction).
+						getDefaultPermissions() == null) {
 
 					valid = false;
 				}
@@ -426,13 +409,15 @@ public abstract class BaseBulkActionResourceTestCase {
 				continue;
 			}
 
-			if (Objects.equals("permissions", additionalAssertFieldName)) {
-				if (!(bulkAction instanceof PermissionBulkAction)) {
+			if (Objects.equals("depotGroupId", additionalAssertFieldName)) {
+				if (!(bulkAction instanceof
+						DefaultPermissionObjectBulkSelectionAction)) {
+
 					continue;
 				}
 
-				if (((PermissionBulkAction)bulkAction).getPermissions() ==
-						null) {
+				if (((DefaultPermissionObjectBulkSelectionAction)bulkAction).
+						getDepotGroupId() == null) {
 
 					valid = false;
 				}
@@ -441,23 +426,107 @@ public abstract class BaseBulkActionResourceTestCase {
 			}
 
 			if (Objects.equals("roleKey", additionalAssertFieldName)) {
-				if (!(bulkAction instanceof PermissionBulkAction)) {
+				if (!(bulkAction instanceof
+						DefaultPermissionObjectBulkSelectionAction)) {
+
 					continue;
 				}
 
-				if (((PermissionBulkAction)bulkAction).getRoleKey() == null) {
+				if (((DefaultPermissionObjectBulkSelectionAction)bulkAction).
+						getRoleKey() == null) {
+
 					valid = false;
 				}
 
 				continue;
 			}
 
-			if (Objects.equals("status", additionalAssertFieldName)) {
-				if (!(bulkAction instanceof StatusBulkAction)) {
+			if (Objects.equals("treePath", additionalAssertFieldName)) {
+				if (!(bulkAction instanceof
+						DefaultPermissionObjectBulkSelectionAction)) {
+
 					continue;
 				}
 
-				if (((StatusBulkAction)bulkAction).getStatus() == null) {
+				if (((DefaultPermissionObjectBulkSelectionAction)bulkAction).
+						getTreePath() == null) {
+
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("className", additionalAssertFieldName)) {
+				if (!(bulkAction instanceof
+						DeleteObjectAssetVersionBulkSelectionAction)) {
+
+					continue;
+				}
+
+				if (((DeleteObjectAssetVersionBulkSelectionAction)bulkAction).
+						getClassName() == null) {
+
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("classPK", additionalAssertFieldName)) {
+				if (!(bulkAction instanceof
+						DeleteObjectAssetVersionBulkSelectionAction)) {
+
+					continue;
+				}
+
+				if (((DeleteObjectAssetVersionBulkSelectionAction)bulkAction).
+						getClassPK() == null) {
+
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("versions", additionalAssertFieldName)) {
+				if (!(bulkAction instanceof
+						DeleteObjectAssetVersionBulkSelectionAction)) {
+
+					continue;
+				}
+
+				if (((DeleteObjectAssetVersionBulkSelectionAction)bulkAction).
+						getVersions() == null) {
+
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("className", additionalAssertFieldName)) {
+				if (!(bulkAction instanceof DeleteObjectBulkSelectionAction)) {
+					continue;
+				}
+
+				if (((DeleteObjectBulkSelectionAction)bulkAction).
+						getClassName() == null) {
+
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("dueDate", additionalAssertFieldName)) {
+				if (!(bulkAction instanceof DueDateObjectBulkSelectionAction)) {
+					continue;
+				}
+
+				if (((DueDateObjectBulkSelectionAction)bulkAction).
+						getDueDate() == null) {
+
 					valid = false;
 				}
 
@@ -465,12 +534,14 @@ public abstract class BaseBulkActionResourceTestCase {
 			}
 
 			if (Objects.equals("append", additionalAssertFieldName)) {
-				if (!(bulkAction instanceof TaxonomyCategoryBulkAction)) {
+				if (!(bulkAction instanceof
+						EditObjectCategoriesBulkSelectionAction)) {
+
 					continue;
 				}
 
-				if (((TaxonomyCategoryBulkAction)bulkAction).getAppend() ==
-						null) {
+				if (((EditObjectCategoriesBulkSelectionAction)bulkAction).
+						getAppend() == null) {
 
 					valid = false;
 				}
@@ -481,11 +552,13 @@ public abstract class BaseBulkActionResourceTestCase {
 			if (Objects.equals(
 					"taxonomyCategoryIdsToAdd", additionalAssertFieldName)) {
 
-				if (!(bulkAction instanceof TaxonomyCategoryBulkAction)) {
+				if (!(bulkAction instanceof
+						EditObjectCategoriesBulkSelectionAction)) {
+
 					continue;
 				}
 
-				if (((TaxonomyCategoryBulkAction)bulkAction).
+				if (((EditObjectCategoriesBulkSelectionAction)bulkAction).
 						getTaxonomyCategoryIdsToAdd() == null) {
 
 					valid = false;
@@ -497,12 +570,156 @@ public abstract class BaseBulkActionResourceTestCase {
 			if (Objects.equals(
 					"taxonomyCategoryIdsToRemove", additionalAssertFieldName)) {
 
-				if (!(bulkAction instanceof TaxonomyCategoryBulkAction)) {
+				if (!(bulkAction instanceof
+						EditObjectCategoriesBulkSelectionAction)) {
+
 					continue;
 				}
 
-				if (((TaxonomyCategoryBulkAction)bulkAction).
+				if (((EditObjectCategoriesBulkSelectionAction)bulkAction).
 						getTaxonomyCategoryIdsToRemove() == null) {
+
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("append", additionalAssertFieldName)) {
+				if (!(bulkAction instanceof
+						EditObjectTagsBulkSelectionAction)) {
+
+					continue;
+				}
+
+				if (((EditObjectTagsBulkSelectionAction)bulkAction).
+						getAppend() == null) {
+
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("keywordsToAdd", additionalAssertFieldName)) {
+				if (!(bulkAction instanceof
+						EditObjectTagsBulkSelectionAction)) {
+
+					continue;
+				}
+
+				if (((EditObjectTagsBulkSelectionAction)bulkAction).
+						getKeywordsToAdd() == null) {
+
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("keywordsToRemove", additionalAssertFieldName)) {
+				if (!(bulkAction instanceof
+						EditObjectTagsBulkSelectionAction)) {
+
+					continue;
+				}
+
+				if (((EditObjectTagsBulkSelectionAction)bulkAction).
+						getKeywordsToRemove() == null) {
+
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"objectEntryFolderId", additionalAssertFieldName)) {
+
+				if (!(bulkAction instanceof MoveObjectBulkSelectionAction)) {
+					continue;
+				}
+
+				if (((MoveObjectBulkSelectionAction)bulkAction).
+						getObjectEntryFolderId() == null) {
+
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("configuration", additionalAssertFieldName)) {
+				if (!(bulkAction instanceof
+						PermissionObjectBulkSelectionAction)) {
+
+					continue;
+				}
+
+				if (((PermissionObjectBulkSelectionAction)bulkAction).
+						getConfiguration() == null) {
+
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("permissions", additionalAssertFieldName)) {
+				if (!(bulkAction instanceof
+						PermissionObjectBulkSelectionAction)) {
+
+					continue;
+				}
+
+				if (((PermissionObjectBulkSelectionAction)bulkAction).
+						getPermissions() == null) {
+
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("roleKey", additionalAssertFieldName)) {
+				if (!(bulkAction instanceof
+						PermissionObjectBulkSelectionAction)) {
+
+					continue;
+				}
+
+				if (((PermissionObjectBulkSelectionAction)bulkAction).
+						getRoleKey() == null) {
+
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("status", additionalAssertFieldName)) {
+				if (!(bulkAction instanceof StatusObjectBulkSelectionAction)) {
+					continue;
+				}
+
+				if (((StatusObjectBulkSelectionAction)bulkAction).getStatus() ==
+						null) {
+
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("values", additionalAssertFieldName)) {
+				if (!(bulkAction instanceof
+						UpdateObjectValuesBulkSelectionAction)) {
+
+					continue;
+				}
+
+				if (((UpdateObjectValuesBulkSelectionAction)bulkAction).
+						getValues() == null) {
 
 					valid = false;
 				}
@@ -750,20 +967,64 @@ public abstract class BaseBulkActionResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("workflow", additionalAssertFieldName)) {
+				if (!(bulkAction1 instanceof
+						AssignStructureDefaultWorkflowBulkSelectionAction) ||
+					!(bulkAction2 instanceof
+						AssignStructureDefaultWorkflowBulkSelectionAction)) {
+
+					continue;
+				}
+
+				if (!Objects.deepEquals(
+						((AssignStructureDefaultWorkflowBulkSelectionAction)
+							bulkAction1).getWorkflow(),
+						((AssignStructureDefaultWorkflowBulkSelectionAction)
+							bulkAction2).getWorkflow())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("className", additionalAssertFieldName)) {
+				if (!(bulkAction1 instanceof
+						AssignToObjectBulkSelectionAction) ||
+					!(bulkAction2 instanceof
+						AssignToObjectBulkSelectionAction)) {
+
+					continue;
+				}
+
+				if (!Objects.deepEquals(
+						((AssignToObjectBulkSelectionAction)bulkAction1).
+							getClassName(),
+						((AssignToObjectBulkSelectionAction)bulkAction2).
+							getClassName())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals(
-					"defaultPermissions", additionalAssertFieldName)) {
+					"externalReferenceCode", additionalAssertFieldName)) {
 
-				if (!(bulkAction1 instanceof DefaultPermissionBulkAction) ||
-					!(bulkAction2 instanceof DefaultPermissionBulkAction)) {
+				if (!(bulkAction1 instanceof
+						AssignToObjectBulkSelectionAction) ||
+					!(bulkAction2 instanceof
+						AssignToObjectBulkSelectionAction)) {
 
 					continue;
 				}
 
 				if (!Objects.deepEquals(
-						((DefaultPermissionBulkAction)bulkAction1).
-							getDefaultPermissions(),
-						((DefaultPermissionBulkAction)bulkAction2).
-							getDefaultPermissions())) {
+						((AssignToObjectBulkSelectionAction)bulkAction1).
+							getExternalReferenceCode(),
+						((AssignToObjectBulkSelectionAction)bulkAction2).
+							getExternalReferenceCode())) {
 
 					return false;
 				}
@@ -771,107 +1032,20 @@ public abstract class BaseBulkActionResourceTestCase {
 				continue;
 			}
 
-			if (Objects.equals("depotGroupId", additionalAssertFieldName)) {
-				if (!(bulkAction1 instanceof DefaultPermissionBulkAction) ||
-					!(bulkAction2 instanceof DefaultPermissionBulkAction)) {
+			if (Objects.equals("name", additionalAssertFieldName)) {
+				if (!(bulkAction1 instanceof
+						AssignToObjectBulkSelectionAction) ||
+					!(bulkAction2 instanceof
+						AssignToObjectBulkSelectionAction)) {
 
 					continue;
 				}
 
 				if (!Objects.deepEquals(
-						((DefaultPermissionBulkAction)bulkAction1).
-							getDepotGroupId(),
-						((DefaultPermissionBulkAction)bulkAction2).
-							getDepotGroupId())) {
-
-					return false;
-				}
-
-				continue;
-			}
-
-			if (Objects.equals("roleKey", additionalAssertFieldName)) {
-				if (!(bulkAction1 instanceof DefaultPermissionBulkAction) ||
-					!(bulkAction2 instanceof DefaultPermissionBulkAction)) {
-
-					continue;
-				}
-
-				if (!Objects.deepEquals(
-						((DefaultPermissionBulkAction)bulkAction1).getRoleKey(),
-						((DefaultPermissionBulkAction)bulkAction2).
-							getRoleKey())) {
-
-					return false;
-				}
-
-				continue;
-			}
-
-			if (Objects.equals("treePath", additionalAssertFieldName)) {
-				if (!(bulkAction1 instanceof DefaultPermissionBulkAction) ||
-					!(bulkAction2 instanceof DefaultPermissionBulkAction)) {
-
-					continue;
-				}
-
-				if (!Objects.deepEquals(
-						((DefaultPermissionBulkAction)bulkAction1).
-							getTreePath(),
-						((DefaultPermissionBulkAction)bulkAction2).
-							getTreePath())) {
-
-					return false;
-				}
-
-				continue;
-			}
-
-			if (Objects.equals("append", additionalAssertFieldName)) {
-				if (!(bulkAction1 instanceof KeywordBulkAction) ||
-					!(bulkAction2 instanceof KeywordBulkAction)) {
-
-					continue;
-				}
-
-				if (!Objects.deepEquals(
-						((KeywordBulkAction)bulkAction1).getAppend(),
-						((KeywordBulkAction)bulkAction2).getAppend())) {
-
-					return false;
-				}
-
-				continue;
-			}
-
-			if (Objects.equals("keywordsToAdd", additionalAssertFieldName)) {
-				if (!(bulkAction1 instanceof KeywordBulkAction) ||
-					!(bulkAction2 instanceof KeywordBulkAction)) {
-
-					continue;
-				}
-
-				if (!Objects.deepEquals(
-						((KeywordBulkAction)bulkAction1).getKeywordsToAdd(),
-						((KeywordBulkAction)bulkAction2).getKeywordsToAdd())) {
-
-					return false;
-				}
-
-				continue;
-			}
-
-			if (Objects.equals("keywordsToRemove", additionalAssertFieldName)) {
-				if (!(bulkAction1 instanceof KeywordBulkAction) ||
-					!(bulkAction2 instanceof KeywordBulkAction)) {
-
-					continue;
-				}
-
-				if (!Objects.deepEquals(
-						((KeywordBulkAction)bulkAction1).getKeywordsToRemove(),
-						((KeywordBulkAction)bulkAction2).
-							getKeywordsToRemove())) {
+						((AssignToObjectBulkSelectionAction)bulkAction1).
+							getName(),
+						((AssignToObjectBulkSelectionAction)bulkAction2).
+							getName())) {
 
 					return false;
 				}
@@ -882,15 +1056,16 @@ public abstract class BaseBulkActionResourceTestCase {
 			if (Objects.equals(
 					"objectEntryFolderId", additionalAssertFieldName)) {
 
-				if (!(bulkAction1 instanceof MoveBulkAction) ||
-					!(bulkAction2 instanceof MoveBulkAction)) {
+				if (!(bulkAction1 instanceof CopyObjectBulkSelectionAction) ||
+					!(bulkAction2 instanceof CopyObjectBulkSelectionAction)) {
 
 					continue;
 				}
 
 				if (!Objects.deepEquals(
-						((MoveBulkAction)bulkAction1).getObjectEntryFolderId(),
-						((MoveBulkAction)bulkAction2).
+						((CopyObjectBulkSelectionAction)bulkAction1).
+							getObjectEntryFolderId(),
+						((CopyObjectBulkSelectionAction)bulkAction2).
 							getObjectEntryFolderId())) {
 
 					return false;
@@ -899,17 +1074,22 @@ public abstract class BaseBulkActionResourceTestCase {
 				continue;
 			}
 
-			if (Objects.equals("configuration", additionalAssertFieldName)) {
-				if (!(bulkAction1 instanceof PermissionBulkAction) ||
-					!(bulkAction2 instanceof PermissionBulkAction)) {
+			if (Objects.equals(
+					"defaultPermissions", additionalAssertFieldName)) {
+
+				if (!(bulkAction1 instanceof
+						DefaultPermissionObjectBulkSelectionAction) ||
+					!(bulkAction2 instanceof
+						DefaultPermissionObjectBulkSelectionAction)) {
 
 					continue;
 				}
 
 				if (!Objects.deepEquals(
-						((PermissionBulkAction)bulkAction1).getConfiguration(),
-						((PermissionBulkAction)bulkAction2).
-							getConfiguration())) {
+						((DefaultPermissionObjectBulkSelectionAction)
+							bulkAction1).getDefaultPermissions(),
+						((DefaultPermissionObjectBulkSelectionAction)
+							bulkAction2).getDefaultPermissions())) {
 
 					return false;
 				}
@@ -917,16 +1097,20 @@ public abstract class BaseBulkActionResourceTestCase {
 				continue;
 			}
 
-			if (Objects.equals("permissions", additionalAssertFieldName)) {
-				if (!(bulkAction1 instanceof PermissionBulkAction) ||
-					!(bulkAction2 instanceof PermissionBulkAction)) {
+			if (Objects.equals("depotGroupId", additionalAssertFieldName)) {
+				if (!(bulkAction1 instanceof
+						DefaultPermissionObjectBulkSelectionAction) ||
+					!(bulkAction2 instanceof
+						DefaultPermissionObjectBulkSelectionAction)) {
 
 					continue;
 				}
 
 				if (!Objects.deepEquals(
-						((PermissionBulkAction)bulkAction1).getPermissions(),
-						((PermissionBulkAction)bulkAction2).getPermissions())) {
+						((DefaultPermissionObjectBulkSelectionAction)
+							bulkAction1).getDepotGroupId(),
+						((DefaultPermissionObjectBulkSelectionAction)
+							bulkAction2).getDepotGroupId())) {
 
 					return false;
 				}
@@ -935,15 +1119,19 @@ public abstract class BaseBulkActionResourceTestCase {
 			}
 
 			if (Objects.equals("roleKey", additionalAssertFieldName)) {
-				if (!(bulkAction1 instanceof PermissionBulkAction) ||
-					!(bulkAction2 instanceof PermissionBulkAction)) {
+				if (!(bulkAction1 instanceof
+						DefaultPermissionObjectBulkSelectionAction) ||
+					!(bulkAction2 instanceof
+						DefaultPermissionObjectBulkSelectionAction)) {
 
 					continue;
 				}
 
 				if (!Objects.deepEquals(
-						((PermissionBulkAction)bulkAction1).getRoleKey(),
-						((PermissionBulkAction)bulkAction2).getRoleKey())) {
+						((DefaultPermissionObjectBulkSelectionAction)
+							bulkAction1).getRoleKey(),
+						((DefaultPermissionObjectBulkSelectionAction)
+							bulkAction2).getRoleKey())) {
 
 					return false;
 				}
@@ -951,16 +1139,123 @@ public abstract class BaseBulkActionResourceTestCase {
 				continue;
 			}
 
-			if (Objects.equals("status", additionalAssertFieldName)) {
-				if (!(bulkAction1 instanceof StatusBulkAction) ||
-					!(bulkAction2 instanceof StatusBulkAction)) {
+			if (Objects.equals("treePath", additionalAssertFieldName)) {
+				if (!(bulkAction1 instanceof
+						DefaultPermissionObjectBulkSelectionAction) ||
+					!(bulkAction2 instanceof
+						DefaultPermissionObjectBulkSelectionAction)) {
 
 					continue;
 				}
 
 				if (!Objects.deepEquals(
-						((StatusBulkAction)bulkAction1).getStatus(),
-						((StatusBulkAction)bulkAction2).getStatus())) {
+						((DefaultPermissionObjectBulkSelectionAction)
+							bulkAction1).getTreePath(),
+						((DefaultPermissionObjectBulkSelectionAction)
+							bulkAction2).getTreePath())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("className", additionalAssertFieldName)) {
+				if (!(bulkAction1 instanceof
+						DeleteObjectAssetVersionBulkSelectionAction) ||
+					!(bulkAction2 instanceof
+						DeleteObjectAssetVersionBulkSelectionAction)) {
+
+					continue;
+				}
+
+				if (!Objects.deepEquals(
+						((DeleteObjectAssetVersionBulkSelectionAction)
+							bulkAction1).getClassName(),
+						((DeleteObjectAssetVersionBulkSelectionAction)
+							bulkAction2).getClassName())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("classPK", additionalAssertFieldName)) {
+				if (!(bulkAction1 instanceof
+						DeleteObjectAssetVersionBulkSelectionAction) ||
+					!(bulkAction2 instanceof
+						DeleteObjectAssetVersionBulkSelectionAction)) {
+
+					continue;
+				}
+
+				if (!Objects.deepEquals(
+						((DeleteObjectAssetVersionBulkSelectionAction)
+							bulkAction1).getClassPK(),
+						((DeleteObjectAssetVersionBulkSelectionAction)
+							bulkAction2).getClassPK())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("versions", additionalAssertFieldName)) {
+				if (!(bulkAction1 instanceof
+						DeleteObjectAssetVersionBulkSelectionAction) ||
+					!(bulkAction2 instanceof
+						DeleteObjectAssetVersionBulkSelectionAction)) {
+
+					continue;
+				}
+
+				if (!Objects.deepEquals(
+						((DeleteObjectAssetVersionBulkSelectionAction)
+							bulkAction1).getVersions(),
+						((DeleteObjectAssetVersionBulkSelectionAction)
+							bulkAction2).getVersions())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("className", additionalAssertFieldName)) {
+				if (!(bulkAction1 instanceof DeleteObjectBulkSelectionAction) ||
+					!(bulkAction2 instanceof DeleteObjectBulkSelectionAction)) {
+
+					continue;
+				}
+
+				if (!Objects.deepEquals(
+						((DeleteObjectBulkSelectionAction)bulkAction1).
+							getClassName(),
+						((DeleteObjectBulkSelectionAction)bulkAction2).
+							getClassName())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("dueDate", additionalAssertFieldName)) {
+				if (!(bulkAction1 instanceof
+						DueDateObjectBulkSelectionAction) ||
+					!(bulkAction2 instanceof
+						DueDateObjectBulkSelectionAction)) {
+
+					continue;
+				}
+
+				if (!Objects.deepEquals(
+						((DueDateObjectBulkSelectionAction)bulkAction1).
+							getDueDate(),
+						((DueDateObjectBulkSelectionAction)bulkAction2).
+							getDueDate())) {
 
 					return false;
 				}
@@ -969,15 +1264,18 @@ public abstract class BaseBulkActionResourceTestCase {
 			}
 
 			if (Objects.equals("append", additionalAssertFieldName)) {
-				if (!(bulkAction1 instanceof TaxonomyCategoryBulkAction) ||
-					!(bulkAction2 instanceof TaxonomyCategoryBulkAction)) {
+				if (!(bulkAction1 instanceof
+						EditObjectCategoriesBulkSelectionAction) ||
+					!(bulkAction2 instanceof
+						EditObjectCategoriesBulkSelectionAction)) {
 
 					continue;
 				}
 
 				if (!Objects.deepEquals(
-						((TaxonomyCategoryBulkAction)bulkAction1).getAppend(),
-						((TaxonomyCategoryBulkAction)bulkAction2).
+						((EditObjectCategoriesBulkSelectionAction)bulkAction1).
+							getAppend(),
+						((EditObjectCategoriesBulkSelectionAction)bulkAction2).
 							getAppend())) {
 
 					return false;
@@ -989,16 +1287,18 @@ public abstract class BaseBulkActionResourceTestCase {
 			if (Objects.equals(
 					"taxonomyCategoryIdsToAdd", additionalAssertFieldName)) {
 
-				if (!(bulkAction1 instanceof TaxonomyCategoryBulkAction) ||
-					!(bulkAction2 instanceof TaxonomyCategoryBulkAction)) {
+				if (!(bulkAction1 instanceof
+						EditObjectCategoriesBulkSelectionAction) ||
+					!(bulkAction2 instanceof
+						EditObjectCategoriesBulkSelectionAction)) {
 
 					continue;
 				}
 
 				if (!Objects.deepEquals(
-						((TaxonomyCategoryBulkAction)bulkAction1).
+						((EditObjectCategoriesBulkSelectionAction)bulkAction1).
 							getTaxonomyCategoryIdsToAdd(),
-						((TaxonomyCategoryBulkAction)bulkAction2).
+						((EditObjectCategoriesBulkSelectionAction)bulkAction2).
 							getTaxonomyCategoryIdsToAdd())) {
 
 					return false;
@@ -1010,17 +1310,206 @@ public abstract class BaseBulkActionResourceTestCase {
 			if (Objects.equals(
 					"taxonomyCategoryIdsToRemove", additionalAssertFieldName)) {
 
-				if (!(bulkAction1 instanceof TaxonomyCategoryBulkAction) ||
-					!(bulkAction2 instanceof TaxonomyCategoryBulkAction)) {
+				if (!(bulkAction1 instanceof
+						EditObjectCategoriesBulkSelectionAction) ||
+					!(bulkAction2 instanceof
+						EditObjectCategoriesBulkSelectionAction)) {
 
 					continue;
 				}
 
 				if (!Objects.deepEquals(
-						((TaxonomyCategoryBulkAction)bulkAction1).
+						((EditObjectCategoriesBulkSelectionAction)bulkAction1).
 							getTaxonomyCategoryIdsToRemove(),
-						((TaxonomyCategoryBulkAction)bulkAction2).
+						((EditObjectCategoriesBulkSelectionAction)bulkAction2).
 							getTaxonomyCategoryIdsToRemove())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("append", additionalAssertFieldName)) {
+				if (!(bulkAction1 instanceof
+						EditObjectTagsBulkSelectionAction) ||
+					!(bulkAction2 instanceof
+						EditObjectTagsBulkSelectionAction)) {
+
+					continue;
+				}
+
+				if (!Objects.deepEquals(
+						((EditObjectTagsBulkSelectionAction)bulkAction1).
+							getAppend(),
+						((EditObjectTagsBulkSelectionAction)bulkAction2).
+							getAppend())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("keywordsToAdd", additionalAssertFieldName)) {
+				if (!(bulkAction1 instanceof
+						EditObjectTagsBulkSelectionAction) ||
+					!(bulkAction2 instanceof
+						EditObjectTagsBulkSelectionAction)) {
+
+					continue;
+				}
+
+				if (!Objects.deepEquals(
+						((EditObjectTagsBulkSelectionAction)bulkAction1).
+							getKeywordsToAdd(),
+						((EditObjectTagsBulkSelectionAction)bulkAction2).
+							getKeywordsToAdd())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("keywordsToRemove", additionalAssertFieldName)) {
+				if (!(bulkAction1 instanceof
+						EditObjectTagsBulkSelectionAction) ||
+					!(bulkAction2 instanceof
+						EditObjectTagsBulkSelectionAction)) {
+
+					continue;
+				}
+
+				if (!Objects.deepEquals(
+						((EditObjectTagsBulkSelectionAction)bulkAction1).
+							getKeywordsToRemove(),
+						((EditObjectTagsBulkSelectionAction)bulkAction2).
+							getKeywordsToRemove())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"objectEntryFolderId", additionalAssertFieldName)) {
+
+				if (!(bulkAction1 instanceof MoveObjectBulkSelectionAction) ||
+					!(bulkAction2 instanceof MoveObjectBulkSelectionAction)) {
+
+					continue;
+				}
+
+				if (!Objects.deepEquals(
+						((MoveObjectBulkSelectionAction)bulkAction1).
+							getObjectEntryFolderId(),
+						((MoveObjectBulkSelectionAction)bulkAction2).
+							getObjectEntryFolderId())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("configuration", additionalAssertFieldName)) {
+				if (!(bulkAction1 instanceof
+						PermissionObjectBulkSelectionAction) ||
+					!(bulkAction2 instanceof
+						PermissionObjectBulkSelectionAction)) {
+
+					continue;
+				}
+
+				if (!Objects.deepEquals(
+						((PermissionObjectBulkSelectionAction)bulkAction1).
+							getConfiguration(),
+						((PermissionObjectBulkSelectionAction)bulkAction2).
+							getConfiguration())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("permissions", additionalAssertFieldName)) {
+				if (!(bulkAction1 instanceof
+						PermissionObjectBulkSelectionAction) ||
+					!(bulkAction2 instanceof
+						PermissionObjectBulkSelectionAction)) {
+
+					continue;
+				}
+
+				if (!Objects.deepEquals(
+						((PermissionObjectBulkSelectionAction)bulkAction1).
+							getPermissions(),
+						((PermissionObjectBulkSelectionAction)bulkAction2).
+							getPermissions())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("roleKey", additionalAssertFieldName)) {
+				if (!(bulkAction1 instanceof
+						PermissionObjectBulkSelectionAction) ||
+					!(bulkAction2 instanceof
+						PermissionObjectBulkSelectionAction)) {
+
+					continue;
+				}
+
+				if (!Objects.deepEquals(
+						((PermissionObjectBulkSelectionAction)bulkAction1).
+							getRoleKey(),
+						((PermissionObjectBulkSelectionAction)bulkAction2).
+							getRoleKey())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("status", additionalAssertFieldName)) {
+				if (!(bulkAction1 instanceof StatusObjectBulkSelectionAction) ||
+					!(bulkAction2 instanceof StatusObjectBulkSelectionAction)) {
+
+					continue;
+				}
+
+				if (!Objects.deepEquals(
+						((StatusObjectBulkSelectionAction)bulkAction1).
+							getStatus(),
+						((StatusObjectBulkSelectionAction)bulkAction2).
+							getStatus())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("values", additionalAssertFieldName)) {
+				if (!(bulkAction1 instanceof
+						UpdateObjectValuesBulkSelectionAction) ||
+					!(bulkAction2 instanceof
+						UpdateObjectValuesBulkSelectionAction)) {
+
+					continue;
+				}
+
+				if (!Objects.deepEquals(
+						((UpdateObjectValuesBulkSelectionAction)bulkAction1).
+							getValues(),
+						((UpdateObjectValuesBulkSelectionAction)bulkAction2).
+							getValues())) {
 
 					return false;
 				}
@@ -1280,7 +1769,9 @@ public abstract class BaseBulkActionResourceTestCase {
 			).toString(),
 			"application/json");
 		httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
-		httpInvoker.path("http://localhost:8080/o/graphql");
+		httpInvoker.path(
+			"http://localhost:" + PortalUtil.getPortalServerPort(false) +
+				"/o/graphql");
 		httpInvoker.userNameAndPassword(
 			"test@liferay.com:" + PropsValues.DEFAULT_ADMIN_PASSWORD);
 
@@ -1312,8 +1803,49 @@ public abstract class BaseBulkActionResourceTestCase {
 	protected BulkAction randomBulkAction() throws Exception {
 		List<Supplier<BulkAction>> suppliers = Arrays.asList(
 			() -> {
-				DefaultPermissionBulkAction bulkAction =
-					new DefaultPermissionBulkAction();
+				AssignStructureDefaultWorkflowBulkSelectionAction bulkAction =
+					new AssignStructureDefaultWorkflowBulkSelectionAction();
+
+				bulkAction.setWorkflow(
+					StringUtil.toLowerCase(RandomTestUtil.randomString()));
+
+				bulkAction.setType(
+					BulkAction.Type.create(
+						"AssignStructureDefaultWorkflowBulkSelectionAction"));
+
+				return bulkAction;
+			},
+			() -> {
+				AssignToObjectBulkSelectionAction bulkAction =
+					new AssignToObjectBulkSelectionAction();
+
+				bulkAction.setClassName(
+					StringUtil.toLowerCase(RandomTestUtil.randomString()));
+				bulkAction.setExternalReferenceCode(
+					StringUtil.toLowerCase(RandomTestUtil.randomString()));
+				bulkAction.setName(
+					StringUtil.toLowerCase(RandomTestUtil.randomString()));
+
+				bulkAction.setType(
+					BulkAction.Type.create(
+						"AssignToObjectBulkSelectionAction"));
+
+				return bulkAction;
+			},
+			() -> {
+				CopyObjectBulkSelectionAction bulkAction =
+					new CopyObjectBulkSelectionAction();
+
+				bulkAction.setObjectEntryFolderId(RandomTestUtil.randomLong());
+
+				bulkAction.setType(
+					BulkAction.Type.create("CopyObjectBulkSelectionAction"));
+
+				return bulkAction;
+			},
+			() -> {
+				DefaultPermissionObjectBulkSelectionAction bulkAction =
+					new DefaultPermissionObjectBulkSelectionAction();
 
 				bulkAction.setDefaultPermissions(
 					StringUtil.toLowerCase(RandomTestUtil.randomString()));
@@ -1324,44 +1856,115 @@ public abstract class BaseBulkActionResourceTestCase {
 					StringUtil.toLowerCase(RandomTestUtil.randomString()));
 
 				bulkAction.setType(
-					BulkAction.Type.create("DefaultPermissionBulkAction"));
+					BulkAction.Type.create(
+						"DefaultPermissionObjectBulkSelectionAction"));
 
 				return bulkAction;
 			},
 			() -> {
-				DeleteBulkAction bulkAction = new DeleteBulkAction();
+				DeleteObjectAssetVersionBulkSelectionAction bulkAction =
+					new DeleteObjectAssetVersionBulkSelectionAction();
 
-				bulkAction.setType(BulkAction.Type.create("DeleteBulkAction"));
+				bulkAction.setClassName(
+					StringUtil.toLowerCase(RandomTestUtil.randomString()));
+				bulkAction.setClassPK(RandomTestUtil.randomLong());
+
+				bulkAction.setType(
+					BulkAction.Type.create(
+						"DeleteObjectAssetVersionBulkSelectionAction"));
 
 				return bulkAction;
 			},
 			() -> {
-				ExpireBulkAction bulkAction = new ExpireBulkAction();
+				DeleteObjectBulkSelectionAction bulkAction =
+					new DeleteObjectBulkSelectionAction();
 
-				bulkAction.setType(BulkAction.Type.create("ExpireBulkAction"));
+				bulkAction.setClassName(
+					StringUtil.toLowerCase(RandomTestUtil.randomString()));
+
+				bulkAction.setType(
+					BulkAction.Type.create("DeleteObjectBulkSelectionAction"));
 
 				return bulkAction;
 			},
 			() -> {
-				KeywordBulkAction bulkAction = new KeywordBulkAction();
+				DeleteObjectEntryBulkSelectionAction bulkAction =
+					new DeleteObjectEntryBulkSelectionAction();
+
+				bulkAction.setType(
+					BulkAction.Type.create(
+						"DeleteObjectEntryBulkSelectionAction"));
+
+				return bulkAction;
+			},
+			() -> {
+				DueDateObjectBulkSelectionAction bulkAction =
+					new DueDateObjectBulkSelectionAction();
+
+				bulkAction.setDueDate(RandomTestUtil.nextDate());
+
+				bulkAction.setType(
+					BulkAction.Type.create("DueDateObjectBulkSelectionAction"));
+
+				return bulkAction;
+			},
+			() -> {
+				DuplicateObjectBulkSelectionAction bulkAction =
+					new DuplicateObjectBulkSelectionAction();
+
+				bulkAction.setType(
+					BulkAction.Type.create(
+						"DuplicateObjectBulkSelectionAction"));
+
+				return bulkAction;
+			},
+			() -> {
+				EditObjectCategoriesBulkSelectionAction bulkAction =
+					new EditObjectCategoriesBulkSelectionAction();
 
 				bulkAction.setAppend(RandomTestUtil.randomBoolean());
 
-				bulkAction.setType(BulkAction.Type.create("KeywordBulkAction"));
+				bulkAction.setType(
+					BulkAction.Type.create(
+						"EditObjectCategoriesBulkSelectionAction"));
 
 				return bulkAction;
 			},
 			() -> {
-				MoveBulkAction bulkAction = new MoveBulkAction();
+				EditObjectTagsBulkSelectionAction bulkAction =
+					new EditObjectTagsBulkSelectionAction();
+
+				bulkAction.setAppend(RandomTestUtil.randomBoolean());
+
+				bulkAction.setType(
+					BulkAction.Type.create(
+						"EditObjectTagsBulkSelectionAction"));
+
+				return bulkAction;
+			},
+			() -> {
+				ExpireObjectBulkSelectionAction bulkAction =
+					new ExpireObjectBulkSelectionAction();
+
+				bulkAction.setType(
+					BulkAction.Type.create("ExpireObjectBulkSelectionAction"));
+
+				return bulkAction;
+			},
+			() -> {
+				MoveObjectBulkSelectionAction bulkAction =
+					new MoveObjectBulkSelectionAction();
 
 				bulkAction.setObjectEntryFolderId(RandomTestUtil.randomLong());
 
-				bulkAction.setType(BulkAction.Type.create("MoveBulkAction"));
+				bulkAction.setType(
+					BulkAction.Type.create("MoveObjectBulkSelectionAction"));
 
 				return bulkAction;
 			},
 			() -> {
-				PermissionBulkAction bulkAction = new PermissionBulkAction();
+				PermissionObjectBulkSelectionAction bulkAction =
+					new PermissionObjectBulkSelectionAction();
 
 				bulkAction.setConfiguration(
 					StringUtil.toLowerCase(RandomTestUtil.randomString()));
@@ -1369,36 +1972,49 @@ public abstract class BaseBulkActionResourceTestCase {
 					StringUtil.toLowerCase(RandomTestUtil.randomString()));
 
 				bulkAction.setType(
-					BulkAction.Type.create("PermissionBulkAction"));
+					BulkAction.Type.create(
+						"PermissionObjectBulkSelectionAction"));
 
 				return bulkAction;
 			},
 			() -> {
-				ResetPermissionBulkAction bulkAction =
-					new ResetPermissionBulkAction();
+				ResetPermissionObjectBulkSelectionAction bulkAction =
+					new ResetPermissionObjectBulkSelectionAction();
 
 				bulkAction.setType(
-					BulkAction.Type.create("ResetPermissionBulkAction"));
+					BulkAction.Type.create(
+						"ResetPermissionObjectBulkSelectionAction"));
 
 				return bulkAction;
 			},
 			() -> {
-				StatusBulkAction bulkAction = new StatusBulkAction();
-
-				bulkAction.setStatus(RandomTestUtil.randomInt());
-
-				bulkAction.setType(BulkAction.Type.create("StatusBulkAction"));
-
-				return bulkAction;
-			},
-			() -> {
-				TaxonomyCategoryBulkAction bulkAction =
-					new TaxonomyCategoryBulkAction();
-
-				bulkAction.setAppend(RandomTestUtil.randomBoolean());
+				RestoreObjectBulkSelectionAction bulkAction =
+					new RestoreObjectBulkSelectionAction();
 
 				bulkAction.setType(
-					BulkAction.Type.create("TaxonomyCategoryBulkAction"));
+					BulkAction.Type.create("RestoreObjectBulkSelectionAction"));
+
+				return bulkAction;
+			},
+			() -> {
+				StatusObjectBulkSelectionAction bulkAction =
+					new StatusObjectBulkSelectionAction();
+
+				bulkAction.setStatus(
+					StringUtil.toLowerCase(RandomTestUtil.randomString()));
+
+				bulkAction.setType(
+					BulkAction.Type.create("StatusObjectBulkSelectionAction"));
+
+				return bulkAction;
+			},
+			() -> {
+				UpdateObjectValuesBulkSelectionAction bulkAction =
+					new UpdateObjectValuesBulkSelectionAction();
+
+				bulkAction.setType(
+					BulkAction.Type.create(
+						"UpdateObjectValuesBulkSelectionAction"));
 
 				return bulkAction;
 			});
@@ -1645,3 +2261,4 @@ public abstract class BaseBulkActionResourceTestCase {
 		_bulkActionResource;
 
 }
+// LIFERAY-REST-BUILDER-HASH:2125287309

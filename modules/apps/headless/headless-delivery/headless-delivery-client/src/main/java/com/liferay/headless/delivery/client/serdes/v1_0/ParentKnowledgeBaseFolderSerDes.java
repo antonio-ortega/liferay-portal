@@ -240,3 +240,4 @@ public class ParentKnowledgeBaseFolderSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:1381427491

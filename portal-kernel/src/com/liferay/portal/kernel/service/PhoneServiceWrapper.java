@@ -109,3 +109,4 @@ public class PhoneServiceWrapper
 	private PhoneService _phoneService;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:1918694002

@@ -36,11 +36,13 @@ export function RightSidebarObjectFieldDetails() {
 		{
 			baseResourceURL,
 			ckEditor5Config,
+			countries,
 			decimalSeparator,
 			filterOperators,
 			forbiddenChars,
 			forbiddenLastChars,
 			forbiddenNames,
+			hasDepotEntry,
 			isRootDescendantNode,
 			learnResourceContext,
 			selectedObjectDefinitionNode,
@@ -206,6 +208,7 @@ export function RightSidebarObjectFieldDetails() {
 							baseResourceURL={baseResourceURL}
 							ckEditor5Config={ckEditor5Config}
 							containerWrapper={ClayPanel}
+							countries={countries}
 							creationLanguageId={
 								objectDefinitionNodeData.defaultLanguageId
 							}
@@ -213,6 +216,7 @@ export function RightSidebarObjectFieldDetails() {
 							errors={errors}
 							filterOperators={filterOperators}
 							handleChange={handleChange}
+							hasDepotEntry={hasDepotEntry}
 							isDefaultStorageType={isDefaultStorageType}
 							isRootDescendantNode={isRootDescendantNode}
 							learnResources={learnResourceContext}

@@ -206,15 +206,17 @@ public class BaseJakartaUpgradeProcessTest extends BaseJakartaUpgradeProcess {
 			upgradeProcess.upgrade();
 
 			try (Connection connection = DataAccess.getConnection();
+
 				PreparedStatement preparedStatement =
 					connection.prepareStatement(
 						"select * from " + _TABLE_NAME + " order by uuid_ asc");
+
 				ResultSet resultSet = preparedStatement.executeQuery()) {
 
 				Assert.assertTrue(resultSet.next());
 
-				Assert.assertEquals(0, resultSet.getLong(1));
-				Assert.assertEquals("uuid1", resultSet.getString(2));
+				Assert.assertEquals(0, resultSet.getLong("mvccVersion"));
+				Assert.assertEquals("uuid1", resultSet.getString("uuid_"));
 				Assert.assertEquals(
 					jakartaValue, resultSet.getString(_COLUMN_NAME_1));
 				Assert.assertEquals(
@@ -225,8 +227,8 @@ public class BaseJakartaUpgradeProcessTest extends BaseJakartaUpgradeProcess {
 
 				Assert.assertTrue(resultSet.next());
 
-				Assert.assertEquals(1, resultSet.getLong(1));
-				Assert.assertEquals("uuid2", resultSet.getString(2));
+				Assert.assertEquals(1, resultSet.getLong("mvccVersion"));
+				Assert.assertEquals("uuid2", resultSet.getString("uuid_"));
 				Assert.assertEquals(
 					jakartaValue, resultSet.getString(_COLUMN_NAME_1));
 				Assert.assertEquals(
@@ -333,8 +335,8 @@ public class BaseJakartaUpgradeProcessTest extends BaseJakartaUpgradeProcess {
 	private static final String _TABLE_NAME = "BaseJakartaUpgradeProcessTest";
 
 	@Inject
-	private static CompanyLocalService _companyLocalService;
+	private CompanyLocalService _companyLocalService;
 
-	private static DB _db;
+	private DB _db;
 
 }

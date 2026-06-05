@@ -239,3 +239,4 @@ public class WidgetPermissionSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-47205725

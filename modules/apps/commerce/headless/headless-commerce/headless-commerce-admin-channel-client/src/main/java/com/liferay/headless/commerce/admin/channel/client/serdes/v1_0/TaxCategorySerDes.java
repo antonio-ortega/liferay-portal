@@ -278,3 +278,4 @@ public class TaxCategorySerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:1670826247

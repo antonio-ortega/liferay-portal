@@ -310,3 +310,4 @@ public class FormStructure implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:1930870888

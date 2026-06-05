@@ -76,3 +76,4 @@ public class FragmentFieldHTML implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1997648372

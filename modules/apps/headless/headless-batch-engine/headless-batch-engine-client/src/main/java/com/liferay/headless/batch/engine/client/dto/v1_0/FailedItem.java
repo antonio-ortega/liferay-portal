@@ -118,3 +118,4 @@ public class FailedItem implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-621327955

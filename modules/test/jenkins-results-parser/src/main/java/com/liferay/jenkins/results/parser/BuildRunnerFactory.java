@@ -20,6 +20,11 @@ public class BuildRunnerFactory {
 
 		BuildRunner<?> buildRunner = null;
 
+		if (jobName.startsWith("archive-binaries-cache-controller(")) {
+			buildRunner = new ArchiveBinariesCachePortalControllerBuildRunner(
+				(PortalTopLevelBuildData)buildData);
+		}
+
 		if (jobName.equals("generate-reports")) {
 			buildRunner = new GenerateReportsBuildRunner(buildData);
 		}
@@ -47,20 +52,21 @@ public class BuildRunnerFactory {
 
 			if (matcher.find() && (matcher.group("testSuiteName") != null)) {
 				buildRunner =
-					new PortalTestSuiteUpstreamControllerSingleSuiteBuildRunner(
-						(PortalTestSuiteUpstreamControllerBuildData)buildData);
+					new TestSuiteSingleUpstreamPortalControllerBuildRunner(
+						(ControllerPortalTopLevelBuildData)buildData);
 			}
 			else {
-				buildRunner = new PortalTestSuiteUpstreamControllerBuildRunner(
-					(PortalTestSuiteUpstreamControllerBuildData)buildData);
+				buildRunner =
+					new TestSuiteMultipleUpstreamPortalControllerBuildRunner(
+						(ControllerPortalTopLevelBuildData)buildData);
 			}
 		}
 
 		if ((buildRunner == null) &&
 			jobName.startsWith("test-portal-upstream-controller(")) {
 
-			buildRunner = new PortalUpstreamControllerSingleSuiteBuildRunner(
-				(PortalTestSuiteUpstreamControllerBuildData)buildData);
+			buildRunner = new SingleUpstreamPortalControllerBuildRunner(
+				(ControllerPortalTopLevelBuildData)buildData);
 		}
 
 		if ((buildRunner == null) && jobName.equals("test-poshi-release")) {

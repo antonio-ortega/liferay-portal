@@ -831,3 +831,4 @@ public class KaleoTransitionWrapper
 	}
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-547560792

@@ -60,6 +60,7 @@ import com.liferay.portal.aop.AopService;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.change.tracking.CTColumnResolutionType;
+import com.liferay.portal.kernel.change.tracking.sql.CTSQLModeThreadLocal;
 import com.liferay.portal.kernel.dao.jdbc.AutoBatchPreparedStatementUtil;
 import com.liferay.portal.kernel.dao.jdbc.CurrentConnection;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -72,6 +73,9 @@ import com.liferay.portal.kernel.model.GroupedModel;
 import com.liferay.portal.kernel.model.ModelHintsUtil;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.Role;
+import com.liferay.portal.kernel.model.WorkflowInstanceLink;
+import com.liferay.portal.kernel.model.WorkflowInstanceLinkTable;
+import com.liferay.portal.kernel.model.WorkflowedModel;
 import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.search.IndexWriterHelper;
 import com.liferay.portal.kernel.search.Indexable;
@@ -84,6 +88,7 @@ import com.liferay.portal.kernel.service.ResourceLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalService;
+import com.liferay.portal.kernel.service.WorkflowInstanceLinkLocalService;
 import com.liferay.portal.kernel.service.change.tracking.CTService;
 import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
 import com.liferay.portal.kernel.transaction.TransactionCommitCallbackUtil;
@@ -780,6 +785,75 @@ public class CTCollectionLocalServiceImpl
 			}
 		}
 
+		long workflowInstanceLinkClassNameId =
+			_classNameLocalService.getClassNameId(WorkflowInstanceLink.class);
+
+		Map<Long, List<CTEntry>> workflowRelatedCTEntriesMap = new HashMap<>();
+
+		try (SafeCloseable safeCloseable1 =
+				CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
+					ctCollectionId);
+			SafeCloseable safeCloseable2 =
+				CTSQLModeThreadLocal.setCTSQLModeWithSafeCloseable(
+					CTSQLModeThreadLocal.CTSQLMode.CT_ONLY)) {
+
+			for (Map.Entry<Long, List<CTEntry>> entry :
+					relatedCTEntriesMap.entrySet()) {
+
+				CTService<?> ctService = _ctServiceRegistry.getCTService(
+					entry.getKey());
+
+				if ((ctService == null) ||
+					!WorkflowedModel.class.isAssignableFrom(
+						ctService.getModelClass()) ||
+					ListUtil.isEmpty(entry.getValue())) {
+
+					continue;
+				}
+
+				List<Long> workflowInstanceLinkIds =
+					_workflowInstanceLinkLocalService.dslQuery(
+						DSLQueryFactoryUtil.select(
+							WorkflowInstanceLinkTable.INSTANCE.
+								workflowInstanceLinkId
+						).from(
+							WorkflowInstanceLinkTable.INSTANCE
+						).where(
+							WorkflowInstanceLinkTable.INSTANCE.companyId.eq(
+								ctCollection.getCompanyId()
+							).and(
+								WorkflowInstanceLinkTable.INSTANCE.classNameId.
+									eq(
+										entry.getKey()
+									).and(
+										WorkflowInstanceLinkTable.INSTANCE.
+											classPK.in(
+												TransformUtil.transformToArray(
+													entry.getValue(),
+													CTEntry::getModelClassPK,
+													Long.class))
+									)
+							)
+						));
+
+				for (long workflowInstanceLinkId : workflowInstanceLinkIds) {
+					_getRelatedCTEntriesMap(
+						ctCollection, workflowInstanceLinkClassNameId,
+						workflowInstanceLinkId
+					).forEach(
+						(key, value) -> workflowRelatedCTEntriesMap.merge(
+							key, value,
+							(value1, value2) -> ListUtil.concat(value1, value2))
+					);
+				}
+			}
+		}
+
+		workflowRelatedCTEntriesMap.forEach(
+			(key, value) -> relatedCTEntriesMap.merge(
+				key, value,
+				(value1, value2) -> ListUtil.concat(value1, value2)));
+
 		return relatedCTEntriesMap;
 	}
 
@@ -856,10 +930,11 @@ public class CTCollectionLocalServiceImpl
 			DataSource dataSource = ctPersistence.getDataSource();
 
 			try (Connection connection = dataSource.getConnection();
+
 				PreparedStatement preparedStatement =
 					connection.prepareStatement(
 						StringBundler.concat(
-							"select count(*) from ",
+							"select count(*) as count from ",
 							ctPersistence.getTableName(),
 							" where ctCollectionId = ? and status not in (",
 							StringUtil.merge(
@@ -871,12 +946,8 @@ public class CTCollectionLocalServiceImpl
 				preparedStatement.setLong(1, ctCollectionId);
 
 				try (ResultSet resultSet = preparedStatement.executeQuery()) {
-					if (resultSet.next()) {
-						int count = resultSet.getInt(1);
-
-						if (count > 0) {
-							return true;
-						}
+					if (resultSet.next() && (resultSet.getLong("count") > 0)) {
+						return true;
 					}
 				}
 			}
@@ -1035,16 +1106,6 @@ public class CTCollectionLocalServiceImpl
 			null, undoCTCollection.getCompanyId(), userId,
 			undoCTCollection.getCtRemoteId(), name, description);
 
-		CTPreferences ctPreferences =
-			_ctPreferencesLocalService.getCTPreferences(
-				undoCTCollection.getCompanyId(), userId);
-
-		ctPreferences.setCtCollectionId(newCTCollection.getCtCollectionId());
-		ctPreferences.setPreviousCtCollectionId(
-			CTConstants.CT_COLLECTION_ID_PRODUCTION);
-
-		_ctPreferencesPersistence.update(ctPreferences);
-
 		List<CTEntry> publishedCTEntries =
 			_ctEntryPersistence.findByCtCollectionId(
 				undoCTCollection.getCtCollectionId());
@@ -1104,8 +1165,7 @@ public class CTCollectionLocalServiceImpl
 
 			ctEntry.setChangeType(changeType);
 
-			ctServiceCopier.addCTEntry(
-				_ctEntryLocalService.updateCTEntry(ctEntry));
+			ctServiceCopier.addCTEntry(_ctEntryPersistence.update(ctEntry));
 		}
 
 		try {
@@ -1140,6 +1200,16 @@ public class CTCollectionLocalServiceImpl
 		}
 
 		_ctServiceRegistry.onAfterCopy(undoCTCollection, newCTCollection);
+
+		CTPreferences ctPreferences =
+			_ctPreferencesLocalService.getCTPreferences(
+				undoCTCollection.getCompanyId(), userId);
+
+		ctPreferences.setCtCollectionId(newCTCollection.getCtCollectionId());
+		ctPreferences.setPreviousCtCollectionId(
+			CTConstants.CT_COLLECTION_ID_PRODUCTION);
+
+		_ctPreferencesPersistence.update(ctPreferences);
 
 		return newCTCollection;
 	}
@@ -1235,6 +1305,8 @@ public class CTCollectionLocalServiceImpl
 
 		CTService<?> ctService = _ctServiceRegistry.getCTService(classNameId);
 
+		Class<?> modelClass = ctService.getModelClass();
+
 		ctService.updateWithUnsafeFunction(
 			ctPersistence -> {
 				Set<String> primaryKeyNames = ctPersistence.getCTColumnNames(
@@ -1295,8 +1367,7 @@ public class CTCollectionLocalServiceImpl
 			processedClassPKs += batchSize;
 		}
 
-		Indexer<?> indexer = _indexerRegistry.getIndexer(
-			ctService.getModelClass());
+		Indexer<?> indexer = _indexerRegistry.getIndexer(modelClass);
 
 		if (indexer != null) {
 			TransactionCommitCallbackUtil.registerCallback(
@@ -1444,7 +1515,7 @@ public class CTCollectionLocalServiceImpl
 
 			ctEntry.setCtCollectionId(toCTCollectionId);
 
-			_ctEntryLocalService.updateCTEntry(ctEntry);
+			_ctEntryPersistence.update(ctEntry);
 		}
 
 		CTPersistence<?> ctPersistence = ctService.getCTPersistence();
@@ -1740,5 +1811,8 @@ public class CTCollectionLocalServiceImpl
 	@Reference
 	private WorkflowDefinitionLinkLocalService
 		_workflowDefinitionLinkLocalService;
+
+	@Reference
+	private WorkflowInstanceLinkLocalService _workflowInstanceLinkLocalService;
 
 }

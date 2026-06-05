@@ -1,5 +1,6 @@
 import autobind from 'autobind-decorator';
 import ClayButton from '@clayui/button';
+import Constants, {Sizes} from 'shared/util/constants';
 import debounce from 'shared/util/debounce-decorator';
 import getCN from 'classnames';
 import NoResultsDisplay from 'shared/components/NoResultsDisplay';
@@ -11,8 +12,95 @@ import {ACTION_TYPES, SelectionContext} from 'shared/context/selection';
 import {autoCancel, hasRequest} from 'shared/util/request-decorator';
 import {hasChanges} from 'shared/util/react';
 import {paginationConfig, paginationDefaults} from 'shared/util/pagination';
-import {Sizes} from 'shared/util/constants';
+import {setUriFilterValues, setUriQueryValues} from 'shared/util/router';
+import {withHistory} from 'shared/hoc';
 
+const {cur: defaultPage} = Constants.pagination;
+
+/**
+ * Memoized so typing in the search input — which only mutates the parent's
+ * `searchValue` state — does not force the results subtree (e.g. a large
+ * paginated table with custom cell renderers) to reconcile on every keystroke.
+ */
+const ResultsContent = React.memo(function ResultsContent({
+	enableClearSearch,
+	error,
+	filterBy,
+	items,
+	loading,
+	noResultsRenderer,
+	onClearAllFilters,
+	onItemsChange,
+	onRetry,
+	query,
+	resultsRenderer,
+	selectedItemsIOMap,
+	showCheckbox,
+	total
+}) {
+	if (error) {
+		return (
+			<div className='error-info flex-grow-1'>
+				<div>
+					{Liferay.Language.get('an-unexpected-error-occurred')}
+				</div>
+
+				<ClayButton
+					className='button-root'
+					displayType='secondary'
+					onClick={onRetry}
+				>
+					{Liferay.Language.get('reload')}
+				</ClayButton>
+			</div>
+		);
+	}
+
+	if (!loading && !items.length && !total) {
+		if (query) {
+			return (
+				<NoResultsDisplay
+					description={Liferay.Language.get(
+						'please-try-a-different-search-term'
+					)}
+					icon={{
+						border: false,
+						size: Sizes.XXXLarge,
+						symbol: 'ac_no_results_found'
+					}}
+					spacer
+					title={Liferay.Language.get('there-are-no-results-found')}
+				>
+					{enableClearSearch && (
+						<ClayButton
+							className='button-root'
+							displayType='secondary'
+							onClick={onClearAllFilters}
+						>
+							{Liferay.Language.get('clear-search')}
+						</ClayButton>
+					)}
+				</NoResultsDisplay>
+			);
+		}
+
+		if (noResultsRenderer) {
+			const activeFilters = filterBy.some(values => values.some(Boolean));
+
+			return noResultsRenderer(query, activeFilters);
+		}
+	}
+
+	return resultsRenderer({
+		items,
+		loading,
+		onSelectItemsChange: showCheckbox ? onItemsChange : null,
+		selectedItemsIOMap,
+		total
+	});
+});
+
+@withHistory
 @hasRequest
 export default class BaseResults extends React.Component {
 	static contextType = SelectionContext;
@@ -21,6 +109,7 @@ export default class BaseResults extends React.Component {
 		...paginationDefaults,
 		checkDisabled: () => false,
 		crossPageSelect: false,
+		enableClearSearch: false,
 		filterByOptions: [],
 		orderByOptions: [],
 		placeholder: Liferay.Language.get('search'),
@@ -38,6 +127,7 @@ export default class BaseResults extends React.Component {
 		crossPageSelect: PropTypes.bool,
 		dataSourceFn: PropTypes.func.isRequired,
 		dataSourceParams: PropTypes.object,
+		enableClearSearch: PropTypes.bool,
 		entityLabel: PropTypes.string,
 		filterByOptions: PropTypes.array,
 		maxLength: PropTypes.number,
@@ -234,6 +324,35 @@ export default class BaseResults extends React.Component {
 	}
 
 	@autobind
+	handleClearAllFilters() {
+		const {
+			filterBy,
+			history,
+			onFilterByChange,
+			onQueryChange,
+			onSearchValueChange
+		} = this.props;
+
+		const emptyFilterBy = filterBy.map(() => Set([]));
+
+		if (onSearchValueChange) {
+			onSearchValueChange('');
+		}
+
+		if (onQueryChange || onFilterByChange) {
+			onQueryChange && onQueryChange('');
+			onFilterByChange && onFilterByChange(emptyFilterBy);
+		} else {
+			history.push(
+				setUriFilterValues(
+					emptyFilterBy,
+					setUriQueryValues({page: defaultPage, query: ''})
+				)
+			);
+		}
+	}
+
+	@autobind
 	handleSearchValueChange(value) {
 		const {onSearchValueChange} = this.props;
 
@@ -253,69 +372,6 @@ export default class BaseResults extends React.Component {
 		this.handleFetchResults();
 	}
 
-	renderContent() {
-		const {
-			context: {selectedItems: selectedItemsIOMap},
-			props: {
-				filterBy,
-				noResultsRenderer,
-				query,
-				resultsRenderer,
-				showCheckbox
-			},
-			state: {error, items, loading, total}
-		} = this;
-
-		const activeFilters = filterBy.some(values => values.some(Boolean));
-
-		if (error) {
-			return (
-				<div className='error-info flex-grow-1'>
-					<div>
-						{Liferay.Language.get('an-unexpected-error-occurred')}
-					</div>
-
-					<ClayButton
-						className='button-root'
-						displayType='secondary'
-						onClick={this.handleFetchResults}
-					>
-						{Liferay.Language.get('reload')}
-					</ClayButton>
-				</div>
-			);
-		} else if (!loading && !items.length && !total) {
-			if (query) {
-				return (
-					<NoResultsDisplay
-						description={Liferay.Language.get(
-							'please-try-a-different-search-term'
-						)}
-						icon={{
-							border: false,
-							size: Sizes.XXXLarge,
-							symbol: 'ac_no_results_found'
-						}}
-						spacer
-						title={Liferay.Language.get(
-							'there-are-no-results-found'
-						)}
-					/>
-				);
-			} else if (noResultsRenderer) {
-				return noResultsRenderer(query, activeFilters);
-			}
-		}
-
-		return resultsRenderer({
-			items,
-			loading,
-			onSelectItemsChange: showCheckbox ? this.handleItemsChange : null,
-			selectedItemsIOMap,
-			total
-		});
-	}
-
 	render() {
 		const {
 			context: {selectedItems: selectedItemsIOMap},
@@ -324,10 +380,12 @@ export default class BaseResults extends React.Component {
 				className,
 				crossPageSelect,
 				delta,
+				enableClearSearch,
 				filterBy,
 				filterByOptions,
 				maxLength,
 				navRenderer,
+				noResultsRenderer,
 				onDeltaChange,
 				onFilterByChange,
 				onOrderIOMapChange,
@@ -339,6 +397,7 @@ export default class BaseResults extends React.Component {
 				placeholder,
 				query,
 				renderSubnav,
+				resultsRenderer,
 				showCheckbox,
 				showFilterAndOrder,
 				showPagination,
@@ -391,7 +450,22 @@ export default class BaseResults extends React.Component {
 					!error &&
 					renderSubnav({handleClearChecked: this.clearChecked})}
 
-				{this.renderContent()}
+				<ResultsContent
+					enableClearSearch={enableClearSearch}
+					error={error}
+					filterBy={filterBy}
+					items={items}
+					loading={loading}
+					noResultsRenderer={noResultsRenderer}
+					onClearAllFilters={this.handleClearAllFilters}
+					onItemsChange={this.handleItemsChange}
+					onRetry={this.handleFetchResults}
+					query={query}
+					resultsRenderer={resultsRenderer}
+					selectedItemsIOMap={selectedItemsIOMap}
+					showCheckbox={showCheckbox}
+					total={total}
+				/>
 
 				{showPagination && !!total && !!items.length && (
 					<PaginationBar

@@ -336,3 +336,4 @@ public class MetricSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-779859398

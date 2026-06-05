@@ -63,7 +63,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {objectEntryFolderCollaboratorByTypeCollaborator(collaboratorId: ___, objectEntryFolderId: ___, type: ___){actionIds, actions, creator, dateExpired, externalReferenceCode, id, name, portrait, share, type}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {objectEntryFolderCollaboratorByTypeCollaborator(collaboratorId: ___, objectEntryFolderId: ___, type: ___){actionIds, actions, creator, dateExpired, emailAddress, externalReferenceCode, id, name, portrait, share, type}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField(
 		description = "Retrieves the collaborator of an object entry."
@@ -108,7 +108,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {scopeScopeKeyObjectEntryFolderByExternalReferenceCodeCollaboratorByTypeCollaborator(collaboratorId: ___, externalReferenceCode: ___, scopeKey: ___, type: ___){actionIds, actions, creator, dateExpired, externalReferenceCode, id, name, portrait, share, type}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {scopeScopeKeyObjectEntryFolderByExternalReferenceCodeCollaboratorByTypeCollaborator(collaboratorId: ___, externalReferenceCode: ___, scopeKey: ___, type: ___){actionIds, actions, creator, dateExpired, emailAddress, externalReferenceCode, id, name, portrait, share, type}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField(
 		description = "Retrieves the collaborator for an object entry folder."
@@ -161,7 +161,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {objectEntryFolder(objectEntryFolderId: ___){actions, creator, dateCreated, dateModified, description, externalReferenceCode, id, label, label_i18n, numberOfObjectEntries, numberOfObjectEntryFolders, parentObjectEntryFolderBrief, parentObjectEntryFolderExternalReferenceCode, parentObjectEntryFolderId, permissions, removedBy, removedDate, scope, scopeId, scopeKey, status, title, viewableBy}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {objectEntryFolder(objectEntryFolderId: ___){actions, creator, dateCreated, dateModified, description, externalReferenceCode, id, label, label_i18n, numberOfObjectEntries, numberOfObjectEntryFolders, parentObjectEntryFolderBrief, parentObjectEntryFolderExternalReferenceCode, parentObjectEntryFolderId, permissions, removedBy, removedDate, scope, scopeId, scopeKey, status, systemProperties, title, viewableBy}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField(description = "Retrieves the object entry folder.")
 	public ObjectEntryFolder objectEntryFolder(
@@ -198,7 +198,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {scopeScopeKeyObjectEntryFolderByExternalReferenceCode(externalReferenceCode: ___, scopeKey: ___){actions, creator, dateCreated, dateModified, description, externalReferenceCode, id, label, label_i18n, numberOfObjectEntries, numberOfObjectEntryFolders, parentObjectEntryFolderBrief, parentObjectEntryFolderExternalReferenceCode, parentObjectEntryFolderId, permissions, removedBy, removedDate, scope, scopeId, scopeKey, status, title, viewableBy}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {scopeScopeKeyObjectEntryFolderByExternalReferenceCode(externalReferenceCode: ___, scopeKey: ___){actions, creator, dateCreated, dateModified, description, externalReferenceCode, id, label, label_i18n, numberOfObjectEntries, numberOfObjectEntryFolders, parentObjectEntryFolderBrief, parentObjectEntryFolderExternalReferenceCode, parentObjectEntryFolderId, permissions, removedBy, removedDate, scope, scopeId, scopeKey, status, systemProperties, title, viewableBy}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
 	public ObjectEntryFolder
@@ -251,6 +251,36 @@ public class Query {
 	}
 
 	@GraphQLTypeExtension(ObjectEntryFolder.class)
+	public class GetObjectEntryFolderCollaboratorsPageTypeExtension {
+
+		public GetObjectEntryFolderCollaboratorsPageTypeExtension(
+			ObjectEntryFolder objectEntryFolder) {
+
+			_objectEntryFolder = objectEntryFolder;
+		}
+
+		@GraphQLField(
+			description = "Retrieves the collaborators of an object entry folder."
+		)
+		public CollaboratorPage collaborators(
+				@GraphQLName("pageSize") int pageSize,
+				@GraphQLName("page") int page)
+			throws Exception {
+
+			return _applyComponentServiceObjects(
+				_collaboratorResourceComponentServiceObjects,
+				Query.this::_populateResourceContext,
+				collaboratorResource -> new CollaboratorPage(
+					collaboratorResource.getObjectEntryFolderCollaboratorsPage(
+						_objectEntryFolder.getId(),
+						Pagination.of(page, pageSize))));
+		}
+
+		private ObjectEntryFolder _objectEntryFolder;
+
+	}
+
+	@GraphQLTypeExtension(ObjectEntryFolder.class)
 	public class
 		GetObjectEntryFolderCollaboratorByTypeCollaboratorTypeExtension {
 
@@ -275,36 +305,6 @@ public class Query {
 					collaboratorResource.
 						getObjectEntryFolderCollaboratorByTypeCollaborator(
 							_objectEntryFolder.getId(), type, collaboratorId));
-		}
-
-		private ObjectEntryFolder _objectEntryFolder;
-
-	}
-
-	@GraphQLTypeExtension(ObjectEntryFolder.class)
-	public class GetObjectEntryFolderCollaboratorsPageTypeExtension {
-
-		public GetObjectEntryFolderCollaboratorsPageTypeExtension(
-			ObjectEntryFolder objectEntryFolder) {
-
-			_objectEntryFolder = objectEntryFolder;
-		}
-
-		@GraphQLField(
-			description = "Retrieves the collaborators of an object entry folder."
-		)
-		public CollaboratorPage collaborators(
-				@GraphQLName("pageSize") int pageSize,
-				@GraphQLName("page") int page)
-			throws Exception {
-
-			return _applyComponentServiceObjects(
-				_collaboratorResourceComponentServiceObjects,
-				Query.this::_populateResourceContext,
-				collaboratorResource -> new CollaboratorPage(
-					collaboratorResource.getObjectEntryFolderCollaboratorsPage(
-						_objectEntryFolder.getId(),
-						Pagination.of(page, pageSize))));
 		}
 
 		private ObjectEntryFolder _objectEntryFolder;
@@ -496,3 +496,4 @@ public class Query {
 	private com.liferay.portal.kernel.model.User _user;
 
 }
+// LIFERAY-REST-BUILDER-HASH:-234834889

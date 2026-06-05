@@ -11,7 +11,7 @@ import ClayLayout from '@clayui/layout';
 import ClayLoadingIndicator from '@clayui/loading-indicator';
 import ClayModal from '@clayui/modal';
 import {
-	FDS_INTERNAL_CELL_RENDERERS,
+	FDS_INTERNAL_RENDERERS,
 	IClientExtensionRenderer,
 	IInternalRenderer,
 } from '@liferay/frontend-data-set-web';
@@ -61,7 +61,7 @@ const getRendererLabel = ({
 }): string => {
 	let clientExtensionRenderer;
 
-	const internalRenderer = FDS_INTERNAL_CELL_RENDERERS.find(
+	const internalRenderer = FDS_INTERNAL_RENDERERS.find(
 		(renderer: IInternalRenderer) => {
 			return renderer.name === rendererName;
 		}
@@ -135,15 +135,15 @@ const EditTableSectionModalContent = ({
 	sortable: boolean;
 	tableSection: IDataSetTableSection;
 }) => {
-	const [selectedCellRenderer, setSelectedCellRenderer] = useState(
+	const [selectedRenderer, setSelectedRenderer] = useState(
 		tableSection.renderer ?? 'default'
 	);
 	const [tableSectionSortable, setTableSectionSortable] = useState<boolean>(
 		tableSection.sortable
 	);
 
-	const fdsInternalCellRendererNames = FDS_INTERNAL_CELL_RENDERERS.map(
-		(cellRenderer: IInternalRenderer) => cellRenderer.name
+	const fdsInternalRendererNames = FDS_INTERNAL_RENDERERS.map(
+		(renderer: IInternalRenderer) => renderer.name
 	);
 
 	const tableSectionTranslations = tableSection.label_i18n;
@@ -155,10 +155,8 @@ const EditTableSectionModalContent = ({
 	const editTableSection = async () => {
 		const body = {
 			label_i18n: i18nFieldLabels,
-			renderer: selectedCellRenderer,
-			rendererType: !fdsInternalCellRendererNames.includes(
-				selectedCellRenderer
-			)
+			renderer: selectedRenderer,
+			rendererType: !fdsInternalRendererNames.includes(selectedRenderer)
 				? 'clientExtension'
 				: 'internal',
 			sortable: tableSectionSortable,
@@ -195,7 +193,7 @@ const EditTableSectionModalContent = ({
 	const tableSectionLabelInputId = `${namespace}tableSectionLabelInput`;
 	const tableSectionRendererSelectId = `${namespace}tableSectionRendererSelectId`;
 
-	const options = FDS_INTERNAL_CELL_RENDERERS.map(
+	const options = FDS_INTERNAL_RENDERERS.map(
 		(renderer: IInternalRenderer) => ({
 			label: renderer.label!,
 			value: renderer.name!,
@@ -238,10 +236,10 @@ const EditTableSectionModalContent = ({
 						displayType="secondary"
 						id={tableSectionRendererSelectId}
 					>
-						{selectedCellRenderer
+						{selectedRenderer
 							? getRendererLabel({
 									cetRenderers: cellClientExtensionRenderers,
-									rendererName: selectedCellRenderer,
+									rendererName: selectedRenderer,
 								})
 							: Liferay.Language.get('choose-an-option')}
 					</ClayButton>
@@ -316,7 +314,7 @@ const EditTableSectionModalContent = ({
 						cellRenderers={options}
 						namespace={namespace}
 						onItemClick={(item: string) =>
-							setSelectedCellRenderer(item)
+							setSelectedRenderer(item)
 						}
 					/>
 				</ClayForm.Group>
@@ -677,15 +675,17 @@ function Table(props: IDataSetSectionProps & {title?: string}) {
 
 	return tableSections ? (
 		<ClayLayout.ContentCol className="c-gap-4 table-visualization-mode">
-			<ClayAlert
-				displayType="info"
-				title={`${Liferay.Language.get('info')}:`}
-				variant="stripe"
-			>
-				{Liferay.Language.get(
-					'this-visualization-mode-will-not-be-shown-until-you-assign-at-least-one-field'
-				)}
-			</ClayAlert>
+			{!tableSections.length && (
+				<ClayAlert
+					displayType="info"
+					title={`${Liferay.Language.get('info')}:`}
+					variant="stripe"
+				>
+					{Liferay.Language.get(
+						'this-visualization-mode-will-not-be-shown-until-you-assign-at-least-one-field'
+					)}
+				</ClayAlert>
+			)}
 
 			<OrderableTable
 				actions={[

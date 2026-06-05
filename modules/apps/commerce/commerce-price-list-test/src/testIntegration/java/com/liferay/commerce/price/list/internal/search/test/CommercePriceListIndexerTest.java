@@ -123,11 +123,10 @@ public class CommercePriceListIndexerTest {
 			commerceCurrency.getCode());
 
 		_commercePriceListLocalService.addCommercePriceList(
-			null, _user.getUserId(), commerceCatalog.getGroupId(),
-			commerceCurrency.getCode(), true,
-			CommercePriceListConstants.TYPE_PRICE_LIST, 0, false,
-			RandomTestUtil.randomString(), 0, 1, 1, 2018, 3, 4, 0, 0, 0, 0, 0,
-			true,
+			null, _user.getUserId(), commerceCatalog.getGroupId(), 0, false,
+			commerceCurrency.getCode(), 1, 3, 4, 1, 2018, 0, 0, 0, 0, 0,
+			RandomTestUtil.randomString(), true, true, 0,
+			CommercePriceListConstants.TYPE_PRICE_LIST,
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
 		List<CommercePriceList> commercePriceLists =
@@ -154,10 +153,6 @@ public class CommercePriceListIndexerTest {
 	public FrutillaRule frutillaRule = new FrutillaRule();
 
 	private static Company _company;
-
-	@Inject
-	private static CompanyLocalService _companyLocalService;
-
 	private static Indexer<CommercePriceList> _indexer;
 
 	@Inject
@@ -168,6 +163,9 @@ public class CommercePriceListIndexerTest {
 
 	@Inject
 	private CommercePriceListLocalService _commercePriceListLocalService;
+
+	@Inject
+	private CompanyLocalService _companyLocalService;
 
 	private Group _group;
 

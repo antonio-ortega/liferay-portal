@@ -86,6 +86,7 @@ public class UpgradeViewCountTest {
 		}
 
 		try (Connection connection = DataAccess.getConnection();
+
 			PreparedStatement preparedStatement = connection.prepareStatement(
 				"select * from ViewCountEntry where companyId = 2 AND " +
 					"classNameId = ? AND classPK = 1")) {
@@ -107,11 +108,11 @@ public class UpgradeViewCountTest {
 		}
 	}
 
-	@Inject
-	private static ClassNameLocalService _classNameLocalService;
-
 	@DeleteAfterTestRun
 	private ClassName _className;
+
+	@Inject
+	private ClassNameLocalService _classNameLocalService;
 
 	private DB _db;
 

@@ -19,7 +19,7 @@ import java.util.List;
  */
 public class ResultSetGetCall {
 
-	protected List<Long> method(Connection connection) throws Exception {
+	protected List<Long> method1(Connection connection) throws Exception {
 		List<Long> plids = new ArrayList<>();
 
 		try (PreparedStatement preparedStatement = connection.prepareStatement(
@@ -36,14 +36,43 @@ public class ResultSetGetCall {
 
 			preparedStatement.setString(1, "portlet");
 
-			ResultSet resultSet = preparedStatement.executeQuery();
-
-			while (resultSet.next()) {
-				plids.add(
-					resultSet.getLong("LayoutPageTemplateStructure.classPK"));
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				while (resultSet.next()) {
+					plids.add(
+						resultSet.getLong(
+							"LayoutPageTemplateStructure.classPK"));
+				}
 			}
 
 			return plids;
+		}
+	}
+
+	protected List<Long> method2(Connection connection) throws Exception {
+		List<Long> objectDefinitionIds = new ArrayList<>();
+
+		try (PreparedStatement preparedStatement = connection.prepareStatement(
+				"select objectDefinitionId, name from ObjectDefinition");
+
+			ResultSet resultSet = preparedStatement.executeQuery()) {
+
+			while (resultSet.next()) {
+				objectDefinitionIds.add(resultSet.getLong(1));
+			}
+
+			return objectDefinitionIds;
+		}
+	}
+
+	protected void method3(Connection connection) throws Exception {
+		try (PreparedStatement preparedStatement = connection.prepareStatement(
+				"select count(*) as count from Table");
+
+			ResultSet resultSet = preparedStatement.executeQuery()) {
+
+			while (resultSet.next()) {
+				System.out.println(resultSet.getInt("count"));
+			}
 		}
 	}
 

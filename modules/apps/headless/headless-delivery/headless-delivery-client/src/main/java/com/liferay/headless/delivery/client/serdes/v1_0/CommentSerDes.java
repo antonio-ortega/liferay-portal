@@ -480,3 +480,4 @@ public class CommentSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:416123773

@@ -337,8 +337,9 @@ public class GetLayoutReportsDataStrutsAction implements StrutsAction {
 			if ((Objects.equals(
 					curSegmentsExperience.getSegmentsEntryERC(),
 					segmentsExperience.getSegmentsEntryERC()) &&
-				 (curSegmentsExperience.getSegmentsEntryGroupId() ==
-					 segmentsExperience.getSegmentsEntryGroupId())) ||
+				 Objects.equals(
+					 curSegmentsExperience.getSegmentsEntryScopeERC(),
+					 segmentsExperience.getSegmentsEntryScopeERC())) ||
 				curSegmentsExperience.hasDefaultSegmentsEntry()) {
 
 				if (curSegmentsExperience.getSegmentsExperienceId() ==

@@ -145,13 +145,9 @@ public class OpenSearchAggregationResultTranslator
 			   PipelineAggregationResultTranslatorFactory {
 
 	public OpenSearchAggregationResultTranslator(
-		Aggregate aggregate, AggregationResults aggregationResults,
-		GeoBuilders geoBuilders,
-		HitsMetadataTranslator hitsMetadataTranslator) {
+		Aggregate aggregate, HitsMetadataTranslator hitsMetadataTranslator) {
 
 		_aggregate = aggregate;
-		_aggregationResults = aggregationResults;
-		_geoBuilders = geoBuilders;
 		_hitsMetadataTranslator = hitsMetadataTranslator;
 	}
 
@@ -160,23 +156,21 @@ public class OpenSearchAggregationResultTranslator
 		Aggregate aggregate) {
 
 		return new OpenSearchAggregationResultTranslator(
-			aggregate, _aggregationResults, _geoBuilders,
-			_hitsMetadataTranslator);
+			aggregate, _hitsMetadataTranslator);
 	}
 
 	@Override
 	public PipelineAggregationResultTranslator
 		createPipelineAggregationResultTranslator(Aggregate aggregate) {
 
-		return new OpenSearchPipelineAggregationResultTranslator(
-			aggregate, _aggregationResults);
+		return new OpenSearchPipelineAggregationResultTranslator(aggregate);
 	}
 
 	@Override
 	public AvgAggregationResult visit(AvgAggregation avgAggregation) {
 		AvgAggregate avgAggregate = _aggregate.avg();
 
-		return _aggregationResults.avg(
+		return AggregationResults.INSTANCE.avg(
 			avgAggregation.getName(), avgAggregate.value());
 	}
 
@@ -186,7 +180,7 @@ public class OpenSearchAggregationResultTranslator
 
 		CardinalityAggregate cardinalityAggregate = _aggregate.cardinality();
 
-		return _aggregationResults.cardinality(
+		return AggregationResults.INSTANCE.cardinality(
 			cardinalityAggregation.getName(), cardinalityAggregate.value());
 	}
 
@@ -197,7 +191,7 @@ public class OpenSearchAggregationResultTranslator
 		ChildrenAggregate childrenAggregate = _aggregate.children();
 
 		ChildrenAggregationResult childrenAggregationResult =
-			_aggregationResults.children(
+			AggregationResults.INSTANCE.children(
 				childrenAggregation.getName(), childrenAggregate.docCount());
 
 		childrenAggregationResult.addChildrenAggregationResults(
@@ -214,7 +208,7 @@ public class OpenSearchAggregationResultTranslator
 			_aggregate.dateHistogram();
 
 		DateHistogramAggregationResult dateHistogramAggregationResult =
-			_aggregationResults.dateHistogram(
+			AggregationResults.INSTANCE.dateHistogram(
 				dateHistogramAggregation.getName());
 
 		Buckets<DateHistogramBucket> buckets = dateHistogramAggregate.buckets();
@@ -258,7 +252,7 @@ public class OpenSearchAggregationResultTranslator
 
 		return _translateRangeBuckets(
 			dateRangeAggregation, dateRangeAggregate.buckets(),
-			_aggregationResults.range(dateRangeAggregation.getName()));
+			AggregationResults.INSTANCE.range(dateRangeAggregation.getName()));
 	}
 
 	@Override
@@ -269,7 +263,7 @@ public class OpenSearchAggregationResultTranslator
 
 		DiversifiedSamplerAggregationResult
 			diversifiedSamplerAggregationResult =
-				_aggregationResults.diversifiedSampler(
+				AggregationResults.INSTANCE.diversifiedSampler(
 					diversifiedSamplerAggregation.getName(),
 					samplerAggregate.docCount());
 
@@ -288,7 +282,7 @@ public class OpenSearchAggregationResultTranslator
 		ExtendedStatsAggregate extendedStatsAggregate =
 			_aggregate.extendedStats();
 
-		return _aggregationResults.extendedStats(
+		return AggregationResults.INSTANCE.extendedStats(
 			extendedStatsAggregation.getName(), extendedStatsAggregate.avg(),
 			extendedStatsAggregate.count(), extendedStatsAggregate.min(),
 			extendedStatsAggregate.max(), extendedStatsAggregate.sum(),
@@ -302,7 +296,7 @@ public class OpenSearchAggregationResultTranslator
 		FilterAggregate filterAggregate = _aggregate.filter();
 
 		FilterAggregationResult filterAggregationResult =
-			_aggregationResults.filter(
+			AggregationResults.INSTANCE.filter(
 				filterAggregation.getName(), filterAggregate.docCount());
 
 		filterAggregationResult.addChildrenAggregationResults(
@@ -318,7 +312,7 @@ public class OpenSearchAggregationResultTranslator
 		FiltersAggregate filtersAggregate = _aggregate.filters();
 
 		FiltersAggregationResult filtersAggregationResult =
-			_aggregationResults.filters(filtersAggregation.getName());
+			AggregationResults.INSTANCE.filters(filtersAggregation.getName());
 
 		Buckets<FiltersBucket> buckets = filtersAggregate.buckets();
 
@@ -350,7 +344,7 @@ public class OpenSearchAggregationResultTranslator
 		TopLeftBottomRightGeoBounds topLeftBottomRightGeoBounds =
 			geoBounds.tlbr();
 
-		return _aggregationResults.geoBounds(
+		return AggregationResults.INSTANCE.geoBounds(
 			geoBoundsAggregation.getName(),
 			_translateGeoLocation(topLeftBottomRightGeoBounds.topLeft()),
 			_translateGeoLocation(topLeftBottomRightGeoBounds.bottomRight()));
@@ -364,7 +358,7 @@ public class OpenSearchAggregationResultTranslator
 
 		GeoLocation geoLocation = geoCentroidAggregate.location();
 
-		return _aggregationResults.geoCentroid(
+		return AggregationResults.INSTANCE.geoCentroid(
 			geoCentroidAggregation.getName(),
 			_translateGeoLocation(geoLocation), geoCentroidAggregate.count());
 	}
@@ -377,7 +371,8 @@ public class OpenSearchAggregationResultTranslator
 
 		return _translateRangeBuckets(
 			geoDistanceAggregation, geoDistanceAggregate.buckets(),
-			_aggregationResults.geoDistance(geoDistanceAggregation.getName()));
+			AggregationResults.INSTANCE.geoDistance(
+				geoDistanceAggregation.getName()));
 	}
 
 	@Override
@@ -387,7 +382,8 @@ public class OpenSearchAggregationResultTranslator
 		GeoHashGridAggregate geoHashGridAggregate = _aggregate.geohashGrid();
 
 		GeoHashGridAggregationResult geoHashGridAggregationResult =
-			_aggregationResults.geoHashGrid(geoHashGridAggregation.getName());
+			AggregationResults.INSTANCE.geoHashGrid(
+				geoHashGridAggregation.getName());
 
 		Buckets<GeoHashGridBucket> buckets = geoHashGridAggregate.buckets();
 
@@ -424,7 +420,7 @@ public class OpenSearchAggregationResultTranslator
 		GlobalAggregate globalAggregate = _aggregate.global();
 
 		GlobalAggregationResult globalAggregationResult =
-			_aggregationResults.global(
+			AggregationResults.INSTANCE.global(
 				globalAggregation.getName(), globalAggregate.docCount());
 
 		globalAggregationResult.addChildrenAggregationResults(
@@ -440,7 +436,8 @@ public class OpenSearchAggregationResultTranslator
 		HistogramAggregate histogramAggregate = _aggregate.histogram();
 
 		HistogramAggregationResult histogramAggregationResult =
-			_aggregationResults.histogram(histogramAggregation.getName());
+			AggregationResults.INSTANCE.histogram(
+				histogramAggregation.getName());
 
 		Buckets<HistogramBucket> buckets = histogramAggregate.buckets();
 
@@ -478,7 +475,7 @@ public class OpenSearchAggregationResultTranslator
 	public MaxAggregationResult visit(MaxAggregation maxAggregation) {
 		MaxAggregate maxAggregate = _aggregate.max();
 
-		return _aggregationResults.max(
+		return AggregationResults.INSTANCE.max(
 			maxAggregation.getName(), maxAggregate.value());
 	}
 
@@ -486,7 +483,7 @@ public class OpenSearchAggregationResultTranslator
 	public MinAggregationResult visit(MinAggregation minAggregation) {
 		MinAggregate minAggregate = _aggregate.min();
 
-		return _aggregationResults.min(
+		return AggregationResults.INSTANCE.min(
 			minAggregation.getName(), minAggregate.value());
 	}
 
@@ -497,7 +494,7 @@ public class OpenSearchAggregationResultTranslator
 		MissingAggregate missingAggregate = _aggregate.missing();
 
 		MissingAggregationResult missingAggregationResult =
-			_aggregationResults.missing(
+			AggregationResults.INSTANCE.missing(
 				missingAggregation.getName(), missingAggregate.docCount());
 
 		missingAggregationResult.addChildrenAggregationResults(
@@ -511,7 +508,7 @@ public class OpenSearchAggregationResultTranslator
 		NestedAggregate nestedAggregate = _aggregate.nested();
 
 		NestedAggregationResult nestedAggregationResult =
-			_aggregationResults.nested(
+			AggregationResults.INSTANCE.nested(
 				nestedAggregation.getName(), nestedAggregate.docCount());
 
 		List<AggregationResult> aggregationResults = translate(
@@ -546,7 +543,7 @@ public class OpenSearchAggregationResultTranslator
 		}
 
 		PercentileRanksAggregationResult percentileRanksAggregationResult =
-			_aggregationResults.percentileRanks(
+			AggregationResults.INSTANCE.percentileRanks(
 				percentileRanksAggregation.getName());
 
 		if (percentiles.isArray()) {
@@ -590,7 +587,8 @@ public class OpenSearchAggregationResultTranslator
 		}
 
 		PercentilesAggregationResult percentilesAggregationResult =
-			_aggregationResults.percentiles(percentilesAggregation.getName());
+			AggregationResults.INSTANCE.percentiles(
+				percentilesAggregation.getName());
 
 		if (percentiles.isArray()) {
 			ListUtil.isNotEmptyForEach(
@@ -615,7 +613,7 @@ public class OpenSearchAggregationResultTranslator
 
 		return _translateRangeBuckets(
 			rangeAggregation, rangeAggregate.buckets(),
-			_aggregationResults.range(rangeAggregation.getName()));
+			AggregationResults.INSTANCE.range(rangeAggregation.getName()));
 	}
 
 	@Override
@@ -626,7 +624,7 @@ public class OpenSearchAggregationResultTranslator
 			_aggregate.reverseNested();
 
 		ReverseNestedAggregationResult reverseNestedAggregationResult =
-			_aggregationResults.reverseNested(
+			AggregationResults.INSTANCE.reverseNested(
 				reverseNestedAggregation.getName(),
 				reverseNestedAggregate.docCount());
 
@@ -645,7 +643,7 @@ public class OpenSearchAggregationResultTranslator
 		SamplerAggregate samplerAggregate = _aggregate.sampler();
 
 		SamplerAggregationResult samplerAggregationResult =
-			_aggregationResults.sampler(
+			AggregationResults.INSTANCE.sampler(
 				samplerAggregation.getName(), samplerAggregate.docCount());
 
 		samplerAggregationResult.addChildrenAggregationResults(
@@ -661,7 +659,7 @@ public class OpenSearchAggregationResultTranslator
 		ScriptedMetricAggregate scriptedMetricAggregate =
 			_aggregate.scriptedMetric();
 
-		return _aggregationResults.scriptedMetric(
+		return AggregationResults.INSTANCE.scriptedMetric(
 			scriptedMetricAggregation.getName(),
 			scriptedMetricAggregate.value());
 	}
@@ -684,7 +682,7 @@ public class OpenSearchAggregationResultTranslator
 	public StatsAggregationResult visit(StatsAggregation statsAggregation) {
 		StatsAggregate statsAggregate = _aggregate.stats();
 
-		return _aggregationResults.stats(
+		return AggregationResults.INSTANCE.stats(
 			statsAggregation.getName(), statsAggregate.avg(),
 			statsAggregate.count(), statsAggregate.min(), statsAggregate.max(),
 			statsAggregate.sum());
@@ -694,7 +692,7 @@ public class OpenSearchAggregationResultTranslator
 	public SumAggregationResult visit(SumAggregation sumAggregation) {
 		SumAggregate sumAggregate = _aggregate.sum();
 
-		return _aggregationResults.sum(
+		return AggregationResults.INSTANCE.sum(
 			sumAggregation.getName(), sumAggregate.value());
 	}
 
@@ -705,7 +703,7 @@ public class OpenSearchAggregationResultTranslator
 
 			return _translateStringTermBuckets(
 				termsAggregation, stringTermsAggregate.buckets(),
-				_aggregationResults.terms(
+				AggregationResults.INSTANCE.terms(
 					termsAggregation.getName(),
 					stringTermsAggregate.docCountErrorUpperBound(),
 					stringTermsAggregate.sumOtherDocCount()));
@@ -715,7 +713,7 @@ public class OpenSearchAggregationResultTranslator
 
 			return _translateLongTermBuckets(
 				termsAggregation, longTermsAggregate.buckets(),
-				_aggregationResults.terms(
+				AggregationResults.INSTANCE.terms(
 					termsAggregation.getName(),
 					longTermsAggregate.docCountErrorUpperBound(),
 					longTermsAggregate.sumOtherDocCount()));
@@ -730,7 +728,7 @@ public class OpenSearchAggregationResultTranslator
 
 		TopHitsAggregate topHitsAggregate = _aggregate.topHits();
 
-		return _aggregationResults.topHits(
+		return AggregationResults.INSTANCE.topHits(
 			topHitsAggregation.getName(),
 			_hitsMetadataTranslator.translate(topHitsAggregate.hits()));
 	}
@@ -743,7 +741,7 @@ public class OpenSearchAggregationResultTranslator
 
 		Double value = Double.valueOf(valueCountAggregate.value());
 
-		return _aggregationResults.valueCount(
+		return AggregationResults.INSTANCE.valueCount(
 			valueCountAggregation.getName(), value.longValue());
 	}
 
@@ -753,7 +751,7 @@ public class OpenSearchAggregationResultTranslator
 
 		WeightedAvgAggregate weightedAvgAggregate = _aggregate.weightedAvg();
 
-		return _aggregationResults.weightedAvg(
+		return AggregationResults.INSTANCE.weightedAvg(
 			weightedAvgAggregation.getName(), weightedAvgAggregate.value());
 	}
 
@@ -787,7 +785,7 @@ public class OpenSearchAggregationResultTranslator
 
 		LatLonGeoLocation latLonGeoLocation = geoLocation.latlon();
 
-		return _geoBuilders.geoLocationPoint(
+		return GeoBuilders.INSTANCE.geoLocationPoint(
 			latLonGeoLocation.lat(), latLonGeoLocation.lon());
 	}
 
@@ -882,8 +880,6 @@ public class OpenSearchAggregationResultTranslator
 	}
 
 	private final Aggregate _aggregate;
-	private final AggregationResults _aggregationResults;
-	private final GeoBuilders _geoBuilders;
 	private final HitsMetadataTranslator _hitsMetadataTranslator;
 
 }

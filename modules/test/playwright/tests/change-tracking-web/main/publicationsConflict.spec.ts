@@ -12,6 +12,7 @@ import {pageEditorPagesTest} from '../../../fixtures/pageEditorPagesTest';
 import {TCustomField} from '../../../helpers/CustomFieldTypesHelper';
 import {clickAndExpectToBeVisible} from '../../../utils/clickAndExpectToBeVisible';
 import getRandomString from '../../../utils/getRandomString';
+import {closeProductMenu} from '../../../utils/productMenu';
 import {waitForAlert} from '../../../utils/waitForAlert';
 import {blogsPagesTest} from '../../blogs-web/main/fixtures/blogsPagesTest';
 import {journalPagesTest} from '../../journal-web/main/fixtures/journalPagesTest';
@@ -159,11 +160,13 @@ test('LPD-54602 Edit in Production action should not be visible if entity does n
 
 	await expect(page.getByText('Checking Changes')).toBeVisible();
 
+	await closeProductMenu(page);
+
 	await expect(
 		page.getByText('Test Test added a Custom Field')
 	).toBeVisible();
 
-	await expect(page.getByRole('menuitem')).not.toBeVisible();
+	await expect(page.getByRole('menuitem', {name: 'Home'})).not.toBeVisible();
 
 	await expect(
 		page.getByRole('link', {name: 'Discard Change'})

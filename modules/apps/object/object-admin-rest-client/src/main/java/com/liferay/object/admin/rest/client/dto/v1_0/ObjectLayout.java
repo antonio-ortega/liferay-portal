@@ -253,3 +253,4 @@ public class ObjectLayout implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-308913012

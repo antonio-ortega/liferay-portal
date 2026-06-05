@@ -9,6 +9,7 @@ import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
+import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.change.tracking.CTModel;
 import com.liferay.portal.kernel.search.BooleanQuery;
@@ -133,6 +134,24 @@ public class DefaultIndexer<T extends BaseModel<?>> implements Indexer<T> {
 			IndexerRegistryUtil.getIndexerPostProcessors(this);
 
 		return indexerPostProcessors.toArray(new IndexerPostProcessor[0]);
+	}
+
+	@Override
+	public long getReindexEntryCount(long companyId) {
+		long indexerCompanyId = getCompanyId();
+
+		if (((indexerCompanyId != 0) && (indexerCompanyId != companyId)) ||
+			!_indexerWriter.shouldRun(companyId)) {
+
+			return 0;
+		}
+
+		IndexableActionableDynamicQuery indexableActionableDynamicQuery =
+			_indexerWriter.getIndexableActionableDynamicQuery();
+
+		indexableActionableDynamicQuery.setCompanyId(companyId);
+
+		return indexableActionableDynamicQuery.performCount();
 	}
 
 	@Override
@@ -263,11 +282,6 @@ public class DefaultIndexer<T extends BaseModel<?>> implements Indexer<T> {
 	}
 
 	@Override
-	public void reindex(String[] ids) throws SearchException {
-		_indexerWriter.reindex(ids);
-	}
-
-	@Override
 	public void reindex(T baseModel) throws SearchException {
 		_indexerWriter.reindex(baseModel);
 	}
@@ -275,6 +289,11 @@ public class DefaultIndexer<T extends BaseModel<?>> implements Indexer<T> {
 	@Override
 	public void reindex(T baseModel, boolean notify) throws SearchException {
 		_indexerWriter.reindex(baseModel, notify);
+	}
+
+	@Override
+	public void reindexCompany(long companyId) throws SearchException {
+		_indexerWriter.reindexCompany(companyId);
 	}
 
 	@Override

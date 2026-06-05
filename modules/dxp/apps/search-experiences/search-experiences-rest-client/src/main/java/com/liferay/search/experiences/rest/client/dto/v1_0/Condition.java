@@ -219,3 +219,4 @@ public class Condition implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:676046138

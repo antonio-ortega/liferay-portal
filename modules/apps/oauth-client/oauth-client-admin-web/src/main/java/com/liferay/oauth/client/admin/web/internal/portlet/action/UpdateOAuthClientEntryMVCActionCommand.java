@@ -5,15 +5,20 @@
 
 package com.liferay.oauth.client.admin.web.internal.portlet.action;
 
-import com.liferay.oauth.client.admin.web.internal.constants.OAuthClientAdminPortletKeys;
+import com.liferay.oauth.client.constants.OAuthClientAdminPortletKeys;
 import com.liferay.oauth.client.persistence.service.OAuthClientEntryService;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
+import com.liferay.portal.kernel.json.JSONFactory;
+import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import jakarta.portlet.ActionRequest;
@@ -47,7 +52,10 @@ public class UpdateOAuthClientEntryMVCActionCommand
 				actionRequest, "authRequestParametersJSON");
 			String authServerWellKnownURI = ParamUtil.getString(
 				actionRequest, "authServerWellKnownURI");
+			String customClaimsJSON = _getCustomClaimsJSON(actionRequest);
 			String infoJSON = ParamUtil.getString(actionRequest, "infoJSON");
+			String matcherField = ParamUtil.getString(
+				actionRequest, "matcherField");
 			long metadataCacheTime = ParamUtil.getLong(
 				actionRequest, "metadataCacheTime");
 			String oidcUserInfoMapperJSON = ParamUtil.getString(
@@ -58,8 +66,9 @@ public class UpdateOAuthClientEntryMVCActionCommand
 			if (oAuthClientEntryId > 0) {
 				_oAuthClientEntryService.updateOAuthClientEntry(
 					oAuthClientEntryId, authRequestParametersJSON,
-					authServerWellKnownURI, null, infoJSON, metadataCacheTime,
-					oidcUserInfoMapperJSON, tokenRequestParametersJSON);
+					authServerWellKnownURI, customClaimsJSON, infoJSON,
+					matcherField, metadataCacheTime, oidcUserInfoMapperJSON,
+					tokenRequestParametersJSON);
 			}
 			else {
 				ThemeDisplay themeDisplay =
@@ -67,9 +76,10 @@ public class UpdateOAuthClientEntryMVCActionCommand
 						WebKeys.THEME_DISPLAY);
 
 				_oAuthClientEntryService.addOAuthClientEntry(
-					themeDisplay.getUserId(), authRequestParametersJSON,
-					authServerWellKnownURI, null, infoJSON, metadataCacheTime,
-					oidcUserInfoMapperJSON, tokenRequestParametersJSON);
+					null, themeDisplay.getUserId(), authRequestParametersJSON,
+					authServerWellKnownURI, customClaimsJSON, infoJSON,
+					matcherField, metadataCacheTime, oidcUserInfoMapperJSON,
+					tokenRequestParametersJSON);
 			}
 
 			return true;
@@ -87,10 +97,42 @@ public class UpdateOAuthClientEntryMVCActionCommand
 		}
 	}
 
+	private String _getCustomClaimsJSON(ActionRequest actionRequest) {
+		if (!FeatureFlagManagerUtil.isEnabled(
+				_portal.getCompanyId(actionRequest), "LPD-49855")) {
+
+			return null;
+		}
+
+		JSONObject jsonObject = _jsonFactory.createJSONObject();
+
+		int[] indexes = ParamUtil.getIntegerValues(
+			actionRequest, "customClaimsIndexes");
+
+		for (int index : indexes) {
+			String key = ParamUtil.getString(
+				actionRequest, "customClaimsKey-" + index);
+			String value = ParamUtil.getString(
+				actionRequest, "customClaimsValue-" + index);
+
+			if (Validator.isNotNull(key) && Validator.isNotNull(value)) {
+				jsonObject.put(key, value);
+			}
+		}
+
+		return jsonObject.toString();
+	}
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		UpdateOAuthClientEntryMVCActionCommand.class);
 
 	@Reference
+	private JSONFactory _jsonFactory;
+
+	@Reference
 	private OAuthClientEntryService _oAuthClientEntryService;
+
+	@Reference
+	private Portal _portal;
 
 }

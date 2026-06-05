@@ -35,9 +35,6 @@ import FDSDndProvider from './dnd/FDSDndProvider';
 import isFileDropEnabled from './utils/isFileDropEnabled';
 
 import './styles/main.scss';
-
-import {Atom, Selector, State} from '@liferay/frontend-js-state-web';
-
 import DnDContext from './DnDContext';
 import FrontendDataSetContext from './FrontendDataSetContext';
 import useFDSDrop from './dnd/useFDSDrop';
@@ -63,6 +60,7 @@ import {readConfigFromURL} from './utils/configInURL';
 import EVENTS from './utils/eventsDefinitions';
 import {activateFilter} from './utils/filters/activateFilter';
 import {deactivateFilter} from './utils/filters/deactivateFilter';
+import {getFDSAtom} from './utils/getFDSAtom';
 import getRandomId from './utils/getRandomId';
 
 // @ts-ignore
@@ -73,6 +71,8 @@ import {loadData} from './utils/loadData';
 // @ts-ignore
 
 import {logError} from './utils/logError';
+import {transformAdditionalAPIURLParameters} from './utils/transformAdditionalAPIURLParameters';
+import transformDataSetItems from './utils/transformDataSetItems';
 import {
 	EConfigInURLBehavior,
 	EConfigInURLKeys,
@@ -89,46 +89,21 @@ import {
 	ISuccessNotification,
 	ITableSchema,
 	IView,
-	TRenderer,
 	TSort,
 	VisibleFieldNames,
 } from './utils/types';
 import useConfigInURL, {useUpdateConfig} from './utils/useConfigInURL';
-import ViewsContext, {ISnapshot} from './views/ViewsContext';
+import ViewsContext, {ISnapshot, ISnapshots} from './views/ViewsContext';
 import getViewComponent from './views/getViewComponent';
 import viewsReducer, {EViewsActionTypes} from './views/viewsReducer';
 
 const DEFAULT_PAGINATION_DELTA = 20;
 const DEFAULT_PAGINATION_PAGE_NUMBER = 1;
 
-const getAtom = ({
-	atom,
-	id,
-}: {
-	atom: Atom<IFDSState> | undefined;
-	id: string;
-}): Atom<IFDSState> | Selector<IFDSState> => {
-	if (atom) {
-		return atom;
-	}
-
-	const key = `${id}_fdsState`;
-
-	const fallbackAtom: Atom<IFDSState> | null =
-		State.__unsafe__.getAtomOrSelectorKey(key) as Atom<IFDSState> | null;
-
-	return (
-		fallbackAtom ||
-		State.atom<IFDSState>(key, {
-			filters: [],
-			search: {query: ''},
-		})
-	);
-};
-
 const FrontendDataSetContent = ({
 	actionParameterName,
 	additionalAPIURLParameters: initialAdditionalAPIURLParameters,
+	additionalAPIURLParametersTransformer,
 	apiURL,
 	appURL,
 	atom,
@@ -158,6 +133,7 @@ const FrontendDataSetContent = ({
 	nestedItemsReferenceKey,
 	onActionDropdownItemClick,
 	onBulkActionItemClick,
+	onItemsPropSearch,
 	onSelectedItemsChange,
 	overrideEmptyResultView,
 	pagination,
@@ -391,7 +367,10 @@ const FrontendDataSetContent = ({
 		id,
 	});
 
-	const memoizedAtom = useMemo(() => getAtom({atom, id}), [atom, id]);
+	const memoizedAtom = useMemo(
+		() => getFDSAtom({atom, fdsName: id}),
+		[atom, id]
+	);
 
 	const [additionalAPIURLParameters, setAdditionalAPIURLParameters] =
 		useState(initialAdditionalAPIURLParameters);
@@ -491,10 +470,11 @@ const FrontendDataSetContent = ({
 					selectedItems:
 						newSelectionFilter.selectedData?.selectedItems.map(
 							(newItem) => {
-								const selectedItem = selectionFilter.items.find(
-									(item: ISelectionFilterStateItem) =>
-										item.value === newItem.value
-								);
+								const selectedItem =
+									selectionFilter.items?.find(
+										(item: ISelectionFilterStateItem) =>
+											item.value === newItem.value
+									);
 
 								if (selectedItem) {
 									return selectedItem;
@@ -560,27 +540,8 @@ const FrontendDataSetContent = ({
 				(pagination?.initialDelta || DEFAULT_PAGINATION_DELTA),
 		};
 
-		const customInternalViews =
-			customRenderers?.views?.map((customRenderer: TRenderer) => ({
-
-				// Need to check presence of property in TRenderer Union type
-
-				component:
-					'component' in customRenderer && customRenderer.component,
-				default: 'default' in customRenderer && customRenderer?.default,
-				label: 'label' in customRenderer && customRenderer?.label,
-				name: customRenderer.name,
-				schema: 'schema' in customRenderer && customRenderer?.schema,
-				thumbnail: 'symbol' in customRenderer && customRenderer?.symbol,
-			})) || [];
-
 		let initialActiveView =
-			views.find(({default: defaultProp}) => defaultProp) ||
-			customInternalViews?.find(
-				({default: defaultProp}) => defaultProp
-			) ||
-			views[0] ||
-			(customInternalViews?.length && customInternalViews[0]);
+			views.find(({default: defaultProp}) => defaultProp) || views[0];
 
 		defaultSnapshot.activeView = {
 			component: getViewComponent(initialActiveView as IView),
@@ -626,8 +587,12 @@ const FrontendDataSetContent = ({
 				})
 			: [];
 
-		const paginationDelta =
-			showPagination && (getDelta() || defaultSnapshot.paginationDelta);
+		const paginationDelta: number =
+			getDelta() ||
+			activeView.initialPaginationDelta ||
+			defaultSnapshot.paginationDelta;
+
+		defaultSnapshot.paginationDelta = paginationDelta;
 
 		const pageNumber =
 			getPageNumber() ||
@@ -641,9 +606,12 @@ const FrontendDataSetContent = ({
 			oldSorts: sortsProp,
 		});
 
-		const parsedSnapshots = snapshots?.map((snapshot: ISnapshot) => ({
-			...snapshot,
-			configuration: JSON.parse(snapshot.configuration),
+		const parsedSnapshots = snapshots?.map((group: ISnapshots) => ({
+			...group,
+			items: group.items.map((snapshot: ISnapshot) => ({
+				...snapshot,
+				configuration: JSON.parse(snapshot.configuration),
+			})),
 		}));
 
 		return {
@@ -656,7 +624,7 @@ const FrontendDataSetContent = ({
 			snapshots: parsedSnapshots,
 			snapshotsEnabled,
 			sorts,
-			views: [...views, ...customInternalViews],
+			views,
 			visibleFieldNames: initialVisibleFieldNames,
 		};
 	};
@@ -681,6 +649,12 @@ const FrontendDataSetContent = ({
 		...currentViewProps
 	} = activeView;
 
+	const paginationEnabled =
+		(activeView.showPagination ?? showPagination) &&
+		!!pagination &&
+		!!items?.length &&
+		!!total;
+
 	const requestData = useCallback(() => {
 		if (!apiURL) {
 			return;
@@ -703,7 +677,7 @@ const FrontendDataSetContent = ({
 				? sorts.filter((sort: TSort) => sort.active)
 				: sorts;
 
-		return loadData({
+		const loadDataArgs = {
 			additionalAPIURLParameters,
 			apiURL,
 			currentURL,
@@ -712,9 +686,18 @@ const FrontendDataSetContent = ({
 			page: pageNumber,
 			searchParam: unfrozenGlobalFDSState.search.query,
 			sorts: activeSorts,
+		};
+
+		return loadData({
+			...loadDataArgs,
+			additionalAPIURLParameters: transformAdditionalAPIURLParameters(
+				loadDataArgs,
+				additionalAPIURLParametersTransformer
+			),
 		});
 	}, [
 		additionalAPIURLParameters,
+		additionalAPIURLParametersTransformer,
 		apiURL,
 		currentURL,
 		globalFDSState,
@@ -765,8 +748,14 @@ const FrontendDataSetContent = ({
 		const globalFDSStateSearchQuery = globalFDSState.search.query;
 		const urlSearchQuery = configInURL?.q;
 
-		const shouldUpdateFilters = globalFDSState.filters.some(
-			(filter: IBaseFilterState) => {
+		const hasActiveFilterInURL = Boolean(configInURL?.filters?.length);
+		const hasActiveFilterInState = globalFDSState.filters.some(
+			(filter: IBaseFilterState) => filter.active
+		);
+
+		const shouldUpdateFilters =
+			(hasActiveFilterInURL && !hasActiveFilterInState) ||
+			globalFDSState.filters.some((filter: IBaseFilterState) => {
 				if (filter.preloadedData || filter.selectedData) {
 					const preloadedData = JSON.stringify(filter.preloadedData);
 					const selectedData = JSON.stringify(filter.selectedData);
@@ -777,8 +766,7 @@ const FrontendDataSetContent = ({
 				}
 
 				return false;
-			}
-		);
+			});
 
 		const shouldUpdateSearch =
 			(urlSearchQuery ?? '') !== (globalFDSStateSearchQuery ?? '') &&
@@ -819,29 +807,16 @@ const FrontendDataSetContent = ({
 
 	const updateDataSetItems = useCallback(
 		(dataSetData: IDataSetData) => {
-			const remappedItems = dataSetData.items.map((item) => {
-				if (item.embedded && item.embedded.actions) {
-					const actions = item.embedded.actions;
+			const transformedItems = transformDataSetItems(dataSetData.items);
 
-					delete item.embedded.actions;
-
-					return {
-						...item,
-						actions,
-					};
-				}
-
-				return {
-					...item,
-				};
-			});
-
-			setItems(remappedItems);
+			setItems(transformedItems);
 			setTotal(dataSetData.totalCount);
 
 			if (!dataSetData.items.length && dataSetData.totalCount > 0) {
 				viewsDispatch(updatePageNumber(dataSetData.lastPage));
 			}
+
+			return transformedItems;
 		},
 		[updatePageNumber, viewsDispatch]
 	);
@@ -1057,18 +1032,42 @@ const FrontendDataSetContent = ({
 	]);
 
 	useEffect(() => {
-		if (itemsProp) {
-
-			// Assuming default pagination values if data comes from items instead of apiURL
-
-			updateDataSetItems({
-				items: itemsProp,
-				lastPage: 1,
-				page: 1,
-				totalCount: itemsProp.length,
-			});
+		if (apiURL || !itemsProp) {
+			return;
 		}
-	}, [itemsProp, updateDataSetItems]);
+
+		const searchQuery = globalFDSState.search.query || '';
+
+		const filteredItems =
+			searchQuery && onItemsPropSearch
+				? itemsProp.filter((item) =>
+						onItemsPropSearch(item, searchQuery)
+					)
+				: itemsProp;
+
+		const start = (pageNumber - 1) * paginationDelta;
+		const end = start + paginationDelta;
+
+		updateDataSetItems({
+			items: paginationEnabled
+				? filteredItems.slice(start, end)
+				: filteredItems,
+			lastPage: paginationEnabled
+				? Math.ceil(filteredItems.length / paginationDelta) || 1
+				: 1,
+			page: pageNumber,
+			totalCount: filteredItems.length,
+		});
+	}, [
+		apiURL,
+		globalFDSState.search.query,
+		itemsProp,
+		onItemsPropSearch,
+		pageNumber,
+		paginationEnabled,
+		paginationDelta,
+		updateDataSetItems,
+	]);
 
 	function deselectItems(value: any) {
 		const values = Array.isArray(value) ? value : [value];
@@ -1297,10 +1296,10 @@ const FrontendDataSetContent = ({
 					}
 
 					if (isMounted()) {
-						updateDataSetItems(data);
+						const updatedItems = updateDataSetItems(data);
 
 						setSelectedItems(
-							data.items.filter(
+							updatedItems.filter(
 								(item: ISelectionFilterStateItem) => {
 									const itemValue = getObjectValueFromPath({
 										object: item,
@@ -1441,9 +1440,25 @@ const FrontendDataSetContent = ({
 
 	useEffect(() => {
 		function handleRefreshFromTheOutside(event: any) {
-			if (event.id === id) {
-				refreshData();
+			if (event.id !== id) {
+				return;
 			}
+
+			if (event.resetSearch && globalFDSState.search.query) {
+				const unfrozenGlobalFDSState: IFDSState =
+					deepClone(globalFDSState);
+
+				setGlobalFDSState({
+					...unfrozenGlobalFDSState,
+					search: {query: ''},
+				});
+
+				viewsDispatch(updatePageNumber(1));
+
+				return;
+			}
+
+			refreshData();
 		}
 
 		function handleCloseSidePanel() {
@@ -1471,7 +1486,16 @@ const FrontendDataSetContent = ({
 				window.removeEventListener('popstate', handlePopState);
 			}
 		};
-	}, [configInURLBehavior, handlePopState, id, refreshData]);
+	}, [
+		configInURLBehavior,
+		globalFDSState,
+		handlePopState,
+		id,
+		refreshData,
+		setGlobalFDSState,
+		updatePageNumber,
+		viewsDispatch,
+	]);
 
 	const fdsRef = useRef(null);
 
@@ -1534,7 +1558,7 @@ const FrontendDataSetContent = ({
 			<div
 				className={classNames(
 					'container-fluid align-items-center inline-notification-bar',
-					style === 'fluid' && 'px-0'
+					style === 'fluid' && 'pb-1 px-0'
 				)}
 			>
 				<InlineNotification
@@ -1550,11 +1574,11 @@ const FrontendDataSetContent = ({
 		!dataLoading && !componentLoading ? (
 			<div className="data-set-content-wrapper">
 				<input
-					hidden
 					name={`${namespace || id + '_'}${
 						actionParameterName || selectedItemsKey
 					}`}
 					readOnly
+					type="hidden"
 					value={selectedItemsValue.join(',')}
 				/>
 
@@ -1604,6 +1628,9 @@ const FrontendDataSetContent = ({
 					<EmptyState
 						creationMenu={creationMenu}
 						emptyStateConfiguration={emptyState}
+						hideManagementBarInEmptyState={
+							hideManagementBarInEmptyState
+						}
 						onClearFilters={onClearFilters}
 					/>
 				)}
@@ -1612,30 +1639,29 @@ const FrontendDataSetContent = ({
 			<ClayLoadingIndicator className="my-7" />
 		);
 
-	const paginationComponent =
-		showPagination && pagination && items?.length && total ? (
-			<div className="data-set-pagination-wrapper">
-				<ClayPaginationBarWithBasicItems
-					active={pageNumber}
-					activeDelta={paginationDelta}
-					deltas={pagination?.deltas}
-					disableEllipsis={items.length / paginationDelta - 5 > 999}
-					ellipsisBuffer={3}
-					labels={{
-						paginationResults: Liferay.Language.get(
-							'showing-x-to-x-of-x-entries'
-						),
-						perPageItems: Liferay.Language.get('x-items'),
-						selectPerPageItems: Liferay.Language.get('x-items'),
-					}}
-					onActiveChange={(page: number) =>
-						viewsDispatch(updatePageNumber(page))
-					}
-					onDeltaChange={handleDeltaChange}
-					totalItems={total}
-				/>
-			</div>
-		) : null;
+	const paginationComponent = paginationEnabled ? (
+		<div className="data-set-pagination-wrapper">
+			<ClayPaginationBarWithBasicItems
+				active={pageNumber}
+				activeDelta={paginationDelta}
+				deltas={pagination?.deltas}
+				disableEllipsis={items.length / paginationDelta - 5 > 999}
+				ellipsisBuffer={3}
+				labels={{
+					paginationResults: Liferay.Language.get(
+						'showing-x-to-x-of-x-entries'
+					),
+					perPageItems: Liferay.Language.get('x-items'),
+					selectPerPageItems: Liferay.Language.get('x-items'),
+				}}
+				onActiveChange={(page: number) =>
+					viewsDispatch(updatePageNumber(page))
+				}
+				onDeltaChange={handleDeltaChange}
+				totalItems={total}
+			/>
+		</div>
+	) : null;
 
 	function executeAsyncItemAction({
 		errorMessage,
@@ -1789,7 +1815,9 @@ const FrontendDataSetContent = ({
 		}
 		else {
 			const snapshot = deepClone(
-				snapshots.find((view: ISnapshot) => view.erc === value)
+				snapshots
+					.flatMap((group: ISnapshots) => group.items)
+					.find((snapshot: ISnapshot) => snapshot.erc === value)
 			);
 
 			updateConfigInURL({
@@ -2045,6 +2073,53 @@ const FrontendDataSetContent = ({
 					});
 				},
 				onSnapshotChange: handleSnapshotChange,
+				onViewChange: (viewName: string) => {
+					const view = views.find(({name}) => name === viewName);
+
+					if (!view) {
+						return;
+					}
+
+					const paginationDelta =
+						view.initialPaginationDelta ||
+						pagination?.initialDelta ||
+						DEFAULT_PAGINATION_DELTA;
+
+					const stateUpdates: Array<{
+						type: EViewsActionTypes;
+						value: IConfigInURL[keyof IConfigInURL];
+					}> = [
+						{
+							type: EViewsActionTypes.UPDATE_ACTIVE_VIEW,
+							value: viewName,
+						},
+						{
+							type: EViewsActionTypes.UPDATE_PAGINATION_DELTA,
+							value: paginationDelta,
+						},
+					];
+
+					const configInURLUpdates: Record<string, any> = {
+						[EConfigInURLKeys.VIEW_NAME]: viewName,
+						[EConfigInURLKeys.DELTA]: paginationDelta,
+					};
+
+					if (view.initialPaginationDelta) {
+						stateUpdates.push({
+							type: EViewsActionTypes.UPDATE_PAGE_NUMBER,
+							value: 1,
+						});
+
+						configInURLUpdates[EConfigInURLKeys.PAGE_NUMBER] = 1;
+					}
+
+					updateConfigInURL(configInURLUpdates);
+
+					viewsDispatch({
+						type: EViewsActionTypes.BATCH_UPDATE,
+						value: stateUpdates,
+					});
+				},
 				openModal,
 				openSidePanel,
 				portletId,

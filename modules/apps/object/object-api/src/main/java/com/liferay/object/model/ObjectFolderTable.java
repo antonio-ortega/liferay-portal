@@ -47,9 +47,12 @@ public class ObjectFolderTable extends BaseTable<ObjectFolderTable> {
 		"label", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
 	public final Column<ObjectFolderTable, String> name = createColumn(
 		"name", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
+	public final Column<ObjectFolderTable, Integer> status = createColumn(
+		"status", Integer.class, Types.INTEGER, Column.FLAG_DEFAULT);
 
 	private ObjectFolderTable() {
 		super("ObjectFolder", ObjectFolderTable::new);
 	}
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-1769871252

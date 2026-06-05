@@ -6,7 +6,6 @@
 import {APIResponse, expect as baseExpect, mergeTests} from '@playwright/test';
 
 import {apiHelpersTest} from '../../../fixtures/apiHelpersTest';
-import {applicationsMenuPageTest} from '../../../fixtures/applicationsMenuPageTest';
 import {featureFlagsTest} from '../../../fixtures/featureFlagsTest';
 import {isolatedSiteTest} from '../../../fixtures/isolatedSiteTest';
 import {loginTest} from '../../../fixtures/loginTest';
@@ -32,9 +31,9 @@ const expect = baseExpect.extend({
 
 const autoSaveTest = mergeTests(
 	apiHelpersTest,
-	applicationsMenuPageTest,
 	featureFlagsTest({
 		'LPD-11228': {enabled: true},
+		'LPD-11235': {enabled: true},
 	}),
 	isolatedSiteTest,
 	journalPagesTest,
@@ -837,6 +836,85 @@ autosaveWithoutPermissionsTest(
 		await journalPage.changeView('list');
 
 		await expect(page.getByTitle(articleTitle)).toBeVisible();
+	}
+);
+
+autoSaveTest(
+	'Resizing the browser does not trigger autosave for an unmodified article',
+	{
+		tag: '@LPD-86516',
+	},
+	async ({journalEditArticlePage, page, site}) => {
+		await journalEditArticlePage.goto({siteUrl: site.friendlyUrlPath});
+
+		await journalEditArticlePage.propertiesTab.waitFor();
+
+		let autosaveRequestCount = 0;
+
+		page.on('request', (request) => {
+			if (request.url().includes('auto_save_article')) {
+				autosaveRequestCount++;
+			}
+		});
+
+		const viewportSizes = [
+			{height: 800, width: 1600},
+			{height: 800, width: 900},
+			{height: 800, width: 480},
+			{height: 800, width: 1600},
+		];
+
+		for (const size of viewportSizes) {
+			await page.setViewportSize(size);
+
+			// Wait past AUTO_SAVE_DELAY (1500 ms) so any spurious debounced
+			// save would have fired before we assert.
+
+			await page.waitForTimeout(2000);
+		}
+
+		expect(autosaveRequestCount).toBe(0);
+
+		await expect(journalEditArticlePage.changesSavedIndicator).toBeHidden();
+	}
+);
+
+autoSaveTest(
+	'Resizing the browser does not trigger autosave after the article has already been saved',
+	{
+		tag: '@LPD-86516',
+	},
+	async ({journalEditArticlePage, page, site}) => {
+		await journalEditArticlePage.goto({siteUrl: site.friendlyUrlPath});
+
+		await journalEditArticlePage.fillTitle(getRandomString());
+
+		await expect(
+			journalEditArticlePage.changesSavedIndicator
+		).toBeVisible();
+
+		let autosaveRequestCount = 0;
+
+		page.on('request', (request) => {
+			if (request.url().includes('auto_save_article')) {
+				autosaveRequestCount++;
+			}
+		});
+
+		const viewportSizes = [
+			{height: 800, width: 900},
+			{height: 800, width: 1600},
+			{height: 800, width: 480},
+			{height: 800, width: 1600},
+		];
+
+		for (const size of viewportSizes) {
+			await page.setViewportSize(size);
+
+			await page.waitForTimeout(2000);
+		}
+
+		expect(autosaveRequestCount).toBe(0);
 	}
 );
 

@@ -208,11 +208,11 @@ public class LayoutFriendlyURLEntryUpgradeProcessTest {
 
 		_deleteFriendlyURLEntries(draftLayout2, layout2);
 
-		int expectedFriendlyURLEntriesCount =
+		long expectedFriendlyURLEntriesCount =
 			_getRowsCount("FriendlyURLEntry") + 2;
-		int expectedFriendlyURLEntryMappingsCount =
+		long expectedFriendlyURLEntryMappingsCount =
 			_getRowsCount("FriendlyURLEntryMapping") + 2;
-		int expectedFriendlyURLEntryLocalizationsCount =
+		long expectedFriendlyURLEntryLocalizationsCount =
 			_getRowsCount("FriendlyURLEntryLocalization") + 2;
 
 		_assertUpgrade(draftLayout1, draftLayout2, layout1, layout2);
@@ -465,14 +465,16 @@ public class LayoutFriendlyURLEntryUpgradeProcessTest {
 		return friendlyURLEntry;
 	}
 
-	private int _getRowsCount(String tableName) throws Exception {
+	private long _getRowsCount(String tableName) throws Exception {
 		try (Connection connection = DataAccess.getConnection();
+
 			PreparedStatement preparedStatement = connection.prepareStatement(
-				"select count(*) from " + tableName);
+				"select count(*) as count from " + tableName);
+
 			ResultSet resultSet = preparedStatement.executeQuery()) {
 
 			if (resultSet.next()) {
-				return resultSet.getInt(1);
+				return resultSet.getLong("count");
 			}
 		}
 
@@ -486,6 +488,7 @@ public class LayoutFriendlyURLEntryUpgradeProcessTest {
 		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 
 		try (Connection connection = DataAccess.getConnection();
+
 			PreparedStatement preparedStatement = connection.prepareStatement(
 				StringBundler.concat(
 					"insert into LayoutFriendlyURL (mvccVersion, ",
@@ -542,11 +545,6 @@ public class LayoutFriendlyURLEntryUpgradeProcessTest {
 		"com.liferay.friendly.url.internal.upgrade.v3_4_1." +
 			"LayoutFriendlyURLEntryUpgradeProcess";
 
-	@Inject(
-		filter = "(&(component.name=com.liferay.friendly.url.internal.upgrade.registry.FriendlyURLServiceUpgradeStepRegistrator))"
-	)
-	private static UpgradeStepRegistrator _upgradeStepRegistrator;
-
 	@Inject
 	private ClassNameLocalService _classNameLocalService;
 
@@ -590,5 +588,10 @@ public class LayoutFriendlyURLEntryUpgradeProcessTest {
 
 	@Inject
 	private ResourceActions _resourceActions;
+
+	@Inject(
+		filter = "(&(component.name=com.liferay.friendly.url.internal.upgrade.registry.FriendlyURLServiceUpgradeStepRegistrator))"
+	)
+	private UpgradeStepRegistrator _upgradeStepRegistrator;
 
 }

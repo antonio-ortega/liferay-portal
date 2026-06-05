@@ -60,7 +60,6 @@ import jakarta.portlet.ActionRequest;
 import jakarta.portlet.PortletURL;
 import jakarta.portlet.RenderRequest;
 import jakarta.portlet.RenderResponse;
-import jakarta.portlet.ResourceURL;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -297,9 +296,20 @@ public class FragmentDisplayContext {
 			return _fragmentCollection;
 		}
 
-		_fragmentCollection =
+		FragmentCollection fragmentCollection =
 			FragmentCollectionLocalServiceUtil.fetchFragmentCollection(
 				getFragmentCollectionId());
+
+		if ((fragmentCollection != null) &&
+			(fragmentCollection.getGroupId() !=
+				_themeDisplay.getCompanyGroupId()) &&
+			(fragmentCollection.getGroupId() !=
+				_themeDisplay.getScopeGroupId())) {
+
+			fragmentCollection = null;
+		}
+
+		_fragmentCollection = fragmentCollection;
 
 		return _fragmentCollection;
 	}
@@ -435,6 +445,8 @@ public class FragmentDisplayContext {
 			).setMVCRenderCommandName(
 				"/fragment/view_fragment_collections"
 			).setParameter(
+				"action", "delete"
+			).setParameter(
 				"includeMarketplaceFragmentCollections", true
 			).setWindowState(
 				LiferayWindowState.POP_UP
@@ -444,7 +456,7 @@ public class FragmentDisplayContext {
 			() -> PortletURLBuilder.createRenderURL(
 				_renderResponse
 			).setMVCRenderCommandName(
-				"/fragment/view_fragment_collections"
+				"/fragment/view_exportable_fragment_collections"
 			).setParameter(
 				"includeGlobalFragmentCollections", true
 			).setParameter(
@@ -554,23 +566,28 @@ public class FragmentDisplayContext {
 	}
 
 	public Map<String, Object> getMarketplaceProps() throws PortalException {
+		Map<String, Object> additionalProps = getAdditionalProps();
+
 		return HashMapBuilder.<String, Object>put(
+			"addFragmentCollectionURL",
+			additionalProps.get("addFragmentCollectionURL")
+		).put(
 			"body",
 			LanguageUtil.get(
 				_httpServletRequest,
 				"we-are-excited-to-share-that-marketplace-is-now-part-of-" +
 					"fragments")
 		).put(
+			"fragmentCollections", additionalProps.get("fragmentCollections")
+		).put(
 			"fragmentPortletNamespace", _renderResponse.getNamespace()
 		).put(
 			"fragmentsImportURL",
 			() -> {
-				ResourceURL importURL = _renderResponse.createResourceURL();
+				LiferayPortletURL importURL =
+					(LiferayPortletURL)_renderResponse.createResourceURL();
 
-				importURL.setParameter(
-					"fragmentCollectionId",
-					ParamUtil.getString(
-						_httpServletRequest, "fragmentCollectionId"));
+				importURL.setCopyCurrentRenderParameters(false);
 				importURL.setResourceID("/fragment/import");
 
 				return importURL.toString();

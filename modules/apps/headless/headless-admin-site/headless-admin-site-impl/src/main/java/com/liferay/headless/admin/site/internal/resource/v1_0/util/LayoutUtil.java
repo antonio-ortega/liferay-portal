@@ -9,6 +9,7 @@ import com.liferay.client.extension.constants.ClientExtensionEntryConstants;
 import com.liferay.client.extension.service.ClientExtensionEntryRelLocalServiceUtil;
 import com.liferay.client.extension.type.CET;
 import com.liferay.client.extension.type.manager.CETManager;
+import com.liferay.expando.kernel.util.ExpandoUtil;
 import com.liferay.exportimport.kernel.staging.StagingUtil;
 import com.liferay.fragment.processor.FragmentEntryProcessorRegistry;
 import com.liferay.headless.admin.site.dto.v1_0.BasicWidgetPageWidgetInstance;
@@ -18,6 +19,7 @@ import com.liferay.headless.admin.site.dto.v1_0.FavIcon;
 import com.liferay.headless.admin.site.dto.v1_0.FavIconClientExtension;
 import com.liferay.headless.admin.site.dto.v1_0.FavIconItemExternalReference;
 import com.liferay.headless.admin.site.dto.v1_0.GeneralConfig;
+import com.liferay.headless.admin.site.dto.v1_0.IconImageURL;
 import com.liferay.headless.admin.site.dto.v1_0.ItemExternalReference;
 import com.liferay.headless.admin.site.dto.v1_0.NestedApplicationsWidgetPageWidgetInstance;
 import com.liferay.headless.admin.site.dto.v1_0.NestedWidgetSection;
@@ -28,6 +30,7 @@ import com.liferay.headless.admin.site.dto.v1_0.WidgetLookAndFeelConfig;
 import com.liferay.headless.admin.site.dto.v1_0.WidgetPageSection;
 import com.liferay.headless.admin.site.dto.v1_0.WidgetPageSpecification;
 import com.liferay.headless.admin.site.dto.v1_0.WidgetPageWidgetInstance;
+import com.liferay.headless.admin.site.dto.v1_0.util.URLUtil;
 import com.liferay.headless.admin.site.internal.dto.v1_0.util.FileEntryUtil;
 import com.liferay.headless.admin.site.internal.dto.v1_0.util.ItemScopeUtil;
 import com.liferay.headless.admin.site.internal.util.LogUtil;
@@ -38,7 +41,6 @@ import com.liferay.layout.importer.util.PortletPreferencesPortletConfigurationIm
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalServiceUtil;
-import com.liferay.layout.page.template.service.LayoutPageTemplateEntryServiceUtil;
 import com.liferay.layout.util.LayoutServiceContextHelperUtil;
 import com.liferay.layout.util.UpdateLayoutModifiedDateThreadLocal;
 import com.liferay.petra.function.transform.TransformUtil;
@@ -51,11 +53,14 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.CustomizedPages;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
+import com.liferay.portal.kernel.model.LayoutTemplate;
 import com.liferay.portal.kernel.model.LayoutTypePortlet;
 import com.liferay.portal.kernel.model.LayoutTypePortletConstants;
+import com.liferay.portal.kernel.model.Theme;
 import com.liferay.portal.kernel.portlet.PortletIdCodec;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.service.LayoutServiceUtil;
+import com.liferay.portal.kernel.service.LayoutTemplateLocalServiceUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
@@ -76,9 +81,10 @@ import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 import com.liferay.segments.constants.SegmentsExperienceConstants;
 import com.liferay.segments.model.SegmentsExperience;
 import com.liferay.segments.service.SegmentsExperienceLocalServiceUtil;
-import com.liferay.segments.service.SegmentsExperienceServiceUtil;
 import com.liferay.style.book.model.StyleBookEntry;
 import com.liferay.style.book.service.StyleBookEntryLocalServiceUtil;
+
+import java.io.Serializable;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -99,8 +105,8 @@ public class LayoutUtil {
 			CETManager cetManager,
 			FragmentEntryProcessorRegistry fragmentEntryProcessorRegistry,
 			long groupId, InfoItemServiceRegistry infoItemServiceRegistry,
-			PageSpecification[] pageSpecifications, long parentLayoutId,
-			boolean privateLayout, Map<Locale, String> nameMap,
+			PageSpecification[] pageSpecifications, boolean privateLayout,
+			long parentLayoutId, Map<Locale, String> nameMap,
 			Map<Locale, String> titleMap, Map<Locale, String> descriptionMap,
 			Map<Locale, String> keywordsMap, Map<Locale, String> robotsMap,
 			String type, UnicodeProperties typeSettingsUnicodeProperties,
@@ -113,13 +119,12 @@ public class LayoutUtil {
 		}
 
 		if (pageSpecifications == null) {
-			Layout layout = LayoutLocalServiceUtil.addLayout(
+			Layout layout = LayoutServiceUtil.addLayout(
 				GetterUtil.getString(
 					serviceContext.getAttribute("layoutExternalReferenceCode"),
 					null),
-				serviceContext.getUserId(), groupId, privateLayout,
-				parentLayoutId, 0, 0, nameMap, titleMap, descriptionMap,
-				keywordsMap, robotsMap, type,
+				groupId, privateLayout, parentLayoutId, 0, 0, nameMap, titleMap,
+				descriptionMap, keywordsMap, robotsMap, type,
 				typeSettingsUnicodeProperties.toString(), hidden, system,
 				friendlyURLMap, null, serviceContext);
 
@@ -162,7 +167,8 @@ public class LayoutUtil {
 					serviceContext.getAttribute(
 						"layout.page.template.entry.type"))) {
 
-				throw new UnsupportedOperationException();
+				throw new IllegalArgumentException(
+					"A master page cannot reference another master page");
 			}
 
 			ItemExternalReference itemExternalReference =
@@ -172,7 +178,9 @@ public class LayoutUtil {
 					itemExternalReference.getExternalReferenceCode())) {
 
 				if (itemExternalReference.getScope() != null) {
-					throw new UnsupportedOperationException();
+					throw new IllegalArgumentException(
+						"The master page reference does not belong to the " +
+							"same scope as the target page");
 				}
 
 				LayoutPageTemplateEntry layoutPageTemplateEntry =
@@ -186,7 +194,9 @@ public class LayoutUtil {
 						LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT,
 						layoutPageTemplateEntry.getType())) {
 
-					throw new UnsupportedOperationException();
+					throw new IllegalArgumentException(
+						"The master page reference does not point to a " +
+							"master page");
 				}
 
 				if (layoutPageTemplateEntry == null) {
@@ -260,7 +270,8 @@ public class LayoutUtil {
 				 PageSpecification.Status.DRAFT)) ||
 			layout.isDraftLayout()) {
 
-			throw new UnsupportedOperationException();
+			throw new IllegalArgumentException(
+				"The draft page specification is not in draft status");
 		}
 
 		Layout draftLayout = layout.fetchDraftLayout();
@@ -273,7 +284,9 @@ public class LayoutUtil {
 			!Objects.equals(
 				draftLayout.getStatus(), WorkflowConstants.STATUS_APPROVED)) {
 
-			throw new UnsupportedOperationException();
+			throw new IllegalArgumentException(
+				"The draft page specification's external reference code does " +
+					"not match the expected value");
 		}
 
 		return updateLayout(
@@ -286,8 +299,8 @@ public class LayoutUtil {
 	}
 
 	public static Layout addLayout(
-			String externalReferenceCode, long groupId, long parentLayoutId,
-			Map<Locale, String> nameMap, String type,
+			String externalReferenceCode, long groupId, boolean privateLayout,
+			long parentLayoutId, Map<Locale, String> nameMap, String type,
 			UnicodeProperties typeSettingsUnicodeProperties,
 			boolean hiddenFromNavigation, Map<Locale, String> friendlyURLMap,
 			PageSpecification pageSpecification, ServiceContext serviceContext)
@@ -302,17 +315,18 @@ public class LayoutUtil {
 		_setExpandoBridgeAttributes(pageSpecification, serviceContext);
 
 		return LayoutServiceUtil.addLayout(
-			externalReferenceCode, groupId, false, parentLayoutId, nameMap,
-			null, null, null, null, type, typeSettings, hiddenFromNavigation,
-			friendlyURLMap, null, serviceContext);
+			externalReferenceCode, groupId, privateLayout, parentLayoutId,
+			nameMap, null, null, null, null, type, typeSettings,
+			hiddenFromNavigation, friendlyURLMap, null, serviceContext);
 	}
 
 	public static Layout addPortletLayout(
 			CETManager cetManager, String externalReferenceCode,
 			InfoItemServiceRegistry infoItemServiceRegistry, long groupId,
-			long parentLayoutId, Map<Locale, String> nameMap,
-			Map<Locale, String> titleMap, Map<Locale, String> descriptionMap,
-			Map<Locale, String> keywordsMap, Map<Locale, String> robotsMap,
+			boolean privateLayout, long parentLayoutId,
+			Map<Locale, String> nameMap, Map<Locale, String> titleMap,
+			Map<Locale, String> descriptionMap, Map<Locale, String> keywordsMap,
+			Map<Locale, String> robotsMap,
 			UnicodeProperties typeSettingsUnicodeProperties,
 			boolean hiddenFromNavigation, Map<Locale, String> friendlyURLMap,
 			ServiceContext serviceContext,
@@ -328,8 +342,8 @@ public class LayoutUtil {
 		_setExpandoBridgeAttributes(widgetPageSpecification, serviceContext);
 
 		Layout layout = LayoutServiceUtil.addLayout(
-			externalReferenceCode, groupId, false, parentLayoutId, nameMap,
-			titleMap, descriptionMap, keywordsMap, robotsMap,
+			externalReferenceCode, groupId, privateLayout, parentLayoutId,
+			nameMap, titleMap, descriptionMap, keywordsMap, robotsMap,
 			LayoutConstants.TYPE_PORTLET, typeSettings, hiddenFromNavigation,
 			friendlyURLMap, null, serviceContext);
 
@@ -454,7 +468,9 @@ public class LayoutUtil {
 				layout.getExternalReferenceCode(),
 				publishedContentPageSpecification.getExternalReferenceCode())) {
 
-			throw new UnsupportedOperationException();
+			throw new IllegalArgumentException(
+				"The published page specification's external reference code " +
+					"does not match the expected value");
 		}
 
 		int draftLayoutStatus = WorkflowConstants.STATUS_APPROVED;
@@ -649,6 +665,22 @@ public class LayoutUtil {
 		}
 	}
 
+	private static byte[] _getIconImageByteArray(Settings settings)
+		throws Exception {
+
+		if (settings == null) {
+			return null;
+		}
+
+		IconImageURL iconImageURL = settings.getIconImageURL();
+
+		if ((iconImageURL == null) || Validator.isNull(iconImageURL.getUrl())) {
+			return null;
+		}
+
+		return URLUtil.getByteArray(iconImageURL.getUrl());
+	}
+
 	private static String _getMasterLayoutPageTemplateEntryERC(
 			long groupId, Layout layout, Settings settings)
 		throws Exception {
@@ -668,7 +700,9 @@ public class LayoutUtil {
 		}
 
 		if (itemExternalReference.getScope() != null) {
-			throw new UnsupportedOperationException();
+			throw new IllegalArgumentException(
+				"The master page references do not belong to the same scope " +
+					"as the current page");
 		}
 
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
@@ -680,11 +714,12 @@ public class LayoutUtil {
 				LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT,
 				layoutPageTemplateEntry.getType())) {
 
-			throw new UnsupportedOperationException();
+			throw new IllegalArgumentException(
+				"A master page cannot reference another master page");
 		}
 
 		layoutPageTemplateEntry =
-			LayoutPageTemplateEntryServiceUtil.
+			LayoutPageTemplateEntryLocalServiceUtil.
 				fetchLayoutPageTemplateEntryByExternalReferenceCode(
 					itemExternalReference.getExternalReferenceCode(), groupId);
 
@@ -693,7 +728,8 @@ public class LayoutUtil {
 				LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT,
 				layoutPageTemplateEntry.getType())) {
 
-			throw new UnsupportedOperationException();
+			throw new IllegalArgumentException(
+				"The master page reference does not point to a master page");
 		}
 
 		if (layoutPageTemplateEntry == null) {
@@ -759,7 +795,9 @@ public class LayoutUtil {
 						return null;
 					}))) {
 
-			throw new UnsupportedOperationException();
+			throw new IllegalArgumentException(
+				"The look and feel preferences cannot be modified using " +
+					"widget configuration");
 		}
 
 		if (configurationMap == null) {
@@ -863,10 +901,19 @@ public class LayoutUtil {
 			serviceContext.setExpandoBridgeAttributes(null);
 		}
 		else {
-			serviceContext.setExpandoBridgeAttributes(
+			Map<String, Serializable> expandoBridgeAttributes =
 				CustomFieldsUtil.toMap(
 					Layout.class.getName(), serviceContext.getCompanyId(),
-					pageSpecification.getCustomFields(), null));
+					pageSpecification.getCustomFields(),
+					LocaleUtil.getSiteDefault());
+
+			if (expandoBridgeAttributes != null) {
+				ExpandoUtil.fillMissingDefaultLocaleValues(
+					expandoBridgeAttributes);
+
+				serviceContext.setExpandoBridgeAttributes(
+					expandoBridgeAttributes);
+			}
 		}
 	}
 
@@ -944,7 +991,8 @@ public class LayoutUtil {
 				Validator.isNotNull(
 					settings.getThemeSpritemapClientExtension())) {
 
-				throw new UnsupportedOperationException();
+				throw new IllegalArgumentException(
+					"Utility pages do not support client extensions");
 			}
 
 			return;
@@ -1000,8 +1048,6 @@ public class LayoutUtil {
 
 		_updateClientExtensions(cetManager, layout, settings, serviceContext);
 
-		layout = _updateLookAndFeel(layout, settings);
-
 		_setExpandoBridgeAttributes(pageSpecification, serviceContext);
 
 		String faviconFileEntryERC = null;
@@ -1029,7 +1075,7 @@ public class LayoutUtil {
 			}
 		}
 
-		return _updateLayout(
+		layout = _updateLayout(
 			layout, nameMap, titleMap, descriptionMap, keywordsMap, robotsMap,
 			_getStyleBookEntryERC(
 				layout.getCompanyId(), layout.getGroupId(), settings),
@@ -1037,6 +1083,11 @@ public class LayoutUtil {
 			_getMasterLayoutPageTemplateEntryERC(
 				serviceContext.getScopeGroupId(), layout, settings),
 			friendlyURLMap, serviceContext);
+
+		layout = LayoutLocalServiceUtil.updateIconImage(
+			layout.getPlid(), _getIconImageByteArray(settings));
+
+		return _updateLookAndFeel(layout, settings);
 	}
 
 	private static Layout _updateLayout(
@@ -1141,8 +1192,8 @@ public class LayoutUtil {
 				new HashMap<>();
 
 			for (SegmentsExperience segmentsExperience :
-					SegmentsExperienceServiceUtil.getSegmentsExperiences(
-						layout.getGroupId(), layout.getPlid(), true)) {
+					SegmentsExperienceLocalServiceUtil.getSegmentsExperiences(
+						layout.getGroupId(), layout.getPlid())) {
 
 				originalSegmentsExperiencesMap.put(
 					segmentsExperience.getExternalReferenceCode(),
@@ -1199,11 +1250,13 @@ public class LayoutUtil {
 					actualSegmentsExperiencesMap.get(
 						pageExperience.getExternalReferenceCode());
 
-				SegmentsExperienceServiceUtil.updateSegmentsExperiencePriority(
-					actualSegmentsExperience.getSegmentsExperienceId(),
-					SegmentsExperienceUtil.getPriority(
-						pageExperience.getKey(), layout,
-						pageExperience.getPriority()));
+				SegmentsExperienceLocalServiceUtil.
+					updateSegmentsExperiencePriority(
+						serviceContext.getUserId(),
+						actualSegmentsExperience.getSegmentsExperienceId(),
+						SegmentsExperienceUtil.getPriority(
+							pageExperience.getKey(), layout,
+							pageExperience.getPriority()));
 			}
 		}
 	}
@@ -1222,14 +1275,31 @@ public class LayoutUtil {
 				layout.getLayoutId(), unicodeProperties.toString());
 		}
 
+		LayoutTypePortlet layoutTypePortlet =
+			(LayoutTypePortlet)layout.getLayoutType();
+		Theme theme = layout.getTheme();
+
+		LayoutTemplate layoutTemplate =
+			LayoutTemplateLocalServiceUtil.getLayoutTemplate(
+				layoutTypePortlet.getLayoutTemplateId(), false,
+				theme.getThemeId());
+
+		if (layoutTemplate == null) {
+			LogUtil.logOptionalReference(
+				LayoutTemplate.class, layoutTypePortlet.getLayoutTemplateId(),
+				0);
+		}
+
 		WidgetPageSection[] widgetPageSections =
 			widgetPageSpecification.getWidgetPageSections();
 
-		LayoutTypePortlet layoutTypePortlet =
-			(LayoutTypePortlet)layout.getLayoutType();
+		if ((layoutTemplate != null) &&
+			(widgetPageSections.length !=
+				layoutTypePortlet.getNumOfColumns())) {
 
-		if (widgetPageSections.length != layoutTypePortlet.getNumOfColumns()) {
-			throw new UnsupportedOperationException();
+			throw new IllegalArgumentException(
+				"The widget layout template columns do not match the widget " +
+					"page columns");
 		}
 
 		List<String> columns = layoutTypePortlet.getColumns();
@@ -1237,6 +1307,21 @@ public class LayoutUtil {
 
 		boolean layoutCustomizable = GetterUtil.getBoolean(
 			unicodeProperties.get(LayoutConstants.CUSTOMIZABLE_LAYOUT));
+
+		List<String> nestedColumnIds =
+			com.liferay.petra.string.StringUtil.split(
+				unicodeProperties.get(
+					com.liferay.layout.admin.kernel.model.
+						LayoutTypePortletConstants.NESTED_COLUMN_IDS));
+
+		for (String column : columns) {
+			if (nestedColumnIds.contains(column)) {
+				unicodeProperties.remove(column);
+			}
+			else {
+				unicodeProperties.put(column, StringPool.BLANK);
+			}
+		}
 
 		try (SafeCloseable safeCloseable =
 				UpdateLayoutModifiedDateThreadLocal.
@@ -1251,7 +1336,9 @@ public class LayoutUtil {
 				if (!columns.contains(widgetPageSection.getId()) ||
 					(!layoutCustomizable && customizable)) {
 
-					throw new UnsupportedOperationException();
+					throw new IllegalArgumentException(
+						"The widget page section is missing, or the page is " +
+							"not customizable");
 				}
 
 				for (WidgetPageWidgetInstance widgetPageWidgetInstance :

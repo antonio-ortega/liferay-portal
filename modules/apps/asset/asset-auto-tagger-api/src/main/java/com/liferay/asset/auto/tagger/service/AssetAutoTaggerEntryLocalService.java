@@ -309,3 +309,4 @@ public interface AssetAutoTaggerEntryLocalService
 		throws E;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-162699969

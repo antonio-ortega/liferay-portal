@@ -1,0 +1,22 @@
+{
+	"dependencies": {
+		"prettier": "3.2.5"
+	},
+	"devDependencies": {
+		"esbuild": "^0.21.2"
+	},
+	"files": [
+		"dist"
+	],
+	"main": "./dist/index.js",
+	"name": "@liferay/prettier-plugin",
+	"scripts": {
+		"build": "esbuild index.mjs --bundle --outdir=dist --platform=node \"--external:@prettier\" \"--external:prettier\"",
+		"format": "node-scripts format",
+		"format:check": "node-scripts format --check",
+		"postversion": "npx liferay-js-publish",
+		"preversion": "yarn run format:check && yarn run test",
+		"test": "node --test"
+	},
+	"version": "1.1.5"
+}

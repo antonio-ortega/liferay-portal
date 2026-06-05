@@ -139,3 +139,4 @@ public class Transition implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1662893093

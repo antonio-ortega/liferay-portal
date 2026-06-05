@@ -21,6 +21,7 @@ import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.module.framework.ThrowableCollector;
 import com.liferay.portal.kernel.security.auth.CompanyInheritableThreadLocalCallable;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
+import com.liferay.portal.kernel.upgrade.recorder.UpgradeLogProgressTracker;
 import com.liferay.portal.kernel.upgrade.recorder.UpgradeSQLRecorder;
 import com.liferay.portal.kernel.util.ClassUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -337,12 +338,16 @@ public abstract class BaseDBProcess implements DBProcess {
 	}
 
 	protected Connection getConnection() throws Exception {
-		return UpgradeSQLRecorder.getConnectionWrapper(
-			(Connection)ProxyUtil.newProxyInstance(
-				ClassLoader.getSystemClassLoader(),
-				new Class<?>[] {Connection.class},
-				new ConnectionThreadProxyInvocationHandler()),
-			ClassUtil.getClassName(this));
+		Connection connection = (Connection)ProxyUtil.newProxyInstance(
+			ClassLoader.getSystemClassLoader(),
+			new Class<?>[] {Connection.class},
+			new ConnectionThreadProxyInvocationHandler());
+
+		connection = UpgradeSQLRecorder.getConnectionWrapper(
+			connection, ClassUtil.getClassName(this));
+
+		return UpgradeLogProgressTracker.wrap(
+			connection, ClassUtil.getClassName(this));
 	}
 
 	protected String[] getPrimaryKeyColumnNames(
@@ -644,6 +649,14 @@ public abstract class BaseDBProcess implements DBProcess {
 
 	private int _getFixedThreadPoolSize() {
 		if (_fixedThreadPoolSize.get() != 0) {
+			return _fixedThreadPoolSize.get();
+		}
+
+		DB db = DBManagerUtil.getDB();
+
+		if (db.getDBType() == DBType.HYPERSONIC) {
+			_fixedThreadPoolSize.set(1);
+
 			return _fixedThreadPoolSize.get();
 		}
 

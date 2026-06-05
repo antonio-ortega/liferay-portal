@@ -18,6 +18,7 @@ import com.liferay.portal.db.migration.schema.exporter.internal.test.util.Config
 import com.liferay.portal.db.migration.schema.exporter.internal.test.util.DatabaseTestUtil;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.util.FileUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.test.log.LogCapture;
 import com.liferay.portal.test.log.LogEntry;
@@ -32,7 +33,6 @@ import java.util.List;
 
 import javax.sql.DataSource;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.cm.PersistenceManager;
 
 import org.junit.Assert;
@@ -87,40 +87,18 @@ public abstract class BaseDBMigrationSchemaExportTestCase {
 			DataSource dataSource, DataSource copyDataSource)
 		throws Exception {
 
-		List<String> copyIndexColumnNames =
-			DatabaseTestUtil.getIndexColumnNames(copyDataSource);
-		List<String> indexColumnNames = DatabaseTestUtil.getIndexColumnNames(
-			dataSource);
-
-		Assert.assertEquals(
-			StringUtils.difference(
-				copyIndexColumnNames.toString(), indexColumnNames.toString()),
-			indexColumnNames.size(), copyIndexColumnNames.size());
-
-		for (int i = 0; i < indexColumnNames.size(); i++) {
-			Assert.assertEquals(
-				indexColumnNames.get(i), copyIndexColumnNames.get(i));
-		}
+		_assertColumnNamesMatch(
+			DatabaseTestUtil.getIndexColumnNames(dataSource),
+			DatabaseTestUtil.getIndexColumnNames(copyDataSource));
 	}
 
 	protected void assertTables(
 			DataSource dataSource, DataSource copyDataSource)
 		throws Exception {
 
-		List<String> copyTableColumnNames =
-			DatabaseTestUtil.getTableColumnNames(copyDataSource);
-		List<String> tableColumnNames = DatabaseTestUtil.getTableColumnNames(
-			dataSource);
-
-		Assert.assertEquals(
-			StringUtils.difference(
-				copyTableColumnNames.toString(), tableColumnNames.toString()),
-			tableColumnNames.size(), copyTableColumnNames.size());
-
-		for (int i = 0; i < tableColumnNames.size(); i++) {
-			Assert.assertEquals(
-				tableColumnNames.get(i), copyTableColumnNames.get(i));
-		}
+		_assertColumnNamesMatch(
+			DatabaseTestUtil.getTableColumnNames(dataSource),
+			DatabaseTestUtil.getTableColumnNames(copyDataSource));
 	}
 
 	protected String getReportContent() throws Exception {
@@ -180,6 +158,23 @@ public abstract class BaseDBMigrationSchemaExportTestCase {
 
 	@Inject
 	protected ConfigurationAdmin configurationAdmin;
+
+	private void _assertColumnNamesMatch(
+		List<String> columnNames, List<String> copyColumnNames) {
+
+		List<String> missingColumnNames = ListUtil.remove(
+			columnNames, copyColumnNames);
+
+		Assert.assertTrue(
+			missingColumnNames.toString(),
+			ListUtil.isEmpty(missingColumnNames));
+
+		List<String> addedColumnNames = ListUtil.remove(
+			copyColumnNames, columnNames);
+
+		Assert.assertTrue(
+			addedColumnNames.toString(), ListUtil.isEmpty(addedColumnNames));
+	}
 
 	private static ObjectDefinition _objectDefinition1;
 	private static ObjectDefinition _objectDefinition2;

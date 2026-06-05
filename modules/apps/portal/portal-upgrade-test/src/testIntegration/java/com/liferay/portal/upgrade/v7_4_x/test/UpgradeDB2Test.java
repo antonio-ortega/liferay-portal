@@ -64,6 +64,7 @@ public class UpgradeDB2Test {
 		upgradeProcess.upgrade();
 
 		try (Connection connection = DataAccess.getConnection();
+
 			PreparedStatement preparedStatement = connection.prepareStatement(
 				"select length from syscat.columns where tabname = " +
 					"'TESTTABLE' and colname = 'COLUMN1'")) {
@@ -72,7 +73,7 @@ public class UpgradeDB2Test {
 				Assert.assertTrue(
 					"column1 not found in TestTable", resultSet.next());
 
-				Assert.assertEquals(2147483647, resultSet.getInt(1));
+				Assert.assertEquals(2147483647, resultSet.getInt("length"));
 			}
 		}
 	}

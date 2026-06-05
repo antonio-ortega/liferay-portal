@@ -8,16 +8,17 @@ import path from 'path';
 
 import {apiHelpersTest} from '../../../fixtures/apiHelpersTest';
 import {appManagerPagesTest} from '../../../fixtures/appManagerPagesTest';
-import {applicationsMenuPageTest} from '../../../fixtures/applicationsMenuPageTest';
+import {globalMenuPagesTest} from '../../../fixtures/globalMenuPagesTest';
 import {loginTest} from '../../../fixtures/loginTest';
 import {virtualInstancesPagesTest} from '../../../fixtures/virtualInstancesPagesTest';
+import {liferayConfig} from '../../../liferay.config';
 import performLogin from '../../../utils/performLogin';
 import {waitForAlert} from '../../../utils/waitForAlert';
 import {zipFolder} from '../../../utils/zip';
 
 export const test = mergeTests(
 	apiHelpersTest,
-	applicationsMenuPageTest,
+	globalMenuPagesTest,
 	appManagerPagesTest,
 	loginTest(),
 	virtualInstancesPagesTest
@@ -292,14 +293,14 @@ test(
 test(
 	'App Manager do not display in non default instances',
 	{tag: ['@LPD-61776']},
-	async ({applicationsMenuPage, browser, page, virtualInstancesPage}) => {
+	async ({browser, globalMenuPage, page, virtualInstancesPage}) => {
 		test.setTimeout(300000);
 
 		const DEFAULT_VIRTUAL_INSTANCE_NAME = 'www.able.com';
 
 		const links = ['App Manager', 'License Manager', 'Purchased', 'Store'];
 
-		await applicationsMenuPage.goToControlPanel();
+		await globalMenuPage.goToControlPanel();
 
 		for (const link of links) {
 			await expect(
@@ -318,7 +319,7 @@ test(
 			);
 
 			newPage = await browser.newPage({
-				baseURL: `http://${DEFAULT_VIRTUAL_INSTANCE_NAME}:8080`,
+				baseURL: `http://${DEFAULT_VIRTUAL_INSTANCE_NAME}:${liferayConfig.environment.port}`,
 			});
 
 			await performLogin(
@@ -328,7 +329,7 @@ test(
 				`@${DEFAULT_VIRTUAL_INSTANCE_NAME}.com`
 			);
 
-			await applicationsMenuPage.goToControlPanel();
+			await globalMenuPage.goToControlPanel();
 
 			for (const link of links) {
 				await expect(

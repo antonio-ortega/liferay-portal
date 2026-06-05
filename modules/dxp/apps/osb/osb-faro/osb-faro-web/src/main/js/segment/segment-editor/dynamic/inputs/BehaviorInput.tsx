@@ -4,9 +4,6 @@ import DateFilterConjunctionInput from './components/DateFilterConjunctionInput'
 import Form from 'shared/components/form';
 import OccurenceConjunctionInput from './components/OccurenceConjunctionInput';
 import React from 'react';
-import RealTimePeriodInput, {
-	DEFAULT_OPTIONS
-} from './components/RealTimePeriodInput';
 import SelectEntityFromModal from './components/SelectEntityFromModal';
 import {
 	ACTIVITY_KEY,
@@ -30,6 +27,7 @@ import {
 	getPropertyValue,
 	setPropertyValue
 } from '../utils/custom-inputs';
+import {getSafeDecodedURIComponent} from 'shared/util/util';
 import {isBoolean, isNil, isNull} from 'lodash';
 import {Modal} from 'shared/types/Modal';
 import {parseActivityKey, parseReferencedEntityId} from '../utils/utils';
@@ -45,10 +43,10 @@ export const AssetItem: React.FC<{
 			<div
 				data-tooltip
 				data-tooltip-align='top'
-				title={decodeURIComponent(dataSourceAssetPK)}
+				title={getSafeDecodedURIComponent(dataSourceAssetPK)}
 			>
 				<div className='asset-url text-secondary text-truncate'>
-					{decodeURIComponent(dataSourceAssetPK)}
+					{getSafeDecodedURIComponent(dataSourceAssetPK)}
 				</div>
 			</div>
 		)}
@@ -99,12 +97,9 @@ interface IBehaviorInputProps extends ISegmentEditorCustomInputBase {
 
 export class BehaviorInput extends React.Component<IBehaviorInputProps> {
 	static contextType = ReferencedObjectsContext;
+	declare context: React.ContextType<typeof ReferencedObjectsContext>;
 
 	_completedAnalytics = false;
-
-	componentDidMount() {
-		this.initializeRealTimeDefaults();
-	}
 
 	componentDidUpdate() {
 		const {
@@ -121,23 +116,8 @@ export class BehaviorInput extends React.Component<IBehaviorInputProps> {
 		}
 	}
 
-	initializeRealTimeDefaults() {
-		const isRealTime = this.props.segmentType === SegmentTypes.RealTime;
-
-		if (isRealTime) {
-			const currentPeriod = this.getRealTimePeriodFromCriterion();
-
-			if (!currentPeriod) {
-				this.handleRealTimePeriodChange(
-					DEFAULT_OPTIONS.interval,
-					DEFAULT_OPTIONS.timeWindow
-				);
-			}
-		}
-	}
-
 	@autobind
-	assetsDataFn({delta, orderIOMap, page, query}) {
+	assetsDataFn({delta, orderIOMap, page, query}: {[key: string]: any}) {
 		const {
 			channelId,
 			groupId,
@@ -156,7 +136,7 @@ export class BehaviorInput extends React.Component<IBehaviorInputProps> {
 		});
 	}
 
-	createActivityKey(asset) {
+	createActivityKey(asset: {id: string}) {
 		const {property} = this.props;
 
 		return `${property.entityType}#${property.name}#${asset.id}`;
@@ -191,7 +171,7 @@ export class BehaviorInput extends React.Component<IBehaviorInputProps> {
 		return id;
 	}
 
-	getConjunctionDateFilterIMap(value) {
+	getConjunctionDateFilterIMap(value: CustomValue) {
 		const conjunctionDateFilterIndex = getIndexFromPropertyName(
 			value,
 			'day'
@@ -203,7 +183,7 @@ export class BehaviorInput extends React.Component<IBehaviorInputProps> {
 	}
 
 	@autobind
-	handleAssetSelect(items) {
+	handleAssetSelect(items: import('immutable').OrderedMap<string, any>) {
 		const {
 			context: {addEntities, addEntity},
 			props: {onChange, touched, valid, value}
@@ -214,7 +194,7 @@ export class BehaviorInput extends React.Component<IBehaviorInputProps> {
 		const propertyIndex = getIndexFromPropertyName(value, ACTIVITY_KEY);
 
 		if (items.size === 1) {
-			addEntity({entityType: EntityType.Assets, payload: Map(asset)});
+			addEntity?.({entityType: EntityType.Assets, payload: Map(asset)});
 
 			onChange({
 				valid: {...valid, asset: true},
@@ -226,7 +206,7 @@ export class BehaviorInput extends React.Component<IBehaviorInputProps> {
 				)
 			});
 		} else {
-			addEntities({
+			addEntities?.({
 				entityType: EntityType.Assets,
 				payload: items.map(Map).valueSeq().toArray()
 			});
@@ -234,7 +214,7 @@ export class BehaviorInput extends React.Component<IBehaviorInputProps> {
 			onChange(
 				items
 					.valueSeq()
-					.map(assetItem => ({
+					.map((assetItem: any) => ({
 						touched,
 						valid: {...valid, asset: true},
 						value: setPropertyValue(
@@ -250,7 +230,7 @@ export class BehaviorInput extends React.Component<IBehaviorInputProps> {
 	}
 
 	@autobind
-	handleDateFilterConjunctionChange(criterion) {
+	handleDateFilterConjunctionChange(criterion: Criterion | null) {
 		const {onChange, touched, valid, value} = this.props;
 
 		onChange({
@@ -317,70 +297,6 @@ export class BehaviorInput extends React.Component<IBehaviorInputProps> {
 		onChange(params);
 	}
 
-	@autobind
-	handleRealTimePeriodChange(interval: number, timeWindow: string) {
-		const {onChange, touched, valid, value} = this.props;
-
-		const newDayValue = `${interval}_${timeWindow}`;
-
-		const conjunctionDateFilterIndex = getIndexFromPropertyName(
-			value,
-			'day'
-		);
-
-		let dayCriterion;
-		if (conjunctionDateFilterIndex >= 0) {
-			const existingDayIMap = getFilterCriterionIMap(
-				value,
-				conjunctionDateFilterIndex
-			);
-
-			dayCriterion = existingDayIMap.merge({
-				operatorName: RelationalOperators.EQ,
-				touched: true,
-				valid: true,
-				value: newDayValue
-			});
-		} else {
-			dayCriterion = fromJS({
-				operatorName: RelationalOperators.EQ,
-				propertyName: 'day',
-				touched: true,
-				valid: true,
-				value: newDayValue
-			});
-		}
-
-		const updatedValue = value.mergeIn(
-			['criterionGroup', 'items', 1],
-			dayCriterion
-		);
-
-		onChange({
-			touched: {...touched, dateFilter: true},
-			valid: {...valid, dateFilter: true},
-			value: updatedValue
-		});
-	}
-
-	getRealTimePeriodFromCriterion(): {
-		interval: number;
-		timeWindow: string;
-	} | null {
-		const {value} = this.props;
-
-		const dayValue = value.getIn(['criterionGroup', 'items', 1, 'value']);
-
-		if (!dayValue || typeof dayValue !== 'string') return null;
-
-		const [intervalStr, timeWindow] = dayValue.split('_');
-		const interval = Number(intervalStr);
-
-		if (!timeWindow || Number.isNaN(interval)) return null;
-
-		return {interval, timeWindow};
-	}
-
 	invalidateAsset() {
 		const {onChange, touched, valid} = this.props;
 
@@ -424,10 +340,6 @@ export class BehaviorInput extends React.Component<IBehaviorInputProps> {
 			Map({propertyName: 'day'})
 		).toJS();
 
-		const isRealTime = segmentType === SegmentTypes.RealTime;
-
-		const initialPeriod = this.getRealTimePeriodFromCriterion();
-
 		return (
 			<div className='criteria-statement'>
 				<Form.Group autoFit>
@@ -446,7 +358,11 @@ export class BehaviorInput extends React.Component<IBehaviorInputProps> {
 							activityAssetsListColumns.nameUrl,
 							...columns
 						]}
-						dataSourceFn={this.assetsDataFn}
+						dataSourceFn={
+							this.assetsDataFn as (params: {
+								[key: string]: any;
+							}) => Promise<any>
+						}
 						entity={this.getAssetFromContext()}
 						error={touched.asset && !valid.asset}
 						groupId={groupId}
@@ -466,31 +382,25 @@ export class BehaviorInput extends React.Component<IBehaviorInputProps> {
 					/>
 				</Form.Group>
 
-				<Form.Group autoFit>
-					<OccurenceConjunctionInput
-						onChange={this.handleOccurenceConjunctionChange}
-						operatorName={
-							value.get('operator') as FunctionalOperators &
-								RelationalOperators
-						}
-						touched={touched.occurenceCount}
-						valid={valid.occurenceCount}
-						value={value.get('value')}
-					/>
-
-					{isRealTime ? (
-						<RealTimePeriodInput
-							initialInterval={initialPeriod?.interval}
-							initialTimeWindow={initialPeriod?.timeWindow}
-							onChange={this.handleRealTimePeriodChange}
+				{segmentType === SegmentTypes.Batch && (
+					<Form.Group autoFit>
+						<OccurenceConjunctionInput
+							onChange={this.handleOccurenceConjunctionChange}
+							operatorName={
+								value.get('operator') as FunctionalOperators &
+									RelationalOperators
+							}
+							touched={touched.occurenceCount}
+							valid={valid.occurenceCount}
+							value={value.get('value')}
 						/>
-					) : (
+
 						<DateFilterConjunctionInput
 							conjunctionCriterion={conjunctionCriterion}
 							onChange={this.handleDateFilterConjunctionChange}
 						/>
-					)}
-				</Form.Group>
+					</Form.Group>
+				)}
 			</div>
 		);
 	}

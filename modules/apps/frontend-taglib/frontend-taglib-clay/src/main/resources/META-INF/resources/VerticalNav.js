@@ -22,9 +22,11 @@ export default function VerticalNav({
 	items,
 	large,
 	locale: _locale,
+	nestMargins,
 	portletId: _portletId,
 	portletNamespace: _portletNamespace,
 	size,
+	stacked,
 	triggerLabel,
 	...otherProps
 }) {
@@ -39,7 +41,9 @@ export default function VerticalNav({
 			displayType={displayType}
 			items={items}
 			large={large}
+			nestMargins={nestMargins}
 			size={size}
+			stacked={stacked}
 			triggerLabel={triggerLabel}
 			{...otherProps}
 		>
@@ -53,7 +57,7 @@ export default function VerticalNav({
 				>
 					{item.leadingIcon?.symbol && (
 						<ClayIcon
-							className="c-ml-2 c-mr-2"
+							className="c-mr-2"
 							key={item.leadingIcon.symbol}
 							symbol={item.leadingIcon.symbol}
 							title={item.leadingIcon.title}

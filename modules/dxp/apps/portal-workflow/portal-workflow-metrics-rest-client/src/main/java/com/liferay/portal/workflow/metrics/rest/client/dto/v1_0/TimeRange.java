@@ -159,3 +159,4 @@ public class TimeRange implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-512629165

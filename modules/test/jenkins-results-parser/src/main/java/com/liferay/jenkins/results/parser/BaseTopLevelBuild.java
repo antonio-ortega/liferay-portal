@@ -12,6 +12,7 @@ import com.liferay.jenkins.results.parser.failure.message.generator.DownstreamFa
 import com.liferay.jenkins.results.parser.failure.message.generator.FailureMessageGenerator;
 import com.liferay.jenkins.results.parser.failure.message.generator.FormatFailureMessageGenerator;
 import com.liferay.jenkins.results.parser.failure.message.generator.GenericFailureMessageGenerator;
+import com.liferay.jenkins.results.parser.failure.message.generator.GitForcePushFailureMessageGenerator;
 import com.liferay.jenkins.results.parser.failure.message.generator.GitLPushFailureMessageGenerator;
 import com.liferay.jenkins.results.parser.failure.message.generator.GradleTaskFailureMessageGenerator;
 import com.liferay.jenkins.results.parser.failure.message.generator.InvalidGitCommitSHAFailureMessageGenerator;
@@ -22,6 +23,7 @@ import com.liferay.jenkins.results.parser.failure.message.generator.PoshiTestFai
 import com.liferay.jenkins.results.parser.failure.message.generator.PoshiValidationFailureMessageGenerator;
 import com.liferay.jenkins.results.parser.failure.message.generator.RebaseFailureMessageGenerator;
 import com.liferay.jenkins.results.parser.failure.message.generator.RelevantRuleValidationFailureMessageGenerator;
+import com.liferay.jenkins.results.parser.persistent.resource.PersistentResourceFactory;
 import com.liferay.jenkins.results.parser.testray.TestrayBuild;
 
 import java.io.File;
@@ -44,12 +46,11 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
@@ -283,129 +284,6 @@ public abstract class BaseTopLevelBuild
 		}
 
 		return sb.toString();
-	}
-
-	@Override
-	public AxisBuild getDownstreamAxisBuild(String axisName) {
-		AxisBuild targetAxisBuild = _downstreamAxisBuilds.get(axisName);
-
-		if (targetAxisBuild != null) {
-			return targetAxisBuild;
-		}
-
-		for (AxisBuild axisBuild : getDownstreamAxisBuilds()) {
-			if (axisName.equals(axisBuild.getAxisName())) {
-				return axisBuild;
-			}
-		}
-
-		return null;
-	}
-
-	@Override
-	public List<AxisBuild> getDownstreamAxisBuilds() {
-		if (_downstreamAxisBuildsPopulated &&
-			!_downstreamAxisBuilds.isEmpty()) {
-
-			List<AxisBuild> downstreamAxisBuilds = new ArrayList<>(
-				_downstreamAxisBuilds.values());
-
-			Collections.sort(
-				downstreamAxisBuilds,
-				new BaseBuild.BuildDisplayNameComparator());
-
-			return downstreamAxisBuilds;
-		}
-
-		List<AxisBuild> downstreamAxisBuilds = new ArrayList<>();
-
-		for (BatchBuild downstreamBatchBuild : getDownstreamBatchBuilds()) {
-			downstreamAxisBuilds.addAll(
-				downstreamBatchBuild.getDownstreamAxisBuilds());
-		}
-
-		synchronized (_downstreamAxisBuilds) {
-			if (isCompleted() && !_downstreamAxisBuildsPopulated) {
-				for (AxisBuild downstreamAxisBuild : downstreamAxisBuilds) {
-					_downstreamAxisBuilds.put(
-						downstreamAxisBuild.getAxisName(), downstreamAxisBuild);
-				}
-
-				_downstreamAxisBuildsPopulated = true;
-			}
-		}
-
-		Collections.sort(
-			downstreamAxisBuilds, new BaseBuild.BuildDisplayNameComparator());
-
-		return downstreamAxisBuilds;
-	}
-
-	@Override
-	public BatchBuild getDownstreamBatchBuild(String jobVariant) {
-		BatchBuild targetBatchBuild = _downstreamBatchBuilds.get(jobVariant);
-
-		if (targetBatchBuild != null) {
-			return targetBatchBuild;
-		}
-
-		for (BatchBuild batchBuild : getDownstreamBatchBuilds()) {
-			if (jobVariant.equals(batchBuild.getJobVariant())) {
-				return batchBuild;
-			}
-		}
-
-		return null;
-	}
-
-	@Override
-	public List<BatchBuild> getDownstreamBatchBuilds() {
-		if (_downstreamBatchBuildsPopulated &&
-			!_downstreamBatchBuilds.isEmpty()) {
-
-			List<BatchBuild> downstreamBatchBuilds = new ArrayList<>(
-				_downstreamBatchBuilds.values());
-
-			Collections.sort(
-				downstreamBatchBuilds,
-				new BaseBuild.BuildDisplayNameComparator());
-
-			return downstreamBatchBuilds;
-		}
-
-		List<BatchBuild> downstreamBatchBuilds = new ArrayList<>();
-
-		List<Build> downstreamBuilds = getDownstreamBuilds(null);
-
-		for (Build downstreamBuild : downstreamBuilds) {
-			if (!(downstreamBuild instanceof BatchBuild)) {
-				continue;
-			}
-
-			downstreamBatchBuilds.add((BatchBuild)downstreamBuild);
-		}
-
-		synchronized (_downstreamBatchBuilds) {
-			if (isCompleted() && !_downstreamBatchBuildsPopulated) {
-				for (BatchBuild downstreamBatchBuild : downstreamBatchBuilds) {
-					String jobVariant = downstreamBatchBuild.getJobVariant();
-
-					if (JenkinsResultsParserUtil.isNullOrEmpty(jobVariant)) {
-						continue;
-					}
-
-					_downstreamBatchBuilds.put(
-						jobVariant, downstreamBatchBuild);
-				}
-
-				_downstreamBatchBuildsPopulated = true;
-			}
-		}
-
-		Collections.sort(
-			downstreamBatchBuilds, new BaseBuild.BuildDisplayNameComparator());
-
-		return downstreamBatchBuilds;
 	}
 
 	@Override
@@ -1056,6 +934,18 @@ public abstract class BaseTopLevelBuild
 				}
 
 			});
+		archiveCallables.add(
+			new Callable<Object>() {
+
+				@Override
+				public Object call() {
+					PersistentResourceFactory.touchUsedPersistentResources(
+						getExecutorService());
+
+					return null;
+				}
+
+			});
 
 		return archiveCallables;
 	}
@@ -1163,7 +1053,7 @@ public abstract class BaseTopLevelBuild
 		List<Element> allCurrentBuildFailureElements = new ArrayList<>();
 		List<Element> upstreamBuildFailureElements = new ArrayList<>();
 
-		int maxFailureCount = 5;
+		int maxFailureCount = 20;
 
 		for (Build failedDownstreamBuild : failedDownstreamBuilds) {
 			Element gitHubMessageElement =
@@ -1592,7 +1482,7 @@ public abstract class BaseTopLevelBuild
 			Dom4JUtil.getNewElement(
 				"p", null,
 				Dom4JUtil.getNewAnchorElement(
-					_URL_CI_SYSTEM_STATUS, "CI System Status")),
+					_getCISystemStatusURL(), "CI System Status")),
 			Dom4JUtil.getNewElement(
 				"p", null, "Start Time: ",
 				toJenkinsReportDateString(
@@ -1915,20 +1805,13 @@ public abstract class BaseTopLevelBuild
 	protected Element getReevaluationDetailsElement(
 		TopLevelBuildReport upstreamTopLevelBuildReport) {
 
-		Element growURLElement = Dom4JUtil.getNewAnchorElement(
-			"https://grow.liferay.com/share" +
-				"/CI+liferay-continuous-integration+GitHub+Commands#" +
-					"General-Commands",
-			"reevaluation");
-
 		String buildID = JenkinsResultsParserUtil.getBuildID(getBuildURL());
 
 		Element preElement = Dom4JUtil.getNewElement(
 			"pre", null, "ci:reevaluate:" + buildID);
 
 		return Dom4JUtil.getNewElement(
-			"p", null, "This pull is eligible for ", growURLElement,
-			". When this ",
+			"p", null, "This pull is eligible for reevaluation. When this ",
 			Dom4JUtil.getNewAnchorElement(
 				String.valueOf(upstreamTopLevelBuildReport.getBuildURL()),
 				"upstream build"),
@@ -2234,10 +2117,6 @@ public abstract class BaseTopLevelBuild
 			getModifiedDownstreamBuildsByStatus("completed");
 
 		for (Build modifiedCompletedBuild : modifiedCompletedBuilds) {
-			if (modifiedCompletedBuild instanceof BatchBuild) {
-				continue;
-			}
-
 			sendBuildMetrics(
 				StatsDMetricsUtil.generateTimerMetric(
 					"jenkins_job_build_duration",
@@ -2496,6 +2375,28 @@ public abstract class BaseTopLevelBuild
 		return cachedDownstreamBuilds;
 	}
 
+	private String _getCISystemStatusURL() {
+		try {
+			String masterHostname = JenkinsResultsParserUtil.getBuildProperty(
+				"jenkins.remote.url[test-1-0]");
+
+			if (!JenkinsResultsParserUtil.isNullOrEmpty(masterHostname)) {
+				if (!masterHostname.endsWith("/")) {
+					masterHostname += "/";
+				}
+
+				return JenkinsResultsParserUtil.combine(
+					masterHostname,
+					"userContent/reports/ci-system-status/index.html");
+			}
+		}
+		catch (IOException ioException) {
+			ioException.printStackTrace();
+		}
+
+		return _URL_CI_SYSTEM_STATUS;
+	}
+
 	private Map<Map<String, String>, Integer> _getSlaveUsageByLabels() {
 		Map<Map<String, String>, Integer> slaveUsages = new HashMap<>();
 
@@ -2565,6 +2466,7 @@ public abstract class BaseTopLevelBuild
 			new CITestSuiteValidationFailureMessageGenerator(),
 			new CompileFailureMessageGenerator(),
 			new FormatFailureMessageGenerator(),
+            new GitForcePushFailureMessageGenerator(),
 			new GitLPushFailureMessageGenerator(),
 			new JenkinsRegenFailureMessageGenerator(),
 			new JenkinsSourceFormatFailureMessageGenerator(),
@@ -2594,7 +2496,7 @@ public abstract class BaseTopLevelBuild
 		"https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.min.js";
 
 	private static final String _URL_CI_SYSTEM_STATUS =
-		"http://test-1-0.liferay.com/userContent/reports/ci-system-status" +
+		"https://test-1-0.liferay.com/userContent/reports/ci-system-status" +
 			"/index.html";
 
 	private static final Pattern _downstreamBuildURLPattern = Pattern.compile(
@@ -2608,12 +2510,6 @@ public abstract class BaseTopLevelBuild
 
 	private boolean _compareToUpstream;
 	private Build _controllerBuild;
-	private final Map<String, AxisBuild> _downstreamAxisBuilds =
-		new ConcurrentHashMap<>();
-	private boolean _downstreamAxisBuildsPopulated;
-	private final Map<String, BatchBuild> _downstreamBatchBuilds =
-		new ConcurrentHashMap<>();
-	private boolean _downstreamBatchBuildsPopulated;
 	private JenkinsCohort _jenkinsCohort;
 	private long _lastDownstreamBuildsListingTimestamp = -1L;
 	private String _metricsHostName;

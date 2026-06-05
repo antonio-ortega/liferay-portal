@@ -84,3 +84,4 @@ public class ModulePageElementDefinition
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-366311552

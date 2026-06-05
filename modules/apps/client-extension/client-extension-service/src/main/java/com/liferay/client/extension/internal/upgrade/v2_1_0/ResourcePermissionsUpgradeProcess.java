@@ -32,16 +32,15 @@ public class ResourcePermissionsUpgradeProcess extends UpgradeProcess {
 
 	private boolean _hasResourcePermissions() throws Exception {
 		try (PreparedStatement preparedStatement = connection.prepareStatement(
-				"select count(*) from ResourcePermission where name = ?")) {
+				"select count(*) as count from ResourcePermission where name " +
+					"= ?")) {
 
 			preparedStatement.setString(
 				1, "com.liferay.remote.app.model.RemoteAppEntry");
 
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				while (resultSet.next()) {
-					int count = resultSet.getInt(1);
-
-					if (count > 0) {
+					if (resultSet.getLong("count") > 0) {
 						return true;
 					}
 				}
@@ -53,9 +52,11 @@ public class ResourcePermissionsUpgradeProcess extends UpgradeProcess {
 
 	private void _insertResourcePermissions() {
 		try (Statement s = connection.createStatement();
+
 			ResultSet resultSet = s.executeQuery(
 				"select mvccVersion, remoteAppEntryId, companyId, userId " +
 					"from RemoteAppEntry");
+
 			PreparedStatement preparedStatement =
 				AutoBatchPreparedStatementUtil.autoBatch(
 					connection,

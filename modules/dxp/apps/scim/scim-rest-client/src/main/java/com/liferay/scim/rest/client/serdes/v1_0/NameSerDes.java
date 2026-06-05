@@ -345,3 +345,4 @@ public class NameSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:1467773438

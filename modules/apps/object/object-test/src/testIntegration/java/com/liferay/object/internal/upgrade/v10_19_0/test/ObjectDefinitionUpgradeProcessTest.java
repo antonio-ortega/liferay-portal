@@ -75,6 +75,7 @@ public class ObjectDefinitionUpgradeProcessTest {
 		_runUpgrade();
 
 		try (Connection connection = DataAccess.getConnection();
+
 			PreparedStatement preparedStatement = connection.prepareStatement(
 				"select name, value from ObjectDefinitionSetting where " +
 					"objectDefinitionId = ?")) {
@@ -123,6 +124,6 @@ public class ObjectDefinitionUpgradeProcessTest {
 	@Inject(
 		filter = "component.name=com.liferay.object.internal.upgrade.registry.ObjectServiceUpgradeStepRegistrator"
 	)
-	private static UpgradeStepRegistrator _upgradeStepRegistrator;
+	private UpgradeStepRegistrator _upgradeStepRegistrator;
 
 }

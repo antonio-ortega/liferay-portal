@@ -10,7 +10,7 @@ import {
 } from '../../../../src/main/resources/META-INF/resources/js/structure_builder/types/Structure';
 import {Field} from '../../../../src/main/resources/META-INF/resources/js/structure_builder/utils/field';
 import getUuid from '../../../../src/main/resources/META-INF/resources/js/structure_builder/utils/getUuid';
-import refreshReferencedStructures from '../../../../src/main/resources/META-INF/resources/js/structure_builder/utils/refreshReferencedStructures';
+import refreshReferencedStructures from '../../../../src/main/resources/META-INF/resources/js/structure_builder/utils/state/refreshReferencedStructures';
 
 describe('refreshReferencedStructures', () => {
 	it('add new field, update label and keep uuids', () => {
@@ -62,9 +62,11 @@ describe('refreshReferencedStructures', () => {
 				en_US: 'Structure',
 			},
 			name: 'structure-name',
+			path: '',
 			spaces: [],
 			status: 'published',
 			system: false,
+			type: 'L_CMS_CONTENT_STRUCTURES',
 			uuid: structureUuid,
 			workflows: {},
 		};
@@ -132,7 +134,9 @@ describe('refreshReferencedStructures', () => {
 			root,
 		});
 
-		const updatedReferencedStructure = result.get(referencedStructure.uuid);
+		const updatedReferencedStructure = result.get(
+			referencedStructure.uuid
+		) as ReferencedStructure;
 
 		expect(updatedReferencedStructure.label.en_US).toBe(
 			'Referenced Structure 2'

@@ -25,16 +25,19 @@ public class NotificationRecipientUpgradeProcess extends UpgradeProcess {
 	@Override
 	protected void doUpgrade() throws Exception {
 		try (PreparedStatement preparedStatement1 = connection.prepareStatement(
-				"select count(*) from NotificationRecipient");
+				"select count(*) as count from NotificationRecipient");
+
 			ResultSet resultSet1 = preparedStatement1.executeQuery();
+
 			PreparedStatement preparedStatement2 = connection.prepareStatement(
-				"select count(*) from NotificationRecipientSetting");
+				"select count(*) as count from NotificationRecipientSetting");
+
 			ResultSet resultSet2 = preparedStatement2.executeQuery()) {
 
-			if (resultSet1.next() && (resultSet1.getInt(1) > 0)) {
+			if (resultSet1.next() && (resultSet1.getLong("count") > 0)) {
 				return;
 			}
-			else if (resultSet2.next() && (resultSet2.getInt(1) == 0)) {
+			else if (resultSet2.next() && (resultSet2.getLong("count") == 0)) {
 				return;
 			}
 		}
@@ -44,13 +47,17 @@ public class NotificationRecipientUpgradeProcess extends UpgradeProcess {
 					"select notificationQueueEntryId, companyId, userId, ",
 					"userName, createDate, modifiedDate from ",
 					"NotificationQueueEntry"));
+
 			ResultSet resultSet1 = preparedStatement1.executeQuery();
+
 			PreparedStatement preparedStatement2 = connection.prepareStatement(
 				StringBundler.concat(
 					"select notificationTemplateId, companyId, userId, ",
 					"userName, createDate, modifiedDate from ",
 					"NotificationTemplate"));
+
 			ResultSet resultSet2 = preparedStatement2.executeQuery();
+
 			PreparedStatement preparedStatement3 =
 				AutoBatchPreparedStatementUtil.concurrentAutoBatch(
 					connection,

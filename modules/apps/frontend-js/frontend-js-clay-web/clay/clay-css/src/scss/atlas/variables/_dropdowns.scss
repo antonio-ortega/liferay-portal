@@ -43,11 +43,11 @@ $dropdown-menu: map-deep-merge(
 		border-width: $dropdown-border-width,
 		box-shadow: clay-enable-shadows($dropdown-box-shadow),
 		font-size: $dropdown-font-size,
-		margin: $dropdown-spacer 0 0,
+		margin: $dropdown-spacer 0rem 0rem,
 		max-width: $dropdown-max-width,
 		min-height: $dropdown-min-height,
 		min-width: $dropdown-min-width,
-		padding: $dropdown-padding-y 0,
+		padding: $dropdown-padding-y 0rem,
 	),
 	$dropdown-menu
 );
@@ -95,19 +95,23 @@ $dropdown-item-base: () !default;
 $dropdown-item-base: map-deep-merge(
 	(
 		font-size: inherit,
+
 		focus: (
 			box-shadow: $component-focus-inset-box-shadow,
 			outline: 0,
 			text-decoration: none,
 		),
+
 		active-class: (
 			c-kbd-inline: (
 				color: $dropdown-link-active-color,
 			),
 		),
+
 		disabled: (
 			box-shadow: none,
 		),
+
 		c-kbd-inline: (
 			color: $gray-500,
 		),
@@ -232,9 +236,11 @@ $dropdown-section: map-deep-merge(
 		padding: 0.375rem $dropdown-item-padding-x,
 		custom-control-label: $dropdown-section-custom-control-label,
 		custom-control-label-text: $dropdown-section-custom-control-label-text,
+
 		active: (
 			custom-control-label: $dropdown-section-active-custom-control-label,
 		),
+
 		custom-control-outside: (
 			label: (
 				padding-left: 1.75rem,
@@ -283,6 +289,7 @@ $dropdown-action: map-deep-merge(
 			height: $dropdown-action-toggle-size,
 			line-height: $dropdown-action-toggle-size,
 			width: $dropdown-action-toggle-size,
+
 			disabled: (
 				opacity: $dropdown-action-toggle-disabled-opacity,
 			),

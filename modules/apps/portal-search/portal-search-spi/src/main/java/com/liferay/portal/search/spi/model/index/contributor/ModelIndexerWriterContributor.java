@@ -5,36 +5,61 @@
 
 package com.liferay.portal.search.spi.model.index.contributor;
 
+import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.model.BaseModel;
-import com.liferay.portal.search.batch.BatchIndexingActionable;
+import com.liferay.portal.search.indexer.IndexerDocumentBuilder;
 import com.liferay.portal.search.spi.model.index.contributor.helper.IndexerWriterMode;
-import com.liferay.portal.search.spi.model.index.contributor.helper.ModelIndexerWriterDocumentHelper;
+
+import java.util.function.Supplier;
 
 /**
  * @author Michael C. Han
  */
-public interface ModelIndexerWriterContributor<T extends BaseModel<?>> {
+public class ModelIndexerWriterContributor<T extends BaseModel<?>> {
+
+	public ModelIndexerWriterContributor(
+		IndexerWriterMode indexerWriterMode,
+		Supplier<IndexableActionableDynamicQuery> supplier) {
+
+		_indexerWriterMode = indexerWriterMode;
+		_supplier = supplier;
+	}
+
+	public ModelIndexerWriterContributor(
+		Supplier<IndexableActionableDynamicQuery> supplier) {
+
+		this(null, supplier);
+	}
 
 	public void customize(
-		BatchIndexingActionable batchIndexingActionable,
-		ModelIndexerWriterDocumentHelper modelIndexerWriterDocumentHelper);
+		IndexableActionableDynamicQuery indexableActionableDynamicQuery,
+		IndexerDocumentBuilder indexerDocumentBuilder) {
 
-	public BatchIndexingActionable getBatchIndexingActionable();
-
-	public long getCompanyId(T baseModel);
-
-	public default IndexerWriterMode getIndexerWriterMode(T baseModel) {
-		return null;
+		indexableActionableDynamicQuery.setPerformActionMethod(
+			indexerDocumentBuilder::getDocument);
 	}
 
-	public default void modelDeleted(T baseModel) {
+	public IndexableActionableDynamicQuery
+		getIndexableActionableDynamicQuery() {
+
+		return _supplier.get();
 	}
 
-	public default void modelIndexed(T baseModel) {
+	public IndexerWriterMode getIndexerWriterMode(T baseModel) {
+		return _indexerWriterMode;
 	}
 
-	public default boolean shouldRun(long companyId) {
+	public void modelDeleted(T baseModel) {
+	}
+
+	public void modelIndexed(T baseModel) {
+	}
+
+	public boolean shouldRun(long companyId) {
 		return true;
 	}
+
+	private final IndexerWriterMode _indexerWriterMode;
+	private final Supplier<IndexableActionableDynamicQuery> _supplier;
 
 }

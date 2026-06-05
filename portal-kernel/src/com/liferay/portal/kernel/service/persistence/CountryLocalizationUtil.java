@@ -36,6 +36,22 @@ public class CountryLocalizationUtil {
 	 */
 
 	/**
+	 * @see BasePersistence#cacheResult(List)
+	 */
+	public static void cacheResult(
+		List<CountryLocalization> countryLocalizations) {
+
+		getPersistence().cacheResult(countryLocalizations);
+	}
+
+	/**
+	 * @see BasePersistence#cacheResult(com.liferay.portal.kernel.model.BaseModel)
+	 */
+	public static void cacheResult(CountryLocalization countryLocalization) {
+		getPersistence().cacheResult(countryLocalization);
+	}
+
+	/**
 	 * @see BasePersistence#clearCache()
 	 */
 	public static void clearCache() {
@@ -114,59 +130,10 @@ public class CountryLocalizationUtil {
 	}
 
 	/**
-	 * Returns all the country localizations where countryId = &#63;.
-	 *
-	 * @param countryId the country ID
-	 * @return the matching country localizations
-	 */
-	public static List<CountryLocalization> findByCountryId(long countryId) {
-		return getPersistence().findByCountryId(countryId);
-	}
-
-	/**
-	 * Returns a range of all the country localizations where countryId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CountryLocalizationModelImpl</code>.
-	 * </p>
-	 *
-	 * @param countryId the country ID
-	 * @param start the lower bound of the range of country localizations
-	 * @param end the upper bound of the range of country localizations (not inclusive)
-	 * @return the range of matching country localizations
-	 */
-	public static List<CountryLocalization> findByCountryId(
-		long countryId, int start, int end) {
-
-		return getPersistence().findByCountryId(countryId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the country localizations where countryId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CountryLocalizationModelImpl</code>.
-	 * </p>
-	 *
-	 * @param countryId the country ID
-	 * @param start the lower bound of the range of country localizations
-	 * @param end the upper bound of the range of country localizations (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching country localizations
-	 */
-	public static List<CountryLocalization> findByCountryId(
-		long countryId, int start, int end,
-		OrderByComparator<CountryLocalization> orderByComparator) {
-
-		return getPersistence().findByCountryId(
-			countryId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the country localizations where countryId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CountryLocalizationModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.model.impl.CountryLocalizationModelImpl</code>.
 	 * </p>
 	 *
 	 * @param countryId the country ID
@@ -219,58 +186,6 @@ public class CountryLocalizationUtil {
 	}
 
 	/**
-	 * Returns the last country localization in the ordered set where countryId = &#63;.
-	 *
-	 * @param countryId the country ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching country localization
-	 * @throws NoSuchCountryLocalizationException if a matching country localization could not be found
-	 */
-	public static CountryLocalization findByCountryId_Last(
-			long countryId,
-			OrderByComparator<CountryLocalization> orderByComparator)
-		throws com.liferay.portal.kernel.exception.
-			NoSuchCountryLocalizationException {
-
-		return getPersistence().findByCountryId_Last(
-			countryId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last country localization in the ordered set where countryId = &#63;.
-	 *
-	 * @param countryId the country ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching country localization, or <code>null</code> if a matching country localization could not be found
-	 */
-	public static CountryLocalization fetchByCountryId_Last(
-		long countryId,
-		OrderByComparator<CountryLocalization> orderByComparator) {
-
-		return getPersistence().fetchByCountryId_Last(
-			countryId, orderByComparator);
-	}
-
-	/**
-	 * Returns the country localizations before and after the current country localization in the ordered set where countryId = &#63;.
-	 *
-	 * @param countryLocalizationId the primary key of the current country localization
-	 * @param countryId the country ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next country localization
-	 * @throws NoSuchCountryLocalizationException if a country localization with the primary key could not be found
-	 */
-	public static CountryLocalization[] findByCountryId_PrevAndNext(
-			long countryLocalizationId, long countryId,
-			OrderByComparator<CountryLocalization> orderByComparator)
-		throws com.liferay.portal.kernel.exception.
-			NoSuchCountryLocalizationException {
-
-		return getPersistence().findByCountryId_PrevAndNext(
-			countryLocalizationId, countryId, orderByComparator);
-	}
-
-	/**
 	 * Removes all the country localizations where countryId = &#63; from the database.
 	 *
 	 * @param countryId the country ID
@@ -303,20 +218,6 @@ public class CountryLocalizationUtil {
 			NoSuchCountryLocalizationException {
 
 		return getPersistence().findByCountryId_LanguageId(
-			countryId, languageId);
-	}
-
-	/**
-	 * Returns the country localization where countryId = &#63; and languageId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
-	 *
-	 * @param countryId the country ID
-	 * @param languageId the language ID
-	 * @return the matching country localization, or <code>null</code> if a matching country localization could not be found
-	 */
-	public static CountryLocalization fetchByCountryId_LanguageId(
-		long countryId, String languageId) {
-
-		return getPersistence().fetchByCountryId_LanguageId(
 			countryId, languageId);
 	}
 
@@ -363,26 +264,6 @@ public class CountryLocalizationUtil {
 
 		return getPersistence().countByCountryId_LanguageId(
 			countryId, languageId);
-	}
-
-	/**
-	 * Caches the country localization in the entity cache if it is enabled.
-	 *
-	 * @param countryLocalization the country localization
-	 */
-	public static void cacheResult(CountryLocalization countryLocalization) {
-		getPersistence().cacheResult(countryLocalization);
-	}
-
-	/**
-	 * Caches the country localizations in the entity cache if it is enabled.
-	 *
-	 * @param countryLocalizations the country localizations
-	 */
-	public static void cacheResult(
-		List<CountryLocalization> countryLocalizations) {
-
-		getPersistence().cacheResult(countryLocalizations);
 	}
 
 	/**
@@ -443,84 +324,66 @@ public class CountryLocalizationUtil {
 	}
 
 	/**
-	 * Returns all the country localizations.
+	 * Returns the country localization where countryId = &#63; and languageId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
 	 *
-	 * @return the country localizations
+	 * @param countryId the country ID
+	 * @param languageId the language ID
+	 * @return the matching country localization, or <code>null</code> if a matching country localization could not be found
 	 */
-	public static List<CountryLocalization> findAll() {
-		return getPersistence().findAll();
+	public static CountryLocalization fetchByCountryId_LanguageId(
+		long countryId, String languageId) {
+
+		return getPersistence().fetchByCountryId_LanguageId(
+			countryId, languageId);
 	}
 
 	/**
-	 * Returns a range of all the country localizations.
+	 * Returns all the country localizations where countryId = &#63;.
+	 *
+	 * @param countryId the country ID
+	 * @return the matching country localizations
+	 */
+	public static List<CountryLocalization> findByCountryId(long countryId) {
+		return getPersistence().findByCountryId(countryId);
+	}
+
+	/**
+	 * Returns a range of all the country localizations where countryId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CountryLocalizationModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.model.impl.CountryLocalizationModelImpl</code>.
 	 * </p>
 	 *
+	 * @param countryId the country ID
 	 * @param start the lower bound of the range of country localizations
 	 * @param end the upper bound of the range of country localizations (not inclusive)
-	 * @return the range of country localizations
+	 * @return the range of matching country localizations
 	 */
-	public static List<CountryLocalization> findAll(int start, int end) {
-		return getPersistence().findAll(start, end);
+	public static List<CountryLocalization> findByCountryId(
+		long countryId, int start, int end) {
+
+		return getPersistence().findByCountryId(countryId, start, end);
 	}
 
 	/**
-	 * Returns an ordered range of all the country localizations.
+	 * Returns an ordered range of all the country localizations where countryId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CountryLocalizationModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.model.impl.CountryLocalizationModelImpl</code>.
 	 * </p>
 	 *
+	 * @param countryId the country ID
 	 * @param start the lower bound of the range of country localizations
 	 * @param end the upper bound of the range of country localizations (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of country localizations
+	 * @return the ordered range of matching country localizations
 	 */
-	public static List<CountryLocalization> findAll(
-		int start, int end,
+	public static List<CountryLocalization> findByCountryId(
+		long countryId, int start, int end,
 		OrderByComparator<CountryLocalization> orderByComparator) {
 
-		return getPersistence().findAll(start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the country localizations.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CountryLocalizationModelImpl</code>.
-	 * </p>
-	 *
-	 * @param start the lower bound of the range of country localizations
-	 * @param end the upper bound of the range of country localizations (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param useFinderCache whether to use the finder cache
-	 * @return the ordered range of country localizations
-	 */
-	public static List<CountryLocalization> findAll(
-		int start, int end,
-		OrderByComparator<CountryLocalization> orderByComparator,
-		boolean useFinderCache) {
-
-		return getPersistence().findAll(
-			start, end, orderByComparator, useFinderCache);
-	}
-
-	/**
-	 * Removes all the country localizations from the database.
-	 */
-	public static void removeAll() {
-		getPersistence().removeAll();
-	}
-
-	/**
-	 * Returns the number of country localizations.
-	 *
-	 * @return the number of country localizations
-	 */
-	public static int countAll() {
-		return getPersistence().countAll();
+		return getPersistence().findByCountryId(
+			countryId, start, end, orderByComparator);
 	}
 
 	public static CountryLocalizationPersistence getPersistence() {
@@ -536,3 +399,4 @@ public class CountryLocalizationUtil {
 	private static volatile CountryLocalizationPersistence _persistence;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-156640613

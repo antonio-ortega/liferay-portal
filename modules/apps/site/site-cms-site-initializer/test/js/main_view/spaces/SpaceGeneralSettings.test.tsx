@@ -14,6 +14,7 @@ import React from 'react';
 
 import SpaceService from '../../../../src/main/resources/META-INF/resources/js/common/services/SpaceService';
 import {Space} from '../../../../src/main/resources/META-INF/resources/js/common/types/Space';
+import {ERC_MAX_LENGTH} from '../../../../src/main/resources/META-INF/resources/js/common/utils/constants';
 import SpaceGeneralSettings from '../../../../src/main/resources/META-INF/resources/js/main_view/spaces/SpaceGeneralSettings';
 
 jest.mock(
@@ -30,6 +31,7 @@ jest.mock(
 const SPACE: Partial<Space> = {
 	description: 'This is the description for Cool Space',
 	externalReferenceCode: 'space-external-reference-code',
+	friendlyURL: '/cool-space',
 	name: 'Cool Space',
 	settings: {
 		logoColor: 'outline-2',
@@ -172,10 +174,14 @@ describe('SpaceGeneralSettings', () => {
 		});
 	});
 
-	it('shows an error toast when the request fails', async () => {
-		SpaceService.updateSpace = jest
-			.fn()
-			.mockResolvedValue({error: 'Error'});
+	it.each([
+		'Please enter a unique name',
+		'This external reference code is already in use.',
+	])('shows API error message: %s', async (errorMessage) => {
+		jest.spyOn(SpaceService, 'updateSpace').mockResolvedValue({
+			data: null,
+			error: errorMessage,
+		});
 
 		renderComponent();
 
@@ -183,16 +189,10 @@ describe('SpaceGeneralSettings', () => {
 
 		await waitFor(() => {
 			expect(SpaceService.updateSpace).toBeCalled();
-
 			expect(
 				screen.queryByText('My Space-was-saved-successfully')
 			).not.toBeInTheDocument();
-
-			expect(
-				screen.getByText(
-					'an-unexpected-error-occurred-while-saving-the-space'
-				)
-			).toBeInTheDocument();
+			expect(screen.getByText(errorMessage)).toBeInTheDocument();
 		});
 
 		await closeToast();
@@ -230,6 +230,22 @@ describe('SpaceGeneralSettings', () => {
 			).toBeInTheDocument();
 
 			expect(nameInput).toHaveFocus();
+		});
+
+		it('rejects an ERC longer than the column length', async () => {
+			renderComponent();
+
+			const ercInput = screen.getByRole('textbox', {name: /erc/});
+
+			await userEvent.clear(ercInput);
+			await userEvent.type(ercInput, 'a'.repeat(ERC_MAX_LENGTH + 1));
+
+			await userEvent.click(screen.getByRole('button', {name: 'save'}));
+
+			expect(
+				screen.getByText(/please-enter-no-more-than/)
+			).toBeInTheDocument();
+			expect(SpaceService.updateSpace).not.toBeCalled();
 		});
 	});
 });

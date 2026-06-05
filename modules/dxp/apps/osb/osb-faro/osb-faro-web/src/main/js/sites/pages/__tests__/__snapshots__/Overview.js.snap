@@ -21,10 +21,15 @@ exports[`Sites Dashboard Overview render 1`] = `
           <div
             class="card-header align-items-center d-flex justify-content-between"
           >
-            <div
-              class="card-title"
-            >
-              Test Channel Activities
+            <div>
+              <div
+                class="card-title"
+              >
+                Test Channel Activities
+              </div>
+              <span
+                class="text-4 text-secondary"
+              />
             </div>
             <div
               class="d-flex"
@@ -88,10 +93,15 @@ exports[`Sites Dashboard Overview render 1`] = `
           <div
             class="card-header align-items-center d-flex justify-content-between"
           >
-            <div
-              class="card-title"
-            >
-              Top Pages
+            <div>
+              <div
+                class="card-title"
+              >
+                Top Pages
+              </div>
+              <span
+                class="text-4 text-secondary"
+              />
             </div>
             <div
               class="d-flex"
@@ -192,10 +202,15 @@ exports[`Sites Dashboard Overview render 1`] = `
           <div
             class="card-header align-items-center d-flex justify-content-between"
           >
-            <div
-              class="card-title"
-            >
-              Acquisitions
+            <div>
+              <div
+                class="card-title"
+              >
+                Acquisitions
+              </div>
+              <span
+                class="text-4 text-secondary"
+              />
             </div>
             <div
               class="d-flex"
@@ -284,10 +299,15 @@ exports[`Sites Dashboard Overview render 1`] = `
           <div
             class="card-header align-items-center d-flex justify-content-between"
           >
-            <div
-              class="card-title"
-            >
-              Visitors by Day and Time
+            <div>
+              <div
+                class="card-title"
+              >
+                Visitors by Day and Time
+              </div>
+              <span
+                class="text-4 text-secondary"
+              />
             </div>
             <div
               class="d-flex"
@@ -318,10 +338,15 @@ exports[`Sites Dashboard Overview render 1`] = `
           <div
             class="card-header align-items-center d-flex justify-content-between"
           >
-            <div
-              class="card-title"
-            >
-              Search Terms
+            <div>
+              <div
+                class="card-title"
+              >
+                Search Terms
+              </div>
+              <span
+                class="text-4 text-secondary"
+              />
             </div>
             <div
               class="d-flex"
@@ -335,36 +360,10 @@ exports[`Sites Dashboard Overview render 1`] = `
           <div
             class="flex-grow-1 mx-4 table-root"
           >
-            <div
-              class="table-responsive"
-            >
-              <table
-                class="table table-autofit table-list table-nowrap table-head-bordered table-hover table-striped"
-              >
-                <thead>
-                  <tr>
-                    <th
-                      class="table-head-title table-cell-expand"
-                    >
-                      Search Query | Searches
-                    </th>
-                    <th
-                      class="table-head-title table-column-text-end"
-                    >
-                      % of Searches
-                    </th>
-                  </tr>
-                </thead>
-              </table>
-              <div
-                class="loading-root overlay"
-              >
-                <span
-                  aria-hidden="true"
-                  class="loading-root center loading-animation"
-                />
-              </div>
-            </div>
+            <span
+              aria-hidden="true"
+              class="loading-root spacer loading-animation"
+            />
           </div>
           <div
             class="card-footer"
@@ -396,10 +395,15 @@ exports[`Sites Dashboard Overview render 1`] = `
           <div
             class="card-header align-items-center d-flex justify-content-between"
           >
-            <div
-              class="card-title"
-            >
-              Interests
+            <div>
+              <div
+                class="card-title"
+              >
+                Interests
+              </div>
+              <span
+                class="text-4 text-secondary"
+              />
             </div>
             <div
               class="d-flex"
@@ -413,36 +417,10 @@ exports[`Sites Dashboard Overview render 1`] = `
           <div
             class="flex-grow-1 mx-4 table-root"
           >
-            <div
-              class="table-responsive"
-            >
-              <table
-                class="table table-autofit table-list table-nowrap table-head-bordered table-hover table-striped"
-              >
-                <thead>
-                  <tr>
-                    <th
-                      class="table-head-title table-cell-expand"
-                    >
-                      Interest Topics | Sessions
-                    </th>
-                    <th
-                      class="table-head-title table-column-text-end"
-                    >
-                      % of Sessions
-                    </th>
-                  </tr>
-                </thead>
-              </table>
-              <div
-                class="loading-root overlay"
-              >
-                <span
-                  aria-hidden="true"
-                  class="loading-root center loading-animation"
-                />
-              </div>
-            </div>
+            <span
+              aria-hidden="true"
+              class="loading-root spacer loading-animation"
+            />
           </div>
           <div
             class="card-footer"
@@ -481,10 +459,15 @@ exports[`Sites Dashboard Overview render 1`] = `
           <div
             class="card-header align-items-center d-flex justify-content-between"
           >
-            <div
-              class="card-title"
-            >
-              Sessions by Location
+            <div>
+              <div
+                class="card-title"
+              >
+                Sessions by Location
+              </div>
+              <span
+                class="text-4 text-secondary"
+              />
             </div>
             <div
               class="d-flex"
@@ -516,10 +499,15 @@ exports[`Sites Dashboard Overview render 1`] = `
           <div
             class="card-header align-items-center d-flex justify-content-between"
           >
-            <div
-              class="card-title"
-            >
-              Session Technology
+            <div>
+              <div
+                class="card-title"
+              >
+                Session Technology
+              </div>
+              <span
+                class="text-4 text-secondary"
+              />
             </div>
             <div
               class="d-flex"

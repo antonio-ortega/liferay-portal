@@ -6,11 +6,9 @@
 package com.liferay.segments.internal.search;
 
 import com.liferay.portal.kernel.search.Field;
-import com.liferay.portal.search.batch.DynamicQueryBatchIndexingActionableFactory;
 import com.liferay.portal.search.spi.model.index.contributor.ModelIndexerWriterContributor;
 import com.liferay.portal.search.spi.model.registrar.ModelSearchConfigurator;
 import com.liferay.portal.search.spi.model.result.contributor.ModelSummaryContributor;
-import com.liferay.segments.internal.search.spi.model.index.contributor.SegmentsEntryModelIndexerWriterContributor;
 import com.liferay.segments.internal.search.spi.model.result.contributor.SegmentsEntryModelSummaryContributor;
 import com.liferay.segments.model.SegmentsEntry;
 import com.liferay.segments.service.SegmentsEntryLocalService;
@@ -59,15 +57,9 @@ public class SegmentsEntryModelSearchConfigurator
 
 	@Activate
 	protected void activate() {
-		_modelIndexWriterContributor =
-			new SegmentsEntryModelIndexerWriterContributor(
-				_dynamicQueryBatchIndexingActionableFactory,
-				_segmentsEntryLocalService);
+		_modelIndexWriterContributor = new ModelIndexerWriterContributor<>(
+			_segmentsEntryLocalService::getIndexableActionableDynamicQuery);
 	}
-
-	@Reference
-	private DynamicQueryBatchIndexingActionableFactory
-		_dynamicQueryBatchIndexingActionableFactory;
 
 	private ModelIndexerWriterContributor<SegmentsEntry>
 		_modelIndexWriterContributor;

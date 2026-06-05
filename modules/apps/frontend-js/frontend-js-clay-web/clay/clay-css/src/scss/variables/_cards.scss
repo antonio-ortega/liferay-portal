@@ -1,20 +1,19 @@
 $card-bg: $white !default;
 $card-border-color: rgba($black, 0.125) !default;
+$card-border-radius: $border-radius !default;
 $card-border-style: solid !default;
 $card-border-width: $border-width !default;
-
-$card-border-radius: $border-radius !default;
-$card-inner-border-radius: calc(
-	#{$card-border-radius} - #{$card-border-width}
-) !default;
-
 $card-box-shadow: null !default;
 $card-color: null !default;
 $card-height: null !default;
 $card-margin-bottom: 1.5rem !default;
-
 $card-spacer-x: 1.25rem !default;
 $card-spacer-y: 0.75rem !default;
+$card-transition: null !default;
+
+$card-inner-border-radius: calc(
+	#{$card-border-radius} - #{$card-border-width}
+) !default;
 
 $card-cap-bg: rgba($black, 0.03) !default;
 $card-cap-color: null !default;
@@ -53,7 +52,7 @@ $card-section-header-font-size: 0.75rem !default;
 $card-section-header-font-weight: $font-weight-semi-bold !default;
 $card-section-header-line-height: 2.5 !default;
 $card-section-header-margin-bottom: 1.5rem !default;
-$card-section-header-padding: 0 ($grid-gutter-width * 0.5) !default;
+$card-section-header-padding: 0rem calc(#{$grid-gutter-width} * 0.5) !default;
 $card-section-header-text-transform: uppercase !default;
 
 $card-section-header: () !default;
@@ -76,7 +75,7 @@ $card-img-overlay-padding: 1.25rem !default;
 
 /// @deprecated as of v3.x with no replacement
 
-$card-group-margin: $grid-gutter-width * 0.5 !default;
+$card-group-margin: calc(#{$grid-gutter-width} * 0.5) !default;
 
 /// @deprecated as of v3.x with no replacement
 
@@ -101,8 +100,8 @@ $card-aspect-ratio-label: map-deep-merge(
 	(
 		display: block,
 		margin-bottom: 0.5rem,
-		margin-left: 0,
-		margin-right: 0,
+		margin-left: 0rem,
+		margin-right: 0rem,
 		margin-top: 0.5rem,
 	),
 	$card-aspect-ratio-label
@@ -182,22 +181,32 @@ $card: map-deep-merge(
 		display: block,
 		height: $card-height,
 		margin-bottom: $card-margin-bottom,
-		min-width: 0,
+		min-width: 0rem,
 		position: relative,
+		transition: $card-transition,
 		word-wrap: break-word,
+
 		aspect-ratio: (
 			label: $card-aspect-ratio-label,
 		),
+
 		aspect-ratio-item-top-left: $card-aspect-ratio-item-top-left,
+
 		aspect-ratio-item-top-center: $card-aspect-ratio-item-top-center,
+
 		aspect-ratio-item-top-right: $card-aspect-ratio-item-top-right,
+
 		aspect-ratio-item-right-middle: $card-aspect-ratio-item-right-middle,
+
 		aspect-ratio-item-bottom-right: $card-aspect-ratio-item-bottom-right,
+
 		aspect-ratio-item-bottom-center: $card-aspect-ratio-item-bottom-center,
+
 		aspect-ratio-item-bottom-left: $card-aspect-ratio-item-bottom-left,
+
 		hr: (
-			margin-left: 0,
-			margin-right: 0,
+			margin-left: 0rem,
+			margin-right: 0rem,
 		),
 	),
 	$card
@@ -211,7 +220,7 @@ $card-title: map-deep-merge(
 		font-size: 1rem,
 		font-weight: $font-weight-semi-bold,
 		line-height: $line-height-base,
-		margin-bottom: 0,
+		margin-bottom: 0rem,
 	),
 	$card-title
 );
@@ -239,8 +248,8 @@ $card-subtitle: map-deep-merge(
 		color: $gray-600,
 		font-size: 0.875rem,
 		font-weight: $font-weight-semi-bold,
-		margin-bottom: 0,
-		margin-top: 0,
+		margin-bottom: 0rem,
+		margin-top: 0rem,
 	),
 	$card-subtitle
 );
@@ -269,7 +278,7 @@ $card-text: () !default;
 $card-text: map-deep-merge(
 	(
 		last-child: (
-			margin-bottom: 0,
+			margin-bottom: 0rem,
 		),
 	),
 	$card-text
@@ -281,6 +290,7 @@ $card-link: () !default;
 $card-link: map-deep-merge(
 	(
 		color: $link-color,
+
 		hover: (
 			color: $link-hover-color,
 			text-decoration: none,
@@ -319,12 +329,14 @@ $card-header: map-deep-merge(
 		background-color: $card-cap-bg,
 		border-bottom: $card-border-width solid $card-border-color,
 		color: $card-cap-color,
-		margin-bottom: 0,
+		margin-bottom: 0rem,
 		padding: $card-spacer-y $card-spacer-x,
+
 		first-child: (
 			border-radius:
 				clay-enable-rounded(
-					$card-inner-border-radius $card-inner-border-radius 0 0
+					$card-inner-border-radius $card-inner-border-radius 0rem
+						0rem
 				),
 		),
 	),
@@ -339,10 +351,12 @@ $card-footer: map-deep-merge(
 		background-color: $card-cap-bg,
 		border-top: $card-border-width solid $card-border-color,
 		padding: $card-spacer-y $card-spacer-x,
+
 		last-child: (
 			border-radius:
 				clay-enable-rounded(
-					0 0 $card-inner-border-radius $card-inner-border-radius
+					0rem 0rem $card-inner-border-radius
+						$card-inner-border-radius
 				),
 		),
 	),
@@ -354,9 +368,11 @@ $card-footer: map-deep-merge(
 $card-rounded-inner-border-radius: calc(
 	#{$rounded-border-radius} - #{$card-border-width}
 ) !default;
+
 $card-rounded-0-inner-border-radius: calc(
 	#{$rounded-0-border-radius} - #{$card-border-width}
 ) !default;
+
 $card-rounded-circle-inner-border-radius: calc(
 	#{$rounded-circle-border-radius} - #{$card-border-width}
 ) !default;
@@ -369,55 +385,76 @@ $form-check-card: () !default;
 $form-check-card: map-deep-merge(
 	(
 		margin-bottom: $card-margin-bottom,
-		margin-top: 0,
-		padding-left: 0,
+		margin-top: 0rem,
+		padding-left: 0rem,
+
 		hover: (
 			card: (
 				box-shadow: $form-check-card-checked-box-shadow,
 			),
 		),
+
 		active: (
 			card: (
 				box-shadow: $form-check-card-checked-box-shadow,
 			),
 		),
+
 		checked: (
 			card: (
 				box-shadow: $form-check-card-checked-box-shadow,
 			),
 		),
-		card: (
-			margin-bottom: 0,
+
+		disabled: (
+			transform: none,
+
+			card: (
+				box-shadow: none,
+				border-color: $card-border-color,
+				outline-color: transparent,
+			),
 		),
+
+		card: (
+			margin-bottom: 0rem,
+		),
+
 		form-check-input: (
-			margin-left: 0,
-			margin-top: 0,
+			margin-left: 0rem,
+			margin-top: 0rem,
 			opacity: 0,
 			position: absolute,
 			z-index: 1,
 		),
+
 		form-check-label: (
 			color: $body-color,
 			display: inline,
 			font-weight: $font-weight-normal,
-			padding-left: 0,
+			padding-left: 0rem,
 			position: static,
 		),
+
 		custom-control: (
 			display: inline,
-			margin-right: 0,
+			margin-right: 0rem,
 			position: static,
+
 			label: (
 				font-weight: $font-weight-normal,
-				padding-left: 0,
+				padding-left: 0rem,
 			),
+
 			custom-control-label: (
 				opacity: 0,
 				position: absolute,
 				z-index: 1,
 			),
+
 			custom-control-input: (
 				z-index: 2,
+
 				checked: (
 					card: (
 						box-shadow: $form-check-card-checked-box-shadow,
@@ -457,6 +494,7 @@ $form-check-bottom-left: map-deep-merge(
 			top: auto,
 			transform: none,
 		),
+
 		custom-control: (
 			custom-control-input: (
 				bottom: $checkbox-position,
@@ -464,6 +502,7 @@ $form-check-bottom-left: map-deep-merge(
 				top: auto,
 				transform: none,
 			),
+
 			custom-control-label: (
 				bottom: $checkbox-position,
 				left: $checkbox-position,
@@ -489,6 +528,7 @@ $form-check-bottom-right: map-deep-merge(
 			top: auto,
 			transform: none,
 		),
+
 		custom-control: (
 			custom-control-input: (
 				bottom: $checkbox-position,
@@ -497,6 +537,7 @@ $form-check-bottom-right: map-deep-merge(
 				top: auto,
 				transform: none,
 			),
+
 			custom-control-label: (
 				bottom: $checkbox-position,
 				left: auto,
@@ -517,21 +558,23 @@ $form-check-middle-left: map-deep-merge(
 	(
 		form-check-input: (
 			left: $checkbox-position,
-			margin-top: 0,
+			margin-top: 0rem,
 			opacity: 1,
 			top: 50%,
 			transform: translateY(-50%),
 		),
+
 		custom-control: (
 			custom-control-input: (
 				left: $checkbox-position,
-				margin-top: 0,
+				margin-top: 0rem,
 				top: 50%,
 				transform: translateY(-50%),
 			),
+
 			custom-control-label: (
 				left: $checkbox-position,
-				margin-top: 0,
+				margin-top: 0rem,
 				opacity: 1,
 				top: 50%,
 				transform: translateY(-50%),
@@ -548,23 +591,25 @@ $form-check-middle-right: map-deep-merge(
 	(
 		form-check-input: (
 			left: auto,
-			margin-top: 0,
+			margin-top: 0rem,
 			opacity: 1,
 			right: $checkbox-position,
 			top: 50%,
 			transform: translateY(-50%),
 		),
+
 		custom-control: (
 			custom-control-input: (
 				left: auto,
-				margin-top: 0,
+				margin-top: 0rem,
 				right: $checkbox-position,
 				top: 50%,
 				transform: translateY(-50%),
 			),
+
 			custom-control-label: (
 				left: auto,
-				margin-top: 0,
+				margin-top: 0rem,
 				opacity: 1,
 				right: $checkbox-position,
 				top: 50%,
@@ -587,6 +632,7 @@ $form-check-top-right: map-deep-merge(
 			top: $checkbox-position,
 			transform: none,
 		),
+
 		custom-control: (
 			custom-control-input: (
 				left: auto,
@@ -594,6 +640,7 @@ $form-check-top-right: map-deep-merge(
 				top: $checkbox-position,
 				transform: none,
 			),
+
 			custom-control-label: (
 				left: auto,
 				opacity: 1,
@@ -617,12 +664,14 @@ $form-check-top-left: map-deep-merge(
 			top: $checkbox-position,
 			transform: none,
 		),
+
 		custom-control: (
 			custom-control-input: (
 				left: $checkbox-position,
 				top: $checkbox-position,
 				transform: none,
 			),
+
 			custom-control-label: (
 				left: $checkbox-position,
 				opacity: 1,
@@ -639,20 +688,23 @@ $form-check-top-left: map-deep-merge(
 $card-interactive-after-highlight: () !default;
 $card-interactive-after-highlight: map-deep-merge(
 	(
-		border-radius: 0 0 $card-border-radius $card-border-radius,
-		bottom: math-sign($card-border-width),
+		border-radius: 0rem 0rem $card-border-radius $card-border-radius,
+		bottom: calc(#{$card-border-width} * -1),
 		content: '',
-		height: 0,
-		left: math-sign($card-border-width),
+		height: 0rem,
+		left: calc(#{$card-border-width} * -1),
 		position: absolute,
-		right: math-sign($card-border-width),
+		right: calc(#{$card-border-width} * -1),
 		transition: height 0.15s ease-out,
+
 		hover: (
 			height: 4px,
 		),
+
 		focus: (
 			height: 4px,
 		),
+
 		active: (
 			height: 4px,
 		),
@@ -674,18 +726,23 @@ $card-interactive: map-deep-merge(
 		cursor: $link-cursor,
 		outline: 0,
 		transition: $component-transition,
+
 		hover: (
 			background-color: $gray-100,
 			text-decoration: none,
 		),
+
 		focus: (
 			border-color: clay-lighten($component-active-bg, 25%),
 			box-shadow: $input-btn-focus-box-shadow,
 		),
+
 		active: (
 			background-color: $gray-200,
 		),
+
 		after-highlight: $card-interactive-after-highlight,
+
 		card-body: $card-interactive-card-body,
 	),
 	$card-interactive
@@ -693,15 +750,19 @@ $card-interactive: map-deep-merge(
 
 // Card Interactive Primary
 
+$card-interactive-primary-hover-box-shadow: null !default;
+
 $card-interactive-primary-after-highlight: () !default;
 $card-interactive-primary-after-highlight: map-deep-merge(
 	(
 		hover: (
 			background-color: $component-active-bg,
 		),
+
 		focus: (
 			background-color: $component-active-bg,
 		),
+
 		active: (
 			background-color: $component-active-bg,
 		),
@@ -712,12 +773,17 @@ $card-interactive-primary-after-highlight: map-deep-merge(
 $card-interactive-primary: () !default;
 $card-interactive-primary: map-deep-merge(
 	(
+		hover: (
+			box-shadow: $card-interactive-primary-hover-box-shadow,
+		),
 		focus: (
 			background-color: $gray-100,
 		),
+
 		active: (
 			background-color: $gray-200,
 		),
+
 		after-highlight: $card-interactive-primary-after-highlight,
 	),
 	$card-interactive-primary
@@ -729,12 +795,14 @@ $card-interactive-secondary: () !default;
 $card-interactive-secondary: map-deep-merge(
 	(
 		color: $gray-900,
+
 		hover: (
 			background-color: $white,
 			border-color: clay-lighten($component-active-bg, 25%),
 			box-shadow: $input-btn-focus-box-shadow,
 			color: $gray-900,
 		),
+
 		active: (
 			background-color: $white,
 		),
@@ -750,33 +818,38 @@ $card-type-asset: map-deep-merge(
 		aspect-ratio: (
 			border-color: $card-border-color,
 			border-style: solid,
-			border-width: 0 0 0.0625rem 0,
+			border-width: 0rem 0rem 0.0625rem 0rem,
 			horizontal: 16,
 			vertical: 9,
+
 			custom-control: (
 				label: (
-					bottom: 0,
+					bottom: 0rem,
 					cursor: $link-cursor,
-					left: 0,
+					left: 0rem,
 					position: absolute,
-					right: 0,
-					top: 0,
+					right: 0rem,
+					top: 0rem,
 				),
 			),
 		),
+
 		card-type-asset-icon: (
 			width: 22.225%,
+
 			inline-item: (
-				bottom: 0,
-				left: 0,
+				bottom: 0rem,
+				left: 0rem,
 				position: absolute,
-				right: 0,
-				top: 0,
+				right: 0rem,
+				top: 0rem,
 			),
+
 			lexicon-icon: (
 				height: 100%,
 				width: 100%,
 			),
+
 			sticker: (
 				border-radius: 50%,
 				display: block,
@@ -785,9 +858,15 @@ $card-type-asset: map-deep-merge(
 				width: 100%,
 			),
 		),
+
 		card-row: (
 			align-items: flex-start,
 		),
+
+		disabled: (
+			transform: none,
+		),
+
 		dropdown-action: (
 			margin-right: -0.5rem,
 			margin-top: -0.1875rem,
@@ -821,15 +900,19 @@ $product-card: map-deep-merge(
 			background-color: $white,
 			background-image: linear-gradient(0deg, #ebebeb, #ebebeb),
 		),
+
 		card-body: (
 			text-align: center,
 		),
+
 		card-title: (
 			font-size: 1rem,
 		),
+
 		card-subtitle: (
 			font-size: 0.75rem,
 		),
+
 		card-text: (
 			font-size: 1.125rem,
 			font-weight: $font-weight-semi-bold,
@@ -847,6 +930,7 @@ $user-card: map-deep-merge(
 			max-width: 80px,
 			min-width: 48px,
 			width: 30%,
+
 			lexicon-icon: (
 				height: auto,
 				width: 50%,
@@ -876,23 +960,26 @@ $card-page-item-asset: map-deep-merge(
 	(
 		flex-basis: 100%,
 		max-width: 100%,
-		padding-left: $grid-gutter-width * 0.5,
-		padding-right: $grid-gutter-width * 0.5,
+		padding-left: calc(#{$grid-gutter-width} * 0.5),
+		padding-right: calc(#{$grid-gutter-width} * 0.5),
 		'@container #{map-get($card-page, container-name)} (min-width: #{map-get($container-max-widths, sm)})':
 		(
 			flex-basis: 50%,
 			max-width: 50%,
 		),
+
 		'@container #{map-get($card-page, container-name)} (min-width: #{map-get($container-max-widths, md)})':
 		(
 			flex-basis: 33.33333%,
 			max-width: 33.33333%,
 		),
+
 		'@container #{map-get($card-page, container-name)} (min-width: #{map-get($container-max-widths, lg)})':
 		(
 			flex-basis: 25%,
 			max-width: 25%,
 		),
+
 		'@container #{map-get($card-page, container-name)} (min-width: #{map-get($container-max-widths, xl)})':
 		(
 			flex-basis: 20%,
@@ -944,6 +1031,7 @@ $card-type-template-aspect-ratio: map-deep-merge(
 		horizontal: 16,
 		text-align: center,
 		vertical: 9,
+
 		lexicon-icon: (
 			height: auto,
 			width: 28%,
@@ -981,13 +1069,19 @@ $card-type-template: () !default;
 $card-type-template: map-deep-merge(
 	(
 		color: $gray-900,
+
 		hover: (
 			color: $gray-900,
 		),
+
 		after-highlight: $card-type-template-after-highlight,
+
 		aspect-ratio: $card-type-template-aspect-ratio,
+
 		aspect-ratio-item: $card-type-template-aspect-ratio-item,
+
 		card-title: $card-type-template-card-title,
+
 		card-text: $card-type-template-card-text,
 	),
 	$card-type-template
@@ -998,7 +1092,7 @@ $card-type-template: map-deep-merge(
 $template-card-body: () !default;
 $template-card-body: map-deep-merge(
 	(
-		padding-top: 0,
+		padding-top: 0rem,
 		text-align: center,
 	),
 	$template-card-body
@@ -1028,6 +1122,7 @@ $template-card-horizontal-card-row: map-deep-merge(
 		margin-left: -4px,
 		margin-right: -4px,
 		width: auto,
+
 		autofit-col: (
 			padding-left: 4px,
 			padding-right: 4px,
@@ -1040,7 +1135,7 @@ $template-card-horizontal-card-title: () !default;
 $template-card-horizontal-card-title: map-deep-merge(
 	(
 		color: inherit,
-		margin-bottom: 0,
+		margin-bottom: 0rem,
 	),
 	$template-card-horizontal-card-title
 );
@@ -1049,11 +1144,15 @@ $template-card-horizontal: () !default;
 $template-card-horizontal: map-deep-merge(
 	(
 		color: $gray-600,
+
 		hover: (
 			color: $gray-600,
 		),
+
 		sticker: $template-card-horizontal-sticker,
+
 		card-row: $template-card-horizontal-card-row,
+
 		card-title: $template-card-horizontal-card-title,
 	),
 	$template-card-horizontal

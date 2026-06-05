@@ -268,3 +268,4 @@ public class DataListView implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1872846338

@@ -5,15 +5,16 @@ $cadmin-date-picker-dropdown-menu: map-deep-merge(
 	(
 		max-height: none,
 		max-width: 352px,
-		padding-bottom: 0,
-		padding-left: 0,
-		padding-right: 0,
-		padding-top: 0,
+		padding-bottom: 0px,
+		padding-left: 0px,
+		padding-right: 0px,
+		padding-top: 0px,
 		width: 100%,
+
 		media-breakpoint-down: (
 			xs: (
 				font-size: 12px,
-				margin: 0,
+				margin: 0px,
 				max-height: 255px,
 				max-width: 264px,
 			),
@@ -39,18 +40,22 @@ $cadmin-date-picker-nav-btn: map-deep-merge(
 	(
 		color: $cadmin-gray-600,
 		transition: $cadmin-component-transition,
+
 		hover: (
 			background-color: $cadmin-gray-200,
 			color: $cadmin-gray-900,
 		),
+
 		focus: (
 			background-color: $cadmin-gray-200,
 			box-shadow: $cadmin-component-focus-box-shadow,
 			color: $cadmin-gray-900,
 		),
+
 		active: (
 			background-color: $cadmin-gray-200,
 		),
+
 		disabled: (
 			background-color: transparent,
 			box-shadow: none,
@@ -63,10 +68,11 @@ $cadmin-date-picker-nav-btn: map-deep-merge(
 $cadmin-date-picker-nav-btn-monospaced: () !default;
 $cadmin-date-picker-nav-btn-monospaced: map-deep-merge(
 	(
-		margin-bottom: 0,
+		margin-bottom: 0px,
 		margin-left: 2px,
 		margin-right: 2px,
-		margin-top: 0,
+		margin-top: 0px,
+
 		media-breakpoint-down: (
 			xs: (
 				font-size: 12px,
@@ -89,21 +95,25 @@ $cadmin-date-picker-nav-select: map-deep-merge(
 		font-size: $cadmin-font-size-sm,
 		font-weight: $cadmin-font-weight-semi-bold,
 		height: $cadmin-input-height-sm,
-		padding-bottom: 0,
+		padding-bottom: 0px,
 		padding-left: 8px,
-		padding-top: 0,
+		padding-top: 0px,
+
 		hover: (
 			background-color: $cadmin-gray-200,
 			color: $cadmin-gray-900,
 		),
+
 		focus: (
 			background-color: $cadmin-gray-200,
 			color: $cadmin-gray-900,
 		),
+
 		disabled: (
 			background-color: transparent,
 			color: $cadmin-input-disabled-color,
 		),
+
 		media-breakpoint-down: (
 			xs: (
 				font-size: 12px,
@@ -124,7 +134,8 @@ $cadmin-date-picker-row: map-deep-merge(
 		list-style: none,
 		margin-bottom: 8px,
 		margin-top: 8px,
-		padding: 0,
+		padding: 0px,
+
 		media-breakpoint-down: (
 			xs: (
 				margin-bottom: 4px,
@@ -141,23 +152,28 @@ $cadmin-date-picker-col: map-deep-merge(
 		display: flex,
 		flex-grow: 1,
 		justify-content: center,
+
 		c-selected: (
 			background-image:
 				linear-gradient($cadmin-primary-l3, $cadmin-primary-l3),
 			background-repeat: no-repeat,
 		),
+
 		c-selected-first-child: (
 			border-bottom-left-radius: 100px,
 			border-top-left-radius: 100px,
 		),
+
 		c-selected-last-child: (
 			border-bottom-right-radius: 100px,
 			border-top-right-radius: 100px,
 		),
+
 		c-selected-start: (
 			background-position: right top,
 			background-size: 50% 100%,
 		),
+
 		c-selected-end: (
 			background-position: left top,
 			background-size: 50% 100%,
@@ -170,7 +186,8 @@ $cadmin-date-picker-days-row: () !default;
 $cadmin-date-picker-days-row: map-deep-merge(
 	(
 		margin-bottom: 16px,
-		margin-top: 0,
+		margin-top: 0px,
+
 		media-breakpoint-down: (
 			xs: (
 				margin-bottom: 4px,
@@ -210,6 +227,7 @@ $cadmin-date-picker-calendar-header-container: map-merge(
 		padding-left: 16px,
 		padding-right: 16px,
 		padding-top: 16px,
+
 		media-breakpoint-down: (
 			xs: (
 				padding-bottom: 4px,
@@ -228,6 +246,7 @@ $cadmin-date-picker-calendar-body-container: map-merge(
 		padding-left: 8px,
 		padding-right: 8px,
 		padding-bottom: 8px,
+
 		media-breakpoint-down: (
 			xs: (
 				padding-left: 6px,
@@ -244,11 +263,12 @@ $cadmin-date-picker-calendar-footer-container: map-merge(
 	(
 		border-color: $cadmin-gray-400,
 		border-style: solid,
-		border-width: 1px 0 0 0,
+		border-width: 1px 0px 0px 0px,
 		padding-bottom: 8px,
 		padding-left: 14px,
 		padding-right: 14px,
 		padding-top: 8px,
+
 		media-breakpoint-down: (
 			xs: (
 				padding-left: 6px,
@@ -268,7 +288,7 @@ $cadmin-date-picker-calendar-item: map-deep-merge(
 		align-items: center,
 		background-color:
 			setter(map-get($cadmin-date-picker-calendar-item, bg) transparent),
-		border-width: 0,
+		border-width: 0px,
 		disabled-cursor: $cadmin-disabled-cursor,
 		display: inline-flex,
 		flex-shrink: 0,
@@ -276,17 +296,18 @@ $cadmin-date-picker-calendar-item: map-deep-merge(
 		height: 32px,
 		justify-content: center,
 		line-height: 1,
-		margin-left: 0,
-		margin-right: 0,
-		padding-bottom: 0,
-		padding-left: 0,
-		padding-right: 0,
-		padding-top: 0,
+		margin-left: 0px,
+		margin-right: 0px,
+		padding-bottom: 0px,
+		padding-left: 0px,
+		padding-right: 0px,
+		padding-top: 0px,
 		transition: $cadmin-component-transition,
 		user-select: none,
 		vertical-align: middle,
 		white-space: nowrap,
 		width: 32px,
+
 		media-breakpoint-down: (
 			xs: (
 				height: 24px,
@@ -304,20 +325,24 @@ $cadmin-date-picker-date: map-deep-merge(
 		color: $cadmin-gray-600,
 		cursor: $cadmin-link-cursor,
 		position: relative,
+
 		hover: (
 			background-color: $cadmin-gray-200,
 			color: $cadmin-gray-900,
 		),
+
 		focus: (
 			background-color: $cadmin-gray-200,
 			box-shadow: $cadmin-component-focus-box-shadow,
 			color: $cadmin-gray-900,
 			outline: 0,
 		),
+
 		active: (
 			background-color: $cadmin-component-active-bg,
 			color: $cadmin-component-active-color,
 		),
+
 		disabled: (
 			background-color: transparent,
 			box-shadow: none,
@@ -331,6 +356,7 @@ $cadmin-date-picker-previous-month-date: () !default;
 $cadmin-date-picker-previous-month-date: map-deep-merge(
 	(
 		color: $cadmin-gray-500,
+
 		active: (
 			background-color: $cadmin-primary-l2,
 			color: $cadmin-secondary,
@@ -343,6 +369,7 @@ $cadmin-date-picker-next-month-date: () !default;
 $cadmin-date-picker-next-month-date: map-deep-merge(
 	(
 		color: $cadmin-gray-500,
+
 		active: (
 			background-color: $cadmin-primary-l2,
 			color: $cadmin-primary-l3,
@@ -372,6 +399,7 @@ $cadmin-date-picker-input-group-text: map-deep-merge(
 		min-width: 32px,
 		padding-left: 4px,
 		padding-right: 4px,
+
 		media-breakpoint-down: (
 			xs: (
 				font-size: inherit,

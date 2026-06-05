@@ -124,12 +124,6 @@ public class PortalWorkspace extends BaseWorkspace {
 
 		super.setUp();
 
-		Job.BuildProfile buildProfile = getBuildProfile();
-
-		if (buildProfile == Job.BuildProfile.DXP) {
-			portalWorkspaceGitRepository.setUpPortalProfile();
-		}
-
 		portalWorkspaceGitRepository.setUpTCKHome();
 
 		updateOSBAsahModule();
@@ -485,6 +479,8 @@ public class PortalWorkspace extends BaseWorkspace {
 		}
 
 		if (JenkinsResultsParserUtil.isSHA(gitCommit)) {
+			workspaceGitRepository.setCommitFileIsSHA(true);
+
 			workspaceGitRepository.setSenderBranchSHA(gitCommit);
 
 			return true;

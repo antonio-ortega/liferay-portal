@@ -28,6 +28,28 @@ import java.util.Map;
 public class FragmentEntryLinkImpl extends FragmentEntryLinkBaseImpl {
 
 	@Override
+	public FragmentEntry fetchFragmentEntry() {
+		if ((_fragmentEntry == null) &&
+			Validator.isNotNull(getFragmentEntryERC())) {
+
+			Long groupId = ScopeUtil.getItemGroupId(
+				getCompanyId(), getFragmentEntryScopeERC(), getGroupId());
+
+			if (groupId != null) {
+				_fragmentEntry =
+					FragmentEntryLocalServiceUtil.
+						fetchFragmentEntryByExternalReferenceCode(
+							getFragmentEntryERC(), groupId);
+
+				fragmentEntryUpdateEntityCacheBiConsumer.accept(
+					this, _fragmentEntry);
+			}
+		}
+
+		return _fragmentEntry;
+	}
+
+	@Override
 	public JSONObject getConfigurationJSONObject() {
 		return getConfigurationJSONObject(false);
 	}
@@ -64,23 +86,8 @@ public class FragmentEntryLinkImpl extends FragmentEntryLinkBaseImpl {
 	}
 
 	@Override
-	public long getFragmentEntryGroupId() {
-		Long groupId = ScopeUtil.getItemGroupId(
-			getCompanyId(), getFragmentEntryScopeERC(), getGroupId());
-
-		if (groupId == null) {
-			return 0;
-		}
-
-		return groupId;
-	}
-
-	@Override
 	public boolean isCacheable() {
-		FragmentEntry fragmentEntry =
-			FragmentEntryLocalServiceUtil.
-				fetchFragmentEntryByExternalReferenceCode(
-					getFragmentEntryERC(), getFragmentEntryGroupId());
+		FragmentEntry fragmentEntry = fetchFragmentEntry();
 
 		if (fragmentEntry != null) {
 			return fragmentEntry.isCacheable();
@@ -109,10 +116,11 @@ public class FragmentEntryLinkImpl extends FragmentEntryLinkBaseImpl {
 
 	@Override
 	public boolean isLatestVersion() throws PortalException {
-		FragmentEntry fragmentEntry =
-			FragmentEntryLocalServiceUtil.
-				getFragmentEntryByExternalReferenceCode(
-					getFragmentEntryERC(), getFragmentEntryGroupId());
+		FragmentEntry fragmentEntry = fetchFragmentEntry();
+
+		if (fragmentEntry == null) {
+			return false;
+		}
 
 		Date fragmentEntryModifiedDate = fragmentEntry.getModifiedDate();
 
@@ -128,14 +136,7 @@ public class FragmentEntryLinkImpl extends FragmentEntryLinkBaseImpl {
 
 	@Override
 	public boolean isSystem() {
-		if (Validator.isNull(getFragmentEntryERC())) {
-			return false;
-		}
-
-		FragmentEntry fragmentEntry =
-			FragmentEntryLocalServiceUtil.
-				fetchFragmentEntryByExternalReferenceCode(
-					getFragmentEntryERC(), getFragmentEntryGroupId());
+		FragmentEntry fragmentEntry = fetchFragmentEntry();
 
 		if (fragmentEntry == null) {
 			return false;
@@ -219,5 +220,8 @@ public class FragmentEntryLinkImpl extends FragmentEntryLinkBaseImpl {
 
 	@CacheField(permanent = true, propagateToInterface = true)
 	private transient JSONObject _editableValuesJSONObject;
+
+	@CacheField(permanent = true, propagateToInterface = true)
+	private transient FragmentEntry _fragmentEntry;
 
 }

@@ -347,7 +347,8 @@ public interface KaleoInstanceTokenLocalService
 
 	@Indexable(type = IndexableType.REINDEX)
 	public KaleoInstanceToken updateKaleoInstanceToken(
-			long kaleoInstanceTokenId, long currentKaleoNodeId)
+			long kaleoInstanceTokenId, long currentKaleoNodeId,
+			String currentKaleoNodeName)
 		throws PortalException;
 
 	@Override
@@ -366,3 +367,4 @@ public interface KaleoInstanceTokenLocalService
 		throws E;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-1607436285

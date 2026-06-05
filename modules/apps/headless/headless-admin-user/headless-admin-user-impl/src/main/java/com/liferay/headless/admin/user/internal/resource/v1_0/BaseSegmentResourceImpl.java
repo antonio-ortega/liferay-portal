@@ -5,6 +5,7 @@
 
 package com.liferay.headless.admin.user.internal.resource.v1_0;
 
+import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.headless.admin.user.dto.v1_0.Segment;
 import com.liferay.headless.admin.user.resource.v1_0.SegmentResource;
 import com.liferay.petra.function.UnsafeBiConsumer;
@@ -298,6 +299,15 @@ public abstract class BaseSegmentResourceImpl
 			@Override
 			public Locale getPreferredLocale() {
 				return LocaleUtil.fromLanguageId(languageId);
+			}
+
+			@Override
+			public boolean isAcceptAllLanguages() {
+				if (ExportImportThreadLocal.isExportInProcess()) {
+					return true;
+				}
+
+				return AcceptLanguage.super.isAcceptAllLanguages();
 			}
 
 		};
@@ -871,3 +881,4 @@ public abstract class BaseSegmentResourceImpl
 		LogFactoryUtil.getLog(BaseSegmentResourceImpl.class);
 
 }
+// LIFERAY-REST-BUILDER-HASH:2025162793

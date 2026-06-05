@@ -5,10 +5,15 @@
 
 import {Locator, Page, expect} from '@playwright/test';
 
+import {clickAndExpectToBeVisible} from '../../../../utils/clickAndExpectToBeVisible';
+import {expectToPass} from '../../../../utils/expectToPass';
+
 export class DataSetPage {
 	readonly activeViewSelector: Locator;
 	readonly assetLink: (assetName: string) => Locator;
+	readonly loading: Locator;
 	readonly page: Page;
+	readonly searchInput: Locator;
 	readonly table: {
 		bodyRows: Locator;
 		container: Locator;
@@ -31,8 +36,9 @@ export class DataSetPage {
 			container: tableContainer,
 			headRow: tableContainer.locator('thead tr'),
 		};
-
+		this.loading = page.locator('.data-set .loading-animation');
 		this.page = page;
+		this.searchInput = this.page.getByPlaceholder('Search');
 		this.selectAllLink = page.getByRole('button', {
 			exact: true,
 			name: 'Select All',
@@ -58,36 +64,63 @@ export class DataSetPage {
 		await dropdownMenuItemDelete.click();
 	}
 
+	async expectBulkItemActionHidden({action}: {action: string}) {
+		await this.page
+			.getByTestId('visualization-mode-table')
+			.getByLabel('Actions')
+			.click();
+
+		const menu = this.page.getByRole('menu');
+
+		await expect(menu).toBeVisible();
+
+		await expect(
+			menu.getByRole('menuitem', {exact: true, name: action})
+		).toBeHidden();
+
+		await this.page.keyboard.press('Escape');
+	}
+
 	async execItemAction({
 		action,
 		filter,
+		parentAction,
 		timeout,
 	}: {
 		action: string;
 		filter: string;
+		parentAction?: string;
 		timeout?: number;
 	}) {
 		const item = this.getRow(filter);
+
 		const button = item.getByRole('button', {
-			exact: true,
-			name: 'Actions',
+			name: `${filter} Actions`,
 		});
-		const dropdownId = await button.getAttribute('aria-controls');
-		await button.click({timeout});
 
-		const dropdownMenu = this.page
-			.locator(`#${dropdownId}`)
-			.filter({has: this.page.getByRole('menu')});
-		await dropdownMenu.waitFor({timeout});
+		if (parentAction) {
+			await button.click();
 
-		const dropdownMenuActionItem = dropdownMenu
-			.getByRole('menuitem', {
+			await this.page
+				.getByRole('menuitem', {exact: true, name: parentAction})
+				.hover();
+
+			await this.page
+				.getByRole('menuitem', {exact: true, name: action})
+				.click();
+
+			return;
+		}
+
+		await clickAndExpectToBeVisible({
+			autoClick: true,
+			target: this.page.getByRole('menuitem', {
+				exact: true,
 				name: action,
-			})
-			.first();
-
-		await dropdownMenuActionItem.waitFor({timeout});
-		await dropdownMenuActionItem.click({timeout});
+			}),
+			timeout,
+			trigger: button,
+		});
 	}
 
 	async changeVisualizationMode(
@@ -102,5 +135,31 @@ export class DataSetPage {
 			.getByRole('listbox')
 			.getByRole('option', {name: visualizationMode})
 			.click();
+	}
+
+	async search(value: string) {
+		await expectToPass(
+			async () => {
+				await this.searchInput.fill(value);
+
+				await this.searchInput.press('Enter');
+
+				await this.page
+					.locator('.search-resume-label', {
+						has: this.page.locator('strong', {hasText: value}),
+					})
+					.waitFor();
+
+				await this.loading.waitFor({state: 'hidden'});
+			},
+			{timeout: 8000}
+		);
+	}
+
+	async selectAll() {
+		await clickAndExpectToBeVisible({
+			target: this.page.getByText('All Selected'),
+			trigger: this.page.getByTitle('Select Items'),
+		});
 	}
 }

@@ -60,11 +60,12 @@ public class AssetTagCTEventListener implements CTEventListener {
 
 						try (PreparedStatement preparedStatement =
 								connection.prepareStatement(sql);
+
 							ResultSet resultSet =
 								preparedStatement.executeQuery()) {
 
 							while (resultSet.next()) {
-								long tagId = resultSet.getLong(1);
+								long tagId = resultSet.getLong("tagId");
 
 								AssetTag assetTag =
 									assetTagPersistence.fetchByPrimaryKey(

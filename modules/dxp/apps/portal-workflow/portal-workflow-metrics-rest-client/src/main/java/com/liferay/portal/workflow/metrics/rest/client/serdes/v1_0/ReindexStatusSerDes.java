@@ -230,3 +230,4 @@ public class ReindexStatusSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1124222877

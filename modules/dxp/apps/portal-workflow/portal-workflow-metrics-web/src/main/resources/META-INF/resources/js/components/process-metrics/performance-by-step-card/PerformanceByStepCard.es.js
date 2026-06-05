@@ -16,6 +16,28 @@ import TimeRangeFilter from '../../filter/TimeRangeFilter.es';
 import {getTimeRangeParams} from '../../filter/util/timeRangeUtil.es';
 import {Body, Footer} from './PerformanceByStepCardBody.es';
 
+const getDefaultStartDate = () => {
+	const date = new Date();
+
+	date.setDate(date.getDate() - 30);
+
+	let newDate = date.toISOString();
+
+	newDate = newDate.split('.')[0] + 'Z';
+
+	return newDate;
+};
+
+const getDefaultEndDate = () => {
+	const date = new Date();
+
+	let newDate = date.toISOString();
+
+	newDate = newDate.split('.')[0] + 'Z';
+
+	return newDate;
+};
+
 function Header({disableFilters, prefixKey, processId}) {
 	return (
 		<PanelHeaderWithOptions
@@ -71,7 +93,11 @@ function PerformanceByStepCard({routeParams}) {
 
 	const processVersion = version !== 'allVersions' ? [version] : undefined;
 	const timeRange = useMemo(
-		() => getTimeRangeParams(stepDateStart, stepDateEnd),
+		() =>
+			getTimeRangeParams(
+				stepDateStart ?? getDefaultStartDate(),
+				stepDateEnd ?? getDefaultEndDate()
+			),
 		[stepDateEnd, stepDateStart]
 	);
 
@@ -98,7 +124,7 @@ function PerformanceByStepCard({routeParams}) {
 	}, [filtersError, routeParams, timeRange.dateEnd, timeRange.dateStart]);
 
 	return (
-		<ClayPanel className="mt-4 tabs-card">
+		<ClayPanel className="mt-4 tabs-card" displayType="secondary">
 			<PromisesResolver promises={promises}>
 				<PerformanceByStepCard.Header
 					disableFilters={filtersError}

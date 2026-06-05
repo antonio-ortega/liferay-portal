@@ -48,6 +48,7 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Time;
@@ -161,7 +162,8 @@ public abstract class BaseImportProcessResourceTestCase {
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
 		).endpoint(
-			testCompany.getVirtualHostname(), 8080, "http"
+			testCompany.getVirtualHostname(),
+			PortalUtil.getPortalServerPort(false), "http"
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -169,6 +171,9 @@ public abstract class BaseImportProcessResourceTestCase {
 
 	@After
 	public void tearDown() throws Exception {
+		DepotEntryLocalServiceUtil.deleteDepotEntry(irrelevantDepotEntry);
+		DepotEntryLocalServiceUtil.deleteDepotEntry(testDepotEntry);
+
 		GroupTestUtil.deleteGroup(irrelevantGroup);
 		GroupTestUtil.deleteGroup(testGroup);
 	}
@@ -223,7 +228,7 @@ public abstract class BaseImportProcessResourceTestCase {
 
 		ImportProcess importProcess = randomImportProcess();
 
-		importProcess.setTitle(regex);
+		importProcess.setName(regex);
 
 		String json = ImportProcessSerDes.toJSON(importProcess);
 
@@ -231,7 +236,7 @@ public abstract class BaseImportProcessResourceTestCase {
 
 		importProcess = ImportProcessSerDes.toDTO(json);
 
-		Assert.assertEquals(regex, importProcess.getTitle());
+		Assert.assertEquals(regex, importProcess.getName());
 	}
 
 	@Test
@@ -658,8 +663,9 @@ public abstract class BaseImportProcessResourceTestCase {
 			public StringBuffer getRequestURL() {
 				return new StringBuffer(
 					StringBundler.concat(
-						"http://localhost:8080/o/v1.0/",
-						RandomTestUtil.randomString(), "/",
+						"http://localhost:",
+						String.valueOf(PortalUtil.getPortalServerPort(false)),
+						"/o/v1.0/", RandomTestUtil.randomString(), "/",
 						RandomTestUtil.randomString()));
 			}
 
@@ -695,8 +701,10 @@ public abstract class BaseImportProcessResourceTestCase {
 			@Override
 			public URI getRequestUri() {
 				return URI.create(
-					"http://localhost:8080/o/" + applicationPath +
-						resourcePath);
+					StringBundler.concat(
+						"http://localhost:",
+						PortalUtil.getPortalServerPort(false), "/o/",
+						applicationPath, resourcePath));
 			}
 
 			@Override
@@ -716,7 +724,11 @@ public abstract class BaseImportProcessResourceTestCase {
 
 			@Override
 			public URI getBaseUri() {
-				return URI.create("http://localhost:8080/o/" + applicationPath);
+				return URI.create(
+					StringBundler.concat(
+						"http://localhost:",
+						PortalUtil.getPortalServerPort(false), "/o/",
+						applicationPath));
 			}
 
 			@Override
@@ -1401,6 +1413,64 @@ public abstract class BaseImportProcessResourceTestCase {
 	}
 
 	@Test
+	public void testPostAssetLibraryImportProcess() throws Exception {
+		ImportProcess randomImportProcess = randomImportProcess();
+
+		ImportProcess postImportProcess =
+			testPostAssetLibraryImportProcess_addImportProcess(
+				randomImportProcess);
+
+		assertEquals(randomImportProcess, postImportProcess);
+		assertValid(postImportProcess);
+	}
+
+	protected ImportProcess testPostAssetLibraryImportProcess_addImportProcess(
+			ImportProcess importProcess)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostImportProcess() throws Exception {
+		ImportProcess randomImportProcess = randomImportProcess();
+
+		ImportProcess postImportProcess =
+			testPostImportProcess_addImportProcess(randomImportProcess);
+
+		assertEquals(randomImportProcess, postImportProcess);
+		assertValid(postImportProcess);
+	}
+
+	protected ImportProcess testPostImportProcess_addImportProcess(
+			ImportProcess importProcess)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostSiteImportProcess() throws Exception {
+		ImportProcess randomImportProcess = randomImportProcess();
+
+		ImportProcess postImportProcess =
+			testPostSiteImportProcess_addImportProcess(randomImportProcess);
+
+		assertEquals(randomImportProcess, postImportProcess);
+		assertValid(postImportProcess);
+	}
+
+	protected ImportProcess testPostSiteImportProcess_addImportProcess(
+			ImportProcess importProcess)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testBatchEngineDeleteImportTask() throws Exception {
 		Assert.assertTrue(true);
 	}
@@ -1501,16 +1571,16 @@ public abstract class BaseImportProcessResourceTestCase {
 				continue;
 			}
 
-			if (Objects.equals("status", additionalAssertFieldName)) {
-				if (importProcess.getStatus() == null) {
+			if (Objects.equals("name", additionalAssertFieldName)) {
+				if (importProcess.getName() == null) {
 					valid = false;
 				}
 
 				continue;
 			}
 
-			if (Objects.equals("title", additionalAssertFieldName)) {
-				if (importProcess.getTitle() == null) {
+			if (Objects.equals("status", additionalAssertFieldName)) {
+				if (importProcess.getStatus() == null) {
 					valid = false;
 				}
 
@@ -1681,10 +1751,9 @@ public abstract class BaseImportProcessResourceTestCase {
 				continue;
 			}
 
-			if (Objects.equals("status", additionalAssertFieldName)) {
+			if (Objects.equals("name", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
-						importProcess1.getStatus(),
-						importProcess2.getStatus())) {
+						importProcess1.getName(), importProcess2.getName())) {
 
 					return false;
 				}
@@ -1692,9 +1761,10 @@ public abstract class BaseImportProcessResourceTestCase {
 				continue;
 			}
 
-			if (Objects.equals("title", additionalAssertFieldName)) {
+			if (Objects.equals("status", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
-						importProcess1.getTitle(), importProcess2.getTitle())) {
+						importProcess1.getStatus(),
+						importProcess2.getStatus())) {
 
 					return false;
 				}
@@ -1877,13 +1947,8 @@ public abstract class BaseImportProcessResourceTestCase {
 				"Invalid entity field " + entityFieldName);
 		}
 
-		if (entityFieldName.equals("status")) {
-			throw new IllegalArgumentException(
-				"Invalid entity field " + entityFieldName);
-		}
-
-		if (entityFieldName.equals("title")) {
-			Object object = importProcess.getTitle();
+		if (entityFieldName.equals("name")) {
+			Object object = importProcess.getName();
 
 			String value = String.valueOf(object);
 
@@ -1928,6 +1993,11 @@ public abstract class BaseImportProcessResourceTestCase {
 			return sb.toString();
 		}
 
+		if (entityFieldName.equals("status")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
 		throw new IllegalArgumentException(
 			"Invalid entity field " + entityFieldName);
 	}
@@ -1941,7 +2011,9 @@ public abstract class BaseImportProcessResourceTestCase {
 			).toString(),
 			"application/json");
 		httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
-		httpInvoker.path("http://localhost:8080/o/graphql");
+		httpInvoker.path(
+			"http://localhost:" + PortalUtil.getPortalServerPort(false) +
+				"/o/graphql");
 		httpInvoker.userNameAndPassword(
 			"test@liferay.com:" + PropsValues.DEFAULT_ADMIN_PASSWORD);
 
@@ -1976,7 +2048,7 @@ public abstract class BaseImportProcessResourceTestCase {
 				dateCreated = RandomTestUtil.nextDate();
 				dateModified = RandomTestUtil.nextDate();
 				id = RandomTestUtil.randomLong();
-				title = StringUtil.toLowerCase(RandomTestUtil.randomString());
+				name = StringUtil.toLowerCase(RandomTestUtil.randomString());
 			}
 		};
 	}
@@ -2227,3 +2299,4 @@ public abstract class BaseImportProcessResourceTestCase {
 		_vulcanCRUDItemDelegateBuilderRegistry;
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1862664561

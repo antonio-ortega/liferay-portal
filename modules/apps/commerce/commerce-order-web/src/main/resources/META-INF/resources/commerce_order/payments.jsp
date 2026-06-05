@@ -35,7 +35,7 @@ CommerceOrder commerceOrder = commerceOrderEditDisplayContext.getCommerceOrder()
 				).build()
 			%>'
 			actionLabel='<%= commerceOrderEditDisplayContext.hasManageCommerceOrderPaymentMethodsPermission() ? LanguageUtil.get(request, Validator.isNull(commerceOrder.getCommercePaymentMethodKey()) ? "add" : "edit") : null %>'
-			actionUrl="<%= commerceOrderEditDisplayContext.hasManageCommerceOrderPaymentMethodsPermission() ? editOrderPaymentMethodURL : null %>"
+			actionURL="<%= commerceOrderEditDisplayContext.hasManageCommerceOrderPaymentMethodsPermission() ? editOrderPaymentMethodURL : null %>"
 			elementClasses="flex-fill"
 			title='<%= LanguageUtil.get(request, "payment-method") %>'
 		>
@@ -90,7 +90,7 @@ CommerceOrder commerceOrder = commerceOrderEditDisplayContext.getCommerceOrder()
 				).build()
 			%>'
 			actionLabel='<%= commerceOrderEditDisplayContext.hasManageCommerceOrderPaymentStatusesPermission() ? LanguageUtil.get(request, "edit") : null %>'
-			actionUrl="<%= commerceOrderEditDisplayContext.hasManageCommerceOrderPaymentStatusesPermission() ? editOrderPaymentStatusURL: null %>"
+			actionURL="<%= commerceOrderEditDisplayContext.hasManageCommerceOrderPaymentStatusesPermission() ? editOrderPaymentStatusURL: null %>"
 			elementClasses="flex-fill"
 			title='<%= LanguageUtil.get(request, "payment-status") %>'
 		>
@@ -121,7 +121,6 @@ CommerceOrder commerceOrder = commerceOrderEditDisplayContext.getCommerceOrder()
 				%>'
 				dataProviderKey="<%= CommerceOrderFDSNames.PAYMENTS %>"
 				id="<%= CommerceOrderFDSNames.PAYMENTS %>"
-				itemsPerPage="<%= 10 %>"
 			/>
 		</commerce-ui:panel>
 	</div>
@@ -140,7 +139,6 @@ CommerceOrder commerceOrder = commerceOrderEditDisplayContext.getCommerceOrder()
 				%>'
 				dataProviderKey="<%= CommerceOrderFDSNames.REFUNDS %>"
 				id="<%= CommerceOrderFDSNames.REFUNDS %>"
-				itemsPerPage="<%= 10 %>"
 				showSearch="<%= false %>"
 			/>
 		</commerce-ui:panel>

@@ -36,6 +36,20 @@ public class CacheFieldEntryUtil {
 	 */
 
 	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(List)
+	 */
+	public static void cacheResult(List<CacheFieldEntry> cacheFieldEntries) {
+		getPersistence().cacheResult(cacheFieldEntries);
+	}
+
+	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(com.liferay.portal.kernel.model.BaseModel)
+	 */
+	public static void cacheResult(CacheFieldEntry cacheFieldEntry) {
+		getPersistence().cacheResult(cacheFieldEntry);
+	}
+
+	/**
 	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#clearCache()
 	 */
 	public static void clearCache() {
@@ -111,59 +125,10 @@ public class CacheFieldEntryUtil {
 	}
 
 	/**
-	 * Returns all the cache field entries where groupId = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @return the matching cache field entries
-	 */
-	public static List<CacheFieldEntry> findByGroupId(long groupId) {
-		return getPersistence().findByGroupId(groupId);
-	}
-
-	/**
-	 * Returns a range of all the cache field entries where groupId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CacheFieldEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param groupId the group ID
-	 * @param start the lower bound of the range of cache field entries
-	 * @param end the upper bound of the range of cache field entries (not inclusive)
-	 * @return the range of matching cache field entries
-	 */
-	public static List<CacheFieldEntry> findByGroupId(
-		long groupId, int start, int end) {
-
-		return getPersistence().findByGroupId(groupId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the cache field entries where groupId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CacheFieldEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param groupId the group ID
-	 * @param start the lower bound of the range of cache field entries
-	 * @param end the upper bound of the range of cache field entries (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching cache field entries
-	 */
-	public static List<CacheFieldEntry> findByGroupId(
-		long groupId, int start, int end,
-		OrderByComparator<CacheFieldEntry> orderByComparator) {
-
-		return getPersistence().findByGroupId(
-			groupId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the cache field entries where groupId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CacheFieldEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.tools.service.builder.test.model.impl.CacheFieldEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -213,54 +178,6 @@ public class CacheFieldEntryUtil {
 	}
 
 	/**
-	 * Returns the last cache field entry in the ordered set where groupId = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching cache field entry
-	 * @throws NoSuchCacheFieldEntryException if a matching cache field entry could not be found
-	 */
-	public static CacheFieldEntry findByGroupId_Last(
-			long groupId, OrderByComparator<CacheFieldEntry> orderByComparator)
-		throws com.liferay.portal.tools.service.builder.test.exception.
-			NoSuchCacheFieldEntryException {
-
-		return getPersistence().findByGroupId_Last(groupId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last cache field entry in the ordered set where groupId = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching cache field entry, or <code>null</code> if a matching cache field entry could not be found
-	 */
-	public static CacheFieldEntry fetchByGroupId_Last(
-		long groupId, OrderByComparator<CacheFieldEntry> orderByComparator) {
-
-		return getPersistence().fetchByGroupId_Last(groupId, orderByComparator);
-	}
-
-	/**
-	 * Returns the cache field entries before and after the current cache field entry in the ordered set where groupId = &#63;.
-	 *
-	 * @param cacheFieldEntryId the primary key of the current cache field entry
-	 * @param groupId the group ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next cache field entry
-	 * @throws NoSuchCacheFieldEntryException if a cache field entry with the primary key could not be found
-	 */
-	public static CacheFieldEntry[] findByGroupId_PrevAndNext(
-			long cacheFieldEntryId, long groupId,
-			OrderByComparator<CacheFieldEntry> orderByComparator)
-		throws com.liferay.portal.tools.service.builder.test.exception.
-			NoSuchCacheFieldEntryException {
-
-		return getPersistence().findByGroupId_PrevAndNext(
-			cacheFieldEntryId, groupId, orderByComparator);
-	}
-
-	/**
 	 * Removes all the cache field entries where groupId = &#63; from the database.
 	 *
 	 * @param groupId the group ID
@@ -277,24 +194,6 @@ public class CacheFieldEntryUtil {
 	 */
 	public static int countByGroupId(long groupId) {
 		return getPersistence().countByGroupId(groupId);
-	}
-
-	/**
-	 * Caches the cache field entry in the entity cache if it is enabled.
-	 *
-	 * @param cacheFieldEntry the cache field entry
-	 */
-	public static void cacheResult(CacheFieldEntry cacheFieldEntry) {
-		getPersistence().cacheResult(cacheFieldEntry);
-	}
-
-	/**
-	 * Caches the cache field entries in the entity cache if it is enabled.
-	 *
-	 * @param cacheFieldEntries the cache field entries
-	 */
-	public static void cacheResult(List<CacheFieldEntry> cacheFieldEntries) {
-		getPersistence().cacheResult(cacheFieldEntries);
 	}
 
 	/**
@@ -350,84 +249,52 @@ public class CacheFieldEntryUtil {
 	}
 
 	/**
-	 * Returns all the cache field entries.
+	 * Returns all the cache field entries where groupId = &#63;.
 	 *
-	 * @return the cache field entries
+	 * @param groupId the group ID
+	 * @return the matching cache field entries
 	 */
-	public static List<CacheFieldEntry> findAll() {
-		return getPersistence().findAll();
+	public static List<CacheFieldEntry> findByGroupId(long groupId) {
+		return getPersistence().findByGroupId(groupId);
 	}
 
 	/**
-	 * Returns a range of all the cache field entries.
+	 * Returns a range of all the cache field entries where groupId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CacheFieldEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.tools.service.builder.test.model.impl.CacheFieldEntryModelImpl</code>.
 	 * </p>
 	 *
+	 * @param groupId the group ID
 	 * @param start the lower bound of the range of cache field entries
 	 * @param end the upper bound of the range of cache field entries (not inclusive)
-	 * @return the range of cache field entries
+	 * @return the range of matching cache field entries
 	 */
-	public static List<CacheFieldEntry> findAll(int start, int end) {
-		return getPersistence().findAll(start, end);
+	public static List<CacheFieldEntry> findByGroupId(
+		long groupId, int start, int end) {
+
+		return getPersistence().findByGroupId(groupId, start, end);
 	}
 
 	/**
-	 * Returns an ordered range of all the cache field entries.
+	 * Returns an ordered range of all the cache field entries where groupId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CacheFieldEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.tools.service.builder.test.model.impl.CacheFieldEntryModelImpl</code>.
 	 * </p>
 	 *
+	 * @param groupId the group ID
 	 * @param start the lower bound of the range of cache field entries
 	 * @param end the upper bound of the range of cache field entries (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of cache field entries
+	 * @return the ordered range of matching cache field entries
 	 */
-	public static List<CacheFieldEntry> findAll(
-		int start, int end,
+	public static List<CacheFieldEntry> findByGroupId(
+		long groupId, int start, int end,
 		OrderByComparator<CacheFieldEntry> orderByComparator) {
 
-		return getPersistence().findAll(start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the cache field entries.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CacheFieldEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param start the lower bound of the range of cache field entries
-	 * @param end the upper bound of the range of cache field entries (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param useFinderCache whether to use the finder cache
-	 * @return the ordered range of cache field entries
-	 */
-	public static List<CacheFieldEntry> findAll(
-		int start, int end,
-		OrderByComparator<CacheFieldEntry> orderByComparator,
-		boolean useFinderCache) {
-
-		return getPersistence().findAll(
-			start, end, orderByComparator, useFinderCache);
-	}
-
-	/**
-	 * Removes all the cache field entries from the database.
-	 */
-	public static void removeAll() {
-		getPersistence().removeAll();
-	}
-
-	/**
-	 * Returns the number of cache field entries.
-	 *
-	 * @return the number of cache field entries
-	 */
-	public static int countAll() {
-		return getPersistence().countAll();
+		return getPersistence().findByGroupId(
+			groupId, start, end, orderByComparator);
 	}
 
 	public static CacheFieldEntryPersistence getPersistence() {
@@ -441,3 +308,4 @@ public class CacheFieldEntryUtil {
 	private static volatile CacheFieldEntryPersistence _persistence;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:1025232728

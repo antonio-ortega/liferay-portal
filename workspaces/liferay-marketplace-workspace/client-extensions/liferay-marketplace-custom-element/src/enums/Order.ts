@@ -28,14 +28,19 @@ export enum OrderStatus {
 
 export enum OrderTypes {
 	ADDONS = 'ADDONS',
+	AI_HUB = 'AI_HUB',
+	AI_HUB_TOKEN = 'AI_HUB_TOKEN',
 	CLIENT_EXTENSION = 'CLIENT_EXTENSION',
 	CLOUD_APP = 'CLOUD_APP',
+	CMP = 'CMP_BETA',
 	COMPOSITE_APP = 'COMPOSITE_APP',
+	DSR = 'DSR',
+	DXP = 'DXP',
 	DXP_APP = 'DXP_APP',
 	LOW_CODE_CONFIGURATION = 'LOW_CODE_CONFIGURATION',
 	OTHER = 'OTHER',
-	SOLUTIONS7 = 'SOLUTIONS7',
 	SOLUTIONS30 = 'SOLUTIONS30',
+	SOLUTIONS7 = 'SOLUTIONS7',
 	SSA_SAAS = 'SSA_SAAS',
 }
 
@@ -46,6 +51,7 @@ export enum OrderWorkflowStatusCode {
 	ON_HOLD = 20,
 	PENDING = 1,
 	PROCESSING = 10,
+	PENDING_PAYMENT = 99,
 }
 
 export enum PaymentStatus {
@@ -56,22 +62,49 @@ export enum PaymentStatus {
 	PENDING = 1,
 }
 
+export const APP_ORDER_TYPES: readonly OrderTypes[] = [
+	OrderTypes.CLIENT_EXTENSION,
+	OrderTypes.CLOUD_APP,
+	OrderTypes.COMPOSITE_APP,
+	OrderTypes.DXP_APP,
+	OrderTypes.LOW_CODE_CONFIGURATION,
+	OrderTypes.OTHER,
+];
+
+export const LIFERAY_PRODUCT_ORDER_TYPES: readonly OrderTypes[] = [
+	OrderTypes.ADDONS,
+	OrderTypes.AI_HUB,
+	OrderTypes.CMP,
+	OrderTypes.DXP,
+];
+
+export const orderTypeDocumentationURL: Partial<Record<OrderTypes, string>> = {
+	[OrderTypes.CMP]: 'https://learn.liferay.com/content-marketing-platform',
+	[OrderTypes.DSR]: 'https://learn.liferay.com/w/digital-sales-room/index',
+	[OrderTypes.DXP]:
+		'https://learn.liferay.com/w/dxp/self-hosted-installation-and-upgrades/setting-up-liferay/activating-liferay-dxp',
+};
+
 export const orderTypeLabel = {
 	[OrderTypes.ADDONS]: 'Add-Ons',
+	[OrderTypes.AI_HUB]: 'AI Hub',
 	[OrderTypes.CLIENT_EXTENSION]: 'Client Extension',
 	[OrderTypes.CLOUD_APP]: 'Cloud',
+	[OrderTypes.CMP]: 'Content Marketing Platform',
 	[OrderTypes.COMPOSITE_APP]: 'Composite App',
+	[OrderTypes.DSR]: 'Digital Sales Room',
 	[OrderTypes.DXP_APP]: 'DXP',
+	[OrderTypes.DXP]: 'DXP Free',
 	[OrderTypes.LOW_CODE_CONFIGURATION]: 'Low-Code Configuration',
 	[OrderTypes.OTHER]: 'Other',
-	[OrderTypes.SSA_SAAS]: 'SSA SaaS',
 	[OrderTypes.SOLUTIONS7]: 'Solutions 7',
 	[OrderTypes.SOLUTIONS30]: 'Solutions 30',
+	[OrderTypes.SSA_SAAS]: 'SSA SaaS',
 } as const;
 
 export const orderWorkflowDisplayType = {
-	[OrderWorkflowStatusCode.COMPLETED]: 'success',
 	[OrderWorkflowStatusCode.CANCELLED]: 'warning',
+	[OrderWorkflowStatusCode.COMPLETED]: 'success',
 	[OrderWorkflowStatusCode.IN_PROGRESS]: 'info',
 	[OrderWorkflowStatusCode.ON_HOLD]: 'secondary',
 	[OrderWorkflowStatusCode.PENDING]: 'warning',
@@ -79,11 +112,12 @@ export const orderWorkflowDisplayType = {
 } as const;
 
 export const orderWorkflowStatusCodeLabels = {
-	[OrderWorkflowStatusCode.CANCELLED]: 'Canceled',
+	[OrderWorkflowStatusCode.CANCELLED]: 'Cancelled',
 	[OrderWorkflowStatusCode.COMPLETED]: 'Completed',
 	[OrderWorkflowStatusCode.IN_PROGRESS]: 'In Progress',
 	[OrderWorkflowStatusCode.ON_HOLD]: 'On Hold',
 	[OrderWorkflowStatusCode.PENDING]: 'Pending',
+	[OrderWorkflowStatusCode.PENDING_PAYMENT]: 'Pending Payment',
 	[OrderWorkflowStatusCode.PROCESSING]: 'Processing',
 } as const;
 
@@ -92,3 +126,33 @@ export const paymentWorkflowDisplayType = {
 	[PaymentStatus.PENDING]: 'secondary',
 	[PaymentStatus.PAYMENT_PENDING]: 'warning',
 } as const;
+
+export function getOrderStatusLabel(order: PlacedOrder) {
+	if (
+		[
+			OrderTypes.ADDONS,
+			OrderTypes.CMP,
+			OrderTypes.DXP,
+			OrderTypes.DSR,
+		].includes(order.orderTypeExternalReferenceCode as OrderTypes)
+	) {
+		return (
+			{
+				[OrderWorkflowStatusCode.CANCELLED]: 'Expired',
+				[OrderWorkflowStatusCode.COMPLETED]: 'Active',
+				[OrderWorkflowStatusCode.IN_PROGRESS]: 'Active',
+				[OrderWorkflowStatusCode.ON_HOLD]: 'Pending',
+				[OrderWorkflowStatusCode.PENDING]: 'Pending',
+				[OrderWorkflowStatusCode.PROCESSING]: 'Pending',
+			}[order.orderStatusInfo.code] || order.orderStatusInfo.label
+		);
+	}
+
+	if (order.orderTypeExternalReferenceCode === OrderTypes.AI_HUB) {
+		if (order.orderStatusInfo.code !== OrderWorkflowStatusCode.COMPLETED) {
+			return 'Requested';
+		}
+	}
+
+	return order.orderStatusInfo.label;
+}

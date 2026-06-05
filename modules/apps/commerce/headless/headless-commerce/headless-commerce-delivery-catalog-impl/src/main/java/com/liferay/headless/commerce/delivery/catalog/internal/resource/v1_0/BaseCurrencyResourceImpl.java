@@ -5,6 +5,7 @@
 
 package com.liferay.headless.commerce.delivery.catalog.internal.resource.v1_0;
 
+import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.Currency;
 import com.liferay.headless.commerce.delivery.catalog.resource.v1_0.CurrencyResource;
 import com.liferay.petra.function.UnsafeBiConsumer;
@@ -71,7 +72,7 @@ public abstract class BaseCurrencyResourceImpl
 	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-delivery-catalog/v1.0/channels/by-externalReferenceCode/{externalReferenceCode}/currencies'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
-		description = "Retrieves currencies from selected channel."
+		description = "External-reference-code variant of getChannelCurrenciesPage addressed at /channels/by-externalReferenceCode/{externalReferenceCode}/currencies. Resolves the CommerceChannel through CommerceChannelLocalService.getCommerceChannelByExternalReferenceCode and delegates to the numeric handler so search, filter and sort behave identically. Validation -- NoSuchChannelException -> 404 when the channel ERC is missing. List query support — filterable and sortable fields -- currency index fields; search fields -- indexed currency fields."
 	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
@@ -134,7 +135,7 @@ public abstract class BaseCurrencyResourceImpl
 	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-delivery-catalog/v1.0/channels/{channelId}/currencies'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
-		description = "Retrieves currencies from selected channel."
+		description = "Lists CommerceCurrency entries visible to /channels/{channelId}/currencies. Loads the channel by ID; when one or more CommerceChannelRel rows restrict its currencies the result is filtered to those, otherwise every active currency on the company is returned. Validation -- None (returns empty page when no matches). List query support — filterable and sortable fields -- currency index fields; search fields -- indexed currency fields."
 	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
@@ -263,6 +264,15 @@ public abstract class BaseCurrencyResourceImpl
 			@Override
 			public Locale getPreferredLocale() {
 				return LocaleUtil.fromLanguageId(languageId);
+			}
+
+			@Override
+			public boolean isAcceptAllLanguages() {
+				if (ExportImportThreadLocal.isExportInProcess()) {
+					return true;
+				}
+
+				return AcceptLanguage.super.isAcceptAllLanguages();
 			}
 
 		};
@@ -838,3 +848,4 @@ public abstract class BaseCurrencyResourceImpl
 		LogFactoryUtil.getLog(BaseCurrencyResourceImpl.class);
 
 }
+// LIFERAY-REST-BUILDER-HASH:319633506

@@ -158,3 +158,4 @@ public class UserAccountBrief implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:266919103

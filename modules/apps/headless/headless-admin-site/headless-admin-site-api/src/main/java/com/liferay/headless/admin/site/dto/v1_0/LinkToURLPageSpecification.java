@@ -115,6 +115,25 @@ public class LinkToURLPageSpecification
 			sb.append("\"");
 		}
 
+		String siteTemplatePageSpecificationExternalReferenceCode =
+			getSiteTemplatePageSpecificationExternalReferenceCode();
+
+		if (siteTemplatePageSpecificationExternalReferenceCode != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append(
+				"\"siteTemplatePageSpecificationExternalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(
+				_escape(siteTemplatePageSpecificationExternalReferenceCode));
+
+			sb.append("\"");
+		}
+
 		Status status = getStatus();
 
 		if (status != null) {
@@ -244,3 +263,4 @@ public class LinkToURLPageSpecification
 	private Map<String, Serializable> _extendedProperties;
 
 }
+// LIFERAY-REST-BUILDER-HASH:76542714

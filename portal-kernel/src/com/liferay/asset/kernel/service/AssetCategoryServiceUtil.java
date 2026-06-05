@@ -199,6 +199,17 @@ public class AssetCategoryServiceUtil {
 			externalReferenceCode, groupId);
 	}
 
+	public static AssetCategory getOrAddEmptyCategoryWithAncestors(
+			String externalReferenceCode, long groupId,
+			String parentCategoryExternalReferenceCode,
+			String vocabularyExternalReferenceCode)
+		throws PortalException {
+
+		return getService().getOrAddEmptyCategoryWithAncestors(
+			externalReferenceCode, groupId, parentCategoryExternalReferenceCode,
+			vocabularyExternalReferenceCode);
+	}
+
 	/**
 	 * Returns the OSGi service identifier.
 	 *
@@ -419,3 +430,4 @@ public class AssetCategoryServiceUtil {
 	private static volatile AssetCategoryService _service;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-1607392872

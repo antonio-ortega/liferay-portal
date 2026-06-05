@@ -10,14 +10,17 @@ import TextTruncate from 'shared/components/TextTruncate';
 import URLConstants from 'shared/util/url-constants';
 import {AssetTypes} from 'shared/util/constants';
 import {ClayPaginationBarWithBasicItems} from '@clayui/pagination-bar';
-import {getSafeRangeSelectors} from 'shared/util/util';
+import {
+	getSafeDecodedURIComponent,
+	getSafeRangeSelectors
+} from 'shared/util/util';
 import {getUrl} from 'shared/util/urls';
 import {metricsListColumns} from 'shared/util/table-columns';
 import {pickBy} from 'lodash';
 import {ReportContainer} from 'shared/components/download-report/DownloadPDFReport';
 import {Routes} from 'shared/util/router';
 import {useParams} from 'react-router-dom';
-import {useQuery} from '@apollo/react-hooks';
+import {useQuery} from '@apollo/client';
 import {useQueryRangeSelectors} from 'shared/hooks/useQueryRangeSelectors';
 
 const {cur, delta, deltaValues} = FaroConstants.pagination;
@@ -30,19 +33,23 @@ export enum Accessor {
 }
 
 export enum EmptyStateLink {
-	Asset = URLConstants.AssetsCustomAssetsListDocumentation,
 	Blog = URLConstants.AssetsAppearsBlogsOnDocumentation,
 	Document = URLConstants.AssetsAppearsDocumentsAndMediaOnDocumentation,
 	Form = URLConstants.AssetsAppearsFormsOnDocumentation,
-	Journal = URLConstants.AssetsAppearsWebContentOnDocumentation
+	Journal = URLConstants.AssetsAppearsWebContentOnDocumentation,
+	ObjectEntry = URLConstants.AssetsCustomAssetsListDocumentation
 }
 
-export enum EmptyStateText {
-	Blog = Liferay.Language.get('learn-more-about-blogs'),
-	Document = Liferay.Language.get('learn-more-about-documents-and-media'),
-	Form = Liferay.Language.get('learn-more-about-forms'),
-	Journal = Liferay.Language.get('learn-more-about-web-content')
-}
+export const EmptyStateText = {
+	Blog: Liferay.Language.get('learn-more-about-blogs'),
+	Document: Liferay.Language.get('learn-more-about-documents-and-media'),
+	Form: Liferay.Language.get('learn-more-about-forms'),
+	Journal: Liferay.Language.get('learn-more-about-web-content'),
+	ObjectEntry: Liferay.Language.get('learn-more-about-assets')
+} as const;
+// eslint-disable-next-line no-redeclare
+export type EmptyStateText =
+	(typeof EmptyStateText)[keyof typeof EmptyStateText];
 
 interface IAssetAppearsOnCardProps {
 	accessors: Accessor[];
@@ -81,7 +88,7 @@ const AssetAppearsOnStateRenderer = ({
 	emptyStateLink,
 	emptyStateText,
 	rangeSelectors
-}) => {
+}: any) => {
 	const {assetId, channelId, title} = useParams();
 	const [pagination, setPagination] = useState({
 		page: cur,
@@ -93,10 +100,15 @@ const AssetAppearsOnStateRenderer = ({
 		fetchPolicy: 'network-only',
 		variables: {
 			assetId,
-			assetType: assetType.toUpperCase(),
-			channelId,
+			assetType:
+				assetType === AssetTypes.ObjectEntry
+					? 'OBJECT_ENTRY'
+					: assetType.toUpperCase(),
 			selectedMetrics: accessors,
-			title: decodeURIComponent(title),
+			...(assetType !== AssetTypes.ObjectEntry && {
+				channelId,
+				title: getSafeDecodedURIComponent(title as string)
+			}),
 			...pagination,
 			...getSafeRangeSelectors(rangeSelectors)
 		}
@@ -147,12 +159,12 @@ const AssetAppearsOnStateRenderer = ({
 	);
 };
 
-const formatItems = data =>
+const formatItems = (data: any) =>
 	data.assetPages.assetMetrics.map(
-		({assetId, assetTitle, selectedMetrics}) => ({
+		({assetId, assetTitle, selectedMetrics}: any) => ({
 			title: assetTitle ? assetTitle : assetId,
 			touchpoint: assetId,
-			...selectedMetrics.reduce((acc, {name, value}) => {
+			...selectedMetrics.reduce((acc: any, {name, value}: any) => {
 				acc[name] = value;
 
 				return acc;
@@ -165,7 +177,7 @@ const AssetApperarsOnContentCard = ({
 	data,
 	onPaginationChange,
 	pagination
-}) => {
+}: any) => {
 	const {channelId, groupId} = useParams();
 	const rangeSelectors = useQueryRangeSelectors();
 
@@ -206,8 +218,13 @@ const AssetApperarsOnContentCard = ({
 	);
 };
 
-const getTableColumns = ({accessors, channelId, groupId, rangeSelectors}) => {
-	const generateURL = ({title, touchpoint}) => {
+const getTableColumns = ({
+	accessors,
+	channelId,
+	groupId,
+	rangeSelectors
+}: any) => {
+	const generateURL = ({title, touchpoint}: any) => {
 		const router = {
 			params: {
 				channelId,
@@ -226,7 +243,7 @@ const getTableColumns = ({accessors, channelId, groupId, rangeSelectors}) => {
 	const tableColumns = [
 		{
 			accessor: 'title',
-			cellRenderer: ({data}) => {
+			cellRenderer: ({data}: any) => {
 				const url = generateURL(data);
 
 				return (
@@ -247,7 +264,7 @@ const getTableColumns = ({accessors, channelId, groupId, rangeSelectors}) => {
 		},
 		{
 			accessor: 'url',
-			cellRenderer: ({data}) => (
+			cellRenderer: ({data}: any) => (
 				<td className='table-cell-expand'>
 					<ClayLink
 						className='text-secondary text-truncate-inline'
@@ -264,7 +281,7 @@ const getTableColumns = ({accessors, channelId, groupId, rangeSelectors}) => {
 			label: Liferay.Language.get('canonical-url'),
 			sortable: false
 		},
-		...accessors.map(accessor => ({
+		...accessors.map((accessor: Accessor) => ({
 			...metricsListColumns[accessor],
 			sortable: false
 		}))

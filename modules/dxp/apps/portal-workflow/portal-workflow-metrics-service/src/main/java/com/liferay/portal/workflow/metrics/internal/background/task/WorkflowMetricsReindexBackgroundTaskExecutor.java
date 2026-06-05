@@ -7,7 +7,6 @@ package com.liferay.portal.workflow.metrics.internal.background.task;
 
 import com.liferay.petra.concurrent.NoticeableFuture;
 import com.liferay.petra.function.transform.TransformUtil;
-import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTask;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskExecutor;
@@ -18,13 +17,12 @@ import com.liferay.portal.kernel.backgroundtask.BaseBackgroundTaskExecutor;
 import com.liferay.portal.kernel.backgroundtask.constants.BackgroundTaskConstants;
 import com.liferay.portal.kernel.backgroundtask.display.BackgroundTaskDisplay;
 import com.liferay.portal.kernel.messaging.Message;
-import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
+import com.liferay.portal.kernel.security.auth.CompanyInheritableThreadLocalCallable;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.search.capabilities.SearchCapabilities;
 import com.liferay.portal.search.engine.adapter.SearchEngineAdapter;
 import com.liferay.portal.search.index.IndexNameBuilder;
-import com.liferay.portal.search.query.Queries;
 import com.liferay.portal.workflow.metrics.internal.background.task.constants.WorkflowMetricsReindexBackgroundTaskConstants;
 import com.liferay.portal.workflow.metrics.internal.petra.executor.WorkflowMetricsPortalExecutor;
 import com.liferay.portal.workflow.metrics.internal.search.index.WorkflowMetricsIndex;
@@ -82,8 +80,8 @@ public class WorkflowMetricsReindexBackgroundTaskExecutor
 				WorkflowMetricsIndex.toWorkflowMetricsIndex(indexEntityName);
 
 			workflowMetricsIndex.deleteAllDocuments(
-				_searchCapabilities, _searchEngineAdapter, _queries,
-				_indexNameBuilder, backgroundTask.getCompanyId());
+				_searchCapabilities, _searchEngineAdapter, _indexNameBuilder,
+				backgroundTask.getCompanyId());
 		}
 
 		List<NoticeableFuture<?>> noticeableFutures = new ArrayList<>();
@@ -94,25 +92,23 @@ public class WorkflowMetricsReindexBackgroundTaskExecutor
 
 			noticeableFutures.add(
 				_workflowMetricsPortalExecutor.execute(
-					() -> {
-						WorkflowMetricsReindexer workflowMetricsReindexer =
-							_workflowMetricsReindexerRegistry.
-								getWorkflowMetricsReindexer(indexEntityName);
-
-						try (SafeCloseable safeCloseable =
-								CompanyThreadLocal.
-									setCompanyIdWithSafeCloseable(
-										backgroundTask.getCompanyId())) {
+					new CompanyInheritableThreadLocalCallable<>(
+						() -> {
+							WorkflowMetricsReindexer workflowMetricsReindexer =
+								_workflowMetricsReindexerRegistry.
+									getWorkflowMetricsReindexer(
+										indexEntityName);
 
 							workflowMetricsReindexer.reindex(
 								backgroundTask.getCompanyId());
-						}
 
-						_workflowMetricsReindexStatusMessageSender.
-							sendStatusMessage(
-								count, indexEntityNames.length,
-								StringPool.BLANK);
-					}));
+							_workflowMetricsReindexStatusMessageSender.
+								sendStatusMessage(
+									count, indexEntityNames.length,
+									StringPool.BLANK);
+
+							return null;
+						})::call));
 		}
 
 		for (NoticeableFuture<?> noticeableFuture : noticeableFutures) {
@@ -189,9 +185,6 @@ public class WorkflowMetricsReindexBackgroundTaskExecutor
 
 	@Reference
 	private IndexNameBuilder _indexNameBuilder;
-
-	@Reference
-	private Queries _queries;
 
 	@Reference
 	private SearchCapabilities _searchCapabilities;

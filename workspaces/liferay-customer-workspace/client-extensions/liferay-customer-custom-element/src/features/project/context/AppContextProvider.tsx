@@ -6,7 +6,6 @@
 import {createContext, useContext, useEffect, useMemo, useReducer} from 'react';
 import {useAppPropertiesContext} from '~/contexts/AppPropertiesContext';
 import {Liferay} from '~/services/liferay';
-import {fetcher} from '~/services/liferay/fetcher';
 import {
 	getAccountByExternalReferenceCode,
 	getAccountSubscriptionGroups,
@@ -15,7 +14,14 @@ import {
 	getStructuredContentFolders,
 	getUserAccount,
 } from '~/services/liferay/graphql/queries';
-import {ROLE_TYPES, ROUTE_TYPES} from '~/utils/constants';
+import {getBusinessEvents} from '~/services/liferay/rest/jira/Jira';
+import {
+	EXPERIENCE_SUBSCRIPTIONS,
+	LEGACY_SUBSCRIPTIONS,
+	PLAN_SUBSCRIPTIONS,
+	ROLE_TYPES,
+	ROUTE_TYPES,
+} from '~/utils/constants';
 import {getAccountKey} from '~/utils/getAccountKey';
 import {isValidPage} from '~/utils/page.validation';
 import routerPath from '~/utils/routerPath';
@@ -33,6 +39,9 @@ import reducer, {ActionPayload, IAction, IState, actionTypes} from './reducer';
 const AppContext = createContext<[IState, React.Dispatch<IAction>]>([
 	{
 		businessEvents: undefined,
+		hasExperienceSubscription: false,
+		hasLegacySubscription: false,
+		hasPlanSubscription: false,
 		isQuickLinksExpanded: true,
 		page: undefined,
 		project: undefined,
@@ -52,6 +61,9 @@ const AppContextProvider = ({children}: {children: React.ReactNode}) => {
 		reducer,
 		{
 			businessEvents: undefined,
+			hasExperienceSubscription: false,
+			hasLegacySubscription: false,
+			hasPlanSubscription: false,
 			isQuickLinksExpanded: true,
 			page: undefined,
 			project: undefined,
@@ -67,24 +79,13 @@ const AppContextProvider = ({children}: {children: React.ReactNode}) => {
 	const pageRoutes = useMemo(() => routerPath(), []);
 
 	useEffect(() => {
-		const getBusinessEvents = async (filterQuery: string) => {
-			const HEADLESS_BASE_URL = `${window.location.origin}/o/`;
-
+		const fetchBusinessEvents = async (accountKey: string) => {
 			try {
-				const businessEventsResponse = await fetcher(
-					`${HEADLESS_BASE_URL}c/businessevents?${filterQuery}`,
-					{
-						headers: {
-							'Accept-Language':
-								Liferay.ThemeDisplay.getBCP47LanguageId(),
-							'Content-Type': 'application/json',
-							'x-csrf-token': Liferay.authToken,
-						},
-						method: 'GET',
-					}
-				);
+				const businessEventsResponse =
+					await getBusinessEvents(accountKey);
 
-				const items = businessEventsResponse.items as IBusinessEvent[];
+				const items = (businessEventsResponse.items ||
+					[]) as IBusinessEvent[];
 
 				dispatch({
 					payload: items,
@@ -92,7 +93,7 @@ const AppContextProvider = ({children}: {children: React.ReactNode}) => {
 				});
 			}
 			catch (error) {
-				console.error('Error', error);
+				console.error('Unable to fetch business events', error);
 			}
 		};
 
@@ -248,9 +249,36 @@ const AppContextProvider = ({children}: {children: React.ReactNode}) => {
 			if (dataSubscriptions) {
 				const items = dataSubscriptions?.c?.accountSubscriptions?.items;
 
+				const hasExperienceSubscription = items?.some(({name}) =>
+					EXPERIENCE_SUBSCRIPTIONS.includes(name as string)
+				);
+
+				const hasLegacySubscription = items?.some(({name}) =>
+					LEGACY_SUBSCRIPTIONS.includes(name as string)
+				);
+
+				const hasPlanSubscription = items?.some(({name}) =>
+					PLAN_SUBSCRIPTIONS.includes(name as string)
+				);
+
 				dispatch({
 					payload: items as unknown as IAccountSubscription[],
 					type: actionTypes.UPDATE_SUBSCRIPTIONS as keyof typeof actionTypes,
+				});
+
+				dispatch({
+					payload: hasExperienceSubscription as boolean,
+					type: actionTypes.UPDATE_HAS_EXPERIENCE_SUBSCRIPTION as keyof typeof actionTypes,
+				});
+
+				dispatch({
+					payload: hasLegacySubscription as boolean,
+					type: actionTypes.UPDATE_HAS_LEGACY_SUBSCRIPTION as keyof typeof actionTypes,
+				});
+
+				dispatch({
+					payload: hasPlanSubscription as boolean,
+					type: actionTypes.UPDATE_HAS_PLAN_SUBSCRIPTION as keyof typeof actionTypes,
 				});
 			}
 		};
@@ -350,18 +378,21 @@ const AppContextProvider = ({children}: {children: React.ReactNode}) => {
 								projectExternalReferenceCode,
 								accountBrief
 							);
+
 							getSubscriptions(
-								accountBrief.externalReferenceCode
+								projectExternalReferenceCode as string
 							);
-							getSubscriptionGroups(projectExternalReferenceCode);
+
+							getSubscriptionGroups(
+								projectExternalReferenceCode as string
+							);
 						}
 
 						getStructuredContents();
 
-						const businessEventsFilterQuery = accountBrief?.id
-							? `filter=r_accountEntryToBusinessEvents_accountEntryId eq '${accountBrief.id}'`
-							: '';
-						getBusinessEvents(businessEventsFilterQuery);
+						fetchBusinessEvents(
+							projectExternalReferenceCode as string
+						);
 					}
 				}
 			}

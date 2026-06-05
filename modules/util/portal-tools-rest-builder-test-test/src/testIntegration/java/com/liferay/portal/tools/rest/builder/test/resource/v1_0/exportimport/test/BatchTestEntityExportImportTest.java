@@ -20,8 +20,10 @@ import com.liferay.exportimport.kernel.service.ExportImportLocalService;
 import com.liferay.exportimport.report.constants.ExportImportReportEntryConstants;
 import com.liferay.exportimport.report.model.ExportImportReportEntry;
 import com.liferay.exportimport.report.service.ExportImportReportEntryLocalService;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.SystemEventConstants;
@@ -31,20 +33,18 @@ import com.liferay.portal.kernel.service.SystemEventLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.test.TestInfo;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
-import com.liferay.portal.kernel.test.util.FeatureFlagTestUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
 import com.liferay.portal.test.log.LogCapture;
 import com.liferay.portal.test.log.LoggerTestUtil;
-import com.liferay.portal.test.rule.FeatureFlag;
-import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
@@ -71,10 +71,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -88,9 +86,6 @@ import org.osgi.framework.ServiceRegistration;
 /**
  * @author Alejandro Tardín
  */
-@FeatureFlags(
-	featureFlags = {@FeatureFlag("LPD-35443"), @FeatureFlag("LPD-35914")}
-)
 @RunWith(Arquillian.class)
 public class BatchTestEntityExportImportTest {
 
@@ -100,18 +95,6 @@ public class BatchTestEntityExportImportTest {
 		new AggregateTestRule(
 			new LiferayIntegrationTestRule(),
 			PermissionCheckerMethodTestRule.INSTANCE);
-
-	@BeforeClass
-	public static void setUpClass() throws PortalException {
-		FeatureFlagTestUtil.invokeFeatureFlagListeners(
-			TestPropsValues.getCompanyId(), true, "LPD-35914");
-	}
-
-	@AfterClass
-	public static void tearDownClass() throws PortalException {
-		FeatureFlagTestUtil.invokeFeatureFlagListeners(
-			TestPropsValues.getCompanyId(), false, "LPD-35914");
-	}
 
 	@Before
 	public void setUp() throws Exception {
@@ -131,7 +114,8 @@ public class BatchTestEntityExportImportTest {
 			testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
 		).endpoint(
-			testCompany.getVirtualHostname(), 8080, "http"
+			testCompany.getVirtualHostname(),
+			PortalUtil.getPortalServerPort(false), "http"
 		).locale(
 			LocaleUtil.getDefault()
 		).parameters(
@@ -143,7 +127,8 @@ public class BatchTestEntityExportImportTest {
 			testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
 		).endpoint(
-			testCompany.getVirtualHostname(), 8080, "http"
+			testCompany.getVirtualHostname(),
+			PortalUtil.getPortalServerPort(false), "http"
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -153,7 +138,8 @@ public class BatchTestEntityExportImportTest {
 				testCompanyAdminUser.getEmailAddress(),
 				PropsValues.DEFAULT_ADMIN_PASSWORD
 			).endpoint(
-				testCompany.getVirtualHostname(), 8080, "http"
+				testCompany.getVirtualHostname(),
+				PortalUtil.getPortalServerPort(false), "http"
 			).locale(
 				LocaleUtil.getDefault()
 			).build();
@@ -222,6 +208,9 @@ public class BatchTestEntityExportImportTest {
 							RandomTestUtil.randomString());
 					}
 				});
+
+		Assert.assertFalse(batchTestEntity1.getAcceptAllLanguages());
+
 		BatchTestEntity batchTestEntity2 =
 			_batchTestEntityResource.postBatchTestEntity(
 				new BatchTestEntity() {
@@ -249,6 +238,8 @@ public class BatchTestEntityExportImportTest {
 					}
 				});
 
+		Assert.assertFalse(batchTestEntity2.getAcceptAllLanguages());
+
 		batchTestEntitiesPage =
 			_batchTestEntityResource.getBatchTestEntitiesPage();
 
@@ -275,14 +266,21 @@ public class BatchTestEntityExportImportTest {
 		Assert.assertEquals(
 			totalCount + 2, batchTestEntitiesPage.getTotalCount());
 
-		_assertEquals(
-			batchTestEntity1,
+		BatchTestEntity importedBatchTestEntity1 =
 			_batchTestEntityResource.getBatchTestEntityByExternalReferenceCode(
-				batchTestEntity1.getExternalReferenceCode()));
-		_assertEquals(
-			batchTestEntity2,
+				batchTestEntity1.getExternalReferenceCode());
+
+		Assert.assertTrue(importedBatchTestEntity1.getAcceptAllLanguages());
+
+		_assertEquals(batchTestEntity1, importedBatchTestEntity1);
+
+		BatchTestEntity importedBatchTestEntity2 =
 			_batchTestEntityResource.getBatchTestEntityByExternalReferenceCode(
-				batchTestEntity2.getExternalReferenceCode()));
+				batchTestEntity2.getExternalReferenceCode());
+
+		Assert.assertTrue(importedBatchTestEntity2.getAcceptAllLanguages());
+
+		_assertEquals(batchTestEntity2, importedBatchTestEntity2);
 	}
 
 	@Test
@@ -397,14 +395,16 @@ public class BatchTestEntityExportImportTest {
 		_assertEquals(
 			com.liferay.portal.tools.rest.builder.test.dto.v1_0.
 				CompanyTestEntity.class.getName(),
-			null, externalReferenceCode1,
-			ExportImportReportEntryConstants.TYPE_EMPTY,
+			_getEmptyReportEntryErrorMessage(
+				externalReferenceCode1, "CompanyTestEntity"),
+			externalReferenceCode1, ExportImportReportEntryConstants.TYPE_EMPTY,
 			exportImportReportEntries.get(0));
 		_assertEquals(
 			com.liferay.portal.tools.rest.builder.test.dto.v1_0.
 				CompanyTestEntity.class.getName(),
-			null, externalReferenceCode2,
-			ExportImportReportEntryConstants.TYPE_EMPTY,
+			_getEmptyReportEntryErrorMessage(
+				externalReferenceCode2, "CompanyTestEntity"),
+			externalReferenceCode2, ExportImportReportEntryConstants.TYPE_EMPTY,
 			exportImportReportEntries.get(1));
 	}
 
@@ -537,8 +537,9 @@ public class BatchTestEntityExportImportTest {
 		_assertEquals(
 			com.liferay.portal.tools.rest.builder.test.dto.v1_0.
 				CompanyTestEntity.class.getName(),
-			null, externalReferenceCode1,
-			ExportImportReportEntryConstants.TYPE_EMPTY,
+			_getEmptyReportEntryErrorMessage(
+				externalReferenceCode1, "CompanyTestEntity"),
+			externalReferenceCode1, ExportImportReportEntryConstants.TYPE_EMPTY,
 			exportImportReportEntries.get(0));
 		_assertEquals(
 			_CLASS_NAME, errorMessage, externalReferenceCode2,
@@ -708,13 +709,17 @@ public class BatchTestEntityExportImportTest {
 			batchTestEntities1[0].getExternalReferenceCode(), _CLASS_NAME,
 			RandomTestUtil.nextLong(), PortalUUIDUtil.generate(),
 			StringPool.BLANK, SystemEventConstants.TYPE_DELETE,
-			StringPool.BLANK);
+			JSONUtil.put(
+				"type", "BatchTestEntityKey"
+			).toString());
 		_systemEventLocalService.addSystemEvent(
 			TestPropsValues.getUserId(), _companyGroup.getGroupId(),
 			sharedInternalModelBatchTestEntities[0].getExternalReferenceCode(),
 			_CLASS_NAME, RandomTestUtil.nextLong(), PortalUUIDUtil.generate(),
 			StringPool.BLANK, SystemEventConstants.TYPE_DELETE,
-			StringPool.BLANK);
+			JSONUtil.put(
+				"type", "SharedInternalModelBatchTestEntityKey"
+			).toString());
 
 		File larFile = _exportLayout(true);
 
@@ -869,7 +874,9 @@ public class BatchTestEntityExportImportTest {
 		Assert.assertEquals(
 			expectedErrorMessage, exportImportReportEntry.getErrorMessage());
 
-		if (expectedErrorMessage == null) {
+		if ((expectedErrorMessage == null) ||
+			(expectedType == ExportImportReportEntryConstants.TYPE_EMPTY)) {
+
 			Assert.assertNull(exportImportReportEntry.getErrorStacktrace());
 		}
 		else {
@@ -908,13 +915,22 @@ public class BatchTestEntityExportImportTest {
 							).build())));
 	}
 
+	private String _getEmptyReportEntryErrorMessage(
+		String externalReferenceCode, String modelNameLanguageKey) {
+
+		return StringBundler.concat(
+			"The ", modelNameLanguageKey, " with external reference code ",
+			externalReferenceCode,
+			" was not found. An empty shell was created.");
+	}
+
 	private ExportImportConfiguration _importLayout(
 			boolean deletions, File file,
 			ServiceRegistration<?>... serviceRegistrations)
 		throws Exception {
 
 		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
-				"com.liferay.batch.engine.internal.strategy." +
+				"com.liferay.batch.engine.internal." +
 					"BatchEngineImportTaskExecutorImpl",
 				LoggerTestUtil.ERROR)) {
 

@@ -4,7 +4,7 @@ definition {
 	property portal.release = "true";
 	property portal.suite.search.engine = "opensearch2";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Search Infrastructure > Elasticsearch Connector";
+	property testray.main.component.name = "Search Infrastructure > OpenSearch Connector";
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -23,6 +23,7 @@ definition {
 	@priority = 5
 	test SSLSmokeTest {
 		property opensearch.security.enabled = "true";
+		property portal.acceptance = "true";
 		property search.environment.suite.exclude = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";

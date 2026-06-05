@@ -46,6 +46,16 @@ public class UserUserCard extends BaseUserCard {
 		return "sticker-user-icon " + LexiconUtil.getUserColorCssClass(user);
 	}
 
+	@Override
+	public boolean isDisabled() {
+		return rowChecker.isDisabled(user);
+	}
+
+	@Override
+	public boolean isSelectable() {
+		return !isDisabled();
+	}
+
 	private final RenderResponse _renderResponse;
 	private final long _teamId;
 

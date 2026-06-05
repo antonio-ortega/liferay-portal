@@ -6,9 +6,8 @@
 import {ObjectFieldAPI} from '@liferay/object-admin-rest-client-js';
 import {expect, mergeTests} from '@playwright/test';
 
-import {applicationsMenuPageTest} from '../../../fixtures/applicationsMenuPageTest';
 import {dataApiHelpersTest} from '../../../fixtures/dataApiHelpersTest';
-import {featureFlagsTest} from '../../../fixtures/featureFlagsTest';
+import {globalMenuPagesTest} from '../../../fixtures/globalMenuPagesTest';
 import {loginTest} from '../../../fixtures/loginTest';
 import {clickAndExpectToBeVisible} from '../../../utils/clickAndExpectToBeVisible';
 import {normalizeRestPath} from '../../../utils/normalizeRestPath';
@@ -16,22 +15,18 @@ import {companyExportImportPageTest} from './fixtures/companyExportImportPagesTe
 import {exportImportPagesTest} from './fixtures/exportImportPagesTest';
 
 export const test = mergeTests(
-	applicationsMenuPageTest,
 	dataApiHelpersTest,
 	exportImportPagesTest,
 	companyExportImportPageTest,
-	featureFlagsTest({
-		'LPD-35443': {enabled: true},
-		'LPD-35914': {enabled: true},
-	}),
+	globalMenuPagesTest,
 	loginTest()
 );
 
 test('Can see error report and details', async ({
 	apiHelpers,
-	applicationsMenuPage,
 	companyExportImportPage,
 	exportImportPage,
+	globalMenuPage,
 }) => {
 	const objectDefinition =
 		await apiHelpers.objectAdmin.postRandomObjectDefinition({
@@ -45,7 +40,7 @@ test('Can see error report and details', async ({
 		normalizeRestPath(`${objectDefinition.restContextPath}`)
 	);
 
-	await applicationsMenuPage.goToExport();
+	await globalMenuPage.goToApplications('Export');
 
 	const exportFilePath = await exportImportPage.export({
 		portletLabels: [`${objectDefinition.name} 1 Items`],
@@ -115,9 +110,9 @@ test('Can see error report and details', async ({
 
 test('Report entries actions are not visible for a successful import', async ({
 	apiHelpers,
-	applicationsMenuPage,
 	companyExportImportPage,
 	exportImportPage,
+	globalMenuPage,
 }) => {
 	const objectDefinition =
 		await apiHelpers.objectAdmin.postRandomObjectDefinition({
@@ -131,7 +126,7 @@ test('Report entries actions are not visible for a successful import', async ({
 		normalizeRestPath(`${objectDefinition.restContextPath}`)
 	);
 
-	await applicationsMenuPage.goToExport();
+	await globalMenuPage.goToApplications('Export');
 
 	const exportFilePath = await exportImportPage.export({
 		portletLabels: [`${objectDefinition.name} 1 Items`],

@@ -78,6 +78,8 @@ public class CTMessageModelImpl
 
 	public static final String TABLE_SQL_DROP = "drop table CTMessage";
 
+	public static final String ENTITY_ALIAS = "ctMessage";
+
 	public static final String ORDER_BY_JPQL =
 		" ORDER BY ctMessage.ctMessageId ASC";
 
@@ -644,3 +646,4 @@ public class CTMessageModelImpl
 	private CTMessage _escapedModel;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:850549887

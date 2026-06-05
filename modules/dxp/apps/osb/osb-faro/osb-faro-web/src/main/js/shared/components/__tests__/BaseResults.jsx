@@ -34,9 +34,14 @@ describe('BaseResults', () => {
 			/>
 		);
 
-		await waitFor(() => {});
-
-		expect(container).toMatchSnapshot();
+		await waitFor(
+			() => {
+				expect(
+					container.querySelector('.base-results-root')
+				).toBeInTheDocument();
+			},
+			{timeout: 1000}
+		);
 	});
 
 	it('should render w/ an error display', async () => {
@@ -48,9 +53,14 @@ describe('BaseResults', () => {
 			/>
 		);
 
-		await waitFor(() => {});
-
-		expect(getByText('An unexpected error occurred.')).toBeInTheDocument();
+		await waitFor(
+			() => {
+				expect(
+					getByText('An unexpected error occurred.')
+				).toBeInTheDocument();
+			},
+			{timeout: 1000}
+		);
 	});
 
 	it('should render w/a no results display', async () => {
@@ -63,9 +73,14 @@ describe('BaseResults', () => {
 			/>
 		);
 
-		await waitFor(() => {});
-
-		expect(getByText('There are no results found.')).toBeInTheDocument();
+		await waitFor(
+			() => {
+				expect(
+					getByText('There are no results found.')
+				).toBeInTheDocument();
+			},
+			{timeout: 1000}
+		);
 	});
 
 	it('should put a size limit on the query based on maxLength', () => {
@@ -96,9 +111,13 @@ describe('BaseResults', () => {
 			/>
 		);
 
-		await waitFor(() => {});
-
-		expect(queryByText('subnav content')).toBeNull();
+		await waitFor(
+			() => {
+				// After error, subnav content should not be rendered
+				expect(queryByText('subnav content')).toBeNull();
+			},
+			{timeout: 1000}
+		);
 	});
 
 	it('should render with search disabled when disableSearch is TRUE', async () => {
@@ -116,9 +135,14 @@ describe('BaseResults', () => {
 			/>
 		);
 
-		await waitFor(() => {});
-
-		expect(container.querySelector('.search input').disabled).toBe(true);
+		await waitFor(
+			() => {
+				expect(container.querySelector('.search input').disabled).toBe(
+					true
+				);
+			},
+			{timeout: 1000}
+		);
 	});
 
 	it('should not include disabled items when calculating whether all the items are checked', async () => {
@@ -136,10 +160,61 @@ describe('BaseResults', () => {
 
 		const selectAllCheckbox = getByTestId('select-all-checkbox');
 
-		await waitFor(() => {});
+		// Wait for items to load (loading state clears)
+		await waitFor(
+			() => {
+				expect(selectAllCheckbox).not.toBeDisabled();
+			},
+			{timeout: 1000}
+		);
 
 		fireEvent.click(selectAllCheckbox);
 
-		expect(selectAllCheckbox.checked).toBe(true);
+		await waitFor(
+			() => {
+				expect(selectAllCheckbox.checked).toBe(true);
+			},
+			{timeout: 1000}
+		);
+	});
+
+	it('should not re-invoke resultsRenderer while typing in the search input', async () => {
+		const resultsRenderer = jest.fn(({items}) => (
+			<ul data-testid='results'>
+				{items.map(item => (
+					<li key={item.id}>{item.name}</li>
+				))}
+			</ul>
+		));
+
+		const {container} = render(
+			<DefaultComponent
+				dataSourceFn={() =>
+					Promise.resolve({items: INDIVIDUALS, total: TOTAL})
+				}
+				groupId='23'
+				resultsRenderer={resultsRenderer}
+			/>
+		);
+
+		await waitFor(
+			() => {
+				expect(resultsRenderer).toHaveBeenCalled();
+				expect(resultsRenderer.mock.lastCall[0].loading).toBe(false);
+			},
+			{timeout: 1000}
+		);
+
+		const callsAfterLoad = resultsRenderer.mock.calls.length;
+
+		const searchInput = container.querySelector('input.input-root');
+
+		fireEvent.change(searchInput, {target: {value: 'a'}});
+		fireEvent.change(searchInput, {target: {value: 'ab'}});
+		fireEvent.change(searchInput, {target: {value: 'abc'}});
+
+		expect(searchInput.value).toBe('abc');
+
+		expect(resultsRenderer).toHaveBeenCalledTimes(callsAfterLoad);
 	});
 });

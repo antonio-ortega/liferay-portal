@@ -290,3 +290,4 @@ public class ObjectReviewedSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1711492355

@@ -5,26 +5,23 @@
 
 package com.liferay.site.cms.site.initializer.internal.display.context;
 
-import com.liferay.asset.categories.admin.web.constants.AssetCategoriesAdminPortletKeys;
 import com.liferay.asset.kernel.model.AssetVocabulary;
-import com.liferay.asset.tags.constants.AssetTagsAdminPortletKeys;
 import com.liferay.frontend.data.set.model.FDSActionDropdownItem;
+import com.liferay.frontend.data.set.model.FDSActionDropdownItemBuilder;
+import com.liferay.frontend.data.set.model.FDSActionDropdownItemList;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenuBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
-import com.liferay.portal.kernel.service.GroupService;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
-import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.site.cms.site.initializer.internal.util.ExportImportUtil;
 import com.liferay.taglib.security.PermissionsURLTag;
@@ -40,10 +37,8 @@ import java.util.Map;
 public class ViewVocabulariesDisplayContext {
 
 	public ViewVocabulariesDisplayContext(
-		GroupService groupService, HttpServletRequest httpServletRequest,
-		ThemeDisplay themeDisplay) {
+		HttpServletRequest httpServletRequest, ThemeDisplay themeDisplay) {
 
-		_groupService = groupService;
 		_httpServletRequest = httpServletRequest;
 		_themeDisplay = themeDisplay;
 	}
@@ -91,43 +86,68 @@ public class ViewVocabulariesDisplayContext {
 				"/categorization/edit-vocabulary"),
 			_themeDisplay);
 
-		return ListUtil.fromArray(
-			new FDSActionDropdownItem(
-				fullLayoutURL + "?vocabularyId={id}", "pencil", "edit",
-				LanguageUtil.get(_httpServletRequest, "edit"), "get", "update",
-				null),
-			new FDSActionDropdownItem(
-				HttpComponentsUtil.addParameter(
-					PortalUtil.getLayoutFullURL(
-						LayoutLocalServiceUtil.getLayoutByFriendlyURL(
-							_themeDisplay.getScopeGroupId(), false,
-							"/categorization/view-categories"),
-						_themeDisplay),
-					"vocabularyId", "{id}"),
-				null, "view-categories",
-				LanguageUtil.get(_httpServletRequest, "view-categories"), "get",
-				null, null),
-			new FDSActionDropdownItem(
-				_getEditPermissionsURL(), "password-policies", "permissions",
-				LanguageUtil.get(_httpServletRequest, "permissions"), "get",
-				null, "modal-permissions"),
-			new FDSActionDropdownItem(
-				null, "trash", "delete",
-				LanguageUtil.get(_httpServletRequest, "delete"), null, "delete",
-				null));
+		return FDSActionDropdownItemList.of(
+			FDSActionDropdownItemBuilder.setFDSActionDropdownItems(
+				FDSActionDropdownItemList.of(
+					new FDSActionDropdownItem(
+						fullLayoutURL + "?vocabularyId={id}", "pencil", "edit",
+						LanguageUtil.get(_httpServletRequest, "edit"), "get",
+						"update", null),
+					new FDSActionDropdownItem(
+						HttpComponentsUtil.addParameter(
+							PortalUtil.getLayoutFullURL(
+								LayoutLocalServiceUtil.getLayoutByFriendlyURL(
+									_themeDisplay.getScopeGroupId(), false,
+									"/categorization/new-category"),
+								_themeDisplay),
+							"vocabularyId", "{id}"),
+						null, "add-category",
+						LanguageUtil.get(_httpServletRequest, "add-category"),
+						"get", "update", null),
+					new FDSActionDropdownItem(
+						HttpComponentsUtil.addParameter(
+							PortalUtil.getLayoutFullURL(
+								LayoutLocalServiceUtil.getLayoutByFriendlyURL(
+									_themeDisplay.getScopeGroupId(), false,
+									"/categorization/view-categories"),
+								_themeDisplay),
+							"vocabularyId", "{id}"),
+						null, "view-categories",
+						LanguageUtil.get(
+							_httpServletRequest, "view-categories"),
+						"get", null, null))
+			).setSeparator(
+				true
+			).setType(
+				"group"
+			).build(
+				"view-edit"
+			),
+			FDSActionDropdownItemBuilder.setFDSActionDropdownItems(
+				FDSActionDropdownItemList.of(
+					new FDSActionDropdownItem(
+						_getEditPermissionsURL(), "password-policies",
+						"permissions",
+						LanguageUtil.get(_httpServletRequest, "permissions"),
+						"get", null, "modal-permissions"),
+					new FDSActionDropdownItem(
+						null, "trash", "delete",
+						LanguageUtil.get(_httpServletRequest, "delete"), null,
+						"delete", null))
+			).setSeparator(
+				true
+			).setType(
+				"group"
+			).build(
+				"delete-permissions"
+			));
 	}
 
 	public Map<String, Object> getReactData() throws Exception {
 		return HashMapBuilder.<String, Object>put(
 			"actionItems",
-			JSONUtil.putAll(
-				ExportImportUtil.getActionItemJSONObject(
-					_httpServletRequest, "export-import-vocabularies",
-					AssetCategoriesAdminPortletKeys.ASSET_CATEGORIES_ADMIN,
-					_themeDisplay),
-				ExportImportUtil.getActionItemJSONObject(
-					_httpServletRequest, "export-import-tags",
-					AssetTagsAdminPortletKeys.ASSET_TAGS_ADMIN, _themeDisplay))
+			ExportImportUtil.getCategorizationActionItemsJSONArray(
+				_httpServletRequest, _themeDisplay)
 		).put(
 			"activeTab", "vocabularies"
 		).put(
@@ -169,7 +189,6 @@ public class ViewVocabulariesDisplayContext {
 	private static final Log _log = LogFactoryUtil.getLog(
 		ViewVocabulariesDisplayContext.class);
 
-	private final GroupService _groupService;
 	private final HttpServletRequest _httpServletRequest;
 	private final ThemeDisplay _themeDisplay;
 

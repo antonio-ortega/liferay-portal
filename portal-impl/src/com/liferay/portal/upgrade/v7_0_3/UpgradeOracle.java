@@ -24,26 +24,29 @@ public class UpgradeOracle extends UpgradeProcess {
 
 	protected void alterVarchar2Columns() throws Exception {
 		try (LoggingTimer loggingTimer = new LoggingTimer();
+
 			PreparedStatement preparedStatement = connection.prepareStatement(
 				"select table_name, column_name, data_length from " +
 					"user_tab_columns where data_type = 'VARCHAR2' and " +
 						"char_used = 'B'");
+
 			ResultSet resultSet = preparedStatement.executeQuery()) {
 
 			while (resultSet.next()) {
-				String tableName = resultSet.getString(1);
+				String tableName = resultSet.getString("table_name");
 
 				if (!isPortal62TableName(tableName)) {
 					continue;
 				}
 
-				String columnName = resultSet.getString(2);
+				String columnName = resultSet.getString("column_name");
 
 				try {
 					runSQL(
 						StringBundler.concat(
 							"alter table ", tableName, " modify ", columnName,
-							" varchar2(", resultSet.getInt(3), " char)"));
+							" varchar2(", resultSet.getInt("data_length"),
+							" char)"));
 				}
 				catch (SQLException sqlException) {
 					if (sqlException.getErrorCode() == 1441) {

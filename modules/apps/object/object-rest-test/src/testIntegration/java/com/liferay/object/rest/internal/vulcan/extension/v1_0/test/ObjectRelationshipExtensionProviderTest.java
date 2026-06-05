@@ -225,8 +225,8 @@ public class ObjectRelationshipExtensionProviderTest {
 
 		ObjectDefinition objectDefinition =
 			_objectDefinitionLocalService.addCustomObjectDefinition(
-				null, TestPropsValues.getUserId(), 0, null, false, true, false,
-				true, false, false, false, false, null,
+				null, TestPropsValues.getUserId(), 0, null, true, false, true,
+				false, true, false, false, false, false, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				ObjectDefinitionTestUtil.getRandomName(), null, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
@@ -246,19 +246,21 @@ public class ObjectRelationshipExtensionProviderTest {
 	private static final String _OBJECT_FIELD_VALUE =
 		RandomTestUtil.randomString();
 
-	@Inject
-	private static ObjectDefinitionLocalService _objectDefinitionLocalService;
-
-	@Inject
-	private static ObjectFieldLocalService _objectFieldLocalService;
-
 	@Inject(
 		filter = "component.name=com.liferay.object.rest.internal.vulcan.extension.v1_0.ObjectRelationshipExtensionProvider"
 	)
 	private ExtensionProvider _extensionProvider;
 
 	private ObjectDefinition _objectDefinition;
+
+	@Inject
+	private ObjectDefinitionLocalService _objectDefinitionLocalService;
+
 	private ObjectEntry _objectEntry;
+
+	@Inject
+	private ObjectFieldLocalService _objectFieldLocalService;
+
 	private ObjectRelationship _objectRelationship;
 	private NestedFieldsContext _originalNestedFieldsContext;
 

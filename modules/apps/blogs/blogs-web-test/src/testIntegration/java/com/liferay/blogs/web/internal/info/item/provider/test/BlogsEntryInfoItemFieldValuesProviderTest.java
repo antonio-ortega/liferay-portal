@@ -18,6 +18,7 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.servlet.taglib.ui.ImageSelector;
@@ -30,6 +31,7 @@ import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.MimeTypesUtil;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.TempFileEntryUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.test.rule.Inject;
@@ -112,9 +114,6 @@ public class BlogsEntryInfoItemFieldValuesProviderTest {
 
 	@Test
 	public void testGetInfoItemFieldValuesWithCoverImage() throws Exception {
-		ServiceContext originalServiceContext =
-			ServiceContextThreadLocal.getServiceContext();
-
 		ThemeDisplay themeDisplay = _getThemeDisplay();
 
 		ServiceContextThreadLocal.pushServiceContext(
@@ -150,17 +149,13 @@ public class BlogsEntryInfoItemFieldValuesProviderTest {
 				blogsEntry.getCoverImageURL(themeDisplay), webImage.getURL());
 		}
 		finally {
-			ServiceContextThreadLocal.pushServiceContext(
-				originalServiceContext);
+			ServiceContextThreadLocal.popServiceContext();
 		}
 	}
 
 	@Test
 	public void testGetInfoItemFieldValuesWithCoverImageAndSmallImage()
 		throws Exception {
-
-		ServiceContext originalServiceContext =
-			ServiceContextThreadLocal.getServiceContext();
 
 		ThemeDisplay themeDisplay = _getThemeDisplay();
 
@@ -199,16 +194,12 @@ public class BlogsEntryInfoItemFieldValuesProviderTest {
 				blogsEntry.getSmallImageURL(themeDisplay), webImage.getURL());
 		}
 		finally {
-			ServiceContextThreadLocal.pushServiceContext(
-				originalServiceContext);
+			ServiceContextThreadLocal.popServiceContext();
 		}
 	}
 
 	@Test
 	public void testGetInfoItemFieldValuesWithSmallImage() throws Exception {
-		ServiceContext originalServiceContext =
-			ServiceContextThreadLocal.getServiceContext();
-
 		ThemeDisplay themeDisplay = _getThemeDisplay();
 
 		ServiceContextThreadLocal.pushServiceContext(
@@ -244,8 +235,7 @@ public class BlogsEntryInfoItemFieldValuesProviderTest {
 				blogsEntry.getSmallImageURL(themeDisplay), webImage.getURL());
 		}
 		finally {
-			ServiceContextThreadLocal.pushServiceContext(
-				originalServiceContext);
+			ServiceContextThreadLocal.popServiceContext();
 		}
 	}
 
@@ -279,8 +269,11 @@ public class BlogsEntryInfoItemFieldValuesProviderTest {
 			MimeTypesUtil.getContentType(title));
 	}
 
-	private ThemeDisplay _getThemeDisplay() {
+	private ThemeDisplay _getThemeDisplay() throws Exception {
 		ThemeDisplay themeDisplay = new ThemeDisplay();
+
+		themeDisplay.setCompany(
+			_companyLocalService.getCompany(_group.getCompanyId()));
 
 		MockHttpServletRequest mockHttpServletRequest =
 			new MockHttpServletRequest();
@@ -292,13 +285,18 @@ public class BlogsEntryInfoItemFieldValuesProviderTest {
 
 		themeDisplay.setScopeGroupId(_group.getGroupId());
 		themeDisplay.setSiteGroupId(_group.getGroupId());
-		themeDisplay.setURLCurrent("http://localhost:8080/currentURL");
+		themeDisplay.setURLCurrent(
+			"http://localhost:" + PortalUtil.getPortalServerPort(false) +
+				"/currentURL");
 
 		return themeDisplay;
 	}
 
 	@Inject
 	private BlogsEntryLocalService _blogsEntryLocalService;
+
+	@Inject
+	private CompanyLocalService _companyLocalService;
 
 	@DeleteAfterTestRun
 	private Group _group;

@@ -1,5 +1,17 @@
 @import 'atlas-variables';
 
+.fds {
+	.data-set-wrapper {
+		.col-md-3:has(.hidden-item-selector-item) {
+			display: none;
+		}
+
+		tr.hidden-item-selector-item {
+			display: none;
+		}
+	}
+}
+
 .cms-fds-fluid {
 	.container-fluid {
 		padding: 0;
@@ -26,12 +38,50 @@
 		border: 0 !important;
 		margin-inline: -1rem;
 	}
+
+	&.cms-space-summary .table-responsive {
+		border-bottom-left-radius: 10px;
+		border-bottom-right-radius: 10px;
+	}
+}
+
+.cms-find-and-replace {
+	.fds {
+		.management-bar-wrapper {
+			border-bottom: 0;
+		}
+
+		.list-item__success {
+			background-color: $success-l2;
+		}
+	}
+
+	&-preview {
+		gap: 200px;
+
+		&__footer {
+			border-top: 1px solid $primary-l1;
+		}
+
+		&__replacement {
+			background-color: $success-l2;
+		}
+
+		&__search {
+			background-color: $danger-l2;
+			text-decoration: line-through;
+		}
+	}
 }
 
 .cms-related-assets {
-	&-header {
-		position: relative;
-		top: 3rem;
+	padding-top: 1px;
+	position: relative;
+
+	.cms-related-assets-header {
+		position: absolute;
+		top: 1.5rem;
+		z-index: 1;
 	}
 
 	.c-empty-state-animation {
@@ -53,6 +103,79 @@
 
 	.c-empty-state-title {
 		display: none;
+	}
+
+	.fds {
+		.data-set-wrapper {
+			.c-empty-state {
+				margin: 4rem 0 0;
+			}
+
+			&.drop-target {
+				background-color: transparent !important;
+				border: 0 !important;
+				margin: 0 !important;
+
+				*:not(.btn-primary):not(.lexicon-icon-plus):not(
+						.lexicon-icon-plus use
+					) {
+					background-color: transparent !important;
+
+					.c-empty-state {
+						background-color: $primary-l3 !important;
+						outline: 2px solid $primary-l0;
+					}
+
+					.aspect-ratio-item,
+					.c-empty-state-image,
+					.c-empty-state-aspect-ratio {
+						background-color: transparent !important;
+					}
+
+					.btn-secondary {
+						background-color: $white !important;
+					}
+				}
+
+				.table-responsive {
+					border-radius: 0.5rem;
+					outline: 2px solid $primary-l0;
+
+					*:not(.btn-primary):not(.lexicon-icon-plus):not(
+							.lexicon-icon-plus use
+						) {
+						background-color: $primary-l3 !important;
+					}
+				}
+			}
+
+			tr.drop-target {
+				background-color: $primary-l3 !important;
+
+				> td {
+					border-color: $primary-l0 !important;
+				}
+			}
+		}
+
+		.management-bar-wrapper {
+			border-bottom: 0;
+			margin-bottom: 0;
+		}
+
+		.navbar-nav button.nav-btn.btn.btn-primary {
+			background-color: $white;
+			border-color: $secondary-l0;
+			color: $secondary;
+			margin-right: -1rem;
+			z-index: 1;
+
+			&:hover {
+				background-color: $light-l1;
+				border-color: $secondary-l0;
+				color: $dark;
+			}
+		}
 	}
 }
 

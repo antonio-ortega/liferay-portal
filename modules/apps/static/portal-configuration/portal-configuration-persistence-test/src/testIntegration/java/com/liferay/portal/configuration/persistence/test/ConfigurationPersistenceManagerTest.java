@@ -293,6 +293,7 @@ public class ConfigurationPersistenceManagerTest {
 		throws Exception {
 
 		try (Connection connection = _dataSource.getConnection();
+
 			PreparedStatement preparedStatement = connection.prepareStatement(
 				"select configurationId, dictionary from Configuration_ " +
 					"where configurationId = ?")) {
@@ -341,12 +342,12 @@ public class ConfigurationPersistenceManagerTest {
 	}
 
 	@Inject
-	private static ConfigurationAdmin _configurationAdmin;
+	private ConfigurationAdmin _configurationAdmin;
 
 	@Inject
-	private static DataSource _dataSource;
+	private DataSource _dataSource;
 
 	@Inject
-	private static PersistenceManager _persistenceManager;
+	private PersistenceManager _persistenceManager;
 
 }

@@ -261,3 +261,4 @@ public class HighlightFieldSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:1505846274

@@ -5,11 +5,14 @@
 
 package com.liferay.object.web.internal.object.definitions.display.context;
 
+import com.liferay.depot.constants.DepotConstants;
+import com.liferay.depot.service.DepotEntryLocalService;
 import com.liferay.frontend.data.set.model.FDSActionDropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
 import com.liferay.list.type.service.ListTypeDefinitionService;
 import com.liferay.object.admin.rest.dto.v1_0.util.ObjectFieldUtil;
 import com.liferay.object.constants.ObjectFieldConstants;
+import com.liferay.object.field.business.type.ObjectFieldBusinessType;
 import com.liferay.object.field.business.type.ObjectFieldBusinessTypeRegistry;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectField;
@@ -36,9 +39,11 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * @author Marco Leo
@@ -48,6 +53,7 @@ public class ObjectDefinitionsFieldsDisplayContext
 	extends BaseObjectDefinitionsDisplayContext {
 
 	public ObjectDefinitionsFieldsDisplayContext(
+		DepotEntryLocalService depotEntryLocalService,
 		HttpServletRequest httpServletRequest,
 		ListTypeDefinitionService listTypeDefinitionService,
 		ModelResourcePermission<ObjectDefinition>
@@ -59,8 +65,32 @@ public class ObjectDefinitionsFieldsDisplayContext
 			httpServletRequest, objectDefinitionModelResourcePermission,
 			objectFolderLocalService);
 
+		_depotEntryLocalService = depotEntryLocalService;
 		_listTypeDefinitionService = listTypeDefinitionService;
 		_objectFieldBusinessTypeRegistry = objectFieldBusinessTypeRegistry;
+	}
+
+	public List<Map<String, String>> getCountries() {
+		ObjectFieldBusinessType phoneNumberObjectFieldBusinessType =
+			_objectFieldBusinessTypeRegistry.getObjectFieldBusinessType(
+				ObjectFieldConstants.BUSINESS_TYPE_PHONE_NUMBER);
+
+		Map<String, Object> renderingProperties =
+			phoneNumberObjectFieldBusinessType.getRenderingProperties();
+
+		return (List<Map<String, String>>)renderingProperties.get("countries");
+	}
+
+	public List<Map<String, String>> getCountries(ObjectField objectField) {
+		if ((objectField == null) ||
+			!Objects.equals(
+				objectField.getBusinessType(),
+				ObjectFieldConstants.BUSINESS_TYPE_PHONE_NUMBER)) {
+
+			return Collections.emptyList();
+		}
+
+		return getCountries();
 	}
 
 	public CreationMenu getCreationMenu(ObjectDefinition objectDefinition)
@@ -178,11 +208,30 @@ public class ObjectDefinitionsFieldsDisplayContext
 			_listTypeDefinitionService, objectField);
 	}
 
+	public boolean hasDepotEntry() {
+		HttpServletRequest httpServletRequest =
+			objectRequestHelper.getRequest();
+
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
+
+		int depotEntriesCount = _depotEntryLocalService.getDepotEntriesCount(
+			themeDisplay.getCompanyId(), DepotConstants.TYPE_SPACE);
+
+		if (depotEntriesCount > 0) {
+			return true;
+		}
+
+		return false;
+	}
+
 	@Override
 	protected String getAPIURI() {
 		return "/object-fields";
 	}
 
+	private final DepotEntryLocalService _depotEntryLocalService;
 	private final ListTypeDefinitionService _listTypeDefinitionService;
 	private final ObjectFieldBusinessTypeRegistry
 		_objectFieldBusinessTypeRegistry;

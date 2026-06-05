@@ -1085,6 +1085,9 @@ public interface GroupLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<Group> getUserGroupsRelatedGroups(List<UserGroup> userGroups);
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public Map<Long, long[]> getUserInheritedSiteGroupIds(long companyId);
+
 	/**
 	 * Returns the range of all groups associated with the user's organization
 	 * groups, including the ancestors of the organization groups, unless portal
@@ -1186,6 +1189,9 @@ public interface GroupLocalService
 
 	@Transactional(enabled = false)
 	public boolean isLiveGroupActive(Group group);
+
+	@Transactional(enabled = false)
+	public boolean isMaintenanceMode(Group group);
 
 	/**
 	 * Returns the group with the matching group key by first searching the
@@ -2210,3 +2216,4 @@ public interface GroupLocalService
 		throws E;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:1472393451

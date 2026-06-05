@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {ObjectRelationship} from '../../../../src/main/resources/META-INF/resources/js/common/types/ObjectDefinition';
+import {ObjectDefinition} from '../../../../src/main/resources/META-INF/resources/js/common/types/ObjectDefinition';
 import {State} from '../../../../src/main/resources/META-INF/resources/js/structure_builder/contexts/StateContext';
 import buildObjectDefinition from '../../../../src/main/resources/META-INF/resources/js/structure_builder/utils/buildObjectDefinition';
 import buildState from '../../../../src/main/resources/META-INF/resources/js/structure_builder/utils/buildState';
@@ -77,16 +77,6 @@ const TITLE_FIELD: Field = {
 	uuid: TITLE_FIELD_UUID,
 };
 
-const RELATED_CONTENT_RELATIONSHIP: ObjectRelationship = {
-	deletionType: 'disassociate',
-	externalReferenceCode: 'related-content-relationship-erc',
-	label: {en_US: 'Related Content'},
-	name: 'relatedContent',
-	objectDefinitionExternalReferenceCode1: 'related-structure-erc',
-	objectDefinitionExternalReferenceCode2: 'structureERC',
-	type: 'oneToMany',
-};
-
 function getChildren(fields: Field[]) {
 	const children = new Map();
 
@@ -104,6 +94,7 @@ describe('buildState', () => {
 			erc: 'structureERC',
 			label: {en_US: 'Structure'},
 			name: 'myStructure',
+			path: '',
 			spaces: [],
 			status: 'draft',
 			system: false,
@@ -113,6 +104,7 @@ describe('buildState', () => {
 		};
 
 		const initialState: State = {
+			clipboard: null,
 			history: {
 				deletedChildren: [],
 				deletedGroupERCs: [],
@@ -138,7 +130,6 @@ describe('buildState', () => {
 		const result = buildState({
 			mainObjectDefinition: objectDefinition,
 			objectDefinitions: {},
-			relatedContentObjectRelationships: [],
 		});
 
 		const {children, uuid} = result!.structure;
@@ -161,6 +152,7 @@ describe('buildState', () => {
 			erc: 'structureERC',
 			label: {en_US: 'Structure'},
 			name: 'myStructure',
+			path: '',
 			spaces: [],
 			status: 'published',
 			system: false,
@@ -170,6 +162,7 @@ describe('buildState', () => {
 		};
 
 		const initialState: State = {
+			clipboard: null,
 			history: {
 				deletedChildren: [],
 				deletedGroupERCs: [],
@@ -200,7 +193,6 @@ describe('buildState', () => {
 				},
 			},
 			objectDefinitions: {},
-			relatedContentObjectRelationships: [],
 		});
 
 		const {children, uuid} = result!.structure;
@@ -226,6 +218,7 @@ describe('buildState', () => {
 			erc: 'structureERC',
 			label: {en_US: 'Structure'},
 			name: 'myStructure',
+			path: '',
 			spaces: ['space-1-erc', 'space-2-erc'],
 			status: 'published',
 			system: false,
@@ -238,6 +231,7 @@ describe('buildState', () => {
 		};
 
 		const initialState: State = {
+			clipboard: null,
 			history: {
 				deletedChildren: [],
 				deletedGroupERCs: [],
@@ -269,7 +263,6 @@ describe('buildState', () => {
 				},
 			},
 			objectDefinitions: {},
-			relatedContentObjectRelationships: [],
 		});
 
 		const {children, uuid} = result!.structure;
@@ -328,7 +321,6 @@ describe('buildState', () => {
 		const state = buildState({
 			mainObjectDefinition: objectDefinition,
 			objectDefinitions: {},
-			relatedContentObjectRelationships: [],
 		});
 
 		const [, field] = [...state!.structure.children][0];
@@ -343,13 +335,48 @@ describe('buildState', () => {
 			label: {en_US: 'Structure'},
 			name: 'myStructure',
 			spaces: [],
-			status: 'draft',
+			status: 'published',
 		});
+
+		const relatedObjectDefinition: ObjectDefinition = {
+			enableComments: true,
+			enableFriendlyURLCustomization: true,
+			enableIndexSearch: true,
+			enableLocalization: true,
+			enableObjectEntryDraft: true,
+			enableObjectEntryHistory: true,
+			enableObjectEntrySchedule: true,
+			enableObjectEntryVersioning: true,
+			externalReferenceCode: 'related-structure-erc',
+			label: {en_US: 'Structure'},
+			name: 'relatedStructure',
+			objectFields: [],
+			objectRelationships: [
+				{
+					deletionType: 'disassociate',
+					externalReferenceCode: 'related-content-relationship-erc',
+					label: {en_US: 'Related Content'},
+					name: 'relatedContent',
+					objectDefinitionExternalReferenceCode1:
+						'related-structure-erc',
+					objectDefinitionExternalReferenceCode2: 'structureERC',
+					type: 'oneToMany',
+				},
+			],
+			pluralLabel: {en_US: 'Structure'},
+			scope: 'depot',
+			status: {
+				code: 2,
+			},
+			titleObjectFieldName: 'title',
+		};
 
 		const state = buildState({
 			mainObjectDefinition: objectDefinition,
-			objectDefinitions: {},
-			relatedContentObjectRelationships: [RELATED_CONTENT_RELATIONSHIP],
+			objectDefinitions: {
+				[relatedObjectDefinition.externalReferenceCode]:
+					relatedObjectDefinition,
+			},
 		});
 
 		const children = Array.from(state!.structure.children.values());

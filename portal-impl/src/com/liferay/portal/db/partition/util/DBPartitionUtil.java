@@ -240,10 +240,11 @@ public class DBPartitionUtil {
 					"select configurationId from ", getPartitionName(companyId),
 					".Configuration_ where dictionary like ",
 					"'%org.apache.felix.configadmin.revision%'"));
+
 			ResultSet resultSet = preparedStatement.executeQuery()) {
 
 			while (resultSet.next()) {
-				pids.add(resultSet.getString(1));
+				pids.add(resultSet.getString("configurationId"));
 			}
 		}
 
@@ -265,13 +266,15 @@ public class DBPartitionUtil {
 				StringBundler.concat(
 					"select configurationId, dictionary from ",
 					getPartitionName(companyId), ".Configuration_"));
+
 			ResultSet resultSet = preparedStatement.executeQuery()) {
 
 			Map<String, String> configurations = new HashMap<>();
 
 			while (resultSet.next()) {
 				configurations.put(
-					resultSet.getString(1), resultSet.getString(2));
+					resultSet.getString("configurationId"),
+					resultSet.getString("dictionary"));
 			}
 
 			return configurations;
@@ -386,7 +389,7 @@ public class DBPartitionUtil {
 
 				try (ResultSet resultSet = preparedStatement.executeQuery()) {
 					if (resultSet.next()) {
-						_defaultCompanyId = resultSet.getLong(1);
+						_defaultCompanyId = resultSet.getLong("companyId");
 					}
 				}
 			}

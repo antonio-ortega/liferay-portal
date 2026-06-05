@@ -8,6 +8,7 @@ package com.liferay.portal.search.test.util.indexing;
 import com.liferay.petra.string.CharPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.search.BooleanClauseOccur;
+import com.liferay.portal.kernel.search.BooleanQuery;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Hits;
@@ -17,10 +18,9 @@ import com.liferay.portal.kernel.search.Query;
 import com.liferay.portal.kernel.search.QueryConfig;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.SearchException;
+import com.liferay.portal.kernel.search.TermQuery;
 import com.liferay.portal.kernel.search.filter.BooleanFilter;
 import com.liferay.portal.kernel.search.filter.Filter;
-import com.liferay.portal.kernel.search.generic.BooleanQueryImpl;
-import com.liferay.portal.kernel.search.generic.TermQueryImpl;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
@@ -35,24 +35,17 @@ import com.liferay.portal.search.document.DocumentBuilder;
 import com.liferay.portal.search.document.DocumentBuilderFactory;
 import com.liferay.portal.search.engine.adapter.SearchEngineAdapter;
 import com.liferay.portal.search.filter.ComplexQueryPartBuilderFactory;
-import com.liferay.portal.search.geolocation.GeoBuilders;
 import com.liferay.portal.search.highlight.FieldConfigBuilderFactory;
 import com.liferay.portal.search.highlight.HighlightBuilderFactory;
 import com.liferay.portal.search.internal.aggregation.AggregationsImpl;
-import com.liferay.portal.search.internal.document.DocumentBuilderFactoryImpl;
 import com.liferay.portal.search.internal.filter.ComplexQueryPartBuilderFactoryImpl;
-import com.liferay.portal.search.internal.geolocation.GeoBuildersImpl;
 import com.liferay.portal.search.internal.highlight.FieldConfigBuilderFactoryImpl;
 import com.liferay.portal.search.internal.highlight.HighlightBuilderFactoryImpl;
 import com.liferay.portal.search.internal.legacy.searcher.SearchRequestBuilderImpl;
 import com.liferay.portal.search.internal.legacy.searcher.SearchResponseBuilderImpl;
-import com.liferay.portal.search.internal.query.QueriesImpl;
 import com.liferay.portal.search.internal.rescore.RescoreBuilderFactoryImpl;
-import com.liferay.portal.search.internal.script.ScriptsImpl;
 import com.liferay.portal.search.internal.sort.SortsImpl;
-import com.liferay.portal.search.query.Queries;
 import com.liferay.portal.search.rescore.RescoreBuilderFactory;
-import com.liferay.portal.search.script.Scripts;
 import com.liferay.portal.search.searcher.SearchRequestBuilder;
 import com.liferay.portal.search.searcher.SearchResponse;
 import com.liferay.portal.search.searcher.SearchResponseBuilder;
@@ -234,13 +227,13 @@ public abstract class BaseIndexingTestCase {
 			toMap(Field.COMPANY_ID, String.valueOf(getCompanyId())),
 			toMap(Field.ENTRY_CLASS_NAME, _entryClassName));
 
-		BooleanQueryImpl booleanQueryImpl = new BooleanQueryImpl();
+		BooleanQuery booleanQuery = new BooleanQuery();
 
 		map.forEach(
-			(key, value) -> booleanQueryImpl.add(
-				new TermQueryImpl(key, value), BooleanClauseOccur.MUST));
+			(key, value) -> booleanQuery.add(
+				new TermQuery(key, value), BooleanClauseOccur.MUST));
 
-		return booleanQueryImpl;
+		return booleanQuery;
 	}
 
 	protected String getEntryClassName() {
@@ -268,7 +261,7 @@ public abstract class BaseIndexingTestCase {
 	}
 
 	protected DocumentBuilder newDocumentBuilder() {
-		return _documentBuilderFactory.builder(
+		return DocumentBuilderFactory.builder(
 		).setLong(
 			Field.COMPANY_ID, getCompanyId()
 		).setString(
@@ -320,13 +313,10 @@ public abstract class BaseIndexingTestCase {
 			new ComplexQueryPartBuilderFactoryImpl();
 	protected final FieldConfigBuilderFactory fieldConfigBuilderFactory =
 		new FieldConfigBuilderFactoryImpl();
-	protected final GeoBuilders geoBuilders = new GeoBuildersImpl();
 	protected final HighlightBuilderFactory highlightBuilderFactory =
 		new HighlightBuilderFactoryImpl();
-	protected final Queries queries = new QueriesImpl();
 	protected final RescoreBuilderFactory rescoreBuilderFactory =
 		new RescoreBuilderFactoryImpl();
-	protected final Scripts scripts = new ScriptsImpl();
 	protected final Sorts sorts = new SortsImpl();
 
 	protected class IndexingTestHelper {
@@ -533,8 +523,6 @@ public abstract class BaseIndexingTestCase {
 		new DocumentFixture();
 	private static IndexingFixture _indexingFixture;
 
-	private final DocumentBuilderFactory _documentBuilderFactory =
-		new DocumentBuilderFactoryImpl();
 	private String _entryClassName;
 	private IndexSearcher _indexSearcher;
 	private IndexWriter _indexWriter;

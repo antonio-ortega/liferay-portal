@@ -200,3 +200,4 @@ public class ChatSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-190716578

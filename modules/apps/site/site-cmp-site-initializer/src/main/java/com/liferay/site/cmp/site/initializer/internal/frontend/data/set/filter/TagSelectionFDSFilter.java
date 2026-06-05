@@ -6,10 +6,15 @@
 package com.liferay.site.cmp.site.initializer.internal.frontend.data.set.filter;
 
 import com.liferay.asset.kernel.service.AssetTagLocalService;
+import com.liferay.depot.constants.DepotConstants;
+import com.liferay.depot.model.DepotEntryModel;
+import com.liferay.depot.service.DepotEntryLocalService;
 import com.liferay.frontend.data.set.constants.FDSEntityFieldTypes;
 import com.liferay.frontend.data.set.filter.BaseSelectionFDSFilter;
 import com.liferay.frontend.data.set.filter.SelectionFDSFilterItem;
+import com.liferay.object.model.ObjectDefinition;
 import com.liferay.petra.function.transform.TransformUtil;
+import com.liferay.portal.kernel.model.GroupedModel;
 
 import java.util.HashSet;
 import java.util.List;
@@ -22,10 +27,14 @@ import java.util.Set;
 public class TagSelectionFDSFilter extends BaseSelectionFDSFilter {
 
 	public TagSelectionFDSFilter(
-		AssetTagLocalService assetTagLocalService, long[] groupIds) {
+		AssetTagLocalService assetTagLocalService,
+		DepotEntryLocalService depotEntryLocalService,
+		GroupedModel groupedModel, ObjectDefinition projectObjectDefinition) {
 
 		_assetTagLocalService = assetTagLocalService;
-		_groupIds = groupIds;
+		_depotEntryLocalService = depotEntryLocalService;
+		_groupedModel = groupedModel;
+		_projectObjectDefinition = projectObjectDefinition;
 	}
 
 	@Override
@@ -47,10 +56,23 @@ public class TagSelectionFDSFilter extends BaseSelectionFDSFilter {
 	public List<SelectionFDSFilterItem> getSelectionFDSFilterItems(
 		Locale locale) {
 
+		long[] groupIds = null;
+
+		if (_groupedModel != null) {
+			groupIds = new long[] {_groupedModel.getGroupId()};
+		}
+		else {
+			groupIds = TransformUtil.transformToLongArray(
+				_depotEntryLocalService.getDepotEntries(
+					_projectObjectDefinition.getCompanyId(),
+					DepotConstants.TYPE_PROJECT),
+				DepotEntryModel::getGroupId);
+		}
+
 		Set<String> assetTagNames = new HashSet<>();
 
 		return TransformUtil.transform(
-			_assetTagLocalService.getGroupsTags(_groupIds),
+			_assetTagLocalService.getGroupsTags(groupIds),
 			assetTag -> {
 				if (!assetTagNames.add(assetTag.getName())) {
 					return null;
@@ -67,6 +89,8 @@ public class TagSelectionFDSFilter extends BaseSelectionFDSFilter {
 	}
 
 	private final AssetTagLocalService _assetTagLocalService;
-	private final long[] _groupIds;
+	private final DepotEntryLocalService _depotEntryLocalService;
+	private final GroupedModel _groupedModel;
+	private final ObjectDefinition _projectObjectDefinition;
 
 }

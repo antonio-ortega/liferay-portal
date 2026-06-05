@@ -64,42 +64,51 @@ $label: map-deep-merge(
 		text-transform: $label-text-transform,
 		white-space: inherit,
 		word-wrap: break-word,
+
 		href: (
 			cursor: $link-cursor,
 			text-decoration: $label-anchor-text-decoration,
+
 			hover: (
 				text-decoration: $label-anchor-hover-text-decoration,
 			),
+
 			focus: (
 				text-decoration: $label-anchor-hover-text-decoration,
 			),
 		),
+
 		link: (
 			color: $label-link-color,
 			display: inline-block,
 			text-decoration: $label-link-text-decoration,
+
 			hover: (
 				color: $label-link-hover-color,
 				text-decoration: $label-link-hover-text-decoration,
 			),
+
 			focus: (
 				color: $label-link-hover-color,
 				text-decoration: $label-link-hover-text-decoration,
 			),
 		),
+
 		c-inner: (
-			margin-bottom: math-sign($label-padding-y),
-			margin-left: math-sign($label-padding-x),
-			margin-right: math-sign($label-padding-x),
-			margin-top: math-sign($label-padding-y),
+			margin-bottom: calc(#{$label-padding-y} * -1),
+			margin-left: calc(#{$label-padding-x} * -1),
+			margin-right: calc(#{$label-padding-x} * -1),
+			margin-top: calc(#{$label-padding-y} * -1),
 			max-width: none,
 		),
+
 		sticker: (
 			border-radius: $label-sticker-border-radius,
 			height: $label-sticker-size,
 			line-height: $label-sticker-size,
 			width: $label-sticker-size,
 		),
+
 		sticker-overlay: (
 			border-radius: $label-sticker-border-radius,
 		),
@@ -133,13 +142,16 @@ $label-close: map-deep-merge(
 		margin: -6px,
 		opacity: 1,
 		width: 1.5rem,
+
 		hover: (
 			color: inherit,
 			opacity: 1,
 		),
+
 		focus: (
 			opacity: 1,
 		),
+
 		disabled: (
 			opacity: $component-disabled-opacity,
 		),
@@ -153,7 +165,7 @@ $label-item-spacer-x: 0.5em !default;
 $label-item-spacer-y: null !default;
 
 $label-lexicon-icon-height: null !default;
-$label-lexicon-icon-margin-top: 0 !default;
+$label-lexicon-icon-margin-top: 0rem !default;
 $label-lexicon-icon-width: null !default;
 
 $label-item: () !default;
@@ -165,21 +177,26 @@ $label-item: map-deep-merge(
 		justify-content: center,
 		margin-bottom: $label-item-spacer-y,
 		margin-top: $label-item-spacer-y,
-		min-height: 0,
+		min-height: 0rem,
 		position: relative,
+
 		link: (
 			display: inline-flex,
 		),
+
 		btn-unstyled: (
 			color: inherit,
 			display: inline-flex,
 		),
+
 		close: $label-close,
+
 		lexicon-icon: (
 			height: $label-lexicon-icon-height,
 			margin-top: $label-lexicon-icon-margin-top,
 			width: $label-lexicon-icon-width,
 		),
+
 		text-truncate-inline: (
 			display: inline-flex,
 		),
@@ -196,6 +213,7 @@ $label-item-expand: map-deep-merge(
 		flex-shrink: 1,
 		min-width: 1rem,
 		word-wrap: break-word,
+
 		link: (
 			flex-direction: column,
 		),
@@ -289,6 +307,7 @@ $label-primary-close: map-deep-merge(
 		hover: (
 			color: $label-primary-hover-color,
 		),
+
 		focus: (
 			color: $label-primary-hover-color,
 		),
@@ -302,22 +321,27 @@ $label-primary: map-deep-merge(
 		background-color: $label-primary-bg,
 		border-color: $label-primary-border-color,
 		color: $label-primary-color,
+
 		href: (
 			hover: (
 				background-color: $label-primary-hover-bg,
 				border-color: $label-primary-hover-border-color,
 				color: $label-primary-hover-color,
 			),
+
 			focus: (
 				color: $label-primary-hover-color,
 			),
 		),
+
 		link: (
 			color: $label-primary-link-color,
+
 			hover: (
 				color: $label-primary-link-hover-color,
 			),
 		),
+
 		close: $label-primary-close,
 	),
 	$label-primary
@@ -361,6 +385,7 @@ $label-secondary-close: map-deep-merge(
 		hover: (
 			color: $label-secondary-hover-color,
 		),
+
 		focus: (
 			color: $label-secondary-hover-color,
 		),
@@ -374,22 +399,27 @@ $label-secondary: map-deep-merge(
 		background-color: $label-secondary-bg,
 		border-color: $label-secondary-border-color,
 		color: $label-secondary-color,
+
 		href: (
 			hover: (
 				background-color: $label-secondary-hover-bg,
 				border-color: $label-secondary-hover-border-color,
 				color: $label-secondary-hover-color,
 			),
+
 			focus: (
 				color: $label-secondary-hover-color,
 			),
 		),
+
 		link: (
 			color: $label-secondary-link-color,
+
 			hover: (
 				color: $label-secondary-link-hover-color,
 			),
 		),
+
 		close: $label-secondary-close,
 	),
 	$label-secondary
@@ -433,6 +463,7 @@ $label-success-close: map-deep-merge(
 		hover: (
 			color: $label-success-hover-color,
 		),
+
 		focus: (
 			color: $label-success-hover-color,
 		),
@@ -446,22 +477,27 @@ $label-success: map-deep-merge(
 		background-color: $label-success-bg,
 		border-color: $label-success-border-color,
 		color: $label-success-color,
+
 		href: (
 			hover: (
 				background-color: $label-success-hover-bg,
 				border-color: $label-success-hover-border-color,
 				color: $label-success-hover-color,
 			),
+
 			focus: (
 				color: $label-success-hover-color,
 			),
 		),
+
 		link: (
 			color: $label-success-link-color,
+
 			hover: (
 				color: $label-success-link-hover-color,
 			),
 		),
+
 		close: $label-success-close,
 	),
 	$label-success
@@ -505,6 +541,7 @@ $label-info-close: map-deep-merge(
 		hover: (
 			color: $label-info-hover-color,
 		),
+
 		focus: (
 			color: $label-info-hover-color,
 		),
@@ -518,22 +555,27 @@ $label-info: map-deep-merge(
 		background-color: $label-info-bg,
 		border-color: $label-info-border-color,
 		color: $label-info-color,
+
 		href: (
 			hover: (
 				background-color: $label-info-hover-bg,
 				border-color: $label-info-hover-border-color,
 				color: $label-info-hover-color,
 			),
+
 			focus: (
 				color: $label-info-hover-color,
 			),
 		),
+
 		link: (
 			color: $label-info-link-color,
+
 			hover: (
 				color: $label-info-link-hover-color,
 			),
 		),
+
 		close: $label-info-close,
 	),
 	$label-info
@@ -577,6 +619,7 @@ $label-warning-close: map-deep-merge(
 		hover: (
 			color: $label-warning-hover-color,
 		),
+
 		focus: (
 			color: $label-warning-hover-color,
 		),
@@ -590,22 +633,27 @@ $label-warning: map-deep-merge(
 		background-color: $label-warning-bg,
 		border-color: $label-warning-border-color,
 		color: $label-warning-color,
+
 		href: (
 			hover: (
 				background-color: $label-warning-hover-bg,
 				border-color: $label-warning-hover-border-color,
 				color: $label-warning-hover-color,
 			),
+
 			focus: (
 				color: $label-warning-hover-color,
 			),
 		),
+
 		link: (
 			color: $label-warning-link-color,
+
 			hover: (
 				color: $label-warning-link-hover-color,
 			),
 		),
+
 		close: $label-warning-close,
 	),
 	$label-warning
@@ -649,6 +697,7 @@ $label-danger-close: map-deep-merge(
 		hover: (
 			color: $label-danger-hover-color,
 		),
+
 		focus: (
 			color: $label-danger-hover-color,
 		),
@@ -662,22 +711,27 @@ $label-danger: map-deep-merge(
 		background-color: $label-danger-bg,
 		border-color: $label-danger-border-color,
 		color: $label-danger-color,
+
 		href: (
 			hover: (
 				background-color: $label-danger-hover-bg,
 				border-color: $label-danger-hover-border-color,
 				color: $label-danger-hover-color,
 			),
+
 			focus: (
 				color: $label-danger-hover-color,
 			),
 		),
+
 		link: (
 			color: $label-danger-link-color,
+
 			hover: (
 				color: $label-danger-link-hover-color,
 			),
 		),
+
 		close: $label-danger-close,
 	),
 	$label-danger
@@ -721,6 +775,7 @@ $label-light-close: map-deep-merge(
 		hover: (
 			color: $label-light-hover-color,
 		),
+
 		focus: (
 			color: $label-light-hover-color,
 		),
@@ -734,22 +789,27 @@ $label-light: map-deep-merge(
 		background-color: $label-light-bg,
 		border-color: $label-light-border-color,
 		color: $label-light-color,
+
 		href: (
 			hover: (
 				background-color: $label-light-hover-bg,
 				border-color: $label-light-hover-border-color,
 				color: $label-light-hover-color,
 			),
+
 			focus: (
 				color: $label-light-hover-color,
 			),
 		),
+
 		link: (
 			color: $label-light-link-color,
+
 			hover: (
 				color: $label-light-link-hover-color,
 			),
 		),
+
 		close: $label-light-close,
 	),
 	$label-light
@@ -793,6 +853,7 @@ $label-dark-close: map-deep-merge(
 		hover: (
 			color: $label-dark-hover-color,
 		),
+
 		focus: (
 			color: $label-dark-hover-color,
 		),
@@ -806,22 +867,27 @@ $label-dark: map-deep-merge(
 		background-color: $label-dark-bg,
 		border-color: $label-dark-border-color,
 		color: $label-dark-color,
+
 		href: (
 			hover: (
 				background-color: $label-dark-hover-bg,
 				border-color: $label-dark-hover-border-color,
 				color: $label-dark-hover-color,
 			),
+
 			focus: (
 				color: $label-dark-hover-color,
 			),
 		),
+
 		link: (
 			color: $label-dark-link-color,
+
 			hover: (
 				color: $label-dark-link-hover-color,
 			),
 		),
+
 		close: $label-dark-close,
 	),
 	$label-dark
@@ -838,15 +904,17 @@ $label-inverse-primary: map-deep-merge(
 		href: (
 			hover: (
 				background-color: clay-darken($primary, 10%),
-				border-color: clay-darken($primary, 10%),
+				border-color: transparent,
 				color: color-yiq(clay-darken($primary, 10%)),
 			),
 		),
+
 		link: (
 			hover: (
 				color: clay-darken(color-yiq(clay-darken($primary, 10%)), 10%),
 			),
 		),
+
 		close: (
 			hover: (
 				color: clay-darken(color-yiq(clay-darken($primary, 10%)), 10%),
@@ -865,15 +933,17 @@ $label-inverse-secondary: map-deep-merge(
 		href: (
 			hover: (
 				background-color: clay-darken($secondary, 10%),
-				border-color: clay-darken($secondary, 10%),
+				border-color: transparent,
 				color: color-yiq(clay-darken($secondary, 10%)),
 			),
 		),
+
 		link: (
 			hover: (
 				color: clay-darken(color-yiq(clay-darken($secondary, 10%)), 10%),
 			),
 		),
+
 		close: (
 			hover: (
 				color: clay-darken(color-yiq(clay-darken($secondary, 10%)), 10%),
@@ -892,15 +962,17 @@ $label-inverse-success: map-deep-merge(
 		href: (
 			hover: (
 				background-color: clay-darken($success, 10%),
-				border-color: clay-darken($success, 10%),
+				border-color: transparent,
 				color: color-yiq(clay-darken($success, 10%)),
 			),
 		),
+
 		link: (
 			hover: (
 				color: clay-darken(color-yiq(clay-darken($success, 10%)), 10%),
 			),
 		),
+
 		close: (
 			hover: (
 				color: clay-darken(color-yiq(clay-darken($success, 10%)), 10%),
@@ -919,15 +991,17 @@ $label-inverse-info: map-deep-merge(
 		href: (
 			hover: (
 				background-color: clay-darken($info, 10%),
-				border-color: clay-darken($info, 10%),
+				border-color: transparent,
 				color: color-yiq(clay-darken($info, 10%)),
 			),
 		),
+
 		link: (
 			hover: (
 				color: clay-darken(color-yiq(clay-darken($info, 10%)), 10%),
 			),
 		),
+
 		close: (
 			hover: (
 				color: clay-darken(color-yiq(clay-darken($info, 10%)), 10%),
@@ -946,15 +1020,17 @@ $label-inverse-warning: map-deep-merge(
 		href: (
 			hover: (
 				background-color: clay-darken($warning, 10%),
-				border-color: clay-darken($warning, 10%),
+				border-color: transparent,
 				color: color-yiq(clay-darken($warning, 10%)),
 			),
 		),
+
 		link: (
 			hover: (
 				color: clay-lighten(color-yiq(clay-darken($warning, 10%)), 20%),
 			),
 		),
+
 		close: (
 			hover: (
 				color: clay-lighten(color-yiq(clay-darken($warning, 10%)), 20%),
@@ -973,15 +1049,17 @@ $label-inverse-danger: map-deep-merge(
 		href: (
 			hover: (
 				background-color: clay-darken($danger, 10%),
-				border-color: clay-darken($danger, 10%),
+				border-color: transparent,
 				color: color-yiq(clay-darken($danger, 10%)),
 			),
 		),
+
 		link: (
 			hover: (
 				color: clay-darken(color-yiq(clay-darken($danger, 10%)), 10%),
 			),
 		),
+
 		close: (
 			hover: (
 				color: clay-darken(color-yiq(clay-darken($danger, 10%)), 10%),
@@ -1000,15 +1078,17 @@ $label-inverse-light: map-deep-merge(
 		href: (
 			hover: (
 				background-color: clay-darken($light, 10%),
-				border-color: clay-darken($light, 10%),
+				border-color: transparent,
 				color: color-yiq(clay-darken($light, 10%)),
 			),
 		),
+
 		link: (
 			hover: (
 				color: clay-lighten(color-yiq(clay-darken($light, 10%)), 10%),
 			),
 		),
+
 		close: (
 			hover: (
 				color: clay-lighten(color-yiq(clay-darken($light, 10%)), 10%),
@@ -1027,15 +1107,17 @@ $label-inverse-dark: map-deep-merge(
 		href: (
 			hover: (
 				background-color: clay-darken($dark, 10%),
-				border-color: clay-darken($dark, 10%),
+				border-color: transparent,
 				color: color-yiq(clay-darken($dark, 10%)),
 			),
 		),
+
 		link: (
 			hover: (
 				color: clay-darken(color-yiq(clay-darken($dark, 10%)), 10%),
 			),
 		),
+
 		close: (
 			hover: (
 				color: clay-darken(color-yiq(clay-darken($dark, 10%)), 10%),
@@ -1045,25 +1127,328 @@ $label-inverse-dark: map-deep-merge(
 	$label-inverse-dark
 );
 
+$label-inverse-content-0: () !default;
+$label-inverse-content-0: map-deep-merge(
+	(
+		background-color: $secondary-l3,
+		border-color: transparent,
+		color: $dark-d2,
+
+		href: (
+			hover: (
+				background-color: $secondary-l3,
+				border-color: transparent,
+				color: $dark-d2,
+			),
+		),
+
+		link: (
+			hover: (
+				color: $dark-d2,
+			),
+		),
+
+		close: (
+			hover: (
+				color: $dark-d2,
+			),
+		),
+	),
+	$label-inverse-content-0
+);
+
+$label-inverse-content-1: () !default;
+$label-inverse-content-1: map-deep-merge(
+	(
+		background-color: $purple-l5,
+		border-color: transparent,
+		color: $purple-d2,
+
+		href: (
+			hover: (
+				background-color: $purple-l5,
+				border-color: transparent,
+				color: $purple-d2,
+			),
+		),
+
+		link: (
+			hover: (
+				color: $purple-d2,
+			),
+		),
+
+		close: (
+			hover: (
+				color: $purple-d2,
+			),
+		),
+	),
+	$label-inverse-content-1
+);
+
+$label-inverse-content-2: () !default;
+$label-inverse-content-2: map-deep-merge(
+	(
+		background-color: $yellow-l5,
+		border-color: transparent,
+		color: $yellow-d4,
+
+		href: (
+			hover: (
+				background-color: $yellow-l5,
+				border-color: transparent,
+				color: $yellow-d4,
+			),
+		),
+
+		link: (
+			hover: (
+				color: $yellow-d4,
+			),
+		),
+
+		close: (
+			hover: (
+				color: $yellow-d4,
+			),
+		),
+	),
+	$label-inverse-content-2
+);
+
+$label-inverse-content-3: () !default;
+$label-inverse-content-3: map-deep-merge(
+	(
+		background-color: $green-l5,
+		border-color: transparent,
+		color: $green-d2,
+
+		href: (
+			hover: (
+				background-color: $green-l5,
+				border-color: transparent,
+				color: $green-d2,
+			),
+		),
+
+		link: (
+			hover: (
+				color: $green-d2,
+			),
+		),
+
+		close: (
+			hover: (
+				color: $green-d2,
+			),
+		),
+	),
+	$label-inverse-content-3
+);
+
+$label-inverse-content-4: () !default;
+$label-inverse-content-4: map-deep-merge(
+	(
+		background-color: $red-l5,
+		border-color: transparent,
+		color: $red-d2,
+
+		href: (
+			hover: (
+				background-color: $red-l5,
+				border-color: transparent,
+				color: $red-d2,
+			),
+		),
+
+		link: (
+			hover: (
+				color: $red-d2,
+			),
+		),
+
+		close: (
+			hover: (
+				color: $red-d2,
+			),
+		),
+	),
+	$label-inverse-content-4
+);
+
+$label-inverse-content-5: () !default;
+$label-inverse-content-5: map-deep-merge(
+	(
+		background-color: $teal-l5,
+		border-color: transparent,
+		color: $teal-d2,
+
+		href: (
+			hover: (
+				background-color: $teal-l5,
+				border-color: transparent,
+				color: $teal-d2,
+			),
+		),
+
+		link: (
+			hover: (
+				color: $teal-d2,
+			),
+		),
+
+		close: (
+			hover: (
+				color: $teal-d2,
+			),
+		),
+	),
+	$label-inverse-content-5
+);
+
+$label-inverse-content-6: () !default;
+$label-inverse-content-6: map-deep-merge(
+	(
+		background-color: $cyan-l5,
+		border-color: transparent,
+		color: $cyan-d2,
+
+		href: (
+			hover: (
+				background-color: $cyan-l5,
+				border-color: transparent,
+				color: $cyan-d2,
+			),
+		),
+
+		link: (
+			hover: (
+				color: $cyan-d2,
+			),
+		),
+
+		close: (
+			hover: (
+				color: $cyan-d2,
+			),
+		),
+	),
+	$label-inverse-content-6
+);
+
+$label-inverse-content-7: () !default;
+$label-inverse-content-7: map-deep-merge(
+	(
+		background-color: $orange-l5,
+		border-color: transparent,
+		color: $orange-d2,
+
+		href: (
+			hover: (
+				background-color: $orange-l5,
+				border-color: transparent,
+				color: $orange-d2,
+			),
+		),
+
+		link: (
+			hover: (
+				color: $orange-d2,
+			),
+		),
+
+		close: (
+			hover: (
+				color: $orange-d2,
+			),
+		),
+	),
+	$label-inverse-content-7
+);
+
+$label-inverse-content-8: () !default;
+$label-inverse-content-8: map-deep-merge(
+	(
+		background-color: $pink-l5,
+		border-color: transparent,
+		color: $pink-d2,
+
+		href: (
+			hover: (
+				background-color: $pink-l5,
+				border-color: transparent,
+				color: $pink-d2,
+			),
+		),
+
+		link: (
+			hover: (
+				color: $pink-d2,
+			),
+		),
+
+		close: (
+			hover: (
+				color: $pink-d2,
+			),
+		),
+	),
+	$label-inverse-content-8
+);
+
 $label-palette: () !default;
 $label-palette: map-deep-merge(
 	(
 		primary: $label-primary,
+
 		secondary: $label-secondary,
+
 		success: $label-success,
+
 		info: $label-info,
+
 		warning: $label-warning,
+
 		danger: $label-danger,
+
 		dark: $label-dark,
+
 		light: $label-light,
+
 		inverse-primary: $label-inverse-primary,
+
 		inverse-secondary: $label-inverse-secondary,
+
 		inverse-success: $label-inverse-success,
+
 		inverse-info: $label-inverse-info,
+
 		inverse-warning: $label-inverse-warning,
+
 		inverse-danger: $label-inverse-danger,
+
 		inverse-light: $label-inverse-light,
+
 		inverse-dark: $label-inverse-dark,
+
+		inverse-content-0: $label-inverse-content-0,
+
+		inverse-content-1: $label-inverse-content-1,
+
+		inverse-content-2: $label-inverse-content-2,
+
+		inverse-content-3: $label-inverse-content-3,
+
+		inverse-content-4: $label-inverse-content-4,
+
+		inverse-content-5: $label-inverse-content-5,
+
+		inverse-content-6: $label-inverse-content-6,
+
+		inverse-content-7: $label-inverse-content-7,
+
+		inverse-content-8: $label-inverse-content-8,
 	),
 	$label-palette
 );

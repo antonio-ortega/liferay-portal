@@ -9,6 +9,7 @@ import com.liferay.document.library.kernel.exception.NoSuchFileEntryException;
 import com.liferay.document.library.kernel.exception.NoSuchFolderException;
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
+import com.liferay.document.library.kernel.model.DLVersionNumberIncrease;
 import com.liferay.document.library.kernel.service.DLTrashLocalService;
 import com.liferay.document.library.kernel.util.DLAppHelperThreadLocal;
 import com.liferay.petra.function.UnsafeSupplier;
@@ -126,48 +127,52 @@ public class PortletFileRepositoryImpl implements PortletFileRepository {
 			boolean indexingEnabled)
 		throws PortalException {
 
-		if (Validator.isNull(fileName)) {
+		return addPortletFileEntry(
+			externalReferenceCode, groupId, userId, className, classPK,
+			portletId, folderId, file, fileName, fileName, mimeType,
+			indexingEnabled);
+	}
+
+	@Override
+	public FileEntry addPortletFileEntry(
+			String externalReferenceCode, long groupId, long userId,
+			String className, long classPK, String portletId, long folderId,
+			File file, String sourceFileName, String title, String mimeType,
+			boolean indexingEnabled)
+		throws PortalException {
+
+		if (Validator.isNull(sourceFileName) || Validator.isNull(title)) {
 			return null;
 		}
 
-		ServiceContext serviceContext = new ServiceContext();
+		return _run(
+			() -> {
+				ServiceContext serviceContext = new ServiceContext();
 
-		serviceContext.setAddGroupPermissions(true);
-		serviceContext.setAddGuestPermissions(true);
+				serviceContext.setAddGroupPermissions(true);
+				serviceContext.setAddGuestPermissions(true);
 
-		Repository repository = addPortletRepository(
-			groupId, portletId, serviceContext);
+				Repository repository = addPortletRepository(
+					groupId, portletId, serviceContext);
 
-		if (Validator.isNotNull(className) && (classPK > 0)) {
-			serviceContext.setAttribute("className", className);
-			serviceContext.setAttribute("classPK", String.valueOf(classPK));
-		}
+				if (Validator.isNotNull(className) && (classPK > 0)) {
+					serviceContext.setAttribute("className", className);
+					serviceContext.setAttribute(
+						"classPK", String.valueOf(classPK));
+				}
 
-		serviceContext.setIndexingEnabled(indexingEnabled);
+				serviceContext.setIndexingEnabled(indexingEnabled);
 
-		if (Validator.isNull(mimeType) ||
-			mimeType.equals(ContentTypes.APPLICATION_OCTET_STREAM)) {
+				LocalRepository localRepository =
+					_repositoryProvider.getLocalRepository(
+						repository.getRepositoryId());
 
-			mimeType = MimeTypesUtil.getContentType(file, fileName);
-		}
-
-		boolean dlAppHelperEnabled = DLAppHelperThreadLocal.isEnabled();
-
-		try {
-			DLAppHelperThreadLocal.setEnabled(false);
-
-			LocalRepository localRepository =
-				_repositoryProvider.getLocalRepository(
-					repository.getRepositoryId());
-
-			return localRepository.addFileEntry(
-				externalReferenceCode, userId, folderId, fileName, mimeType,
-				fileName, fileName, StringPool.BLANK, StringPool.BLANK, file,
-				null, null, null, serviceContext);
-		}
-		finally {
-			DLAppHelperThreadLocal.setEnabled(dlAppHelperEnabled);
-		}
+				return localRepository.addFileEntry(
+					externalReferenceCode, userId, folderId, sourceFileName,
+					_getMimeType(file, sourceFileName, mimeType), title, title,
+					StringPool.BLANK, StringPool.BLANK, file, null, null, null,
+					serviceContext);
+			});
 	}
 
 	@Override
@@ -785,6 +790,66 @@ public class PortletFileRepositoryImpl implements PortletFileRepository {
 			_repositoryProvider.getRepository(repositoryId);
 
 		return repository.search(searchContext);
+	}
+
+	@Override
+	public FileEntry updatePortletFileEntry(
+			long userId, long fileEntryId, File file, String fileName,
+			String mimeType, ServiceContext serviceContext)
+		throws PortalException {
+
+		FileEntry fileEntry = getPortletFileEntry(fileEntryId);
+
+		return _run(
+			() -> {
+				LocalRepository localRepository =
+					_repositoryProvider.getLocalRepository(
+						fileEntry.getRepositoryId());
+
+				return localRepository.updateFileEntry(
+					userId, fileEntryId, fileName,
+					_getMimeType(file, fileName, mimeType),
+					fileEntry.getTitle(), null, fileEntry.getDescription(),
+					null, DLVersionNumberIncrease.NONE, file, null, null, null,
+					serviceContext);
+			});
+	}
+
+	@Override
+	public FileEntry updatePortletFileEntry(
+			long userId, long fileEntryId, InputStream inputStream,
+			String fileName, String mimeType, ServiceContext serviceContext)
+		throws PortalException {
+
+		if (inputStream == null) {
+			return null;
+		}
+
+		File file = null;
+
+		try {
+			file = FileUtil.createTempFile(inputStream);
+
+			return updatePortletFileEntry(
+				userId, fileEntryId, file, fileName, mimeType, serviceContext);
+		}
+		catch (IOException ioException) {
+			throw new SystemException(
+				"Unable to update portlet file entry", ioException);
+		}
+		finally {
+			FileUtil.delete(file);
+		}
+	}
+
+	private String _getMimeType(File file, String fileName, String mimeType) {
+		if (Validator.isNotNull(mimeType) &&
+			!mimeType.equals(ContentTypes.APPLICATION_OCTET_STREAM)) {
+
+			return mimeType;
+		}
+
+		return MimeTypesUtil.getContentType(file, fileName);
 	}
 
 	private boolean _isAttachment(FileEntry fileEntry) {

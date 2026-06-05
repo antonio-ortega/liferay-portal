@@ -4,6 +4,7 @@
  */
 
 import ClayAlert from '@clayui/alert';
+import {NetworkStatus} from '@clayui/data-provider';
 import {ClayCheckbox} from '@clayui/form';
 import ClayIcon from '@clayui/icon';
 import ClayMultiSelect from '@clayui/multi-select';
@@ -37,11 +38,19 @@ export default function CategorizationSpaces({
 	spaceInputError: string;
 }) {
 	const [availableSpaces, setAvailableSpaces] = useState<Space[]>([]);
+	const [availableSpacesKey, setAvailableSpacesKey] = useState(0);
 	const [checkbox, setCheckbox] = useState(true);
+	const isVocabulary = checkboxText === 'vocabulary';
+	const [displaySpaceError, setDisplaySpaceError] = useState(!isVocabulary);
+	const [query, setQuery] = useState('');
 	const [selectedItems, setSelectedItems] = useState<Space[]>([]);
 	const [initialSelectedSpaces, setInitialSelectedSpaces] = useState<
 		number[]
 	>([]);
+
+	const loadingState = !availableSpaces.length
+		? NetworkStatus.Polling
+		: undefined;
 
 	useEffect(() => {
 		SpaceService.getSpaces().then((response) => {
@@ -53,6 +62,7 @@ export default function CategorizationSpaces({
 			}));
 
 			setAvailableSpaces(spaces);
+			setAvailableSpacesKey((key) => key + 1);
 
 			const initialSpaces = assetLibraries?.map(
 				(item: {name: string}) =>
@@ -117,16 +127,26 @@ export default function CategorizationSpaces({
 		setSpaceInputError,
 	]);
 
+	const _getAvailableSpaces = (items: Space[]) => {
+		return availableSpaces.filter((availableItem) =>
+			items.some((item) => availableItem.value === item.value)
+		);
+	};
+
 	const _handleChangeAllSpaces = () => {
+		if (isVocabulary && checkbox) {
+			setDisplaySpaceError(false);
+		}
+
 		setSelectedItems([]);
 		setSelectedSpaces([]);
+		setQuery('');
 		setCheckbox((checkbox) => !checkbox);
 	};
 
 	const _handleChangeSpaces = (items: Space[]) => {
-		setSelectedItems(
-			availableSpaces.filter((item) => items.includes(item))
-		);
+		setDisplaySpaceError(true);
+		setSelectedItems(_getAvailableSpaces(items));
 
 		setSelectedSpaces(items.map((item) => item.scopeKey));
 	};
@@ -141,18 +161,24 @@ export default function CategorizationSpaces({
 				</span>
 			</label>
 
-			<div className={spaceInputError ? 'has-error' : ''}>
+			<div
+				className={
+					displaySpaceError && spaceInputError ? 'has-error' : ''
+				}
+			>
 				<ClayMultiSelect
 					aria-label={Liferay.Language.get('space-selector')}
 					disabled={checkbox}
 					id="multiSelect"
 					items={selectedItems}
-					loadingState={3}
-					onItemsChange={(items: Space[]) => {
-						_handleChangeSpaces(items);
-					}}
+					key={availableSpacesKey}
+					loadingState={loadingState}
+					onChange={setQuery}
+					onItemsChange={_handleChangeSpaces}
 					sourceItems={availableSpaces}
-					value={checkbox ? Liferay.Language.get('all-spaces') : ''}
+					value={
+						checkbox ? Liferay.Language.get('all-spaces') : query
+					}
 				>
 					{(item) => (
 						<ClayMultiSelect.Item
@@ -168,7 +194,7 @@ export default function CategorizationSpaces({
 					)}
 				</ClayMultiSelect>
 
-				{spaceInputError && (
+				{displaySpaceError && spaceInputError && (
 					<ClayAlert displayType="danger" variant="feedback">
 						<strong>{Liferay.Language.get('error')}: </strong>
 

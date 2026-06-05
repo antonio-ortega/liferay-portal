@@ -7,12 +7,15 @@ package com.liferay.friendly.url.internal.servlet;
 
 import com.liferay.depot.constants.DepotActionKeys;
 import com.liferay.depot.constants.DepotConstants;
-import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.service.DepotEntryLocalService;
 import com.liferay.friendly.url.configuration.FriendlyURLRedirectionConfiguration;
 import com.liferay.friendly.url.configuration.FriendlyURLRedirectionConfigurationProvider;
+import com.liferay.layout.utility.page.kernel.LayoutUtilityPageEntryViewRenderer;
+import com.liferay.layout.utility.page.kernel.LayoutUtilityPageEntryViewRendererRegistryUtil;
+import com.liferay.layout.utility.page.kernel.constants.LayoutUtilityPageEntryConstants;
 import com.liferay.layout.utility.page.model.LayoutUtilityPageEntry;
-import com.liferay.layout.utility.page.service.LayoutUtilityPageEntryLocalServiceUtil;
+import com.liferay.layout.utility.page.service.LayoutUtilityPageEntryLocalService;
+import com.liferay.petra.io.BigEndianCodec;
 import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
@@ -24,7 +27,6 @@ import com.liferay.portal.kernel.exception.NoSuchGroupException;
 import com.liferay.portal.kernel.exception.NoSuchLayoutException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
-import com.liferay.portal.kernel.io.BigEndianCodec;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -68,7 +70,9 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
@@ -147,6 +151,21 @@ public class FriendlyURLServlet extends HttpServlet {
 		long companyId = PortalInstances.getCompanyId(httpServletRequest);
 
 		Group group = _getGroup(path, groupFriendlyURL, companyId);
+
+		if (!group.isActive() && groupLocalService.isMaintenanceMode(group)) {
+			User user = _getUser(httpServletRequest);
+
+			PermissionChecker permissionChecker =
+				PermissionThreadLocal.getPermissionChecker(
+					user, !user.isGuestUser());
+
+			if (!permissionChecker.isGroupAdmin(group.getGroupId())) {
+				httpServletRequest.setAttribute(
+					_MAINTENANCE_MODE_GROUP_ID, group.getGroupId());
+
+				return null;
+			}
+		}
 
 		Locale locale = portal.getLocale(httpServletRequest, null, false);
 
@@ -255,7 +274,7 @@ public class FriendlyURLServlet extends HttpServlet {
 
 					if (layout.isTypeUtility() && !layout.isDraftLayout()) {
 						LayoutUtilityPageEntry layoutUtilityPageEntry =
-							LayoutUtilityPageEntryLocalServiceUtil.
+							layoutUtilityPageEntryLocalService.
 								fetchLayoutUtilityPageEntryByPlid(
 									layout.getPlid());
 
@@ -267,7 +286,9 @@ public class FriendlyURLServlet extends HttpServlet {
 									String.valueOf(
 										layoutUtilityPageEntry.
 											getLayoutUtilityPageEntryId()),
-									user.getRoleIds(), ActionKeys.VIEW)) {
+									permissionChecker.getRoleIds(
+										user.getUserId(), layout.getGroupId()),
+									ActionKeys.VIEW)) {
 
 							if (AuthLoginGroupSettingsUtil.isPromptEnabled(
 									group.getGroupId())) {
@@ -421,7 +442,8 @@ public class FriendlyURLServlet extends HttpServlet {
 							portal.getOriginalServletRequest(
 								httpServletRequest);
 
-						if (redirect.equals(
+						if (Objects.equals(
+								HttpComponentsUtil.getPath(redirect),
 								originalHttpServletRequest.getRequestURI())) {
 
 							throw new NoSuchLayoutException();
@@ -544,12 +566,18 @@ public class FriendlyURLServlet extends HttpServlet {
 
 		Layout layout = (Layout)httpServletRequest.getAttribute(WebKeys.LAYOUT);
 
-		if ((layout != null) &&
-			Objects.equals(layout.getType(), LayoutConstants.TYPE_URL)) {
+		if ((layout != null) && layout.isTypeURL() &&
+			MapUtil.isNotEmpty(params)) {
 
-			actualURL = actualURL.concat(
-				HttpComponentsUtil.parameterMapToString(
-					params, !actualURL.contains(StringPool.QUESTION)));
+			for (Map.Entry<String, String[]> entry : params.entrySet()) {
+				String name = entry.getKey();
+				String[] values = entry.getValue();
+
+				for (String value : values) {
+					actualURL = HttpComponentsUtil.addParameter(
+						actualURL, name, value);
+				}
+			}
 		}
 
 		return new Redirect(
@@ -632,6 +660,67 @@ public class FriendlyURLServlet extends HttpServlet {
 		}
 
 		if (redirect == null) {
+			Long maintenanceGroupId = (Long)httpServletRequest.getAttribute(
+				_MAINTENANCE_MODE_GROUP_ID);
+
+			if (maintenanceGroupId != null) {
+				httpServletRequest.removeAttribute(_MAINTENANCE_MODE_GROUP_ID);
+
+				httpServletResponse.setStatus(
+					HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+
+				LayoutUtilityPageEntry layoutUtilityPageEntry =
+					layoutUtilityPageEntryLocalService.
+						fetchDefaultLayoutUtilityPageEntry(
+							maintenanceGroupId,
+							LayoutUtilityPageEntryConstants.
+								TYPE_SC_SERVICE_UNAVAILABLE);
+
+				if (layoutUtilityPageEntry != null) {
+					Layout maintenanceLayout = layoutLocalService.fetchLayout(
+						layoutUtilityPageEntry.getPlid());
+
+					if (maintenanceLayout != null) {
+						try {
+							httpServletRequest.setAttribute(
+								WebKeys.RENDERING_MAINTENANCE_UTILITY_PAGE,
+								Boolean.TRUE);
+
+							RequestDispatcher requestDispatcher =
+								httpServletRequest.getRequestDispatcher(
+									portal.getLayoutActualURL(
+										maintenanceLayout));
+
+							requestDispatcher.forward(
+								httpServletRequest, httpServletResponse);
+
+							return;
+						}
+						catch (PortalException portalException) {
+							if (_log.isWarnEnabled()) {
+								_log.warn(
+									"Unable to render maintenance utility page",
+									portalException);
+							}
+						}
+					}
+				}
+
+				LayoutUtilityPageEntryViewRenderer
+					layoutUtilityPageEntryViewRenderer =
+						LayoutUtilityPageEntryViewRendererRegistryUtil.
+							getLayoutUtilityPageEntryViewRenderer(
+								LayoutUtilityPageEntryConstants.
+									TYPE_SC_SERVICE_UNAVAILABLE);
+
+				if (layoutUtilityPageEntryViewRenderer != null) {
+					layoutUtilityPageEntryViewRenderer.renderHTML(
+						httpServletRequest, httpServletResponse);
+
+					return;
+				}
+			}
+
 			redirect = new Redirect();
 		}
 
@@ -805,6 +894,10 @@ public class FriendlyURLServlet extends HttpServlet {
 	protected LayoutService layoutService;
 
 	@Reference
+	protected LayoutUtilityPageEntryLocalService
+		layoutUtilityPageEntryLocalService;
+
+	@Reference
 	protected Portal portal;
 
 	@Reference(
@@ -897,7 +990,7 @@ public class FriendlyURLServlet extends HttpServlet {
 		}
 
 		if ((group == null) ||
-			(!group.isActive() &&
+			(!group.isActive() && !groupLocalService.isMaintenanceMode(group) &&
 			 !inactiveRequestHandler.isShowInactiveRequestMessage() &&
 			 !path.startsWith(GroupConstants.CONTROL_PANEL_FRIENDLY_URL) &&
 			 !path.startsWith(
@@ -1188,21 +1281,11 @@ public class FriendlyURLServlet extends HttpServlet {
 		return user;
 	}
 
-	private boolean _hasDepotEntryTypeSpace(User user) throws PortalException {
-		for (Group group : user.getGroups()) {
-			if (!group.isDepot()) {
-				continue;
-			}
-
-			DepotEntry depotEntry = depotEntryLocalService.getGroupDepotEntry(
-				group.getGroupId());
-
-			if (depotEntry.getType() == DepotConstants.TYPE_SPACE) {
-				return true;
-			}
-		}
-
-		return false;
+	private boolean _hasDepotEntryTypeSpace(User user) {
+		return ListUtil.isNotEmpty(
+			depotEntryLocalService.getDepotEntryGroupIds(
+				user.getCompanyId(), user.getUserId(),
+				DepotConstants.TYPE_SPACE));
 	}
 
 	private boolean _isImpersonated(
@@ -1316,6 +1399,9 @@ public class FriendlyURLServlet extends HttpServlet {
 
 		return groupLocale;
 	}
+
+	private static final String _MAINTENANCE_MODE_GROUP_ID =
+		FriendlyURLServlet.class.getName() + "#MAINTENANCE_MODE_GROUP_ID";
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		FriendlyURLServlet.class);

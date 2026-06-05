@@ -214,3 +214,4 @@ public class WarehouseChannel implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-2132962218

@@ -398,3 +398,4 @@ public interface LayoutClassedModelUsageLocalService
 		throws E;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:237564382

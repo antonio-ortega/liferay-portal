@@ -70,11 +70,14 @@ if (!portletName.equals(UsersAdminPortletKeys.MY_ACCOUNT)) {
 				<clay:content-col
 					expand="<%= true %>"
 				>
-					<h2><%= HtmlUtil.escape(cookiesBannerConfigurationDisplayContext.getCookieTitle(requiredConsentCookieType.getName(), request)) %></h2>
+					<h3><%= HtmlUtil.escape(cookiesBannerConfigurationDisplayContext.getCookieTitle(requiredConsentCookieType.getName(), request)) %></h3>
 				</clay:content-col>
 
 				<clay:content-col>
-					<span class="pr-2 text-primary"><liferay-ui:message key="always-active" /></span>
+					<span class="pr-2 text-primary" role="status">
+						<span class="sr-only"><liferay-ui:message key="status" />: </span>
+						<liferay-ui:message key="always-active" />
+					</span>
 				</clay:content-col>
 			</clay:content-row>
 
@@ -86,13 +89,56 @@ if (!portletName.equals(UsersAdminPortletKeys.MY_ACCOUNT)) {
 
 		<%
 		}
-
-		for (ConsentCookieType optionalConsentCookieType : cookiesBannerConfigurationDisplayContext.getOptionalConsentCookieTypes()) {
-			if (FeatureFlagManagerUtil.isEnabled("LPD-51356") && optionalConsentCookieType.isHideFromEndUser()) {
-				continue;
-			}
 		%>
 
+		<fieldset>
+			<legend class="sr-only"><liferay-ui:message key="optional-cookies" /></legend>
+
+			<%
+			for (ConsentCookieType optionalConsentCookieType : cookiesBannerConfigurationDisplayContext.getOptionalConsentCookieTypes()) {
+				if (optionalConsentCookieType.isHideFromEndUser()) {
+					continue;
+				}
+
+				String optionalCookieTitle = HtmlUtil.escape(cookiesBannerConfigurationDisplayContext.getCookieTitle(optionalConsentCookieType.getName(), request));
+			%>
+
+				<clay:content-row
+					noGutters="true"
+					verticalAlign="center"
+				>
+					<clay:content-col
+						expand="<%= true %>"
+					>
+						<h3><%= optionalCookieTitle %></h3>
+					</clay:content-col>
+
+					<clay:content-col>
+						<label class="toggle-switch">
+							<span class="toggle-switch-check-bar">
+								<input aria-label="<%= optionalCookieTitle %>" class="toggle-switch-check" data-cookie-key="<%= optionalConsentCookieType.getName() %>" data-prechecked="<%= optionalConsentCookieType.isPrechecked() %>" disabled type="checkbox" />
+
+								<span aria-hidden="true" class="toggle-switch-bar">
+									<span class="toggle-switch-handle"></span>
+								</span>
+							</span>
+						</label>
+					</clay:content-col>
+				</clay:content-row>
+
+				<clay:content-row
+					cssClass="mb-3"
+				>
+					<p><%= HtmlUtil.escape(optionalConsentCookieType.getDescription(locale)) %></p>
+				</clay:content-row>
+
+			<%
+			}
+			%>
+
+		</fieldset>
+
+		<c:if test="<%= cookiesBannerConfigurationDisplayContext.isStoreConsent() %>">
 			<clay:content-row
 				noGutters="true"
 				verticalAlign="center"
@@ -100,13 +146,15 @@ if (!portletName.equals(UsersAdminPortletKeys.MY_ACCOUNT)) {
 				<clay:content-col
 					expand="<%= true %>"
 				>
-					<h2><%= HtmlUtil.escape(cookiesBannerConfigurationDisplayContext.getCookieTitle(optionalConsentCookieType.getName(), request)) %></h2>
+					<h3>
+						<liferay-ui:message key="cookie-store-consent" />
+					</h3>
 				</clay:content-col>
 
 				<clay:content-col>
 					<label class="toggle-switch">
 						<span class="toggle-switch-check-bar">
-							<input class="toggle-switch-check" data-cookie-key="<%= optionalConsentCookieType.getName() %>" data-prechecked="<%= optionalConsentCookieType.isPrechecked() %>" disabled type="checkbox" />
+							<input aria-label="<liferay-ui:message key="cookie-store-consent" />" class="toggle-switch-check" disabled id="<portlet:namespace />storeConsent" name="<portlet:namespace />storeConsent" type="checkbox" />
 
 							<span aria-hidden="true" class="toggle-switch-bar">
 								<span class="toggle-switch-handle"></span>
@@ -119,13 +167,9 @@ if (!portletName.equals(UsersAdminPortletKeys.MY_ACCOUNT)) {
 			<clay:content-row
 				cssClass="mb-3"
 			>
-				<p><%= HtmlUtil.escape(optionalConsentCookieType.getDescription(locale)) %></p>
+				<p><liferay-ui:message key="cookie-store-consent-help" /></p>
 			</clay:content-row>
-
-		<%
-		}
-		%>
-
+		</c:if>
 	</clay:col>
 </clay:row>
 
@@ -150,6 +194,7 @@ if (!portletName.equals(UsersAdminPortletKeys.MY_ACCOUNT)) {
 
 			<clay:content-col>
 				<clay:button
+					aria-label='<%= LanguageUtil.get(request, "accept-selected-cookies") %>'
 					displayType="secondary"
 					id='<%= liferayPortletResponse.getNamespace() + "acceptSelectedButton" %>'
 					label='<%= LanguageUtil.get(request, "accept-selected") %>'
@@ -159,6 +204,7 @@ if (!portletName.equals(UsersAdminPortletKeys.MY_ACCOUNT)) {
 
 			<clay:content-col>
 				<clay:button
+					aria-label='<%= LanguageUtil.get(request, "accept-all-cookies") %>'
 					displayType="secondary"
 					id='<%= liferayPortletResponse.getNamespace() + "acceptAllButton" %>'
 					label='<%= LanguageUtil.get(request, "accept-all") %>'

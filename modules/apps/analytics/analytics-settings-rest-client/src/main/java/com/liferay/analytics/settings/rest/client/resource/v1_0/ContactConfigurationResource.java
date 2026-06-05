@@ -373,3 +373,4 @@ public interface ContactConfigurationResource {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1210113853

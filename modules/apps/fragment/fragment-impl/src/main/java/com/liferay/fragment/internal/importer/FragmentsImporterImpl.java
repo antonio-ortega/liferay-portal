@@ -233,6 +233,32 @@ public class FragmentsImporterImpl implements FragmentsImporter {
 		return true;
 	}
 
+	private void _addFileEntry(
+			Map<String, Long> folderIdsMap, long fragmentCollectionId,
+			long groupId, String path, Repository repository, long userId,
+			String zipEntryName, ZipFile zipFile)
+		throws Exception {
+
+		String folderPath = StringPool.BLANK;
+
+		String fileName = path;
+
+		int index = fileName.lastIndexOf(StringPool.SLASH);
+
+		if (index != -1) {
+			folderPath = fileName.substring(0, index);
+			fileName = fileName.substring(index + 1);
+		}
+
+		PortletFileRepositoryUtil.addPortletFileEntry(
+			null, groupId, userId, FragmentCollection.class.getName(),
+			fragmentCollectionId, FragmentPortletKeys.FRAGMENT,
+			_getOrCreateFolderId(
+				folderIdsMap, folderPath, repository.getRepositoryId(), userId),
+			_getInputStream(zipFile, zipEntryName), fileName,
+			MimeTypesUtil.getContentType(fileName), false);
+	}
+
 	private FragmentCollection _addFragmentCollection(
 			long groupId, String fragmentCollectionKey, String name,
 			String description, FragmentsImportStrategy fragmentsImportStrategy,
@@ -448,33 +474,11 @@ public class FragmentsImporterImpl implements FragmentsImporter {
 					FileEntry fileEntry = entry.getValue();
 
 					if (fragmentServiceConfiguration.propagateChanges()) {
-						PortletFileRepositoryUtil.deletePortletFileEntry(
-							fileEntry.getFileEntryId());
+						_updateFileEntry(
+							fileEntry, userId, zipEntryNames.get(fileEntryPath),
+							zipFile);
 
-						String fileName = entry.getKey();
-						String folderPath = StringPool.BLANK;
-
-						int index = fileName.lastIndexOf(StringPool.SLASH);
-
-						if (index != -1) {
-							folderPath = fileName.substring(0, index);
-							fileName = fileName.substring(index + 1);
-						}
-
-						PortletFileRepositoryUtil.addPortletFileEntry(
-							null, groupId, userId,
-							FragmentCollection.class.getName(),
-							fragmentCollection.getFragmentCollectionId(),
-							FragmentPortletKeys.FRAGMENT,
-							_getOrCreateFolderId(
-								folderIdsMap, folderPath,
-								repository.getRepositoryId(), userId),
-							_getInputStream(
-								zipFile, zipEntryNames.get(fileName)),
-							fileName, MimeTypesUtil.getContentType(fileName),
-							false);
-
-						zipEntryNames.remove(fileEntry.getFileName());
+						zipEntryNames.remove(fileEntryPath);
 					}
 					else {
 						String folderPath = StringPool.BLANK;
@@ -482,7 +486,7 @@ public class FragmentsImporterImpl implements FragmentsImporter {
 						int index = fileEntryPath.lastIndexOf(StringPool.SLASH);
 
 						if (index != -1) {
-							folderPath = fileEntryPath.substring(0, index);
+							folderPath = fileEntryPath.substring(0, index + 1);
 						}
 
 						String newFileName =
@@ -513,25 +517,10 @@ public class FragmentsImporterImpl implements FragmentsImporter {
 		}
 
 		for (Map.Entry<String, String> entry : zipEntryNames.entrySet()) {
-			String fileName = entry.getKey();
-			String folderPath = StringPool.BLANK;
-
-			int index = fileName.lastIndexOf(StringPool.SLASH);
-
-			if (index != -1) {
-				folderPath = fileName.substring(0, index);
-				fileName = fileName.substring(index + 1);
-			}
-
-			PortletFileRepositoryUtil.addPortletFileEntry(
-				null, groupId, userId, FragmentCollection.class.getName(),
-				fragmentCollection.getFragmentCollectionId(),
-				FragmentPortletKeys.FRAGMENT,
-				_getOrCreateFolderId(
-					folderIdsMap, folderPath, repository.getRepositoryId(),
-					userId),
-				_getInputStream(zipFile, entry.getValue()), fileName,
-				MimeTypesUtil.getContentType(fileName), false);
+			_addFileEntry(
+				folderIdsMap, fragmentCollection.getFragmentCollectionId(),
+				groupId, entry.getKey(), repository, userId, entry.getValue(),
+				zipFile);
 		}
 	}
 
@@ -1198,6 +1187,32 @@ public class FragmentsImporterImpl implements FragmentsImporter {
 		}
 
 		return input;
+	}
+
+	private void _updateFileEntry(
+			FileEntry fileEntry, long userId, String zipEntryName,
+			ZipFile zipFile)
+		throws Exception {
+
+		ZipEntry zipEntry = zipFile.getEntry(zipEntryName);
+
+		if (zipEntry == null) {
+			return;
+		}
+
+		ServiceContext serviceContext =
+			ServiceContextThreadLocal.getServiceContext();
+
+		if (serviceContext == null) {
+			serviceContext = new ServiceContext();
+		}
+
+		try (InputStream inputStream = zipFile.getInputStream(zipEntry)) {
+			PortletFileRepositoryUtil.updatePortletFileEntry(
+				userId, fileEntry.getFileEntryId(), inputStream,
+				fileEntry.getFileName(), fileEntry.getMimeType(),
+				serviceContext);
+		}
 	}
 
 	private boolean _validateFragmentCompositions(

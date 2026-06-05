@@ -5,6 +5,7 @@
 
 package com.liferay.headless.commerce.delivery.catalog.internal.resource.v1_0;
 
+import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.Product;
 import com.liferay.headless.commerce.delivery.catalog.resource.v1_0.ProductResource;
 import com.liferay.petra.function.UnsafeBiConsumer;
@@ -71,7 +72,7 @@ public abstract class BaseProductResourceImpl
 	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-delivery-catalog/v1.0/channels/{channelId}/products/{productId}'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
-		description = "Retrieves products from selected channel."
+		description = "Returns a single Product under /channels/{channelId}/products/{productId}. Resolves the active CPDefinition via CPDefinitionLocalService.fetchCPDefinitionByCProductId, the CommerceChannel, and the effective accountId through AccountUtil. Short-circuits and returns null when the resolved account is not on the channel's eligibility list and the channel has restrictions. Converts via ProductDTOConverter against a fresh CommerceContext for the requested locale and currency. Validation -- NoSuchCProductException -> 404 when the productId is missing; PrincipalException -> 403 when the caller lacks CommerceProductViewPermission."
 	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
@@ -119,7 +120,7 @@ public abstract class BaseProductResourceImpl
 	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-delivery-catalog/v1.0/channels/{channelId}/products/by-friendly-url-path/{friendlyUrlPath}'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
-		description = "Retrieves products from selected channel."
+		description = "Returns a single Product under /channels/{channelId}/products/by-friendly-url-path/{friendlyUrlPath}. Loads the channel, resolves the account through AccountUtil, returns null when the account is not eligible, then resolves the CPDefinition through CPDefinitionLocalService.fetchCPDefinitionByFriendlyURL against the company group. Enforces CommerceProductViewPermission and converts via ProductDTOConverter. Validation -- NoSuchCProductException -> 404 when the friendly URL does not resolve; PrincipalException -> 403 when the caller lacks VIEW permission on the product."
 	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
@@ -169,7 +170,7 @@ public abstract class BaseProductResourceImpl
 	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-delivery-catalog/v1.0/channels/{channelId}/products'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
-		description = "Retrieves products from selected channel."
+		description = "Lists products visible on /channels/{channelId}/products. Resolves the channel and the effective accountId via AccountUtil; when the account fails the channel's eligibility check an empty page is returned. Builds a SearchContext seeded with status=APPROVED, accountEntryId, commerceAccountGroupIds (from AccountGroupLocalService) and the channel group; merges the OData `filter` into a BooleanQuery and applies a CPQuery sorted by title ASC and modifiedDate DESC. Search runs through CPDefinitionHelper.search/searchCount; each CPCatalogEntry is converted via ProductDTOConverter. Validation -- None (returns empty page when no matches or account ineligible). List query support — filterable and sortable fields -- ProductEntityModel (categoryIds, categoryNames, gtins, specificationNames, specificationValues, tags, createDate, modifiedDate, catalogId, statusCode, externalReferenceCode, name, productType) plus every expando custom column exposed via EntityFieldsUtil; search fields -- indexed CPDefinition fields."
 	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
@@ -303,6 +304,15 @@ public abstract class BaseProductResourceImpl
 			@Override
 			public Locale getPreferredLocale() {
 				return LocaleUtil.fromLanguageId(languageId);
+			}
+
+			@Override
+			public boolean isAcceptAllLanguages() {
+				if (ExportImportThreadLocal.isExportInProcess()) {
+					return true;
+				}
+
+				return AcceptLanguage.super.isAcceptAllLanguages();
 			}
 
 		};
@@ -876,3 +886,4 @@ public abstract class BaseProductResourceImpl
 		LogFactoryUtil.getLog(BaseProductResourceImpl.class);
 
 }
+// LIFERAY-REST-BUILDER-HASH:1270387878

@@ -5,6 +5,7 @@
 
 package com.liferay.headless.object.internal.resource.v1_0;
 
+import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.headless.object.dto.v1_0.Collaborator;
 import com.liferay.headless.object.resource.v1_0.CollaboratorResource;
 import com.liferay.petra.function.UnsafeBiConsumer;
@@ -581,7 +582,7 @@ public abstract class BaseCollaboratorResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'PUT' 'http://localhost:8080/o/headless-object/v1.0/object-entry-folders/{objectEntryFolderId}/collaborators/by-type/{type}/{collaboratorId}' -d $'{"actionIds": ___, "dateExpired": ___, "id": ___, "share": ___, "type": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'PUT' 'http://localhost:8080/o/headless-object/v1.0/object-entry-folders/{objectEntryFolderId}/collaborators/by-type/{type}/{collaboratorId}' -d $'{"actionIds": ___, "dateExpired": ___, "emailAddress": ___, "id": ___, "share": ___, "type": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
 		description = "Add or update a collaborator received in the request."
@@ -634,7 +635,7 @@ public abstract class BaseCollaboratorResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'PUT' 'http://localhost:8080/o/headless-object/v1.0/scopes/{scopeKey}/object-entry-folders/by-external-reference-code/{externalReferenceCode}/collaborators/by-type/{type}/{collaboratorId}' -d $'{"actionIds": ___, "dateExpired": ___, "id": ___, "share": ___, "type": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'PUT' 'http://localhost:8080/o/headless-object/v1.0/scopes/{scopeKey}/object-entry-folders/by-external-reference-code/{externalReferenceCode}/collaborators/by-type/{type}/{collaboratorId}' -d $'{"actionIds": ___, "dateExpired": ___, "emailAddress": ___, "id": ___, "share": ___, "type": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
 		description = "Add or update a collaborator received in the request."
@@ -774,6 +775,15 @@ public abstract class BaseCollaboratorResourceImpl
 			@Override
 			public Locale getPreferredLocale() {
 				return LocaleUtil.fromLanguageId(languageId);
+			}
+
+			@Override
+			public boolean isAcceptAllLanguages() {
+				if (ExportImportThreadLocal.isExportInProcess()) {
+					return true;
+				}
+
+				return AcceptLanguage.super.isAcceptAllLanguages();
 			}
 
 		};
@@ -1358,3 +1368,4 @@ public abstract class BaseCollaboratorResourceImpl
 		LogFactoryUtil.getLog(BaseCollaboratorResourceImpl.class);
 
 }
+// LIFERAY-REST-BUILDER-HASH:230273300

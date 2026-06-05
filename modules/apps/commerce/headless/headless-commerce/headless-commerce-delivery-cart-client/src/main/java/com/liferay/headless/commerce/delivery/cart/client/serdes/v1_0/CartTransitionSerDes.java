@@ -365,3 +365,4 @@ public class CartTransitionSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:1915366478

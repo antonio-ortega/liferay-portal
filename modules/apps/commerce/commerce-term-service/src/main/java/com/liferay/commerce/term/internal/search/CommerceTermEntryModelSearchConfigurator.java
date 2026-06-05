@@ -5,14 +5,13 @@
 
 package com.liferay.commerce.term.internal.search;
 
-import com.liferay.commerce.term.internal.search.spi.model.index.contributor.CommerceTermEntryModelIndexerWriterContributor;
 import com.liferay.commerce.term.internal.search.spi.model.result.contributor.CommerceTermEntryModelSummaryContributor;
 import com.liferay.commerce.term.internal.search.spi.model.result.contributor.CommerceTermEntryModelVisibilityContributor;
 import com.liferay.commerce.term.model.CommerceTermEntry;
 import com.liferay.commerce.term.service.CommerceTermEntryLocalService;
 import com.liferay.portal.kernel.search.Field;
-import com.liferay.portal.search.batch.DynamicQueryBatchIndexingActionableFactory;
 import com.liferay.portal.search.spi.model.index.contributor.ModelIndexerWriterContributor;
+import com.liferay.portal.search.spi.model.index.contributor.helper.IndexerWriterMode;
 import com.liferay.portal.search.spi.model.registrar.ModelSearchConfigurator;
 import com.liferay.portal.search.spi.model.result.contributor.ModelSummaryContributor;
 import com.liferay.portal.search.spi.model.result.contributor.ModelVisibilityContributor;
@@ -60,11 +59,9 @@ public class CommerceTermEntryModelSearchConfigurator
 
 	@Activate
 	protected void activate() {
-		_modelIndexWriterContributor =
-			new CommerceTermEntryModelIndexerWriterContributor(
-				_commerceTermEntryLocalService,
-				_dynamicQueryBatchIndexingActionableFactory);
-
+		_modelIndexWriterContributor = new ModelIndexerWriterContributor<>(
+			IndexerWriterMode.UPDATE,
+			_commerceTermEntryLocalService::getIndexableActionableDynamicQuery);
 		_modelSummaryContributor =
 			new CommerceTermEntryModelSummaryContributor();
 		_modelVisibilityContributor =
@@ -74,10 +71,6 @@ public class CommerceTermEntryModelSearchConfigurator
 
 	@Reference
 	private CommerceTermEntryLocalService _commerceTermEntryLocalService;
-
-	@Reference
-	private DynamicQueryBatchIndexingActionableFactory
-		_dynamicQueryBatchIndexingActionableFactory;
 
 	private ModelIndexerWriterContributor<CommerceTermEntry>
 		_modelIndexWriterContributor;

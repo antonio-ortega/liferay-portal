@@ -11,7 +11,6 @@ import com.liferay.jenkins.results.parser.aws.AWSFleetCloud;
 import java.io.IOException;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -108,6 +107,17 @@ public class JenkinsMaster implements JenkinsNode<JenkinsMaster> {
 
 		if (JenkinsResultsParserUtil.isNullOrEmpty(labelExpression)) {
 			labelExpression = null;
+		}
+		else {
+			for (AWSFleetCloud awsFleetCloud : getAWSFleetClouds()) {
+				if (_matchesLabels(
+						labelExpression, awsFleetCloud.getLabels())) {
+
+					labelExpression = awsFleetCloud.getPrimaryLabel();
+
+					break;
+				}
+			}
 		}
 
 		Map<Long, Integer> batchSizes = _labelBatchSizes.get(labelExpression);
@@ -528,6 +538,29 @@ public class JenkinsMaster implements JenkinsNode<JenkinsMaster> {
 		return queuedBuildURLs;
 	}
 
+	public QueueItem getQueueItem(long queueId) {
+		try {
+			JSONObject queueItemJSONObject =
+				JenkinsResultsParserUtil.toJSONObject(
+					JenkinsResultsParserUtil.combine(
+						getURL(), "/queue/item/", String.valueOf(queueId),
+						"/api/json?tree=actions[parameters[name,value]],",
+						"id,inQueueSince,task[name,url],url,why"),
+					false, 5000);
+
+			if ((queueItemJSONObject == null) ||
+				!queueItemJSONObject.has("id")) {
+
+				return null;
+			}
+
+			return new QueueItem(this, queueItemJSONObject);
+		}
+		catch (IOException ioException) {
+			return null;
+		}
+	}
+
 	public List<JSONObject> getQueueItemJSONObjects() {
 		List<JSONObject> queueItemJSONObjects = new ArrayList<>();
 
@@ -843,7 +876,31 @@ public class JenkinsMaster implements JenkinsNode<JenkinsMaster> {
 	}
 
 	public boolean matchesLabelExpression(String labelExpression) {
-		return _matchesLabels(labelExpression, getAssignedLabels());
+		if (_matchesLabels(labelExpression, getAssignedLabels())) {
+			return true;
+		}
+
+		for (JenkinsSlave jenkinsSlave : getJenkinsSlaves()) {
+			if (jenkinsSlave.isEC2FleetNodeComputer() ||
+				jenkinsSlave.isOffline()) {
+
+				continue;
+			}
+
+			if (_matchesLabels(
+					labelExpression, jenkinsSlave.getAssignedLabels())) {
+
+				return true;
+			}
+		}
+
+		for (AWSFleetCloud awsFleetCloud : getAWSFleetClouds()) {
+			if (_matchesLabels(labelExpression, awsFleetCloud.getLabels())) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	@Override
@@ -866,15 +923,17 @@ public class JenkinsMaster implements JenkinsNode<JenkinsMaster> {
 			return;
 		}
 
+		_labelExpressionLabels.clear();
+
 		if (!isAvailable()) {
 			_assignedLabels.clear();
 			_buildURLs.clear();
 			_jenkinsSlavesMap.clear();
-			_labelBatchSizes.clear();
-			_labelExpressionLabels.clear();
 
 			return;
 		}
+
+		_assignedLabels.clear();
 
 		JSONObject computerAPIJSONObject = null;
 
@@ -891,7 +950,6 @@ public class JenkinsMaster implements JenkinsNode<JenkinsMaster> {
 			_assignedLabels.clear();
 			_buildURLs.clear();
 			_jenkinsSlavesMap.clear();
-			_labelBatchSizes.clear();
 			_labelExpressionLabels.clear();
 
 			System.out.println("Unable to read " + _masterURL);
@@ -1324,29 +1382,29 @@ public class JenkinsMaster implements JenkinsNode<JenkinsMaster> {
 
 		Set<String> labels = new HashSet<>();
 
-		labels.addAll(getAssignedLabels());
+		if (_matchesLabels(labelExpression, getAssignedLabels())) {
+			labels.addAll(getAssignedLabels());
+		}
 
 		for (JenkinsSlave jenkinsSlave : getJenkinsSlaves()) {
 			if (jenkinsSlave.isEC2FleetNodeComputer()) {
 				continue;
 			}
 
-			labels.addAll(jenkinsSlave.getAssignedLabels());
-		}
+			if (_matchesLabels(
+					labelExpression, jenkinsSlave.getAssignedLabels())) {
 
-		for (AWSFleetCloud awsFleetCloud : getAWSFleetClouds()) {
-			labels.addAll(awsFleetCloud.getLabels());
-		}
-
-		List<String> matchingLabels = new ArrayList<>();
-
-		for (String label : labels) {
-			if (_matchesLabels(labelExpression, Arrays.asList(label))) {
-				matchingLabels.add(label);
+				labels.addAll(jenkinsSlave.getAssignedLabels());
 			}
 		}
 
-		_labelExpressionLabels.put(labelExpression, matchingLabels);
+		for (AWSFleetCloud awsFleetCloud : getAWSFleetClouds()) {
+			if (_matchesLabels(labelExpression, awsFleetCloud.getLabels())) {
+				labels.addAll(awsFleetCloud.getLabels());
+			}
+		}
+
+		_labelExpressionLabels.put(labelExpression, new ArrayList<>(labels));
 
 		return _labelExpressionLabels.get(labelExpression);
 	}
@@ -1372,20 +1430,18 @@ public class JenkinsMaster implements JenkinsNode<JenkinsMaster> {
 	private synchronized int _getRecentBatchSizesTotal(String labelExpression) {
 		int recentBatchSizesTotal = 0;
 
+		long currentTimestamp = JenkinsResultsParserUtil.getCurrentTimeMillis();
+
 		if (JenkinsResultsParserUtil.isNullOrEmpty(labelExpression)) {
 			labelExpression = null;
 		}
 
-		long currentTimestamp = JenkinsResultsParserUtil.getCurrentTimeMillis();
+		List<String> labels = _getLabels(labelExpression);
 
 		for (Map.Entry<String, Map<Long, Integer>> labelBatchSizesEntry :
 				_labelBatchSizes.entrySet()) {
 
 			String label = labelBatchSizesEntry.getKey();
-
-			if ((labelExpression != null) && !labelExpression.equals(label)) {
-				continue;
-			}
 
 			Map<Long, Integer> batchSizes = labelBatchSizesEntry.getValue();
 
@@ -1404,7 +1460,11 @@ public class JenkinsMaster implements JenkinsNode<JenkinsMaster> {
 					continue;
 				}
 
-				recentBatchSizesTotal += entry.getValue();
+				if ((labelExpression == null) ||
+					_matchesLabels(label, labels)) {
+
+					recentBatchSizesTotal += entry.getValue();
+				}
 			}
 
 			for (Long expiredTimestamp : expiredTimestamps) {

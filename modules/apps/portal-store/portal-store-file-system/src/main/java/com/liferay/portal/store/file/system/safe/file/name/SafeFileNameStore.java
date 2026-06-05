@@ -43,6 +43,11 @@ public class SafeFileNameStore implements Store {
 	}
 
 	@Override
+	public void deleteDirectory(long companyId) throws PortalException {
+		_store.deleteDirectory(companyId);
+	}
+
+	@Override
 	public void deleteDirectory(
 		long companyId, long repositoryId, String dirName) {
 
@@ -181,6 +186,11 @@ public class SafeFileNameStore implements Store {
 		}
 
 		return _store.hasFile(companyId, repositoryId, fileName, versionLabel);
+	}
+
+	@Override
+	public void verifyCompanyStores() throws PortalException {
+		_store.verifyCompanyStores();
 	}
 
 	private final Store _store;

@@ -503,3 +503,4 @@ public abstract class BaseChatResourceImpl implements ChatResource {
 		LogFactoryUtil.getLog(BaseChatResourceImpl.class);
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1083824764

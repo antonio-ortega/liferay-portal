@@ -1,3 +1,4 @@
+import React from 'react';
 import {align} from './align';
 import {
 	ALIGNMENTS_MAP,
@@ -24,7 +25,7 @@ export const isBlank = (value: string | number): boolean =>
  * @param query
  * @deprecated
  */
-export const getRangeSelectorsFromQuery = query => {
+export const getRangeSelectorsFromQuery = (query: {[key: string]: any}) => {
 	const rangeEnd = get(query, 'rangeEnd', '');
 	const rangeKey = get(query, 'rangeKey', RangeKeyTimeRanges.Last30Days);
 	const rangeStart = get(query, 'rangeStart', '');
@@ -34,6 +35,20 @@ export const getRangeSelectorsFromQuery = query => {
 		rangeKey,
 		rangeStart: rangeStart === 'null' ? null : rangeStart
 	};
+};
+
+export const getSafeDecodedURIComponent = (
+	encodedURIComponent: string
+): string => {
+	if (!isString(encodedURIComponent)) {
+		return '';
+	}
+
+	try {
+		return decodeURIComponent(encodedURIComponent);
+	} catch (error) {
+		return encodedURIComponent;
+	}
 };
 
 export const getSafeRangeSelectors = (
@@ -66,8 +81,9 @@ export const normalizeRangeSelectors = (
 
 	if (rangeEnd && rangeStart) {
 		return {
-			...rangeSelectors,
-			rangeKey: RangeKeyTimeRanges.CustomRange
+			rangeEnd,
+			rangeKey: RangeKeyTimeRanges.CustomRange,
+			rangeStart
 		};
 	}
 
@@ -98,7 +114,9 @@ export const getSafeTouchpoint = (touchpoint: string) => {
 
 		return remainingUrl === '/' ? url.origin : url.origin + remainingUrl;
 	} catch (e) {
-		return touchpoint !== 'Any' ? decodeURIComponent(touchpoint) : null;
+		return touchpoint !== 'Any'
+			? getSafeDecodedURIComponent(touchpoint)
+			: null;
 	}
 };
 
@@ -126,7 +144,7 @@ export const downloadDataAsFile = ({
 
 	link.click();
 
-	link.parentNode.removeChild(link);
+	link.parentNode?.removeChild(link);
 	URL.revokeObjectURL(linkUrl);
 };
 
@@ -134,20 +152,20 @@ export const downloadDataAsFile = ({
  * Remove Protocol
  * @param {string} url
  */
-export const removeProtocol = url =>
-	decodeURIComponent(url).replace(/^http(s)?:\/\//i, '');
+export const removeProtocol = (url: string) =>
+	getSafeDecodedURIComponent(url).replace(/^http(s)?:\/\//i, '');
 
 /**
  * Remove numbers using regex
  * @param {string} str
  */
-export const removeNumbers = str => str.replace(/\d+/g, ' ');
+export const removeNumbers = (str: string) => str.replace(/\d+/g, ' ');
 
 /**
  * Remove spacing using regex
  * @param {string} str
  */
-export const removeSpacing = str => str.replace(/\s+/g, '');
+export const removeSpacing = (str: string) => str.replace(/\s+/g, '');
 
 /**
  * Returns the percent number passing as
@@ -156,8 +174,11 @@ export const removeSpacing = str => str.replace(/\s+/g, '');
  * @param {number} number2
  * @returns {number}
  */
-export const getPercentage = (number1, number2) => {
-	const result = (number1 / number2) * 100;
+export const getPercentage = (
+	number1: number | undefined | null,
+	number2: number | undefined | null
+) => {
+	const result = ((number1 ?? 0) / (number2 ?? 0)) * 100;
 
 	return isFinite(result) ? result : 0;
 };
@@ -168,7 +189,11 @@ export const getPercentage = (number1, number2) => {
  * @param {number} length
  * @param {number} ending
  */
-export const truncateText = (str, length, ending) => {
+export const truncateText = (
+	str: string,
+	length?: number | null,
+	ending?: string | null
+) => {
 	if (length == null) length = 100;
 	if (ending == null) ending = '...';
 
@@ -181,8 +206,10 @@ export const truncateText = (str, length, ending) => {
  * Is Ellipsis Active
  * @param {object} event
  */
-export const isEllipisActive = ({target}) =>
-	target.offsetWidth < target.scrollWidth;
+export const isEllipisActive = ({target}: {target: EventTarget | null}) => {
+	const el = target as HTMLElement | null;
+	return !!el && el.offsetWidth < el.scrollWidth;
+};
 
 /**
  * Get Align Position
@@ -190,7 +217,11 @@ export const isEllipisActive = ({target}) =>
  * @param {string} target
  * @param {string} suggestedPosition
  */
-export const getAlignPosition = (source, target, suggestedPosition) => {
+export const getAlignPosition = (
+	source: HTMLElement,
+	target: HTMLElement,
+	suggestedPosition?: keyof typeof ALIGNMENTS_MAP
+) => {
 	if (!suggestedPosition) {
 		suggestedPosition = 'top';
 	}
@@ -213,17 +244,25 @@ export const formatStringToLowercase: (value: string) => string = flow(
 /**
  * Merges multiple refs to be used on one element
  */
-export const mergeRef = (...refs) => instance =>
-	refs.forEach(ref => {
-		if (typeof ref === 'function') {
-			ref(instance);
-		} else if (ref) {
-			ref.current = instance;
-		}
-	});
+type Ref<T> =
+	| ((instance: T | null) => void)
+	| React.MutableRefObject<T | null>
+	| null
+	| undefined;
 
-export function getInitials(name = '') {
-	const nameArray = name.split(' ', 3);
+export const mergeRef =
+	<T>(...refs: Ref<T>[]) =>
+	(instance: T | null) =>
+		refs.forEach(ref => {
+			if (typeof ref === 'function') {
+				ref(instance);
+			} else if (ref) {
+				ref.current = instance;
+			}
+		});
+
+export function getInitials(name: string | null | undefined = '') {
+	const nameArray = (name ?? '').split(' ', 3);
 
 	return nameArray
 		.reduce((acc, val) => acc + val.substring(0, 1), '')

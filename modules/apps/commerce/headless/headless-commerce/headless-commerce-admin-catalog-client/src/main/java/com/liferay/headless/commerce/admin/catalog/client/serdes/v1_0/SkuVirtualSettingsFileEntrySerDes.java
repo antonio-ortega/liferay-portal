@@ -360,3 +360,4 @@ public class SkuVirtualSettingsFileEntrySerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1470241116

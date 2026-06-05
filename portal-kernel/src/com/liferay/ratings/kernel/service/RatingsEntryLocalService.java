@@ -352,3 +352,4 @@ public interface RatingsEntryLocalService
 		throws E;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:463923618

@@ -122,3 +122,4 @@ public class TemplateListStyle
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1924513501

@@ -6,6 +6,8 @@
 package com.liferay.portlet.asset.service.impl;
 
 import com.liferay.asset.kernel.exception.AssetCategoryNameException;
+import com.liferay.asset.kernel.exception.AssetCategoryParentCategoryIdException;
+import com.liferay.asset.kernel.exception.CategoryExternalReferenceCodeException;
 import com.liferay.asset.kernel.exception.DuplicateCategoryException;
 import com.liferay.asset.kernel.exception.DuplicateCategoryExternalReferenceCodeException;
 import com.liferay.asset.kernel.exception.InvalidAssetCategoryException;
@@ -15,6 +17,7 @@ import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.model.AssetCategoryConstants;
 import com.liferay.asset.kernel.model.AssetVocabulary;
 import com.liferay.asset.kernel.model.AssetVocabularyConstants;
+import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
 import com.liferay.asset.kernel.service.persistence.AssetVocabularyPersistence;
 import com.liferay.exportimport.kernel.empty.model.EmptyModelManagerUtil;
 import com.liferay.petra.string.StringBundler;
@@ -22,7 +25,6 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.bean.BeanReference;
 import com.liferay.portal.kernel.cache.thread.local.ThreadLocalCachable;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.model.ModelHintsUtil;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.SystemEventConstants;
@@ -139,7 +141,7 @@ public class AssetCategoryLocalServiceImpl
 
 		long categoryId = counterLocalService.increment();
 
-		_validateExternalReferenceCode(externalReferenceCode, groupId);
+		_validateExternalReferenceCode(externalReferenceCode, groupId, 0);
 
 		AssetCategory category = assetCategoryPersistence.create(categoryId);
 
@@ -432,6 +434,7 @@ public class AssetCategoryLocalServiceImpl
 		return Collections.emptyList();
 	}
 
+	@Override
 	public AssetCategory getOrAddEmptyCategory(
 			String externalReferenceCode, long userId, long groupId)
 		throws PortalException {
@@ -448,6 +451,90 @@ public class AssetCategoryLocalServiceImpl
 			externalReferenceCode,
 			this::fetchAssetCategoryByExternalReferenceCode,
 			this::getAssetCategoryByExternalReferenceCode, groupId, "category");
+	}
+
+	@Override
+	public AssetCategory getOrAddEmptyCategoryWithAncestors(
+			String externalReferenceCode, long userId, long groupId,
+			String parentCategoryExternalReferenceCode,
+			String vocabularyExternalReferenceCode)
+		throws PortalException {
+
+		AssetCategory assetCategory =
+			assetCategoryLocalService.getOrAddEmptyCategory(
+				externalReferenceCode, userId, groupId);
+
+		if ((assetCategory.getParentCategoryId() !=
+				AssetCategoryConstants.EMPTY_PARENT_CATEGORY_ID) ||
+			(assetCategory.getVocabularyId() !=
+				AssetVocabularyConstants.EMPTY_VOCABULARY_ID)) {
+
+			return assetCategory;
+		}
+
+		AssetVocabulary assetVocabulary = null;
+
+		if (Validator.isNotNull(vocabularyExternalReferenceCode)) {
+			assetVocabulary =
+				_assetVocabularyLocalService.getOrAddEmptyVocabulary(
+					vocabularyExternalReferenceCode, userId, groupId);
+
+			assetCategory.setVocabularyId(assetVocabulary.getVocabularyId());
+		}
+
+		if (Validator.isNotNull(parentCategoryExternalReferenceCode)) {
+			AssetCategory parentAssetCategory =
+				assetCategoryLocalService.getOrAddEmptyCategory(
+					parentCategoryExternalReferenceCode, userId, groupId);
+
+			long parentVocabularyId = parentAssetCategory.getVocabularyId();
+
+			if (assetVocabulary != null) {
+				if ((parentVocabularyId !=
+						AssetVocabularyConstants.EMPTY_VOCABULARY_ID) &&
+					(parentVocabularyId != assetVocabulary.getVocabularyId())) {
+
+					throw new AssetCategoryParentCategoryIdException(
+						"Parent category exists in a different vocabulary");
+				}
+
+				parentAssetCategory.setVocabularyId(
+					assetVocabulary.getVocabularyId());
+			}
+			else if ((parentVocabularyId !=
+						AssetVocabularyConstants.EMPTY_VOCABULARY_ID) &&
+					 (assetCategory.getVocabularyId() ==
+						 AssetVocabularyConstants.EMPTY_VOCABULARY_ID)) {
+
+				assetCategory.setVocabularyId(parentVocabularyId);
+			}
+
+			boolean emptyParentCategory = false;
+
+			if (parentAssetCategory.getParentCategoryId() ==
+					AssetCategoryConstants.EMPTY_PARENT_CATEGORY_ID) {
+
+				emptyParentCategory = true;
+
+				parentAssetCategory.setParentCategoryId(
+					AssetCategoryConstants.DEFAULT_PARENT_CATEGORY_ID);
+			}
+
+			if ((assetVocabulary != null) || emptyParentCategory) {
+				parentAssetCategory =
+					assetCategoryLocalService.updateAssetCategory(
+						parentAssetCategory);
+			}
+
+			assetCategory.setParentCategoryId(
+				parentAssetCategory.getCategoryId());
+		}
+		else {
+			assetCategory.setParentCategoryId(
+				AssetCategoryConstants.DEFAULT_PARENT_CATEGORY_ID);
+		}
+
+		return assetCategoryLocalService.updateAssetCategory(assetCategory);
 	}
 
 	@Override
@@ -626,9 +713,9 @@ public class AssetCategoryLocalServiceImpl
 		AssetCategory category = assetCategoryPersistence.findByPrimaryKey(
 			categoryId);
 
-		if (Validator.isNotNull(externalReferenceCode) &&
-			FeatureFlagManagerUtil.isEnabled(
-				category.getCompanyId(), "LPD-31228")) {
+		if (Validator.isNotNull(externalReferenceCode)) {
+			_validateExternalReferenceCode(
+				externalReferenceCode, category.getGroupId(), categoryId);
 
 			category.setExternalReferenceCode(externalReferenceCode);
 		}
@@ -647,10 +734,11 @@ public class AssetCategoryLocalServiceImpl
 		category.setName(name);
 		category.setTitleMap(trimmedTitleMap);
 		category.setDescriptionMap(descriptionMap);
-
-		if (category.getStatus() == WorkflowConstants.STATUS_EMPTY) {
-			category.setStatus(WorkflowConstants.STATUS_APPROVED);
-		}
+		category.setStatus(
+			EmptyModelManagerUtil.solveEmptyModel(
+				externalReferenceCode, category.getModelClassName(),
+				category.getCompanyId(), category.getGroupId(),
+				category.getStatus(), () -> WorkflowConstants.STATUS_APPROVED));
 
 		return _moveCategory(category, parentCategoryId, vocabularyId);
 	}
@@ -873,23 +961,38 @@ public class AssetCategoryLocalServiceImpl
 	}
 
 	private void _validateExternalReferenceCode(
-			String externalReferenceCode, long groupId)
+			String externalReferenceCode, long groupId, long categoryId)
 		throws PortalException {
 
 		if (Validator.isNull(externalReferenceCode)) {
 			return;
 		}
 
+		int maxLength = ModelHintsUtil.getMaxLength(
+			AssetCategory.class.getName(), "externalReferenceCode");
+
+		if (externalReferenceCode.length() > maxLength) {
+			throw new CategoryExternalReferenceCodeException(
+				StringBundler.concat(
+					"External reference code length cannot exceed ", maxLength,
+					" characters"));
+		}
+
 		AssetCategory assetCategory = assetCategoryPersistence.fetchByERC_G(
 			externalReferenceCode, groupId);
 
-		if (assetCategory != null) {
+		if ((assetCategory != null) &&
+			(assetCategory.getCategoryId() != categoryId)) {
+
 			throw new DuplicateCategoryExternalReferenceCodeException(
 				StringBundler.concat(
 					"Duplicate category external reference code ",
-					externalReferenceCode, " in group", groupId));
+					externalReferenceCode, " in group ", groupId));
 		}
 	}
+
+	@BeanReference(type = AssetVocabularyLocalService.class)
+	private AssetVocabularyLocalService _assetVocabularyLocalService;
 
 	@BeanReference(type = AssetVocabularyPersistence.class)
 	private AssetVocabularyPersistence _assetVocabularyPersistence;

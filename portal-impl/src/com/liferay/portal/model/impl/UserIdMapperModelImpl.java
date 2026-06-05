@@ -84,6 +84,8 @@ public class UserIdMapperModelImpl
 
 	public static final String TABLE_SQL_DROP = "drop table UserIdMapper";
 
+	public static final String ENTITY_ALIAS = "userIdMapper";
+
 	public static final String ORDER_BY_JPQL =
 		" ORDER BY userIdMapper.userIdMapperId ASC";
 
@@ -796,3 +798,4 @@ public class UserIdMapperModelImpl
 	private UserIdMapper _escapedModel;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-1560381004

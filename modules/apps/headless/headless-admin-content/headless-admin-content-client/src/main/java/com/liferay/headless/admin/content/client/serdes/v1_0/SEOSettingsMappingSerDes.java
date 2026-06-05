@@ -308,3 +308,4 @@ public class SEOSettingsMappingSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1804100791

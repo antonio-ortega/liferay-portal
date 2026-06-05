@@ -32,6 +32,7 @@
 		}
 
 		const clickToChatProviders = {
+			aihub: '#aihub-chatbot-widget',
 			chatwoot: function (hide) {
 				if (hide) {
 					document

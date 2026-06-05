@@ -36,6 +36,24 @@ public class LayoutPageTemplateStructureUtil {
 	 */
 
 	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(List)
+	 */
+	public static void cacheResult(
+		List<LayoutPageTemplateStructure> layoutPageTemplateStructures) {
+
+		getPersistence().cacheResult(layoutPageTemplateStructures);
+	}
+
+	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(com.liferay.portal.kernel.model.BaseModel)
+	 */
+	public static void cacheResult(
+		LayoutPageTemplateStructure layoutPageTemplateStructure) {
+
+		getPersistence().cacheResult(layoutPageTemplateStructure);
+	}
+
+	/**
 	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#clearCache()
 	 */
 	public static void clearCache() {
@@ -117,58 +135,10 @@ public class LayoutPageTemplateStructureUtil {
 	}
 
 	/**
-	 * Returns all the layout page template structures where uuid = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @return the matching layout page template structures
-	 */
-	public static List<LayoutPageTemplateStructure> findByUuid(String uuid) {
-		return getPersistence().findByUuid(uuid);
-	}
-
-	/**
-	 * Returns a range of all the layout page template structures where uuid = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LayoutPageTemplateStructureModelImpl</code>.
-	 * </p>
-	 *
-	 * @param uuid the uuid
-	 * @param start the lower bound of the range of layout page template structures
-	 * @param end the upper bound of the range of layout page template structures (not inclusive)
-	 * @return the range of matching layout page template structures
-	 */
-	public static List<LayoutPageTemplateStructure> findByUuid(
-		String uuid, int start, int end) {
-
-		return getPersistence().findByUuid(uuid, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the layout page template structures where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LayoutPageTemplateStructureModelImpl</code>.
-	 * </p>
-	 *
-	 * @param uuid the uuid
-	 * @param start the lower bound of the range of layout page template structures
-	 * @param end the upper bound of the range of layout page template structures (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching layout page template structures
-	 */
-	public static List<LayoutPageTemplateStructure> findByUuid(
-		String uuid, int start, int end,
-		OrderByComparator<LayoutPageTemplateStructure> orderByComparator) {
-
-		return getPersistence().findByUuid(uuid, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the layout page template structures where uuid = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LayoutPageTemplateStructureModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.layout.page.template.model.impl.LayoutPageTemplateStructureModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -219,56 +189,6 @@ public class LayoutPageTemplateStructureUtil {
 	}
 
 	/**
-	 * Returns the last layout page template structure in the ordered set where uuid = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching layout page template structure
-	 * @throws NoSuchPageTemplateStructureException if a matching layout page template structure could not be found
-	 */
-	public static LayoutPageTemplateStructure findByUuid_Last(
-			String uuid,
-			OrderByComparator<LayoutPageTemplateStructure> orderByComparator)
-		throws com.liferay.layout.page.template.exception.
-			NoSuchPageTemplateStructureException {
-
-		return getPersistence().findByUuid_Last(uuid, orderByComparator);
-	}
-
-	/**
-	 * Returns the last layout page template structure in the ordered set where uuid = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching layout page template structure, or <code>null</code> if a matching layout page template structure could not be found
-	 */
-	public static LayoutPageTemplateStructure fetchByUuid_Last(
-		String uuid,
-		OrderByComparator<LayoutPageTemplateStructure> orderByComparator) {
-
-		return getPersistence().fetchByUuid_Last(uuid, orderByComparator);
-	}
-
-	/**
-	 * Returns the layout page template structures before and after the current layout page template structure in the ordered set where uuid = &#63;.
-	 *
-	 * @param layoutPageTemplateStructureId the primary key of the current layout page template structure
-	 * @param uuid the uuid
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next layout page template structure
-	 * @throws NoSuchPageTemplateStructureException if a layout page template structure with the primary key could not be found
-	 */
-	public static LayoutPageTemplateStructure[] findByUuid_PrevAndNext(
-			long layoutPageTemplateStructureId, String uuid,
-			OrderByComparator<LayoutPageTemplateStructure> orderByComparator)
-		throws com.liferay.layout.page.template.exception.
-			NoSuchPageTemplateStructureException {
-
-		return getPersistence().findByUuid_PrevAndNext(
-			layoutPageTemplateStructureId, uuid, orderByComparator);
-	}
-
-	/**
 	 * Removes all the layout page template structures where uuid = &#63; from the database.
 	 *
 	 * @param uuid the uuid
@@ -301,19 +221,6 @@ public class LayoutPageTemplateStructureUtil {
 			NoSuchPageTemplateStructureException {
 
 		return getPersistence().findByUUID_G(uuid, groupId);
-	}
-
-	/**
-	 * Returns the layout page template structure where uuid = &#63; and groupId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
-	 *
-	 * @param uuid the uuid
-	 * @param groupId the group ID
-	 * @return the matching layout page template structure, or <code>null</code> if a matching layout page template structure could not be found
-	 */
-	public static LayoutPageTemplateStructure fetchByUUID_G(
-		String uuid, long groupId) {
-
-		return getPersistence().fetchByUUID_G(uuid, groupId);
 	}
 
 	/**
@@ -357,64 +264,10 @@ public class LayoutPageTemplateStructureUtil {
 	}
 
 	/**
-	 * Returns all the layout page template structures where uuid = &#63; and companyId = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @return the matching layout page template structures
-	 */
-	public static List<LayoutPageTemplateStructure> findByUuid_C(
-		String uuid, long companyId) {
-
-		return getPersistence().findByUuid_C(uuid, companyId);
-	}
-
-	/**
-	 * Returns a range of all the layout page template structures where uuid = &#63; and companyId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LayoutPageTemplateStructureModelImpl</code>.
-	 * </p>
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param start the lower bound of the range of layout page template structures
-	 * @param end the upper bound of the range of layout page template structures (not inclusive)
-	 * @return the range of matching layout page template structures
-	 */
-	public static List<LayoutPageTemplateStructure> findByUuid_C(
-		String uuid, long companyId, int start, int end) {
-
-		return getPersistence().findByUuid_C(uuid, companyId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the layout page template structures where uuid = &#63; and companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LayoutPageTemplateStructureModelImpl</code>.
-	 * </p>
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param start the lower bound of the range of layout page template structures
-	 * @param end the upper bound of the range of layout page template structures (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching layout page template structures
-	 */
-	public static List<LayoutPageTemplateStructure> findByUuid_C(
-		String uuid, long companyId, int start, int end,
-		OrderByComparator<LayoutPageTemplateStructure> orderByComparator) {
-
-		return getPersistence().findByUuid_C(
-			uuid, companyId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the layout page template structures where uuid = &#63; and companyId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LayoutPageTemplateStructureModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.layout.page.template.model.impl.LayoutPageTemplateStructureModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -470,61 +323,6 @@ public class LayoutPageTemplateStructureUtil {
 	}
 
 	/**
-	 * Returns the last layout page template structure in the ordered set where uuid = &#63; and companyId = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching layout page template structure
-	 * @throws NoSuchPageTemplateStructureException if a matching layout page template structure could not be found
-	 */
-	public static LayoutPageTemplateStructure findByUuid_C_Last(
-			String uuid, long companyId,
-			OrderByComparator<LayoutPageTemplateStructure> orderByComparator)
-		throws com.liferay.layout.page.template.exception.
-			NoSuchPageTemplateStructureException {
-
-		return getPersistence().findByUuid_C_Last(
-			uuid, companyId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last layout page template structure in the ordered set where uuid = &#63; and companyId = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching layout page template structure, or <code>null</code> if a matching layout page template structure could not be found
-	 */
-	public static LayoutPageTemplateStructure fetchByUuid_C_Last(
-		String uuid, long companyId,
-		OrderByComparator<LayoutPageTemplateStructure> orderByComparator) {
-
-		return getPersistence().fetchByUuid_C_Last(
-			uuid, companyId, orderByComparator);
-	}
-
-	/**
-	 * Returns the layout page template structures before and after the current layout page template structure in the ordered set where uuid = &#63; and companyId = &#63;.
-	 *
-	 * @param layoutPageTemplateStructureId the primary key of the current layout page template structure
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next layout page template structure
-	 * @throws NoSuchPageTemplateStructureException if a layout page template structure with the primary key could not be found
-	 */
-	public static LayoutPageTemplateStructure[] findByUuid_C_PrevAndNext(
-			long layoutPageTemplateStructureId, String uuid, long companyId,
-			OrderByComparator<LayoutPageTemplateStructure> orderByComparator)
-		throws com.liferay.layout.page.template.exception.
-			NoSuchPageTemplateStructureException {
-
-		return getPersistence().findByUuid_C_PrevAndNext(
-			layoutPageTemplateStructureId, uuid, companyId, orderByComparator);
-	}
-
-	/**
 	 * Removes all the layout page template structures where uuid = &#63; and companyId = &#63; from the database.
 	 *
 	 * @param uuid the uuid
@@ -546,61 +344,10 @@ public class LayoutPageTemplateStructureUtil {
 	}
 
 	/**
-	 * Returns all the layout page template structures where groupId = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @return the matching layout page template structures
-	 */
-	public static List<LayoutPageTemplateStructure> findByGroupId(
-		long groupId) {
-
-		return getPersistence().findByGroupId(groupId);
-	}
-
-	/**
-	 * Returns a range of all the layout page template structures where groupId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LayoutPageTemplateStructureModelImpl</code>.
-	 * </p>
-	 *
-	 * @param groupId the group ID
-	 * @param start the lower bound of the range of layout page template structures
-	 * @param end the upper bound of the range of layout page template structures (not inclusive)
-	 * @return the range of matching layout page template structures
-	 */
-	public static List<LayoutPageTemplateStructure> findByGroupId(
-		long groupId, int start, int end) {
-
-		return getPersistence().findByGroupId(groupId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the layout page template structures where groupId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LayoutPageTemplateStructureModelImpl</code>.
-	 * </p>
-	 *
-	 * @param groupId the group ID
-	 * @param start the lower bound of the range of layout page template structures
-	 * @param end the upper bound of the range of layout page template structures (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching layout page template structures
-	 */
-	public static List<LayoutPageTemplateStructure> findByGroupId(
-		long groupId, int start, int end,
-		OrderByComparator<LayoutPageTemplateStructure> orderByComparator) {
-
-		return getPersistence().findByGroupId(
-			groupId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the layout page template structures where groupId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LayoutPageTemplateStructureModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.layout.page.template.model.impl.LayoutPageTemplateStructureModelImpl</code>.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -652,56 +399,6 @@ public class LayoutPageTemplateStructureUtil {
 	}
 
 	/**
-	 * Returns the last layout page template structure in the ordered set where groupId = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching layout page template structure
-	 * @throws NoSuchPageTemplateStructureException if a matching layout page template structure could not be found
-	 */
-	public static LayoutPageTemplateStructure findByGroupId_Last(
-			long groupId,
-			OrderByComparator<LayoutPageTemplateStructure> orderByComparator)
-		throws com.liferay.layout.page.template.exception.
-			NoSuchPageTemplateStructureException {
-
-		return getPersistence().findByGroupId_Last(groupId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last layout page template structure in the ordered set where groupId = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching layout page template structure, or <code>null</code> if a matching layout page template structure could not be found
-	 */
-	public static LayoutPageTemplateStructure fetchByGroupId_Last(
-		long groupId,
-		OrderByComparator<LayoutPageTemplateStructure> orderByComparator) {
-
-		return getPersistence().fetchByGroupId_Last(groupId, orderByComparator);
-	}
-
-	/**
-	 * Returns the layout page template structures before and after the current layout page template structure in the ordered set where groupId = &#63;.
-	 *
-	 * @param layoutPageTemplateStructureId the primary key of the current layout page template structure
-	 * @param groupId the group ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next layout page template structure
-	 * @throws NoSuchPageTemplateStructureException if a layout page template structure with the primary key could not be found
-	 */
-	public static LayoutPageTemplateStructure[] findByGroupId_PrevAndNext(
-			long layoutPageTemplateStructureId, long groupId,
-			OrderByComparator<LayoutPageTemplateStructure> orderByComparator)
-		throws com.liferay.layout.page.template.exception.
-			NoSuchPageTemplateStructureException {
-
-		return getPersistence().findByGroupId_PrevAndNext(
-			layoutPageTemplateStructureId, groupId, orderByComparator);
-	}
-
-	/**
 	 * Removes all the layout page template structures where groupId = &#63; from the database.
 	 *
 	 * @param groupId the group ID
@@ -733,19 +430,6 @@ public class LayoutPageTemplateStructureUtil {
 			NoSuchPageTemplateStructureException {
 
 		return getPersistence().findByG_P(groupId, plid);
-	}
-
-	/**
-	 * Returns the layout page template structure where groupId = &#63; and plid = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
-	 *
-	 * @param groupId the group ID
-	 * @param plid the plid
-	 * @return the matching layout page template structure, or <code>null</code> if a matching layout page template structure could not be found
-	 */
-	public static LayoutPageTemplateStructure fetchByG_P(
-		long groupId, long plid) {
-
-		return getPersistence().fetchByG_P(groupId, plid);
 	}
 
 	/**
@@ -786,28 +470,6 @@ public class LayoutPageTemplateStructureUtil {
 	 */
 	public static int countByG_P(long groupId, long plid) {
 		return getPersistence().countByG_P(groupId, plid);
-	}
-
-	/**
-	 * Caches the layout page template structure in the entity cache if it is enabled.
-	 *
-	 * @param layoutPageTemplateStructure the layout page template structure
-	 */
-	public static void cacheResult(
-		LayoutPageTemplateStructure layoutPageTemplateStructure) {
-
-		getPersistence().cacheResult(layoutPageTemplateStructure);
-	}
-
-	/**
-	 * Caches the layout page template structures in the entity cache if it is enabled.
-	 *
-	 * @param layoutPageTemplateStructures the layout page template structures
-	 */
-	public static void cacheResult(
-		List<LayoutPageTemplateStructure> layoutPageTemplateStructures) {
-
-		getPersistence().cacheResult(layoutPageTemplateStructures);
 	}
 
 	/**
@@ -872,86 +534,182 @@ public class LayoutPageTemplateStructureUtil {
 	}
 
 	/**
-	 * Returns all the layout page template structures.
+	 * Returns the layout page template structure where uuid = &#63; and groupId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
 	 *
-	 * @return the layout page template structures
+	 * @param uuid the uuid
+	 * @param groupId the group ID
+	 * @return the matching layout page template structure, or <code>null</code> if a matching layout page template structure could not be found
 	 */
-	public static List<LayoutPageTemplateStructure> findAll() {
-		return getPersistence().findAll();
+	public static LayoutPageTemplateStructure fetchByUUID_G(
+		String uuid, long groupId) {
+
+		return getPersistence().fetchByUUID_G(uuid, groupId);
 	}
 
 	/**
-	 * Returns a range of all the layout page template structures.
+	 * Returns the layout page template structure where groupId = &#63; and plid = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	 *
+	 * @param groupId the group ID
+	 * @param plid the plid
+	 * @return the matching layout page template structure, or <code>null</code> if a matching layout page template structure could not be found
+	 */
+	public static LayoutPageTemplateStructure fetchByG_P(
+		long groupId, long plid) {
+
+		return getPersistence().fetchByG_P(groupId, plid);
+	}
+
+	/**
+	 * Returns all the layout page template structures where uuid = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @return the matching layout page template structures
+	 */
+	public static List<LayoutPageTemplateStructure> findByUuid(String uuid) {
+		return getPersistence().findByUuid(uuid);
+	}
+
+	/**
+	 * Returns a range of all the layout page template structures where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LayoutPageTemplateStructureModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.layout.page.template.model.impl.LayoutPageTemplateStructureModelImpl</code>.
 	 * </p>
 	 *
+	 * @param uuid the uuid
 	 * @param start the lower bound of the range of layout page template structures
 	 * @param end the upper bound of the range of layout page template structures (not inclusive)
-	 * @return the range of layout page template structures
+	 * @return the range of matching layout page template structures
 	 */
-	public static List<LayoutPageTemplateStructure> findAll(
-		int start, int end) {
+	public static List<LayoutPageTemplateStructure> findByUuid(
+		String uuid, int start, int end) {
 
-		return getPersistence().findAll(start, end);
+		return getPersistence().findByUuid(uuid, start, end);
 	}
 
 	/**
-	 * Returns an ordered range of all the layout page template structures.
+	 * Returns an ordered range of all the layout page template structures where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LayoutPageTemplateStructureModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.layout.page.template.model.impl.LayoutPageTemplateStructureModelImpl</code>.
 	 * </p>
 	 *
+	 * @param uuid the uuid
 	 * @param start the lower bound of the range of layout page template structures
 	 * @param end the upper bound of the range of layout page template structures (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of layout page template structures
+	 * @return the ordered range of matching layout page template structures
 	 */
-	public static List<LayoutPageTemplateStructure> findAll(
-		int start, int end,
+	public static List<LayoutPageTemplateStructure> findByUuid(
+		String uuid, int start, int end,
 		OrderByComparator<LayoutPageTemplateStructure> orderByComparator) {
 
-		return getPersistence().findAll(start, end, orderByComparator);
+		return getPersistence().findByUuid(uuid, start, end, orderByComparator);
 	}
 
 	/**
-	 * Returns an ordered range of all the layout page template structures.
+	 * Returns all the layout page template structures where uuid = &#63; and companyId = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @return the matching layout page template structures
+	 */
+	public static List<LayoutPageTemplateStructure> findByUuid_C(
+		String uuid, long companyId) {
+
+		return getPersistence().findByUuid_C(uuid, companyId);
+	}
+
+	/**
+	 * Returns a range of all the layout page template structures where uuid = &#63; and companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LayoutPageTemplateStructureModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.layout.page.template.model.impl.LayoutPageTemplateStructureModelImpl</code>.
 	 * </p>
 	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of layout page template structures
+	 * @param end the upper bound of the range of layout page template structures (not inclusive)
+	 * @return the range of matching layout page template structures
+	 */
+	public static List<LayoutPageTemplateStructure> findByUuid_C(
+		String uuid, long companyId, int start, int end) {
+
+		return getPersistence().findByUuid_C(uuid, companyId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the layout page template structures where uuid = &#63; and companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.layout.page.template.model.impl.LayoutPageTemplateStructureModelImpl</code>.
+	 * </p>
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
 	 * @param start the lower bound of the range of layout page template structures
 	 * @param end the upper bound of the range of layout page template structures (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param useFinderCache whether to use the finder cache
-	 * @return the ordered range of layout page template structures
+	 * @return the ordered range of matching layout page template structures
 	 */
-	public static List<LayoutPageTemplateStructure> findAll(
-		int start, int end,
-		OrderByComparator<LayoutPageTemplateStructure> orderByComparator,
-		boolean useFinderCache) {
+	public static List<LayoutPageTemplateStructure> findByUuid_C(
+		String uuid, long companyId, int start, int end,
+		OrderByComparator<LayoutPageTemplateStructure> orderByComparator) {
 
-		return getPersistence().findAll(
-			start, end, orderByComparator, useFinderCache);
+		return getPersistence().findByUuid_C(
+			uuid, companyId, start, end, orderByComparator);
 	}
 
 	/**
-	 * Removes all the layout page template structures from the database.
-	 */
-	public static void removeAll() {
-		getPersistence().removeAll();
-	}
-
-	/**
-	 * Returns the number of layout page template structures.
+	 * Returns all the layout page template structures where groupId = &#63;.
 	 *
-	 * @return the number of layout page template structures
+	 * @param groupId the group ID
+	 * @return the matching layout page template structures
 	 */
-	public static int countAll() {
-		return getPersistence().countAll();
+	public static List<LayoutPageTemplateStructure> findByGroupId(
+		long groupId) {
+
+		return getPersistence().findByGroupId(groupId);
+	}
+
+	/**
+	 * Returns a range of all the layout page template structures where groupId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.layout.page.template.model.impl.LayoutPageTemplateStructureModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param start the lower bound of the range of layout page template structures
+	 * @param end the upper bound of the range of layout page template structures (not inclusive)
+	 * @return the range of matching layout page template structures
+	 */
+	public static List<LayoutPageTemplateStructure> findByGroupId(
+		long groupId, int start, int end) {
+
+		return getPersistence().findByGroupId(groupId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the layout page template structures where groupId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.layout.page.template.model.impl.LayoutPageTemplateStructureModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param start the lower bound of the range of layout page template structures
+	 * @param end the upper bound of the range of layout page template structures (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching layout page template structures
+	 */
+	public static List<LayoutPageTemplateStructure> findByGroupId(
+		long groupId, int start, int end,
+		OrderByComparator<LayoutPageTemplateStructure> orderByComparator) {
+
+		return getPersistence().findByGroupId(
+			groupId, start, end, orderByComparator);
 	}
 
 	public static LayoutPageTemplateStructurePersistence getPersistence() {
@@ -967,3 +725,4 @@ public class LayoutPageTemplateStructureUtil {
 	private static volatile LayoutPageTemplateStructurePersistence _persistence;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-1158396820

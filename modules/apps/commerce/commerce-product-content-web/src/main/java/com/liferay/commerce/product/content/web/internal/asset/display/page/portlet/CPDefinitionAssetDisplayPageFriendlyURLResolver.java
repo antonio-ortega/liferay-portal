@@ -37,6 +37,7 @@ import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.product.url.CPFriendlyURL;
 import com.liferay.commerce.util.CommerceContextThreadLocal;
 import com.liferay.commerce.util.CommerceGroupThreadLocal;
+import com.liferay.friendly.url.constants.FriendlyURLEntryConstants;
 import com.liferay.friendly.url.model.FriendlyURLEntry;
 import com.liferay.friendly.url.service.FriendlyURLEntryLocalService;
 import com.liferay.info.constants.InfoDisplayWebKeys;
@@ -109,7 +110,10 @@ public class CPDefinitionAssetDisplayPageFriendlyURLResolver
 
 		FriendlyURLEntry friendlyURLEntry =
 			_friendlyURLEntryLocalService.fetchFriendlyURLEntry(
-				companyGroup.getGroupId(), classNameId, urlTitle);
+				companyGroup.getGroupId(), classNameId,
+				FriendlyURLEntryConstants.
+					FRIENDLY_URL_ENTRY_PARENT_CLASS_PK_DEFAULT,
+				urlTitle);
 
 		if (friendlyURLEntry == null) {
 			return null;
@@ -163,7 +167,7 @@ public class CPDefinitionAssetDisplayPageFriendlyURLResolver
 				layoutDisplayPageObjectProvider);
 			httpServletRequest.setAttribute(
 				LayoutDisplayPageWebKeys.LAYOUT_DISPLAY_PAGE_PROVIDER,
-				_getLayoutDisplayPageProvider(friendlyURL));
+				_getLayoutDisplayPageProvider(companyId, friendlyURL));
 
 			AssetEntry assetEntry = _getAssetEntry(
 				layoutDisplayPageObjectProvider);
@@ -209,7 +213,10 @@ public class CPDefinitionAssetDisplayPageFriendlyURLResolver
 		FriendlyURLEntry friendlyURLEntry =
 			_friendlyURLEntryLocalService.fetchFriendlyURLEntry(
 				companyGroup.getGroupId(),
-				_portal.getClassNameId(CProduct.class), urlTitle);
+				_portal.getClassNameId(CProduct.class),
+				FriendlyURLEntryConstants.
+					FRIENDLY_URL_ENTRY_PARENT_CLASS_PK_DEFAULT,
+				urlTitle);
 
 		if (friendlyURLEntry == null) {
 			return null;
@@ -443,7 +450,7 @@ public class CPDefinitionAssetDisplayPageFriendlyURLResolver
 		LayoutDisplayPageProvider<?> layoutDisplayPageProvider =
 			layoutDisplayPageProviderRegistry.
 				getLayoutDisplayPageProviderByClassName(
-					CPDefinition.class.getName());
+					cpDefinition.getCompanyId(), CPDefinition.class.getName());
 
 		InfoItemReference infoItemReference = new InfoItemReference(
 			CPDefinition.class.getName(), cpDefinition.getCPDefinitionId());
@@ -453,14 +460,15 @@ public class CPDefinitionAssetDisplayPageFriendlyURLResolver
 	}
 
 	private LayoutDisplayPageProvider<?> _getLayoutDisplayPageProvider(
-			String friendlyURL)
+			long companyId, String friendlyURL)
 		throws PortalException {
 
 		String urlSeparator = _getURLSeparator(friendlyURL);
 
 		LayoutDisplayPageProvider<?> layoutDisplayPageProvider =
 			layoutDisplayPageProviderRegistry.
-				getLayoutDisplayPageProviderByURLSeparator(urlSeparator);
+				getLayoutDisplayPageProviderByURLSeparator(
+					companyId, urlSeparator);
 
 		if (layoutDisplayPageProvider == null) {
 			throw new PortalException(

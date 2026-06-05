@@ -97,6 +97,8 @@ public class CommerceInventoryAuditModelImpl
 
 	public static final String TABLE_SQL_DROP = "drop table CIAudit";
 
+	public static final String ENTITY_ALIAS = "commerceInventoryAudit";
+
 	public static final String ORDER_BY_JPQL =
 		" ORDER BY commerceInventoryAudit.createDate DESC";
 
@@ -1039,3 +1041,4 @@ public class CommerceInventoryAuditModelImpl
 	private CommerceInventoryAudit _escapedModel;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:211209032

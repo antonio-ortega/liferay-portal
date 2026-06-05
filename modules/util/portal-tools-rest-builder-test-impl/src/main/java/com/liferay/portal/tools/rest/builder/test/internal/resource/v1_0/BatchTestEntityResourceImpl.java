@@ -95,8 +95,18 @@ public class BatchTestEntityResourceImpl
 		return new ExportImportDescriptor() {
 
 			@Override
+			public String getKey() {
+				return "BatchTestEntityKey";
+			}
+
+			@Override
 			public String getLabelLanguageKey() {
 				return "batch-test-entity";
+			}
+
+			@Override
+			public Class getModelClass() {
+				return null;
 			}
 
 			@Override
@@ -117,24 +127,8 @@ public class BatchTestEntityResourceImpl
 			}
 
 			@Override
-			public String getResourceClassName() {
-				return BatchTestEntityResourceImpl.class.getName();
-			}
-
-			@Override
 			public Scope getScope() {
 				return Scope.COMPANY;
-			}
-
-			@Override
-			public boolean isApplicableExternalReferenceCode(
-				String externalReferenceCode) {
-
-				if (_fetchBatchTestEntity(externalReferenceCode) != null) {
-					return true;
-				}
-
-				return false;
 			}
 
 		};
@@ -198,7 +192,7 @@ public class BatchTestEntityResourceImpl
 						throw new PortalException(exception);
 					}
 				},
-				CompanyTestEntity.class.getName());
+				"CompanyTestEntity");
 
 			batchTestEntity.setRelatedCompanyTestEntity(companyTestEntity);
 
@@ -275,7 +269,7 @@ public class BatchTestEntityResourceImpl
 						throw new PortalException(exception);
 					}
 				},
-				CompanyTestEntity.class.getName());
+				"CompanyTestEntity");
 
 			_relationships.put(
 				batchTestEntity.getId(), companyTestEntity.getId());
@@ -317,8 +311,23 @@ public class BatchTestEntityResourceImpl
 	private BatchTestEntity _toBatchTestEntity(
 		BatchTestEntity originalBatchTestEntity) {
 
+		if (contextAcceptLanguage.isAcceptAllLanguages()) {
+			originalBatchTestEntity.setAcceptAllLanguages(true);
+		}
+
 		return new BatchTestEntity() {
 			{
+				setAcceptAllLanguages(
+					() -> {
+						Boolean originalAcceptAllLanguages =
+							originalBatchTestEntity.getAcceptAllLanguages();
+
+						if (originalAcceptAllLanguages != null) {
+							return originalAcceptAllLanguages;
+						}
+
+						return contextAcceptLanguage.isAcceptAllLanguages();
+					});
 				setCustomFields(
 					() -> transform(
 						originalBatchTestEntity.getCustomFields(),

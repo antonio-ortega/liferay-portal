@@ -14,6 +14,8 @@ import com.liferay.document.library.kernel.service.DLFileEntryLocalService;
 import com.liferay.document.library.kernel.service.DLFileEntryLocalServiceUtil;
 import com.liferay.object.constants.ObjectEntryFolderConstants;
 import com.liferay.object.constants.ObjectFieldConstants;
+import com.liferay.object.field.business.type.ObjectFieldBusinessTypeRegistry;
+import com.liferay.object.internal.field.business.type.AssigneeObjectFieldBusinessType;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntry;
 import com.liferay.object.model.ObjectEntryFolder;
@@ -79,12 +81,14 @@ public class ObjectEntryModelDocumentContributor
 			accountEntryOrganizationRelLocalService,
 		DLFileEntryLocalService dlFileEntryLocalService,
 		ObjectEntryFolderLocalService objectEntryFolderLocalService,
+		ObjectFieldBusinessTypeRegistry objectFieldBusinessTypeRegistry,
 		TextEmbeddingDocumentContributor textEmbeddingDocumentContributor) {
 
 		_accountEntryOrganizationRelLocalService =
 			accountEntryOrganizationRelLocalService;
 		_dlFileEntryLocalService = dlFileEntryLocalService;
 		_objectEntryFolderLocalService = objectEntryFolderLocalService;
+		_objectFieldBusinessTypeRegistry = objectFieldBusinessTypeRegistry;
 		_textEmbeddingDocumentContributor = textEmbeddingDocumentContributor;
 	}
 
@@ -120,18 +124,14 @@ public class ObjectEntryModelDocumentContributor
 		ObjectContentHelper objectContentHelper, String locale,
 		String objectFieldName, String valueString) {
 
-		StringBundler sb = new StringBundler(4);
-
-		sb.append(objectFieldName);
-		sb.append(": ");
-		sb.append(valueString);
-		sb.append(StringPool.COMMA_AND_SPACE);
-
-		if (locale != null) {
-			objectContentHelper.contributeToLocale(locale, sb);
+		if (locale == null) {
+			objectContentHelper.contributeToAll(
+				objectFieldName, ": ", valueString, StringPool.COMMA_AND_SPACE);
 		}
 		else {
-			objectContentHelper.contributeToAll(sb);
+			objectContentHelper.contributeToLocale(
+				locale, objectFieldName, ": ", valueString,
+				StringPool.COMMA_AND_SPACE);
 		}
 	}
 
@@ -160,7 +160,39 @@ public class ObjectEntryModelDocumentContributor
 
 		if (StringUtil.equals(
 				objectField.getBusinessType(),
-				ObjectFieldConstants.BUSINESS_TYPE_ATTACHMENT)) {
+				ObjectFieldConstants.BUSINESS_TYPE_ASSIGNEE) &&
+			(fieldValue instanceof Map)) {
+
+			Map<String, Long> assigneeMap = (Map<String, Long>)fieldValue;
+
+			long classNameId = MapUtil.getLong(assigneeMap, "classNameId");
+			long classPK = MapUtil.getLong(assigneeMap, "classPK");
+
+			fieldValue = StringBundler.concat(
+				classNameId, StringPool.UNDERLINE, classPK);
+
+			AssigneeObjectFieldBusinessType assigneeObjectFieldBusinessType =
+				(AssigneeObjectFieldBusinessType)
+					_objectFieldBusinessTypeRegistry.getObjectFieldBusinessType(
+						ObjectFieldConstants.BUSINESS_TYPE_ASSIGNEE);
+
+			if (assigneeObjectFieldBusinessType != null) {
+				String assigneeName =
+					assigneeObjectFieldBusinessType.getDisplayName(
+						classNameId, classPK);
+
+				if (Validator.isNotNull(assigneeName)) {
+					_addField(
+						fieldArray, fieldName, "value_text", assigneeName);
+
+					_appendToContent(
+						objectContentHelper, locale, fieldName, assigneeName);
+				}
+			}
+		}
+		else if (StringUtil.equals(
+					objectField.getBusinessType(),
+					ObjectFieldConstants.BUSINESS_TYPE_ATTACHMENT)) {
 
 			fieldValue = _getFileName(
 				GetterUtil.getLong(fieldValue), objectDefinition);
@@ -312,6 +344,8 @@ public class ObjectEntryModelDocumentContributor
 				Field.getSortableFieldName(Field.ENTRY_CLASS_PK),
 				document.get(Field.ENTRY_CLASS_PK)));
 
+		ObjectDefinition objectDefinition = objectEntry.getObjectDefinition();
+
 		FieldArray fieldArray = (FieldArray)document.getField(
 			"nestedFieldArray");
 
@@ -322,13 +356,10 @@ public class ObjectEntryModelDocumentContributor
 		}
 
 		document.addKeyword(
-			"objectDefinitionId", objectEntry.getObjectDefinitionId());
-
-		ObjectDefinition objectDefinition = objectEntry.getObjectDefinition();
-
-		document.addKeyword(
 			"objectDefinitionExternalReferenceCode",
 			objectDefinition.getExternalReferenceCode());
+		document.addKeyword(
+			"objectDefinitionId", objectEntry.getObjectDefinitionId());
 		document.addKeyword(
 			"objectDefinitionName", objectDefinition.getShortName());
 
@@ -403,6 +434,11 @@ public class ObjectEntryModelDocumentContributor
 		if (FeatureFlagManagerUtil.isEnabled(
 				objectEntry.getCompanyId(), "LPD-17564")) {
 
+			document.addDate(Field.DISPLAY_DATE, objectEntry.getDisplayDate());
+			document.addDate(
+				Field.EXPIRATION_DATE, objectEntry.getExpirationDate());
+			document.addDate(Field.REVIEW_DATE, objectEntry.getReviewDate());
+
 			_contributeObjectEntryFolder(
 				document, objectEntry.getObjectEntryFolderId());
 
@@ -447,12 +483,7 @@ public class ObjectEntryModelDocumentContributor
 					values, "r_cmpProjectToCMPTasks_c_cmpProjectId"));
 		}
 
-		if (FeatureFlagManagerUtil.isEnabled(
-				objectEntry.getCompanyId(), "LPS-122920")) {
-
-			_contributeTextEmbeddings(
-				document, objectContentHelper, objectEntry);
-		}
+		_contributeTextEmbeddings(document, objectContentHelper, objectEntry);
 	}
 
 	private void _contributeFile(Document document, long fileEntryId) {
@@ -704,29 +735,55 @@ public class ObjectEntryModelDocumentContributor
 		_accountEntryOrganizationRelLocalService;
 	private final DLFileEntryLocalService _dlFileEntryLocalService;
 	private final ObjectEntryFolderLocalService _objectEntryFolderLocalService;
+	private final ObjectFieldBusinessTypeRegistry
+		_objectFieldBusinessTypeRegistry;
 	private final TextEmbeddingDocumentContributor
 		_textEmbeddingDocumentContributor;
 
 	private static class ObjectContentHelper {
 
-		public void contributeToAll(StringBundler sb) {
-			_contentSB.append(sb);
+		public void contributeToAll(
+			String s1, String s2, String s3, String s4) {
+
+			_contentSB.append(s1);
+			_contentSB.append(s2);
+			_contentSB.append(s3);
+			_contentSB.append(s4);
+
+			if (_localizedContentSBMap == null) {
+				return;
+			}
 
 			for (StringBundler localizedContentSB :
 					_localizedContentSBMap.values()) {
 
-				localizedContentSB.append(sb);
+				localizedContentSB.append(s1);
+				localizedContentSB.append(s2);
+				localizedContentSB.append(s3);
+				localizedContentSB.append(s4);
 			}
 		}
 
-		public void contributeToLocale(String locale, StringBundler sb) {
-			_contentSB.append(sb);
+		public void contributeToLocale(
+			String locale, String s1, String s2, String s3, String s4) {
+
+			_contentSB.append(s1);
+			_contentSB.append(s2);
+			_contentSB.append(s3);
+			_contentSB.append(s4);
+
+			if (_localizedContentSBMap == null) {
+				return;
+			}
 
 			StringBundler localizedContentSB = _localizedContentSBMap.get(
 				locale);
 
 			if (localizedContentSB != null) {
-				localizedContentSB.append(sb);
+				localizedContentSB.append(s1);
+				localizedContentSB.append(s2);
+				localizedContentSB.append(s3);
+				localizedContentSB.append(s4);
 			}
 		}
 
@@ -735,7 +792,7 @@ public class ObjectEntryModelDocumentContributor
 		}
 
 		public Map<String, String> getLocalizedContentMap() {
-			if (_localizedContentSBMap.isEmpty()) {
+			if (_localizedContentSBMap == null) {
 				return Collections.emptyMap();
 			}
 
@@ -760,6 +817,10 @@ public class ObjectEntryModelDocumentContributor
 				_contentSB.setIndex(_contentSB.index() - 1);
 			}
 
+			if (_localizedContentSBMap == null) {
+				return;
+			}
+
 			for (StringBundler localizedContentSB :
 					_localizedContentSBMap.values()) {
 
@@ -773,26 +834,26 @@ public class ObjectEntryModelDocumentContributor
 			ObjectEntry objectEntry, List<ObjectField> objectFields,
 			TextEmbeddingDocumentContributor textEmbeddingDocumentContributor) {
 
-			_contentSB = new StringBundler(objectFields.size());
+			_contentSB = new StringBundler(objectFields.size() * 4);
 
-			if (!FeatureFlagManagerUtil.isEnabled(
-					objectEntry.getCompanyId(), "LPS-122920")) {
+			List<String> languageIds =
+				textEmbeddingDocumentContributor.getLanguageIds(objectEntry);
 
-				return;
+			if (languageIds.isEmpty()) {
+				_localizedContentSBMap = null;
 			}
+			else {
+				_localizedContentSBMap = new TreeMap<>();
 
-			for (String languageId :
-					textEmbeddingDocumentContributor.getLanguageIds(
-						objectEntry)) {
-
-				_localizedContentSBMap.put(
-					languageId, new StringBundler(objectFields.size() * 4));
+				for (String languageId : languageIds) {
+					_localizedContentSBMap.put(
+						languageId, new StringBundler(objectFields.size() * 4));
+				}
 			}
 		}
 
 		private final StringBundler _contentSB;
-		private final Map<String, StringBundler> _localizedContentSBMap =
-			new TreeMap<>();
+		private final Map<String, StringBundler> _localizedContentSBMap;
 
 	}
 

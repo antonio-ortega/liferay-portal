@@ -18,7 +18,6 @@ import com.liferay.fragment.processor.PortletRegistry;
 import com.liferay.fragment.renderer.FragmentRenderer;
 import com.liferay.fragment.renderer.FragmentRendererContext;
 import com.liferay.fragment.renderer.constants.FragmentRendererConstants;
-import com.liferay.fragment.service.FragmentEntryLocalService;
 import com.liferay.fragment.util.configuration.FragmentEntryConfigurationParser;
 import com.liferay.petra.io.unsync.UnsyncStringWriter;
 import com.liferay.petra.string.StringBundler;
@@ -46,6 +45,7 @@ import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.ScopeUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -90,7 +90,7 @@ public class FragmentEntryFragmentRenderer implements FragmentRenderer {
 
 	@Override
 	public String getKey() {
-		return FragmentRendererConstants.FRAGMENT_ENTRY_FRAGMENT_RENDERER_KEY;
+		return FragmentRendererConstants.FRAGMENT_RENDERER_KEY_FRAGMENT_ENTRY;
 	}
 
 	@Override
@@ -162,20 +162,14 @@ public class FragmentEntryFragmentRenderer implements FragmentRenderer {
 	}
 
 	private String _getFragmentEntryName(FragmentEntryLink fragmentEntryLink) {
-		FragmentEntry fragmentEntry = null;
+		FragmentEntry fragmentEntry = fragmentEntryLink.fetchFragmentEntry();
 
-		if (Validator.isNotNull(fragmentEntryLink.getRendererKey())) {
+		if ((fragmentEntry == null) &&
+			Validator.isNotNull(fragmentEntryLink.getRendererKey())) {
+
 			fragmentEntry =
 				_fragmentCollectionContributorRegistry.getFragmentEntry(
 					fragmentEntryLink.getRendererKey());
-		}
-
-		if (fragmentEntry == null) {
-			fragmentEntry =
-				_fragmentEntryLocalService.
-					fetchFragmentEntryByExternalReferenceCode(
-						fragmentEntryLink.getFragmentEntryERC(),
-						fragmentEntryLink.getFragmentEntryGroupId());
 		}
 
 		if (fragmentEntry == null) {
@@ -222,10 +216,8 @@ public class FragmentEntryFragmentRenderer implements FragmentRenderer {
 			}
 		}
 
-		FragmentEntry fragmentEntry = null;
-
 		if (Validator.isNotNull(fragmentEntryLink.getRendererKey())) {
-			fragmentEntry =
+			FragmentEntry fragmentEntry =
 				_fragmentCollectionContributorRegistry.getFragmentEntry(
 					fragmentEntryLink.getRendererKey());
 
@@ -234,13 +226,7 @@ public class FragmentEntryFragmentRenderer implements FragmentRenderer {
 			}
 		}
 
-		if (fragmentEntry == null) {
-			fragmentEntry =
-				_fragmentEntryLocalService.
-					fetchFragmentEntryByExternalReferenceCode(
-						fragmentEntryLink.getFragmentEntryERC(),
-						fragmentEntryLink.getFragmentEntryGroupId());
-		}
+		FragmentEntry fragmentEntry = fragmentEntryLink.fetchFragmentEntry();
 
 		if (fragmentEntry == null) {
 			return fragmentEntryLink.isCacheable();
@@ -276,7 +262,7 @@ public class FragmentEntryFragmentRenderer implements FragmentRenderer {
 		FragmentRendererContext fragmentRendererContext, String html,
 		HttpServletRequest httpServletRequest, String nonce) {
 
-		StringBundler sb = new StringBundler(31);
+		StringBundler sb = new StringBundler(35);
 
 		sb.append("<div id=\"");
 
@@ -300,9 +286,14 @@ public class FragmentEntryFragmentRenderer implements FragmentRenderer {
 				sb.append("</style>");
 			}
 			else {
+				Long groupId = ScopeUtil.getItemGroupId(
+					fragmentEntryLink.getCompanyId(),
+					fragmentEntryLink.getFragmentEntryScopeERC(),
+					fragmentEntryLink.getGroupId());
+
 				String outputKey = StringBundler.concat(
-					fragmentEntryLink.getFragmentEntryERC(), "_",
-					fragmentEntryLink.getFragmentEntryGroupId(), "_CSS");
+					fragmentEntryLink.getFragmentEntryERC(), "_", groupId,
+					"_CSS");
 
 				OutputData outputData =
 					(OutputData)httpServletRequest.getAttribute(
@@ -379,6 +370,10 @@ public class FragmentEntryFragmentRenderer implements FragmentRenderer {
 					_getInputJSONObject(
 						fragmentEntryLink, fragmentRendererContext,
 						httpServletRequest)));
+			sb.append("; input.value = Liferay.Util.unescapeHTML(input.value ");
+			sb.append("?? ''); Object.keys(input.valueI18n).forEach(");
+			sb.append("function(key){ input.valueI18n[key] = Liferay.Util.");
+			sb.append("unescapeHTML(input.valueI18n[key] ?? '');})");
 		}
 
 		sb.append("; const layoutMode = '");
@@ -581,9 +576,6 @@ public class FragmentEntryFragmentRenderer implements FragmentRenderer {
 
 	@Reference
 	private FragmentEntryLinkCache _fragmentEntryLinkCache;
-
-	@Reference
-	private FragmentEntryLocalService _fragmentEntryLocalService;
 
 	@Reference
 	private FragmentEntryProcessorRegistry _fragmentEntryProcessorRegistry;

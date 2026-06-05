@@ -76,3 +76,4 @@ public class CouponCode implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:1086895042

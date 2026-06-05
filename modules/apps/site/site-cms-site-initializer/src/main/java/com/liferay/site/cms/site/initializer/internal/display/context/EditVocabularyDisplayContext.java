@@ -5,12 +5,14 @@
 
 package com.liferay.site.cms.site.initializer.internal.display.context;
 
+import com.liferay.asset.kernel.model.AssetVocabulary;
 import com.liferay.object.constants.ObjectFolderConstants;
 import com.liferay.object.service.ObjectDefinitionServiceUtil;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.model.ModelHintsUtil;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -19,6 +21,7 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Validator;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -36,6 +39,20 @@ public class EditVocabularyDisplayContext {
 		_themeDisplay = themeDisplay;
 	}
 
+	public String getBackURL() throws Exception {
+		String backURL = ParamUtil.getString(_httpServletRequest, "backURL");
+
+		if (Validator.isNotNull(backURL)) {
+			return backURL;
+		}
+
+		return PortalUtil.getLayoutFullURL(
+			LayoutLocalServiceUtil.getLayoutByFriendlyURL(
+				_themeDisplay.getScopeGroupId(), false,
+				"/categorization/view-vocabularies"),
+			_themeDisplay);
+	}
+
 	public Map<String, Object> getReactData() throws Exception {
 		return HashMapBuilder.<String, Object>put(
 			"availableAssetTypes",
@@ -47,28 +64,25 @@ public class EditVocabularyDisplayContext {
 							EXTERNAL_REFERENCE_CODE_CONTENT_STRUCTURES,
 						ObjectFolderConstants.EXTERNAL_REFERENCE_CODE_FILE_TYPES
 					}),
-				objectDefinition -> HashMapBuilder.put(
-					"required", Boolean.FALSE.toString()
+				objectDefinition -> HashMapBuilder.<String, Object>put(
+					"required", Boolean.FALSE
 				).put(
 					"type", objectDefinition.getLabelCurrentValue()
 				).put(
 					"typeId",
-					String.valueOf(
-						PortalUtil.getClassNameId(
-							objectDefinition.getClassName()))
+					PortalUtil.getClassNameId(objectDefinition.getClassName())
 				).build())
 		).put(
-			"backURL",
-			PortalUtil.getLayoutFullURL(
-				LayoutLocalServiceUtil.getLayoutByFriendlyURL(
-					_themeDisplay.getScopeGroupId(), false,
-					"/categorization/view-vocabularies"),
-				_themeDisplay)
+			"backURL", getBackURL()
 		).put(
 			"cmsGroupId", _themeDisplay.getScopeGroupId()
 		).put(
 			"defaultLanguageId",
 			LocaleUtil.toLanguageId(_themeDisplay.getSiteDefaultLocale())
+		).put(
+			"externalReferenceCodeMaxLength",
+			ModelHintsUtil.getMaxLength(
+				AssetVocabulary.class.getName(), "externalReferenceCode")
 		).put(
 			"locales",
 			JSONUtil.toJSONArray(

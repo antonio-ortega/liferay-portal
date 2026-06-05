@@ -1,0 +1,13 @@
+{
+	"options": {
+		"auto_approve": false,
+		"parallelism": 10,
+		"provider": "gcp",
+		"version": "1.0.3"
+	},
+	"variables": {
+		"deployment_name": "liferay-gcp-test",
+		"project_id": "your-gcp-project-id",
+		"region": "us-central1"
+	}
+}

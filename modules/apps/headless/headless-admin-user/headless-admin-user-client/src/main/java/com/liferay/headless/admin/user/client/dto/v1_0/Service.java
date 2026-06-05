@@ -100,3 +100,4 @@ public class Service implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1963245042

@@ -22,6 +22,7 @@ import com.liferay.osb.faro.engine.client.model.FieldMapping;
 import com.liferay.osb.faro.engine.client.model.IndividualSegment;
 import com.liferay.osb.faro.engine.client.model.IndividualSegmentMembership;
 import com.liferay.osb.faro.engine.client.model.Organization;
+import com.liferay.osb.faro.engine.client.model.SegmentActivation;
 import com.liferay.osb.faro.web.internal.constants.FaroConstants;
 import com.liferay.osb.faro.web.internal.model.display.main.FaroEntityDisplay;
 import com.liferay.osb.faro.web.internal.util.JSONUtil;
@@ -51,6 +52,7 @@ public class IndividualSegmentDisplay implements FaroEntityDisplay {
 		_channelId = individualSegment.getChannelId();
 		_dateCreated = individualSegment.getDateCreated();
 		_dateModified = individualSegment.getDateModified();
+		_externalReferenceCode = individualSegment.getExternalReferenceCode();
 		_filterString = individualSegment.getFilterString();
 		_id = individualSegment.getId();
 		_includeAnonymousUsers = individualSegment.isIncludeAnonymousUsers();
@@ -121,12 +123,22 @@ public class IndividualSegmentDisplay implements FaroEntityDisplay {
 		}
 
 		_individualCount = individualSegment.getIndividualCount();
+
+		SegmentActivation segmentActivation =
+			individualSegment.getSegmentActivation();
+
+		if (segmentActivation != null) {
+			_individualSegmentActivationDisplay =
+				new IndividualSegmentActivationDisplay(segmentActivation);
+		}
+
 		_knownIndividualCount = individualSegment.getKnownIndividualCount();
 		_lastActivityDate = individualSegment.getLastActivityDate();
 		_lastMembershipUpdateDate =
 			individualSegment.getLastMembershipUpdateDate();
 		_name = individualSegment.getName();
 		_segmentType = individualSegment.getSegmentType();
+		_sequential = individualSegment.isSequential();
 		_state = individualSegment.getState();
 		_status = individualSegment.getStatus();
 		_type = FaroConstants.TYPE_SEGMENT_INDIVIDUALS;
@@ -216,6 +228,7 @@ public class IndividualSegmentDisplay implements FaroEntityDisplay {
 	private String _channelId;
 	private Date _dateCreated;
 	private Date _dateModified;
+	private String _externalReferenceCode;
 
 	@JsonProperty("filter")
 	private String _filterString;
@@ -224,6 +237,10 @@ public class IndividualSegmentDisplay implements FaroEntityDisplay {
 	private boolean _includeAnonymousUsers;
 	private Date _individualAddedDate;
 	private long _individualCount;
+
+	@JsonProperty("activation")
+	private IndividualSegmentActivationDisplay
+		_individualSegmentActivationDisplay;
 
 	@JsonIgnore
 	private Map<String, List<Field>> _interestsFieldMap;
@@ -234,6 +251,7 @@ public class IndividualSegmentDisplay implements FaroEntityDisplay {
 	private String _name;
 	private final Map<String, Object> _referencedObjects = new HashMap<>();
 	private String _segmentType;
+	private boolean _sequential;
 	private String _state;
 	private String _status;
 	private int _type;

@@ -76,6 +76,8 @@ public class CompanyInfoModelImpl
 
 	public static final String TABLE_SQL_DROP = "drop table CompanyInfo";
 
+	public static final String ENTITY_ALIAS = "companyInfo";
+
 	public static final String ORDER_BY_JPQL =
 		" ORDER BY companyInfo.companyInfoId ASC";
 
@@ -635,3 +637,4 @@ public class CompanyInfoModelImpl
 	private CompanyInfo _escapedModel;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-848778778

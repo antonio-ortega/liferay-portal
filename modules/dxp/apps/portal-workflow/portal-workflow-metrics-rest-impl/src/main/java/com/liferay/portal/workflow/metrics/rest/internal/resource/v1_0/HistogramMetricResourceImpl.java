@@ -13,12 +13,12 @@ import com.liferay.portal.search.aggregation.bucket.DateHistogramAggregation;
 import com.liferay.portal.search.aggregation.bucket.DateHistogramAggregationResult;
 import com.liferay.portal.search.aggregation.bucket.DateRangeAggregation;
 import com.liferay.portal.search.aggregation.bucket.RangeAggregationResult;
-import com.liferay.portal.search.engine.adapter.search.SearchRequestExecutor;
+import com.liferay.portal.search.engine.adapter.SearchEngineAdapter;
 import com.liferay.portal.search.engine.adapter.search.SearchSearchRequest;
 import com.liferay.portal.search.engine.adapter.search.SearchSearchResponse;
 import com.liferay.portal.search.index.IndexNameBuilder;
 import com.liferay.portal.search.query.BooleanQuery;
-import com.liferay.portal.search.query.Queries;
+import com.liferay.portal.search.query.QueriesUtil;
 import com.liferay.portal.workflow.metrics.rest.dto.v1_0.Histogram;
 import com.liferay.portal.workflow.metrics.rest.dto.v1_0.HistogramMetric;
 import com.liferay.portal.workflow.metrics.rest.resource.v1_0.HistogramMetricResource;
@@ -87,17 +87,17 @@ public class HistogramMetricResourceImpl
 			_indexNameBuilder.getIndexName(contextCompany.getCompanyId()) +
 				WorkflowMetricsIndexNameConstants.SUFFIX_INSTANCE);
 
-		BooleanQuery booleanQuery = _queries.booleanQuery();
+		BooleanQuery booleanQuery = QueriesUtil.booleanQuery();
 
 		searchSearchRequest.setQuery(
 			booleanQuery.addMustQueryClauses(
-				_queries.term("companyId", contextCompany.getCompanyId()),
-				_queries.term("completed", Boolean.TRUE.toString()),
-				_queries.term("deleted", Boolean.FALSE.toString()),
-				_queries.term("processId", processId)));
+				QueriesUtil.term("companyId", contextCompany.getCompanyId()),
+				QueriesUtil.term("completed", Boolean.TRUE.toString()),
+				QueriesUtil.term("deleted", Boolean.FALSE.toString()),
+				QueriesUtil.term("processId", processId)));
 
 		SearchSearchResponse searchSearchResponse =
-			_searchRequestExecutor.executeSearchRequest(searchSearchRequest);
+			_searchEngineAdapter.execute(searchSearchRequest);
 
 		Map<String, AggregationResult> aggregationResultsMap =
 			searchSearchResponse.getAggregationResultsMap();
@@ -294,9 +294,6 @@ public class HistogramMetricResourceImpl
 	private IndexNameBuilder _indexNameBuilder;
 
 	@Reference
-	private Queries _queries;
-
-	@Reference
-	private SearchRequestExecutor _searchRequestExecutor;
+	private SearchEngineAdapter _searchEngineAdapter;
 
 }

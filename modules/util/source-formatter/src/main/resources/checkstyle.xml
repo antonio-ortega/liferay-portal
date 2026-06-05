@@ -254,6 +254,18 @@
 			<message key="variable.move.after.branching.statement" value="For better performance, the variable assignment for &quot;{0}&quot; should come after the &quot;{1}&quot; statement on line &quot;{2}&quot;" />
 			<message key="variable.move.inside.if.statement" value="For better performance, the variable assignment for &quot;{0}&quot; should be moved inside the {1}-statement on line &quot;{2}&quot;" />
 		</module>
+		<module name="com.liferay.source.formatter.checkstyle.check.AutoBatchPreparedStatementUtilCheck">
+			<property name="category" value="Bug Prevention" />
+			<property name="description" value="Finds cases where `AutoBatchPreparedStatementUtil.autoBatch` or `AutoBatchPreparedStatementUtil.concurrentAutoBatch` should be used." />
+			<property name="enabled" value="false" />
+			<message key="auto.batch.prepared.statement.util.use" value="Use &quot;AutoBatchPreparedStatementUtil.autoBatch&quot; or &quot;AutoBatchPreparedStatementUtil.concurrentAutoBatch&quot; to create a prepared statement when using &quot;preparedStatement.executeBatch()&quot;" />
+		</module>
+		<module name="com.liferay.source.formatter.checkstyle.check.BatchableUpdateCheck">
+			<property name="category" value="Performance" />
+			<property name="description" value="Checks for cases where batch updates should be used inside a loop instead of individual executeUpdate calls." />
+			<property name="enabled" value="false" />
+			<message key="add.batch.use" value="Use &quot;addBatch()&quot; and &quot;executeBatch()&quot; instead of &quot;executeUpdate()&quot; inside loops" />
+		</module>
 		<module name="com.liferay.source.formatter.checkstyle.check.BrandNameCheck">
 			<property name="category" value="Naming Conventions" />
 			<property name="description" value="Checks the correct brand name." />
@@ -296,13 +308,6 @@
 			<message key="company.local.service.use.for.loop" value="Use &quot;CompanyLocalService.{0}&quot; when iterating over &quot;{1}&quot;" />
 			<message key="company.local.service.use.sql" value="Use &quot;CompanyLocalService.forEachCompany&quot; instead of SQL" />
 			<message key="portal.instances.use" value="Use &quot;PortalInstancePool.getCompanyIds&quot; instead to fetch company IDs" />
-		</module>
-		<module name="com.liferay.source.formatter.checkstyle.check.CompanyThreadLocalCheck">
-			<property name="category" value="Bug Prevention" />
-			<property name="description" value="Checks usage of `CompanyThreadLocal`." />
-			<property name="enabled" value="false" />
-			<message key="close.call.missing" value="Missing calling &quot;close&quot; to variable &quot;{0}&quot;, use &quot;{1}.close&quot; or try-with-resources statement instead" />
-			<message key="set.company.id.call.avoid" value="Do not use &quot;CompanyThreadLocal.setCompanyId&quot;, use &quot;CompanyThreadLocal.setCompanyIdWithSafeCloseable&quot; instead" />
 		</module>
 		<module name="com.liferay.source.formatter.checkstyle.check.ComponentAnnotationCheck">
 			<property name="category" value="Bug Prevention" />
@@ -804,14 +809,16 @@
 			<property name="category" value="Performance" />
 			<property name="description" value="Ensures using set calls with `UnsafeSupplier` parameter for REST DTO." />
 			<property name="enabled" value="false" />
-			<message key="if.statement.inline" value="Use &quot;{0}(UnsafeSupplier)&quot; with inlined if-statement" />
 			<message key="set.method.use.instead" value="Use &quot;{0}(UnsafeSupplier)&quot; instead" />
+			<message key="statement.move" value="Instance initializers should only contain set calls" />
 		</module>
 		<module name="com.liferay.source.formatter.checkstyle.check.ResultSetGetCallCheck">
 			<property name="category" value="Bug Prevention" />
 			<property name="description" value="Finds incorrect use of `ResultSet.get*` calls." />
 			<property name="enabled" value="false" />
-			<message key="set.call.parameter.incorrect" value="Do not use &quot;TableName.ColumnName&quot; as the parameter when calling method &quot;{0}&quot;, use column index or column name instead" />
+			<message key="method.use" value="Use &quot;resultSet.getLong&quot; for count" />
+			<message key="set.call.parameter.incorrect.1" value="Use the simple column name instead of column index when calling method &quot;resultSet.get*&quot;" />
+			<message key="set.call.parameter.incorrect.2" value="Use the simple column name instead of &quot;TableName.ColumnName&quot; when calling method &quot;resultSet.get*&quot;" />
 		</module>
 		<module name="com.liferay.source.formatter.checkstyle.check.ReturnVariableDeclarationAsUsedCheck">
 			<property name="category" value="Miscellaneous" />
@@ -819,6 +826,11 @@
 			<property name="enabled" value="false" />
 			<message key="empty.line.missing.after.variable.definition" value="There should be an empty line after variable definition on line &quot;{0}&quot;" />
 			<message key="variable.declaration.move" value="Move the variable declaration for &quot;{0}&quot; on line &quot;{1}&quot;" />
+		</module>
+		<module name="com.liferay.source.formatter.checkstyle.check.SafeCloseableMissingCloseCheck">
+			<property name="category" value="Bug Prevention" />
+			<property name="description" value="Finds missing `close()` calls for `SafeCloseable` instances." />
+			<message key="close.call.missing" value="Missing calling &quot;close&quot; to variable &quot;{0}&quot;, use &quot;{1}.close&quot; or try-with-resources statement instead" />
 		</module>
 		<module name="com.liferay.source.formatter.checkstyle.check.SealedAndNonsealedModifierCheck">
 			<property name="category" value="Performance" />
@@ -919,6 +931,12 @@
 			<property name="category" value="Bug Prevention" />
 			<property name="description" value="Finds missing LiferayUnitTestRule." />
 			<message key="test.rule.missing" value="Missing test rule &quot;LiferayUnitTestRule&quot;" />
+		</module>
+		<module name="com.liferay.source.formatter.checkstyle.check.TestClassStaticVariableCheck">
+			<property name="category" value="Performance" />
+			<property name="description" value="Finds unnecessary static modifiers in test classes." />
+			<property name="enabled" value="false" />
+			<message key="modifier.unnecessary" value="Private static variable &quot;{0}&quot; should be an instance variable, as it is not used by any static members" />
 		</module>
 		<module name="com.liferay.source.formatter.checkstyle.check.TextBlockCheck">
 			<property name="category" value="Styling" />

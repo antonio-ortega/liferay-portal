@@ -8,13 +8,14 @@ package com.liferay.site.cms.site.initializer.internal.display.context;
 import com.liferay.depot.service.DepotEntryLocalService;
 import com.liferay.object.model.ObjectEntryFolder;
 import com.liferay.object.service.ObjectDefinitionService;
-import com.liferay.object.service.ObjectDefinitionSettingLocalService;
 import com.liferay.object.service.ObjectEntryFolderLocalService;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
-import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.GroupLocalService;
-import com.liferay.portal.kernel.util.HashMapBuilder;
-import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.site.cms.site.initializer.internal.constants.CMSSpaceConstants;
 import com.liferay.site.cms.site.initializer.internal.util.ActionUtil;
@@ -37,19 +38,14 @@ public class ViewSpaceContentsSummarySectionDisplayContext
 		GroupLocalService groupLocalService,
 		HttpServletRequest httpServletRequest, Language language,
 		ObjectDefinitionService objectDefinitionService,
-		ObjectDefinitionSettingLocalService objectDefinitionSettingLocalService,
 		ObjectEntryFolderLocalService objectEntryFolderLocalService,
-		ModelResourcePermission<ObjectEntryFolder>
-			objectEntryFolderModelResourcePermission,
 		Portal portal,
 		TranslationInfoItemFieldValuesExporterRegistry
 			translationInfoItemFieldValuesExporterRegistry) {
 
 		super(
 			depotEntryLocalService, groupLocalService, httpServletRequest,
-			language, objectDefinitionService,
-			objectDefinitionSettingLocalService,
-			objectEntryFolderModelResourcePermission, portal,
+			language, objectDefinitionService, portal,
 			translationInfoItemFieldValuesExporterRegistry);
 
 		_groupId = groupId;
@@ -57,20 +53,29 @@ public class ViewSpaceContentsSummarySectionDisplayContext
 	}
 
 	@Override
-	public Map<String, Object> getAdditionalProps() {
-		return new HashMapBuilder<>().putAll(
-			super.getAdditionalProps()
-		).put(
-			"showAdditionalItemInfo", true
-		).build();
+	public String getAdditionalAPIURLParameters() {
+		return StringBundler.concat(
+			super.getAdditionalAPIURLParameters(), "&page=",
+			CMSSpaceConstants.SPACE_SUMMARY_PAGE, "&pageSize=",
+			CMSSpaceConstants.SPACE_SUMMARY_PAGE_SIZE);
 	}
 
 	@Override
-	public String getAPIURL() {
-		return HttpComponentsUtil.addParameters(
-			super.getAPIURL(), "page", CMSSpaceConstants.SPACE_SUMMARY_PAGE,
-			"pageSize", CMSSpaceConstants.SPACE_SUMMARY_PAGE_SIZE, "sort",
-			"dateModified:desc");
+	public Map<String, Object> getAdditionalProps() {
+		Map<String, Object> additionalProps = super.getAdditionalProps();
+
+		try {
+			additionalProps.put("breadcrumbProps", getBreadcrumbProps());
+		}
+		catch (PortalException portalException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(portalException);
+			}
+		}
+
+		additionalProps.put("showAdditionalItemInfo", true);
+
+		return additionalProps;
 	}
 
 	public Map<String, Object> getHeaderProps() throws Exception {
@@ -81,9 +86,10 @@ public class ViewSpaceContentsSummarySectionDisplayContext
 					themeDisplay.getCompanyId());
 
 		return SpaceSummaryHeaderUtil.getSpaceSummaryHeaderProps(
-			getAPIURL(), getCreationMenu(), httpServletRequest,
-			"view-all-content", Collections.emptyMap(), Collections.emptyMap(),
-			"content",
+			getAPIURL() + StringPool.AMPERSAND +
+				getAdditionalAPIURLParameters(),
+			getCreationMenu(), httpServletRequest, "view-all-content",
+			Collections.emptyMap(), Collections.emptyMap(), "content",
 			ActionUtil.getBaseViewFolderURL(themeDisplay) +
 				objectEntryFolder.getObjectEntryFolderId());
 	}
@@ -100,6 +106,9 @@ public class ViewSpaceContentsSummarySectionDisplayContext
 	protected String getEmptyStateDescriptionKey() {
 		return "create-and-manage-content-within-this-space";
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		ViewSpaceContentsSummarySectionDisplayContext.class);
 
 	private final long _groupId;
 	private final ObjectEntryFolderLocalService _objectEntryFolderLocalService;

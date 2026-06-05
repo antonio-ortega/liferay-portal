@@ -31,6 +31,16 @@ test(
 	{tag: '@LPD-36752'},
 	async ({page, picklistBuilderPage, structureBuilderPage}) => {
 
+		// Create another structure first
+
+		const usedName = `Name${getRandomInt()}`;
+
+		await structureBuilderPage.createStructureFromData({
+			label: usedName,
+			name: usedName,
+			page: structureBuilderPage,
+		});
+
 		// Add a picklist
 
 		const picklist = await picklistBuilderPage.createPicklist();
@@ -82,7 +92,11 @@ test(
 		).toBeVisible();
 
 		await structureBuilderPage.changeStructureSettings({
-			name: 'CMSBasicDocument',
+			name: `Name${getRandomInt()}`,
+		});
+
+		await structureBuilderPage.changeStructureSettings({
+			name: usedName,
 		});
 
 		await expect(
@@ -151,9 +165,9 @@ test(
 
 		// Add a Single Select field and select it
 
-		await structureBuilderPage.addField('Single Select');
+		await structureBuilderPage.addField('Select from List');
 
-		await structureBuilderPage.selectFields([{label: 'Single Select'}]);
+		await structureBuilderPage.selectFields([{label: 'Select from List'}]);
 
 		// Put empty name
 
@@ -177,7 +191,7 @@ test(
 
 		await clickAndExpectToBeVisible({
 			target: page.locator('.breadcrumb-link', {
-				hasText: 'Single Select',
+				hasText: 'Select from List',
 			}),
 			trigger: structureBuilderPage.saveButton,
 		});
@@ -194,7 +208,7 @@ test(
 
 		await structureBuilderPage.selectFields([{label: 'Text'}]);
 
-		await structureBuilderPage.selectFields([{label: 'Single Select'}]);
+		await structureBuilderPage.selectFields([{label: 'Select from List'}]);
 
 		await expect(page.getByText(picklist.name)).toBeVisible();
 
@@ -212,14 +226,14 @@ test(
 
 		await clickAndExpectToBeVisible({
 			target: page.getByText(
-				'You removed one or more fields from the content structure'
+				'You have made changes to the content structure that may impact existing stored data once published'
 			),
 			trigger: structureBuilderPage.publishButton,
 		});
 
 		await clickAndExpectToBeHidden({
 			target: page.getByText(
-				'You removed one or more fields from the content structure'
+				'You have made changes to the content structure that may impact existing stored data once published'
 			),
 			trigger: page.locator('.btn-danger'),
 		});
@@ -253,9 +267,9 @@ test(
 
 		// Add a Single Select field and check for blur error
 
-		await structureBuilderPage.addField('Single Select');
+		await structureBuilderPage.addField('Select from List');
 
-		await structureBuilderPage.selectFields([{label: 'Single Select'}]);
+		await structureBuilderPage.selectFields([{label: 'Select from List'}]);
 
 		const picklistPicker = page.getByLabel('Picklist');
 
@@ -272,20 +286,6 @@ test(
 		});
 
 		await expect(errorMessage).not.toBeAttached();
-
-		// Add a Multiselect field and check for outside click error
-
-		await structureBuilderPage.addField('Multiselect');
-
-		await structureBuilderPage.selectFields([{label: 'Multiselect'}]);
-
-		await expect(errorMessage).not.toBeAttached();
-
-		await picklistPicker.click();
-
-		await page.getByText('Content Structure Fields').click();
-
-		await expect(errorMessage).toBeAttached();
 
 		// Delete picklist
 
@@ -496,5 +496,94 @@ test(
 		await page.waitForTimeout(2000);
 
 		await expect(modal).not.toBeVisible();
+	}
+);
+
+test(
+	'Shows an inline "name in use" error when the backend reports a friendly URL separator conflict',
+	{tag: '@LPD-86255'},
+	async ({page, structureBuilderPage}) => {
+		await page.route(
+			'**/o/object-admin/v1.0/object-definitions',
+			async (route) => {
+				if (route.request().method() !== 'POST') {
+					await route.fallback();
+
+					return;
+				}
+
+				await route.fulfill({
+					body: JSON.stringify({
+						detail: '[{"fieldName":"friendlyURLSeparator","message":"Other asset types may use this prefix."}]',
+						status: 'BAD_REQUEST',
+						title: 'Other asset types may use this prefix.',
+						type: 'ObjectDefinitionFriendlyURLSeparatorException',
+					}),
+					headers: {'Content-Type': 'application/json'},
+					status: 400,
+				});
+			}
+		);
+
+		await structureBuilderPage.goToCreateStructure();
+
+		await structureBuilderPage.enableForAllSpaces();
+
+		await structureBuilderPage.changeStructureSettings({
+			label: `Structure${getRandomInt()}`,
+			name: `Structure${getRandomInt()}`,
+		});
+
+		await structureBuilderPage.addField('Text');
+
+		await structureBuilderPage.selectStructure();
+
+		await structureBuilderPage.publishButton.click();
+
+		await expect(
+			page.getByText('This name is already in use. Try another one.')
+		).toBeVisible();
+
+		await expect(
+			page.getByText('Other asset types may use this prefix.')
+		).not.toBeVisible();
+	}
+);
+
+test(
+	'Shows an inline "name in use" error when updating a structure and the backend reports a friendly URL separator conflict',
+	{tag: '@LPD-86255'},
+	async ({page, structureBuilderPage, structuresPage}) => {
+		const label = `Structure${getRandomInt()}`;
+
+		await structureBuilderPage.createStructureFromData({
+			label,
+			page: structureBuilderPage,
+		});
+
+		await structuresPage.goto();
+
+		await structuresPage.execItemAction({action: 'Edit', filter: label});
+
+		await page.route('**/cms/update-structure', async (route) => {
+			await route.fulfill({
+				body: JSON.stringify({
+					error: 'An unexpected error occurred',
+					type: 'ObjectDefinitionFriendlyURLSeparatorException',
+				}),
+				headers: {'Content-Type': 'application/json'},
+				status: 200,
+			});
+		});
+
+		await structureBuilderPage.publishButton.click();
+
+		await expect(
+			page.getByText('This name is already in use. Try another one.')
+		).toBeVisible();
+
+		await expect(
+			page.getByText('Other asset types may use this prefix.')
+		).not.toBeVisible();
 	}
 );

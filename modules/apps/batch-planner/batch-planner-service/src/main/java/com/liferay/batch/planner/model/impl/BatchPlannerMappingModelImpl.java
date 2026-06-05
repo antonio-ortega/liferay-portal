@@ -99,6 +99,8 @@ public class BatchPlannerMappingModelImpl
 	public static final String TABLE_SQL_DROP =
 		"drop table BatchPlannerMapping";
 
+	public static final String ENTITY_ALIAS = "batchPlannerMapping";
+
 	public static final String ORDER_BY_JPQL =
 		" ORDER BY batchPlannerMapping.modifiedDate DESC";
 
@@ -1066,3 +1068,4 @@ public class BatchPlannerMappingModelImpl
 	private BatchPlannerMapping _escapedModel;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-224051325

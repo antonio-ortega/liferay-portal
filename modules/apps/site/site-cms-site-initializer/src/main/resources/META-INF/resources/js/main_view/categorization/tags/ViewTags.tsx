@@ -4,6 +4,7 @@
  */
 
 import {ClayDropDownWithItems} from '@clayui/drop-down';
+import ClayLink from '@clayui/link';
 import {FrontendDataSet} from '@liferay/frontend-data-set-web';
 import {navigate, sub} from 'frontend-js-web';
 import React, {ComponentProps} from 'react';
@@ -35,6 +36,7 @@ export default function ViewTags({
 	tagsURL: string;
 	vocabulariesURL: string;
 }) {
+	const NAME_TABLE_CELL_RENDERER_NAME = 'NameTableCellRenderer';
 	const VIEWS_SPACE_TABLE_CELL_RENDERER_NAME = 'ViewsSpaceTableCellRenderer';
 
 	const creationMenu = {
@@ -63,7 +65,7 @@ export default function ViewTags({
 
 	const filters = [
 		{
-			apiURL: '/o/headless-asset-library/v1.0/asset-libraries',
+			apiURL: "/o/headless-asset-library/v1.0/asset-libraries?filter=type eq 'Space'",
 			entityFieldType: 'string',
 			id: 'groupIds',
 			itemKey: 'id',
@@ -83,6 +85,7 @@ export default function ViewTags({
 			schema: {
 				fields: [
 					{
+						contentRenderer: NAME_TABLE_CELL_RENDERER_NAME,
 						fieldName: 'name',
 						label: Liferay.Language.get('title'),
 						sortable: true,
@@ -238,6 +241,33 @@ export default function ViewTags({
 				customRenderers={{
 					tableCell: [
 						{
+							component: ({
+								itemData,
+								loadData,
+								value,
+							}: {
+								itemData: any;
+								loadData: () => {};
+								value: string;
+							}) => (
+								<div className="table-list-title">
+									<ClayLink
+										data-senna-off
+										href="#"
+										onClick={(event: React.MouseEvent) => {
+											event.preventDefault();
+
+											editTag({itemData, loadData});
+										}}
+									>
+										{value}
+									</ClayLink>
+								</div>
+							),
+							name: NAME_TABLE_CELL_RENDERER_NAME,
+							type: 'internal',
+						},
+						{
 							component: MultipleSpacesRenderer,
 							name: VIEWS_SPACE_TABLE_CELL_RENDERER_NAME,
 							type: 'internal',
@@ -246,6 +276,7 @@ export default function ViewTags({
 				}}
 				emptyState={emptyState}
 				filters={filters}
+				hideManagementBarInEmptyState={true}
 				id={dataSetId}
 				itemsActions={[
 					{
@@ -260,7 +291,7 @@ export default function ViewTags({
 						data: {
 							permissionKey: 'get',
 						},
-						icon: 'null',
+						icon: 'list-ul',
 						id: 'viewUsages',
 						label: Liferay.Language.get('view-usages'),
 					},

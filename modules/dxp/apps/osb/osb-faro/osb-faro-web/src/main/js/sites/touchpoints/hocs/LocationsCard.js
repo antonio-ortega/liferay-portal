@@ -3,8 +3,8 @@ import getLocationsMapper, {
 } from 'cerebro-shared/hocs/mappers/locations';
 import URLConstants from 'shared/util/url-constants';
 import {GEOLOCATION_FRAGMENT} from 'shared/queries/fragments';
-import {gql} from 'apollo-boost';
-import {graphql} from '@apollo/react-hoc';
+import {gql} from '@apollo/client';
+import {graphql} from '@apollo/client/react/hoc';
 import {ReportContainer} from 'shared/components/download-report/DownloadPDFReport';
 import {withLocationsCard} from 'cerebro-shared/hocs/LocationsCard';
 
@@ -12,6 +12,7 @@ const TouchpointLocationsQuery = gql`
 	query TouchpointLocationsQuery(
 		$channelId: String
 		$devices: String
+		$experienceId: String
 		$location: String
 		$rangeEnd: String
 		$rangeKey: Int
@@ -24,6 +25,7 @@ const TouchpointLocationsQuery = gql`
 			canonicalUrl: $touchpoint
 			country: $location
 			deviceType: $devices
+			experienceId: $experienceId
 			rangeEnd: $rangeEnd
 			rangeKey: $rangeKey
 			rangeStart: $rangeStart

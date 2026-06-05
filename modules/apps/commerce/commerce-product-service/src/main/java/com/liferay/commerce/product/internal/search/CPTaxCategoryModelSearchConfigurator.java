@@ -5,12 +5,11 @@
 
 package com.liferay.commerce.product.internal.search;
 
-import com.liferay.commerce.product.internal.search.spi.model.index.contributor.CPTaxCategoryModelIndexerWriterContributor;
 import com.liferay.commerce.product.internal.search.spi.model.result.contributor.CPTaxCategoryModelSummaryContributor;
 import com.liferay.commerce.product.model.CPTaxCategory;
 import com.liferay.commerce.product.service.CPTaxCategoryLocalService;
-import com.liferay.portal.search.batch.DynamicQueryBatchIndexingActionableFactory;
 import com.liferay.portal.search.spi.model.index.contributor.ModelIndexerWriterContributor;
+import com.liferay.portal.search.spi.model.index.contributor.helper.IndexerWriterMode;
 import com.liferay.portal.search.spi.model.registrar.ModelSearchConfigurator;
 import com.liferay.portal.search.spi.model.result.contributor.ModelSummaryContributor;
 
@@ -49,18 +48,13 @@ public class CPTaxCategoryModelSearchConfigurator
 
 	@Activate
 	protected void activate() {
-		_modelIndexWriterContributor =
-			new CPTaxCategoryModelIndexerWriterContributor(
-				_cpTaxCategoryLocalService,
-				_dynamicQueryBatchIndexingActionableFactory);
+		_modelIndexWriterContributor = new ModelIndexerWriterContributor<>(
+			IndexerWriterMode.UPDATE,
+			_cpTaxCategoryLocalService::getIndexableActionableDynamicQuery);
 	}
 
 	@Reference
 	private CPTaxCategoryLocalService _cpTaxCategoryLocalService;
-
-	@Reference
-	private DynamicQueryBatchIndexingActionableFactory
-		_dynamicQueryBatchIndexingActionableFactory;
 
 	private ModelIndexerWriterContributor<CPTaxCategory>
 		_modelIndexWriterContributor;

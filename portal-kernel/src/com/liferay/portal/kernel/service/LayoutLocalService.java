@@ -1166,7 +1166,7 @@ public interface LayoutLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public Layout getOrAddEmptyLayout(
 			String externalReferenceCode, long userId, long groupId,
-			ServiceContext serviceContext)
+			boolean privateLayout, ServiceContext serviceContext)
 		throws Exception;
 
 	/**
@@ -1345,6 +1345,9 @@ public interface LayoutLocalService
 		throws PortalException;
 
 	public Layout updateIconImage(long plid, byte[] bytes)
+		throws PortalException;
+
+	public Layout updateIconImageId(long plid, long iconImageId)
 		throws PortalException;
 
 	/**
@@ -1712,3 +1715,4 @@ public interface LayoutLocalService
 		throws E;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-997549099

@@ -134,6 +134,12 @@ public class GroupFinderUtil {
 			andOperator, start, end, orderByComparator);
 	}
 
+	public static java.util.Map<Long, long[]>
+		findByC_C_S_A_UserInheritedGroupIds(long companyId) {
+
+		return getFinder().findByC_C_S_A_UserInheritedGroupIds(companyId);
+	}
+
 	public static GroupFinder getFinder() {
 		if (_finder == null) {
 			_finder = (GroupFinder)PortalBeanLocatorUtil.locate(
@@ -150,3 +156,4 @@ public class GroupFinderUtil {
 	private static GroupFinder _finder;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-381314832

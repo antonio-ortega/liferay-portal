@@ -991,3 +991,4 @@ public interface DiscountCategoryResource {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1856238152

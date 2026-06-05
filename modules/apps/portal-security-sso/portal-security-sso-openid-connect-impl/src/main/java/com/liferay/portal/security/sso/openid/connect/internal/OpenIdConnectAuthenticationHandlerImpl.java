@@ -17,6 +17,7 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
@@ -25,6 +26,7 @@ import com.liferay.portal.security.sso.openid.connect.OpenIdConnectServiceExcept
 import com.liferay.portal.security.sso.openid.connect.constants.OpenIdConnectConstants;
 import com.liferay.portal.security.sso.openid.connect.constants.OpenIdConnectWebKeys;
 import com.liferay.portal.security.sso.openid.connect.internal.session.manager.OfflineOpenIdConnectSessionManager;
+import com.liferay.portal.security.sso.openid.connect.internal.util.OpenIdConnectHttpUtil;
 import com.liferay.portal.security.sso.openid.connect.internal.util.OpenIdConnectProviderUtil;
 import com.liferay.portal.security.sso.openid.connect.internal.util.OpenIdConnectRequestParametersUtil;
 import com.liferay.portal.security.sso.openid.connect.internal.util.OpenIdConnectTokenRequestUtil;
@@ -36,7 +38,6 @@ import com.nimbusds.langtag.LangTagException;
 import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
-import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.id.State;
 import com.nimbusds.oauth2.sdk.pkce.CodeChallenge;
@@ -70,12 +71,14 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 import java.util.Collections;
+import java.util.Dictionary;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
 import net.minidev.json.JSONObject;
 
+import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -131,15 +134,33 @@ public class OpenIdConnectAuthenticationHandlerImpl
 		OIDCProviderMetadata oidcProviderMetadata =
 			_authorizationServerMetadataResolver.resolveOIDCProviderMetadata(
 				oAuthClientEntry.getAuthServerWellKnownURI(),
+				oAuthClientEntry.getCompanyId(),
 				oAuthClientEntry.getMetadataCacheInSeconds(),
 				oAuthClientEntry.getOAuthClientEntryId());
+
+		int timeout = 0;
+
+		Dictionary<String, Object> properties =
+			OpenIdConnectProviderUtil.
+				getOpenIdConnectProviderConfigurationProperties(
+					oAuthClientEntry.getAuthServerWellKnownURI(),
+					oAuthClientEntry.getClientId(),
+					_portal.getCompanyId(httpServletRequest),
+					_configurationAdmin,
+					String.valueOf(oidcProviderMetadata.getIssuer()),
+					String.valueOf(oidcProviderMetadata.getTokenEndpointURI()));
+
+		if (properties != null) {
+			timeout = GetterUtil.getInteger(
+				properties.get("tokenConnectionTimeout"));
+		}
 
 		OIDCTokens oidcTokens = OpenIdConnectTokenRequestUtil.request(
 			authenticationSuccessResponse,
 			openIdConnectAuthenticationSession.getCodeVerifier(),
 			openIdConnectAuthenticationSession.getNonce(),
 			oidcClientInformation, oidcProviderMetadata,
-			_getLoginRedirectURI(httpServletRequest),
+			_getLoginRedirectURI(httpServletRequest), timeout,
 			oAuthClientEntry.getTokenRequestParametersJSON());
 
 		String userInfoJSON = null;
@@ -161,9 +182,7 @@ public class OpenIdConnectAuthenticationHandlerImpl
 		long userId = _oidcUserInfoProcessor.processUserInfo(
 			_portal.getCompanyId(httpServletRequest),
 			String.valueOf(oidcProviderMetadata.getIssuer()), oAuthClientEntry,
-			serviceContext,
-			String.valueOf(oidcProviderMetadata.getTokenEndpointURI()),
-			userInfoJSON);
+			serviceContext, userInfoJSON);
 
 		userIdUnsafeConsumer.accept(userId);
 
@@ -227,6 +246,7 @@ public class OpenIdConnectAuthenticationHandlerImpl
 				_authorizationServerMetadataResolver.
 					resolveOIDCProviderMetadata(
 						oAuthClientEntry.getAuthServerWellKnownURI(),
+						oAuthClientEntry.getCompanyId(),
 						oAuthClientEntry.getMetadataCacheInSeconds(),
 						oAuthClientEntryId);
 
@@ -421,10 +441,8 @@ public class OpenIdConnectAuthenticationHandlerImpl
 			"text/html, image/gif, image/jpeg, */*; q=0.2, */*; q=0.2");
 
 		try {
-			HTTPResponse httpResponse = httpRequest.send();
-
 			UserInfoResponse userInfoResponse = UserInfoResponse.parse(
-				httpResponse);
+				OpenIdConnectHttpUtil.send(httpRequest));
 
 			if (userInfoResponse instanceof UserInfoErrorResponse) {
 				UserInfoErrorResponse userInfoErrorResponse =
@@ -492,6 +510,9 @@ public class OpenIdConnectAuthenticationHandlerImpl
 	@Reference
 	private AuthorizationServerMetadataResolver
 		_authorizationServerMetadataResolver;
+
+	@Reference
+	private ConfigurationAdmin _configurationAdmin;
 
 	@Reference
 	private Language _language;

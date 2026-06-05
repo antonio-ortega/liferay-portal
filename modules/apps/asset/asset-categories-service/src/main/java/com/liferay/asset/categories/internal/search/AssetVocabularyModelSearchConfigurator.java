@@ -5,11 +5,9 @@
 
 package com.liferay.asset.categories.internal.search;
 
-import com.liferay.asset.categories.internal.search.spi.model.index.contributor.AssetVocabularyModelIndexerWriterContributor;
 import com.liferay.asset.kernel.model.AssetVocabulary;
 import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
 import com.liferay.portal.kernel.search.Field;
-import com.liferay.portal.search.batch.DynamicQueryBatchIndexingActionableFactory;
 import com.liferay.portal.search.spi.model.index.contributor.ModelIndexerWriterContributor;
 import com.liferay.portal.search.spi.model.registrar.ModelSearchConfigurator;
 
@@ -47,18 +45,12 @@ public class AssetVocabularyModelSearchConfigurator
 
 	@Activate
 	protected void activate() {
-		_modelIndexWriterContributor =
-			new AssetVocabularyModelIndexerWriterContributor(
-				_assetVocabularyLocalService,
-				_dynamicQueryBatchIndexingActionableFactory);
+		_modelIndexWriterContributor = new ModelIndexerWriterContributor<>(
+			_assetVocabularyLocalService::getIndexableActionableDynamicQuery);
 	}
 
 	@Reference
 	private AssetVocabularyLocalService _assetVocabularyLocalService;
-
-	@Reference
-	private DynamicQueryBatchIndexingActionableFactory
-		_dynamicQueryBatchIndexingActionableFactory;
 
 	private ModelIndexerWriterContributor<AssetVocabulary>
 		_modelIndexWriterContributor;

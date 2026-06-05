@@ -7,11 +7,12 @@ package com.liferay.portal.osgi.web.servlet.jsp.compiler.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.layout.test.util.LayoutTestUtil;
+import com.liferay.petra.io.StreamUtil;
+import com.liferay.petra.io.unsync.UnsyncByteArrayInputStream;
+import com.liferay.petra.io.unsync.UnsyncByteArrayOutputStream;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayInputStream;
-import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayOutputStream;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutTemplate;
@@ -25,7 +26,6 @@ import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.StreamUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.URLUtil;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
@@ -37,7 +37,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
-import java.io.OutputStream;
 
 import java.net.URI;
 import java.net.URL;
@@ -94,9 +93,10 @@ public class TagFileCompileTest {
 
 			URL url = new URL(
 				StringBundler.concat(
-					"http://localhost:8080/web",
-					testGroupAutoCloseable._group.getFriendlyURL(), "?p_p_id=",
-					JspPrecompilePortlet.PORTLET_NAME, StringPool.AMPERSAND,
+					"http://localhost:", PortalUtil.getPortalServerPort(false),
+					"/web", testGroupAutoCloseable._group.getFriendlyURL(),
+					"?p_p_id=", JspPrecompilePortlet.PORTLET_NAME,
+					StringPool.AMPERSAND,
 					JspPrecompilePortlet.getJspFileNameParameterName(), "=/",
 					_TAG_TEST_JSP_FILE_NAME));
 
@@ -164,15 +164,14 @@ public class TagFileCompileTest {
 					jarOutputStream.putNextEntry(new ZipEntry(resourcePath));
 
 					try (InputStream inputStream =
-							classLoader.getResourceAsStream(resourcePath);
-						OutputStream outputStream = StreamUtil.uncloseable(
-							jarOutputStream)) {
+							classLoader.getResourceAsStream(resourcePath)) {
 
 						if (inputStream == null) {
 							continue;
 						}
 
-						StreamUtil.transfer(inputStream, outputStream);
+						StreamUtil.transfer(
+							inputStream, jarOutputStream, false);
 					}
 
 					jarOutputStream.closeEntry();

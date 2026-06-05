@@ -158,3 +158,4 @@ public class UserAccount implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:1675198449

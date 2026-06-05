@@ -1,5 +1,6 @@
 {
 	"dependencies": {
+		"frontend-js-components-web": "*",
 		"frontend-js-web": "*",
 		"prop-types": "15.7.2"
 	},
@@ -10,5 +11,5 @@
 		"checkFormat": "node-scripts format --check",
 		"format": "node-scripts format"
 	},
-	"version": "1.0.43"
+	"version": "1.0.45"
 }

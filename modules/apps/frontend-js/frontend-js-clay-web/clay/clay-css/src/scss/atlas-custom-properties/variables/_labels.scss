@@ -1,0 +1,1753 @@
+// .label
+
+$label-border-color: var(--label-border-color, $gray-900) !default;
+$label-border-radius: var(--label-border-radius, $border-radius) !default;
+$label-border-style: var(--label-border-style, solid) !default;
+$label-border-width: var(--label-border-width, 1px) !default;
+$label-color: var(--label-color, inherit) !default;
+$label-font-size: var(--label-font-size, 0.75rem) !default;
+$label-font-weight: var(--label-font-weight, $font-weight-semi-bold) !default;
+$label-height: var(--label-height, auto) !default;
+$label-line-height: var(--label-line-height, 1) !default;
+$label-padding-x: var(--label-padding-x, 0.25rem) !default;
+$label-padding-y: var(--label-padding-y, 0.125rem) !default;
+$label-spacer-x: var(--label-spacer-x, 0.25rem) !default;
+$label-spacer-y: var(--label-spacer-y, 0.125rem) !default;
+$label-text-transform: var(--label-text-transform, none) !default;
+
+// .label .sticker
+
+$label-sticker-border-radius: $rounded-pill !default;
+$label-sticker-size: 0.875em !default;
+
+// .label[href], .label[type], .label[tabindex='0']
+
+$label-anchor-text-decoration: none !default;
+
+$label-anchor-hover-text-decoration: none !default;
+
+// .label a, .label .btn-unstyled
+
+$label-link-color: inherit !default;
+$label-link-text-decoration: none !default;
+
+$label-link-hover-color: inherit !default;
+$label-link-hover-text-decoration: underline !default;
+
+$label-base: () !default;
+
+$label: () !default;
+$label: map-deep-merge(
+	(
+		border-color: $label-border-color,
+		border-radius: clay-enable-rounded($label-border-radius),
+		border-style: $label-border-style,
+		border-width: $label-border-width,
+		box-shadow: var(--label-box-shadow),
+		color: $label-color,
+		display: inline-flex,
+		font-size: $label-font-size,
+		font-weight: $label-font-weight,
+		height: $label-height,
+		line-height: $label-line-height,
+		margin-bottom: $label-spacer-y,
+		margin-right: $label-spacer-x,
+		margin-top: $label-spacer-y,
+		max-width: 100%,
+		outline: 0,
+		padding-bottom: $label-padding-y,
+		padding-left: $label-padding-x,
+		padding-right: $label-padding-x,
+		padding-top: $label-padding-y,
+		text-transform: $label-text-transform,
+		transition: box-shadow 0.15s ease-in-out,
+		white-space: inherit,
+		word-wrap: break-word,
+
+		disabled: (
+			box-shadow: none,
+		),
+
+		href: (
+			cursor: $link-cursor,
+			text-decoration: $label-anchor-text-decoration,
+
+			hover: (
+				text-decoration: $label-anchor-hover-text-decoration,
+			),
+
+			focus: (
+				box-shadow: $component-focus-box-shadow,
+				text-decoration: $label-anchor-hover-text-decoration,
+			),
+		),
+
+		link: (
+			color: $label-link-color,
+			display: inline-block,
+			text-decoration: $label-link-text-decoration,
+
+			hover: (
+				color: $label-link-hover-color,
+				text-decoration: $label-link-hover-text-decoration,
+			),
+
+			focus: (
+				color: $label-link-hover-color,
+				text-decoration: $label-link-hover-text-decoration,
+			),
+		),
+
+		sticker: (
+			border-radius: $label-sticker-border-radius,
+			height: $label-sticker-size,
+			line-height: $label-sticker-size,
+			width: $label-sticker-size,
+		),
+
+		sticker-overlay: (
+			border-radius: $label-sticker-border-radius,
+		),
+
+		c-inner: (
+			margin-bottom: calc(#{$label-padding-y} * -1),
+			margin-left: calc(#{$label-padding-x} * -1),
+			margin-right: calc(#{$label-padding-x} * -1),
+			margin-top: calc(#{$label-padding-y} * -1),
+			max-width: none,
+		),
+	),
+	$label
+);
+$label: map-deep-merge($label, $label-base) !default;
+
+// .label-dismissible
+
+$label-dismissible-text-transform: null !default;
+
+$label-dismissible: () !default;
+$label-dismissible: map-merge(
+	(
+		text-transform: $label-dismissible-text-transform,
+	),
+	$label-dismissible
+);
+
+// .label-item .close
+
+$label-close: () !default;
+$label-close: map-deep-merge(
+	(
+		border-radius: var(--label-close-border-radius, $rounded-pill),
+		box-shadow: var(--label-close-box-shadow, none),
+		color: var(--label-close-color, inherit),
+		display: inline-flex,
+		font-size: var(--label-close-font-size, 1rem),
+		height: var(--label-close-height, 1.5rem),
+		margin: var(--label-close-margin, -3.125rem -0.25rem),
+		opacity: var(--label-close-opacity, 1),
+		width: var(--label-close-width, 1.5rem),
+		hover: (
+			color: inherit,
+			opacity: 1,
+		),
+
+		focus: (
+			opacity: 1,
+		),
+
+		disabled: (
+			color: inherit,
+			opacity: $component-disabled-opacity,
+		),
+	),
+	$label-close
+);
+
+// .label-item
+
+$label-item-spacer-x: var(--label-item-spacer-x, 0.85714em) !default;
+$label-item-spacer-y: var(--label-item-spacer-y, 0em) !default;
+
+$label-lexicon-icon-height: var(--label-lexicon-icon-height, 1em) !default;
+$label-lexicon-icon-margin-top: var(
+	--label-lexicon-icon-margin-top,
+	0em
+) !default;
+$label-lexicon-icon-width: var(--label-lexicon-icon-width, 1em) !default;
+
+$label-item: () !default;
+$label-item: map-deep-merge(
+	(
+		display: flex,
+		flex-direction: column,
+		flex-shrink: 0,
+		justify-content: center,
+		margin-bottom: $label-item-spacer-y,
+		margin-top: $label-item-spacer-y,
+		min-height: 0rem,
+		position: relative,
+
+		link: (
+			display: inline-flex,
+		),
+
+		btn-unstyled: (
+			color: inherit,
+			display: inline-flex,
+		),
+
+		close: $label-close,
+
+		lexicon-icon: (
+			height: $label-lexicon-icon-height,
+			margin-top: $label-lexicon-icon-margin-top,
+			width: $label-lexicon-icon-width,
+		),
+
+		text-truncate-inline: (
+			display: inline-flex,
+		),
+	),
+	$label-item
+);
+
+// .label-item-expand
+
+$label-item-expand: () !default;
+$label-item-expand: map-deep-merge(
+	(
+		flex-grow: 1,
+		flex-shrink: 1,
+		min-width: 1rem,
+		word-wrap: break-word,
+
+		link: (
+			flex-direction: column,
+		),
+	),
+	$label-item-expand
+);
+
+// .label-item-before
+
+$label-item-before: () !default;
+$label-item-before: map-merge(
+	(
+		margin-right: $label-item-spacer-x,
+	),
+	$label-item-before
+);
+
+// .label-item-after
+
+$label-item-after: () !default;
+$label-item-after: map-merge(
+	(
+		margin-left: $label-item-spacer-x,
+	),
+	$label-item-after
+);
+
+// Label Sizes
+
+$label-lg: () !default;
+$label-lg: map-deep-merge(
+	(
+		border-radius: var(--label-lg-border-radius, $border-radius-lg),
+		font-size: var(--label-lg-font-size, 0.875rem),
+		height: var(--label-lg-height, auto),
+		min-height: var(--label-lg-min-height, 1.5rem),
+		padding-bottom: var(--label-lg-padding-bottom, 0.3125rem),
+		padding-left: var(--label-lg-padding-left, 0.5rem),
+		padding-right: var(--label-lg-padding-right, 0.5rem),
+		padding-top: var(--label-lg-padding-top, 0.3125rem),
+		text-transform: var(--label-lg-text-transform, none),
+		label-item: (
+			margin-bottom: -1px,
+			margin-top: -1px,
+		),
+
+		lexicon-icon: (
+			height: 1em,
+			width: 1em,
+		),
+
+		sticker: (
+			height: var(--label-lg-sticker-height, 0.875rem),
+			line-height: var(--label-lg-sticker-line-height, 0.875rem),
+			width: var(--label-lg-sticker-width, 0.875rem),
+		),
+	),
+	$label-lg
+);
+
+$label-sizes: () !default;
+$label-sizes: map-deep-merge(
+	(
+		label-lg: $label-lg,
+	),
+	$label-sizes
+);
+
+// Label Variants
+
+// @deprecated as of v2.4.1 use the Sass map `$label-primary` instead
+
+$label-primary-color: $primary !default;
+
+// @deprecated as of v2.4.1 use the Sass map `$label-primary` instead
+
+$label-primary-hover-color: $primary-d2 !default;
+
+// @deprecated as of v2.4.1 use the Sass map `$label-primary` instead
+
+$label-primary-bg: $white !default;
+
+// @deprecated as of v2.4.1 use the Sass map `$label-primary` instead
+
+$label-primary-hover-bg: null !default;
+
+// @deprecated as of v2.4.1 use the Sass map `$label-primary` instead
+
+$label-primary-border-color: $primary-l1 !default;
+
+// @deprecated as of v2.4.1 use the Sass map `$label-primary` instead
+
+$label-primary-hover-border-color: $label-primary-border-color !default;
+
+// @deprecated as of v2.4.1 use the Sass map `$label-primary` instead
+
+$label-primary-link-color: null !default;
+
+// @deprecated as of v2.4.1 use the Sass map `$label-primary` instead
+
+$label-primary-link-hover-color: $label-primary-hover-color !default;
+
+$label-primary-close: () !default;
+$label-primary-close: map-deep-merge(
+	(
+		hover: (
+			color: $label-primary-hover-color,
+		),
+
+		focus: (
+			color: $label-primary-hover-color,
+		),
+	),
+	$label-primary-close
+);
+
+$label-primary: () !default;
+$label-primary: map-deep-merge(
+	(
+		background-color:
+			var(--label-primary-background-color, $label-primary-bg),
+		border-color:
+			var(--label-primary-border-color, $label-primary-border-color),
+		color: var(--label-primary-color, $label-primary-color),
+		href: (
+			hover: (
+				background-color:
+					var(
+						--label-primary-hover-background-color,
+						$label-primary-hover-bg
+					),
+				border-color:
+					var(
+						--label-primary-hover-border-color,
+						$label-primary-hover-border-color
+					),
+				color:
+					var(--label-primary-hover-color, $label-primary-hover-color),
+			),
+
+			focus: (
+				background-color:
+					var(
+						--label-primary-focus-background-color,
+						$label-primary-hover-bg
+					),
+				border-color:
+					var(
+						--label-primary-focus-border-color,
+						$label-primary-hover-border-color
+					),
+				color:
+					var(--label-primary-focus-color, $label-primary-hover-color),
+			),
+		),
+
+		link: (
+			color: $label-primary-link-color,
+
+			hover: (
+				color: $label-primary-link-hover-color,
+			),
+		),
+
+		close: $label-primary-close,
+	),
+	$label-primary
+);
+
+// @deprecated as of v2.4.1 use the Sass map `$label-secondary` instead
+
+$label-secondary-color: $dark-l2 !default;
+
+// @deprecated as of v2.4.1 use the Sass map `$label-secondary` instead
+
+$label-secondary-hover-color: $gray-900 !default;
+
+// @deprecated as of v2.4.1 use the Sass map `$label-secondary` instead
+
+$label-secondary-bg: $white !default;
+
+// @deprecated as of v2.4.1 use the Sass map `$label-secondary` instead
+
+$label-secondary-hover-bg: null !default;
+
+// @deprecated as of v2.4.1 use the Sass map `$label-secondary` instead
+
+$label-secondary-border-color: $secondary-l2 !default;
+
+// @deprecated as of v2.4.1 use the Sass map `$label-secondary` instead
+
+$label-secondary-hover-border-color: $label-secondary-border-color !default;
+
+// @deprecated as of v2.4.1 use the Sass map `$label-secondary` instead
+
+$label-secondary-link-color: null !default;
+
+// @deprecated as of v2.4.1 use the Sass map `$label-secondary` instead
+
+$label-secondary-link-hover-color: $label-secondary-hover-color !default;
+
+$label-secondary-close: () !default;
+$label-secondary-close: map-deep-merge(
+	(
+		hover: (
+			color: $label-secondary-hover-color,
+		),
+
+		focus: (
+			color: $label-secondary-hover-color,
+		),
+	),
+	$label-secondary-close
+);
+
+$label-secondary: () !default;
+$label-secondary: map-deep-merge(
+	(
+		background-color:
+			var(--label-secondary-background-color, $label-secondary-bg),
+		border-color:
+			var(--label-secondary-border-color, $label-secondary-border-color),
+		color: var(--label-secondary-color, $label-secondary-color),
+		href: (
+			hover: (
+				background-color:
+					var(
+						--label-secondary-hover-background-color,
+						$label-secondary-hover-bg
+					),
+				border-color:
+					var(
+						--label-secondary-hover-border-color,
+						$label-secondary-hover-border-color
+					),
+				color:
+					var(
+						--label-secondary-hover-color,
+						$label-secondary-hover-color
+					),
+			),
+
+			focus: (
+				background-color:
+					var(
+						--label-secondary-focus-background-color,
+						$label-secondary-hover-bg
+					),
+				border-color:
+					var(
+						--label-secondary-focus-border-color,
+						$label-secondary-hover-border-color
+					),
+				color:
+					var(
+						--label-secondary-focus-color,
+						$label-secondary-hover-color
+					),
+			),
+		),
+
+		link: (
+			color: $label-secondary-link-color,
+
+			hover: (
+				color: $label-secondary-link-hover-color,
+			),
+		),
+
+		close: $label-secondary-close,
+	),
+	$label-secondary
+);
+
+// @deprecated as of v2.4.1 use the Sass map `$label-success` instead
+
+$label-success-color: $success-d1 !default;
+
+// @deprecated as of v2.4.1 use the Sass map `$label-success` instead
+
+$label-success-hover-color: $success-d2 !default;
+
+// @deprecated as of v2.4.1 use the Sass map `$label-success` instead
+
+$label-success-bg: $white !default;
+
+// @deprecated as of v2.4.1 use the Sass map `$label-success` instead
+
+$label-success-hover-bg: null !default;
+
+// @deprecated as of v2.4.1 use the Sass map `$label-success` instead
+
+$label-success-border-color: $success-l1 !default;
+
+// @deprecated as of v2.4.1 use the Sass map `$label-success` instead
+
+$label-success-hover-border-color: $label-success-border-color !default;
+
+// @deprecated as of v2.4.1 use the Sass map `$label-success` instead
+
+$label-success-link-color: null !default;
+
+// @deprecated as of v2.4.1 use the Sass map `$label-success` instead
+
+$label-success-link-hover-color: $label-success-hover-color !default;
+
+$label-success-close: () !default;
+$label-success-close: map-deep-merge(
+	(
+		hover: (
+			color: $label-success-hover-color,
+		),
+
+		focus: (
+			color: $label-success-hover-color,
+		),
+	),
+	$label-success-close
+);
+
+$label-success: () !default;
+$label-success: map-deep-merge(
+	(
+		background-color:
+			var(--label-success-background-color, $label-success-bg),
+		border-color:
+			var(--label-success-border-color, $label-success-border-color),
+		color: var(--label-success-color, $label-success-color),
+		href: (
+			hover: (
+				background-color:
+					var(
+						--label-success-hover-background-color,
+						$label-success-hover-bg
+					),
+				border-color:
+					var(
+						--label-success-hover-border-color,
+						$label-success-hover-border-color
+					),
+				color:
+					var(--label-success-hover-color, $label-success-hover-color),
+			),
+
+			focus: (
+				background-color:
+					var(
+						--label-success-focus-background-color,
+						$label-success-hover-bg
+					),
+				border-color:
+					var(
+						--label-success-focus-border-color,
+						$label-success-hover-border-color
+					),
+				color:
+					var(--label-success-focus-color, $label-success-hover-color),
+			),
+		),
+
+		link: (
+			color: $label-success-link-color,
+
+			hover: (
+				color: $label-success-link-hover-color,
+			),
+		),
+
+		close: $label-success-close,
+	),
+	$label-success
+);
+
+// @deprecated as of v2.4.1 use the Sass map `$label-info` instead
+
+$label-info-color: $info-d1 !default;
+
+// @deprecated as of v2.4.1 use the Sass map `$label-info` instead
+
+$label-info-hover-color: $info-d2 !default;
+
+// @deprecated as of v2.4.1 use the Sass map `$label-info` instead
+
+$label-info-bg: $white !default;
+
+// @deprecated as of v2.4.1 use the Sass map `$label-info` instead
+
+$label-info-hover-bg: null !default;
+
+// @deprecated as of v2.4.1 use the Sass map `$label-info` instead
+
+$label-info-border-color: $info-l1 !default;
+
+// @deprecated as of v2.4.1 use the Sass map `$label-info` instead
+
+$label-info-hover-border-color: $label-info-border-color !default;
+
+// @deprecated as of v2.4.1 use the Sass map `$label-info` instead
+
+$label-info-link-color: null !default;
+
+// @deprecated as of v2.4.1 use the Sass map `$label-info` instead
+
+$label-info-link-hover-color: $label-info-hover-color !default;
+
+$label-info-close: () !default;
+$label-info-close: map-deep-merge(
+	(
+		hover: (
+			color: $label-info-hover-color,
+		),
+
+		focus: (
+			color: $label-info-hover-color,
+		),
+	),
+	$label-info-close
+);
+
+$label-info: () !default;
+$label-info: map-deep-merge(
+	(
+		background-color: var(--label-info-background-color, $label-info-bg),
+		border-color: var(--label-info-border-color, $label-info-border-color),
+		color: var(--label-info-color, $label-info-color),
+		href: (
+			hover: (
+				background-color:
+					var(
+						--label-info-hover-background-color,
+						$label-info-hover-bg
+					),
+				border-color:
+					var(
+						--label-info-hover-border-color,
+						$label-info-hover-border-color
+					),
+				color: var(--label-info-hover-color, $label-info-hover-color),
+			),
+
+			focus: (
+				background-color:
+					var(
+						--label-info-focus-background-color,
+						$label-info-hover-bg
+					),
+				border-color:
+					var(
+						--label-info-focus-border-color,
+						$label-info-hover-border-color
+					),
+				color: var(--label-info-focus-color, $label-info-hover-color),
+			),
+		),
+
+		link: (
+			color: $label-info-link-color,
+
+			hover: (
+				color: $label-info-link-hover-color,
+			),
+		),
+
+		close: $label-info-close,
+	),
+	$label-info
+);
+
+// @deprecated as of v2.4.1 use the Sass map `$label-warning` instead
+
+$label-warning-color: $warning-d1 !default;
+
+// @deprecated as of v2.4.1 use the Sass map `$label-warning` instead
+
+$label-warning-hover-color: $warning-d2 !default;
+
+// @deprecated as of v2.4.1 use the Sass map `$label-warning` instead
+
+$label-warning-bg: $white !default;
+
+// @deprecated as of v2.4.1 use the Sass map `$label-warning` instead
+
+$label-warning-hover-bg: null !default;
+
+// @deprecated as of v2.4.1 use the Sass map `$label-warning` instead
+
+$label-warning-border-color: $warning-l1 !default;
+
+// @deprecated as of v2.4.1 use the Sass map `$label-warning` instead
+
+$label-warning-hover-border-color: $label-warning-border-color !default;
+
+// @deprecated as of v2.4.1 use the Sass map `$label-warning` instead
+
+$label-warning-link-color: null !default;
+
+// @deprecated as of v2.4.1 use the Sass map `$label-warning` instead
+
+$label-warning-link-hover-color: $label-warning-hover-color !default;
+
+$label-warning-close: () !default;
+$label-warning-close: map-deep-merge(
+	(
+		hover: (
+			color: $label-warning-hover-color,
+		),
+
+		focus: (
+			color: $label-warning-hover-color,
+		),
+	),
+	$label-warning-close
+);
+
+$label-warning: () !default;
+$label-warning: map-deep-merge(
+	(
+		background-color:
+			var(--label-warning-background-color, $label-warning-bg),
+		border-color:
+			var(--label-warning-border-color, $label-warning-border-color),
+		color: var(--label-warning-color, $label-warning-color),
+		href: (
+			hover: (
+				background-color:
+					var(
+						--label-warning-hover-background-color,
+						$label-warning-hover-bg
+					),
+				border-color:
+					var(
+						--label-warning-hover-border-color,
+						$label-warning-hover-border-color
+					),
+				color:
+					var(--label-warning-hover-color, $label-warning-hover-color),
+			),
+
+			focus: (
+				background-color:
+					var(
+						--label-warning-focus-background-color,
+						$label-warning-hover-bg
+					),
+				border-color:
+					var(
+						--label-warning-focus-border-color,
+						$label-warning-hover-border-color
+					),
+				color:
+					var(--label-warning-focus-color, $label-warning-hover-color),
+			),
+		),
+
+		link: (
+			color: $label-warning-link-color,
+
+			hover: (
+				color: $label-warning-link-hover-color,
+			),
+		),
+
+		close: $label-warning-close,
+	),
+	$label-warning
+);
+
+// @deprecated as of v2.4.1 use the Sass map `$label-danger` instead
+
+$label-danger-color: $danger-d1 !default;
+
+// @deprecated as of v2.4.1 use the Sass map `$label-danger` instead
+
+$label-danger-hover-color: $danger-d2 !default;
+
+// @deprecated as of v2.4.1 use the Sass map `$label-danger` instead
+
+$label-danger-bg: $white !default;
+
+// @deprecated as of v2.4.1 use the Sass map `$label-danger` instead
+
+$label-danger-hover-bg: null !default;
+
+// @deprecated as of v2.4.1 use the Sass map `$label-danger` instead
+
+$label-danger-border-color: $danger-l1 !default;
+
+// @deprecated as of v2.4.1 use the Sass map `$label-danger` instead
+
+$label-danger-hover-border-color: $label-danger-border-color !default;
+
+// @deprecated as of v2.4.1 use the Sass map `$label-danger` instead
+
+$label-danger-link-color: null !default;
+
+// @deprecated as of v2.4.1 use the Sass map `$label-danger` instead
+
+$label-danger-link-hover-color: $label-danger-hover-color !default;
+
+$label-danger-close: () !default;
+$label-danger-close: map-deep-merge(
+	(
+		hover: (
+			color: $label-danger-hover-color,
+		),
+
+		focus: (
+			color: $label-danger-hover-color,
+		),
+	),
+	$label-danger-close
+);
+
+$label-danger: () !default;
+$label-danger: map-deep-merge(
+	(
+		background-color: var(--label-danger-background-color, $label-danger-bg),
+		border-color:
+			var(--label-danger-border-color, $label-danger-border-color),
+		color: var(--label-danger-color, $label-danger-color),
+		href: (
+			hover: (
+				background-color:
+					var(
+						--label-danger-hover-background-color,
+						$label-danger-hover-bg
+					),
+				border-color:
+					var(
+						--label-danger-hover-border-color,
+						$label-danger-hover-border-color
+					),
+				color:
+					var(--label-danger-hover-color, $label-danger-hover-color),
+			),
+
+			focus: (
+				background-color:
+					var(
+						--label-danger-focus-background-color,
+						$label-danger-hover-bg
+					),
+				border-color:
+					var(
+						--label-danger-focus-border-color,
+						$label-danger-hover-border-color
+					),
+				color:
+					var(--label-danger-focus-color, $label-danger-hover-color),
+			),
+		),
+
+		link: (
+			color: $label-danger-link-color,
+
+			hover: (
+				color: $label-danger-link-hover-color,
+			),
+		),
+
+		close: $label-danger-close,
+	),
+	$label-danger
+);
+
+// @deprecated as of v2.4.1 use the Sass map `$label-light` instead
+
+$label-light-color: $light !default;
+
+// @deprecated as of v2.4.1 use the Sass map `$label-light` instead
+
+$label-light-hover-color: $light-d2 !default;
+
+// @deprecated as of v2.4.1 use the Sass map `$label-light` instead
+
+$label-light-bg: $dark !default;
+
+// @deprecated as of v2.4.1 use the Sass map `$label-light` instead
+
+$label-light-hover-bg: null !default;
+
+// @deprecated as of v2.4.1 use the Sass map `$label-light` instead
+
+$label-light-border-color: $light !default;
+
+// @deprecated as of v2.4.1 use the Sass map `$label-light` instead
+
+$label-light-hover-border-color: $label-light-border-color !default;
+
+// @deprecated as of v2.4.1 use the Sass map `$label-light` instead
+
+$label-light-link-color: null !default;
+
+// @deprecated as of v2.4.1 use the Sass map `$label-light` instead
+
+$label-light-link-hover-color: $label-light-hover-color !default;
+
+$label-light-close: () !default;
+$label-light-close: map-deep-merge(
+	(
+		hover: (
+			color: $label-light-hover-color,
+		),
+
+		focus: (
+			color: $label-light-hover-color,
+		),
+	),
+	$label-light-close
+);
+
+$label-light: () !default;
+$label-light: map-deep-merge(
+	(
+		background-color: var(--label-light-background-color, $label-light-bg),
+		border-color: var(--label-light-border-color, $label-light-border-color),
+		color: var(--label-light-color, $label-light-color),
+		href: (
+			hover: (
+				background-color:
+					var(
+						--label-light-hover-background-color,
+						$label-light-hover-bg
+					),
+				border-color:
+					var(
+						--label-light-hover-border-color,
+						$label-light-hover-border-color
+					),
+				color: var(--label-light-hover-color, $label-light-hover-color),
+			),
+
+			focus: (
+				background-color:
+					var(
+						--label-light-focus-background-color,
+						$label-light-hover-bg
+					),
+				border-color:
+					var(
+						--label-light-focus-border-color,
+						$label-light-hover-border-color
+					),
+				color: var(--label-light-focus-color, $label-light-hover-color),
+			),
+		),
+
+		link: (
+			color: $label-light-link-color,
+
+			hover: (
+				color: $label-light-link-hover-color,
+			),
+		),
+
+		close: $label-light-close,
+	),
+	$label-light
+);
+
+// @deprecated as of v2.4.1 use the Sass map `$label-dark` instead
+
+$label-dark-color: $dark !default;
+
+// @deprecated as of v2.4.1 use the Sass map `$label-dark` instead
+
+$label-dark-hover-color: $dark-l2 !default;
+
+// @deprecated as of v2.4.1 use the Sass map `$label-dark` instead
+
+$label-dark-bg: $white !default;
+
+// @deprecated as of v2.4.1 use the Sass map `$label-dark` instead
+
+$label-dark-hover-bg: null !default;
+
+// @deprecated as of v2.4.1 use the Sass map `$label-dark` instead
+
+$label-dark-border-color: $dark !default;
+
+// @deprecated as of v2.4.1 use the Sass map `$label-dark` instead
+
+$label-dark-hover-border-color: $label-dark-border-color !default;
+
+// @deprecated as of v2.4.1 use the Sass map `$label-dark` instead
+
+$label-dark-link-color: null !default;
+
+// @deprecated as of v2.4.1 use the Sass map `$label-dark` instead
+
+$label-dark-link-hover-color: $label-dark-hover-color !default;
+
+$label-dark-close: () !default;
+$label-dark-close: map-deep-merge(
+	(
+		hover: (
+			color: $label-dark-hover-color,
+		),
+
+		focus: (
+			color: $label-dark-hover-color,
+		),
+	),
+	$label-dark-close
+);
+
+$label-dark: () !default;
+$label-dark: map-deep-merge(
+	(
+		background-color: var(--label-dark-background-color, $label-dark-bg),
+		border-color: var(--label-dark-border-color, $label-dark-border-color),
+		color: var(--label-dark-color, $label-dark-color),
+		href: (
+			hover: (
+				background-color:
+					var(
+						--label-dark-hover-background-color,
+						$label-dark-hover-bg
+					),
+				border-color:
+					var(
+						--label-dark-hover-border-color,
+						$label-dark-hover-border-color
+					),
+				color: var(--label-dark-hover-color, $label-dark-hover-color),
+			),
+
+			focus: (
+				background-color:
+					var(
+						--label-dark-focus-background-color,
+						$label-dark-hover-bg
+					),
+				border-color:
+					var(
+						--label-dark-focus-border-color,
+						$label-dark-hover-border-color
+					),
+				color: var(--label-dark-focus-color, $label-dark-hover-color),
+			),
+		),
+
+		link: (
+			color: $label-dark-link-color,
+
+			hover: (
+				color: $label-dark-link-hover-color,
+			),
+		),
+
+		close: $label-dark-close,
+	),
+	$label-dark
+);
+
+// Label Inverse
+
+$label-inverse-primary: () !default;
+$label-inverse-primary: map-deep-merge(
+	(
+		background-color:
+			var(--label-inverse-primary-background-color, $primary),
+		border-color: var(--label-inverse-primary-border-color, transparent),
+		color: var(--label-inverse-primary-color, $white),
+		href: (
+			hover: (
+				background-color:
+					var(
+						--label-inverse-primary-hover-background-color,
+						$primary-d2
+					),
+				border-color:
+					var(--label-inverse-primary-hover-border-color, transparent),
+				color: var(--label-inverse-primary-hover-color, $white),
+			),
+
+			focus: (
+				background-color:
+					var(
+						--label-inverse-primary-focus-background-color,
+						$primary-d2
+					),
+				border-color:
+					var(--label-inverse-primary-focus-border-color, transparent),
+				color: var(--label-inverse-primary-focus-color, $white),
+			),
+		),
+	),
+	$label-inverse-primary
+);
+
+$label-inverse-secondary: () !default;
+$label-inverse-secondary: map-deep-merge(
+	(
+		background-color:
+			var(--label-inverse-secondary-background-color, $secondary-l3),
+		border-color: var(--label-inverse-secondary-border-color, transparent),
+		color: var(--label-inverse-secondary-color, $dark-d2),
+		href: (
+			hover: (
+				background-color:
+					var(
+						--label-inverse-secondary-hover-background-color,
+						$secondary-l3
+					),
+				border-color:
+					var(
+						--label-inverse-secondary-hover-border-color,
+						transparent
+					),
+				color: var(--label-inverse-secondary-hover-color, $dark-d2),
+			),
+
+			focus: (
+				background-color:
+					var(
+						--label-inverse-secondary-focus-background-color,
+						$secondary-l3
+					),
+				border-color:
+					var(
+						--label-inverse-secondary-focus-border-color,
+						transparent
+					),
+				color: var(--label-inverse-secondary-focus-color, $dark-d2),
+			),
+		),
+	),
+	$label-inverse-secondary
+);
+
+$label-inverse-success: () !default;
+$label-inverse-success: map-deep-merge(
+	(
+		background-color:
+			var(--label-inverse-success-background-color, $success-l2),
+		border-color: var(--label-inverse-success-border-color, transparent),
+		color: var(--label-inverse-success-color, $success-d2),
+		href: (
+			hover: (
+				background-color:
+					var(
+						--label-inverse-success-hover-background-color,
+						$success-l2
+					),
+				border-color:
+					var(--label-inverse-success-hover-border-color, transparent),
+				color: var(--label-inverse-success-hover-color, $success-d2),
+			),
+
+			focus: (
+				background-color:
+					var(
+						--label-inverse-success-focus-background-color,
+						$success-l2
+					),
+				border-color:
+					var(--label-inverse-success-focus-border-color, transparent),
+				color: var(--label-inverse-success-focus-color, $success-d2),
+			),
+		),
+	),
+	$label-inverse-success
+);
+
+$label-inverse-info: () !default;
+$label-inverse-info: map-deep-merge(
+	(
+		background-color: var(--label-inverse-info-background-color, $info-l2),
+		border-color: var(--label-inverse-info-border-color, transparent),
+		color: var(--label-inverse-info-color, $info-d2),
+		href: (
+			hover: (
+				background-color:
+					var(--label-inverse-info-hover-background-color, $info-l2),
+				border-color:
+					var(--label-inverse-info-hover-border-color, transparent),
+				color: var(--label-inverse-info-hover-color, $info-d2),
+			),
+
+			focus: (
+				background-color:
+					var(--label-inverse-info-focus-background-color, $info-l2),
+				border-color:
+					var(--label-inverse-info-focus-border-color, transparent),
+				color: var(--label-inverse-info-focus-color, $info-d2),
+			),
+		),
+	),
+	$label-inverse-info
+);
+
+$label-inverse-warning: () !default;
+$label-inverse-warning: map-deep-merge(
+	(
+		background-color:
+			var(--label-inverse-warning-background-color, $warning-l2),
+		border-color: var(--label-inverse-warning-border-color, transparent),
+		color: var(--label-inverse-warning-color, $warning-d2),
+		href: (
+			hover: (
+				background-color:
+					var(
+						--label-inverse-warning-hover-background-color,
+						$warning-l2
+					),
+				border-color:
+					var(--label-inverse-warning-hover-border-color, transparent),
+				color: var(--label-inverse-warning-hover-color, $warning-d2),
+			),
+
+			focus: (
+				background-color:
+					var(
+						--label-inverse-warning-focus-background-color,
+						$warning-l2
+					),
+				border-color:
+					var(--label-inverse-warning-focus-border-color, transparent),
+				color: var(--label-inverse-warning-focus-color, $warning-d2),
+			),
+		),
+	),
+	$label-inverse-warning
+);
+
+$label-inverse-danger: () !default;
+$label-inverse-danger: map-deep-merge(
+	(
+		background-color:
+			var(--label-inverse-danger-background-color, $danger-l2),
+		border-color: var(--label-inverse-danger-border-color, transparent),
+		color: var(--label-inverse-danger-color, $danger-d2),
+		href: (
+			hover: (
+				background-color:
+					var(
+						--label-inverse-danger-hover-background-color,
+						$danger-l2
+					),
+				border-color:
+					var(--label-inverse-danger-hover-border-color, transparent),
+				color: var(--label-inverse-danger-hover-color, $danger-d2),
+			),
+
+			focus: (
+				background-color:
+					var(
+						--label-inverse-danger-focus-background-color,
+						$danger-l2
+					),
+				border-color:
+					var(--label-inverse-danger-focus-border-color, transparent),
+				color: var(--label-inverse-danger-focus-color, $danger-d2),
+			),
+		),
+	),
+	$label-inverse-danger
+);
+
+$label-inverse-light: () !default;
+$label-inverse-light: map-deep-merge(
+	(
+		background-color: var(--label-inverse-light-background-color, $light),
+		border-color: var(--label-inverse-light-border-color, transparent),
+		color: var(--label-inverse-light-color, $dark),
+		href: (
+			hover: (
+				background-color:
+					var(--label-inverse-light-hover-background-color, $light-d2),
+				border-color:
+					var(--label-inverse-light-hover-border-color, transparent),
+				color: var(--label-inverse-light-hover-color, $dark),
+			),
+
+			focus: (
+				background-color:
+					var(--label-inverse-light-focus-background-color, $light-d2),
+				border-color:
+					var(--label-inverse-light-focus-border-color, transparent),
+				color: var(--label-inverse-light-focus-color, $dark),
+			),
+		),
+	),
+	$label-inverse-light
+);
+
+$label-inverse-dark: () !default;
+$label-inverse-dark: map-deep-merge(
+	(
+		background-color: var(--label-inverse-dark-background-color, $dark),
+		border-color: var(--label-inverse-dark-border-color, transparent),
+		color: var(--label-inverse-dark-color, $white),
+		href: (
+			hover: (
+				background-color:
+					var(--label-inverse-dark-hover-background-color, $dark-l2),
+				border-color:
+					var(--label-inverse-dark-hover-border-color, transparent),
+				color: var(--label-inverse-dark-hover-color, $white),
+			),
+
+			focus: (
+				background-color:
+					var(--label-inverse-dark-focus-background-color, $dark-l2),
+				border-color:
+					var(--label-inverse-dark-focus-border-color, transparent),
+				color: var(--label-inverse-dark-focus-color, $white),
+			),
+		),
+	),
+	$label-inverse-dark
+);
+
+$label-inverse-content-0: () !default;
+$label-inverse-content-0: map-deep-merge(
+	(
+		background-color:
+			var(--label-inverse-content-0-background-color, $secondary-l3),
+		border-color: var(--label-inverse-content-0-border-color, transparent),
+		color: var(--label-inverse-content-0-color, $dark-d2),
+		href: (
+			hover: (
+				background-color:
+					var(
+						--label-inverse-content-0-hover-background-color,
+						$secondary-l3
+					),
+				border-color:
+					var(
+						--label-inverse-content-0-hover-border-color,
+						transparent
+					),
+				color: var(--label-inverse-content-0-hover-color, $dark-d2),
+			),
+
+			focus: (
+				background-color:
+					var(
+						--label-inverse-content-0-focus-background-color,
+						$secondary-l3
+					),
+				border-color:
+					var(
+						--label-inverse-content-0-focus-border-color,
+						transparent
+					),
+				color: var(--label-inverse-content-0-focus-color, $dark-d2),
+			),
+		),
+	),
+	$label-inverse-content-0
+);
+
+$label-inverse-content-1: () !default;
+$label-inverse-content-1: map-deep-merge(
+	(
+		background-color:
+			var(--label-inverse-content-1-background-color, $purple-l5),
+		border-color: var(--label-inverse-content-1-border-color, transparent),
+		color: var(--label-inverse-content-1-color, $purple-d2),
+		href: (
+			hover: (
+				background-color:
+					var(
+						--label-inverse-content-1-hover-background-color,
+						$purple-l5
+					),
+				border-color:
+					var(
+						--label-inverse-content-1-hover-border-color,
+						transparent
+					),
+				color: var(--label-inverse-content-1-hover-color, $purple-d2),
+			),
+
+			focus: (
+				background-color:
+					var(
+						--label-inverse-content-1-focus-background-color,
+						$purple-l5
+					),
+				border-color:
+					var(
+						--label-inverse-content-1-focus-border-color,
+						transparent
+					),
+				color: var(--label-inverse-content-1-focus-color, $purple-d2),
+			),
+		),
+	),
+	$label-inverse-content-1
+);
+
+$label-inverse-content-2: () !default;
+$label-inverse-content-2: map-deep-merge(
+	(
+		background-color:
+			var(--label-inverse-content-2-background-color, $yellow-l5),
+		border-color: var(--label-inverse-content-2-border-color, transparent),
+		color: var(--label-inverse-content-2-color, $yellow-d4),
+		href: (
+			hover: (
+				background-color:
+					var(
+						--label-inverse-content-2-hover-background-color,
+						$yellow-l5
+					),
+				border-color:
+					var(
+						--label-inverse-content-2-hover-border-color,
+						transparent
+					),
+				color: var(--label-inverse-content-2-hover-color, $yellow-d4),
+			),
+
+			focus: (
+				background-color:
+					var(
+						--label-inverse-content-2-focus-background-color,
+						$yellow-l5
+					),
+				border-color:
+					var(
+						--label-inverse-content-2-focus-border-color,
+						transparent
+					),
+				color: var(--label-inverse-content-2-focus-color, $yellow-d4),
+			),
+		),
+	),
+	$label-inverse-content-2
+);
+
+$label-inverse-content-3: () !default;
+$label-inverse-content-3: map-deep-merge(
+	(
+		background-color:
+			var(--label-inverse-content-3-background-color, $green-l5),
+		border-color: var(--label-inverse-content-3-border-color, transparent),
+		color: var(--label-inverse-content-3-color, $green-d2),
+		href: (
+			hover: (
+				background-color:
+					var(
+						--label-inverse-content-3-hover-background-color,
+						$green-l5
+					),
+				border-color:
+					var(
+						--label-inverse-content-3-hover-border-color,
+						transparent
+					),
+				color: var(--label-inverse-content-3-hover-color, $green-d2),
+			),
+
+			focus: (
+				background-color:
+					var(
+						--label-inverse-content-3-focus-background-color,
+						$green-l5
+					),
+				border-color:
+					var(
+						--label-inverse-content-3-focus-border-color,
+						transparent
+					),
+				color: var(--label-inverse-content-3-focus-color, $green-d2),
+			),
+		),
+	),
+	$label-inverse-content-3
+);
+
+$label-inverse-content-4: () !default;
+$label-inverse-content-4: map-deep-merge(
+	(
+		background-color:
+			var(--label-inverse-content-4-background-color, $red-l5),
+		border-color: var(--label-inverse-content-4-border-color, transparent),
+		color: var(--label-inverse-content-4-color, $red-d2),
+		href: (
+			hover: (
+				background-color:
+					var(
+						--label-inverse-content-4-hover-background-color,
+						$red-l5
+					),
+				border-color:
+					var(
+						--label-inverse-content-4-hover-border-color,
+						transparent
+					),
+				color: var(--label-inverse-content-4-hover-color, $red-d2),
+			),
+
+			focus: (
+				background-color:
+					var(
+						--label-inverse-content-4-focus-background-color,
+						$red-l5
+					),
+				border-color:
+					var(
+						--label-inverse-content-4-focus-border-color,
+						transparent
+					),
+				color: var(--label-inverse-content-4-focus-color, $red-d2),
+			),
+		),
+	),
+	$label-inverse-content-4
+);
+
+$label-inverse-content-5: () !default;
+$label-inverse-content-5: map-deep-merge(
+	(
+		background-color:
+			var(--label-inverse-content-5-background-color, $teal-l5),
+		border-color: var(--label-inverse-content-5-border-color, transparent),
+		color: var(--label-inverse-content-5-color, $teal-d2),
+		href: (
+			hover: (
+				background-color:
+					var(
+						--label-inverse-content-5-hover-background-color,
+						$teal-l5
+					),
+				border-color:
+					var(
+						--label-inverse-content-5-hover-border-color,
+						transparent
+					),
+				color: var(--label-inverse-content-5-hover-color, $teal-d2),
+			),
+
+			focus: (
+				background-color:
+					var(
+						--label-inverse-content-5-focus-background-color,
+						$teal-l5
+					),
+				border-color:
+					var(
+						--label-inverse-content-5-focus-border-color,
+						transparent
+					),
+				color: var(--label-inverse-content-5-focus-color, $teal-d2),
+			),
+		),
+	),
+	$label-inverse-content-5
+);
+
+$label-inverse-content-6: () !default;
+$label-inverse-content-6: map-deep-merge(
+	(
+		background-color:
+			var(--label-inverse-content-6-background-color, $cyan-l5),
+		border-color: var(--label-inverse-content-6-border-color, transparent),
+		color: var(--label-inverse-content-6-color, $cyan-d2),
+		href: (
+			hover: (
+				background-color:
+					var(
+						--label-inverse-content-6-hover-background-color,
+						$cyan-l5
+					),
+				border-color:
+					var(
+						--label-inverse-content-6-hover-border-color,
+						transparent
+					),
+				color: var(--label-inverse-content-6-hover-color, $cyan-d2),
+			),
+
+			focus: (
+				background-color:
+					var(
+						--label-inverse-content-6-focus-background-color,
+						$cyan-l5
+					),
+				border-color:
+					var(
+						--label-inverse-content-6-focus-border-color,
+						transparent
+					),
+				color: var(--label-inverse-content-6-focus-color, $cyan-d2),
+			),
+		),
+	),
+	$label-inverse-content-6
+);
+
+$label-inverse-content-7: () !default;
+$label-inverse-content-7: map-deep-merge(
+	(
+		background-color:
+			var(--label-inverse-content-7-background-color, $orange-l5),
+		border-color: var(--label-inverse-content-7-border-color, transparent),
+		color: var(--label-inverse-content-7-color, $orange-d2),
+		href: (
+			hover: (
+				background-color:
+					var(
+						--label-inverse-content-7-hover-background-color,
+						$orange-l5
+					),
+				border-color:
+					var(
+						--label-inverse-content-7-hover-border-color,
+						transparent
+					),
+				color: var(--label-inverse-content-7-hover-color, $orange-d2),
+			),
+
+			focus: (
+				background-color:
+					var(
+						--label-inverse-content-7-focus-background-color,
+						$orange-l5
+					),
+				border-color:
+					var(
+						--label-inverse-content-7-focus-border-color,
+						transparent
+					),
+				color: var(--label-inverse-content-7-focus-color, $orange-d2),
+			),
+		),
+	),
+	$label-inverse-content-7
+);
+
+$label-inverse-content-8: () !default;
+$label-inverse-content-8: map-deep-merge(
+	(
+		background-color:
+			var(--label-inverse-content-8-background-color, $pink-l5),
+		border-color: var(--label-inverse-content-8-border-color, transparent),
+		color: var(--label-inverse-content-8-color, $pink-d2),
+		href: (
+			hover: (
+				background-color:
+					var(
+						--label-inverse-content-8-hover-background-color,
+						$pink-l5
+					),
+				border-color:
+					var(
+						--label-inverse-content-8-hover-border-color,
+						transparent
+					),
+				color: var(--label-inverse-content-8-hover-color, $pink-d2),
+			),
+
+			focus: (
+				background-color:
+					var(
+						--label-inverse-content-8-focus-background-color,
+						$pink-l5
+					),
+				border-color:
+					var(
+						--label-inverse-content-8-focus-border-color,
+						transparent
+					),
+				color: var(--label-inverse-content-8-focus-color, $pink-d2),
+			),
+		),
+	),
+	$label-inverse-content-8
+);
+
+$label-palette: () !default;
+$label-palette: map-deep-merge(
+	(
+		primary: $label-primary,
+
+		secondary: $label-secondary,
+
+		success: $label-success,
+
+		info: $label-info,
+
+		warning: $label-warning,
+
+		danger: $label-danger,
+
+		dark: $label-dark,
+
+		light: $label-light,
+
+		inverse-primary: $label-inverse-primary,
+
+		inverse-secondary: $label-inverse-secondary,
+
+		inverse-success: $label-inverse-success,
+
+		inverse-info: $label-inverse-info,
+
+		inverse-warning: $label-inverse-warning,
+
+		inverse-danger: $label-inverse-danger,
+
+		inverse-light: $label-inverse-light,
+
+		inverse-dark: $label-inverse-dark,
+
+		inverse-content-0: $label-inverse-content-0,
+
+		inverse-content-1: $label-inverse-content-1,
+
+		inverse-content-2: $label-inverse-content-2,
+
+		inverse-content-3: $label-inverse-content-3,
+
+		inverse-content-4: $label-inverse-content-4,
+
+		inverse-content-5: $label-inverse-content-5,
+
+		inverse-content-6: $label-inverse-content-6,
+
+		inverse-content-7: $label-inverse-content-7,
+
+		inverse-content-8: $label-inverse-content-8,
+	),
+	$label-palette
+);

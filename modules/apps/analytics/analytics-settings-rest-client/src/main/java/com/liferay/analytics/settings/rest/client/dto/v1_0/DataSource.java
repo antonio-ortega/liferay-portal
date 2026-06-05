@@ -120,3 +120,4 @@ public class DataSource implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1545543902

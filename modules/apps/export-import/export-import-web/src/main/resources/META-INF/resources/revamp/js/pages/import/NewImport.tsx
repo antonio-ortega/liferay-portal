@@ -5,32 +5,66 @@
 
 import ClayButton from '@clayui/button';
 import ClayIcon from '@clayui/icon';
-import React from 'react';
+import React, {useState} from 'react';
 
 import {Wizard, WizardStep} from '../../components/Wizard';
+import {postImportProcess} from '../../services/postImportProcess';
+import {ImportPreview} from '../../types/exportImportPreview';
+import {DataStrategy, UserIdStrategy} from '../../types/exportImportProcess';
+import {toRequestPortletDataHandlers} from '../../utils/toRequestPortletDataHandlers';
 import DataSelectionStep from './steps/DataSelectionStep';
 import FileSelectionStep from './steps/FileSelectionStep';
-import SettingsStep from './steps/SettingsStep';
+import SettingsStep, {SETTINGS_STEP_INITIAL_VALUES} from './steps/SettingsStep';
 
-export function NewImport({backURL}: {backURL: string}) {
+export function NewImport({
+	backURL,
+	importPreviewAPIURL,
+	importProcessAPIURL,
+}: {
+	backURL: string;
+	importPreviewAPIURL: string;
+	importProcessAPIURL: string;
+}) {
+	const [importPreview, setImportPreview] = useState<
+		ImportPreview | undefined
+	>();
+
 	return (
 		<Wizard backURL={backURL}>
 			<WizardStep
 				description={Liferay.Language.get(
 					'name-your-import-process-and-upload-your-file'
 				)}
+				initialValues={{
+					fileSelector: undefined,
+					name: '',
+				}}
+				isStepValid={(values) =>
+					values.fileSelector instanceof File &&
+					!!values.name.trim() &&
+					!!importPreview
+				}
 				title={Liferay.Language.get('setup')}
 			>
-				<FileSelectionStep />
+				<FileSelectionStep
+					importPreviewAPIURL={importPreviewAPIURL}
+					setImportPreview={setImportPreview}
+				/>
 			</WizardStep>
 
 			<WizardStep
 				description={Liferay.Language.get(
 					'select-the-data-from-your-file-that-you-would-like-to-import'
 				)}
+				initialValues={{
+					contentSelection: undefined,
+					deletions: false,
+					permissions: false,
+				}}
+				isStepValid={(values) => !!values.contentSelection}
 				title={Liferay.Language.get('data-selection')}
 			>
-				<DataSelectionStep />
+				<DataSelectionStep importPreview={importPreview} />
 			</WizardStep>
 
 			<WizardStep
@@ -46,8 +80,47 @@ export function NewImport({backURL}: {backURL: string}) {
 				description={Liferay.Language.get(
 					'set-up-your-import-configuration'
 				)}
-				onSubmit={async () => {
-					alert('Import started!');
+				initialValues={SETTINGS_STEP_INITIAL_VALUES}
+				onSubmit={async (values) => {
+					if (!importPreview) {
+						Liferay.Util.openToast({
+							message: Liferay.Language.get(
+								'an-unexpected-error-occurred'
+							),
+							type: 'danger',
+						});
+
+						return;
+					}
+
+					const result = await postImportProcess({
+						importProcessRequest: {
+							dataStrategy: values.dataStrategy as DataStrategy,
+							deletions: !!values.deletions,
+							name: values.name,
+							permissions: !!values.permissions,
+							requestPortletDataHandlers:
+								toRequestPortletDataHandlers(
+									importPreview.previewPortletDataHandlerSections ??
+										[],
+									values.contentSelection
+								),
+							userIdStrategy:
+								values.userIdStrategy as UserIdStrategy,
+						},
+						url: importProcessAPIURL,
+					});
+
+					if (result.error) {
+						Liferay.Util.openToast({
+							message: result.error,
+							type: 'danger',
+						});
+
+						return;
+					}
+
+					Liferay.Util.navigate(backURL);
 				}}
 				title={Liferay.Language.get('settings')}
 			>

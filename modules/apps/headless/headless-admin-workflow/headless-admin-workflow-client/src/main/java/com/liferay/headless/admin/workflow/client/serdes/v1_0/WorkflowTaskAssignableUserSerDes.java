@@ -267,3 +267,4 @@ public class WorkflowTaskAssignableUserSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:47998083

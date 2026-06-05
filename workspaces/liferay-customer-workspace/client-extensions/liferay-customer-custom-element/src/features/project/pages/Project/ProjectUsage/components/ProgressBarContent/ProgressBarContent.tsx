@@ -13,25 +13,35 @@ import i18n from '~/utils/I18n';
 interface IProps {
 	displayUsage?: boolean;
 	maxCount?: number;
+	maxCountUnits?: string;
+	percentage?: string;
 	title: string;
 	usedCount?: number;
+	usedCountUnits?: string;
 }
 
 const ProgressBarContent: React.FC<IProps> = ({
 	displayUsage,
-	maxCount = 0,
+	maxCount,
+	maxCountUnits = '',
+	percentage,
 	title,
-	usedCount = 0,
+	usedCount,
+	usedCountUnits = '',
 }) => {
 	const barPercentage = useMemo(() => {
 		if (displayUsage) {
-			return `${(usedCount / maxCount) * 100}%`;
+			if (percentage !== undefined) {
+				return `${percentage}%`;
+			}
+
+			return '0%';
 		}
 
 		return `${Math.random() * 100}%`;
-	}, [displayUsage, maxCount, usedCount]);
+	}, [displayUsage, percentage]);
 
-	const isUnlimited = maxCount < 0;
+	const isUnlimited = maxCount !== undefined && maxCount < 0;
 
 	return (
 		<div className="progress-bar-content w-100">
@@ -44,14 +54,22 @@ const ProgressBarContent: React.FC<IProps> = ({
 							'col-3 empty-text': !displayUsage,
 						})}
 					>
-						{displayUsage && usedCount.toLocaleString()}
+						{displayUsage &&
+							(usedCount !== undefined && maxCount !== undefined
+								? usedCount.toLocaleString() + usedCountUnits
+								: '-')}
 					</h3>
 
 					{displayUsage && (
 						<span className="total-value-text">
 							{isUnlimited
 								? i18n.translate('of-unlimited')
-								: `${i18n.translate('of')} ${maxCount.toLocaleString()}`}
+								: `${i18n.translate('of')} ${
+										maxCount !== undefined
+											? maxCount.toLocaleString() +
+												maxCountUnits
+											: '-'
+									}`}
 						</span>
 					)}
 				</div>

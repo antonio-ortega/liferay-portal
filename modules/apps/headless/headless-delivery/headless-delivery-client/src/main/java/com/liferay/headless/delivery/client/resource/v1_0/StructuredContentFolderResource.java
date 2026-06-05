@@ -3908,3 +3908,4 @@ public interface StructuredContentFolderResource {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-297892713

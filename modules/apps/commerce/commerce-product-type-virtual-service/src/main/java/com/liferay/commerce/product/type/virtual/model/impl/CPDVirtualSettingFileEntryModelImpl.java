@@ -100,6 +100,8 @@ public class CPDVirtualSettingFileEntryModelImpl
 	public static final String TABLE_SQL_DROP =
 		"drop table CPDVirtualSettingFileEntry";
 
+	public static final String ENTITY_ALIAS = "cpdVirtualSettingFileEntry";
+
 	public static final String ORDER_BY_JPQL =
 		" ORDER BY cpdVirtualSettingFileEntry.CPDefinitionVirtualSettingFileEntryId ASC";
 
@@ -1114,3 +1116,4 @@ public class CPDVirtualSettingFileEntryModelImpl
 	private CPDVirtualSettingFileEntry _escapedModel;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-487358780

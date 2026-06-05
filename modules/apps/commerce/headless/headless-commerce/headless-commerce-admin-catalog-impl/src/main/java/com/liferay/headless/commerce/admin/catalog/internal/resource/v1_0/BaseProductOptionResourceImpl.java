@@ -5,6 +5,7 @@
 
 package com.liferay.headless.commerce.admin.catalog.internal.resource.v1_0;
 
+import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.ProductOption;
 import com.liferay.headless.commerce.admin.catalog.resource.v1_0.ProductOptionResource;
 import com.liferay.petra.function.UnsafeBiConsumer;
@@ -75,6 +76,9 @@ public abstract class BaseProductOptionResourceImpl
 	 *
 	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/productOptions/{id}'  -u 'test@liferay.com:test'
 	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Removes the product option relation identified by id from its product. Calls CPDefinitionOptionRelService.getCPDefinitionOptionRel + deleteCPDefinitionOptionRel. Validation -- NoSuchCPDefinitionOptionRelException -> 404 when id not found. Side effects -- Cascades deletion of associated CPDefinitionOptionValueRel rows."
+	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
@@ -155,6 +159,9 @@ public abstract class BaseProductOptionResourceImpl
 	 *
 	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/products/by-externalReferenceCode/{externalReferenceCode}/productOptions'  -u 'test@liferay.com:test'
 	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Lists the product option relations of the product identified by external reference code. Calls CPDefinitionService.fetchCPDefinitionByCProductExternalReferenceCode + CPDefinitionOptionRelService.searchCPDefinitionOptionRels. Validation -- NoSuchCPDefinitionException -> 404 when product ERC not found."
+	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
@@ -212,6 +219,9 @@ public abstract class BaseProductOptionResourceImpl
 	 *
 	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/products/{id}/productOptions'  -u 'test@liferay.com:test'
 	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Lists the product option relations of the product identified by product id. Calls CPDefinitionService.fetchCPDefinitionByCProductId + CPDefinitionOptionRelService.searchCPDefinitionOptionRels. Validation -- NoSuchCPDefinitionException -> 404 when product id not found."
+	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
@@ -266,6 +276,9 @@ public abstract class BaseProductOptionResourceImpl
 	 *
 	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/productOptions/{id}'  -u 'test@liferay.com:test'
 	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Fetches the product option relation identified by id. Calls CPDefinitionOptionRelService.getCPDefinitionOptionRel (via DTO converter). Validation -- NoSuchCPDefinitionOptionRelException -> 404 when id not found."
+	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
@@ -298,6 +311,9 @@ public abstract class BaseProductOptionResourceImpl
 	 *
 	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/productOptions/{id}' -d $'{"catalogId": ___, "customFields": ___, "definedExternally": ___, "description": ___, "facetable": ___, "fieldType": ___, "infoItemServiceKey": ___, "key": ___, "name": ___, "optionExternalReferenceCode": ___, "optionId": ___, "priceType": ___, "priority": ___, "productOptionValues": ___, "required": ___, "skuContributor": ___, "typeSettings": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Partially updates the product option relation identified by id, including any nested product option values. Calls CPDefinitionOptionRelService.getCPDefinitionOptionRel + updateCPDefinitionOptionRel + nested addOrUpdateCPDefinitionOptionValueRel. Validation -- NoSuchCPDefinitionOptionRelException -> 404 when id not found. Side effects -- Reindexes the parent product; cascades into nested product option values."
+	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
@@ -334,6 +350,9 @@ public abstract class BaseProductOptionResourceImpl
 	 *
 	 * curl -X 'POST' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/products/by-externalReferenceCode/{externalReferenceCode}/productOptions'  -u 'test@liferay.com:test'
 	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Creates or updates a batch of product option relations on the product identified by external reference code. Calls CPDefinitionService.fetchCPDefinitionByCProductExternalReferenceCode + ProductOptionUtil.addOrUpdateCPDefinitionOptionRel (batch). POST is upsert by external reference code -- creates a new entity when the ERC is unknown, otherwise updates the existing one. Validation -- NoSuchCPDefinitionException -> 404 when product ERC not found. Side effects -- Adds or updates each product option and cascades into nested product option values."
+	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
@@ -371,6 +390,9 @@ public abstract class BaseProductOptionResourceImpl
 	 *
 	 * curl -X 'POST' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/products/{id}/productOptions'  -u 'test@liferay.com:test'
 	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Creates or updates a batch of product option relations on the product identified by product id. Calls CPDefinitionService.fetchCPDefinitionByCProductId + ProductOptionUtil.addOrUpdateCPDefinitionOptionRel (batch). POST is upsert by external reference code -- creates a new entity when the ERC is unknown, otherwise updates the existing one. Validation -- NoSuchCPDefinitionException -> 404 when product id not found. Side effects -- Adds or updates each product option and cascades into nested product option values."
+	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
@@ -492,6 +514,15 @@ public abstract class BaseProductOptionResourceImpl
 			@Override
 			public Locale getPreferredLocale() {
 				return LocaleUtil.fromLanguageId(languageId);
+			}
+
+			@Override
+			public boolean isAcceptAllLanguages() {
+				if (ExportImportThreadLocal.isExportInProcess()) {
+					return true;
+				}
+
+				return AcceptLanguage.super.isAcceptAllLanguages();
 			}
 
 		};
@@ -1105,3 +1136,4 @@ public abstract class BaseProductOptionResourceImpl
 		LogFactoryUtil.getLog(BaseProductOptionResourceImpl.class);
 
 }
+// LIFERAY-REST-BUILDER-HASH:1794536595

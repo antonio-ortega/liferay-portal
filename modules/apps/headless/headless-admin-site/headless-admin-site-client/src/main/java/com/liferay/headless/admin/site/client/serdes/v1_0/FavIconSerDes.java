@@ -228,3 +228,4 @@ public class FavIconSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1734994616

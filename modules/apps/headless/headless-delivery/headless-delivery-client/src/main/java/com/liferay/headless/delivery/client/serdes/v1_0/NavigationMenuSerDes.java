@@ -561,3 +561,4 @@ public class NavigationMenuSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:89131313

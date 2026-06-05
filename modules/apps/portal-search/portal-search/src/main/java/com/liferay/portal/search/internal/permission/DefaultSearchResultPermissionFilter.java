@@ -5,6 +5,7 @@
 
 package com.liferay.portal.search.internal.permission;
 
+import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.NoSuchResourceActionException;
@@ -12,6 +13,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.ClassedModel;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
@@ -32,6 +34,7 @@ import com.liferay.portal.kernel.search.facet.collector.FacetCollector;
 import com.liferay.portal.kernel.search.facet.collector.TermCollector;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalServiceUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
@@ -47,11 +50,9 @@ import com.liferay.portal.search.facet.nested.NestedFacet;
 import com.liferay.portal.search.hits.SearchHit;
 import com.liferay.portal.search.hits.SearchHits;
 import com.liferay.portal.search.hits.SearchHitsBuilder;
-import com.liferay.portal.search.hits.SearchHitsBuilderFactory;
 import com.liferay.portal.search.internal.facet.FacetImpl;
 import com.liferay.portal.search.internal.facet.NestedFacetImpl;
 import com.liferay.portal.search.internal.facet.SimpleFacetCollector;
-import com.liferay.portal.search.internal.hits.SearchHitsBuilderFactoryImpl;
 import com.liferay.portal.search.internal.searcher.SearchResponseImpl;
 import com.liferay.portal.search.legacy.searcher.SearchRequestBuilderFactory;
 import com.liferay.portal.search.searcher.SearchRequestBuilder;
@@ -74,13 +75,16 @@ public class DefaultSearchResultPermissionFilter
 	implements SearchResultPermissionFilter {
 
 	public DefaultSearchResultPermissionFilter(
+		DefaultSearchResultPermissionFilterConfiguration
+			defaultSearchResultPermissionFilterConfiguration,
 		FacetPostProcessor facetPostProcessor, IndexerRegistry indexerRegistry,
 		PermissionChecker permissionChecker,
 		RelatedEntryIndexerRegistry relatedEntryIndexerRegistry,
 		Function<SearchContext, Hits> searchFunction,
 		SearchRequestBuilderFactory searchRequestBuilderFactory,
-		DefaultSearchResultPermissionFilterConfiguration
-			defaultSearchResultPermissionFilterConfiguration) {
+		ServiceTrackerMap
+			<String, ModelResourcePermission<? extends ClassedModel>>
+				serviceTrackerMap) {
 
 		_facetPostProcessor = facetPostProcessor;
 		_indexerRegistry = indexerRegistry;
@@ -88,6 +92,7 @@ public class DefaultSearchResultPermissionFilter
 		_relatedEntryIndexerRegistry = relatedEntryIndexerRegistry;
 		_searchFunction = searchFunction;
 		_searchRequestBuilderFactory = searchRequestBuilderFactory;
+		_serviceTrackerMap = serviceTrackerMap;
 
 		_accurateCountThreshold =
 			defaultSearchResultPermissionFilterConfiguration.
@@ -293,12 +298,16 @@ public class DefaultSearchResultPermissionFilter
 
 		String entryClassName = document.get(Field.ENTRY_CLASS_NAME);
 
-		boolean hasCompanyScopeViewPermission =
-			companyScopeViewPermissions.computeIfAbsent(
-				entryClassName, this::_hasCompanyScopeViewPermission);
+		if (!_serviceTrackerMap.containsKey(entryClassName) ||
+			!PropsValues.PERMISSIONS_VIEW_DYNAMIC_INHERITANCE) {
 
-		if (hasCompanyScopeViewPermission) {
-			return true;
+			boolean hasCompanyScopeViewPermission =
+				companyScopeViewPermissions.computeIfAbsent(
+					entryClassName, this::_hasCompanyScopeViewPermission);
+
+			if (hasCompanyScopeViewPermission) {
+				return true;
+			}
 		}
 
 		Indexer<?> indexer = _indexerRegistry.getIndexer(entryClassName);
@@ -361,11 +370,7 @@ public class DefaultSearchResultPermissionFilter
 
 		Document[] documents = hits.getDocs();
 
-		SearchHitsBuilderFactory searchHitsBuilderFactory =
-			new SearchHitsBuilderFactoryImpl();
-
-		SearchHitsBuilder searchHitsBuilder =
-			searchHitsBuilderFactory.getSearchHitsBuilder();
+		SearchHitsBuilder searchHitsBuilder = new SearchHitsBuilder();
 
 		if (documents.length == 0) {
 			searchResponseImpl.setSearchHits(searchHitsBuilder.build());
@@ -404,6 +409,9 @@ public class DefaultSearchResultPermissionFilter
 	private final Function<SearchContext, Hits> _searchFunction;
 	private final int _searchQueryResultWindowLimit;
 	private final SearchRequestBuilderFactory _searchRequestBuilderFactory;
+	private volatile ServiceTrackerMap
+		<String, ModelResourcePermission<? extends ClassedModel>>
+			_serviceTrackerMap;
 	private final long _timeLimit;
 
 	private class SlidingWindowSearcher {

@@ -12,11 +12,7 @@ import {loginTest} from '../../../fixtures/loginTest';
 import {siteSettingsPagesTest} from '../../../fixtures/siteSettingsPagesTest';
 import {usersAndOrganizationsPagesTest} from '../../../fixtures/usersAndOrganizationsPagesTest';
 import getRandomString from '../../../utils/getRandomString';
-import {
-	performLoginViaApi,
-	performLogout,
-	userData,
-} from '../../../utils/performLogin';
+import {performUserSwitch, userData} from '../../../utils/performLogin';
 import {waitForAlert} from '../../../utils/waitForAlert';
 import getPageDefinition from '../../layout-content-page-editor-web/main/utils/getPageDefinition';
 import getWidgetDefinition from '../../layout-content-page-editor-web/main/utils/getWidgetDefinition';
@@ -26,7 +22,6 @@ const test = mergeTests(
 	dataApiHelpersTest,
 	featureFlagsTest({
 		'LPD-35443': {enabled: true},
-		'LPD-35914': {enabled: true},
 		'LPS-178052': {enabled: true},
 	}),
 	isolatedSiteTest,
@@ -61,7 +56,7 @@ test(
 				await teamsPage.teamsTable.rowActions(team.teamName)
 			).click();
 
-			await expect(teamsPage.editButton).toBeVisible();
+			await expect(teamsPage.editButton).toBeVisible({timeout: 500});
 		}).toPass({timeout: 5000});
 
 		await teamsPage.editButton.click();
@@ -92,7 +87,7 @@ test(
 				await teamsPage.teamsTable.rowActions(newTeam.teamName)
 			).click();
 
-			await expect(teamsPage.editButton).toBeVisible();
+			await expect(teamsPage.editButton).toBeVisible({timeout: 500});
 		}).toPass({timeout: 5000});
 
 		await teamsPage.editButton.click();
@@ -109,7 +104,7 @@ test(
 				await teamsPage.teamsTable.rowActions(newTeam.teamName)
 			).click();
 
-			await expect(teamsPage.deleteButton).toBeVisible();
+			await expect(teamsPage.deleteButton).toBeVisible({timeout: 500});
 		}).toPass({timeout: 5000});
 
 		await teamsPage.deleteButton.click();
@@ -739,8 +734,7 @@ test(
 			String(Number(team.teamId) + 1)
 		);
 
-		await performLogout(page);
-		await performLoginViaApi({page, screenName: user1.alternateName});
+		await performUserSwitch(page, user1.alternateName);
 
 		await page.goto(`/web/${site.name}/${layout.friendlyUrlPath}`);
 
@@ -750,8 +744,7 @@ test(
 				.or(page.getByText('requested resource could not be found'))
 		).toBeVisible();
 
-		await performLogout(page);
-		await performLoginViaApi({page, screenName: user2.alternateName});
+		await performUserSwitch(page, user2.alternateName);
 
 		await page.goto(`/web/${site.name}/${layout.friendlyUrlPath}`);
 
@@ -760,5 +753,423 @@ test(
 				.getByRole('heading', {name: '404'})
 				.or(page.getByText('requested resource could not be found'))
 		).toHaveCount(0);
+	}
+);
+
+test(
+	'Dropdown menu is hidden if user membership is due to inheritance',
+	{tag: ['@LPD-80349']},
+	async ({
+		apiHelpers,
+		page,
+		selectUserGroupPage,
+		site,
+		teamsPage,
+		userGroupsPage,
+		usersPage,
+	}) => {
+		const userGroup = await apiHelpers.headlessAdminUser.postUserGroup();
+
+		await apiHelpers.jsonWebServicesUserGroup.assignUserGroupsToGroup(
+			site.id,
+			String(userGroup.id)
+		);
+
+		const user1 = await apiHelpers.headlessAdminUser.postUserAccount();
+		const user2 = await apiHelpers.headlessAdminUser.postUserAccount();
+
+		await apiHelpers.headlessAdminUser.assignUsersToUserGroup(
+			userGroup.id,
+			[user1.id]
+		);
+
+		const newTeam = {
+			teamDescription: getRandomString(),
+			teamName: getRandomString(),
+		};
+
+		await teamsPage.goTo(site.friendlyUrlPath);
+
+		await teamsPage.newTeamButton.click();
+		await teamsPage.newTeam(newTeam);
+
+		await expect(
+			await teamsPage.teamsTable.cellLink(newTeam.teamName)
+		).toBeVisible();
+
+		const team = await apiHelpers.jsonWebServicesTeam.getTeam(
+			site.id,
+			newTeam.teamName
+		);
+
+		await apiHelpers.jsonWebServicesUser.addTeamUsers(team.teamId, [
+			user2.id,
+		]);
+
+		await (await teamsPage.teamsTable.cellLink(newTeam.teamName)).click();
+		await teamsPage.userGroupTab.click();
+
+		await expect(userGroupsPage.userGroupsTable.searchInput).toBeEnabled();
+
+		await userGroupsPage.userGroupsTable.changeView('Table');
+
+		await expect(userGroupsPage.noUserGroupsMessage).toBeVisible();
+
+		await expect(async () => {
+			await userGroupsPage.newButton.click();
+
+			await expect(selectUserGroupPage.addButton).toBeVisible({
+				timeout: 2000,
+			});
+		}).toPass({timeout: 5000});
+
+		await selectUserGroupPage.userGroupsTable.changeView('Table');
+
+		await (
+			await selectUserGroupPage.userGroupsTable.rowCheckbox(
+				userGroup.name
+			)
+		).click();
+		await selectUserGroupPage.addButton.click();
+
+		await expect(
+			userGroupsPage.userGroupsTable.cell(userGroup.name)
+		).toBeVisible();
+
+		await teamsPage.usersTab.click();
+
+		await expect(usersPage.usersTable.searchInput).toBeEnabled();
+
+		await usersPage.usersTable.changeView('Table');
+
+		await expect(usersPage.usersTable.cell(user1.name)).toBeVisible();
+		await expect(usersPage.usersTable.cell(user2.name)).toBeVisible();
+
+		await expect(
+			await usersPage.usersTable.rowActions(user1.name)
+		).toHaveCount(0);
+
+		await expect(async () => {
+			await (await usersPage.usersTable.rowCheckbox(user2.name)).check();
+
+			await expect(usersPage.deleteButton).toBeVisible({timeout: 200});
+			await expect(usersPage.deleteButton).toBeEnabled({timeout: 200});
+		}).toPass({timeout: 1000});
+
+		await expect(
+			await usersPage.usersTable.rowCheckbox(user1.name)
+		).toBeDisabled();
+
+		await page.reload();
+
+		await expect(async () => {
+			await (await usersPage.usersTable.rowActions(user2.name)).click();
+
+			await expect(usersPage.deleteButton).toBeVisible({timeout: 200});
+		}).toPass({timeout: 1000});
+	}
+);
+
+test(
+	'Team user is visible on staging site',
+	{tag: ['@LPD-81993', '@LPS-115692']},
+	async ({apiHelpers, page, selectUserPage, site, teamsPage, usersPage}) => {
+		const user = await apiHelpers.headlessAdminUser.postUserAccount();
+
+		await apiHelpers.jsonWebServicesUser.assignUsersToSite(
+			site.id,
+			String(user.id)
+		);
+
+		const teamName = `Team${getRandomString()}`;
+
+		await teamsPage.goTo(site.friendlyUrlPath);
+
+		await teamsPage.newTeamButton.click();
+		await teamsPage.newTeam({teamName});
+
+		await (await teamsPage.teamsTable.cellLink(teamName)).click();
+
+		await expect(async () => {
+			await usersPage.newButton.click();
+
+			await expect(selectUserPage.addButton).toBeVisible({
+				timeout: 2000,
+			});
+		}).toPass({timeout: 5000});
+
+		await (await selectUserPage.usersTable.rowCheckbox(user.name)).click();
+		await selectUserPage.addButton.click();
+
+		await expect(page.getByText(user.name, {exact: false})).toBeVisible();
+
+		await test.step('Verify team user is still visible after enabling staging', async () => {
+			await apiHelpers.jsonWebServicesStaging.enableLocalStaging({
+				groupId: site.id,
+			});
+
+			await teamsPage.goTo(site.friendlyUrlPath);
+
+			await (await teamsPage.teamsTable.cellLink(teamName)).click();
+
+			await expect(
+				page.getByText(user.name, {exact: false})
+			).toBeVisible();
+		});
+
+		// Wait for background tasks to complete before cleaning up.
+
+		await page.waitForTimeout(2000);
+	}
+);
+
+test(
+	'Can search users who inherit membership based on user group membership',
+	{tag: ['@LPD-82822']},
+	async ({
+		apiHelpers,
+		page,
+		selectUserGroupPage,
+		selectUserPage,
+		site,
+		teamsPage,
+		userGroupsPage,
+		usersPage,
+	}) => {
+		page.on('dialog', (dialog) => dialog.accept());
+
+		const user1 = await apiHelpers.headlessAdminUser.postUserAccount({
+			familyName: 'Parker',
+			givenName: 'Peter',
+		});
+
+		await apiHelpers.jsonWebServicesUser.assignUsersToSite(
+			site.id,
+			user1.id
+		);
+
+		const userGroup = await apiHelpers.headlessAdminUser.postUserGroup();
+
+		await apiHelpers.jsonWebServicesUserGroup.assignUserGroupsToGroup(
+			site.id,
+			String(userGroup.id)
+		);
+
+		const user2 = await apiHelpers.headlessAdminUser.postUserAccount({
+			familyName: 'Porker',
+			givenName: 'Pete',
+		});
+
+		await apiHelpers.headlessAdminUser.assignUsersToUserGroup(
+			userGroup.id,
+			[user2.id]
+		);
+
+		const team = {
+			teamName: getRandomString(),
+		};
+
+		await teamsPage.goTo(site.friendlyUrlPath);
+
+		await teamsPage.newTeamButton.click();
+		await teamsPage.newTeam(team);
+
+		await expect(
+			await teamsPage.teamsTable.cellLink(team.teamName)
+		).toBeVisible();
+
+		await (await teamsPage.teamsTable.cellLink(team.teamName)).click();
+
+		await expect(usersPage.usersTable.searchInput).toBeEnabled();
+
+		const newTeam = await apiHelpers.jsonWebServicesTeam.getTeam(
+			site.id,
+			team.teamName
+		);
+
+		await apiHelpers.jsonWebServicesUser.addTeamUsers(newTeam.teamId, [
+			user1.id,
+		]);
+
+		await teamsPage.userGroupTab.click();
+
+		await expect(userGroupsPage.userGroupsTable.searchInput).toBeEnabled();
+
+		await userGroupsPage.userGroupsTable.changeView('Table');
+
+		await expect(userGroupsPage.noUserGroupsMessage).toBeVisible();
+
+		await expect(async () => {
+			await userGroupsPage.newButton.click();
+
+			await expect(selectUserGroupPage.addButton).toBeVisible({
+				timeout: 2000,
+			});
+		}).toPass({timeout: 5000});
+
+		await selectUserGroupPage.userGroupsTable.changeView('Table');
+
+		await (
+			await selectUserGroupPage.userGroupsTable.rowCheckbox(
+				userGroup.name
+			)
+		).check();
+
+		await selectUserGroupPage.addButton.click();
+
+		await expect(
+			userGroupsPage.userGroupsTable.cell(userGroup.name)
+		).toBeVisible();
+
+		await teamsPage.usersTab.click();
+
+		await usersPage.usersTable.changeView('Table');
+
+		await expect(usersPage.usersTable.cell(user1.name)).toBeVisible();
+		await expect(usersPage.usersTable.cell(user2.name)).toBeVisible();
+
+		await expect(async () => {
+			await usersPage.newButton.click();
+
+			await expect(selectUserPage.addButton).toBeVisible({timeout: 2000});
+		}).toPass({timeout: 5000});
+
+		await selectUserPage.usersTable.changeView('Table');
+
+		await selectUserPage.usersTable.search(`"${user1.name}"`);
+
+		await expect(selectUserPage.usersTable.cell(user1.name)).toBeVisible();
+		await expect(selectUserPage.usersTable.cell(user2.name)).toHaveCount(0);
+
+		await selectUserPage.usersTable.search(`"${user2.name}"`);
+
+		await expect(selectUserPage.usersTable.cell(user1.name)).toHaveCount(0);
+		await expect(selectUserPage.usersTable.cell(user2.name)).toBeVisible();
+
+		await selectUserPage.usersTable.search(`"${user2.name}a"`);
+
+		await expect(selectUserPage.usersTable.cell(user1.name)).toHaveCount(0);
+		await expect(selectUserPage.usersTable.cell(user2.name)).toHaveCount(0);
+
+		await selectUserPage.usersTable.search(`${user2.givenName}`);
+
+		await expect(selectUserPage.usersTable.cell(user1.name)).toBeVisible();
+		await expect(selectUserPage.usersTable.cell(user2.name)).toBeVisible();
+	}
+);
+
+test(
+	'Checkbox is hidden and user is not selected if user membership is due to inheritance',
+	{tag: ['@LPD-82647']},
+	async ({
+		apiHelpers,
+		page,
+		selectUserGroupPage,
+		site,
+		teamsPage,
+		userGroupsPage,
+		usersPage,
+	}) => {
+		page.on('dialog', (dialog) => dialog.accept());
+
+		const userGroup = await apiHelpers.headlessAdminUser.postUserGroup();
+
+		await apiHelpers.jsonWebServicesUserGroup.assignUserGroupsToGroup(
+			site.id,
+			String(userGroup.id)
+		);
+
+		const user1 = await apiHelpers.headlessAdminUser.postUserAccount();
+		const user2 = await apiHelpers.headlessAdminUser.postUserAccount();
+
+		await apiHelpers.headlessAdminUser.assignUsersToUserGroup(
+			userGroup.id,
+			[user1.id]
+		);
+
+		const newTeam = {
+			teamDescription: getRandomString(),
+			teamName: getRandomString(),
+		};
+
+		await teamsPage.goTo(site.friendlyUrlPath);
+
+		await teamsPage.newTeamButton.click();
+		await teamsPage.newTeam(newTeam);
+
+		await expect(
+			await teamsPage.teamsTable.cellLink(newTeam.teamName)
+		).toBeVisible();
+
+		const team = await apiHelpers.jsonWebServicesTeam.getTeam(
+			site.id,
+			newTeam.teamName
+		);
+
+		await apiHelpers.jsonWebServicesUser.addTeamUsers(team.teamId, [
+			user2.id,
+		]);
+
+		await (await teamsPage.teamsTable.cellLink(newTeam.teamName)).click();
+		await teamsPage.userGroupTab.click();
+
+		await expect(userGroupsPage.userGroupsTable.searchInput).toBeEnabled();
+
+		await userGroupsPage.userGroupsTable.changeView('Table');
+
+		await expect(userGroupsPage.noUserGroupsMessage).toBeVisible();
+
+		await expect(async () => {
+			await userGroupsPage.newButton.click();
+
+			await expect(selectUserGroupPage.addButton).toBeVisible({
+				timeout: 2000,
+			});
+		}).toPass({timeout: 5000});
+
+		await selectUserGroupPage.userGroupsTable.changeView('Table');
+
+		await (
+			await selectUserGroupPage.userGroupsTable.rowCheckbox(
+				userGroup.name
+			)
+		).click();
+		await selectUserGroupPage.addButton.click();
+
+		await expect(
+			userGroupsPage.userGroupsTable.cell(userGroup.name)
+		).toBeVisible();
+
+		await teamsPage.usersTab.click();
+
+		await expect(usersPage.usersTable.searchInput).toBeEnabled();
+
+		await usersPage.usersTable.changeView('Table');
+
+		await expect(usersPage.usersTable.cell(user1.name)).toBeVisible();
+		await expect(usersPage.usersTable.cell(user2.name)).toBeVisible();
+
+		await expect(
+			await usersPage.usersTable.rowCheckbox(user1.name)
+		).toBeDisabled();
+		await expect(
+			await usersPage.usersTable.rowCheckbox(user2.name)
+		).toBeVisible();
+
+		await usersPage.usersTable.selectAllItemsCheckbox.check();
+
+		await expect(
+			page.getByText('1 of 2 Items Selected', {exact: true})
+		).toBeVisible();
+
+		await expect(async () => {
+			await expect(usersPage.deleteButton).toBeVisible({timeout: 200});
+			await usersPage.deleteButton.click();
+		}).toPass({timeout: 5000});
+
+		await waitForAlert(page);
+
+		await expect(usersPage.usersTable.cell(user1.name)).toBeVisible();
+		await expect(usersPage.usersTable.cell(user2.name)).toHaveCount(0);
 	}
 );

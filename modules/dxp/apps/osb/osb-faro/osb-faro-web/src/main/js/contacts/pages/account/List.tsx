@@ -1,93 +1,75 @@
 import * as API from 'shared/api';
-import BaseListPage from 'contacts/components/BaseListPage';
-import ClayLink from '@clayui/link';
-import React from 'react';
+import * as breadcrumbs from 'shared/util/breadcrumbs';
+import AccountsDataSet from 'shared/components/AccountsDataSet';
+import BasePage from 'shared/components/base-page';
+import Link from '@clayui/link';
+import Loading from 'shared/components/Loading';
+import NoResultsDisplay from 'shared/components/NoResultsDisplay';
+import React, {useState} from 'react';
+import TotalAccounts from 'contacts/components/account/TotalAccounts';
 import URLConstants from 'shared/util/url-constants';
-import {
-	ACCOUNT_TYPE,
-	ACTIVITIES_COUNT,
-	createOrderIOMap,
-	getDefaultSortOrder,
-	INDIVIDUAL_COUNT,
-	NAME
-} from 'shared/util/pagination';
-import {accountsListColumns} from 'shared/util/table-columns';
-import {FetchSegmentsParams} from 'segment/pages/List';
+import {DropdownRangeKey} from 'shared/components/dropdown-range-key/DropdownRangeKey';
+import {isNil} from 'lodash/fp';
+import {RangeKeyTimeRanges} from 'shared/util/constants';
+import {RangeSelectors} from 'shared/types';
 import {Routes, toRoute} from 'shared/util/router';
+import {SectionHeader} from 'shared/components/SectionHeader';
 import {Sizes} from 'shared/util/constants';
+import {useChannelContext} from 'shared/context/channel';
 import {useCurrentUser} from 'shared/hooks/useCurrentUser';
-import {useQueryPagination} from 'shared/hooks/useQueryPagination';
-import {User} from 'shared/util/records';
-
-const getAccountsDataSource = ({
-	channelId,
-	delta,
-	groupId,
-	orderIOMap,
-	page,
-	query
-}: FetchSegmentsParams) =>
-	API.accounts.search({
-		channelId,
-		delta,
-		groupId,
-		orderIOMap,
-		page,
-		query
-	});
+import {useRequest} from 'shared/hooks/useRequest';
 
 interface IListProps {
 	channelId: string;
-	currentUser: User;
 	groupId: string;
 }
 
-const List: React.FC<IListProps> = ({channelId, groupId, ...otherProps}) => {
+const List: React.FC<IListProps> = ({channelId, groupId}) => {
 	const currentUser = useCurrentUser();
-	const authorized = currentUser.isAdmin();
+	const {selectedChannel} = useChannelContext();
 
-	const columns = [
-		accountsListColumns.getName({channelId, groupId}),
-		accountsListColumns.type,
-		accountsListColumns.individualCount,
-		accountsListColumns.activitiesCount
-	];
-
-	const {delta, orderIOMap, page, query} = useQueryPagination({
-		initialOrderIOMap: createOrderIOMap(NAME, getDefaultSortOrder(NAME))
+	const [rangeSelectors, setRangeSelectors] = useState<RangeSelectors>({
+		rangeEnd: null,
+		rangeKey: RangeKeyTimeRanges.Last30Days,
+		rangeStart: null
 	});
 
-	return (
-		<BaseListPage
-			{...otherProps}
-			columns={columns}
-			currentUser={currentUser}
-			dataSourceFn={getAccountsDataSource}
-			delta={delta}
-			emptyStateTitle={Liferay.Language.get(
-				'no-accounts-synced-from-data-sources'
-			)}
-			entityLabel={Liferay.Language.get('accounts')}
-			noResultsConfig={{
-				description: (
-					<>
-						{Liferay.Language.get(
-							'connect-a-data-source-to-get-started'
-						)}
+	const {data: dataSourceData, loading: dataSourceLoading} = useRequest({
+		dataSourceFn: API.dataSource.fetchChannels,
+		variables: {
+			channelIds: [channelId],
+			groupId
+		}
+	});
 
-						<ClayLink
-							className='d-block mb-3'
-							href={URLConstants.DataSourceConnection}
-							key='DOCUMENTATION'
-							target='_blank'
-						>
-							{Liferay.Language.get(
-								'access-our-documentation-to-learn-more'
-							)}
-						</ClayLink>
+	const authorized = currentUser.isAdmin();
 
-						{authorized && (
-							<ClayLink
+	const dataSourceConnected =
+		!isNil(dataSourceData?.total) && dataSourceData?.total > 0;
+
+	const NoDataSourcesConnected = () => (
+		<NoResultsDisplay
+			description={
+				<>
+					{Liferay.Language.get(
+						'connect-a-data-source-to-start-syncing-accounts'
+					)}
+
+					{authorized && (
+						<>
+							<p>
+								<Link
+									className='d-block mb-3'
+									href={URLConstants.DataSourceConnection}
+									key='DOCUMENTATION'
+									target='_blank'
+								>
+									{Liferay.Language.get(
+										'access-our-documentation-to-learn-more'
+									)}
+								</Link>
+							</p>
+							<Link
 								button
 								className='button-root'
 								displayType='primary'
@@ -99,42 +81,76 @@ const List: React.FC<IListProps> = ({channelId, groupId, ...otherProps}) => {
 								)}
 							>
 								{Liferay.Language.get('connect-data-source')}
-							</ClayLink>
-						)}
-					</>
-				),
-				icon: {
-					border: false,
-					size: Sizes.XXXLarge,
-					symbol: 'ac_satellite'
-				},
-				title: Liferay.Language.get(
-					'no-accounts-synced-from-data-sources'
-				)
+							</Link>
+						</>
+					)}
+				</>
+			}
+			displayCard
+			icon={{
+				border: false,
+				size: Sizes.XXXLarge,
+				symbol: 'ac_satellite'
 			}}
-			orderByOptions={[
-				{
-					label: Liferay.Language.get('account-name'),
-					value: NAME
-				},
-				{
-					label: Liferay.Language.get('account-type'),
-					value: ACCOUNT_TYPE
-				},
-				{
-					label: Liferay.Language.get('individuals'),
-					value: INDIVIDUAL_COUNT
-				},
-				{
-					label: Liferay.Language.get('total-activities'),
-					value: ACTIVITIES_COUNT
-				}
-			]}
-			orderIOMap={orderIOMap}
-			page={page}
-			query={query}
-			rowIdentifier='id'
+			spacer
+			title={Liferay.Language.get('no-data-sources-connected')}
 		/>
+	);
+
+	if (dataSourceLoading) {
+		return <Loading />;
+	}
+
+	return (
+		<BasePage documentTitle={Liferay.Language.get('accounts')}>
+			<BasePage.Header
+				breadcrumbs={[
+					breadcrumbs.getHome({
+						channelId,
+						groupId,
+						label: selectedChannel && selectedChannel.name
+					})
+				]}
+				groupId={groupId}
+			>
+				<BasePage.Row>
+					<BasePage.Header.TitleSection
+						title={Liferay.Language.get('accounts')}
+					/>
+				</BasePage.Row>
+			</BasePage.Header>
+			<BasePage.Body>
+				{dataSourceConnected ? (
+					<>
+						<TotalAccounts groupId={groupId} />
+
+						<div className='align-items-center d-flex justify-content-between mb-3'>
+							<SectionHeader
+								className='mb-0'
+								icon='box-container'
+								title={Liferay.Language.get('accounts')}
+							/>
+
+							<DropdownRangeKey
+								legacy={false}
+								onRangeSelectorChange={setRangeSelectors}
+								rangeSelectors={rangeSelectors}
+							/>
+						</div>
+
+						<AccountsDataSet
+							activityStatusFilter='ACTIVE'
+							apiURL={`/o/faro/contacts/${groupId}/account/search?channelId=${channelId}`}
+							channelId={channelId}
+							groupId={groupId}
+							rangeSelectors={rangeSelectors}
+						/>
+					</>
+				) : (
+					<NoDataSourcesConnected />
+				)}
+			</BasePage.Body>
+		</BasePage>
 	);
 };
 

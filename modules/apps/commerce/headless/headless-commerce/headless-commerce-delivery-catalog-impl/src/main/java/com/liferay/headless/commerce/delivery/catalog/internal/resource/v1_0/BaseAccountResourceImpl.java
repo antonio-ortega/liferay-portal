@@ -5,6 +5,7 @@
 
 package com.liferay.headless.commerce.delivery.catalog.internal.resource.v1_0;
 
+import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.Account;
 import com.liferay.headless.commerce.delivery.catalog.resource.v1_0.AccountResource;
 import com.liferay.petra.function.UnsafeBiConsumer;
@@ -70,6 +71,9 @@ public abstract class BaseAccountResourceImpl
 	 *
 	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-delivery-catalog/v1.0/channels/{channelId}/accounts'  -u 'test@liferay.com:test'
 	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Lists AccountEntry rows eligible for the channel under /channels/{channelId}/accounts. Loads the CommerceChannel via CommerceChannelLocalService, gathers eligibility-typed CommerceChannelAccountEntryRel rows, and calls Vulcan SearchUtil.search on AccountEntry restricted to commerceChannelIds. Exposes ADD_ACCOUNT_ENTRY / VIEW HATEOAS actions. Validation -- NoSuchChannelException -> 404 when an eligibility rel exists and the caller lacks CommerceAccountActionKeys.VIEW_CHANNELS_ACCOUNTS or ownership of an eligible account. List query support — filterable and sortable fields -- AccountEntityModel (dateCreated, dateModified, name, type); search fields -- indexed AccountEntry fields."
+	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
@@ -128,6 +132,9 @@ public abstract class BaseAccountResourceImpl
 	 *
 	 * curl -X 'POST' 'http://localhost:8080/o/headless-commerce-delivery-catalog/v1.0/channels/{channelId}/accounts' -d $'{"defaultBillingAddressId": ___, "defaultShippingAddressId": ___, "description": ___, "domains": ___, "externalReferenceCode": ___, "id": ___, "logoId": ___, "logoURL": ___, "name": ___, "organizationIds": ___, "status": ___, "taxId": ___, "type": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Creates a new AccountEntry under /channels/<channelId>/accounts via AccountEntryService.addAccountEntry. The request body supplies externalReferenceCode, name, description, domains, taxId, type (defaults to business) and status (defaults to approved); logo bytes are loaded from DLAppLocalService when logoId is set. Not an upsert -- addAccountEntry is always invoked, so a duplicate externalReferenceCode raises 422. Validation -- NoSuchChannelException -> 404 when channel eligibility re-validation fails. Side effects -- When the channel restricts accounts, creates a CommerceChannelAccountEntryRel of TYPE_ELIGIBILITY linking the new account to the channel; applies default billing and shipping address IDs via AccountEntryLocalService; synchronizes organization rels through AccountEntryOrganizationRelLocalService."
+	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
@@ -227,6 +234,15 @@ public abstract class BaseAccountResourceImpl
 			@Override
 			public Locale getPreferredLocale() {
 				return LocaleUtil.fromLanguageId(languageId);
+			}
+
+			@Override
+			public boolean isAcceptAllLanguages() {
+				if (ExportImportThreadLocal.isExportInProcess()) {
+					return true;
+				}
+
+				return AcceptLanguage.super.isAcceptAllLanguages();
 			}
 
 		};
@@ -800,3 +816,4 @@ public abstract class BaseAccountResourceImpl
 		LogFactoryUtil.getLog(BaseAccountResourceImpl.class);
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1087014975

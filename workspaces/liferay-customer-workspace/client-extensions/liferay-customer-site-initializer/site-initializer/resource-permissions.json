@@ -143,38 +143,6 @@
 	},
 	{
 		"actionIds": [
-			"UPDATE"
-		],
-		"resourceName": "[$OBJECT_DEFINITION_CLASS_NAME:BusinessEvent$]",
-		"roleName": "Account Administrator",
-		"scope": "3"
-	},
-	{
-		"actionIds": [
-			"UPDATE"
-		],
-		"resourceName": "[$OBJECT_DEFINITION_CLASS_NAME:BusinessEvent$]",
-		"roleName": "Liferay Staff",
-		"scope": "1"
-	},
-	{
-		"actionIds": [
-			"UPDATE"
-		],
-		"resourceName": "[$OBJECT_DEFINITION_CLASS_NAME:BusinessEvent$]",
-		"roleName": "Organization User",
-		"scope": "3"
-	},
-	{
-		"actionIds": [
-			"UPDATE"
-		],
-		"resourceName": "[$OBJECT_DEFINITION_CLASS_NAME:BusinessEvent$]",
-		"roleName": "Requester",
-		"scope": "3"
-	},
-	{
-		"actionIds": [
 			"DELETE",
 			"UPDATE",
 			"VIEW"
@@ -994,70 +962,6 @@
 		"actionIds": [
 			"ADD_OBJECT_ENTRY"
 		],
-		"resourceName": "com.liferay.object#[$OBJECT_DEFINITION_ID:BusinessEvent$]",
-		"roleName": "Account Administrator",
-		"scope": "3"
-	},
-	{
-		"actionIds": [
-			"ADD_OBJECT_ENTRY"
-		],
-		"resourceName": "com.liferay.object#[$OBJECT_DEFINITION_ID:BusinessEvent$]",
-		"roleName": "Liferay Staff",
-		"scope": "1"
-	},
-	{
-		"actionIds": [
-			"ADD_OBJECT_ENTRY"
-		],
-		"resourceName": "com.liferay.object#[$OBJECT_DEFINITION_ID:BusinessEvent$]",
-		"roleName": "Organization User",
-		"scope": "3"
-	},
-	{
-		"actionIds": [
-			"ADD_OBJECT_ENTRY"
-		],
-		"resourceName": "com.liferay.object#[$OBJECT_DEFINITION_ID:BusinessEvent$]",
-		"roleName": "Requester",
-		"scope": "3"
-	},
-	{
-		"actionIds": [
-			"ADD_OBJECT_ENTRY"
-		],
-		"resourceName": "com.liferay.object#[$OBJECT_DEFINITION_ID:BusinessEventVersion$]",
-		"roleName": "Account Administrator",
-		"scope": "3"
-	},
-	{
-		"actionIds": [
-			"ADD_OBJECT_ENTRY"
-		],
-		"resourceName": "com.liferay.object#[$OBJECT_DEFINITION_ID:BusinessEventVersion$]",
-		"roleName": "Liferay Staff",
-		"scope": "1"
-	},
-	{
-		"actionIds": [
-			"ADD_OBJECT_ENTRY"
-		],
-		"resourceName": "com.liferay.object#[$OBJECT_DEFINITION_ID:BusinessEventVersion$]",
-		"roleName": "Organization User",
-		"scope": "3"
-	},
-	{
-		"actionIds": [
-			"ADD_OBJECT_ENTRY"
-		],
-		"resourceName": "com.liferay.object#[$OBJECT_DEFINITION_ID:BusinessEventVersion$]",
-		"roleName": "Requester",
-		"scope": "3"
-	},
-	{
-		"actionIds": [
-			"ADD_OBJECT_ENTRY"
-		],
 		"primKey": "0",
 		"resourceName": "com.liferay.object#[$OBJECT_DEFINITION_ID:CallbackRequest$]",
 		"roleName": "Provisioning Member",
@@ -1214,6 +1118,15 @@
 		"primKey": "0",
 		"resourceName": "com.liferay.object#[$OBJECT_DEFINITION_ID:SupportTicketEscalation$]",
 		"roleName": "Provisioning Member",
+		"scope": "1"
+	},
+	{
+		"actionIds": [
+			"ADD_OBJECT_ENTRY"
+		],
+		"primKey": "0",
+		"resourceName": "com.liferay.object#[$OBJECT_DEFINITION_ID:SupportTicketEscalation$]",
+		"roleName": "User",
 		"scope": "1"
 	},
 	{

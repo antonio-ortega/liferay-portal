@@ -893,7 +893,11 @@ test(
 
 		await navigationMenusPage.addMenuItemButton.click();
 
-		expect(await navigationMenusPage.getMenuItem('Page')).not.toBeVisible();
+		await expect(
+			await navigationMenusPage.getMenuItem('Page')
+		).not.toBeVisible();
+
+		await navigationMenusPage.addMenuItemButton.click();
 
 		await navigationMenusPage.gotoGlobalSiteNavigationMenuPortlet();
 

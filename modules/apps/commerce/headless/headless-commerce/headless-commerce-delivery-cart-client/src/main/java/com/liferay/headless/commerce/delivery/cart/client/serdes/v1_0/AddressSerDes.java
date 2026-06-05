@@ -745,3 +745,4 @@ public class AddressSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:1664417097

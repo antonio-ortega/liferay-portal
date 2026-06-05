@@ -547,3 +547,4 @@ public interface UserNotificationEventLocalService
 		Collection<String> uuids, long companyId, boolean archive);
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-1346917629

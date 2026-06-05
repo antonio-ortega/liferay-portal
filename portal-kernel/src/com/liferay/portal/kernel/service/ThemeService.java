@@ -57,3 +57,4 @@ public interface ThemeService extends BaseService {
 	public JSONArray getWARThemes();
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-1884480917

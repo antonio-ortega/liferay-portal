@@ -100,7 +100,7 @@ if ((cpDefinition != null) && (cpDefinition.getExpirationDate() != null)) {
 
 					<div class="entry-content form-group">
 						<c:choose>
-							<c:when test='<%= !FeatureFlagManagerUtil.isEnabled("LPD-11235") %>'>
+							<c:when test='<%= FeatureFlagManagerUtil.isEnabled("LPD-11235") %>'>
 								<liferay-ui:input-localized
 									defaultLanguageId="<%= defaultLanguageId %>"
 									name="descriptionMapAsXML"
@@ -210,7 +210,6 @@ if ((cpDefinition != null) && (cpDefinition.getExpirationDate() != null)) {
 						dataProviderKey="<%= CommerceProductFDSNames.PRODUCT_DEFINITION_SPECIFICATIONS %>"
 						formName="fm"
 						id="<%= CommerceProductFDSNames.PRODUCT_DEFINITION_SPECIFICATIONS %>"
-						itemsPerPage="<%= 10 %>"
 						selectedItemsKey="cpdefinitionSpecificationOptionValueId"
 						showManagementBar="<%= true %>"
 						showSearch="<%= true %>"

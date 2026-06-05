@@ -107,3 +107,4 @@ public class VideoFragmentConfigurationFieldValue
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-784103909

@@ -135,6 +135,11 @@
 			<category name="Bug Prevention" />
 			<description name="Checks if the property value for `Web-ContextPath` matches the module directory." />
 		</check>
+		<check name="BNDWebServiceTrackingCheck">
+			<category name="Bug Prevention" />
+			<description name="Finds missing `Web-ServiceTracking: false`." />
+			<property name="enabled" value="false" />
+		</check>
 	</source-processor>
 	<source-processor name="CIMergeAndGitRepoSourceProcessor">
 		<check name="CIMergeAndGitRepoFileCheck">
@@ -344,11 +349,6 @@
 			<category name="Bug Prevention" />
 			<description name="Validates the dependencies in `/required-dependencies/required-dependencies/build.gradle`." />
 		</check>
-		<check name="GradleRestClientDependenciesCheck">
-			<category name="Bug Prevention" />
-			<description name="Validates the project dependencies `.*-rest-client` can only be used for `testIntegrationImplementation`." />
-			<property name="enabled" value="false" />
-		</check>
 		<check name="GradleStylingCheck">
 			<category name="Styling" />
 			<description name="Applies rules to enforce consistency in code style." />
@@ -386,7 +386,15 @@
 		</check>
 		<check name="GradlePetraModuleDependenciesCheck">
 			<category name="Bug Prevention" />
-			<description name="Checks that dependencies in `petra` moudule can only contains `petra` dependencies." />
+			<description name="Checks that dependencies in `petra` module can only contains `petra` dependencies." />
+		</check>
+		<check name="GradleRestClientModuleDependenciesCheck">
+			<category name="Bug Prevention" />
+			<description name="Validates that only Jakarta dependencies can be used in `*-rest-client` modules." />
+		</check>
+		<check name="GradleRestTestModuleDependenciesCheck">
+			<category name="Bug Prevention" />
+			<description name="Validates the project dependencies `*-rest-client` can only be used for `testIntegrationImplementation` in `*-rest-test` modules." />
 		</check>
 	</source-processor>
 	<source-processor name="GroovySourceProcessor">
@@ -648,10 +656,6 @@
 			<category name="Bug Prevention" />
 			<description name="Finds unnecessary empty constructor." />
 		</check>
-		<check name="JavaResultSetCheck">
-			<category name="Bug Prevention" />
-			<description name="Checks for correct use `java.sql.ResultSet.getInt(int)`." />
-		</check>
 		<check name="JavaReturnStatementCheck">
 			<category name="Styling" />
 			<description name="Finds unnecessary `else` statement (when `if` and `else` statement both end with `return` statement)." />
@@ -775,6 +779,11 @@
 			<description name="Finds cases where company scoped ids are used, see LPD-45118." />
 			<property name="enabled" value="false" />
 		</check>
+		<check name="JavaCompanyThreadLocalCheck">
+			<category name="Bug Prevention" />
+			<description name="Checks that `CompanyThreadLocal.lock` and `CompanyThreadLocal.setCompanyId*` methods are not used." />
+			<property name="enabled" value="false" />
+		</check>
 		<check name="JavaComponentActivateCheck">
 			<category name="Naming Conventions" />
 			<description name="Checks if methods with annotation `@Activate` or `@Deactivate` follow naming conventions." />
@@ -798,6 +807,10 @@
 		<check name="JavaDeprecatedJavadocCheck">
 			<category name="Javadoc" />
 			<description name="Checks if the `@deprecated` javadoc is pointing to the correct version." />
+		</check>
+		<check name="JavaExpandoBridgeAttributesCallOrderCheck">
+			<category name="Bug Prevention" />
+			<description name="Ensure `setExpandoBridgeAttributes` is the final setter called on a model before model persistence." />
 		</check>
 		<check name="JavaFeatureFlagManagerUtilCheck">
 			<category name="Bug Prevention" />
@@ -977,11 +990,6 @@
 			<category name="Bug Prevention" />
 			<description name="Performs several checks on Upgrade classes." />
 		</check>
-		<check name="JavaUpgradeCompanyThreadLocalCheck">
-			<category name="Bug Prevention" />
-			<description name="Checks that we do not use `CompanyThreadLocal.setCompanyId*` in upgrade classes." />
-			<property name="enabled" value="false" />
-		</check>
 		<check name="JavaUpgradeConnectionCheck">
 			<category name="Bug Prevention" />
 			<description name="Performs several checks on connection in Upgrade classes." />
@@ -1066,6 +1074,10 @@
 
 		<!-- Module Source Checks -->
 
+		<check name="JavaAPIModulePackagePathCheck">
+			<category name="Bug Prevention" />
+			<description name="Finds cases of incorrect package names in API modules." />
+		</check>
 		<check name="JavaConfigurationCategoryCheck">
 			<category name="Bug Prevention" />
 			<description name="Checks that the value of `category` in `@ExtendedObjectClassDefinition` matches the `categoryKey` of the corresponding class that implements `ConfigurationCategory`." />
@@ -1202,6 +1214,10 @@
 			<category name="Styling" />
 			<description name="Sorts by `resourceName` and `roleName` in `resource-permissions.json` files." />
 		</check>
+		<check name="JSONRolesFileCheck">
+			<category name="Styling" />
+			<description name="Sorts by `resource` and `actionId` in `roles.json` files." />
+		</check>
 	</source-processor>
 	<source-processor name="JSPSourceProcessor">
 		<check name="ArrayCheck">
@@ -1286,6 +1302,10 @@
 			<category name="Bug Prevention" />
 			<description name="Finds incorrect use of `LanguageUtil.get` in `.jsp` files." />
 			<property name="enabled" value="false" />
+		</check>
+		<check name="JSPLiferayUICSPTagCheck">
+			<category name="Bug Prevention" />
+			<description name="Finds new usages of deprecated liferay-ui:csp tag." />
 		</check>
 		<check name="JSPLineBreakCheck">
 			<category name="Styling" />
@@ -1523,6 +1543,10 @@
 		</check>
 	</source-processor>
 	<source-processor name="MarkdownSourceProcessor">
+		<check name="EmbeddedJSONCheck">
+			<category name="Styling" />
+			<description name="Ensures consistent formatting for embedded JSON." />
+		</check>
 		<check name="MarkdownBreakingChangesAmendmentsFileCheck">
 			<category name="Styling" />
 			<description name="Checks that breaking changes amendments should contain the schematized breaking changes in `BREAKING_CHANGES_AMENDMENTS.md` file." />
@@ -1784,6 +1808,11 @@
 		</check>
 	</source-processor>
 	<source-processor name="SHSourceProcessor">
+		<check name="SHSubshellCheck">
+			<category name="Bug Prevention" />
+			<description name="Checks that local variables are not assigned via subshells." />
+			<property name="enabled" value="false" />
+		</check>
 		<check name="WhitespaceCheck">
 			<category name="Styling" />
 			<description name="Finds missing and unnecessary whitespace." />
@@ -1933,10 +1962,6 @@
 			<category name="Upgrade" />
 			<description name="Adds FragmentCollectionKey to Component annotation in classes that extend `BaseFragmentCollectionContributor`" />
 		</check>
-		<check name="UpgradeJavaBaseModelListenerCheck">
-			<category name="Upgrade" />
-			<description name="Add parameter in the onAfterUpdate and onBeforeUpdate methods of the BaseModelListener class." />
-		</check>
 		<check name="UpgradeJavaDDMFormValuesSerializerTrackerCheck">
 			<category name="Upgrade" />
 			<description name="Replaces the references of `DDMFormValuesSerializerTracker` class and also its methods usages." />
@@ -1948,11 +1973,6 @@
 		<check name="UpgradeJavaFacetedSearcherCheck">
 			<category name="Upgrade" />
 			<description name="Replaces the references of the `Indexer indexer = FacetedSearcher.getInstance();` declaration and `indexer.search` method call." />
-		</check>
-		<check name="UpgradeJavaFDSActionProviderCheck">
-			<category name="Upgrade" />
-			<description name="Reorder parameters in the getDropdownItems method of the FDSDataProvider interface." />
-			<weight>1</weight>
 		</check>
 		<check name="UpgradeJavaFDSDataProviderCheck">
 			<category name="Upgrade" />
@@ -2018,10 +2038,6 @@
 			<category name="Upgrade" />
 			<description name="Upgrade class that implements SortFieldNameTranslator." />
 		</check>
-		<check name="UpgradeJavaStorageTypeAwareCheck">
-			<category name="Upgrade" />
-			<description name="Run code to delete StorageTypeAware interface." />
-		</check>
 		<check name="UpgradeJSPFieldSetGroupCheck">
 			<category name="Upgrade" />
 			<description name="Run code to remove 'fieldset-group' tag." />
@@ -2085,13 +2101,13 @@
 		</check>
 	</source-processor>
 	<source-processor name="XMLSourceProcessor">
+		<check name="EmbeddedJSONCheck">
+			<category name="Styling" />
+			<description name="Ensures consistent formatting for embedded JSON." />
+		</check>
 		<check name="XMLBuildFileCheck">
 			<category name="Bug Prevention" />
 			<description name="Performs several checks on `build.xml`." />
-		</check>
-		<check name="XMLCDATACheck">
-			<category name="Bug Prevention" />
-			<description name="Performs several checks on `CDATA` inside `xml`." />
 		</check>
 		<check name="XMLCustomSQLOrderCheck">
 			<category name="Styling" />
@@ -2185,16 +2201,23 @@
 			<category name="Bug Prevention" />
 			<description name="Checks that the `entity name` in `service.xml` does not equal the `package name`." />
 		</check>
-		<check name="XMLServiceFileCheck">
-			<category name="Bug Prevention" />
-			<description name="Performs several checks on `service.xml` file." />
-			<property name="allowedIncorrectLastPublishDateEntities" value="CommerceCountry,CPDefinition,CPInstance,PollsQuestion,PollsVote" />
-			<property name="checkMVCCEnabled" value="false" />
-		</check>
 		<check name="XMLServiceFinderNameCheck">
 			<category name="Bug Prevention" />
 			<description name="Checks that the `finder name` in `service.xml`." />
 			<property name="enabled" value="false" />
+		</check>
+		<check name="XMLServiceMissingCompanyIdCheck">
+			<category name="Bug Prevention" />
+			<description name="Finds missing `companyId` column in `service.xml`." />
+		</check>
+		<check name="XMLServiceMVCCEnabledCheck">
+			<category name="Bug Prevention" />
+			<description name="Checks that the `mvcc-enabled` attribute is always set in `service.xml`." />
+		</check>
+		<check name="XMLServiceOrderCheck">
+			<category name="Bug Prevention" />
+			<description name="Performs several checks on `service.xml` file." />
+			<property name="allowedIncorrectLastPublishDateEntities" value="CommerceCountry,CPDefinition,CPInstance,PollsQuestion,PollsVote" />
 		</check>
 		<check name="XMLSolrSchemaFileCheck">
 			<category name="Styling" />

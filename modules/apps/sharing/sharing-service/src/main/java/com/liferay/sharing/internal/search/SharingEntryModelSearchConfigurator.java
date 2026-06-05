@@ -6,11 +6,9 @@
 package com.liferay.sharing.internal.search;
 
 import com.liferay.portal.kernel.search.Field;
-import com.liferay.portal.search.batch.DynamicQueryBatchIndexingActionableFactory;
 import com.liferay.portal.search.spi.model.index.contributor.ModelIndexerWriterContributor;
 import com.liferay.portal.search.spi.model.registrar.ModelSearchConfigurator;
 import com.liferay.portal.search.spi.model.result.contributor.ModelSummaryContributor;
-import com.liferay.sharing.internal.search.spi.model.index.contributor.SharingEntryModelIndexerWriterContributor;
 import com.liferay.sharing.internal.search.spi.model.result.contributor.SharingEntryModelSummaryContributor;
 import com.liferay.sharing.model.SharingEntry;
 import com.liferay.sharing.service.SharingEntryLocalService;
@@ -58,15 +56,9 @@ public class SharingEntryModelSearchConfigurator
 
 	@Activate
 	protected void activate() {
-		_modelIndexWriterContributor =
-			new SharingEntryModelIndexerWriterContributor(
-				_dynamicQueryBatchIndexingActionableFactory,
-				_sharingEntryLocalService);
+		_modelIndexWriterContributor = new ModelIndexerWriterContributor<>(
+			_sharingEntryLocalService::getIndexableActionableDynamicQuery);
 	}
-
-	@Reference
-	private DynamicQueryBatchIndexingActionableFactory
-		_dynamicQueryBatchIndexingActionableFactory;
 
 	private ModelIndexerWriterContributor<SharingEntry>
 		_modelIndexWriterContributor;

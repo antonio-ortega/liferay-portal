@@ -1,10 +1,11 @@
 import ClayAutocomplete from '@clayui/autocomplete';
 import getCN from 'classnames';
 import React, {useEffect, useState} from 'react';
-import {DocumentNode} from 'apollo-boost';
-import {NetworkStatus} from '@clayui/data-provider';
+import {DocumentNode, useQuery} from '@apollo/client';
+
+import {NetworkState} from 'shared/util/constants';
 import {useDebounce} from 'shared/hooks/useDebounce';
-import {useQuery} from '@apollo/react-hooks';
+
 import {useRequest} from 'shared/hooks/useRequest';
 
 type TMappedData = {
@@ -42,7 +43,7 @@ const AutocompleteInput: React.FC<IAutocompleteProps> = ({
 	placeholder,
 	value
 }) => {
-	const [networkStatus, setNetworkStatus] = useState(NetworkStatus.Unused);
+	const [networkState, setNetworkState] = useState(NetworkState.Unused);
 
 	let response;
 
@@ -68,7 +69,7 @@ const AutocompleteInput: React.FC<IAutocompleteProps> = ({
 		};
 	} else {
 		response = useRequest({
-			dataSourceFn: ({value}) => dataSourceFn(value),
+			dataSourceFn: ({value}) => dataSourceFn?.(value),
 			debounceDelay: DEBOUNCE_DELAY,
 			initialState: {
 				data: [],
@@ -82,9 +83,7 @@ const AutocompleteInput: React.FC<IAutocompleteProps> = ({
 	const {data: items = [], loading} = response;
 
 	useEffect(() => {
-		setNetworkStatus(
-			loading ? NetworkStatus.Loading : NetworkStatus.Unused
-		);
+		setNetworkState(loading ? NetworkState.Loading : NetworkState.Unused);
 	}, [loading]);
 
 	return (
@@ -96,7 +95,7 @@ const AutocompleteInput: React.FC<IAutocompleteProps> = ({
 			disabled={disabled}
 			id='clay-autocomplete-1'
 			items={items as string[]}
-			loadingState={networkStatus}
+			loadingState={networkState}
 			menuTrigger='focus'
 			messages={{
 				loading: Liferay.Language.get('loading'),

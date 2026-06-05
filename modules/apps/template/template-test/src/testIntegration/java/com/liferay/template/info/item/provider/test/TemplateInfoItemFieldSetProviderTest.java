@@ -68,6 +68,7 @@ import com.liferay.portal.kernel.test.portlet.MockLiferayPortletRenderRequest;
 import com.liferay.portal.kernel.test.portlet.MockLiferayPortletRenderResponse;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
+import com.liferay.portal.kernel.test.util.CompanyTestUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
@@ -108,6 +109,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -142,6 +144,15 @@ public class TemplateInfoItemFieldSetProviderTest {
 		_group = GroupTestUtil.addGroup();
 
 		_company = _companyLocalService.getCompany(_group.getCompanyId());
+
+		_originalCompanyLanguageIds = _language.getAvailableLocales(
+			_company.getCompanyId());
+
+		CompanyTestUtil.resetCompanyLocales(
+			_company.getCompanyId(),
+			Arrays.asList(LocaleUtil.GERMANY, LocaleUtil.SPAIN, LocaleUtil.US),
+			LocaleUtil.US);
+
 		_layout = LayoutTestUtil.addTypePortletLayout(_group);
 
 		_serviceContext = ServiceContextTestUtil.getServiceContext(
@@ -160,16 +171,20 @@ public class TemplateInfoItemFieldSetProviderTest {
 	}
 
 	@After
-	public void tearDown() {
+	public void tearDown() throws Exception {
+		CompanyTestUtil.resetCompanyLocales(
+			_company.getCompanyId(), _originalCompanyLanguageIds,
+			LocaleUtil.US);
+
 		ServiceContextThreadLocal.pushServiceContext(_originalServiceContext);
 		LocaleThreadLocal.setSiteDefaultLocale(_originalSiteDefaultLocale);
 		LocaleThreadLocal.setThemeDisplayLocale(_originalThemeDisplayLocale);
 
-		if (_globalTemplateEntry != null) {
+		if (_companyGroupTemplateEntry != null) {
 			_templateEntryLocalService.deleteTemplateEntry(
-				_globalTemplateEntry);
+				_companyGroupTemplateEntry);
 
-			_globalTemplateEntry = null;
+			_companyGroupTemplateEntry = null;
 		}
 	}
 
@@ -213,9 +228,25 @@ public class TemplateInfoItemFieldSetProviderTest {
 			infoField.getInfoFieldType() instanceof HTMLInfoFieldType);
 		Assert.assertEquals(
 			infoFields.toString(),
+			StringBundler.concat(
+				PortletDisplayTemplate.DISPLAY_STYLE_PREFIX,
+				StringPool.UNDERLINE,
+				PortletDisplayTemplate.DISPLAY_STYLE_PREFIX, "_ERC__",
+				journalArticleTemplateEntry.getExternalReferenceCode()),
+			infoField.getExternalUniqueId());
+		Assert.assertEquals(
+			infoFields.toString(),
 			PortletDisplayTemplate.DISPLAY_STYLE_PREFIX +
 				journalArticleTemplateEntry.getTemplateEntryId(),
 			infoField.getName());
+		Assert.assertEquals(
+			infoFields.toString(),
+			StringBundler.concat(
+				PortletDisplayTemplate.DISPLAY_STYLE_PREFIX,
+				StringPool.UNDERLINE,
+				PortletDisplayTemplate.DISPLAY_STYLE_PREFIX,
+				journalArticleTemplateEntry.getTemplateEntryId()),
+			infoField.getUniqueId());
 	}
 
 	@Test
@@ -226,7 +257,7 @@ public class TemplateInfoItemFieldSetProviderTest {
 
 		_serviceContext.setScopeGroupId(_company.getGroupId());
 
-		_globalTemplateEntry = TemplateTestUtil.addTemplateEntry(
+		_companyGroupTemplateEntry = TemplateTestUtil.addTemplateEntry(
 			BlogsEntry.class.getName(), StringPool.BLANK, _serviceContext);
 
 		_serviceContext.setScopeGroupId(groupId);
@@ -267,7 +298,7 @@ public class TemplateInfoItemFieldSetProviderTest {
 			infoFieldNames.containsAll(
 				Arrays.asList(
 					PortletDisplayTemplate.DISPLAY_STYLE_PREFIX +
-						_globalTemplateEntry.getTemplateEntryId(),
+						_companyGroupTemplateEntry.getTemplateEntryId(),
 					PortletDisplayTemplate.DISPLAY_STYLE_PREFIX +
 						groupBlogsEntryTemplateEntry.getTemplateEntryId())));
 	}
@@ -278,9 +309,11 @@ public class TemplateInfoItemFieldSetProviderTest {
 
 		long groupId = _serviceContext.getScopeGroupId();
 
-		_serviceContext.setScopeGroupId(_company.getGroupId());
+		Group companyGroup = _company.getGroup();
 
-		_globalTemplateEntry = TemplateTestUtil.addTemplateEntry(
+		_serviceContext.setScopeGroupId(companyGroup.getGroupId());
+
+		_companyGroupTemplateEntry = TemplateTestUtil.addTemplateEntry(
 			BlogsEntry.class.getName(), StringPool.BLANK, _serviceContext);
 
 		_serviceContext.setScopeGroupId(groupId);
@@ -302,9 +335,26 @@ public class TemplateInfoItemFieldSetProviderTest {
 			infoField.getInfoFieldType() instanceof HTMLInfoFieldType);
 		Assert.assertEquals(
 			infoFields.toString(),
+			StringBundler.concat(
+				PortletDisplayTemplate.DISPLAY_STYLE_PREFIX,
+				StringPool.UNDERLINE,
+				PortletDisplayTemplate.DISPLAY_STYLE_PREFIX, "_ERC__",
+				_companyGroupTemplateEntry.getExternalReferenceCode(),
+				"__SERC__", companyGroup.getExternalReferenceCode()),
+			infoField.getExternalUniqueId());
+		Assert.assertEquals(
+			infoFields.toString(),
 			PortletDisplayTemplate.DISPLAY_STYLE_PREFIX +
-				_globalTemplateEntry.getTemplateEntryId(),
+				_companyGroupTemplateEntry.getTemplateEntryId(),
 			infoField.getName());
+		Assert.assertEquals(
+			infoFields.toString(),
+			StringBundler.concat(
+				PortletDisplayTemplate.DISPLAY_STYLE_PREFIX,
+				StringPool.UNDERLINE,
+				PortletDisplayTemplate.DISPLAY_STYLE_PREFIX,
+				_companyGroupTemplateEntry.getTemplateEntryId()),
+			infoField.getUniqueId());
 	}
 
 	@Test
@@ -1334,9 +1384,6 @@ public class TemplateInfoItemFieldSetProviderTest {
 		_ddmTemplateLocalService.updateDDMTemplate(ddmTemplate);
 	}
 
-	@Inject(filter = "ddm.form.deserializer.type=json")
-	private static DDMFormDeserializer _jsonDDMFormDeserializer;
-
 	@Inject
 	private AssetCategoryLocalService _assetCategoryLocalService;
 
@@ -1344,6 +1391,7 @@ public class TemplateInfoItemFieldSetProviderTest {
 	private AssetVocabularyLocalService _assetVocabularyLocalService;
 
 	private Company _company;
+	private TemplateEntry _companyGroupTemplateEntry;
 
 	@Inject
 	private CompanyLocalService _companyLocalService;
@@ -1357,8 +1405,6 @@ public class TemplateInfoItemFieldSetProviderTest {
 	@Inject
 	private DDMTemplateLocalService _ddmTemplateLocalService;
 
-	private TemplateEntry _globalTemplateEntry;
-
 	@DeleteAfterTestRun
 	private Group _group;
 
@@ -1366,6 +1412,9 @@ public class TemplateInfoItemFieldSetProviderTest {
 
 	@Inject
 	private JournalConverter _journalConverter;
+
+	@Inject(filter = "ddm.form.deserializer.type=json")
+	private DDMFormDeserializer _jsonDDMFormDeserializer;
 
 	@Inject
 	private JSONFactory _jsonFactory;
@@ -1378,6 +1427,7 @@ public class TemplateInfoItemFieldSetProviderTest {
 	@Inject(filter = "mvc.command.name=/template/edit_ddm_template")
 	private MVCRenderCommand _mvcRenderCommand;
 
+	private Set<Locale> _originalCompanyLanguageIds;
 	private ServiceContext _originalServiceContext;
 	private Locale _originalSiteDefaultLocale;
 	private Locale _originalThemeDisplayLocale;

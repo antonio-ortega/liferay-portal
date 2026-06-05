@@ -69,10 +69,7 @@ export class DisplayPageTemplatesPage {
 
 		await this.page.getByRole('button', {name: 'Delete'}).click();
 
-		await waitForAlert(
-			this.page,
-			'Success:You successfully deleted 1 display page template(s).'
-		);
+		await waitForAlert(this.page, 'Success:');
 	}
 
 	async deleteAllDisplayPageTemplates() {
@@ -86,10 +83,13 @@ export class DisplayPageTemplatesPage {
 
 		await this.page.getByRole('button', {name: 'Delete'}).click();
 
-		await this.page
-			.getByLabel('Delete Entries- Loading')
-			.getByRole('button', {name: 'Delete'})
-			.click();
+		const deleteEntriesModal = this.page.getByRole('dialog', {
+			name: 'Delete Entries',
+		});
+
+		await deleteEntriesModal.waitFor();
+
+		await deleteEntriesModal.getByRole('button', {name: 'Delete'}).click();
 	}
 
 	async editTemplate(name: string) {

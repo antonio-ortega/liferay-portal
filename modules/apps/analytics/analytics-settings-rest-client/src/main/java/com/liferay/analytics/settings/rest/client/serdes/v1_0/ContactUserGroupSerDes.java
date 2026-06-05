@@ -253,3 +253,4 @@ public class ContactUserGroupSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-915163214

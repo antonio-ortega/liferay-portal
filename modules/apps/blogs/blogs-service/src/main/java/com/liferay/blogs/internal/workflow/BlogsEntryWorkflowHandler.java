@@ -9,8 +9,11 @@ import com.liferay.blogs.model.BlogsEntry;
 import com.liferay.blogs.service.BlogsEntryLocalService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.security.permission.ResourceActionsUtil;
+import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.workflow.BaseWorkflowHandler;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.kernel.workflow.WorkflowHandler;
@@ -31,6 +34,38 @@ import org.osgi.service.component.annotations.Reference;
 	service = WorkflowHandler.class
 )
 public class BlogsEntryWorkflowHandler extends BaseWorkflowHandler<BlogsEntry> {
+
+	@Override
+	public void contributeWorkflowContext(
+			Map<String, Serializable> workflowContext)
+		throws PortalException {
+
+		ServiceContext serviceContext = (ServiceContext)workflowContext.get(
+			WorkflowConstants.CONTEXT_SERVICE_CONTEXT);
+
+		if (serviceContext == null) {
+			return;
+		}
+
+		ThemeDisplay themeDisplay = serviceContext.getThemeDisplay();
+
+		if (themeDisplay == null) {
+			return;
+		}
+
+		String layoutFullURL = null;
+
+		if (themeDisplay.getRefererPlid() == 0) {
+			layoutFullURL = _portal.getLayoutFullURL(themeDisplay);
+		}
+		else {
+			layoutFullURL = _portal.getLayoutFullURL(
+				_layoutLocalService.getLayout(themeDisplay.getRefererPlid()),
+				themeDisplay);
+		}
+
+		serviceContext.setAttribute("layoutFullURL", layoutFullURL);
+	}
 
 	@Override
 	public String getClassName() {
@@ -62,5 +97,11 @@ public class BlogsEntryWorkflowHandler extends BaseWorkflowHandler<BlogsEntry> {
 
 	@Reference
 	private BlogsEntryLocalService _blogsEntryLocalService;
+
+	@Reference
+	private LayoutLocalService _layoutLocalService;
+
+	@Reference
+	private Portal _portal;
 
 }

@@ -283,3 +283,4 @@ public interface ContactAccountGroupResource {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-794769119

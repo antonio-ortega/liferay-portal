@@ -88,6 +88,8 @@ public class AnnouncementsFlagModelImpl
 
 	public static final String TABLE_SQL_DROP = "drop table AnnouncementsFlag";
 
+	public static final String ENTITY_ALIAS = "announcementsFlag";
+
 	public static final String ORDER_BY_JPQL =
 		" ORDER BY announcementsFlag.userId ASC, announcementsFlag.createDate ASC";
 
@@ -842,3 +844,4 @@ public class AnnouncementsFlagModelImpl
 	private AnnouncementsFlag _escapedModel;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:318950578

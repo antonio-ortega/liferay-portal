@@ -52,6 +52,7 @@ export class PageEditorPage {
 
 	readonly editModeButton: Locator;
 	readonly experienceSelector: Locator;
+	readonly dropZone: Locator;
 	readonly languageSelector: Locator;
 	readonly newRuleButton: Locator;
 	readonly publishButton: Locator;
@@ -70,6 +71,7 @@ export class PageEditorPage {
 		this.experienceSelector = page.locator(
 			'.page-editor__experience-selector'
 		);
+		this.dropZone = page.locator('#page-editor');
 		this.languageSelector = page
 			.locator('.page-editor__toolbar')
 			.getByLabel('Select a language');
@@ -104,7 +106,7 @@ export class PageEditorPage {
 		setName: string,
 		name: string,
 		dropTarget?: Locator,
-		timeout: number = 2000
+		timeout: number = 5000
 	) {
 		await this.goToSidebarTab('Components');
 
@@ -130,6 +132,11 @@ export class PageEditorPage {
 			await this.page.getByLabel(`Add ${name}`).focus();
 
 			await this.page.keyboard.press('Enter');
+
+			await expect(
+				this.page.locator('#content').getByText(name, {exact: true})
+			).toBeVisible({timeout});
+
 			await this.page.keyboard.press('Enter');
 		}
 
@@ -281,6 +288,13 @@ export class PageEditorPage {
 			await this.page.getByLabel(`Add ${name}`).first().focus();
 
 			await this.page.keyboard.press('Enter');
+
+			await expect(
+				this.page
+					.locator('.page-editor__keyboard-movement-preview')
+					.getByText(name, {exact: true})
+			).toBeVisible();
+
 			await this.page.keyboard.press('Enter');
 		}
 
@@ -385,13 +399,17 @@ export class PageEditorPage {
 		await field.waitFor();
 
 		if (valueFromStylebook) {
-			await field
-				.getByLabel('Value from Stylebook', {exact: true})
+			await field.getByLabel('Select Color', {exact: true}).click();
+
+			await this.page
+				.getByRole('tab', {name: 'Value from Stylebook'})
 				.click();
 
-			const valueButton = this.page.getByTitle(value as string, {
-				exact: true,
-			});
+			const valueButton = this.page
+				.locator('.show')
+				.getByTitle(value as string, {
+					exact: true,
+				});
 
 			await valueButton.click();
 		}
@@ -446,10 +464,10 @@ export class PageEditorPage {
 		if (unit) {
 			await this.page
 				.locator('.page-editor__spacing-selector__dropdown')
-				.getByRole('button', {name: 'Select a unit'})
+				.getByRole('combobox', {name: 'Select a unit'})
 				.click();
 
-			await this.page.getByRole('menuitem', {name: unit}).click();
+			await this.page.getByRole('option', {name: unit}).click();
 
 			const input = this.page.getByRole(
 				unit === 'custom' ? 'textbox' : 'spinbutton',
@@ -999,7 +1017,7 @@ export class PageEditorPage {
 		await expect(async () => {
 			await this.page.keyboard.press('Escape');
 
-			await this.waitForChangesSaved({timeout: 2000});
+			await this.waitForChangesSaved({timeout: 3000});
 
 			await expect(editor).not.toBeVisible({
 				timeout: 1000,
@@ -1389,7 +1407,12 @@ export class PageEditorPage {
 		await this.selectFragment(fragmentId);
 		await this.goToConfigurationTab('Styles');
 
-		await this.page.getByLabel(spacingType, {exact: true}).click();
+		await clickAndExpectToBeVisible({
+			target: this.page
+				.locator('.dropdown-menu')
+				.getByText('Existing tokens'),
+			trigger: this.page.getByLabel(spacingType, {exact: true}),
+		});
 	}
 
 	async pasteFragment(fragmentId: string) {
@@ -1483,7 +1506,7 @@ export class PageEditorPage {
 
 			await input.press('Enter', {timeout: 2000});
 
-			await this.waitForChangesSaved({timeout: 2000});
+			await this.waitForChangesSaved({timeout: 4000});
 		}).toPass();
 	}
 
@@ -2008,6 +2031,10 @@ export class PageEditorPage {
 		await this.page.goto(
 			`/web${siteUrl || '/guest'}/${layoutName}?${editMode ? 'p_l_mode=edit' : ''}`
 		);
+
+		// Prevent unintended hover effects on the page
+
+		await this.page.getByLabel('Control Menu').hover();
 
 		if (editMode) {
 			await this.page.waitForFunction((sidebarWidth) => {

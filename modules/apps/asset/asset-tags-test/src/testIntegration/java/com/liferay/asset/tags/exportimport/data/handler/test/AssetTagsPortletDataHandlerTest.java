@@ -27,10 +27,16 @@ import com.liferay.exportimport.kernel.staging.constants.StagingConstants;
 import com.liferay.exportimport.report.constants.ExportImportReportEntryConstants;
 import com.liferay.exportimport.report.model.ExportImportReportEntry;
 import com.liferay.exportimport.report.service.ExportImportReportEntryLocalService;
+import com.liferay.exportimport.test.util.ExportImportTestUtil;
 import com.liferay.exportimport.test.util.lar.BasePortletDataHandlerTestCase;
+import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.backgroundtask.BackgroundTask;
+import com.liferay.portal.kernel.backgroundtask.BackgroundTaskManagerUtil;
+import com.liferay.portal.kernel.backgroundtask.constants.BackgroundTaskConstants;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupConstants;
+import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.service.GroupServiceUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
@@ -50,7 +56,9 @@ import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import java.io.File;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -79,17 +87,9 @@ public class AssetTagsPortletDataHandlerTest
 		super.setUp();
 	}
 
-	@FeatureFlags(
-		featureFlags = {
-			@FeatureFlag("LPD-17564"), @FeatureFlag("LPD-35443"),
-			@FeatureFlag("LPD-35914")
-		}
-	)
+	@FeatureFlag("LPD-17564")
 	@Test
 	public void testAssetTagExportImportReportEntries() throws Exception {
-		FeatureFlagTestUtil.invokeFeatureFlagListeners(
-			TestPropsValues.getCompanyId(), true, "LPD-35914");
-
 		AssetTag assetTag = _addTag();
 
 		File larFile = _exportLayout();
@@ -123,22 +123,76 @@ public class AssetTagsPortletDataHandlerTest
 							" already exists") &&
 					(exportImportReportEntry.getType() ==
 						ExportImportReportEntryConstants.TYPE_ERROR)));
-
-		FeatureFlagTestUtil.invokeFeatureFlagListeners(
-			TestPropsValues.getCompanyId(), false, "LPD-35914");
 	}
 
-	@FeatureFlags(
-		featureFlags = {
-			@FeatureFlag("LPD-17564"), @FeatureFlag("LPD-35443"),
-			@FeatureFlag("LPD-35914")
-		}
-	)
+	@FeatureFlag("LPD-17564")
+	@Test
+	public void testAssetTagImportCompletedWithErrors() throws Exception {
+		AssetTag assetTag = _addTag();
+
+		Layout layout = LayoutTestUtil.addTypePortletLayout(stagingGroup);
+
+		Map<String, String[]> parameterMap = HashMapBuilder.put(
+			PortletDataHandlerKeys.PORTLET_DATA,
+			new String[] {Boolean.TRUE.toString()}
+		).put(
+			PortletDataHandlerKeys.PORTLET_DATA + "_" +
+				AssetTagsAdminPortletKeys.ASSET_TAGS_ADMIN,
+			new String[] {Boolean.TRUE.toString()}
+		).build();
+
+		ExportImportConfiguration exportImportConfiguration =
+			_exportImportConfigurationLocalService.
+				addDraftExportImportConfiguration(
+					TestPropsValues.getUserId(),
+					ExportImportConfigurationConstants.TYPE_EXPORT_PORTLET,
+					ExportImportConfigurationSettingsMapFactoryUtil.
+						buildExportPortletSettingsMap(
+							TestPropsValues.getUser(), layout.getPlid(),
+							stagingGroup.getGroupId(),
+							AssetTagsAdminPortletKeys.ASSET_TAGS_ADMIN,
+							parameterMap, StringPool.BLANK));
+
+		File larFile = _exportImportLocalService.exportPortletInfoAsFile(
+			exportImportConfiguration);
+
+		assetTag.setExternalReferenceCode(RandomTestUtil.randomString());
+
+		_assetTagLocalService.updateAssetTag(assetTag);
+
+		exportImportConfiguration =
+			_exportImportConfigurationLocalService.
+				addDraftExportImportConfiguration(
+					TestPropsValues.getUserId(),
+					ExportImportConfigurationConstants.TYPE_IMPORT_PORTLET,
+					ExportImportConfigurationSettingsMapFactoryUtil.
+						buildImportPortletSettingsMap(
+							TestPropsValues.getUser(), layout.getPlid(),
+							stagingGroup.getGroupId(),
+							AssetTagsAdminPortletKeys.ASSET_TAGS_ADMIN,
+							parameterMap));
+
+		long backgroundTaskId =
+			_exportImportLocalService.importPortletInfoInBackground(
+				TestPropsValues.getUserId(), exportImportConfiguration,
+				larFile);
+
+		ExportImportTestUtil.retryAssert(
+			1, TimeUnit.SECONDS, 5, TimeUnit.SECONDS,
+			() -> {
+				BackgroundTask backgroundTask =
+					BackgroundTaskManagerUtil.getBackgroundTask(
+						backgroundTaskId);
+
+				Assert.assertEquals(
+					BackgroundTaskConstants.STATUS_COMPLETED_WITH_ERRORS,
+					backgroundTask.getStatus());
+			});
+	}
+
+	@FeatureFlag("LPD-17564")
 	@Test
 	public void testExportImportAssetTag() throws Exception {
-		FeatureFlagTestUtil.invokeFeatureFlagListeners(
-			TestPropsValues.getCompanyId(), true, "LPD-35914");
-
 		AssetTag assetTag = _addTag();
 
 		File larFile = _exportLayout();
@@ -155,14 +209,11 @@ public class AssetTagsPortletDataHandlerTest
 			_assetTagLocalService.fetchAssetTagByExternalReferenceCode(
 				assetTag.getExternalReferenceCode(),
 				stagingGroup.getGroupId()));
-
-		FeatureFlagTestUtil.invokeFeatureFlagListeners(
-			TestPropsValues.getCompanyId(), false, "LPD-35914");
 	}
 
 	@FeatureFlags(
 		featureFlags = {
-			@FeatureFlag(value = "LPD-11235"),
+			@FeatureFlag(enable = false, value = "LPD-11235"),
 			@FeatureFlag(value = "LPD-17564"), @FeatureFlag(value = "LPD-34594")
 		}
 	)

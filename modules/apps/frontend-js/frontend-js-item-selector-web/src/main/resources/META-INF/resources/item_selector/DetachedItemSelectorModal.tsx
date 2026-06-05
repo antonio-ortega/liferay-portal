@@ -6,16 +6,12 @@
 import {useModal} from '@clayui/modal';
 import React, {useEffect} from 'react';
 
-import ItemSelectorModal, {IItemSelectorModalProps} from './ItemSelectorModal';
+import ItemSelectorModal from './ItemSelectorModal';
+import {TDetachedItemSelectorModal} from './types';
 
-export type TDetachedItemSelectorModal<T> = Omit<
-	IItemSelectorModalProps<T>,
-	'observer' | 'onOpenChange' | 'open'
->;
-
-function DetachedItemSelectorModal<T extends Record<string, any>>(
+const DetachedItemSelectorModal = <T extends Record<string, any>>(
 	props: TDetachedItemSelectorModal<T>
-) {
+) => {
 	const {observer, onOpenChange, open} = useModal();
 
 	useEffect(() => {
@@ -25,7 +21,7 @@ function DetachedItemSelectorModal<T extends Record<string, any>>(
 	return (
 		<>
 			{open && (
-				<ItemSelectorModal
+				<ItemSelectorModal<T>
 					{...props}
 					observer={observer}
 					onOpenChange={onOpenChange}
@@ -34,6 +30,6 @@ function DetachedItemSelectorModal<T extends Record<string, any>>(
 			)}
 		</>
 	);
-}
+};
 
 export default DetachedItemSelectorModal;

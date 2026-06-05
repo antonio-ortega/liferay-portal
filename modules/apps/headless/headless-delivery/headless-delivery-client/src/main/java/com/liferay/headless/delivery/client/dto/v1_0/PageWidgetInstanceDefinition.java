@@ -209,3 +209,4 @@ public class PageWidgetInstanceDefinition implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1113481343

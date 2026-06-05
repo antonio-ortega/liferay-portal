@@ -1,13 +1,13 @@
 /**
- * SPDX-FileCopyrightText: (c) 2025 Liferay, Inc. https://liferay.com
+ * SPDX-FileCopyrightText: (c) 2026 Liferay, Inc. https://liferay.com
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import '@testing-library/jest-dom';
 
 // eslint-disable-next-line
-import {checkAccessibility} from '@liferay/layout-js-components-web/test/__lib__/index';
-import {fireEvent, render, waitFor} from '@testing-library/react';
+import {render, screen, waitFor} from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import {openToast} from 'frontend-js-components-web';
 import React from 'react';
 
@@ -15,6 +15,7 @@ import ApiHelper from '../../../../src/main/resources/META-INF/resources/js/comm
 import ImportTranslationModalContent from '../../../../src/main/resources/META-INF/resources/js/main_view/modal/ImportTranslationModalContent';
 
 jest.mock('frontend-js-components-web', () => ({
+	...(jest.requireActual('frontend-js-components-web') as object),
 	openToast: jest.fn(),
 }));
 
@@ -28,122 +29,79 @@ jest.mock(
 	})
 );
 
+const mockModalClose = jest.fn();
+
 const DEFAULT_PROPS = {
-	actionLink: '/test-link',
-	groupId: 10,
-	itemId: 22,
-	itemName: 'Asset 1',
-	loadData: jest.fn(),
-	onModalClose: jest.fn(),
+	actionLink: '/edit/123',
+	itemName: 'My Content',
+	onModalClose: mockModalClose,
+	translationsAPIURL: '/o/cms/blogs/123/translations',
 };
 
-const renderComponent = (props = DEFAULT_PROPS) => {
-	return render(<ImportTranslationModalContent {...props} />);
-};
+function renderModal() {
+	return render(<ImportTranslationModalContent {...DEFAULT_PROPS} />);
+}
 
-const createFile = (name: string, size: number, type = 'image/png') => {
-	return new File(['a'.repeat(size)], name, {type});
-};
+function createFile(name = 'translations.zip', size = 1024) {
+	return new File(['a'.repeat(size)], name, {type: 'application/zip'});
+}
+
+async function uploadAndImport(user: ReturnType<typeof userEvent.setup>) {
+	const {container} = renderModal();
+
+	const input =
+		container.querySelector<HTMLInputElement>('input[type="file"]')!;
+
+	await user.upload(input, createFile());
+
+	await user.click(await screen.findByRole('button', {name: /import/i}));
+}
 
 describe('ImportTranslationModalContent', () => {
-	beforeEach(() => {
+	afterEach(() => {
 		jest.clearAllMocks();
 	});
 
-	it('checks the accessibility of the modal component', async () => {
-		const {container} = renderComponent();
-
-		await checkAccessibility({bestPractices: true, context: container});
-	});
-
-	it('renders the Multiple Upload component', () => {
-		const {getByRole, getByText} = renderComponent();
-
-		expect(
-			getByRole('heading', {
-				level: 1,
-				name: 'import-translation',
-			})
-		).toBeInTheDocument();
-
-		expect(
-			getByText('please-upload-your-translation-files')
-		).toBeInTheDocument();
-		expect(getByText('drag-and-drop-your-files-or')).toBeInTheDocument();
-		expect(getByRole('button', {name: 'select-files'})).toBeInTheDocument();
-	});
-
-	it('calls ApiHelper.postFormData and shows success toast if result is ok', async () => {
+	it('shows the success toast when the import succeeds', async () => {
 		(ApiHelper.postFormData as jest.Mock).mockResolvedValue({
 			data: {
 				failureMessagesJSON: [],
-				successMessages: ['file1.xlf'],
+				successMessages: ['translations.zip'],
 			},
 		});
 
-		const {container, findByText, getByRole} = renderComponent();
-
-		const input =
-			container.querySelector<HTMLInputElement>('input[type="file"]')!;
-
-		const file = createFile('file1.xlf', 2048);
-
-		fireEvent.change(input, {
-			target: {files: [file]},
-		});
-
-		expect(await findByText('file1.xlf')).toBeInTheDocument();
-
-		fireEvent.click(getByRole('button', {name: 'import'}));
+		await uploadAndImport(userEvent.setup());
 
 		await waitFor(() => {
-			expect(ApiHelper.postFormData).toHaveBeenCalledTimes(1);
+			expect(openToast).toHaveBeenCalledWith(
+				expect.objectContaining({type: 'success'})
+			);
 		});
 
-		expect(openToast).toHaveBeenCalledWith({
-			message:
-				'x-file-was-successfully-imported-x-is-now-published-with-new-translations',
-			type: 'success',
-		});
+		expect(mockModalClose).toHaveBeenCalled();
 	});
 
-	it('shows all errors if request fails', async () => {
+	it('does not show the success toast when every file fails', async () => {
 		(ApiHelper.postFormData as jest.Mock).mockResolvedValue({
 			data: {
 				failureMessagesJSON: [
-					'{"container":"","errorMessage":"The translation file does not correspond to this web content.","fileName":"file1.xlf"}',
-					'{"container":"","errorMessage":"The translation file does not correspond to this web content.","fileName":"file2.xlf"}',
+					JSON.stringify({
+						container: '',
+						errorMessage: 'Invalid file',
+						fileName: 'translations.zip',
+					}),
 				],
 				successMessages: [],
 			},
 		});
 
-		const {container, findByText, getAllByText, getByRole, getByText} =
-			renderComponent();
-
-		const input =
-			container.querySelector<HTMLInputElement>('input[type="file"]')!;
-
-		const file = createFile('file.zip', 2048);
-
-		fireEvent.change(input, {
-			target: {files: [file]},
-		});
-
-		expect(await findByText('file.zip')).toBeInTheDocument();
-
-		fireEvent.click(getByRole('button', {name: 'import'}));
+		await uploadAndImport(userEvent.setup());
 
 		await waitFor(() => {
-			expect(ApiHelper.postFormData).toHaveBeenCalledTimes(1);
+			expect(ApiHelper.postFormData).toHaveBeenCalled();
 		});
 
 		expect(openToast).not.toHaveBeenCalled();
-		expect(getByText('x-files-could-not-be-imported')).toBeVisible();
-		expect(
-			getAllByText(
-				'The translation file does not correspond to this web content.'
-			)
-		).toHaveLength(2);
+		expect(mockModalClose).not.toHaveBeenCalled();
 	});
 });

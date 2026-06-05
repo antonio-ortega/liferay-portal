@@ -19,7 +19,7 @@ export const test = mergeTests(
 	apiHelpersTest,
 	dataApiHelpersTest,
 	loginTest(),
-	headlessBuilderPagesTest(),
+	headlessBuilderPagesTest({}),
 	headlessDiscoveryPagesTest
 );
 

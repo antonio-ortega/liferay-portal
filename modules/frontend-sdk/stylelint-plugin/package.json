@@ -1,0 +1,15 @@
+{
+	"main": "./index.js",
+	"name": "@liferay/stylelint-plugin",
+	"peerDependencies": {
+		"stylelint": "^13.2.0"
+	},
+	"scripts": {
+		"build": "true",
+		"format": "node-scripts format",
+		"format:check": "node-scripts format --check",
+		"postversion": "npx liferay-js-publish",
+		"preversion": "yarn run format:check"
+	},
+	"version": "1.1.0"
+}

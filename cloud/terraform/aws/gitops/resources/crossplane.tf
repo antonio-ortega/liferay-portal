@@ -1,309 +1,74 @@
+resource "aws_iam_policy" "provider_aws_backup_policy" {
+	name="${local.cluster_name}-provider-aws-backup"
+	policy=data.aws_iam_policy_document.provider_aws_backup_policy_document.json
+}
+resource "aws_iam_policy" "provider_aws_cloudwatchlogs_policy" {
+	name="${local.cluster_name}-provider-aws-cloudwatchlogs"
+	policy=data.aws_iam_policy_document.provider_aws_cloudwatchlogs_policy_document.json
+}
 resource "aws_iam_policy" "provider_aws_ec2_policy" {
 	name="${local.cluster_name}-provider-aws-ec2"
-	policy=jsonencode({
-		Statement=[
-			{
-				Action=[
-					"ec2:AuthorizeSecurityGroupIngress",
-					"ec2:CreateNetworkInterface",
-					"ec2:CreateSecurityGroup",
-					"ec2:CreateTags",
-					"ec2:DeleteNetworkInterface",
-					"ec2:DeleteSecurityGroup",
-					"ec2:DescribeAvailabilityZones",
-					"ec2:DescribeNetworkInterfaces",
-					"ec2:DescribeSecurityGroupRules",
-					"ec2:DescribeSecurityGroups",
-					"ec2:DescribeSubnets",
-					"ec2:DescribeVpcs",
-					"ec2:DescribeVpcs",
-					"ec2:ModifyNetworkInterfaceAttribute",
-					"ec2:ModifySecurityGroupRules",
-					"ec2:RevokeSecurityGroupIngress",
-				]
-				Effect="Allow"
-				Resource="*"
-			},
-		]
-		Version="2012-10-17"
-	})
+	policy=data.aws_iam_policy_document.provider_aws_ec2_policy_document.json
 }
 resource "aws_iam_policy" "provider_aws_iam_policy" {
 	name="${local.cluster_name}-provider-aws-iam"
-	policy=jsonencode({
-		Statement=[
-			{
-				Action=[
-					"iam:AttachRolePolicy",
-					"iam:AttachUserPolicy",
-					"iam:CreateAccessKey",
-					"iam:CreatePolicy",
-					"iam:CreateUser",
-					"iam:DeleteAccessKey",
-					"iam:DeletePolicy",
-					"iam:DeleteUser",
-					"iam:DeleteUserPolicy",
-					"iam:DetachRolePolicy",
-					"iam:DetachUserPolicy",
-					"iam:GetAccessKeyLastUsed",
-					"iam:GetPolicy",
-					"iam:GetPolicyVersion",
-					"iam:GetUser",
-					"iam:GetUserPolicy",
-					"iam:ListAccessKeys",
-					"iam:ListAttachedRolePolicies",
-					"iam:ListAttachedUserPolicies",
-					"iam:ListGroupsForUser",
-					"iam:ListPolicyVersions",
-					"iam:ListUserPolicies",
-					"iam:PutUserPolicy",
-					"iam:TagPolicy",
-					"iam:TagUser",
-					"iam:UntagUser",
-					"iam:UpdateAccessKey",
-					"iam:UpdateUser",
-				]
-				Effect="Allow"
-				Resource="*"
-			},
-		]
-		Version="2012-10-17"
-	})
+	policy=data.aws_iam_policy_document.provider_aws_iam_policy_document.json
+}
+resource "aws_iam_policy" "provider_aws_kms_policy" {
+	name="${local.cluster_name}-provider-aws-kms"
+	policy=data.aws_iam_policy_document.provider_aws_kms_policy_document.json
 }
 resource "aws_iam_policy" "provider_aws_opensearch_policy" {
 	name="${local.cluster_name}-provider-aws-opensearch"
-	policy=jsonencode({
-		Statement=[
-			{
-				Action=[
-					"es:AddTags",
-					"es:CreateDomain",
-					"es:DeleteDomain",
-					"es:DescribeDomain",
-					"es:DescribeDomainConfig",
-					"es:DescribeDomainHealth",
-					"es:DescribeDomainNodes",
-					"es:ESHttpGet",
-					"es:ESHttpPut",
-					"es:ListDomainNames",
-					"es:ListTags",
-					"es:RemoveTags",
-					"es:UpdateDomainConfig",
-				]
-				Effect="Allow"
-				Resource="*"
-			},
-		]
-		Version="2012-10-17"
-	})
+	policy=data.aws_iam_policy_document.provider_aws_opensearch_policy_document.json
 }
 resource "aws_iam_policy" "provider_aws_rds_policy" {
 	name="${local.cluster_name}-provider-aws-rds"
-	policy=jsonencode({
-		Statement=[
-			{
-				Action=[
-					"rds:AddTagsToResource",
-					"rds:CreateDBInstance",
-					"rds:CreateDBSubnetGroup",
-					"rds:DeleteDBInstance",
-					"rds:DeleteDBSubnetGroup",
-					"rds:DescribeDBInstances",
-					"rds:DescribeDBParameters",
-					"rds:DescribeDBSubnetGroups",
-					"rds:DescribeEngineDefaultParameters",
-					"rds:ListTagsForResource",
-					"rds:ModifyDBInstance",
-					"rds:ModifyDBSubnetGroup",
-				]
-				Effect="Allow"
-				Resource="*"
-			},
-			{
-				Action=[
-					"ec2:AuthorizeSecurityGroupIngress",
-					"ec2:CreateSecurityGroup",
-					"ec2:CreateTags",
-					"ec2:DescribeSecurityGroups",
-				]
-				Effect="Allow"
-				Resource="*"
-			},
-		]
-		Version="2012-10-17"
-	})
+	policy=data.aws_iam_policy_document.provider_aws_rds_policy_document.json
 }
 resource "aws_iam_policy" "provider_aws_s3_policy" {
 	name="${local.cluster_name}-provider-aws-s3"
-	policy=jsonencode({
-		Statement=[
-			{
-				"Action": [
-					"s3:AbortMultipartUpload",
-					"s3:CreateBucket",
-					"s3:DeleteBucket",
-					"s3:GetAccelerateConfiguration",
-					"s3:GetBucketAcl",
-					"s3:GetBucketCORS",
-					"s3:GetBucketLocation",
-					"s3:GetBucketLogging",
-					"s3:GetBucketObjectLockConfiguration",
-					"s3:GetBucketPolicy",
-					"s3:GetBucketPublicAccessBlock",
-					"s3:GetBucketRequestPayment",
-					"s3:GetBucketTagging",
-					"s3:GetBucketVersioning",
-					"s3:GetBucketWebsite",
-					"s3:GetEncryptionConfiguration",
-					"s3:GetLifecycleConfiguration",
-					"s3:GetReplicationConfiguration",
-					"s3:ListBucket",
-					"s3:ListBucketMultipartUploads",
-					"s3:PutBucketAcl",
-					"s3:PutBucketCORS",
-					"s3:PutBucketPolicy",
-					"s3:PutBucketPublicAccessBlock",
-					"s3:PutBucketTagging",
-					"s3:PutBucketVersioning",
-					"s3:PutBucketWebsite",
-					"s3:PutEncryptionConfiguration",
-					"s3:PutLifecycleConfiguration",
-				]
-				"Effect": "Allow"
-				"Resource": ["arn:aws:s3:::*"]
-			},
-			{
-				"Action": [
-					"s3:DeleteObject",
-					"s3:GetObject",
-					"s3:PutObject",
-				],
-				"Effect": "Allow",
-				"Resource": ["arn:aws:s3:::*/*"]
-			},
-		]
-		Version="2012-10-17"
-	})
+	policy=data.aws_iam_policy_document.provider_aws_s3_policy_document.json
+}
+resource "aws_iam_role" "provider_aws_backup_role" {
+	assume_role_policy=data.aws_iam_policy_document.provider_aws_backup_assume_role_policy_document.json
+	name="${local.cluster_name}-provider-aws-backup-role"
+}
+resource "aws_iam_role" "provider_aws_cloudwatchlogs_role" {
+	assume_role_policy=data.aws_iam_policy_document.provider_aws_cloudwatchlogs_assume_role_policy_document.json
+	name="${local.cluster_name}-provider-aws-cloudwatchlogs-role"
 }
 resource "aws_iam_role" "provider_aws_ec2_role" {
-	assume_role_policy=jsonencode(
-		{
-			Statement=[
-				{
-					Action="sts:AssumeRoleWithWebIdentity"
-					Condition={
-						StringEquals={
-							"${local.oidc_provider}:aud"="sts.amazonaws.com"
-						}
-						StringLike={
-							"${local.oidc_provider}:sub"="system:serviceaccount:${var.crossplane_namespace}:provider-aws-ec2*"
-						}
-					}
-					Effect="Allow"
-					Principal={
-						Federated="arn:aws:iam::${local.account_id}:oidc-provider/${local.oidc_provider}"
-					}
-				},
-			]
-			Version="2012-10-17"
-		})
+	assume_role_policy=data.aws_iam_policy_document.provider_aws_ec2_assume_role_policy_document.json
 	name="${local.cluster_name}-provider-aws-ec2-role"
 }
 resource "aws_iam_role" "provider_aws_iam_role" {
-	assume_role_policy=jsonencode(
-		{
-			Statement=[
-				{
-					Action="sts:AssumeRoleWithWebIdentity"
-					Condition={
-						StringEquals={
-							"${local.oidc_provider}:aud"="sts.amazonaws.com"
-						}
-						StringLike={
-							"${local.oidc_provider}:sub"="system:serviceaccount:${var.crossplane_namespace}:provider-aws-iam*"
-						}
-					}
-					Effect="Allow"
-					Principal={
-						Federated="arn:aws:iam::${local.account_id}:oidc-provider/${local.oidc_provider}"
-					}
-				},
-			]
-			Version="2012-10-17"
-		})
+	assume_role_policy=data.aws_iam_policy_document.provider_aws_iam_assume_role_policy_document.json
 	name="${local.cluster_name}-provider-aws-iam-role"
 }
+resource "aws_iam_role" "provider_aws_kms_role" {
+	assume_role_policy=data.aws_iam_policy_document.provider_aws_kms_assume_role_policy_document.json
+	name="${local.cluster_name}-provider-aws-kms-role"
+}
 resource "aws_iam_role" "provider_aws_opensearch_role" {
-	assume_role_policy=jsonencode(
-		{
-			Statement=[
-				{
-					Action="sts:AssumeRoleWithWebIdentity"
-					Condition={
-						StringEquals={
-							"${local.oidc_provider}:aud"="sts.amazonaws.com"
-						}
-						StringLike={
-							"${local.oidc_provider}:sub"="system:serviceaccount:${var.crossplane_namespace}:provider-aws-opensearch*"
-						}
-					}
-					Effect="Allow"
-					Principal={
-						Federated="arn:aws:iam::${local.account_id}:oidc-provider/${local.oidc_provider}"
-					}
-				},
-			]
-			Version="2012-10-17"
-		})
+	assume_role_policy=data.aws_iam_policy_document.provider_aws_opensearch_assume_role_policy_document.json
 	name="${local.cluster_name}-provider-aws-opensearch-role"
 }
 resource "aws_iam_role" "provider_aws_rds_role" {
-	assume_role_policy=jsonencode(
-		{
-			Statement=[
-				{
-					Action="sts:AssumeRoleWithWebIdentity"
-					Condition={
-						StringEquals={
-							"${local.oidc_provider}:aud"="sts.amazonaws.com"
-						}
-						StringLike={
-							"${local.oidc_provider}:sub"="system:serviceaccount:${var.crossplane_namespace}:provider-aws-rds*"
-						}
-					}
-					Effect="Allow"
-					Principal={
-						Federated="arn:aws:iam::${local.account_id}:oidc-provider/${local.oidc_provider}"
-					}
-				},
-			]
-			Version="2012-10-17"
-		})
+	assume_role_policy=data.aws_iam_policy_document.provider_aws_rds_assume_role_policy_document.json
 	name="${local.cluster_name}-provider-aws-rds-role"
 }
 resource "aws_iam_role" "provider_aws_s3_role" {
-	assume_role_policy=jsonencode(
-		{
-			Statement=[
-				{
-					Action="sts:AssumeRoleWithWebIdentity"
-					Condition={
-						StringEquals={
-							"${local.oidc_provider}:aud"="sts.amazonaws.com"
-						}
-						StringLike={
-							"${local.oidc_provider}:sub"="system:serviceaccount:${var.crossplane_namespace}:provider-aws-s3*"
-						}
-					}
-					Effect="Allow"
-					Principal={
-						Federated="arn:aws:iam::${local.account_id}:oidc-provider/${local.oidc_provider}"
-					}
-				},
-			]
-			Version="2012-10-17"
-		})
+	assume_role_policy=data.aws_iam_policy_document.provider_aws_s3_assume_role_policy_document.json
 	name="${local.cluster_name}-provider-aws-s3-role"
+}
+resource "aws_iam_role_policy_attachment" "provider_aws_backup_attachment" {
+	policy_arn=aws_iam_policy.provider_aws_backup_policy.arn
+	role=aws_iam_role.provider_aws_backup_role.name
+}
+resource "aws_iam_role_policy_attachment" "provider_aws_cloudwatchlogs_attachment" {
+	policy_arn=aws_iam_policy.provider_aws_cloudwatchlogs_policy.arn
+	role=aws_iam_role.provider_aws_cloudwatchlogs_role.name
 }
 resource "aws_iam_role_policy_attachment" "provider_aws_ec2_attachment" {
 	policy_arn=aws_iam_policy.provider_aws_ec2_policy.arn
@@ -312,6 +77,10 @@ resource "aws_iam_role_policy_attachment" "provider_aws_ec2_attachment" {
 resource "aws_iam_role_policy_attachment" "provider_aws_iam_attachment" {
 	policy_arn=aws_iam_policy.provider_aws_iam_policy.arn
 	role=aws_iam_role.provider_aws_iam_role.name
+}
+resource "aws_iam_role_policy_attachment" "provider_aws_kms_attachment" {
+	policy_arn=aws_iam_policy.provider_aws_kms_policy.arn
+	role=aws_iam_role.provider_aws_kms_role.name
 }
 resource "aws_iam_role_policy_attachment" "provider_aws_opensearch_attachment" {
 	policy_arn=aws_iam_policy.provider_aws_opensearch_policy.arn
@@ -325,10 +94,6 @@ resource "aws_iam_role_policy_attachment" "provider_aws_s3_attachment" {
 	policy_arn=aws_iam_policy.provider_aws_s3_policy.arn
 	role=aws_iam_role.provider_aws_s3_role.name
 }
-resource "aws_iam_service_linked_role" "opensearch_linked_role" {
-	aws_service_name="opensearchservice.amazonaws.com"
-	count=local.should_create_opensearch_linked_role ? 1 : 0
-}
 resource "kubernetes_manifest" "function_auto_ready" {
 	manifest={
 		apiVersion="pkg.crossplane.io/v1beta1"
@@ -338,6 +103,56 @@ resource "kubernetes_manifest" "function_auto_ready" {
 		}
 		spec={
 			package="xpkg.upbound.io/upbound/function-auto-ready:v0.6.0"
+			runtimeConfigRef={
+				name="function-auto-ready-runtime-config"
+			}
+		}
+	}
+	provider=kubernetes
+}
+resource "kubernetes_manifest" "function_auto_ready_runtime_config" {
+	manifest={
+		apiVersion="pkg.crossplane.io/v1beta1"
+		kind="DeploymentRuntimeConfig"
+		metadata={
+			name="function-auto-ready-runtime-config"
+		}
+		spec={
+			deploymentTemplate={
+				metadata={
+					annotations=local.deploymentruntimeconfig_opentelemetry_annotations
+				}
+				spec={
+					selector={
+						matchLabels={
+							"pkg.crossplane.io/function"="function-auto-ready"
+						}
+					}
+					template={
+						metadata={
+							annotations=local.deploymentruntimeconfig_opentelemetry_annotations
+						}
+						spec={
+							containers=[
+								{
+									name="package-runtime"
+									resources={
+										limits={
+											memory="256Mi"
+										}
+										requests={
+											cpu="15m"
+											memory="128Mi"
+										}
+									}
+									securityContext=local.default_crossplane_container_security_context
+								},
+							],
+							securityContext=local.default_crossplane_pod_security_context
+						}
+					}
+				}
+			}
 		}
 	}
 	provider=kubernetes
@@ -351,6 +166,56 @@ resource "kubernetes_manifest" "function_go_templating" {
 		}
 		spec={
 			package="xpkg.upbound.io/crossplane-contrib/function-go-templating:v0.11.3"
+			runtimeConfigRef={
+				name="function-go-templating-runtime-config"
+			}
+		}
+	}
+	provider=kubernetes
+}
+resource "kubernetes_manifest" "function_go_templating_runtime_config" {
+	manifest={
+		apiVersion="pkg.crossplane.io/v1beta1"
+		kind="DeploymentRuntimeConfig"
+		metadata={
+			name="function-go-templating-runtime-config"
+		}
+		spec={
+			deploymentTemplate={
+				metadata={
+					annotations=local.deploymentruntimeconfig_opentelemetry_annotations
+				}
+				spec={
+					selector={
+						matchLabels={
+							"pkg.crossplane.io/function"="function-go-templating"
+						}
+					}
+					template={
+						metadata={
+							annotations=local.deploymentruntimeconfig_opentelemetry_annotations
+						}
+						spec={
+							containers=[
+								{
+									name="package-runtime"
+									resources={
+										limits={
+											memory="512Mi"
+										}
+										requests={
+											cpu="15m"
+											memory="128Mi"
+										}
+									}
+									securityContext=local.default_crossplane_container_security_context
+								},
+							],
+							securityContext=local.default_crossplane_pod_security_context
+						}
+					}
+				}
+			}
 		}
 	}
 	provider=kubernetes
@@ -364,6 +229,56 @@ resource "kubernetes_manifest" "function_tag_manager" {
 		}
 		spec={
 			package="xpkg.upbound.io/crossplane-contrib/function-tag-manager:v0.6.0"
+			runtimeConfigRef={
+				name="function-tag-manager-runtime-config"
+			}
+		}
+	}
+	provider=kubernetes
+}
+resource "kubernetes_manifest" "function_tag_manager_runtime_config" {
+	manifest={
+		apiVersion="pkg.crossplane.io/v1beta1"
+		kind="DeploymentRuntimeConfig"
+		metadata={
+			name="function-tag-manager-runtime-config"
+		}
+		spec={
+			deploymentTemplate={
+				metadata={
+					annotations=local.deploymentruntimeconfig_opentelemetry_annotations
+				}
+				spec={
+					selector={
+						matchLabels={
+							"pkg.crossplane.io/function"="function-tag-manager"
+						}
+					}
+					template={
+						metadata={
+							annotations=local.deploymentruntimeconfig_opentelemetry_annotations
+						}
+						spec={
+							containers=[
+								{
+									name="package-runtime"
+									resources={
+										limits={
+											memory="256Mi"
+										}
+										requests={
+											cpu="15m"
+											memory="128Mi"
+										}
+									}
+									securityContext=local.default_crossplane_container_security_context
+								},
+							],
+							securityContext=local.default_crossplane_pod_security_context
+						}
+					}
+				}
+			}
 		}
 	}
 	provider=kubernetes

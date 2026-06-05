@@ -21,6 +21,7 @@ import com.liferay.osb.faro.contacts.demo.internal.data.creator.SalesforceIndivi
 import com.liferay.osb.faro.engine.client.constants.FieldMappingConstants;
 import com.liferay.osb.faro.engine.client.model.Author;
 import com.liferay.osb.faro.engine.client.model.Channel;
+import com.liferay.osb.faro.engine.client.model.ChannelsConfiguration;
 import com.liferay.osb.faro.engine.client.model.Credentials;
 import com.liferay.osb.faro.engine.client.model.DataSource;
 import com.liferay.osb.faro.engine.client.model.FieldMapping;
@@ -39,8 +40,8 @@ import com.liferay.osb.faro.util.FaroThreadLocal;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.util.HashMapBuilder;
-import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Time;
 
@@ -178,22 +179,17 @@ public class NaniteDemoCreatorService extends DemoCreatorService {
 	}
 
 	protected void createIndividualSegments(String channelId) throws Exception {
+		User user = userLocalService.getUserByEmailAddress(
+			portal.getDefaultCompanyId(), "test@liferay.com");
+
 		for (Map.Entry<String, String> individualSegment :
 				_individualSegments.entrySet()) {
 
-			Http.Options options = new Http.Options();
-
-			options.addPart("channelId", channelId);
-			options.addPart("filter", individualSegment.getValue());
-			options.addPart("name", individualSegment.getKey());
-			options.addPart("segmentType", IndividualSegment.Type.BATCH.name());
-			options.setHeaders(headers);
-			options.setLocation(
-				"http://localhost:8080/o/faro/contacts/" +
-					faroProject.getGroupId() + "/individual_segment");
-			options.setPost(true);
-
-			http.URLtoString(options);
+			contactsEngineClient.addIndividualSegment(
+				faroProject, user.getUserId(), channelId, null,
+				individualSegment.getValue(), false, individualSegment.getKey(),
+				IndividualSegment.Type.BATCH.name(), false,
+				IndividualSegment.Status.ACTIVE.name());
 		}
 	}
 
@@ -404,12 +400,17 @@ public class NaniteDemoCreatorService extends DemoCreatorService {
 					HashMapBuilder.<String, Object>put(
 						"channelId", individualSegment.getChannelId()
 					).put(
+						"externalReferenceCode",
+						individualSegment.getExternalReferenceCode()
+					).put(
 						"filter", individualSegment.getFilterString()
 					).put(
 						"id", individualSegment.getId()
 					).put(
 						"includeAnonymousUsers",
 						individualSegment.isIncludeAnonymousUsers()
+					).put(
+						"sequential", individualSegment.isSequential()
 					).build()
 				).build());
 		}
@@ -538,8 +539,8 @@ public class NaniteDemoCreatorService extends DemoCreatorService {
 
 		salesforceProvider.setAccountsConfiguration(accountsConfiguration);
 
-		SalesforceProvider.ChannelsConfiguration channelsConfiguration =
-			new SalesforceProvider.ChannelsConfiguration();
+		ChannelsConfiguration channelsConfiguration =
+			new ChannelsConfiguration();
 
 		channelsConfiguration.setEnableAllChannels(false);
 

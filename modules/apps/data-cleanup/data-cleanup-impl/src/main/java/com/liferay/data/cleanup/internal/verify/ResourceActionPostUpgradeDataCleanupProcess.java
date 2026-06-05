@@ -14,6 +14,7 @@ import com.liferay.portal.kernel.model.ResourceAction;
 import com.liferay.portal.kernel.security.permission.ResourceActionsUtil;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.upgrade.data.cleanup.util.DataCleanupLoggingUtil;
+import com.liferay.portal.kernel.util.Validator;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -67,10 +68,11 @@ public class ResourceActionPostUpgradeDataCleanupProcess
 			ResultSet resultSet1 = preparedStatement1.executeQuery()) {
 
 			while (resultSet1.next()) {
-				String name = resultSet1.getString(1);
+				String name = resultSet1.getString("name");
 
-				if (!name.startsWith("com.liferay.") &&
-					!name.startsWith("com_liferay_")) {
+				if (Validator.isNull(name) ||
+					(!name.startsWith("com.liferay.") &&
+					 !name.startsWith("com_liferay_"))) {
 
 					continue;
 				}
@@ -82,8 +84,8 @@ public class ResourceActionPostUpgradeDataCleanupProcess
 				preparedStatement2.setString(1, name);
 
 				try (ResultSet resultSet2 = preparedStatement2.executeQuery()) {
-					if (resultSet2.next() && _log.isInfoEnabled()) {
-						_log.info(
+					if (resultSet2.next() && _log.isDebugEnabled()) {
+						_log.debug(
 							StringBundler.concat(
 								"Resource action ", name,
 								" is not defined in any deployed module but ",

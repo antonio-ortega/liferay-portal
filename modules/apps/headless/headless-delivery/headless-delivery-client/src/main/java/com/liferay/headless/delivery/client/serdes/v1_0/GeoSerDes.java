@@ -220,3 +220,4 @@ public class GeoSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:1675837662

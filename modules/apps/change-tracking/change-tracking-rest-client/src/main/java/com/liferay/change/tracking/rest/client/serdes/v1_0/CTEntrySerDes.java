@@ -791,3 +791,4 @@ public class CTEntrySerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:1485797171

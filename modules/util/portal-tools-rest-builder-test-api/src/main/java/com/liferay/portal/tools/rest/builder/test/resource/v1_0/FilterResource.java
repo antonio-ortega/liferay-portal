@@ -150,3 +150,4 @@ public interface FilterResource {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:2029490126

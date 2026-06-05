@@ -15,12 +15,10 @@ import com.liferay.portal.kernel.service.VirtualHostLocalServiceUtil;
 import com.liferay.portal.kernel.service.VirtualHostLocalServiceWrapper;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
-import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsValues;
-import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.model.impl.VirtualHostImpl;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
@@ -38,8 +36,6 @@ import org.mockito.Mockito;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
-
-import org.springframework.mock.web.MockHttpServletRequest;
 
 /**
  * @author Tomas Polesovsky
@@ -81,18 +77,8 @@ public class PortalImplEscapeRedirectTest {
 
 		ServiceContext serviceContext = new ServiceContext();
 
-		serviceContext.setRequest(
-			new MockHttpServletRequest() {
-				{
-					setAttribute(
-						WebKeys.THEME_DISPLAY,
-						new ThemeDisplay() {
-							{
-								setPortalDomain(_HOSTNAME_PORTAL_DOMAIN);
-							}
-						});
-				}
-			});
+		serviceContext.setPortalURL(
+			"https://" + _HOSTNAME_PORTAL_DOMAIN + ":1234");
 
 		ServiceContextThreadLocal.pushServiceContext(serviceContext);
 	}
@@ -118,36 +104,40 @@ public class PortalImplEscapeRedirectTest {
 		// Allow request host header
 
 		Assert.assertEquals(
-			"https://" + _HOSTNAME_PORTAL_DOMAIN + ":8080",
+			"https://" + _HOSTNAME_PORTAL_DOMAIN + ":1234",
 			_portalImpl.escapeRedirect(
-				"https://" + _HOSTNAME_PORTAL_DOMAIN + ":8080"));
+				"https://" + _HOSTNAME_PORTAL_DOMAIN + ":1234"));
 
 		// Allow virtual host
 
 		Assert.assertEquals(
-			"https://" + _HOSTNAME_VIRTUAL_HOST + ":8080",
+			"https://" + _HOSTNAME_VIRTUAL_HOST + ":1234",
 			_portalImpl.escapeRedirect(
-				"https://" + _HOSTNAME_VIRTUAL_HOST + ":8080"));
+				"https://" + _HOSTNAME_VIRTUAL_HOST + ":1234"));
 
 		// Allowed domains
 
 		Assert.assertEquals(
 			"http://localhost", _portalImpl.escapeRedirect("http://localhost"));
+
 		Assert.assertEquals(
-			"https://localhost:8080/a/b;c=d?e=f&g=h#x=y",
+			"https://localhost:1234/a/b;c=d?e=f&g=h#x=y",
 			_portalImpl.escapeRedirect(
-				"https://localhost:8080/a/b;c=d?e=f&g=h#x=y"));
+				"https://localhost:1234/a/b;c=d?e=f&g=h#x=y"));
+
 		Assert.assertEquals(
 			"http://google.com",
 			_portalImpl.escapeRedirect("http://google.com"));
+
 		Assert.assertEquals(
-			"https://google.com:8080/a/b;c=d?e=f&g=h#x=y",
+			"https://google.com:1234/a/b;c=d?e=f&g=h#x=y",
 			_portalImpl.escapeRedirect(
-				"https://google.com:8080/a/b;c=d?e=f&g=h#x=y"));
+				"https://google.com:1234/a/b;c=d?e=f&g=h#x=y"));
+
 		Assert.assertNull(_portalImpl.escapeRedirect("http://liferay.com"));
 		Assert.assertNull(
 			_portalImpl.escapeRedirect(
-				"https://liferay.com:8080/a/b;c=d?e=f&g=h#x=y"));
+				"https://liferay.com:1234/a/b;c=d?e=f&g=h#x=y"));
 
 		// Disabled domains
 
@@ -198,10 +188,11 @@ public class PortalImplEscapeRedirectTest {
 			Assert.assertEquals(
 				"http://localhost",
 				_portalImpl.escapeRedirect("http://localhost"));
+
 			Assert.assertEquals(
-				"https://localhost:8080/a/b;c=d?e=f&g=h#x=y",
+				"https://localhost:1234/a/b;c=d?e=f&g=h#x=y",
 				_portalImpl.escapeRedirect(
-					"https://localhost:8080/a/b;c=d?e=f&g=h#x=y"));
+					"https://localhost:1234/a/b;c=d?e=f&g=h#x=y"));
 
 			Set<String> computerAddresses = _portalImpl.getComputerAddresses();
 
@@ -218,7 +209,7 @@ public class PortalImplEscapeRedirectTest {
 			Assert.assertNull(_portalImpl.escapeRedirect("http://liferay.com"));
 			Assert.assertNull(
 				_portalImpl.escapeRedirect(
-					"https://liferay.com:8080/a/b;c=d?e=f&g=h#x=y"));
+					"https://liferay.com:1234/a/b;c=d?e=f&g=h#x=y"));
 			Assert.assertNull(
 				_portalImpl.escapeRedirect("http://127.0.0.1suffix"));
 			Assert.assertNull(
@@ -316,28 +307,34 @@ public class PortalImplEscapeRedirectTest {
 		Assert.assertEquals(
 			"http://test.liferay.com",
 			_portalImpl.escapeRedirect("http://test.liferay.com"));
+
 		Assert.assertEquals(
-			"https://test.liferay.com:8080/a/b;c=d?e=f&g=h#x=y",
+			"https://test.liferay.com:1234/a/b;c=d?e=f&g=h#x=y",
 			_portalImpl.escapeRedirect(
-				"https://test.liferay.com:8080/a/b;c=d?e=f&g=h#x=y"));
+				"https://test.liferay.com:1234/a/b;c=d?e=f&g=h#x=y"));
+
 		Assert.assertEquals(
 			"http://second.test.liferay.com",
 			_portalImpl.escapeRedirect("http://second.test.liferay.com"));
+
 		Assert.assertEquals(
-			"https://second.test.liferay.com:8080/a;c=d?e=f&g=h#x=y",
+			"https://second.test.liferay.com:1234/a;c=d?e=f&g=h#x=y",
 			_portalImpl.escapeRedirect(
-				"https://second.test.liferay.com:8080/a;c=d?e=f&g=h#x=y"));
+				"https://second.test.liferay.com:1234/a;c=d?e=f&g=h#x=y"));
+
 		Assert.assertEquals(
 			"http://google.com",
 			_portalImpl.escapeRedirect("http://google.com"));
+
 		Assert.assertEquals(
-			"https://google.com:8080/a/b;c=d?e=f&g=h#x=y",
+			"https://google.com:1234/a/b;c=d?e=f&g=h#x=y",
 			_portalImpl.escapeRedirect(
-				"https://google.com:8080/a/b;c=d?e=f&g=h#x=y"));
+				"https://google.com:1234/a/b;c=d?e=f&g=h#x=y"));
+
 		Assert.assertNull(_portalImpl.escapeRedirect("http://liferay.com"));
 		Assert.assertNull(
 			_portalImpl.escapeRedirect(
-				"https://liferay.com:8080/a/b;c=d?e=f&g=h#x=y"));
+				"https://liferay.com:1234/a/b;c=d?e=f&g=h#x=y"));
 		Assert.assertNull(
 			_portalImpl.escapeRedirect("http://test.liferay.comsuffix"));
 		Assert.assertNull(
@@ -354,14 +351,13 @@ public class PortalImplEscapeRedirectTest {
 
 	private static final BundleContext _bundleContext =
 		SystemBundleUtil.getBundleContext();
-	private static ServiceRegistration<RedirectURLSettings>
-		_serviceRegistration;
 
 	private final PortalImpl _portalImpl = new PortalImpl();
 	private final MockedStatic<PrefsPropsUtil> _prefsPropsUtilMockedStatic =
 		Mockito.mockStatic(PrefsPropsUtil.class);
 	private final RedirectURLSettingsImpl _redirectURLSettingsImpl =
 		new RedirectURLSettingsImpl();
+	private ServiceRegistration<RedirectURLSettings> _serviceRegistration;
 
 	private static class RedirectURLSettingsImpl
 		implements RedirectURLSettings {

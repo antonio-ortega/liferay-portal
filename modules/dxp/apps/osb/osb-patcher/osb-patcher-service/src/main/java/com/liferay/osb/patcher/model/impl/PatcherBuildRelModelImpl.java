@@ -79,6 +79,8 @@ public class PatcherBuildRelModelImpl
 	public static final String TABLE_SQL_DROP =
 		"drop table OSBPatcher_PatcherBuildRel";
 
+	public static final String ENTITY_ALIAS = "patcherBuildRel";
+
 	public static final String ORDER_BY_JPQL =
 		" ORDER BY patcherBuildRel.patcherBuildRelId ASC";
 
@@ -665,3 +667,4 @@ public class PatcherBuildRelModelImpl
 	private PatcherBuildRel _escapedModel;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-654435464

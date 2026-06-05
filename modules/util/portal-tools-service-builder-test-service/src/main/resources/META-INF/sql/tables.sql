@@ -35,6 +35,12 @@ create table CacheMissEntry (
 	primary key (cacheMissEntryId, ctCollectionId)
 );
 
+create table CacheReplicatorEntry (
+	cacheReplicatorEntryId LONG not null primary key,
+	companyId LONG,
+	name VARCHAR(75) null
+);
+
 create table DSLQueryEntry (
 	dslQueryEntryId LONG not null primary key,
 	name VARCHAR(75) null
@@ -60,6 +66,16 @@ create table DefinedDefaultOrderEntry (
 	definedDefaultOrderEntryId LONG not null primary key,
 	modifiedDate DATE null,
 	name VARCHAR(75) null
+);
+
+create table DynamicQueryEntry (
+	dynamicQueryEntryId LONG not null primary key,
+	createDate DATE null,
+	modifiedDate DATE null,
+	amount LONG,
+	description VARCHAR(75) null,
+	name VARCHAR(75) null,
+	status INTEGER
 );
 
 create table ERCCompanyEntry (
@@ -141,8 +157,8 @@ create table LVEntry (
 	head BOOLEAN,
 	defaultLanguageId VARCHAR(75) null,
 	lvEntryId LONG not null primary key,
-	companyId LONG,
 	groupId LONG,
+	companyId LONG,
 	uniqueGroupKey VARCHAR(75) null
 );
 
@@ -175,8 +191,8 @@ create table LVEntryVersion (
 	uuid_ VARCHAR(75) null,
 	defaultLanguageId VARCHAR(75) null,
 	lvEntryId LONG,
-	companyId LONG,
 	groupId LONG,
+	companyId LONG,
 	uniqueGroupKey VARCHAR(75) null
 );
 

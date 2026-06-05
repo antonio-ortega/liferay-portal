@@ -219,18 +219,20 @@ public class ObjectEntryImpl extends ObjectEntryBaseImpl {
 					return String.valueOf(getObjectEntryId());
 				}
 
-				String title = String.valueOf(
-					ObjectEntryValuesUtil.getValue(
-						languageId, objectField, getIndexedValues()));
+				Object value = ObjectEntryValuesUtil.getValue(
+					languageId, objectField, getIndexedValues());
 
-				if (Validator.isNull(title) && useDefault) {
-					title = String.valueOf(
-						ObjectEntryValuesUtil.getValue(
-							getDefaultLanguageId(), objectField,
-							getIndexedValues()));
+				if (Validator.isNull(value) && useDefault) {
+					value = ObjectEntryValuesUtil.getValue(
+						getDefaultLanguageId(), objectField,
+						getIndexedValues());
 				}
 
-				return title;
+				if (value == null) {
+					return null;
+				}
+
+				return String.valueOf(value);
 			}
 		}
 

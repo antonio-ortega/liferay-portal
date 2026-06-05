@@ -12,7 +12,7 @@ import com.liferay.antivirus.async.store.internal.event.AntivirusAsyncEventListe
 import com.liferay.antivirus.async.store.util.AntivirusAsyncUtil;
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.model.DLFileVersion;
-import com.liferay.document.library.kernel.service.DLFileEntryLocalService;
+import com.liferay.document.library.kernel.service.DLFileVersionLocalService;
 import com.liferay.document.library.kernel.store.Store;
 import com.liferay.petra.function.UnsafeRunnable;
 import com.liferay.petra.reflect.ReflectionUtil;
@@ -148,26 +148,27 @@ public class AntivirusAsyncFileStoreSchedulerJobConfiguration
 	private void _scanDLFileEntries() {
 		try {
 			ActionableDynamicQuery actionableDynamicQuery =
-				_dlFileEntryLocalService.getActionableDynamicQuery();
+				_dlFileVersionLocalService.getActionableDynamicQuery();
 
 			actionableDynamicQuery.setCompanyId(
 				CompanyThreadLocal.getCompanyId());
 			actionableDynamicQuery.setPerformActionMethod(
-				(DLFileEntry dlFileEntry) -> {
-					DLFileVersion dlFileVersion = dlFileEntry.getFileVersion();
+				(DLFileVersion dlFileVersion) -> {
+					DLFileEntry dlFileEntry = dlFileVersion.getFileEntry();
 
 					_scheduleAntivirusScan(
 						dlFileEntry.getModelClassName(),
-						dlFileEntry.getFileEntryId(),
-						dlFileEntry.getCompanyId(), dlFileEntry.getExtension(),
-						dlFileEntry.getName(),
+						dlFileVersion.getFileEntryId(),
+						dlFileVersion.getCompanyId(),
+						dlFileVersion.getExtension(), dlFileEntry.getName(),
 						AntivirusAsyncUtil.getJobName(
 							dlFileEntry.getCompanyId(),
-							dlFileEntry.getRepositoryId(),
+							dlFileEntry.getDataRepositoryId(),
 							dlFileEntry.getFileName(),
 							dlFileVersion.getStoreFileName()),
-						dlFileEntry.getRepositoryId(), dlFileEntry.getSize(),
-						dlFileEntry.getFileName(), dlFileEntry.getUserId(),
+						dlFileEntry.getDataRepositoryId(),
+						dlFileEntry.getSize(), dlFileEntry.getFileName(),
+						dlFileEntry.getUserId(),
 						dlFileVersion.getStoreFileName());
 				});
 
@@ -314,7 +315,7 @@ public class AntivirusAsyncFileStoreSchedulerJobConfiguration
 		_antivirusAsyncEventListenerManager;
 
 	@Reference
-	private DLFileEntryLocalService _dlFileEntryLocalService;
+	private DLFileVersionLocalService _dlFileVersionLocalService;
 
 	@Reference
 	private File _file;

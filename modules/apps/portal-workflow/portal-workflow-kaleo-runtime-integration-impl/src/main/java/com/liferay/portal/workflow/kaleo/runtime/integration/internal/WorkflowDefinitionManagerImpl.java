@@ -6,11 +6,11 @@
 package com.liferay.portal.workflow.kaleo.runtime.integration.internal;
 
 import com.liferay.petra.function.UnsafeSupplier;
+import com.liferay.petra.io.unsync.UnsyncByteArrayInputStream;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.NoSuchModelException;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayInputStream;
 import com.liferay.portal.kernel.model.WorkflowDefinitionLink;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalService;
@@ -38,6 +38,7 @@ import com.liferay.portal.workflow.manager.WorkflowDefinitionManager;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -52,24 +53,14 @@ public class WorkflowDefinitionManagerImpl
 
 	@Override
 	public WorkflowDefinition deployWorkflowDefinition(
-			String externalReferenceCode, long companyId, long userId,
-			String title, String name, byte[] bytes)
-		throws WorkflowException {
-
-		return deployWorkflowDefinition(
-			externalReferenceCode, companyId, userId, title, name,
-			WorkflowDefinitionConstants.SCOPE_ALL, bytes);
-	}
-
-	@Override
-	public WorkflowDefinition deployWorkflowDefinition(
-			String externalReferenceCode, long companyId, long userId,
-			String title, String name, String scope, byte[] bytes)
+			byte[] bytes, long companyId, String externalReferenceCode,
+			long groupId, String name, String scope, String title, long userId)
 		throws WorkflowException {
 
 		ServiceContext serviceContext = new ServiceContext();
 
 		serviceContext.setCompanyId(companyId);
+		serviceContext.setScopeGroupId(groupId);
 		serviceContext.setUserId(userId);
 
 		return _workflowEngine.deployWorkflowDefinition(
@@ -78,8 +69,19 @@ public class WorkflowDefinitionManagerImpl
 	}
 
 	@Override
+	public WorkflowDefinition deployWorkflowDefinition(
+			byte[] bytes, long companyId, String externalReferenceCode,
+			String name, String title, long userId)
+		throws WorkflowException {
+
+		return deployWorkflowDefinition(
+			bytes, companyId, externalReferenceCode, 0, name,
+			WorkflowDefinitionConstants.SCOPE_ALL, title, userId);
+	}
+
+	@Override
 	public List<WorkflowDefinition> getActiveWorkflowDefinitions(
-			int start, int end)
+			int end, int start)
 		throws WorkflowException {
 
 		try {
@@ -97,18 +99,8 @@ public class WorkflowDefinitionManagerImpl
 
 	@Override
 	public List<WorkflowDefinition> getActiveWorkflowDefinitions(
-			long companyId, int start, int end,
-			OrderByComparator<WorkflowDefinition> orderByComparator)
-		throws WorkflowException {
-
-		return _getActiveWorkflowDefinitions(
-			companyId, start, end, orderByComparator, false);
-	}
-
-	@Override
-	public List<WorkflowDefinition> getActiveWorkflowDefinitions(
-			long companyId, String name, int start, int end,
-			OrderByComparator<WorkflowDefinition> orderByComparator)
+			long companyId, int end, String name,
+			OrderByComparator<WorkflowDefinition> orderByComparator, int start)
 		throws WorkflowException {
 
 		try {
@@ -162,17 +154,19 @@ public class WorkflowDefinitionManagerImpl
 			long companyId, String name)
 		throws WorkflowException {
 
-		return _getLatestWorkflowDefinition(companyId, name, false);
+		return _getLatestWorkflowDefinition(companyId, false, name);
 	}
 
 	@Override
 	public List<WorkflowDefinition> getLatestWorkflowDefinitions(
-			Boolean active, long companyId, int start, int end,
-			OrderByComparator<WorkflowDefinition> orderByComparator)
+			Boolean active, long companyId, int end,
+			OrderByComparator<WorkflowDefinition> orderByComparator,
+			String scope, int start, long userId)
 		throws WorkflowException {
 
 		return _getLatestWorkflowDefinitions(
-			companyId, active, start, end, orderByComparator, false);
+			active, companyId, end, false, orderByComparator, scope, start,
+			userId);
 	}
 
 	@Override
@@ -220,15 +214,7 @@ public class WorkflowDefinitionManagerImpl
 
 	@Override
 	public WorkflowDefinition getWorkflowDefinition(
-			long companyId, String name, int version)
-		throws PortalException {
-
-		return _getWorkflowDefinition(companyId, name, version, false);
-	}
-
-	@Override
-	public WorkflowDefinition getWorkflowDefinition(
-			String externalReferenceCode, long companyId)
+			long companyId, String externalReferenceCode)
 		throws PortalException {
 
 		try {
@@ -248,13 +234,11 @@ public class WorkflowDefinitionManagerImpl
 	}
 
 	@Override
-	public List<WorkflowDefinition> getWorkflowDefinitions(
-			long companyId, String name, int start, int end,
-			OrderByComparator<WorkflowDefinition> orderByComparator)
-		throws WorkflowException {
+	public WorkflowDefinition getWorkflowDefinition(
+			long companyId, String name, int version)
+		throws PortalException {
 
-		return _getWorkflowDefinitions(
-			companyId, name, orderByComparator, false);
+		return _getWorkflowDefinition(companyId, false, name, version);
 	}
 
 	@Override
@@ -272,12 +256,12 @@ public class WorkflowDefinitionManagerImpl
 
 	@Override
 	public List<WorkflowDefinition> liberalGetActiveWorkflowDefinitions(
-			long companyId, int start, int end,
-			OrderByComparator<WorkflowDefinition> orderByComparator)
+			long companyId, int end,
+			OrderByComparator<WorkflowDefinition> orderByComparator, int start)
 		throws WorkflowException {
 
 		return _getActiveWorkflowDefinitions(
-			companyId, start, end, orderByComparator, true);
+			companyId, end, true, orderByComparator, start);
 	}
 
 	@Override
@@ -285,17 +269,18 @@ public class WorkflowDefinitionManagerImpl
 			long companyId, String name)
 		throws WorkflowException {
 
-		return _getLatestWorkflowDefinition(companyId, name, true);
+		return _getLatestWorkflowDefinition(companyId, true, name);
 	}
 
 	@Override
 	public List<WorkflowDefinition> liberalGetLatestWorkflowDefinitions(
-			long companyId, int start, int end,
-			OrderByComparator<WorkflowDefinition> orderByComparator)
+			long companyId, int end,
+			OrderByComparator<WorkflowDefinition> orderByComparator,
+			String scope, int start)
 		throws WorkflowException {
 
 		return _getLatestWorkflowDefinitions(
-			companyId, null, start, end, orderByComparator, true);
+			null, companyId, end, true, orderByComparator, scope, start, 0L);
 	}
 
 	@Override
@@ -303,39 +288,29 @@ public class WorkflowDefinitionManagerImpl
 			long companyId, String name, int version)
 		throws PortalException {
 
-		return _getWorkflowDefinition(companyId, name, version, true);
+		return _getWorkflowDefinition(companyId, true, name, version);
 	}
 
 	@Override
 	public List<WorkflowDefinition> liberalGetWorkflowDefinitions(
-			long companyId, String name, int start, int end,
-			OrderByComparator<WorkflowDefinition> orderByComparator)
+			long companyId, int end, String name,
+			OrderByComparator<WorkflowDefinition> orderByComparator, int start)
 		throws WorkflowException {
 
 		return _getWorkflowDefinitions(
-			companyId, name, orderByComparator, true);
+			companyId, true, name, orderByComparator);
 	}
 
 	@Override
 	public WorkflowDefinition saveWorkflowDefinition(
-			String externalReferenceCode, long companyId, long userId,
-			String title, String name, byte[] bytes)
-		throws WorkflowException {
-
-		return saveWorkflowDefinition(
-			externalReferenceCode, companyId, userId, title, name,
-			WorkflowDefinitionConstants.SCOPE_ALL, bytes);
-	}
-
-	@Override
-	public WorkflowDefinition saveWorkflowDefinition(
-			String externalReferenceCode, long companyId, long userId,
-			String title, String name, String scope, byte[] bytes)
+			byte[] bytes, long companyId, String externalReferenceCode,
+			long groupId, String name, String scope, String title, long userId)
 		throws WorkflowException {
 
 		ServiceContext serviceContext = new ServiceContext();
 
 		serviceContext.setCompanyId(companyId);
+		serviceContext.setScopeGroupId(groupId);
 		serviceContext.setUserId(userId);
 
 		return _workflowEngine.saveWorkflowDefinition(
@@ -343,8 +318,19 @@ public class WorkflowDefinitionManagerImpl
 	}
 
 	@Override
+	public WorkflowDefinition saveWorkflowDefinition(
+			byte[] bytes, long companyId, String externalReferenceCode,
+			String name, String title, long userId)
+		throws WorkflowException {
+
+		return saveWorkflowDefinition(
+			bytes, companyId, externalReferenceCode, 0, name,
+			WorkflowDefinitionConstants.SCOPE_ALL, title, userId);
+	}
+
+	@Override
 	public void undeployWorkflowDefinition(
-			long companyId, long userId, String name, int version)
+			long companyId, String name, long userId, int version)
 		throws WorkflowException {
 
 		String className = WorkflowDefinition.class.getName();
@@ -383,8 +369,8 @@ public class WorkflowDefinitionManagerImpl
 
 	@Override
 	public WorkflowDefinition updateActive(
-			long companyId, long userId, String name, int version,
-			boolean active)
+			boolean active, long companyId, String name, long userId,
+			int version)
 		throws WorkflowException {
 
 		try {
@@ -447,9 +433,8 @@ public class WorkflowDefinitionManagerImpl
 	}
 
 	private List<WorkflowDefinition> _getActiveWorkflowDefinitions(
-			long companyId, int start, int end,
-			OrderByComparator<WorkflowDefinition> orderByComparator,
-			boolean liberal)
+			long companyId, int end, boolean liberal,
+			OrderByComparator<WorkflowDefinition> orderByComparator, int start)
 		throws WorkflowException {
 
 		try {
@@ -491,7 +476,7 @@ public class WorkflowDefinitionManagerImpl
 	}
 
 	private WorkflowDefinition _getLatestWorkflowDefinition(
-			long companyId, String name, boolean liberal)
+			long companyId, boolean liberal, String name)
 		throws WorkflowException {
 
 		try {
@@ -516,15 +501,20 @@ public class WorkflowDefinitionManagerImpl
 	}
 
 	private List<WorkflowDefinition> _getLatestWorkflowDefinitions(
-			long companyId, Boolean active, int start, int end,
+			Boolean active, long companyId, int end, boolean liberal,
 			OrderByComparator<WorkflowDefinition> orderByComparator,
-			boolean liberal)
+			String scope, int start, long userId)
 		throws WorkflowException {
 
 		try {
+			if (Objects.equals(scope, WorkflowDefinitionConstants.SCOPE_AI)) {
+				liberal = true;
+			}
+
 			ServiceContext serviceContext = new ServiceContext();
 
 			serviceContext.setCompanyId(companyId);
+			serviceContext.setUserId(userId);
 
 			List<KaleoDefinition> kaleoDefinitions = null;
 
@@ -532,12 +522,12 @@ public class WorkflowDefinitionManagerImpl
 				kaleoDefinitions = _get(
 					liberal,
 					() -> _kaleoDefinitionLocalService.getScopeKaleoDefinitions(
-						WorkflowDefinitionConstants.SCOPE_ALL, start, end,
+						scope, start, end,
 						KaleoDefinitionOrderByComparator.getOrderByComparator(
 							orderByComparator, _kaleoWorkflowModelConverter),
 						serviceContext),
 					() -> _kaleoDefinitionService.getScopeKaleoDefinitions(
-						WorkflowDefinitionConstants.SCOPE_ALL, start, end,
+						scope, start, end,
 						KaleoDefinitionOrderByComparator.getOrderByComparator(
 							orderByComparator, _kaleoWorkflowModelConverter),
 						serviceContext));
@@ -546,14 +536,12 @@ public class WorkflowDefinitionManagerImpl
 				kaleoDefinitions = _get(
 					liberal,
 					() -> _kaleoDefinitionLocalService.getScopeKaleoDefinitions(
-						WorkflowDefinitionConstants.SCOPE_ALL, active, start,
-						end,
+						scope, active, start, end,
 						KaleoDefinitionOrderByComparator.getOrderByComparator(
 							orderByComparator, _kaleoWorkflowModelConverter),
 						serviceContext),
 					() -> _kaleoDefinitionService.getScopeKaleoDefinitions(
-						WorkflowDefinitionConstants.SCOPE_ALL, active, start,
-						end,
+						scope, active, start, end,
 						KaleoDefinitionOrderByComparator.getOrderByComparator(
 							orderByComparator, _kaleoWorkflowModelConverter),
 						serviceContext));
@@ -571,7 +559,7 @@ public class WorkflowDefinitionManagerImpl
 	}
 
 	private WorkflowDefinition _getWorkflowDefinition(
-			long companyId, String name, int version, boolean liberal)
+			long companyId, boolean liberal, String name, int version)
 		throws PortalException {
 
 		try {
@@ -599,9 +587,8 @@ public class WorkflowDefinitionManagerImpl
 	}
 
 	private List<WorkflowDefinition> _getWorkflowDefinitions(
-			long companyId, String name,
-			OrderByComparator<WorkflowDefinition> orderByComparator,
-			boolean liberal)
+			long companyId, boolean liberal, String name,
+			OrderByComparator<WorkflowDefinition> orderByComparator)
 		throws WorkflowException {
 
 		try {

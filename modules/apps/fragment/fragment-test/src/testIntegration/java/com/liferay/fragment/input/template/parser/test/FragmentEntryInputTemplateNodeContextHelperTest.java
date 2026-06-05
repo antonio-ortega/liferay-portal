@@ -224,6 +224,7 @@ public class FragmentEntryInputTemplateNodeContextHelperTest {
 		LayoutDisplayPageProvider<?> layoutDisplayPageProvider =
 			_layoutDisplayPageProviderRegistry.
 				getLayoutDisplayPageProviderByClassName(
+					objectDefinition.getCompanyId(),
 					objectDefinition.getClassName());
 
 		httpServletRequest.setAttribute(
@@ -315,7 +316,9 @@ public class FragmentEntryInputTemplateNodeContextHelperTest {
 			Assert.assertEquals(
 				localeMap.get(LocaleUtil.getSiteDefault()),
 				inputTemplateNode.getInputValue());
-			Assert.assertEquals(localeMap, inputTemplateNode.getValueI18n());
+			Assert.assertEquals(
+				LocalizedMapUtil.getLanguageIdMap(localeMap),
+				inputTemplateNode.getValueI18n());
 		}
 		finally {
 			ServiceContextThreadLocal.popServiceContext();
@@ -383,10 +386,16 @@ public class FragmentEntryInputTemplateNodeContextHelperTest {
 					).objectFieldSettings(
 						Arrays.asList(
 							_createObjectFieldSetting(
-								"acceptedFileExtensions", "txt"),
+								ObjectFieldSettingConstants.
+									NAME_ACCEPTED_FILE_EXTENSIONS,
+								"txt"),
 							_createObjectFieldSetting(
-								"fileSource", "userComputer"),
-							_createObjectFieldSetting("maximumFileSize", "100"))
+								ObjectFieldSettingConstants.NAME_FILE_SOURCE,
+								ObjectFieldSettingConstants.
+									VALUE_USER_COMPUTER_TO_DOCS_AND_MEDIA),
+							_createObjectFieldSetting(
+								ObjectFieldSettingConstants.NAME_MAX_FILE_SIZE,
+								"100"))
 					).build(),
 					new DateObjectFieldBuilder(
 					).labelMap(
@@ -421,10 +430,16 @@ public class FragmentEntryInputTemplateNodeContextHelperTest {
 					).objectFieldSettings(
 						Arrays.asList(
 							_createObjectFieldSetting(
-								"acceptedFileExtensions", "txt"),
+								ObjectFieldSettingConstants.
+									NAME_ACCEPTED_FILE_EXTENSIONS,
+								"txt"),
 							_createObjectFieldSetting(
-								"fileSource", "userComputer"),
-							_createObjectFieldSetting("maximumFileSize", "100"))
+								ObjectFieldSettingConstants.NAME_FILE_SOURCE,
+								ObjectFieldSettingConstants.
+									VALUE_USER_COMPUTER_TO_DOCS_AND_MEDIA),
+							_createObjectFieldSetting(
+								ObjectFieldSettingConstants.NAME_MAX_FILE_SIZE,
+								"100"))
 					).build(),
 					new DateObjectFieldBuilder(
 					).labelMap(
@@ -687,9 +702,16 @@ public class FragmentEntryInputTemplateNodeContextHelperTest {
 				"myAttachment"
 			).objectFieldSettings(
 				Arrays.asList(
-					_createObjectFieldSetting("acceptedFileExtensions", "txt"),
-					_createObjectFieldSetting("fileSource", "userComputer"),
-					_createObjectFieldSetting("maximumFileSize", "100"))
+					_createObjectFieldSetting(
+						ObjectFieldSettingConstants.
+							NAME_ACCEPTED_FILE_EXTENSIONS,
+						"txt"),
+					_createObjectFieldSetting(
+						ObjectFieldSettingConstants.NAME_FILE_SOURCE,
+						ObjectFieldSettingConstants.
+							VALUE_USER_COMPUTER_TO_DOCS_AND_MEDIA),
+					_createObjectFieldSetting(
+						ObjectFieldSettingConstants.NAME_MAX_FILE_SIZE, "100"))
 			).build(),
 			new DateTimeObjectFieldBuilder(
 			).labelMap(
@@ -746,8 +768,8 @@ public class FragmentEntryInputTemplateNodeContextHelperTest {
 
 		objectDefinition =
 			_objectDefinitionLocalService.addCustomObjectDefinition(
-				null, TestPropsValues.getUserId(), 0, null, false, true, false,
-				true, true, false, false, false, null,
+				null, TestPropsValues.getUserId(), 0, null, true, false, true,
+				false, true, true, false, false, false, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				"CustomObjectDefinition", null, "control_panel.sites",
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
@@ -859,6 +881,7 @@ public class FragmentEntryInputTemplateNodeContextHelperTest {
 		LayoutDisplayPageProvider<?> layoutDisplayPageProvider =
 			_layoutDisplayPageProviderRegistry.
 				getLayoutDisplayPageProviderByClassName(
+					_objectDefinition.getCompanyId(),
 					_objectDefinition.getClassName());
 
 		httpServletRequest.setAttribute(
@@ -898,7 +921,8 @@ public class FragmentEntryInputTemplateNodeContextHelperTest {
 
 		LayoutDisplayPageProvider<?> layoutDisplayPageProvider =
 			_layoutDisplayPageProviderRegistry.
-				getLayoutDisplayPageProviderByClassName(className);
+				getLayoutDisplayPageProviderByClassName(
+					themeDisplay.getCompanyId(), className);
 
 		httpServletRequest.setAttribute(
 			LayoutDisplayPageWebKeys.LAYOUT_DISPLAY_PAGE_OBJECT_PROVIDER,
@@ -937,7 +961,7 @@ public class FragmentEntryInputTemplateNodeContextHelperTest {
 				Assert.assertEquals(
 					entry.getValue(), inputTemplateNode.getInputValue());
 
-				Map<Locale, String> actualValueI18nMap =
+				Map<String, String> actualValueI18nMap =
 					inputTemplateNode.getValueI18n();
 
 				Assert.assertEquals(
@@ -949,7 +973,8 @@ public class FragmentEntryInputTemplateNodeContextHelperTest {
 
 					Assert.assertEquals(
 						curEntry.getValue(),
-						actualValueI18nMap.get(curEntry.getKey()));
+						actualValueI18nMap.get(
+							LocaleUtil.toLanguageId(curEntry.getKey())));
 				}
 			}
 		}

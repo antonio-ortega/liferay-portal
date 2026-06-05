@@ -8,8 +8,6 @@ package com.liferay.portal.search.elasticsearch8.internal.search.engine.adapter.
 import co.elastic.clients.elasticsearch.core.DeleteByQueryRequest;
 
 import com.liferay.portal.kernel.search.BooleanQuery;
-import com.liferay.portal.kernel.search.generic.BooleanQueryImpl;
-import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.search.elasticsearch8.internal.connection.ElasticsearchFixture;
 import com.liferay.portal.search.elasticsearch8.internal.util.JsonpUtil;
@@ -55,7 +53,7 @@ public class DeleteByQueryDocumentRequestExecutorTest {
 	}
 
 	protected void doTestDocumentRequestTranslation(boolean refresh) {
-		BooleanQuery booleanQuery = new BooleanQueryImpl();
+		BooleanQuery booleanQuery = new BooleanQuery();
 
 		booleanQuery.addExactTerm(_FIELD_NAME, true);
 
@@ -65,16 +63,12 @@ public class DeleteByQueryDocumentRequestExecutorTest {
 
 		deleteByQueryDocumentRequest.setRefresh(refresh);
 
-		DeleteByQueryDocumentRequestExecutorImpl
-			deleteByQueryDocumentRequestExecutorImpl =
-				new DeleteByQueryDocumentRequestExecutorImpl();
-
-		ReflectionTestUtil.setFieldValue(
-			deleteByQueryDocumentRequestExecutorImpl,
-			"_elasticsearchClientResolver", _elasticsearchFixture);
+		DeleteByQueryDocumentRequestExecutor
+			deleteByQueryDocumentRequestExecutor =
+				new DeleteByQueryDocumentRequestExecutor(_elasticsearchFixture);
 
 		DeleteByQueryRequest deleteByQueryRequest =
-			deleteByQueryDocumentRequestExecutorImpl.createDeleteByQueryRequest(
+			deleteByQueryDocumentRequestExecutor.createDeleteByQueryRequest(
 				deleteByQueryDocumentRequest);
 
 		Assert.assertArrayEquals(

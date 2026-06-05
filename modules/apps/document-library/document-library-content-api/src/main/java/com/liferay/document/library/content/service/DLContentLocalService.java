@@ -361,3 +361,4 @@ public interface DLContentLocalService
 		throws E;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-1612288260

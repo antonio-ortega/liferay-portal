@@ -157,36 +157,6 @@ public interface CPDefinitionLocalizationModel
 	public void setCProductId(long CProductId);
 
 	/**
-	 * Returns the name of this cp definition localization.
-	 *
-	 * @return the name of this cp definition localization
-	 */
-	@AutoEscape
-	public String getName();
-
-	/**
-	 * Sets the name of this cp definition localization.
-	 *
-	 * @param name the name of this cp definition localization
-	 */
-	public void setName(String name);
-
-	/**
-	 * Returns the short description of this cp definition localization.
-	 *
-	 * @return the short description of this cp definition localization
-	 */
-	@AutoEscape
-	public String getShortDescription();
-
-	/**
-	 * Sets the short description of this cp definition localization.
-	 *
-	 * @param shortDescription the short description of this cp definition localization
-	 */
-	public void setShortDescription(String shortDescription);
-
-	/**
 	 * Returns the description of this cp definition localization.
 	 *
 	 * @return the description of this cp definition localization
@@ -200,21 +170,6 @@ public interface CPDefinitionLocalizationModel
 	 * @param description the description of this cp definition localization
 	 */
 	public void setDescription(String description);
-
-	/**
-	 * Returns the meta title of this cp definition localization.
-	 *
-	 * @return the meta title of this cp definition localization
-	 */
-	@AutoEscape
-	public String getMetaTitle();
-
-	/**
-	 * Sets the meta title of this cp definition localization.
-	 *
-	 * @param metaTitle the meta title of this cp definition localization
-	 */
-	public void setMetaTitle(String metaTitle);
 
 	/**
 	 * Returns the meta description of this cp definition localization.
@@ -246,6 +201,51 @@ public interface CPDefinitionLocalizationModel
 	 */
 	public void setMetaKeywords(String metaKeywords);
 
+	/**
+	 * Returns the meta title of this cp definition localization.
+	 *
+	 * @return the meta title of this cp definition localization
+	 */
+	@AutoEscape
+	public String getMetaTitle();
+
+	/**
+	 * Sets the meta title of this cp definition localization.
+	 *
+	 * @param metaTitle the meta title of this cp definition localization
+	 */
+	public void setMetaTitle(String metaTitle);
+
+	/**
+	 * Returns the name of this cp definition localization.
+	 *
+	 * @return the name of this cp definition localization
+	 */
+	@AutoEscape
+	public String getName();
+
+	/**
+	 * Sets the name of this cp definition localization.
+	 *
+	 * @param name the name of this cp definition localization
+	 */
+	public void setName(String name);
+
+	/**
+	 * Returns the short description of this cp definition localization.
+	 *
+	 * @return the short description of this cp definition localization
+	 */
+	@AutoEscape
+	public String getShortDescription();
+
+	/**
+	 * Sets the short description of this cp definition localization.
+	 *
+	 * @param shortDescription the short description of this cp definition localization
+	 */
+	public void setShortDescription(String shortDescription);
+
 	@Override
 	public CPDefinitionLocalization cloneWithOriginalValues();
 
@@ -254,3 +254,4 @@ public interface CPDefinitionLocalizationModel
 	}
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-103853391

@@ -36,6 +36,20 @@ public class SpringEntryUtil {
 	 */
 
 	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(List)
+	 */
+	public static void cacheResult(List<SpringEntry> springEntries) {
+		getPersistence().cacheResult(springEntries);
+	}
+
+	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(com.liferay.portal.kernel.model.BaseModel)
+	 */
+	public static void cacheResult(SpringEntry springEntry) {
+		getPersistence().cacheResult(springEntry);
+	}
+
+	/**
 	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#clearCache()
 	 */
 	public static void clearCache() {
@@ -111,58 +125,10 @@ public class SpringEntryUtil {
 	}
 
 	/**
-	 * Returns all the spring entries where uuid = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @return the matching spring entries
-	 */
-	public static List<SpringEntry> findByUuid(String uuid) {
-		return getPersistence().findByUuid(uuid);
-	}
-
-	/**
-	 * Returns a range of all the spring entries where uuid = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SpringEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param uuid the uuid
-	 * @param start the lower bound of the range of spring entries
-	 * @param end the upper bound of the range of spring entries (not inclusive)
-	 * @return the range of matching spring entries
-	 */
-	public static List<SpringEntry> findByUuid(
-		String uuid, int start, int end) {
-
-		return getPersistence().findByUuid(uuid, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the spring entries where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SpringEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param uuid the uuid
-	 * @param start the lower bound of the range of spring entries
-	 * @param end the upper bound of the range of spring entries (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching spring entries
-	 */
-	public static List<SpringEntry> findByUuid(
-		String uuid, int start, int end,
-		OrderByComparator<SpringEntry> orderByComparator) {
-
-		return getPersistence().findByUuid(uuid, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the spring entries where uuid = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SpringEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.tools.service.builder.spring.sample.model.impl.SpringEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -211,54 +177,6 @@ public class SpringEntryUtil {
 	}
 
 	/**
-	 * Returns the last spring entry in the ordered set where uuid = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching spring entry
-	 * @throws NoSuchSpringEntryException if a matching spring entry could not be found
-	 */
-	public static SpringEntry findByUuid_Last(
-			String uuid, OrderByComparator<SpringEntry> orderByComparator)
-		throws com.liferay.portal.tools.service.builder.spring.sample.exception.
-			NoSuchSpringEntryException {
-
-		return getPersistence().findByUuid_Last(uuid, orderByComparator);
-	}
-
-	/**
-	 * Returns the last spring entry in the ordered set where uuid = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching spring entry, or <code>null</code> if a matching spring entry could not be found
-	 */
-	public static SpringEntry fetchByUuid_Last(
-		String uuid, OrderByComparator<SpringEntry> orderByComparator) {
-
-		return getPersistence().fetchByUuid_Last(uuid, orderByComparator);
-	}
-
-	/**
-	 * Returns the spring entries before and after the current spring entry in the ordered set where uuid = &#63;.
-	 *
-	 * @param springEntryId the primary key of the current spring entry
-	 * @param uuid the uuid
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next spring entry
-	 * @throws NoSuchSpringEntryException if a spring entry with the primary key could not be found
-	 */
-	public static SpringEntry[] findByUuid_PrevAndNext(
-			long springEntryId, String uuid,
-			OrderByComparator<SpringEntry> orderByComparator)
-		throws com.liferay.portal.tools.service.builder.spring.sample.exception.
-			NoSuchSpringEntryException {
-
-		return getPersistence().findByUuid_PrevAndNext(
-			springEntryId, uuid, orderByComparator);
-	}
-
-	/**
 	 * Removes all the spring entries where uuid = &#63; from the database.
 	 *
 	 * @param uuid the uuid
@@ -278,62 +196,10 @@ public class SpringEntryUtil {
 	}
 
 	/**
-	 * Returns all the spring entries where uuid = &#63; and companyId = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @return the matching spring entries
-	 */
-	public static List<SpringEntry> findByUuid_C(String uuid, long companyId) {
-		return getPersistence().findByUuid_C(uuid, companyId);
-	}
-
-	/**
-	 * Returns a range of all the spring entries where uuid = &#63; and companyId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SpringEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param start the lower bound of the range of spring entries
-	 * @param end the upper bound of the range of spring entries (not inclusive)
-	 * @return the range of matching spring entries
-	 */
-	public static List<SpringEntry> findByUuid_C(
-		String uuid, long companyId, int start, int end) {
-
-		return getPersistence().findByUuid_C(uuid, companyId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the spring entries where uuid = &#63; and companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SpringEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param start the lower bound of the range of spring entries
-	 * @param end the upper bound of the range of spring entries (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching spring entries
-	 */
-	public static List<SpringEntry> findByUuid_C(
-		String uuid, long companyId, int start, int end,
-		OrderByComparator<SpringEntry> orderByComparator) {
-
-		return getPersistence().findByUuid_C(
-			uuid, companyId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the spring entries where uuid = &#63; and companyId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SpringEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.tools.service.builder.spring.sample.model.impl.SpringEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -389,61 +255,6 @@ public class SpringEntryUtil {
 	}
 
 	/**
-	 * Returns the last spring entry in the ordered set where uuid = &#63; and companyId = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching spring entry
-	 * @throws NoSuchSpringEntryException if a matching spring entry could not be found
-	 */
-	public static SpringEntry findByUuid_C_Last(
-			String uuid, long companyId,
-			OrderByComparator<SpringEntry> orderByComparator)
-		throws com.liferay.portal.tools.service.builder.spring.sample.exception.
-			NoSuchSpringEntryException {
-
-		return getPersistence().findByUuid_C_Last(
-			uuid, companyId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last spring entry in the ordered set where uuid = &#63; and companyId = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching spring entry, or <code>null</code> if a matching spring entry could not be found
-	 */
-	public static SpringEntry fetchByUuid_C_Last(
-		String uuid, long companyId,
-		OrderByComparator<SpringEntry> orderByComparator) {
-
-		return getPersistence().fetchByUuid_C_Last(
-			uuid, companyId, orderByComparator);
-	}
-
-	/**
-	 * Returns the spring entries before and after the current spring entry in the ordered set where uuid = &#63; and companyId = &#63;.
-	 *
-	 * @param springEntryId the primary key of the current spring entry
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next spring entry
-	 * @throws NoSuchSpringEntryException if a spring entry with the primary key could not be found
-	 */
-	public static SpringEntry[] findByUuid_C_PrevAndNext(
-			long springEntryId, String uuid, long companyId,
-			OrderByComparator<SpringEntry> orderByComparator)
-		throws com.liferay.portal.tools.service.builder.spring.sample.exception.
-			NoSuchSpringEntryException {
-
-		return getPersistence().findByUuid_C_PrevAndNext(
-			springEntryId, uuid, companyId, orderByComparator);
-	}
-
-	/**
 	 * Removes all the spring entries where uuid = &#63; and companyId = &#63; from the database.
 	 *
 	 * @param uuid the uuid
@@ -465,59 +276,10 @@ public class SpringEntryUtil {
 	}
 
 	/**
-	 * Returns all the spring entries where companyId = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @return the matching spring entries
-	 */
-	public static List<SpringEntry> findByCompanyId(long companyId) {
-		return getPersistence().findByCompanyId(companyId);
-	}
-
-	/**
-	 * Returns a range of all the spring entries where companyId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SpringEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param start the lower bound of the range of spring entries
-	 * @param end the upper bound of the range of spring entries (not inclusive)
-	 * @return the range of matching spring entries
-	 */
-	public static List<SpringEntry> findByCompanyId(
-		long companyId, int start, int end) {
-
-		return getPersistence().findByCompanyId(companyId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the spring entries where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SpringEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param start the lower bound of the range of spring entries
-	 * @param end the upper bound of the range of spring entries (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching spring entries
-	 */
-	public static List<SpringEntry> findByCompanyId(
-		long companyId, int start, int end,
-		OrderByComparator<SpringEntry> orderByComparator) {
-
-		return getPersistence().findByCompanyId(
-			companyId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the spring entries where companyId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SpringEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.tools.service.builder.spring.sample.model.impl.SpringEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -568,56 +330,6 @@ public class SpringEntryUtil {
 	}
 
 	/**
-	 * Returns the last spring entry in the ordered set where companyId = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching spring entry
-	 * @throws NoSuchSpringEntryException if a matching spring entry could not be found
-	 */
-	public static SpringEntry findByCompanyId_Last(
-			long companyId, OrderByComparator<SpringEntry> orderByComparator)
-		throws com.liferay.portal.tools.service.builder.spring.sample.exception.
-			NoSuchSpringEntryException {
-
-		return getPersistence().findByCompanyId_Last(
-			companyId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last spring entry in the ordered set where companyId = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching spring entry, or <code>null</code> if a matching spring entry could not be found
-	 */
-	public static SpringEntry fetchByCompanyId_Last(
-		long companyId, OrderByComparator<SpringEntry> orderByComparator) {
-
-		return getPersistence().fetchByCompanyId_Last(
-			companyId, orderByComparator);
-	}
-
-	/**
-	 * Returns the spring entries before and after the current spring entry in the ordered set where companyId = &#63;.
-	 *
-	 * @param springEntryId the primary key of the current spring entry
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next spring entry
-	 * @throws NoSuchSpringEntryException if a spring entry with the primary key could not be found
-	 */
-	public static SpringEntry[] findByCompanyId_PrevAndNext(
-			long springEntryId, long companyId,
-			OrderByComparator<SpringEntry> orderByComparator)
-		throws com.liferay.portal.tools.service.builder.spring.sample.exception.
-			NoSuchSpringEntryException {
-
-		return getPersistence().findByCompanyId_PrevAndNext(
-			springEntryId, companyId, orderByComparator);
-	}
-
-	/**
 	 * Removes all the spring entries where companyId = &#63; from the database.
 	 *
 	 * @param companyId the company ID
@@ -634,24 +346,6 @@ public class SpringEntryUtil {
 	 */
 	public static int countByCompanyId(long companyId) {
 		return getPersistence().countByCompanyId(companyId);
-	}
-
-	/**
-	 * Caches the spring entry in the entity cache if it is enabled.
-	 *
-	 * @param springEntry the spring entry
-	 */
-	public static void cacheResult(SpringEntry springEntry) {
-		getPersistence().cacheResult(springEntry);
-	}
-
-	/**
-	 * Caches the spring entries in the entity cache if it is enabled.
-	 *
-	 * @param springEntries the spring entries
-	 */
-	public static void cacheResult(List<SpringEntry> springEntries) {
-		getPersistence().cacheResult(springEntries);
 	}
 
 	/**
@@ -707,82 +401,152 @@ public class SpringEntryUtil {
 	}
 
 	/**
-	 * Returns all the spring entries.
+	 * Returns all the spring entries where uuid = &#63;.
 	 *
-	 * @return the spring entries
+	 * @param uuid the uuid
+	 * @return the matching spring entries
 	 */
-	public static List<SpringEntry> findAll() {
-		return getPersistence().findAll();
+	public static List<SpringEntry> findByUuid(String uuid) {
+		return getPersistence().findByUuid(uuid);
 	}
 
 	/**
-	 * Returns a range of all the spring entries.
+	 * Returns a range of all the spring entries where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SpringEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.tools.service.builder.spring.sample.model.impl.SpringEntryModelImpl</code>.
 	 * </p>
 	 *
+	 * @param uuid the uuid
 	 * @param start the lower bound of the range of spring entries
 	 * @param end the upper bound of the range of spring entries (not inclusive)
-	 * @return the range of spring entries
+	 * @return the range of matching spring entries
 	 */
-	public static List<SpringEntry> findAll(int start, int end) {
-		return getPersistence().findAll(start, end);
+	public static List<SpringEntry> findByUuid(
+		String uuid, int start, int end) {
+
+		return getPersistence().findByUuid(uuid, start, end);
 	}
 
 	/**
-	 * Returns an ordered range of all the spring entries.
+	 * Returns an ordered range of all the spring entries where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SpringEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.tools.service.builder.spring.sample.model.impl.SpringEntryModelImpl</code>.
 	 * </p>
 	 *
-	 * @param start the lower bound of the range of spring entries
-	 * @param end the upper bound of the range of spring entries (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of spring entries
-	 */
-	public static List<SpringEntry> findAll(
-		int start, int end, OrderByComparator<SpringEntry> orderByComparator) {
-
-		return getPersistence().findAll(start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the spring entries.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SpringEntryModelImpl</code>.
-	 * </p>
-	 *
+	 * @param uuid the uuid
 	 * @param start the lower bound of the range of spring entries
 	 * @param end the upper bound of the range of spring entries (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param useFinderCache whether to use the finder cache
-	 * @return the ordered range of spring entries
+	 * @return the ordered range of matching spring entries
 	 */
-	public static List<SpringEntry> findAll(
-		int start, int end, OrderByComparator<SpringEntry> orderByComparator,
-		boolean useFinderCache) {
+	public static List<SpringEntry> findByUuid(
+		String uuid, int start, int end,
+		OrderByComparator<SpringEntry> orderByComparator) {
 
-		return getPersistence().findAll(
-			start, end, orderByComparator, useFinderCache);
+		return getPersistence().findByUuid(uuid, start, end, orderByComparator);
 	}
 
 	/**
-	 * Removes all the spring entries from the database.
-	 */
-	public static void removeAll() {
-		getPersistence().removeAll();
-	}
-
-	/**
-	 * Returns the number of spring entries.
+	 * Returns all the spring entries where uuid = &#63; and companyId = &#63;.
 	 *
-	 * @return the number of spring entries
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @return the matching spring entries
 	 */
-	public static int countAll() {
-		return getPersistence().countAll();
+	public static List<SpringEntry> findByUuid_C(String uuid, long companyId) {
+		return getPersistence().findByUuid_C(uuid, companyId);
+	}
+
+	/**
+	 * Returns a range of all the spring entries where uuid = &#63; and companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.tools.service.builder.spring.sample.model.impl.SpringEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of spring entries
+	 * @param end the upper bound of the range of spring entries (not inclusive)
+	 * @return the range of matching spring entries
+	 */
+	public static List<SpringEntry> findByUuid_C(
+		String uuid, long companyId, int start, int end) {
+
+		return getPersistence().findByUuid_C(uuid, companyId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the spring entries where uuid = &#63; and companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.tools.service.builder.spring.sample.model.impl.SpringEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of spring entries
+	 * @param end the upper bound of the range of spring entries (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching spring entries
+	 */
+	public static List<SpringEntry> findByUuid_C(
+		String uuid, long companyId, int start, int end,
+		OrderByComparator<SpringEntry> orderByComparator) {
+
+		return getPersistence().findByUuid_C(
+			uuid, companyId, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns all the spring entries where companyId = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @return the matching spring entries
+	 */
+	public static List<SpringEntry> findByCompanyId(long companyId) {
+		return getPersistence().findByCompanyId(companyId);
+	}
+
+	/**
+	 * Returns a range of all the spring entries where companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.tools.service.builder.spring.sample.model.impl.SpringEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of spring entries
+	 * @param end the upper bound of the range of spring entries (not inclusive)
+	 * @return the range of matching spring entries
+	 */
+	public static List<SpringEntry> findByCompanyId(
+		long companyId, int start, int end) {
+
+		return getPersistence().findByCompanyId(companyId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the spring entries where companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.tools.service.builder.spring.sample.model.impl.SpringEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of spring entries
+	 * @param end the upper bound of the range of spring entries (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching spring entries
+	 */
+	public static List<SpringEntry> findByCompanyId(
+		long companyId, int start, int end,
+		OrderByComparator<SpringEntry> orderByComparator) {
+
+		return getPersistence().findByCompanyId(
+			companyId, start, end, orderByComparator);
 	}
 
 	public static SpringEntryPersistence getPersistence() {
@@ -796,3 +560,4 @@ public class SpringEntryUtil {
 	private static volatile SpringEntryPersistence _persistence;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-1967861244

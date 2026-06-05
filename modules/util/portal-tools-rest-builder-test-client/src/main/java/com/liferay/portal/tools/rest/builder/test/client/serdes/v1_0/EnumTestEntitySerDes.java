@@ -202,3 +202,4 @@ public class EnumTestEntitySerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-636174981

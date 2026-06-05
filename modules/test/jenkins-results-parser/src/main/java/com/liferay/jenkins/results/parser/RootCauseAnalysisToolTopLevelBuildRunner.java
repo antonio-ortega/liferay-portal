@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import org.dom4j.Element;
 
@@ -430,9 +430,23 @@ public class RootCauseAnalysisToolTopLevelBuildRunner
 					JenkinsResultsParserUtil.getCanonicalPath(
 						testClass.getTestClassFile());
 
-				list.add(
-					testClassFilePath.replaceAll(
-						".*/(com/.*)\\.java", "$1.class"));
+				testClassFilePath = testClassFilePath.replaceAll(
+					".*/(com/.*)\\.java", "$1.class");
+
+				JUnitTestClass jUnitTestClass = (JUnitTestClass)testClass;
+
+				List<String> testClassMethodNames =
+					jUnitTestClass.getTestClassMethodNames();
+
+				if (!testClassMethodNames.isEmpty()) {
+					for (String testClassMethodName : testClassMethodNames) {
+						list.add(testClassFilePath + "#" + testClassMethodName);
+					}
+
+					continue;
+				}
+
+				list.add(testClassFilePath);
 			}
 			else if (testClass instanceof ModulesTestClass) {
 				for (TestClassMethod testClassMethod :
@@ -479,6 +493,7 @@ public class RootCauseAnalysisToolTopLevelBuildRunner
 			portalBatchName.startsWith("modules-compile") ||
 			portalBatchName.startsWith("modules-semantic-versioning") ||
 			portalBatchName.startsWith("rest-builder") ||
+			portalBatchName.startsWith("rest-builder-and-service-builder") ||
 			portalBatchName.startsWith("service-builder")) {
 
 			return true;

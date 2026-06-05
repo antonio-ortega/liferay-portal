@@ -7,7 +7,6 @@ import {mergeTests} from '@playwright/test';
 
 import {accountsPagesTest} from '../../../fixtures/accountsPagesTest';
 import {apiHelpersTest} from '../../../fixtures/apiHelpersTest';
-import {applicationsMenuPageTest} from '../../../fixtures/applicationsMenuPageTest';
 import {dataApiHelpersTest} from '../../../fixtures/dataApiHelpersTest';
 import {loginTest} from '../../../fixtures/loginTest';
 import {serverAdministrationPageTest} from '../../../fixtures/serverAdministrationPageTest';
@@ -26,7 +25,6 @@ import {
 export const test = mergeTests(
 	accountsPagesTest,
 	apiHelpersTest,
-	applicationsMenuPageTest,
 	dataApiHelpersTest,
 	loginTest(),
 	serverAdministrationPageTest
@@ -34,7 +32,7 @@ export const test = mergeTests(
 
 const DEFAULT_BASE_URL = liferayConfig.environment.baseUrl;
 const DEFAULT_VIRTUAL_INSTANCE_NAME = 'www.able.com';
-const DEFAULT_VIRTUAL_INSTANCE_URL = `http://${DEFAULT_VIRTUAL_INSTANCE_NAME}:8080`;
+const DEFAULT_VIRTUAL_INSTANCE_URL = `http://${DEFAULT_VIRTUAL_INSTANCE_NAME}:${liferayConfig.environment.port}`;
 
 test.afterAll(async ({browser}) => {
 	const page = await browser.newPage();

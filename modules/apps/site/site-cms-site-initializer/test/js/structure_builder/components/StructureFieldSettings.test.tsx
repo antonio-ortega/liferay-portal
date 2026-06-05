@@ -10,6 +10,10 @@ import React from 'react';
 
 import {Picklist} from '../../../../src/main/resources/META-INF/resources/js/common/types/Picklist';
 import StructureFieldSettings from '../../../../src/main/resources/META-INF/resources/js/structure_builder/components/settings/StructureFieldSettings';
+import {
+	Config,
+	initializeConfig,
+} from '../../../../src/main/resources/META-INF/resources/js/structure_builder/config';
 import {State} from '../../../../src/main/resources/META-INF/resources/js/structure_builder/contexts/StateContext';
 import {Uuid} from '../../../../src/main/resources/META-INF/resources/js/structure_builder/types/Uuid';
 import {
@@ -42,6 +46,7 @@ const FIELD: Field = {
 };
 
 const DEFAULT_STATE: State = {
+	clipboard: null,
 	history: {
 		deletedChildren: [],
 		deletedGroupERCs: [],
@@ -57,9 +62,11 @@ const DEFAULT_STATE: State = {
 		erc: 'structure-erc',
 		label: 'untitled-structure' as any,
 		name: 'UntitledStructure',
+		path: '',
 		spaces: [],
 		status: 'new',
 		system: false,
+		type: 'L_CMS_CONTENT_STRUCTURES',
 		uuid: getUuid(),
 		workflows: {},
 	},
@@ -76,6 +83,13 @@ const DEFAULT_PICKLISTS = [
 	},
 ];
 
+const DEFAULT_CONFIG = {
+	countries: [
+		{a2: 'US', idd: '1', name: 'United States'},
+		{a2: 'ES', idd: '34', name: 'Spain'},
+	],
+} as Config;
+
 const MOCK_DISPATCH = jest.fn();
 
 const renderComponent = ({
@@ -88,6 +102,8 @@ const renderComponent = ({
 	uuid?: Uuid;
 } = {}) => {
 	const field = state.structure?.children?.get(uuid) as Field;
+
+	initializeConfig(DEFAULT_CONFIG);
 
 	return render(
 		<MockStateProvider dispatch={MOCK_DISPATCH} state={state}>
@@ -155,7 +171,7 @@ describe('StructureFieldSettings', () => {
 	it('updates searchable configuration', async () => {
 		renderComponent();
 
-		await userEvent.click(screen.getByText('search'));
+		await userEvent.click(screen.getByText('advanced'));
 
 		await userEvent.click(screen.getByLabelText('searchable'));
 
@@ -368,6 +384,147 @@ describe('StructureFieldSettings', () => {
 		});
 	});
 
+	it('updates specific email configuration', async () => {
+		const uuid = getUuid();
+
+		renderComponent({
+			state: {
+				...DEFAULT_STATE,
+				structure: {
+					...DEFAULT_STATE.structure,
+					children: new Map([
+						[
+							uuid,
+							{
+								...getDefaultField({
+									parent: getUuid(),
+									type: 'email',
+								}),
+								uuid,
+							},
+						],
+					]),
+				},
+			},
+			uuid,
+		});
+
+		await userEvent.click(
+			screen.getByLabelText('accept-unique-values-only')
+		);
+
+		expect(MOCK_DISPATCH).toHaveBeenCalledWith({
+			settings: {
+				uniqueValues: true,
+			},
+			type: 'update-field',
+			uuid,
+		});
+
+		expect(
+			screen.queryByLabelText('limit-characters')
+		).not.toBeInTheDocument();
+
+		await userEvent.click(screen.getByText('advanced'));
+
+		expect(screen.getAllByText('blocked-domains')).not.toHaveLength(0);
+		expect(screen.getByText('autocomplete')).toBeInTheDocument();
+		expect(screen.getByLabelText('domains')).toBeInTheDocument();
+	});
+
+	it('updates specific phone number configuration', async () => {
+		const uuid = getUuid();
+
+		renderComponent({
+			state: {
+				...DEFAULT_STATE,
+				structure: {
+					...DEFAULT_STATE.structure,
+					children: new Map([
+						[
+							uuid,
+							{
+								...getDefaultField({
+									parent: getUuid(),
+									type: 'phone-number',
+								}),
+								uuid,
+							},
+						],
+					]),
+				},
+			},
+			uuid,
+		});
+
+		await userEvent.click(screen.getByLabelText('country-source'));
+		await userEvent.click(screen.getByText('fixed'));
+
+		expect(MOCK_DISPATCH).toHaveBeenCalledWith({
+			settings: {
+				country: 'US',
+				countrySource: 'fixed',
+			},
+			type: 'update-field',
+			uuid,
+		});
+
+		await userEvent.click(
+			screen.getByLabelText('accept-unique-values-only')
+		);
+
+		expect(MOCK_DISPATCH).toHaveBeenCalledWith({
+			settings: {
+				countrySource: 'definedByUser',
+				uniqueValues: true,
+			},
+			type: 'update-field',
+			uuid,
+		});
+	});
+
+	it('updates fixed country code on phone number field', async () => {
+		const uuid = getUuid();
+
+		renderComponent({
+			state: {
+				...DEFAULT_STATE,
+				structure: {
+					...DEFAULT_STATE.structure,
+					children: new Map([
+						[
+							uuid,
+							{
+								...getDefaultField({
+									parent: getUuid(),
+									type: 'phone-number',
+								}),
+								settings: {
+									country: 'US',
+									countrySource: 'fixed',
+								},
+								uuid,
+							},
+						],
+					]),
+				},
+			},
+			uuid,
+		});
+
+		await userEvent.click(screen.getByLabelText('country'));
+		await userEvent.click(screen.getByRole('option', {name: /Spain/}));
+
+		expect(MOCK_DISPATCH).toHaveBeenCalledWith({
+			settings: {
+				country: 'ES',
+				countrySource: 'fixed',
+			},
+			type: 'update-field',
+			uuid,
+		});
+	});
+
 	it('updates specific upload configuration', async () => {
 		const uuid = getUuid();
 
@@ -398,16 +555,17 @@ describe('StructureFieldSettings', () => {
 		).not.toBeInTheDocument();
 
 		await userEvent.click(
-			screen.getByLabelText('show-files-in-documents-and-media')
+			screen.getByLabelText('show-files-in-cms-library')
 		);
 
 		expect(MOCK_DISPATCH).toHaveBeenCalledWith({
 			settings: {
 				acceptedFileExtensions: 'jpeg, jpg, pdf, png',
-				fileSource: 'userComputer',
+				fileSource: 'userComputerToCMSBasicDocument',
 				maximumFileSize: 100,
-				showFilesInDocumentsAndMedia: true,
-				storageDLFolderPath: '/new',
+				showFilesInLibrary: true,
+				storageDLFolderPath: '/',
+				storageDepotGroup: undefined,
 			},
 			type: 'update-field',
 			uuid,
@@ -426,7 +584,7 @@ describe('StructureFieldSettings', () => {
 		expect(MOCK_DISPATCH).toHaveBeenCalledWith({
 			settings: {
 				acceptedFileExtensions: 'gif',
-				fileSource: 'userComputer',
+				fileSource: 'userComputerToCMSBasicDocument',
 				maximumFileSize: 100,
 			},
 			type: 'update-field',
@@ -442,7 +600,7 @@ describe('StructureFieldSettings', () => {
 		expect(MOCK_DISPATCH).toHaveBeenCalledWith({
 			settings: {
 				acceptedFileExtensions: 'jpeg, jpg, pdf, png',
-				fileSource: 'userComputer',
+				fileSource: 'userComputerToCMSBasicDocument',
 				maximumFileSize: 200,
 			},
 			type: 'update-field',
@@ -450,7 +608,7 @@ describe('StructureFieldSettings', () => {
 		});
 	});
 
-	it('updates the single select field with the selected picklist', async () => {
+	it('updates the select from list field with the selected picklist', async () => {
 		const uuid = getUuid();
 
 		renderComponent({
@@ -464,42 +622,7 @@ describe('StructureFieldSettings', () => {
 							{
 								...getDefaultField({
 									parent: getUuid(),
-									type: 'single-select',
-								}),
-								uuid,
-							},
-						],
-					]),
-				},
-			},
-			uuid,
-		});
-
-		await userEvent.click(screen.getByLabelText('picklist'));
-		await userEvent.click(screen.getByText('papaya'));
-
-		expect(MOCK_DISPATCH).toHaveBeenCalledWith({
-			picklistId: 1,
-			type: 'update-field',
-			uuid,
-		});
-	});
-
-	it('updates the multiselect field with the selected picklist', async () => {
-		const uuid = getUuid();
-
-		renderComponent({
-			state: {
-				...DEFAULT_STATE,
-				structure: {
-					...DEFAULT_STATE.structure,
-					children: new Map([
-						[
-							uuid,
-							{
-								...getDefaultField({
-									parent: getUuid(),
-									type: 'multiselect',
+									type: 'select-from-list',
 								}),
 								uuid,
 							},
@@ -535,7 +658,7 @@ describe('StructureFieldSettings', () => {
 							{
 								...getDefaultField({
 									parent: getUuid(),
-									type: 'single-select',
+									type: 'select-from-list',
 								}),
 								uuid,
 							},

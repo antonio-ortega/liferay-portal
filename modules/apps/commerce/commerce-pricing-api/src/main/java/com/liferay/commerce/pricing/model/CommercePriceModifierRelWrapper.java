@@ -444,3 +444,4 @@ public class CommercePriceModifierRelWrapper
 	}
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-1459298798

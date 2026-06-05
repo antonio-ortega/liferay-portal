@@ -6,6 +6,7 @@
 		<suppress checks="VariableNameCheck" files="portal-tools-bundle-support/src/main/java/com/liferay/portal/tools/bundle/support/maven/CreateTokenMojo\.java" />
 	</checkstyle>
 	<source-check>
+		<suppress checks="IllegalImportsCheck" files="portal-tools-service-builder/src/main/java/com/liferay/portal/tools/service/builder/ServiceBuilder\.java" />
 		<suppress checks="JavaDeprecatedJavadocCheck" files=".*" />
 		<suppress checks="JavaModuleTestCheck" files="pmd/src/test/java/com/liferay/pmd/rules/junit/AssertFailJUnitRuleTest\.java" />
 		<suppress checks="JavaVariableTypeCheck" files="css-builder/src/main/java/com/liferay/css/builder/maven/BuildCSSMojo\.java" />
@@ -25,9 +26,8 @@
 		<suppress checks="XMLDTDVersionCheck" files="portal-tools-service-builder/src/main/resources/com/liferay/mail/service\.xml" />
 		<suppress checks="XMLDTDVersionCheck" files="portal-tools-service-builder/src/main/resources/com/liferay/portlet/trash/service\.xml" />
 		<suppress checks="XMLServiceEntityNameCheck" files="portal-tools-service-builder/src/main/resources/com/liferay/mail/service\.xml" />
-		<suppress checks="XMLServiceFileCheck" files="portal-tools-service-builder/src/main/resources/com/liferay/mail/service\.xml" />
-		<suppress checks="XMLServiceFileCheck" files="portal-tools-service-builder/src/main/resources/com/liferay/portlet/trash/service\.xml" />
-		<suppress checks="XMLServiceFileCheck" files="portal-tools-service-builder-test-service/service\.xml" />
+		<suppress checks="XMLServiceMVCCEnabledCheck" files="portal-tools-service-builder/src/main/resources/com/liferay/mail/service\.xml" />
+		<suppress checks="XMLServiceMVCCEnabledCheck" files="portal-tools-service-builder/src/main/resources/com/liferay/portlet/trash/service\.xml" />
 		<suppress checks="XMLServiceReferenceCheck" files="portal-tools-service-builder/src/main/resources/com/liferay/portlet/trash/service\.xml" />
 	</source-check>
 </suppressions>

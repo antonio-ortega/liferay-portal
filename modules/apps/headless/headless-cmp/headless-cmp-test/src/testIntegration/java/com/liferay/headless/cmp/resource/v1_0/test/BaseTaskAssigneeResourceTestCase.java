@@ -32,6 +32,7 @@ import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.odata.entity.EntityField;
@@ -103,7 +104,8 @@ public abstract class BaseTaskAssigneeResourceTestCase {
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
 		).endpoint(
-			testCompany.getVirtualHostname(), 8080, "http"
+			testCompany.getVirtualHostname(),
+			PortalUtil.getPortalServerPort(false), "http"
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -185,7 +187,7 @@ public abstract class BaseTaskAssigneeResourceTestCase {
 	@Test
 	public void testGetTaskAssigneesPage() throws Exception {
 		Page<TaskAssignee> page = taskAssigneeResource.getTaskAssigneesPage(
-			null);
+			null, RandomTestUtil.randomString());
 
 		long totalCount = page.getTotalCount();
 
@@ -195,7 +197,7 @@ public abstract class BaseTaskAssigneeResourceTestCase {
 		TaskAssignee taskAssignee2 = testGetTaskAssigneesPage_addTaskAssignee(
 			randomTaskAssignee());
 
-		page = taskAssigneeResource.getTaskAssigneesPage(null);
+		page = taskAssigneeResource.getTaskAssigneesPage(null, null);
 
 		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
@@ -291,6 +293,10 @@ public abstract class BaseTaskAssigneeResourceTestCase {
 
 	protected void assertValid(TaskAssignee taskAssignee) throws Exception {
 		boolean valid = true;
+
+		if (taskAssignee.getId() == null) {
+			valid = false;
+		}
 
 		for (String additionalAssertFieldName :
 				getAdditionalAssertFieldNames()) {
@@ -389,6 +395,8 @@ public abstract class BaseTaskAssigneeResourceTestCase {
 
 		graphQLFields.add(new GraphQLField("externalReferenceCode"));
 
+		graphQLFields.add(new GraphQLField("id"));
+
 		for (java.lang.reflect.Field field :
 				getDeclaredFields(
 					com.liferay.headless.cmp.dto.v1_0.TaskAssignee.class)) {
@@ -455,6 +463,16 @@ public abstract class BaseTaskAssigneeResourceTestCase {
 				if (!Objects.deepEquals(
 						taskAssignee1.getExternalReferenceCode(),
 						taskAssignee2.getExternalReferenceCode())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("id", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						taskAssignee1.getId(), taskAssignee2.getId())) {
 
 					return false;
 				}
@@ -646,6 +664,11 @@ public abstract class BaseTaskAssigneeResourceTestCase {
 			return sb.toString();
 		}
 
+		if (entityFieldName.equals("id")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
 		if (entityFieldName.equals("name")) {
 			Object object = taskAssignee.getName();
 
@@ -797,7 +820,9 @@ public abstract class BaseTaskAssigneeResourceTestCase {
 			).toString(),
 			"application/json");
 		httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
-		httpInvoker.path("http://localhost:8080/o/graphql");
+		httpInvoker.path(
+			"http://localhost:" + PortalUtil.getPortalServerPort(false) +
+				"/o/graphql");
 		httpInvoker.userNameAndPassword(
 			"test@liferay.com:" + PropsValues.DEFAULT_ADMIN_PASSWORD);
 
@@ -831,6 +856,7 @@ public abstract class BaseTaskAssigneeResourceTestCase {
 			{
 				externalReferenceCode = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
+				id = RandomTestUtil.randomLong();
 				name = StringUtil.toLowerCase(RandomTestUtil.randomString());
 				portrait = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
@@ -1059,3 +1085,4 @@ public abstract class BaseTaskAssigneeResourceTestCase {
 		_taskAssigneeResource;
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1692137700

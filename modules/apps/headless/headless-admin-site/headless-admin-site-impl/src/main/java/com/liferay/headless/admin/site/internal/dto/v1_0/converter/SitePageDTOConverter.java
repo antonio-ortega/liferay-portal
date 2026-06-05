@@ -144,8 +144,8 @@ public class SitePageDTOConverter implements DTOConverter<Layout, SitePage> {
 
 						return parentLayout.getExternalReferenceCode();
 					});
-				setTaxonomyCategoryItemExternalReferences(
-					() -> AssetUtil.getTaxonomyCategoryItemExternalReferences(
+				setTaxonomyCategoryBriefs(
+					() -> AssetUtil.getTaxonomyCategoryBriefs(
 						Layout.class.getName(), layout.getPlid(),
 						layout.getGroupId()));
 				setType(
@@ -288,6 +288,10 @@ public class SitePageDTOConverter implements DTOConverter<Layout, SitePage> {
 
 		contentPageSettings.setCustomMetaTags(
 			() -> _getCustomMetaTags(layoutSEOEntry));
+
+		contentPageSettings.setDefaultAssetPublisherPortletId(
+			() -> layout.getTypeSettingsProperty(
+				LayoutTypePortletConstants.DEFAULT_ASSET_PUBLISHER_PORTLET_ID));
 		contentPageSettings.setOpenGraphSettings(
 			() -> OpenGraphSettingsUtil.getOpenGraphSettings(
 				_dlAppService, layoutSEOEntry));
@@ -349,6 +353,9 @@ public class SitePageDTOConverter implements DTOConverter<Layout, SitePage> {
 		widgetPageSettings.setCustomMetaTags(
 			() -> _getCustomMetaTags(layoutSEOEntry));
 
+		widgetPageSettings.setDefaultAssetPublisherPortletId(
+			() -> layout.getTypeSettingsProperty(
+				LayoutTypePortletConstants.DEFAULT_ASSET_PUBLISHER_PORTLET_ID));
 		widgetPageSettings.setInheritChanges(
 			() -> {
 				if (Validator.isNull(

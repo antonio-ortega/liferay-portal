@@ -12,12 +12,20 @@ import {fetch} from 'frontend-js-web';
 import React from 'react';
 
 import ExportTranslationModalContent from '../../../../src/main/resources/META-INF/resources/js/main_view/modal/ExportTranslationModalContent';
+import {exportTranslationBulkActionRequest} from '../../../../src/main/resources/META-INF/resources/js/main_view/props_transformer/actions/exportTranslationBulkActionRequest';
 
 const mockCloseModal = jest.fn();
 
 jest.mock('frontend-js-components-web', () => ({
 	openToast: jest.fn(),
 }));
+
+jest.mock(
+	'../../../../src/main/resources/META-INF/resources/js/main_view/props_transformer/actions/exportTranslationBulkActionRequest',
+	() => ({
+		exportTranslationBulkActionRequest: jest.fn(() => Promise.resolve()),
+	})
+);
 
 jest.mock('frontend-js-web', () => ({
 	...(jest.requireActual('frontend-js-web') as any),
@@ -79,17 +87,19 @@ const DEFAULT_PROPS = {
 	],
 	closeModal: mockCloseModal,
 	defaultSourceLanguageId: 'en_US',
-	itemId: 123,
+	translationsAPIURL: '/o/cms/blogs/123/translations',
 };
 
-const renderComponent = (props = DEFAULT_PROPS) => {
+const renderComponent = (
+	props: React.ComponentProps<
+		typeof ExportTranslationModalContent
+	> = DEFAULT_PROPS
+) => {
 	return render(<ExportTranslationModalContent {...props} />);
 };
 
-(global as any).URL = {
-	createObjectURL: jest.fn(() => 'blob:mock/url-string'),
-	revokeObjectURL: jest.fn(),
-};
+global.URL.createObjectURL = jest.fn(() => 'blob:mock/url-string') as any;
+global.URL.revokeObjectURL = jest.fn() as any;
 
 describe('ExportTranslationModalContent', () => {
 	afterEach(() => {
@@ -173,11 +183,40 @@ describe('ExportTranslationModalContent', () => {
 
 		await waitFor(() => {
 			expect(mockedFetch).toHaveBeenCalledWith(
-				'/o/cms/basic-web-contents/123/translations?sourceLanguageId=en_US&targetLanguageIds=es_ES%2Cfr_FR&version=2.0',
+				'/o/cms/blogs/123/translations?sourceLanguageId=en_US&targetLanguageIds=es_ES%2Cfr_FR&version=2.0',
 				expect.objectContaining({
 					headers: expect.objectContaining({
 						Accept: 'application/zip',
 					}),
+				})
+			);
+		});
+	});
+
+	it('calls exportTranslationBulkActionRequest when selectedData is provided and the export button is clicked', async () => {
+		const selectedData = {items: [], selectAll: true};
+		const {getByLabelText, getByText} = renderComponent({
+			...DEFAULT_PROPS,
+			apiURL: '/api/test',
+			selectedData,
+		});
+
+		fireEvent.click(getByLabelText('Spanish (Spain)'));
+		fireEvent.click(getByLabelText('French (France)'));
+
+		fireEvent.click(getByText('export'));
+
+		await waitFor(() => {
+			expect(exportTranslationBulkActionRequest).toHaveBeenCalledWith(
+				expect.objectContaining({
+					apiURL: '/api/test',
+					keyValues: {
+						sourceLanguageId: 'en_US',
+						targetLanguageIds: ['es_ES', 'fr_FR'],
+						xliffMimeType: 'application/xliff+xml',
+					},
+					selectedData,
+					type: 'ExportTranslationBulkAction',
 				})
 			);
 		});

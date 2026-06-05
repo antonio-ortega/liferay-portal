@@ -6,10 +6,8 @@
 package com.liferay.portal.workflow.kaleo.internal.search;
 
 import com.liferay.portal.kernel.search.Field;
-import com.liferay.portal.search.batch.DynamicQueryBatchIndexingActionableFactory;
 import com.liferay.portal.search.spi.model.index.contributor.ModelIndexerWriterContributor;
 import com.liferay.portal.search.spi.model.registrar.ModelSearchConfigurator;
-import com.liferay.portal.workflow.kaleo.internal.search.spi.model.index.contributor.KaleoTaskInstanceTokenModelIndexerWriterContributor;
 import com.liferay.portal.workflow.kaleo.model.KaleoTaskInstanceToken;
 import com.liferay.portal.workflow.kaleo.service.KaleoTaskInstanceTokenLocalService;
 
@@ -59,15 +57,10 @@ public class KaleoTaskInstanceTokenModelSearchConfigurator
 
 	@Activate
 	protected void activate() {
-		_modelIndexWriterContributor =
-			new KaleoTaskInstanceTokenModelIndexerWriterContributor(
-				_dynamicQueryBatchIndexingActionableFactory,
-				_kaleoTaskInstanceTokenLocalService);
+		_modelIndexWriterContributor = new ModelIndexerWriterContributor<>(
+			_kaleoTaskInstanceTokenLocalService::
+				getIndexableActionableDynamicQuery);
 	}
-
-	@Reference
-	private DynamicQueryBatchIndexingActionableFactory
-		_dynamicQueryBatchIndexingActionableFactory;
 
 	@Reference
 	private KaleoTaskInstanceTokenLocalService

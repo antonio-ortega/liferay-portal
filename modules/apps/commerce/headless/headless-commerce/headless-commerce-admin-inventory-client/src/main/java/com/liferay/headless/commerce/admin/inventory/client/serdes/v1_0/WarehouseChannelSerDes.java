@@ -390,3 +390,4 @@ public class WarehouseChannelSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:1917059238

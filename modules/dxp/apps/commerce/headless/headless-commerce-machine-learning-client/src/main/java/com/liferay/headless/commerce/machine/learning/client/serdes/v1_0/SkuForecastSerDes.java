@@ -389,3 +389,4 @@ public class SkuForecastSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-2078127780

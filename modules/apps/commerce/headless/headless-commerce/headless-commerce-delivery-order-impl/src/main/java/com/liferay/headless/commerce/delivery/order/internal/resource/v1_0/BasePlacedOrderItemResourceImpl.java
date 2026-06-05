@@ -5,6 +5,7 @@
 
 package com.liferay.headless.commerce.delivery.order.internal.resource.v1_0;
 
+import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.headless.commerce.delivery.order.dto.v1_0.PlacedOrderItem;
 import com.liferay.headless.commerce.delivery.order.resource.v1_0.PlacedOrderItemResource;
 import com.liferay.petra.function.UnsafeBiConsumer;
@@ -75,7 +76,7 @@ public abstract class BasePlacedOrderItemResourceImpl
 	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-delivery-order/v1.0/placed-orders/by-externalReferenceCode/{externalReferenceCode}/placed-order-items'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
-		description = "Retrieve placed order items."
+		description = "Lists the top-level line items of the placed order addressed by ERC. Restricts the result to parent items (child items are exposed on the nested placedOrderItems property). Supports search, sort, pagination, and an optional skuId filter to narrow to a single purchasable variant."
 	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
@@ -142,7 +143,7 @@ public abstract class BasePlacedOrderItemResourceImpl
 	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-delivery-order/v1.0/placed-order-items/{placedOrderItemId}'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
-		description = "Retrieve information of the given Placed Order."
+		description = "Returns a single placed-order line item addressed by its internal identifier. The parent order must not be OPEN; if it is, 404 is returned."
 	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
@@ -177,7 +178,7 @@ public abstract class BasePlacedOrderItemResourceImpl
 	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-delivery-order/v1.0/placed-order-items/by-externalReferenceCode/{externalReferenceCode}'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
-		description = "Retrieve information of the given placed order item."
+		description = "Returns a single placed-order line item addressed by external reference code. Resolves the item under the authenticated buyer's company. Returns 404 when the ERC does not resolve."
 	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
@@ -214,7 +215,7 @@ public abstract class BasePlacedOrderItemResourceImpl
 	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-delivery-order/v1.0/placed-orders/{placedOrderId}/placed-order-items'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
-		description = "Retrieve placed order items."
+		description = "Lists the top-level line items of the placed order addressed by id. Restricts the result to parent items (child items are exposed on the nested placedOrderItems property). Supports search, sort, pagination, and an optional skuId filter to narrow to a single purchasable variant."
 	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
@@ -446,6 +447,15 @@ public abstract class BasePlacedOrderItemResourceImpl
 			@Override
 			public Locale getPreferredLocale() {
 				return LocaleUtil.fromLanguageId(languageId);
+			}
+
+			@Override
+			public boolean isAcceptAllLanguages() {
+				if (ExportImportThreadLocal.isExportInProcess()) {
+					return true;
+				}
+
+				return AcceptLanguage.super.isAcceptAllLanguages();
 			}
 
 		};
@@ -1037,3 +1047,4 @@ public abstract class BasePlacedOrderItemResourceImpl
 		LogFactoryUtil.getLog(BasePlacedOrderItemResourceImpl.class);
 
 }
+// LIFERAY-REST-BUILDER-HASH:290870224

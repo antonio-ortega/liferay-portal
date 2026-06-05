@@ -11,6 +11,7 @@ import com.liferay.headless.admin.site.dto.v1_0.PageElementDefinition;
 import com.liferay.headless.admin.site.internal.dto.v1_0.util.ContainerLayoutUtil;
 import com.liferay.headless.admin.site.internal.dto.v1_0.util.FragmentLinkUtil;
 import com.liferay.headless.admin.site.internal.dto.v1_0.util.FragmentViewportUtil;
+import com.liferay.headless.admin.site.internal.dto.v1_0.util.ImageValueUtil;
 import com.liferay.info.item.InfoItemServiceRegistry;
 import com.liferay.layout.converter.ContentVisibilityConverter;
 import com.liferay.layout.util.structure.ContainerStyledLayoutStructureItem;
@@ -60,6 +61,13 @@ public class ContainerPageElementDefinitionDTOConverter
 
 		return new ContainerPageElementDefinition() {
 			{
+				setBackgroundImageValue(
+					() -> ImageValueUtil.toBackgroundImageValue(
+						companyId, dtoConverterContext,
+						_infoItemServiceRegistry,
+						containerStyledLayoutStructureItem.
+							getBackgroundImageJSONObject(),
+						scopeGroupId));
 				setContentVisibility(
 					() -> {
 						String contentVisibility =
@@ -87,7 +95,8 @@ public class ContainerPageElementDefinitionDTOConverter
 					});
 				setFragmentLink(
 					() -> FragmentLinkUtil.toFragmentLink(
-						companyId, _infoItemServiceRegistry,
+						companyId, dtoConverterContext,
+						_infoItemServiceRegistry,
 						containerStyledLayoutStructureItem.getLinkJSONObject(),
 						scopeGroupId));
 				setFragmentViewports(

@@ -14,6 +14,7 @@ import com.liferay.object.constants.ObjectFieldSettingConstants;
 import com.liferay.object.constants.ObjectRelationshipConstants;
 import com.liferay.object.constants.ObjectValidationRuleSettingConstants;
 import com.liferay.object.definition.security.permission.resource.util.ObjectDefinitionResourcePermissionUtil;
+import com.liferay.object.definition.util.ObjectDefinitionThreadLocal;
 import com.liferay.object.definition.util.ObjectDefinitionUtil;
 import com.liferay.object.definition.util.ObjectDefinitionValidationThreadLocal;
 import com.liferay.object.exception.DuplicateObjectFieldExternalReferenceCodeException;
@@ -263,16 +264,32 @@ public class ObjectFieldLocalServiceImpl
 				objectFieldSettings);
 		}
 
+		ObjectField objectField = (ObjectField)existingObjectField.clone();
+
 		validateExternalReferenceCode(
-			externalReferenceCode, existingObjectField.getObjectFieldId(),
-			existingObjectField.getCompanyId(),
-			existingObjectField.getObjectDefinitionId());
-		_validateLabel(labelMap, existingObjectField);
+			externalReferenceCode, objectField.getObjectFieldId(),
+			objectField.getCompanyId(), objectField.getObjectDefinitionId());
+		_validateIndexed(
+			objectField.getBusinessType(), objectField.getDBType(),
+			objectField.isIndexed(), indexedAsKeyword, indexedLanguageId);
+		_validateLabel(labelMap, objectField);
 
-		existingObjectField.setExternalReferenceCode(externalReferenceCode);
-		existingObjectField.setLabelMap(labelMap, LocaleUtil.getSiteDefault());
+		objectField.setExternalReferenceCode(externalReferenceCode);
+		objectField.setIndexedAsKeyword(indexedAsKeyword);
+		objectField.setIndexedLanguageId(indexedLanguageId);
+		objectField.setLabelMap(labelMap, LocaleUtil.getSiteDefault());
 
-		return objectFieldPersistence.update(existingObjectField);
+		objectField = objectFieldPersistence.update(objectField);
+
+		_addOrUpdateObjectFieldSettings(
+			objectField,
+			_objectDefinitionPersistence.findByPrimaryKey(
+				objectField.getObjectDefinitionId()),
+			_objectFieldBusinessTypeRegistry.getObjectFieldBusinessType(
+				objectField.getBusinessType()),
+			objectFieldSettings, existingObjectField);
+
+		return objectField;
 	}
 
 	@Indexable(type = IndexableType.REINDEX)
@@ -385,6 +402,11 @@ public class ObjectFieldLocalServiceImpl
 
 			_objectFieldSettingLocalService.deleteObjectFieldObjectFieldSetting(
 				objectField);
+
+			if (objectField.isState()) {
+				_objectStateFlowLocalService.deleteObjectFieldObjectStateFlow(
+					objectField.getObjectFieldId());
+			}
 		}
 	}
 
@@ -488,15 +510,6 @@ public class ObjectFieldLocalServiceImpl
 					throw new UnsupportedOperationException(
 						"Unsupported method getColumn with field name " + name);
 				}
-			}
-
-			if (Objects.equals(
-					objectField.getBusinessType(),
-					ObjectFieldConstants.BUSINESS_TYPE_RICH_TEXT)) {
-
-				throw new UnsupportedOperationException(
-					"Unsupported operation with " +
-						objectField.getBusinessType() + " field");
 			}
 
 			Table<?> table = getTable(
@@ -751,6 +764,10 @@ public class ObjectFieldLocalServiceImpl
 			_validateObjectRelationshipDeletionType(objectFieldId, required);
 		}
 
+		if (objectField.isRequired() == required) {
+			return objectField;
+		}
+
 		objectField.setRequired(required);
 
 		return objectFieldPersistence.update(objectField);
@@ -927,6 +944,15 @@ public class ObjectFieldLocalServiceImpl
 
 		ObjectDefinition objectDefinition =
 			_objectDefinitionPersistence.findByPrimaryKey(objectDefinitionId);
+
+		if (!FeatureFlagManagerUtil.isEnabled(
+				objectDefinition.getCompanyId(), "LPD-83570") &&
+			Objects.equals(
+				businessType,
+				ObjectFieldConstants.BUSINESS_TYPE_PHONE_NUMBER)) {
+
+			throw new UnsupportedOperationException();
+		}
 
 		if (Validator.isNull(dbTableName)) {
 			dbTableName = objectDefinition.getDBTableName();
@@ -1240,6 +1266,12 @@ public class ObjectFieldLocalServiceImpl
 			_objectDefinitionPersistence.findByPrimaryKey(
 				objectField.getObjectDefinitionId());
 
+		if (ObjectDefinitionThreadLocal.isDeleteObjectDefinitionId(
+				objectField.getObjectDefinitionId())) {
+
+			return objectFieldPersistence.remove(objectField);
+		}
+
 		if (objectDefinition.isSystem() && objectField.isSystem() &&
 			!ObjectDefinitionUtil.isInvokerBundleAllowed()) {
 
@@ -1298,9 +1330,14 @@ public class ObjectFieldLocalServiceImpl
 
 			ObjectFieldSetting objectFieldSetting =
 				_objectFieldSettingPersistence.fetchByOFI_N(
-					objectField.getObjectFieldId(), "fileSource");
+					objectField.getObjectFieldId(),
+					ObjectFieldSettingConstants.NAME_FILE_SOURCE);
 
-			if (Objects.equals(objectFieldSetting.getValue(), "userComputer")) {
+			if (Objects.equals(
+					objectFieldSetting.getValue(),
+					ObjectFieldSettingConstants.
+						VALUE_USER_COMPUTER_TO_DOCS_AND_MEDIA)) {
+
 				List<ObjectEntry> objectEntries =
 					_objectEntryPersistence.findByObjectDefinitionId(
 						objectField.getObjectDefinitionId());
@@ -1571,6 +1608,15 @@ public class ObjectFieldLocalServiceImpl
 
 		ObjectField oldObjectField = objectFieldPersistence.findByPrimaryKey(
 			objectFieldId);
+
+		if (!FeatureFlagManagerUtil.isEnabled(
+				oldObjectField.getCompanyId(), "LPD-83570") &&
+			Objects.equals(
+				businessType,
+				ObjectFieldConstants.BUSINESS_TYPE_PHONE_NUMBER)) {
+
+			throw new UnsupportedOperationException();
+		}
 
 		ObjectField newObjectField = (ObjectField)oldObjectField.clone();
 

@@ -20,14 +20,19 @@ import com.liferay.fragment.service.base.FragmentEntryLinkLocalServiceBaseImpl;
 import com.liferay.fragment.service.persistence.FragmentCollectionPersistence;
 import com.liferay.fragment.service.persistence.FragmentEntryPersistence;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntryTable;
+import com.liferay.layout.page.template.util.CheckUnlockedLayoutThreadLocal;
 import com.liferay.layout.util.CheckNoninstanceablePortletThreadLocal;
 import com.liferay.layout.util.UpdateLayoutStatusThreadLocal;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.lang.SafeCloseable;
+import com.liferay.petra.sql.dsl.DSLFunctionFactoryUtil;
 import com.liferay.petra.sql.dsl.DSLQueryFactoryUtil;
-import com.liferay.petra.sql.dsl.Table;
-import com.liferay.petra.sql.dsl.expression.Expression;
 import com.liferay.petra.sql.dsl.expression.Predicate;
+import com.liferay.petra.sql.dsl.query.DSLQuery;
+import com.liferay.petra.sql.dsl.query.FromStep;
+import com.liferay.petra.sql.dsl.query.GroupByStep;
+import com.liferay.petra.sql.dsl.query.LimitStep;
+import com.liferay.petra.sql.dsl.query.OrderByStep;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.LockedLayoutException;
@@ -55,6 +60,7 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortletKeys;
+import com.liferay.portal.kernel.util.ScopeUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -65,6 +71,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -120,11 +127,7 @@ public class FragmentEntryLinkLocalServiceImpl
 		fragmentEntryLink.setPlid(plid);
 		fragmentEntryLink.setCss(css);
 
-		html = _replaceResources(
-			fragmentEntryERC,
-			_getFragmentEntryGroupId(
-				user.getCompanyId(), groupId, fragmentEntryScopeERC),
-			html);
+		html = _replaceResources(fragmentEntryLink.fetchFragmentEntry(), html);
 
 		fragmentEntryLink.setHtml(html);
 
@@ -226,27 +229,25 @@ public class FragmentEntryLinkLocalServiceImpl
 	}
 
 	@Override
-	public void deleteFragmentEntryLinksByFragmentEntryERC(
-		long groupId, String fragmentEntryERC, String fragmentEntryScopeERC) {
+	public void deleteFragmentEntryLinksByFragmentEntry(
+			FragmentEntry fragmentEntry, boolean deleted)
+		throws PortalException {
 
 		List<FragmentEntryLink> fragmentEntryLinks =
-			fragmentEntryLinkPersistence.findByG_FEERC_FESERC(
-				groupId, fragmentEntryERC, fragmentEntryScopeERC);
+			fragmentEntryLinkPersistence.findByG_FEERC_FESERC_D(
+				fragmentEntry.getGroupId(),
+				fragmentEntry.getExternalReferenceCode(), null, deleted);
 
 		for (FragmentEntryLink fragmentEntryLink : fragmentEntryLinks) {
 			fragmentEntryLinkLocalService.deleteFragmentEntryLink(
 				fragmentEntryLink);
 		}
-	}
 
-	@Override
-	public void deleteFragmentEntryLinksByFragmentEntryERC(
-		long groupId, String fragmentEntryERC, String fragmentEntryScopeERC,
-		boolean deleted) {
+		Group group = _groupLocalService.getGroup(fragmentEntry.getGroupId());
 
-		List<FragmentEntryLink> fragmentEntryLinks =
-			fragmentEntryLinkPersistence.findByG_FEERC_FESERC_D(
-				groupId, fragmentEntryERC, fragmentEntryScopeERC, deleted);
+		fragmentEntryLinks = fragmentEntryLinkPersistence.findByFEERC_FESERC_D(
+			fragmentEntry.getExternalReferenceCode(),
+			group.getExternalReferenceCode(), deleted);
 
 		for (FragmentEntryLink fragmentEntryLink : fragmentEntryLinks) {
 			fragmentEntryLinkLocalService.deleteFragmentEntryLink(
@@ -325,48 +326,42 @@ public class FragmentEntryLinkLocalServiceImpl
 	}
 
 	@Override
-	public List<FragmentEntryLink> getAllFragmentEntryLinksByFragmentEntryERC(
-		long groupId, String fragmentEntryERC, String fragmentEntryScopeERC,
-		int start, int end,
-		OrderByComparator<FragmentEntryLink> orderByComparator) {
+	public List<FragmentEntryLink> getAllFragmentEntryLinksByFragmentEntry(
+			FragmentEntry fragmentEntry, int start, int end,
+			OrderByComparator<FragmentEntryLink> orderByComparator)
+		throws PortalException {
 
-		return fragmentEntryLinkFinder.findByG_FEERC_FESERC(
-			groupId, fragmentEntryERC, fragmentEntryScopeERC, start, end,
-			orderByComparator);
+		return fragmentEntryLinkPersistence.dslQuery(
+			DSLQueryFactoryUtil.select(
+				FragmentEntryLinkTable.INSTANCE
+			).from(
+				FragmentEntryLinkTable.INSTANCE
+			).where(
+				_getLatestFragmentEntryLinkPredicate(
+					_getAllFragmentEntryLinksByFragmentEntryPredicate(
+						fragmentEntry, FragmentEntryLinkTable.INSTANCE))
+			).orderBy(
+				_getOrderByStepLimitStepFunction(orderByComparator)
+			).limit(
+				start, end
+			));
 	}
 
 	@Override
-	public int getAllFragmentEntryLinksCountByFragmentEntryERC(
-		long groupId, String fragmentEntryERC, String fragmentEntryScopeERC) {
-
-		Predicate fragmentEntryScopeERCPredicate =
-			FragmentEntryLinkTable.INSTANCE.fragmentEntryScopeERC.eq(
-				fragmentEntryScopeERC);
-
-		if (Validator.isNull(fragmentEntryScopeERC)) {
-			fragmentEntryScopeERCPredicate =
-				FragmentEntryLinkTable.INSTANCE.fragmentEntryScopeERC.isNull();
-		}
+	public int getAllFragmentEntryLinksCountByFragmentEntry(
+			FragmentEntry fragmentEntry)
+		throws PortalException {
 
 		return fragmentEntryLinkPersistence.dslQueryCount(
 			DSLQueryFactoryUtil.count(
 			).from(
 				DSLQueryFactoryUtil.selectDistinct(
-					FragmentEntryLinkTable.INSTANCE.classNameId,
 					FragmentEntryLinkTable.INSTANCE.classPK
 				).from(
 					FragmentEntryLinkTable.INSTANCE
 				).where(
-					FragmentEntryLinkTable.INSTANCE.groupId.eq(
-						groupId
-					).and(
-						FragmentEntryLinkTable.INSTANCE.fragmentEntryERC.eq(
-							fragmentEntryERC)
-					).and(
-						fragmentEntryScopeERCPredicate
-					).and(
-						FragmentEntryLinkTable.INSTANCE.deleted.eq(false)
-					)
+					_getAllFragmentEntryLinksByFragmentEntryPredicate(
+						fragmentEntry, FragmentEntryLinkTable.INSTANCE)
 				).as(
 					"tempFragmentEntryLinkTable"
 				)
@@ -436,19 +431,14 @@ public class FragmentEntryLinkLocalServiceImpl
 	}
 
 	@Override
-	public List<FragmentEntryLink> getFragmentEntryLinksByFragmentEntryERC(
-		long groupId, String fragmentEntryERC, String fragmentEntryScopeERC) {
+	public List<FragmentEntryLink> getFragmentEntryLinksByFragmentEntry(
+			long groupId, FragmentEntry fragmentEntry)
+		throws PortalException {
 
 		return fragmentEntryLinkPersistence.findByG_FEERC_FESERC(
-			groupId, fragmentEntryERC, fragmentEntryScopeERC);
-	}
-
-	@Override
-	public List<FragmentEntryLink> getFragmentEntryLinksByFragmentEntryERC(
-		String fragmentEntryERC, String fragmentEntryScopeERC) {
-
-		return fragmentEntryLinkPersistence.findByFEERC_FESERC(
-			fragmentEntryERC, fragmentEntryScopeERC);
+			groupId, fragmentEntry.getExternalReferenceCode(),
+			ScopeUtil.getItemScopeExternalReferenceCode(
+				fragmentEntry.getGroupId(), groupId));
 	}
 
 	@Override
@@ -501,29 +491,15 @@ public class FragmentEntryLinkLocalServiceImpl
 	}
 
 	@Override
-	public int getFragmentEntryLinksCountByFragmentEntryERC(
-		long groupId, String fragmentEntryERC, String fragmentEntryScopeERC,
-		boolean deleted) {
+	public int getFragmentEntryLinksCountByFragmentEntry(
+			long groupId, FragmentEntry fragmentEntry, boolean deleted)
+		throws PortalException {
 
 		return fragmentEntryLinkPersistence.countByG_FEERC_FESERC_D(
-			groupId, fragmentEntryERC, fragmentEntryScopeERC, deleted);
-	}
-
-	@Override
-	public int getFragmentEntryLinksCountByFragmentEntryERC(
-		String fragmentEntryERC, String fragmentEntryScopeERC) {
-
-		return fragmentEntryLinkPersistence.countByFEERC_FESERC(
-			fragmentEntryERC, fragmentEntryScopeERC);
-	}
-
-	@Override
-	public int getFragmentEntryLinksCountByFragmentEntryERC(
-		String fragmentEntryERC, String fragmentEntryScopeERC,
-		boolean deleted) {
-
-		return fragmentEntryLinkPersistence.countByFEERC_FESERC_D(
-			fragmentEntryERC, fragmentEntryScopeERC, deleted);
+			groupId, fragmentEntry.getExternalReferenceCode(),
+			ScopeUtil.getItemScopeExternalReferenceCode(
+				fragmentEntry.getGroupId(), groupId),
+			deleted);
 	}
 
 	@Override
@@ -532,137 +508,68 @@ public class FragmentEntryLinkLocalServiceImpl
 	}
 
 	@Override
-	public List<FragmentEntryLink>
-		getLayoutFragmentEntryLinksByFragmentEntryERC(
-			long groupId, String fragmentEntryERC, String fragmentEntryScopeERC,
-			int start, int end,
-			OrderByComparator<FragmentEntryLink> orderByComparator) {
+	public List<FragmentEntryLink> getLayoutFragmentEntryLinksByFragmentEntry(
+			long groupId, FragmentEntry fragmentEntry, int start, int end,
+			OrderByComparator<FragmentEntryLink> orderByComparator)
+		throws PortalException {
 
-		return fragmentEntryLinkFinder.findByG_FEERC_FESERC_P_L(
-			groupId, fragmentEntryERC, fragmentEntryScopeERC, -1, start, end,
-			orderByComparator);
-	}
-
-	@Override
-	public int getLayoutFragmentEntryLinksCountByFragmentEntryERC(
-		long groupId, String fragmentEntryERC, String fragmentEntryScopeERC) {
-
-		Table<LayoutTable> tempLayoutTableTable = DSLQueryFactoryUtil.select(
-			LayoutTable.INSTANCE.plid
-		).from(
-			LayoutTable.INSTANCE
-		).leftJoinOn(
-			LayoutPageTemplateEntryTable.INSTANCE,
-			LayoutTable.INSTANCE.plid.eq(
-				LayoutPageTemplateEntryTable.INSTANCE.plid
-			).or(
-				LayoutTable.INSTANCE.classPK.eq(
-					LayoutPageTemplateEntryTable.INSTANCE.plid)
-			)
-		).where(
-			LayoutPageTemplateEntryTable.INSTANCE.plid.isNull()
-		).as(
-			"tempLayoutTable", LayoutTable.INSTANCE
-		);
-
-		Predicate fragmentEntryScopeERCPredicate =
-			FragmentEntryLinkTable.INSTANCE.fragmentEntryScopeERC.eq(
-				fragmentEntryScopeERC);
-
-		if (Validator.isNull(fragmentEntryScopeERC)) {
-			fragmentEntryScopeERCPredicate =
-				FragmentEntryLinkTable.INSTANCE.fragmentEntryScopeERC.isNull();
-		}
-
-		return fragmentEntryLinkPersistence.dslQueryCount(
-			DSLQueryFactoryUtil.countDistinct(
-				FragmentEntryLinkTable.INSTANCE.plid
-			).from(
-				FragmentEntryLinkTable.INSTANCE
-			).innerJoinON(
-				tempLayoutTableTable,
-				FragmentEntryLinkTable.INSTANCE.plid.eq(
-					(Expression<Long>)tempLayoutTableTable.getColumn("plid"))
-			).where(
-				FragmentEntryLinkTable.INSTANCE.groupId.eq(
-					groupId
-				).and(
-					FragmentEntryLinkTable.INSTANCE.fragmentEntryERC.eq(
-						fragmentEntryERC)
-				).and(
-					fragmentEntryScopeERCPredicate
-				).and(
-					FragmentEntryLinkTable.INSTANCE.deleted.eq(false)
-				)
+		return fragmentEntryLinkPersistence.dslQuery(
+			_getLayoutFragmentEntryLinksByFragmentEntryGroupByStep(
+				fragmentEntry,
+				DSLQueryFactoryUtil.select(FragmentEntryLinkTable.INSTANCE),
+				true, groupId
+			).orderBy(
+				_getOrderByStepLimitStepFunction(orderByComparator)
+			).limit(
+				start, end
 			));
 	}
 
 	@Override
-	public List<FragmentEntryLink>
-		getLayoutPageTemplateFragmentEntryLinksByFragmentEntryERC(
-			long groupId, String fragmentEntryERC, String fragmentEntryScopeERC,
-			int layoutPageTemplateType, int start, int end,
-			OrderByComparator<FragmentEntryLink> orderByComparator) {
+	public int getLayoutFragmentEntryLinksCountByFragmentEntry(
+			long groupId, FragmentEntry fragmentEntry)
+		throws PortalException {
 
-		return fragmentEntryLinkFinder.findByG_FEERC_FESERC_P_L(
-			groupId, fragmentEntryERC, fragmentEntryScopeERC,
-			layoutPageTemplateType, start, end, orderByComparator);
+		return fragmentEntryLinkPersistence.dslQueryCount(
+			_getLayoutFragmentEntryLinksByFragmentEntryGroupByStep(
+				fragmentEntry,
+				DSLQueryFactoryUtil.countDistinct(
+					FragmentEntryLinkTable.INSTANCE.plid),
+				false, groupId));
 	}
 
 	@Override
-	public int getLayoutPageTemplateFragmentEntryLinksCountByFragmentEntryERC(
-		long groupId, String fragmentEntryERC, String fragmentEntryScopeERC,
-		int layoutPageTemplateType) {
+	public List<FragmentEntryLink>
+			getLayoutPageTemplateFragmentEntryLinksByFragmentEntry(
+				long groupId, FragmentEntry fragmentEntry,
+				int layoutPageTemplateType, int start, int end,
+				OrderByComparator<FragmentEntryLink> orderByComparator)
+		throws PortalException {
 
-		Table<LayoutTable> tempLayoutTableTable = DSLQueryFactoryUtil.select(
-			LayoutTable.INSTANCE.plid
-		).from(
-			LayoutTable.INSTANCE
-		).innerJoinON(
-			LayoutPageTemplateEntryTable.INSTANCE,
-			LayoutTable.INSTANCE.plid.eq(
-				LayoutPageTemplateEntryTable.INSTANCE.plid
-			).or(
-				LayoutTable.INSTANCE.classPK.eq(
-					LayoutPageTemplateEntryTable.INSTANCE.plid)
-			)
-		).where(
-			LayoutPageTemplateEntryTable.INSTANCE.type.eq(
-				layoutPageTemplateType)
-		).as(
-			"tempLayoutTable", LayoutTable.INSTANCE
-		);
+		return fragmentEntryLinkPersistence.dslQuery(
+			_getLayoutPageTemplateFragmentEntryLinksByFragmentEntryGroupByStep(
+				fragmentEntry,
+				DSLQueryFactoryUtil.select(FragmentEntryLinkTable.INSTANCE),
+				layoutPageTemplateType, true, groupId
+			).orderBy(
+				_getOrderByStepLimitStepFunction(orderByComparator)
+			).limit(
+				start, end
+			));
+	}
 
-		Predicate fragmentEntryScopeERCPredicate =
-			FragmentEntryLinkTable.INSTANCE.fragmentEntryScopeERC.eq(
-				fragmentEntryScopeERC);
-
-		if (Validator.isNull(fragmentEntryScopeERC)) {
-			fragmentEntryScopeERCPredicate =
-				FragmentEntryLinkTable.INSTANCE.fragmentEntryScopeERC.isNull();
-		}
+	@Override
+	public int getLayoutPageTemplateFragmentEntryLinksCountByFragmentEntry(
+			long groupId, FragmentEntry fragmentEntry,
+			int layoutPageTemplateType)
+		throws PortalException {
 
 		return fragmentEntryLinkPersistence.dslQueryCount(
-			DSLQueryFactoryUtil.countDistinct(
-				FragmentEntryLinkTable.INSTANCE.plid
-			).from(
-				FragmentEntryLinkTable.INSTANCE
-			).innerJoinON(
-				tempLayoutTableTable,
-				FragmentEntryLinkTable.INSTANCE.plid.eq(
-					(Expression<Long>)tempLayoutTableTable.getColumn("plid"))
-			).where(
-				FragmentEntryLinkTable.INSTANCE.groupId.eq(
-					groupId
-				).and(
-					FragmentEntryLinkTable.INSTANCE.fragmentEntryERC.eq(
-						fragmentEntryERC)
-				).and(
-					fragmentEntryScopeERCPredicate
-				).and(
-					FragmentEntryLinkTable.INSTANCE.deleted.eq(false)
-				)
-			));
+			_getLayoutPageTemplateFragmentEntryLinksByFragmentEntryGroupByStep(
+				fragmentEntry,
+				DSLQueryFactoryUtil.countDistinct(
+					FragmentEntryLinkTable.INSTANCE.plid),
+				layoutPageTemplateType, false, groupId));
 	}
 
 	@Override
@@ -765,15 +672,7 @@ public class FragmentEntryLinkLocalServiceImpl
 			FragmentEntry fragmentEntry, FragmentEntryLink fragmentEntryLink)
 		throws PortalException {
 
-		String fragmentEntryERC = fragmentEntryLink.getFragmentEntryERC();
-
-		if (!Objects.equals(
-				fragmentEntryERC, fragmentEntry.getExternalReferenceCode()) ||
-			((fragmentEntryERC == null) &&
-			 !Objects.equals(
-				 fragmentEntry.getFragmentEntryKey(),
-				 fragmentEntryLink.getRendererKey()))) {
-
+		if (!_isValidFragmentEntry(fragmentEntry, fragmentEntryLink)) {
 			throw new UnsupportedOperationException(
 				"Unable to propagate fragment entry " +
 					fragmentEntry.getFragmentEntryId());
@@ -793,16 +692,13 @@ public class FragmentEntryLinkLocalServiceImpl
 			modified = true;
 		}
 
-		String html = _replaceResources(
-			fragmentEntry.getExternalReferenceCode(),
-			fragmentEntry.getGroupId(), fragmentEntry.getHtml());
+		String html = _replaceResources(fragmentEntry, fragmentEntry.getHtml());
 
 		if (!Objects.equals(fragmentEntryLink.getHtml(), html)) {
 			JSONObject editableValuesJSONObject =
 				fragmentEntryLink.getEditableValuesJSONObject();
 
 			fragmentEntryLink.setHtml(html);
-			fragmentEntryLink.setEditableValues(null);
 
 			fragmentEntryLink.setEditableValues(
 				_fragmentEntryProcessorRegistry.mergeDefaultEditableValues(
@@ -866,26 +762,31 @@ public class FragmentEntryLinkLocalServiceImpl
 		FragmentEntryLink fragmentEntryLink =
 			fragmentEntryLinkPersistence.findByPrimaryKey(fragmentEntryLinkId);
 
-		FragmentEntry fragmentEntry =
-			_fragmentEntryPersistence.fetchByERC_G_Head(
-				fragmentEntryLink.getFragmentEntryERC(),
-				_getFragmentEntryGroupId(
-					fragmentEntryLink.getCompanyId(),
-					fragmentEntryLink.getGroupId(),
-					fragmentEntryLink.getFragmentEntryScopeERC()),
-				true);
+		FragmentEntry fragmentEntry = fragmentEntryLink.fetchFragmentEntry();
 
 		if (fragmentEntry == null) {
-			throw new UnsupportedOperationException(
-				"Unable to propagate fragment entry link " +
-					fragmentEntryLinkId);
+			if (_log.isWarnEnabled()) {
+				_log.warn(
+					"Unable to propagate fragment entry link " +
+						fragmentEntryLinkId +
+							" because its fragment entry is missing");
+			}
+
+			return;
 		}
 
-		updateLatestChanges(fragmentEntry, fragmentEntryLink);
+		updateLatestChanges(
+			_fragmentEntryPersistence.findByPrimaryKey(
+				fragmentEntry.getFragmentEntryId()),
+			fragmentEntryLink);
 	}
 
 	private void _checkUnlockedLayout(long plid, long userId)
 		throws PortalException {
+
+		if (!CheckUnlockedLayoutThreadLocal.isCheckUnlockedLayout()) {
+			return;
+		}
 
 		Layout layout = _layoutLocalService.fetchLayout(plid);
 
@@ -894,22 +795,171 @@ public class FragmentEntryLinkLocalServiceImpl
 		}
 	}
 
-	private long _getFragmentEntryGroupId(
-		long companyId, long groupId, String fragmentEntryScopeERC) {
+	private Predicate _getAllFragmentEntryLinksByFragmentEntryPredicate(
+			FragmentEntry fragmentEntry,
+			FragmentEntryLinkTable fragmentEntryLinkTable)
+		throws PortalException {
 
-		if (Validator.isNull(fragmentEntryScopeERC)) {
-			return groupId;
+		Group group = _groupLocalService.getGroup(fragmentEntry.getGroupId());
+
+		return fragmentEntryLinkTable.fragmentEntryERC.eq(
+			fragmentEntry.getExternalReferenceCode()
+		).and(
+			Predicate.withParentheses(
+				fragmentEntryLinkTable.fragmentEntryScopeERC.eq(
+					group.getExternalReferenceCode()
+				).or(
+					Predicate.withParentheses(
+						fragmentEntryLinkTable.fragmentEntryScopeERC.isNull(
+						).and(
+							fragmentEntryLinkTable.groupId.eq(
+								group.getGroupId())
+						))
+				))
+		).and(
+			fragmentEntryLinkTable.deleted.eq(false)
+		);
+	}
+
+	private Predicate _getFragmentEntryLinksByFragmentEntryPredicate(
+			FragmentEntry fragmentEntry, Predicate predicate, long scopeGroupId)
+		throws PortalException {
+
+		String fragmentEntryScopeERC =
+			ScopeUtil.getItemScopeExternalReferenceCode(
+				fragmentEntry.getGroupId(), scopeGroupId);
+
+		if (Validator.isNotNull(fragmentEntryScopeERC)) {
+			return FragmentEntryLinkTable.INSTANCE.groupId.eq(
+				scopeGroupId
+			).and(
+				FragmentEntryLinkTable.INSTANCE.fragmentEntryERC.eq(
+					fragmentEntry.getExternalReferenceCode())
+			).and(
+				FragmentEntryLinkTable.INSTANCE.fragmentEntryScopeERC.eq(
+					fragmentEntryScopeERC)
+			).and(
+				FragmentEntryLinkTable.INSTANCE.deleted.eq(false)
+			).and(
+				predicate
+			);
 		}
 
-		Group fragmentEntryGroup =
-			_groupLocalService.fetchGroupByExternalReferenceCode(
-				fragmentEntryScopeERC, companyId);
+		return FragmentEntryLinkTable.INSTANCE.groupId.eq(
+			scopeGroupId
+		).and(
+			FragmentEntryLinkTable.INSTANCE.fragmentEntryERC.eq(
+				fragmentEntry.getExternalReferenceCode())
+		).and(
+			FragmentEntryLinkTable.INSTANCE.fragmentEntryScopeERC.isNull()
+		).and(
+			FragmentEntryLinkTable.INSTANCE.deleted.eq(false)
+		).and(
+			predicate
+		);
+	}
 
-		if (fragmentEntryGroup == null) {
-			return 0;
+	private Predicate _getLatestFragmentEntryLinkPredicate(
+		Predicate predicate) {
+
+		return FragmentEntryLinkTable.INSTANCE.fragmentEntryLinkId.in(
+			DSLQueryFactoryUtil.select(
+				DSLFunctionFactoryUtil.max(
+					FragmentEntryLinkTable.INSTANCE.fragmentEntryLinkId)
+			).from(
+				FragmentEntryLinkTable.INSTANCE
+			).where(
+				predicate
+			).groupBy(
+				FragmentEntryLinkTable.INSTANCE.plid
+			));
+	}
+
+	private GroupByStep _getLayoutFragmentEntryLinksByFragmentEntryGroupByStep(
+			FragmentEntry fragmentEntry, FromStep fromStep, boolean latest,
+			long scopeGroupId)
+		throws PortalException {
+
+		Predicate predicate = _getFragmentEntryLinksByFragmentEntryPredicate(
+			fragmentEntry,
+			FragmentEntryLinkTable.INSTANCE.plid.notIn(_getPlidsDSLQuery(null)),
+			scopeGroupId);
+
+		if (latest) {
+			return fromStep.from(
+				FragmentEntryLinkTable.INSTANCE
+			).where(
+				_getLatestFragmentEntryLinkPredicate(predicate)
+			);
 		}
 
-		return fragmentEntryGroup.getGroupId();
+		return fromStep.from(
+			FragmentEntryLinkTable.INSTANCE
+		).where(
+			predicate
+		);
+	}
+
+	private GroupByStep
+			_getLayoutPageTemplateFragmentEntryLinksByFragmentEntryGroupByStep(
+				FragmentEntry fragmentEntry, FromStep fromStep,
+				int layoutPageTemplateType, boolean latest, long scopeGroupId)
+		throws PortalException {
+
+		Predicate predicate = _getFragmentEntryLinksByFragmentEntryPredicate(
+			fragmentEntry,
+			FragmentEntryLinkTable.INSTANCE.plid.in(
+				_getPlidsDSLQuery(
+					LayoutPageTemplateEntryTable.INSTANCE.type.eq(
+						layoutPageTemplateType))),
+			scopeGroupId);
+
+		if (latest) {
+			return fromStep.from(
+				FragmentEntryLinkTable.INSTANCE
+			).where(
+				_getLatestFragmentEntryLinkPredicate(predicate)
+			);
+		}
+
+		return fromStep.from(
+			FragmentEntryLinkTable.INSTANCE
+		).where(
+			predicate
+		);
+	}
+
+	private Function<OrderByStep, LimitStep> _getOrderByStepLimitStepFunction(
+		OrderByComparator<FragmentEntryLink> orderByComparator) {
+
+		return orderByStep -> {
+			if (orderByComparator == null) {
+				return orderByStep.orderBy(
+					FragmentEntryLinkTable.INSTANCE.lastPropagationDate.
+						descending());
+			}
+
+			return orderByStep.orderBy(
+				FragmentEntryLinkTable.INSTANCE, orderByComparator);
+		};
+	}
+
+	private DSLQuery _getPlidsDSLQuery(Predicate predicate) {
+		return DSLQueryFactoryUtil.select(
+			LayoutTable.INSTANCE.plid
+		).from(
+			LayoutTable.INSTANCE
+		).innerJoinON(
+			LayoutPageTemplateEntryTable.INSTANCE,
+			LayoutTable.INSTANCE.plid.eq(
+				LayoutPageTemplateEntryTable.INSTANCE.plid
+			).or(
+				LayoutTable.INSTANCE.classPK.eq(
+					LayoutPageTemplateEntryTable.INSTANCE.plid)
+			)
+		).where(
+			predicate
+		);
 	}
 
 	private String _getProcessedHTML(
@@ -946,16 +996,36 @@ public class FragmentEntryLinkLocalServiceImpl
 				fragmentEntryLink.getGroupId());
 
 		return _fragmentEntryProcessorRegistry.processFragmentEntryLinkHTML(
-			fragmentEntryLink, fragmentEntryProcessorContext);
+			_jsonFactory.createJSONObject(), fragmentEntryLink,
+			fragmentEntryProcessorContext);
 	}
 
-	private String _replaceResources(
-			String fragmentEntryERC, long groupId, String html)
-		throws PortalException {
+	private boolean _isValidFragmentEntry(
+		FragmentEntry fragmentEntry, FragmentEntryLink fragmentEntryLink) {
 
-		FragmentEntry fragmentEntry =
-			_fragmentEntryPersistence.fetchByERC_G_Head(
-				fragmentEntryERC, groupId, true);
+		FragmentEntry fragmentEntryLinkFragmentEntry =
+			fragmentEntryLink.fetchFragmentEntry();
+
+		if ((fragmentEntryLinkFragmentEntry != null) &&
+			(fragmentEntry.getFragmentEntryId() ==
+				fragmentEntryLinkFragmentEntry.getFragmentEntryId())) {
+
+			return true;
+		}
+
+		if ((fragmentEntryLinkFragmentEntry == null) &&
+			Validator.isNotNull(fragmentEntryLink.getFragmentEntryERC())) {
+
+			return false;
+		}
+
+		return Objects.equals(
+			fragmentEntry.getFragmentEntryKey(),
+			fragmentEntryLink.getRendererKey());
+	}
+
+	private String _replaceResources(FragmentEntry fragmentEntry, String html)
+		throws PortalException {
 
 		if (fragmentEntry == null) {
 			return html;

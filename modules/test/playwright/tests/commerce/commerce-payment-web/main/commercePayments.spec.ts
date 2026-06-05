@@ -6,23 +6,23 @@
 import {expect, mergeTests} from '@playwright/test';
 
 import {apiHelpersTest} from '../../../../fixtures/apiHelpersTest';
-import {applicationsMenuPageTest} from '../../../../fixtures/applicationsMenuPageTest';
 import {commercePagesTest} from '../../../../fixtures/commercePagesTest';
 import {dataApiHelpersTest} from '../../../../fixtures/dataApiHelpersTest';
+import {globalMenuPagesTest} from '../../../../fixtures/globalMenuPagesTest';
 import {loginTest} from '../../../../fixtures/loginTest';
 
 export const test = mergeTests(
 	apiHelpersTest,
-	applicationsMenuPageTest,
 	commercePagesTest,
 	dataApiHelpersTest,
+	globalMenuPagesTest,
 	loginTest()
 );
 
 test('LPD-5742 Can view payments list admin page', async ({
 	apiHelpers,
-	applicationsMenuPage,
 	commercePaymentsPage,
+	globalMenuPage,
 	page,
 }) => {
 	const account = await apiHelpers.headlessAdminUser.postAccount({
@@ -35,11 +35,9 @@ test('LPD-5742 Can view payments list admin page', async ({
 		['test@liferay.com']
 	);
 
-	const site = await apiHelpers.headlessSite.createSite({
+	const site = await apiHelpers.headlessAdminSite.postSite({
 		name: 'Payment Site',
 	});
-
-	apiHelpers.data.push({id: site.id, type: 'site'});
 
 	const channel = await apiHelpers.headlessCommerceAdminChannel.postChannel({
 		siteGroupId: site.id,
@@ -85,7 +83,7 @@ test('LPD-5742 Can view payments list admin page', async ({
 		payment.id
 	);
 
-	await applicationsMenuPage.goToPayments();
+	await globalMenuPage.goToCommerce('Payments');
 
 	await expect(page.getByText(payment.id.toString()).first()).toBeVisible();
 

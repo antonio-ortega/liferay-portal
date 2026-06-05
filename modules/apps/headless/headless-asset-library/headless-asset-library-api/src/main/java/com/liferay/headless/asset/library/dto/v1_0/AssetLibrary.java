@@ -193,6 +193,50 @@ public class AssetLibrary implements Serializable {
 	private Supplier<ConnectedSite[]> _connectedSitesSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The user who created the asset library."
+	)
+	@Valid
+	public Creator getCreator() {
+		if (_creatorSupplier != null) {
+			creator = _creatorSupplier.get();
+
+			_creatorSupplier = null;
+		}
+
+		return creator;
+	}
+
+	public void setCreator(Creator creator) {
+		this.creator = creator;
+
+		_creatorSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setCreator(
+		UnsafeSupplier<Creator, Exception> creatorUnsafeSupplier) {
+
+		_creatorSupplier = () -> {
+			try {
+				return creatorUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(description = "The user who created the asset library.")
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected Creator creator;
+
+	@JsonIgnore
+	private Supplier<Creator> _creatorSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The asset library's creator user ID."
 	)
 	public Long getCreatorUserId() {
@@ -453,6 +497,49 @@ public class AssetLibrary implements Serializable {
 
 	@JsonIgnore
 	private Supplier<String> _externalReferenceCodeSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The asset library's friendly URL."
+	)
+	public String getFriendlyURL() {
+		if (_friendlyURLSupplier != null) {
+			friendlyURL = _friendlyURLSupplier.get();
+
+			_friendlyURLSupplier = null;
+		}
+
+		return friendlyURL;
+	}
+
+	public void setFriendlyURL(String friendlyURL) {
+		this.friendlyURL = friendlyURL;
+
+		_friendlyURLSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setFriendlyURL(
+		UnsafeSupplier<String, Exception> friendlyURLUnsafeSupplier) {
+
+		_friendlyURLSupplier = () -> {
+			try {
+				return friendlyURLUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(description = "The asset library's friendly URL.")
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String friendlyURL;
+
+	@JsonIgnore
+	private Supplier<String> _friendlyURLSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The asset library's ID."
@@ -1071,6 +1158,18 @@ public class AssetLibrary implements Serializable {
 			sb.append("]");
 		}
 
+		Creator creator = getCreator();
+
+		if (creator != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"creator\": ");
+
+			sb.append(String.valueOf(creator));
+		}
+
 		Long creatorUserId = getCreatorUserId();
 
 		if (creatorUserId != null) {
@@ -1155,6 +1254,22 @@ public class AssetLibrary implements Serializable {
 			sb.append("\"");
 
 			sb.append(_escape(externalReferenceCode));
+
+			sb.append("\"");
+		}
+
+		String friendlyURL = getFriendlyURL();
+
+		if (friendlyURL != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"friendlyURL\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(friendlyURL));
 
 			sb.append("\"");
 		}
@@ -1355,7 +1470,8 @@ public class AssetLibrary implements Serializable {
 	@GraphQLName("Type")
 	public static enum Type {
 
-		ASSET_LIBRARY("AssetLibrary"), PROJECT("Project"), SPACE("Space");
+		ASSET_LIBRARY("AssetLibrary"), DESIGN_LIBRARY("DesignLibrary"),
+		PROJECT("Project"), SPACE("Space");
 
 		@JsonCreator
 		public static Type create(String value) {
@@ -1479,3 +1595,4 @@ public class AssetLibrary implements Serializable {
 	private Map<String, Serializable> _extendedProperties;
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1402354211

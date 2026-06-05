@@ -6,6 +6,7 @@
 package com.liferay.portal.upgrade.v6_2_0;
 
 import com.liferay.layout.admin.kernel.model.LayoutTypePortletConstants;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.jdbc.AutoBatchPreparedStatementUtil;
 import com.liferay.portal.kernel.portlet.PortletIdCodec;
@@ -14,7 +15,6 @@ import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LoggingTimer;
 import com.liferay.portal.kernel.util.PortletKeys;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portlet.PortalPreferencesImpl;
 
@@ -48,11 +48,14 @@ public class UpgradeCustomizablePortlets extends UpgradeProcess {
 
 	protected void upgradeCustomizablePreferences() throws Exception {
 		try (LoggingTimer loggingTimer = new LoggingTimer();
+
 			PreparedStatement preparedStatement1 = connection.prepareStatement(
 				"select portalPreferencesId, ownerId, ownerType, preferences " +
 					"from PortalPreferences where preferences like " +
 						"'%com.liferay.portal.model.CustomizedPages%'");
+
 			ResultSet resultSet = preparedStatement1.executeQuery();
+
 			PreparedStatement preparedStatement2 =
 				AutoBatchPreparedStatementUtil.concurrentAutoBatch(
 					connection,
@@ -126,7 +129,8 @@ public class UpgradeCustomizablePortlets extends UpgradeProcess {
 				sb.append("portletId = ?");
 
 				try (PreparedStatement preparedStatement =
-						connection.prepareStatement(sb.toString())) {
+						AutoBatchPreparedStatementUtil.autoBatch(
+							connection, sb.toString())) {
 
 					for (String customPortletId : StringUtil.split(value)) {
 						if (!PortletIdCodec.hasInstanceId(customPortletId)) {

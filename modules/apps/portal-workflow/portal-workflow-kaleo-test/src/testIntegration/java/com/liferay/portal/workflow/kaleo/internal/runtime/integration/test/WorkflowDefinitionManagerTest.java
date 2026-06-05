@@ -60,8 +60,8 @@ public class WorkflowDefinitionManagerTest extends BaseWorkflowManagerTestCase {
 		WorkflowDefinition workflowDefinition = _saveWorkflowDefinition();
 
 		_workflowDefinitionManager.undeployWorkflowDefinition(
-			TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
-			workflowDefinition.getName(), workflowDefinition.getVersion());
+			TestPropsValues.getCompanyId(), workflowDefinition.getName(),
+			TestPropsValues.getUserId(), workflowDefinition.getVersion());
 
 		_workflowDefinitionManager.getWorkflowDefinition(
 			TestPropsValues.getCompanyId(), workflowDefinition.getName(),
@@ -70,23 +70,96 @@ public class WorkflowDefinitionManagerTest extends BaseWorkflowManagerTestCase {
 
 	@Test
 	public void testDeployGroovyWorkflowDefinition() throws Exception {
-		String content = StringUtil.read(
-			getResourceInputStream(
-				"single-approver-site-member-workflow-definition.xml"));
-
 		try (Closeable closeable =
 				ScriptManagementConfigurationTestUtil.saveWithCloseable(
 					false)) {
+
+			String content1 = StringUtil.read(
+				getResourceInputStream(
+					"single-approver-site-member-workflow-definition.xml"));
 
 			AssertUtils.assertFailure(
 				KaleoDefinitionValidationException.NotAllowedScriptLanguage.
 					class,
 				"Groovy is not allowed",
 				() -> _workflowDefinitionManager.deployWorkflowDefinition(
-					null, TestPropsValues.getCompanyId(),
-					TestPropsValues.getUserId(), StringPool.BLANK,
+					content1.getBytes(), TestPropsValues.getCompanyId(), null,
 					WorkflowDefinitionConstants.NAME_SINGLE_APPROVER,
-					content.getBytes()));
+					StringPool.BLANK, TestPropsValues.getUserId()));
+
+			String content2 = StringUtil.replace(
+				content1, "<script-language>groovy</script-language>",
+				"<script-language><![CDATA[groovy]]></script-language>");
+
+			AssertUtils.assertFailure(
+				KaleoDefinitionValidationException.NotAllowedScriptLanguage.
+					class,
+				"Groovy is not allowed",
+				() -> _workflowDefinitionManager.deployWorkflowDefinition(
+					content2.getBytes(), TestPropsValues.getCompanyId(), null,
+					WorkflowDefinitionConstants.NAME_SINGLE_APPROVER,
+					StringPool.BLANK, TestPropsValues.getUserId()));
+
+			String content3 = StringUtil.replace(
+				content1, "<name>Site Member Single Approver</name>",
+				"<name>Message Board Threads and Comments Reputation " +
+					"Approver</name>");
+
+			AssertUtils.assertFailure(
+				KaleoDefinitionValidationException.NotAllowedScriptLanguage.
+					class,
+				"Groovy is not allowed",
+				() -> _workflowDefinitionManager.deployWorkflowDefinition(
+					content3.getBytes(), TestPropsValues.getCompanyId(), null,
+					"Message Board Threads and Comments Reputation Approver",
+					StringPool.BLANK, TestPropsValues.getUserId()));
+		}
+	}
+
+	@Test
+	public void testDeployJavaWorkflowDefinition() throws Exception {
+		try (Closeable closeable =
+				ScriptManagementConfigurationTestUtil.saveWithCloseable(
+					false)) {
+
+			String content1 = StringUtil.replace(
+				StringUtil.read(
+					getResourceInputStream(
+						"single-approver-site-member-workflow-definition.xml")),
+				"<script-language>groovy</script-language>",
+				"<script-language>java</script-language>");
+
+			AssertUtils.assertFailure(
+				KaleoDefinitionValidationException.NotAllowedScriptLanguage.
+					class,
+				"Java is not allowed",
+				() -> _workflowDefinitionManager.deployWorkflowDefinition(
+					content1.getBytes(), TestPropsValues.getCompanyId(), null,
+					WorkflowDefinitionConstants.NAME_SINGLE_APPROVER,
+					StringPool.BLANK, TestPropsValues.getUserId()));
+
+			String content2 = StringUtil.replace(
+				content1, "<script-language>java</script-language>",
+				"<script-language><![CDATA[java]]></script-language>");
+
+			AssertUtils.assertFailure(
+				KaleoDefinitionValidationException.NotAllowedScriptLanguage.
+					class,
+				"Java is not allowed",
+				() -> _workflowDefinitionManager.deployWorkflowDefinition(
+					content2.getBytes(), TestPropsValues.getCompanyId(), null,
+					WorkflowDefinitionConstants.NAME_SINGLE_APPROVER,
+					StringPool.BLANK, TestPropsValues.getUserId()));
+
+			String content3 = StringUtil.replace(
+				content1, "<name>Site Member Single Approver</name>",
+				"<name>Message Board Threads and Comments Reputation " +
+					"Approver</name>");
+
+			_workflowDefinitionManager.deployWorkflowDefinition(
+				content3.getBytes(), TestPropsValues.getCompanyId(), null,
+				"Message Board Threads and Comments Reputation Approver",
+				StringPool.BLANK, TestPropsValues.getUserId());
 		}
 	}
 
@@ -103,12 +176,12 @@ public class WorkflowDefinitionManagerTest extends BaseWorkflowManagerTestCase {
 						"definition.json");
 
 				_workflowDefinitionManager.deployWorkflowDefinition(
-					RandomTestUtil.randomString(),
-					TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
+					FileUtil.getBytes(inputStream),
+					TestPropsValues.getCompanyId(),
 					RandomTestUtil.randomString(),
 					"AI Decision Node With No Incoming Transitions Workflow " +
 						"Definition",
-					FileUtil.getBytes(inputStream));
+					RandomTestUtil.randomString(), TestPropsValues.getUserId());
 			});
 		AssertUtils.assertFailure(
 			KaleoDefinitionValidationException.
@@ -120,12 +193,12 @@ public class WorkflowDefinitionManagerTest extends BaseWorkflowManagerTestCase {
 						"workflow-definition.json");
 
 				_workflowDefinitionManager.deployWorkflowDefinition(
-					RandomTestUtil.randomString(),
-					TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
+					FileUtil.getBytes(inputStream),
+					TestPropsValues.getCompanyId(),
 					RandomTestUtil.randomString(),
 					"AI Decision Node With Less Than Two Outgoing Transition " +
 						"Workflow Definition",
-					FileUtil.getBytes(inputStream));
+					RandomTestUtil.randomString(), TestPropsValues.getUserId());
 			});
 
 		InputStream inputStream = getResourceInputStream(
@@ -133,10 +206,10 @@ public class WorkflowDefinitionManagerTest extends BaseWorkflowManagerTestCase {
 
 		WorkflowDefinition workflowDefinition =
 			_workflowDefinitionManager.deployWorkflowDefinition(
-				RandomTestUtil.randomString(), TestPropsValues.getCompanyId(),
-				TestPropsValues.getUserId(), RandomTestUtil.randomString(),
+				FileUtil.getBytes(inputStream), TestPropsValues.getCompanyId(),
+				RandomTestUtil.randomString(),
 				"AI Decision Node Workflow Definition",
-				FileUtil.getBytes(inputStream));
+				RandomTestUtil.randomString(), TestPropsValues.getUserId());
 
 		List<WorkflowNode> workflowNodes =
 			workflowDefinition.getWorkflowNodes();
@@ -171,7 +244,8 @@ public class WorkflowDefinitionManagerTest extends BaseWorkflowManagerTestCase {
 					"tools",
 					JSONUtil.put(
 						JSONUtil.put(
-							"externalReferenceCode", "L_LIFERAY_MCP_SERVER")
+							"externalReferenceCode",
+							"L_LIFERAY_AI_HUB_MCP_SERVER")
 					).toString()),
 				_createWorkflowNodeSetting("userMessage", "User Message")),
 			workflowNode.getWorkflowNodeSettings());
@@ -188,10 +262,9 @@ public class WorkflowDefinitionManagerTest extends BaseWorkflowManagerTestCase {
 
 		WorkflowDefinition workflowDefinition =
 			_workflowDefinitionManager.deployWorkflowDefinition(
-				null, TestPropsValues.getCompanyId(),
-				TestPropsValues.getUserId(), StringPool.BLANK,
+				content.getBytes(), TestPropsValues.getCompanyId(), null,
 				WorkflowDefinitionConstants.NAME_SINGLE_APPROVER,
-				content.getBytes());
+				StringPool.BLANK, TestPropsValues.getUserId());
 
 		Assert.assertEquals(
 			workflowDefinition.getName(), workflowDefinition.getName());
@@ -207,12 +280,11 @@ public class WorkflowDefinitionManagerTest extends BaseWorkflowManagerTestCase {
 
 		WorkflowDefinition workflowDefinition =
 			_workflowDefinitionManager.deployWorkflowDefinition(
+				content.getBytes(), TestPropsValues.getCompanyId(),
 				WorkflowDefinitionConstants.
 					EXTERNAL_REFERENCE_CODE_SINGLE_APPROVER,
-				TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
-				StringPool.BLANK,
 				WorkflowDefinitionConstants.NAME_SINGLE_APPROVER,
-				content.getBytes());
+				StringPool.BLANK, TestPropsValues.getUserId());
 
 		Assert.assertEquals(
 			workflowDefinition.getName(), workflowDefinition.getName());
@@ -231,12 +303,12 @@ public class WorkflowDefinitionManagerTest extends BaseWorkflowManagerTestCase {
 						"definition.json");
 
 				_workflowDefinitionManager.deployWorkflowDefinition(
-					RandomTestUtil.randomString(),
-					TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
+					FileUtil.getBytes(inputStream),
+					TestPropsValues.getCompanyId(),
 					RandomTestUtil.randomString(),
 					"LLM Node With Multiple Outgoing Transition Workflow " +
 						"Definition",
-					FileUtil.getBytes(inputStream));
+					RandomTestUtil.randomString(), TestPropsValues.getUserId());
 			});
 
 		InputStream inputStream = getResourceInputStream(
@@ -244,9 +316,9 @@ public class WorkflowDefinitionManagerTest extends BaseWorkflowManagerTestCase {
 
 		WorkflowDefinition workflowDefinition =
 			_workflowDefinitionManager.deployWorkflowDefinition(
-				RandomTestUtil.randomString(), TestPropsValues.getCompanyId(),
-				TestPropsValues.getUserId(), RandomTestUtil.randomString(),
-				"LLM Node Workflow Definition", FileUtil.getBytes(inputStream));
+				FileUtil.getBytes(inputStream), TestPropsValues.getCompanyId(),
+				RandomTestUtil.randomString(), "LLM Node Workflow Definition",
+				RandomTestUtil.randomString(), TestPropsValues.getUserId());
 
 		List<WorkflowNode> workflowNodes =
 			workflowDefinition.getWorkflowNodes();
@@ -280,7 +352,8 @@ public class WorkflowDefinitionManagerTest extends BaseWorkflowManagerTestCase {
 					"tools",
 					JSONUtil.put(
 						JSONUtil.put(
-							"externalReferenceCode", "L_LIFERAY_MCP_SERVER")
+							"externalReferenceCode",
+							"L_LIFERAY_AI_HUB_MCP_SERVER")
 					).toString()),
 				_createWorkflowNodeSetting("userMessage", "User Message")),
 			workflowNode.getWorkflowNodeSettings());
@@ -296,9 +369,9 @@ public class WorkflowDefinitionManagerTest extends BaseWorkflowManagerTestCase {
 
 		WorkflowDefinition deployedWorkflowDefinition =
 			_workflowDefinitionManager.deployWorkflowDefinition(
-				null, TestPropsValues.getCompanyId(),
-				workflowDefinition.getUserId(), workflowDefinition.getTitle(),
-				workflowDefinition.getName(), content.getBytes());
+				content.getBytes(), TestPropsValues.getCompanyId(), null,
+				workflowDefinition.getName(), workflowDefinition.getTitle(),
+				workflowDefinition.getUserId());
 
 		Assert.assertEquals(
 			workflowDefinition.getName(), deployedWorkflowDefinition.getName());
@@ -757,8 +830,8 @@ public class WorkflowDefinitionManagerTest extends BaseWorkflowManagerTestCase {
 		throws Exception {
 
 		return _workflowDefinitionManager.saveWorkflowDefinition(
-			null, TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
-			title, StringUtil.randomId(), bytes);
+			bytes, TestPropsValues.getCompanyId(), null, StringUtil.randomId(),
+			title, TestPropsValues.getUserId());
 	}
 
 	private void _testGetWorkflowDefinition(String externalReferenceCode)
@@ -766,7 +839,7 @@ public class WorkflowDefinitionManagerTest extends BaseWorkflowManagerTestCase {
 
 		WorkflowDefinition workflowDefinition =
 			_workflowDefinitionManager.getWorkflowDefinition(
-				externalReferenceCode, TestPropsValues.getCompanyId());
+				TestPropsValues.getCompanyId(), externalReferenceCode);
 
 		Assert.assertEquals(
 			externalReferenceCode,

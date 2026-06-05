@@ -149,3 +149,4 @@ public class ConnectionInfo implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:1619046306

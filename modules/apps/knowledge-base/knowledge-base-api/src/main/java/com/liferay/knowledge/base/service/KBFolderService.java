@@ -122,3 +122,4 @@ public interface KBFolderService extends BaseService {
 		throws PortalException;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-942503800

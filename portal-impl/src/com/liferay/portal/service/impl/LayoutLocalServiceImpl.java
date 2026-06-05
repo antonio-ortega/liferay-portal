@@ -42,6 +42,7 @@ import com.liferay.portal.kernel.exception.SitemapIncludeException;
 import com.liferay.portal.kernel.exception.SitemapPagePriorityException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.lazy.referencing.LazyReferencingThreadLocal;
 import com.liferay.portal.kernel.lock.LockManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -248,6 +249,12 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 		throws PortalException {
 
 		// Layout
+
+		if (!LazyReferencingThreadLocal.isEnabled() &&
+			Objects.equals(type, LayoutConstants.TYPE_EMPTY)) {
+
+			throw new LayoutTypeException(LayoutTypeException.EMPTY);
+		}
 
 		User user = _userPersistence.findByPrimaryKey(userId);
 		long layoutId = getNextLayoutId(groupId, privateLayout);
@@ -484,7 +491,8 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 				"layoutSetPrototypeLayoutERC",
 				serviceContext.getAttribute(
 					"draftLayoutLayoutSetPrototypeLayoutERC"));
-			serviceContext.setModifiedDate(date);
+			serviceContext.setModifiedDate(
+				serviceContext.getModifiedDate(date));
 
 			addLayout(
 				GetterUtil.getString(
@@ -2389,7 +2397,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 	public Layout getOrAddEmptyLayout(
 			String externalReferenceCode, long userId, long groupId,
-			ServiceContext serviceContext)
+			boolean privateLayout, ServiceContext serviceContext)
 		throws Exception {
 
 		return EmptyModelManagerUtil.getOrAddEmptyModel(
@@ -2399,7 +2407,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 					"layout.instanceable.allowed", Boolean.TRUE);
 
 				return layoutLocalService.addLayout(
-					externalReferenceCode, userId, groupId, false,
+					externalReferenceCode, userId, groupId, privateLayout,
 					LayoutConstants.DEFAULT_PARENT_LAYOUT_ID,
 					externalReferenceCode, StringPool.BLANK, null,
 					LayoutConstants.TYPE_EMPTY, true, false, null,
@@ -3010,6 +3018,17 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 		return layoutLocalService.updateLayout(layout);
 	}
 
+	@Override
+	public Layout updateIconImageId(long plid, long iconImageId)
+		throws PortalException {
+
+		Layout layout = layoutPersistence.findByPrimaryKey(plid);
+
+		layout.setIconImageId(iconImageId);
+
+		return layoutPersistence.update(layout);
+	}
+
 	/**
 	 * Updates the layout replacing its draft publish date.
 	 *
@@ -3244,11 +3263,12 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 			}
 		}
 
+		layout.setStatus(
+			EmptyModelManagerUtil.solveEmptyModel(
+				layout.getExternalReferenceCode(), layout.getModelClassName(),
+				layout.getCompanyId(), groupId, layout.getStatus(),
+				() -> WorkflowConstants.STATUS_APPROVED));
 		layout.setExpandoBridgeAttributes(serviceContext);
-
-		if (layout.getStatus() == WorkflowConstants.STATUS_EMPTY) {
-			layout.setStatus(WorkflowConstants.STATUS_APPROVED);
-		}
 
 		layout = layoutLocalService.updateLayout(layout);
 

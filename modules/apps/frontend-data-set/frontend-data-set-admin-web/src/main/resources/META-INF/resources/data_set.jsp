@@ -9,11 +9,13 @@
 
 <%
 String backURL = ParamUtil.getString(request, "backURL");
+String dataSetERC = ParamUtil.getString(request, "dataSetERC");
+String dataSetLabel = ParamUtil.getString(request, "dataSetLabel");
 
 portletDisplay.setShowBackIcon(true);
-portletDisplay.setURLBack(ParamUtil.getString(request, "backURL"));
+portletDisplay.setURLBack(backURL);
 
-renderResponse.setTitle(ParamUtil.getString(request, "dataSetLabel"));
+renderResponse.setTitle(dataSetLabel);
 %>
 
 <react:component
@@ -24,11 +26,13 @@ renderResponse.setTitle(ParamUtil.getString(request, "dataSetLabel"));
 		).put(
 			"cellClientExtensionRenderers", fdsAdminDisplayContext.getCellClientExtensionRenderersJSONArray()
 		).put(
-			"dataSetERC", ParamUtil.getString(request, "dataSetERC")
+			"dataSetERC", dataSetERC
 		).put(
 			"filterClientExtensionRenderers", fdsAdminDisplayContext.getFDSFilterCETsJSONArray()
 		).put(
 			"learnResources", LearnMessageUtil.getReactDataJSONObject("frontend-data-set-admin-web")
+		).put(
+			"manageUserViewsURL", fdsAdminDisplayContext.getManageUserViewsURL()
 		).put(
 			"namespace", liferayPortletResponse.getNamespace()
 		).put(

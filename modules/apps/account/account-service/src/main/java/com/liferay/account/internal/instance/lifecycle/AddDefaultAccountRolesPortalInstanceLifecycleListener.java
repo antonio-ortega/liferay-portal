@@ -167,12 +167,14 @@ public class AddDefaultAccountRolesPortalInstanceLifecycleListener
 		_accountAdministratorResourceActionsMap = HashMapBuilder.put(
 			AccountEntry.class.getName(),
 			new String[] {
-				ActionKeys.UPDATE, ActionKeys.MANAGE_USERS,
+				AccountActionKeys.ADD_USER, AccountActionKeys.ASSIGN_USERS,
 				AccountActionKeys.MANAGE_ADDRESSES,
+				AccountActionKeys.UNASSIGN_USERS,
+				AccountActionKeys.UPDATE_USERS,
 				AccountActionKeys.VIEW_ADDRESSES,
 				AccountActionKeys.VIEW_ACCOUNT_ROLES,
 				AccountActionKeys.VIEW_ORGANIZATIONS,
-				AccountActionKeys.VIEW_USERS
+				AccountActionKeys.VIEW_USERS, ActionKeys.UPDATE
 			}
 		).put(
 			AccountRole.class.getName(), new String[] {ActionKeys.VIEW}
@@ -181,12 +183,14 @@ public class AddDefaultAccountRolesPortalInstanceLifecycleListener
 		_accountManagerResourceActionsMap = HashMapBuilder.put(
 			AccountEntry.class.getName(),
 			new String[] {
+				AccountActionKeys.ADD_USER, AccountActionKeys.ASSIGN_USERS,
 				AccountActionKeys.MANAGE_ADDRESSES,
+				AccountActionKeys.UNASSIGN_USERS,
+				AccountActionKeys.UPDATE_USERS,
 				AccountActionKeys.VIEW_ACCOUNT_ROLES,
 				AccountActionKeys.VIEW_ADDRESSES,
 				AccountActionKeys.VIEW_ORGANIZATIONS,
-				AccountActionKeys.VIEW_USERS, ActionKeys.MANAGE_USERS,
-				ActionKeys.UPDATE
+				AccountActionKeys.VIEW_USERS, ActionKeys.UPDATE
 			}
 		).put(
 			AccountRole.class.getName(), new String[] {ActionKeys.VIEW}

@@ -178,6 +178,12 @@ public class PortalPreferenceValuePersistenceTest {
 	}
 
 	@Test
+	public void testCountByPortalPreferencesIdArrayable() throws Exception {
+		_persistence.countByPortalPreferencesId(
+			new long[] {RandomTestUtil.nextLong(), 0L});
+	}
+
+	@Test
 	public void testCountByP_N() throws Exception {
 		_persistence.countByP_N(RandomTestUtil.nextLong(), "");
 
@@ -598,3 +604,4 @@ public class PortalPreferenceValuePersistenceTest {
 	private ClassLoader _dynamicQueryClassLoader;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:2130033114

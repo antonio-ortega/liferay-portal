@@ -5,6 +5,7 @@
 
 package com.liferay.headless.commerce.delivery.order.internal.resource.v1_0;
 
+import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.headless.commerce.delivery.order.dto.v1_0.PlacedOrderItemShipment;
 import com.liferay.headless.commerce.delivery.order.resource.v1_0.PlacedOrderItemShipmentResource;
 import com.liferay.petra.function.UnsafeBiConsumer;
@@ -73,7 +74,7 @@ public abstract class BasePlacedOrderItemShipmentResourceImpl
 	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-delivery-order/v1.0/placed-order-items/by-externalReferenceCode/{externalReferenceCode}/placed-order-item-shipments'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
-		description = "Retrieve shipments of the given placed order item."
+		description = "Lists the shipments that fulfill the placed-order line item addressed by ERC. Includes drop-ship supplier shipments when the line was fulfilled through supplier orders. The parent order must not be OPEN."
 	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
@@ -113,7 +114,7 @@ public abstract class BasePlacedOrderItemShipmentResourceImpl
 	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-delivery-order/v1.0/placed-order-items/{placedOrderItemId}/placed-order-item-shipments'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
-		description = "Retrieve shipments of the given Placed Order Item."
+		description = "Lists the shipments that fulfill the placed-order line item addressed by id. Includes drop-ship supplier shipments when the line was fulfilled through supplier orders. The parent order must not be OPEN."
 	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
@@ -302,6 +303,15 @@ public abstract class BasePlacedOrderItemShipmentResourceImpl
 			@Override
 			public Locale getPreferredLocale() {
 				return LocaleUtil.fromLanguageId(languageId);
+			}
+
+			@Override
+			public boolean isAcceptAllLanguages() {
+				if (ExportImportThreadLocal.isExportInProcess()) {
+					return true;
+				}
+
+				return AcceptLanguage.super.isAcceptAllLanguages();
 			}
 
 		};
@@ -890,3 +900,4 @@ public abstract class BasePlacedOrderItemShipmentResourceImpl
 		LogFactoryUtil.getLog(BasePlacedOrderItemShipmentResourceImpl.class);
 
 }
+// LIFERAY-REST-BUILDER-HASH:-240370534

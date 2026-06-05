@@ -229,3 +229,4 @@ public class CustomMetaTagSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:564782282

@@ -5,26 +5,18 @@
 
 package com.liferay.site.cms.site.initializer.internal.fragment.renderer;
 
+import com.liferay.bulk.selection.constants.BulkSelectionActionStatusConstants;
 import com.liferay.info.constants.InfoDisplayWebKeys;
-import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntry;
-import com.liferay.object.model.ObjectRelationship;
-import com.liferay.object.service.ObjectDefinitionLocalService;
-import com.liferay.object.service.ObjectEntryLocalService;
-import com.liferay.object.service.ObjectRelationshipLocalService;
-import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.ListUtil;
-import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.kernel.util.StringUtil;
 
 import jakarta.servlet.http.HttpServletRequest;
 
-import java.util.List;
-import java.util.Objects;
+import java.io.Serializable;
 
-import org.osgi.service.component.annotations.Reference;
+import java.util.Map;
 
 /**
  * @author Ivica Cardic
@@ -49,52 +41,23 @@ public abstract class BaseBulkActionTaskComponentSectionFragmentRenderer
 			return -1;
 		}
 
-		ThemeDisplay themeDisplay =
-			(ThemeDisplay)httpServletRequest.getAttribute(
-				WebKeys.THEME_DISPLAY);
+		Map<String, Serializable> values =
+			cmsBulkActionTaskObjectEntry.getValues();
 
-		ObjectDefinition objectDefinition =
-			objectDefinitionLocalService.
-				getObjectDefinitionByExternalReferenceCode(
-					"L_CMS_BULK_ACTION_TASK", themeDisplay.getCompanyId());
+		String status = (String)values.get("executionStatus");
 
-		ObjectRelationship objectRelationship =
-			objectRelationshipLocalService.getObjectRelationship(
-				objectDefinition.getObjectDefinitionId(),
-				"cmsBATaskToCMSBATaskItems");
+		if (StringUtil.equals(
+				status, BulkSelectionActionStatusConstants.COMPLETED)) {
 
-		List<ObjectEntry> objectEntries = ListUtil.filter(
-			objectEntryLocalService.getOneToManyObjectEntries(
-				cmsBulkActionTaskObjectEntry.getGroupId(),
-				objectRelationship.getObjectRelationshipId(), null, false,
-				cmsBulkActionTaskObjectEntry.getObjectEntryId(), true, null,
-				QueryUtil.ALL_POS, QueryUtil.ALL_POS, null),
-			objectEntry ->
-				Objects.equals(
-					GetterUtil.getLong(
-						objectEntry.getValues(
-						).get(
-							"r_cmsBATaskToCMSBATaskItems_c_cmsBulkActionTaskId"
-						)),
-					cmsBulkActionTaskObjectEntry.getObjectEntryId()) &&
-				Objects.equals(
-					GetterUtil.getString(
-						objectEntry.getValues(
-						).get(
-							"executionStatus"
-						)),
-					executionStatus));
+			return GetterUtil.getInteger(values.get("numberOfSuccessfulItems"));
+		}
+		else if (StringUtil.equals(
+					status, BulkSelectionActionStatusConstants.FAILED)) {
 
-		return objectEntries.size();
+			return GetterUtil.getInteger(values.get("numberOfFailedItems"));
+		}
+
+		return -1;
 	}
-
-	@Reference
-	protected ObjectDefinitionLocalService objectDefinitionLocalService;
-
-	@Reference
-	protected ObjectEntryLocalService objectEntryLocalService;
-
-	@Reference
-	protected ObjectRelationshipLocalService objectRelationshipLocalService;
 
 }

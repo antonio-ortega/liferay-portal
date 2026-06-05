@@ -41,62 +41,81 @@ public class CommercePermissionUpgradeProcess extends UpgradeProcess {
 
 	private void _deleteGuestPermission() throws Exception {
 		try (PreparedStatement preparedStatement = connection.prepareStatement(
-			StringBundler.concat(
-				"select companyId, resourcePermissionId, roleId from ",
-				"ResourcePermission where name = 'com.liferay.commerce.order' ",
-				"and primKey = 'com.liferay.commerce.order' and scope = 4"));
+				StringBundler.concat(
+					"select companyId, resourcePermissionId, roleId from ",
+					"ResourcePermission where name = 'com.liferay.commerce.",
+					"order' and primKey = 'com.liferay.commerce.order' and ",
+					"scope = 4"));
 
-			 ResultSet resultSet = preparedStatement.executeQuery()) {
+			ResultSet resultSet = preparedStatement.executeQuery()) {
 
 			while (resultSet.next()) {
-				long roleId = resultSet.getLong(3);
-
 				Role role = _roleLocalService.fetchRole(
-					resultSet.getLong(1), RoleConstants.GUEST);
+					resultSet.getLong("companyId"), RoleConstants.GUEST);
 
-				if ((role != null) && (roleId == role.getRoleId())) {
-					_resourcePermissionLocalService.deleteResourcePermission(
-						resultSet.getLong(2));
+				if (role == null) {
+					continue;
 				}
+
+				long roleId = resultSet.getLong("roleId");
+
+				if (roleId != role.getRoleId()) {
+					continue;
+				}
+
+				_resourcePermissionLocalService.deleteResourcePermission(
+					resultSet.getLong("resourcePermissionId"));
 			}
 		}
 	}
 
 	private void _updateSalesAgentPermission() throws Exception {
 		try (PreparedStatement preparedStatement = connection.prepareStatement(
-			StringBundler.concat(
-				"select companyId, resourcePermissionId, roleId from ",
-				"ResourcePermission where name = 'com.liferay.commerce.order' ",
-				"and primKey = 'com.liferay.commerce.order' and scope = 1"));
+				StringBundler.concat(
+					"select companyId, resourcePermissionId, roleId from ",
+					"ResourcePermission where name = 'com.liferay.commerce.",
+					"order' and primKey = 'com.liferay.commerce.order' and ",
+					"scope = 1"));
 
-			 ResultSet resultSet = preparedStatement.executeQuery()) {
+			ResultSet resultSet = preparedStatement.executeQuery()) {
 
 			while (resultSet.next()) {
-				long roleId = resultSet.getLong(3);
-
 				Role role = _roleLocalService.fetchRole(
-					resultSet.getLong(1), "Sales Agent");
+					resultSet.getLong("companyId"), "Sales Agent");
 
-				if ((role != null) && (roleId == role.getRoleId())) {
-					ResourcePermission resourcePermission =
-						_resourcePermissionLocalService.getResourcePermission(
-							resultSet.getLong(2));
-
-					ResourceAction resourceAction =
-						_resourceActionLocalService.fetchResourceAction(
-							"com.liferay.commerce.order", "ADD_COMMERCE_ORDER");
-
-					if ((resourceAction != null) &&
-						!_resourcePermissionLocalService.hasActionId(
-							resourcePermission, resourceAction)) {
-
-						resourcePermission.addResourceAction(
-							resourceAction.getActionId());
-
-						_resourcePermissionLocalService.
-							updateResourcePermission(resourcePermission);
-					}
+				if (role == null) {
+					continue;
 				}
+
+				long roleId = resultSet.getLong("roleId");
+
+				if (roleId != role.getRoleId()) {
+					continue;
+				}
+
+				ResourceAction resourceAction =
+					_resourceActionLocalService.fetchResourceAction(
+						"com.liferay.commerce.order", "ADD_COMMERCE_ORDER");
+
+				if (resourceAction == null) {
+					continue;
+				}
+
+				ResourcePermission resourcePermission =
+					_resourcePermissionLocalService.getResourcePermission(
+						resultSet.getLong("resourcePermissionId"));
+
+				if (_resourcePermissionLocalService.hasActionId(
+						resourcePermission, resourceAction)) {
+
+					continue;
+				}
+
+				resourcePermission.addResourceAction(
+					resourceAction.getActionId());
+
+				_resourcePermissionLocalService.updateResourcePermission(
+					resourcePermission);
 			}
 		}
 	}

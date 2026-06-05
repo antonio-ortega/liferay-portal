@@ -46,7 +46,6 @@ const RequiredInformation = ({
 }) => {
 	const {
 		client,
-		featureFlags,
 		provisioningServerAPI,
 	} = useAppPropertiesContext();
 
@@ -127,13 +126,14 @@ const RequiredInformation = ({
 		setBaseButtonDisabled(getVerificationDisabledType());
 
 		setAddButtonDisabled(
-			hasReachedMaximumKeys || !hasFilledAtLeastOneField
+			hasReachedMaximumKeys || !hasFilledAtLeastOneField || isComplimentaryKey
 		);
 	}, [
 		hasError,
 		hasFilledAtLeastOneField,
 		hasNotPermanentLicenseRenewKeyType,
 		hasReachedMaximumKeys,
+		isComplimentaryKey,
 		selectedKeyData.hasNotPermanentLicense,
 		isOemOrEnterprise,
 		values.maxClusterNodes,
@@ -324,10 +324,7 @@ const RequiredInformation = ({
 	]);
 
 	const CheckboxSubscriptionNotification = () => {
-		if (
-			featureFlags.includes('LPS-180001') &&
-			(selectedKeyData?.hasNotPermanentLicense || isComplimentaryKey)
-		) {
+		if (selectedKeyData?.hasNotPermanentLicense || isComplimentaryKey) {
 			return (
 				<>
 					<div className="d-flex mb-3 pt-2">

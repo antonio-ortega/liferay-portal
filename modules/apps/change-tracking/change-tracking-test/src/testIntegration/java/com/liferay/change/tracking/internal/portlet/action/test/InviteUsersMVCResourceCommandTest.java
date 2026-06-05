@@ -10,8 +10,13 @@ import com.liferay.change.tracking.configuration.CTCollectionEmailConfiguration;
 import com.liferay.change.tracking.constants.CTPortletKeys;
 import com.liferay.change.tracking.model.CTCollection;
 import com.liferay.change.tracking.service.CTCollectionLocalService;
+import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.configuration.test.util.CompanyConfigurationTemporarySwapper;
+import com.liferay.portal.kernel.json.JSONFactoryUtil;
+import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCResourceCommand;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
@@ -22,6 +27,8 @@ import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.test.portlet.MockLiferayResourceRequest;
 import com.liferay.portal.kernel.test.portlet.MockLiferayResourceResponse;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.util.CompanyTestUtil;
+import com.liferay.portal.kernel.test.util.PropsValuesTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
@@ -29,6 +36,7 @@ import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.JavaConstants;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.test.mail.MailMessage;
@@ -40,6 +48,9 @@ import com.liferay.portal.test.rule.SynchronousMailTestRule;
 
 import jakarta.portlet.PortletRequest;
 
+import java.io.ByteArrayOutputStream;
+
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -66,6 +77,14 @@ public class InviteUsersMVCResourceCommandTest {
 		_ctCollection = _ctCollectionLocalService.addCTCollection(
 			null, TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
 			0, RandomTestUtil.randomString(), null);
+
+		_safeCloseable = PropsValuesTestUtil.swapWithSafeCloseable(
+			"AUTH_TOKEN_CHECK_ENABLED", false);
+	}
+
+	@After
+	public void tearDown() throws Exception {
+		_safeCloseable.close();
 	}
 
 	@Test
@@ -163,6 +182,32 @@ public class InviteUsersMVCResourceCommandTest {
 		}
 	}
 
+	@Test
+	public void testGetInviteUsersWithInvalidUser() throws Exception {
+		Company company = CompanyTestUtil.addCompany();
+
+		User user = UserTestUtil.addUser(company);
+
+		MockLiferayResourceResponse mockLiferayResourceResponse =
+			new MockLiferayResourceResponse();
+
+		_mvcResourceCommand.serveResource(
+			_getMockLiferayResourceRequest(
+				_ctCollection.getCtCollectionId(), user.getUserId()),
+			mockLiferayResourceResponse);
+
+		ByteArrayOutputStream byteArrayOutputStream =
+			(ByteArrayOutputStream)
+				mockLiferayResourceResponse.getPortletOutputStream();
+
+		JSONObject jsonObject = JSONFactoryUtil.createJSONObject(
+			new String(byteArrayOutputStream.toByteArray()));
+
+		Assert.assertEquals(
+			_language.get(LocaleUtil.US, "your-request-failed-to-complete"),
+			jsonObject.getString("errorMessage"));
+	}
+
 	private MockLiferayResourceRequest _getMockLiferayResourceRequest(
 			long ctCollectionId, long userId)
 		throws Exception {
@@ -189,6 +234,7 @@ public class InviteUsersMVCResourceCommandTest {
 
 		themeDisplay.setCompany(
 			_companyLocalService.fetchCompany(TestPropsValues.getCompanyId()));
+		themeDisplay.setLocale(LocaleUtil.US);
 		themeDisplay.setPermissionChecker(
 			PermissionThreadLocal.getPermissionChecker());
 		themeDisplay.setSiteGroupId(TestPropsValues.getGroupId());
@@ -223,13 +269,16 @@ public class InviteUsersMVCResourceCommandTest {
 		}
 	}
 
-	private static CTCollection _ctCollection;
-
-	@Inject
-	private static CTCollectionLocalService _ctCollectionLocalService;
-
 	@Inject
 	private CompanyLocalService _companyLocalService;
+
+	private CTCollection _ctCollection;
+
+	@Inject
+	private CTCollectionLocalService _ctCollectionLocalService;
+
+	@Inject
+	private Language _language;
 
 	@Inject(filter = "mvc.command.name=/change_tracking/invite_users")
 	private MVCResourceCommand _mvcResourceCommand;
@@ -237,6 +286,7 @@ public class InviteUsersMVCResourceCommandTest {
 	@Inject
 	private Portal _portal;
 
+	private SafeCloseable _safeCloseable;
 	private ServiceContext _serviceContext;
 
 }

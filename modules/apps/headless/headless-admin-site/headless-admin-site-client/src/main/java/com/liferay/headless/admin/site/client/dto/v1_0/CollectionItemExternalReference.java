@@ -129,3 +129,4 @@ public class CollectionItemExternalReference
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:1883820151

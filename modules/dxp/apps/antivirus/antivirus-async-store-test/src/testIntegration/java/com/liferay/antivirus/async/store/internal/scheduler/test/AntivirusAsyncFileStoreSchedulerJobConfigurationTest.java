@@ -44,6 +44,7 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
 import java.io.ByteArrayInputStream;
 
+import java.util.Dictionary;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -86,6 +87,8 @@ public class AntivirusAsyncFileStoreSchedulerJobConfigurationTest {
 		_configuration = _configurationAdmin.getConfiguration(
 			AntivirusAsyncConfiguration.class.getName(), "?");
 
+		_properties = _configuration.getProperties();
+
 		_configuration.update(
 			HashMapDictionaryBuilder.<String, Object>put(
 				"batchScanCronExpression", "0 0 23 * * ?"
@@ -105,7 +108,8 @@ public class AntivirusAsyncFileStoreSchedulerJobConfigurationTest {
 	@After
 	public void tearDown() throws Exception {
 		_antivirusScannerServiceRegistration.unregister();
-		_configuration.delete();
+
+		_configuration.update(_properties);
 	}
 
 	@Test(expected = Test.None.class)
@@ -244,12 +248,12 @@ public class AntivirusAsyncFileStoreSchedulerJobConfigurationTest {
 	private static final BundleContext _bundleContext =
 		SystemBundleUtil.getBundleContext();
 
-	@Inject
-	private static ConfigurationAdmin _configurationAdmin;
-
 	private ServiceRegistration<AntivirusScanner>
 		_antivirusScannerServiceRegistration;
 	private Configuration _configuration;
+
+	@Inject
+	private ConfigurationAdmin _configurationAdmin;
 
 	@Inject(filter = "store.type=" + _CLASS_NAME_DB_STORE)
 	private Store _dbStore;
@@ -257,6 +261,7 @@ public class AntivirusAsyncFileStoreSchedulerJobConfigurationTest {
 	@DeleteAfterTestRun
 	private Group _group;
 
+	private Dictionary<String, Object> _properties;
 	private SchedulerJobConfiguration _schedulerJobConfiguration;
 
 	private static class TestMessageListener implements MessageListener {

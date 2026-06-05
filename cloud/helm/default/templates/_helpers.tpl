@@ -8,6 +8,10 @@
 {{- end }}
 {{- end }}
 
+{{- define "liferay.keda.prometheusServerAddress" -}}
+{{- tpl (.Values.autoscaling.keda.prometheusServerAddress | default "") . -}}
+{{- end }}
+
 {{- define "liferay.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
@@ -21,12 +25,23 @@
 {{- end }}
 {{- end }}
 
+{{- define "liferay.hostnameSlug" -}}
+{{- $hostname := . | lower -}}
+{{- $sanitized := $hostname | replace "*" "wildcard" | replace "." "-" | trimPrefix "-" | trimSuffix "-" -}}
+{{- if gt (len $sanitized) 50 -}}
+{{- $hash := sha256sum $hostname | trunc 8 -}}
+{{- $sanitized = printf "%s-%s" (trunc 41 $sanitized | trimSuffix "-") $hash -}}
+{{- end -}}
+{{- $sanitized -}}
+{{- end -}}
+
 {{- define "liferay.labels" -}}
 {{ include "liferay.selectorLabels" . }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
+component: liferay
 helm.sh/chart: {{ include "liferay.chart" . }}
 {{- include "liferay.customLabels" . }}
 {{- end }}
@@ -45,9 +60,9 @@ app.kubernetes.io/name: {{ include "liferay.name" . }}
 {{- end }}
 
 {{- define "liferay.serviceAccountName" -}}
-{{- if .Values.serviceAccount.create }}
-{{- default (include "liferay.name" .) .Values.serviceAccount.name }}
+{{- if .Values.global.liferayServiceAccount.create }}
+{{- default (include "liferay.name" .) .Values.global.liferayServiceAccount.name }}
 {{- else }}
-{{- default "default" .Values.serviceAccount.name }}
+{{- default "default" .Values.global.liferayServiceAccount.name }}
 {{- end }}
 {{- end }}

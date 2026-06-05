@@ -3,14 +3,12 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import './ProductCard.scss';
-
 import {ReactNode} from 'react';
 
-import {
-	getThumbnailByProductAttachment,
-	getValueFromDeliverySpecifications,
-} from '../../../../utils/util';
+import {normalizeURLProtocol} from '../../../../utils/string';
+import {getValueFromDeliverySpecifications} from '../../../../utils/util';
+
+import './ProductCard.scss';
 
 type ProductCardProps = {
 	ExtendBanner: React.ReactNode;
@@ -18,14 +16,6 @@ type ProductCardProps = {
 	creatorAccountName?: string;
 	product: DeliveryProduct;
 	showExtendBanner?: boolean;
-};
-
-const getIconUrl = (product?: ProductCardProps['product']) => {
-	const iconURL = product
-		? getThumbnailByProductAttachment(product.images)?.split('/o/')
-		: '';
-
-	return iconURL ? `/o/${iconURL[1]}` : '';
 };
 
 type ProductCardPropsRevamp = {
@@ -59,7 +49,7 @@ const ProductCardRevamp = ({
 					/>
 
 					<div className="align-items-center ml-4">
-						<HeadingComponent className="product-banner-title text-weight-bold">
+						<HeadingComponent className="font-weight-semi-bold product-banner-title">
 							{title}
 						</HeadingComponent>
 
@@ -83,20 +73,18 @@ const ProductCard = ({
 	showExtendBanner = false,
 }: ProductCardProps) => (
 	<div className="pb-5 product-banner pt-5 px-5">
-		<div className="d-flex flex-row justify-content-between">
+		<div className="d-flex flex-row justify-content-between mb-4">
 			<div className="d-flex flex-row">
 				<img
 					alt="App Icon"
 					className="object-fit-cover rounded"
 					height="64px"
-					src={getIconUrl(product)}
+					src={normalizeURLProtocol(product.urlImage)}
 					width="64px"
 				/>
 
 				<div className="align-items-center ml-4">
-					<h1 className="product-banner-title text-weight-bold">
-						{product?.name}
-					</h1>
+					<h1 className="product-banner-title">{product?.name}</h1>
 
 					<div className="sub-text">
 						{getValueFromDeliverySpecifications(

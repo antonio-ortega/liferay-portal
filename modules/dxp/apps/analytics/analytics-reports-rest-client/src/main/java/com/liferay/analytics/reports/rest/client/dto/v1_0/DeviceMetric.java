@@ -99,3 +99,4 @@ public class DeviceMetric implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1722461057

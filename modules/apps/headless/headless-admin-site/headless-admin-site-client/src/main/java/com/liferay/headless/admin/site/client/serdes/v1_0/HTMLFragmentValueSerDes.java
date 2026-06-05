@@ -232,3 +232,4 @@ public class HTMLFragmentValueSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-171453277

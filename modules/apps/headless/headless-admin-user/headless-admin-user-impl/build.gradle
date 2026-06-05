@@ -1,5 +1,5 @@
 dependencies {
-	compileOnly group: "com.fasterxml.jackson.core", name: "jackson-annotations", version: "2.18.2"
+	compileOnly group: "com.fasterxml.jackson.core", name: "jackson-annotations", version: "2.18.6"
 	compileOnly group: "com.liferay", name: "jakarta.ws.rs", version: "3.1.0.LIFERAY-PATCHED-1"
 	compileOnly group: "com.liferay.jakarta.portlet", name: "com.liferay.jakarta.portlet-api", version: "4.0.0"
 	compileOnly group: "com.liferay.portal", name: "com.liferay.portal.impl", version: "default"
@@ -28,6 +28,7 @@ dependencies {
 	compileOnly project(":apps:sharing:sharing-api")
 	compileOnly project(":apps:subscription:subscription-api")
 	compileOnly project(":apps:user-associated-data:user-associated-data-api")
+	compileOnly project(":apps:user-groups-admin:user-groups-admin-api")
 	compileOnly project(":apps:users-admin:users-admin-api")
 	compileOnly project(":core:petra:petra-function")
 	compileOnly project(":core:petra:petra-lang")

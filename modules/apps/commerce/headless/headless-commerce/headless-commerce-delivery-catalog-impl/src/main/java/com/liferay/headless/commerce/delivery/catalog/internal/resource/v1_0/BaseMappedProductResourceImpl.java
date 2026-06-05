@@ -5,6 +5,7 @@
 
 package com.liferay.headless.commerce.delivery.catalog.internal.resource.v1_0;
 
+import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.MappedProduct;
 import com.liferay.headless.commerce.delivery.catalog.resource.v1_0.MappedProductResource;
 import com.liferay.petra.function.UnsafeBiConsumer;
@@ -70,6 +71,9 @@ public abstract class BaseMappedProductResourceImpl
 	 *
 	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-delivery-catalog/v1.0/channels/{channelId}/products/{productId}/mapped-products'  -u 'test@liferay.com:test'
 	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Lists CSDiagramEntry shop-by-diagram mappings for /channels/{channelId}/products/{productId}/mapped-products. Resolves the active CPDefinition, the channel, and the account via AccountUtil, then enforces CommerceProductViewPermission. Builds a CommerceContext from the currencyCode and calls Vulcan SearchUtil.search on the CSDiagramEntry index filtered by CPField.CP_DEFINITION_ID. Validation -- NoSuchCPDefinitionException -> 404 when the productId does not resolve to an active CPDefinition; PrincipalException -> 403 when the caller lacks VIEW permission on the product. List query support — sortable fields -- indexed CSDiagramEntry fields; search fields -- indexed CSDiagramEntry fields; filterable fields -- none (no OData filter and no published entity model)."
+	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
@@ -217,6 +221,15 @@ public abstract class BaseMappedProductResourceImpl
 			@Override
 			public Locale getPreferredLocale() {
 				return LocaleUtil.fromLanguageId(languageId);
+			}
+
+			@Override
+			public boolean isAcceptAllLanguages() {
+				if (ExportImportThreadLocal.isExportInProcess()) {
+					return true;
+				}
+
+				return AcceptLanguage.super.isAcceptAllLanguages();
 			}
 
 		};
@@ -794,3 +807,4 @@ public abstract class BaseMappedProductResourceImpl
 		LogFactoryUtil.getLog(BaseMappedProductResourceImpl.class);
 
 }
+// LIFERAY-REST-BUILDER-HASH:1903578271

@@ -497,3 +497,4 @@ public class StyleBookSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:57398793

@@ -36,6 +36,20 @@ public class IndexEntryUtil {
 	 */
 
 	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(List)
+	 */
+	public static void cacheResult(List<IndexEntry> indexEntries) {
+		getPersistence().cacheResult(indexEntries);
+	}
+
+	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(com.liferay.portal.kernel.model.BaseModel)
+	 */
+	public static void cacheResult(IndexEntry indexEntry) {
+		getPersistence().cacheResult(indexEntry);
+	}
+
+	/**
 	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#clearCache()
 	 */
 	public static void clearCache() {
@@ -111,59 +125,10 @@ public class IndexEntryUtil {
 	}
 
 	/**
-	 * Returns all the index entries where ownerId = &#63;.
-	 *
-	 * @param ownerId the owner ID
-	 * @return the matching index entries
-	 */
-	public static List<IndexEntry> findByOwnerId(long ownerId) {
-		return getPersistence().findByOwnerId(ownerId);
-	}
-
-	/**
-	 * Returns a range of all the index entries where ownerId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>IndexEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param ownerId the owner ID
-	 * @param start the lower bound of the range of index entries
-	 * @param end the upper bound of the range of index entries (not inclusive)
-	 * @return the range of matching index entries
-	 */
-	public static List<IndexEntry> findByOwnerId(
-		long ownerId, int start, int end) {
-
-		return getPersistence().findByOwnerId(ownerId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the index entries where ownerId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>IndexEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param ownerId the owner ID
-	 * @param start the lower bound of the range of index entries
-	 * @param end the upper bound of the range of index entries (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching index entries
-	 */
-	public static List<IndexEntry> findByOwnerId(
-		long ownerId, int start, int end,
-		OrderByComparator<IndexEntry> orderByComparator) {
-
-		return getPersistence().findByOwnerId(
-			ownerId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the index entries where ownerId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>IndexEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.tools.service.builder.test.model.impl.IndexEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param ownerId the owner ID
@@ -213,54 +178,6 @@ public class IndexEntryUtil {
 	}
 
 	/**
-	 * Returns the last index entry in the ordered set where ownerId = &#63;.
-	 *
-	 * @param ownerId the owner ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching index entry
-	 * @throws NoSuchIndexEntryException if a matching index entry could not be found
-	 */
-	public static IndexEntry findByOwnerId_Last(
-			long ownerId, OrderByComparator<IndexEntry> orderByComparator)
-		throws com.liferay.portal.tools.service.builder.test.exception.
-			NoSuchIndexEntryException {
-
-		return getPersistence().findByOwnerId_Last(ownerId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last index entry in the ordered set where ownerId = &#63;.
-	 *
-	 * @param ownerId the owner ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching index entry, or <code>null</code> if a matching index entry could not be found
-	 */
-	public static IndexEntry fetchByOwnerId_Last(
-		long ownerId, OrderByComparator<IndexEntry> orderByComparator) {
-
-		return getPersistence().fetchByOwnerId_Last(ownerId, orderByComparator);
-	}
-
-	/**
-	 * Returns the index entries before and after the current index entry in the ordered set where ownerId = &#63;.
-	 *
-	 * @param indexEntryId the primary key of the current index entry
-	 * @param ownerId the owner ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next index entry
-	 * @throws NoSuchIndexEntryException if a index entry with the primary key could not be found
-	 */
-	public static IndexEntry[] findByOwnerId_PrevAndNext(
-			long indexEntryId, long ownerId,
-			OrderByComparator<IndexEntry> orderByComparator)
-		throws com.liferay.portal.tools.service.builder.test.exception.
-			NoSuchIndexEntryException {
-
-		return getPersistence().findByOwnerId_PrevAndNext(
-			indexEntryId, ownerId, orderByComparator);
-	}
-
-	/**
 	 * Removes all the index entries where ownerId = &#63; from the database.
 	 *
 	 * @param ownerId the owner ID
@@ -280,56 +197,10 @@ public class IndexEntryUtil {
 	}
 
 	/**
-	 * Returns all the index entries where plid = &#63;.
-	 *
-	 * @param plid the plid
-	 * @return the matching index entries
-	 */
-	public static List<IndexEntry> findByPlid(long plid) {
-		return getPersistence().findByPlid(plid);
-	}
-
-	/**
-	 * Returns a range of all the index entries where plid = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>IndexEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param plid the plid
-	 * @param start the lower bound of the range of index entries
-	 * @param end the upper bound of the range of index entries (not inclusive)
-	 * @return the range of matching index entries
-	 */
-	public static List<IndexEntry> findByPlid(long plid, int start, int end) {
-		return getPersistence().findByPlid(plid, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the index entries where plid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>IndexEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param plid the plid
-	 * @param start the lower bound of the range of index entries
-	 * @param end the upper bound of the range of index entries (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching index entries
-	 */
-	public static List<IndexEntry> findByPlid(
-		long plid, int start, int end,
-		OrderByComparator<IndexEntry> orderByComparator) {
-
-		return getPersistence().findByPlid(plid, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the index entries where plid = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>IndexEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.tools.service.builder.test.model.impl.IndexEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param plid the plid
@@ -378,54 +249,6 @@ public class IndexEntryUtil {
 	}
 
 	/**
-	 * Returns the last index entry in the ordered set where plid = &#63;.
-	 *
-	 * @param plid the plid
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching index entry
-	 * @throws NoSuchIndexEntryException if a matching index entry could not be found
-	 */
-	public static IndexEntry findByPlid_Last(
-			long plid, OrderByComparator<IndexEntry> orderByComparator)
-		throws com.liferay.portal.tools.service.builder.test.exception.
-			NoSuchIndexEntryException {
-
-		return getPersistence().findByPlid_Last(plid, orderByComparator);
-	}
-
-	/**
-	 * Returns the last index entry in the ordered set where plid = &#63;.
-	 *
-	 * @param plid the plid
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching index entry, or <code>null</code> if a matching index entry could not be found
-	 */
-	public static IndexEntry fetchByPlid_Last(
-		long plid, OrderByComparator<IndexEntry> orderByComparator) {
-
-		return getPersistence().fetchByPlid_Last(plid, orderByComparator);
-	}
-
-	/**
-	 * Returns the index entries before and after the current index entry in the ordered set where plid = &#63;.
-	 *
-	 * @param indexEntryId the primary key of the current index entry
-	 * @param plid the plid
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next index entry
-	 * @throws NoSuchIndexEntryException if a index entry with the primary key could not be found
-	 */
-	public static IndexEntry[] findByPlid_PrevAndNext(
-			long indexEntryId, long plid,
-			OrderByComparator<IndexEntry> orderByComparator)
-		throws com.liferay.portal.tools.service.builder.test.exception.
-			NoSuchIndexEntryException {
-
-		return getPersistence().findByPlid_PrevAndNext(
-			indexEntryId, plid, orderByComparator);
-	}
-
-	/**
 	 * Removes all the index entries where plid = &#63; from the database.
 	 *
 	 * @param plid the plid
@@ -445,59 +268,10 @@ public class IndexEntryUtil {
 	}
 
 	/**
-	 * Returns all the index entries where portletId = &#63;.
-	 *
-	 * @param portletId the portlet ID
-	 * @return the matching index entries
-	 */
-	public static List<IndexEntry> findByPortletId(String portletId) {
-		return getPersistence().findByPortletId(portletId);
-	}
-
-	/**
-	 * Returns a range of all the index entries where portletId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>IndexEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param portletId the portlet ID
-	 * @param start the lower bound of the range of index entries
-	 * @param end the upper bound of the range of index entries (not inclusive)
-	 * @return the range of matching index entries
-	 */
-	public static List<IndexEntry> findByPortletId(
-		String portletId, int start, int end) {
-
-		return getPersistence().findByPortletId(portletId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the index entries where portletId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>IndexEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param portletId the portlet ID
-	 * @param start the lower bound of the range of index entries
-	 * @param end the upper bound of the range of index entries (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching index entries
-	 */
-	public static List<IndexEntry> findByPortletId(
-		String portletId, int start, int end,
-		OrderByComparator<IndexEntry> orderByComparator) {
-
-		return getPersistence().findByPortletId(
-			portletId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the index entries where portletId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>IndexEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.tools.service.builder.test.model.impl.IndexEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param portletId the portlet ID
@@ -548,56 +322,6 @@ public class IndexEntryUtil {
 	}
 
 	/**
-	 * Returns the last index entry in the ordered set where portletId = &#63;.
-	 *
-	 * @param portletId the portlet ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching index entry
-	 * @throws NoSuchIndexEntryException if a matching index entry could not be found
-	 */
-	public static IndexEntry findByPortletId_Last(
-			String portletId, OrderByComparator<IndexEntry> orderByComparator)
-		throws com.liferay.portal.tools.service.builder.test.exception.
-			NoSuchIndexEntryException {
-
-		return getPersistence().findByPortletId_Last(
-			portletId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last index entry in the ordered set where portletId = &#63;.
-	 *
-	 * @param portletId the portlet ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching index entry, or <code>null</code> if a matching index entry could not be found
-	 */
-	public static IndexEntry fetchByPortletId_Last(
-		String portletId, OrderByComparator<IndexEntry> orderByComparator) {
-
-		return getPersistence().fetchByPortletId_Last(
-			portletId, orderByComparator);
-	}
-
-	/**
-	 * Returns the index entries before and after the current index entry in the ordered set where portletId = &#63;.
-	 *
-	 * @param indexEntryId the primary key of the current index entry
-	 * @param portletId the portlet ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next index entry
-	 * @throws NoSuchIndexEntryException if a index entry with the primary key could not be found
-	 */
-	public static IndexEntry[] findByPortletId_PrevAndNext(
-			long indexEntryId, String portletId,
-			OrderByComparator<IndexEntry> orderByComparator)
-		throws com.liferay.portal.tools.service.builder.test.exception.
-			NoSuchIndexEntryException {
-
-		return getPersistence().findByPortletId_PrevAndNext(
-			indexEntryId, portletId, orderByComparator);
-	}
-
-	/**
 	 * Removes all the index entries where portletId = &#63; from the database.
 	 *
 	 * @param portletId the portlet ID
@@ -617,62 +341,10 @@ public class IndexEntryUtil {
 	}
 
 	/**
-	 * Returns all the index entries where ownerType = &#63; and portletId = &#63;.
-	 *
-	 * @param ownerType the owner type
-	 * @param portletId the portlet ID
-	 * @return the matching index entries
-	 */
-	public static List<IndexEntry> findByO_P(int ownerType, String portletId) {
-		return getPersistence().findByO_P(ownerType, portletId);
-	}
-
-	/**
-	 * Returns a range of all the index entries where ownerType = &#63; and portletId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>IndexEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param ownerType the owner type
-	 * @param portletId the portlet ID
-	 * @param start the lower bound of the range of index entries
-	 * @param end the upper bound of the range of index entries (not inclusive)
-	 * @return the range of matching index entries
-	 */
-	public static List<IndexEntry> findByO_P(
-		int ownerType, String portletId, int start, int end) {
-
-		return getPersistence().findByO_P(ownerType, portletId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the index entries where ownerType = &#63; and portletId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>IndexEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param ownerType the owner type
-	 * @param portletId the portlet ID
-	 * @param start the lower bound of the range of index entries
-	 * @param end the upper bound of the range of index entries (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching index entries
-	 */
-	public static List<IndexEntry> findByO_P(
-		int ownerType, String portletId, int start, int end,
-		OrderByComparator<IndexEntry> orderByComparator) {
-
-		return getPersistence().findByO_P(
-			ownerType, portletId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the index entries where ownerType = &#63; and portletId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>IndexEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.tools.service.builder.test.model.impl.IndexEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param ownerType the owner type
@@ -729,61 +401,6 @@ public class IndexEntryUtil {
 	}
 
 	/**
-	 * Returns the last index entry in the ordered set where ownerType = &#63; and portletId = &#63;.
-	 *
-	 * @param ownerType the owner type
-	 * @param portletId the portlet ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching index entry
-	 * @throws NoSuchIndexEntryException if a matching index entry could not be found
-	 */
-	public static IndexEntry findByO_P_Last(
-			int ownerType, String portletId,
-			OrderByComparator<IndexEntry> orderByComparator)
-		throws com.liferay.portal.tools.service.builder.test.exception.
-			NoSuchIndexEntryException {
-
-		return getPersistence().findByO_P_Last(
-			ownerType, portletId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last index entry in the ordered set where ownerType = &#63; and portletId = &#63;.
-	 *
-	 * @param ownerType the owner type
-	 * @param portletId the portlet ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching index entry, or <code>null</code> if a matching index entry could not be found
-	 */
-	public static IndexEntry fetchByO_P_Last(
-		int ownerType, String portletId,
-		OrderByComparator<IndexEntry> orderByComparator) {
-
-		return getPersistence().fetchByO_P_Last(
-			ownerType, portletId, orderByComparator);
-	}
-
-	/**
-	 * Returns the index entries before and after the current index entry in the ordered set where ownerType = &#63; and portletId = &#63;.
-	 *
-	 * @param indexEntryId the primary key of the current index entry
-	 * @param ownerType the owner type
-	 * @param portletId the portlet ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next index entry
-	 * @throws NoSuchIndexEntryException if a index entry with the primary key could not be found
-	 */
-	public static IndexEntry[] findByO_P_PrevAndNext(
-			long indexEntryId, int ownerType, String portletId,
-			OrderByComparator<IndexEntry> orderByComparator)
-		throws com.liferay.portal.tools.service.builder.test.exception.
-			NoSuchIndexEntryException {
-
-		return getPersistence().findByO_P_PrevAndNext(
-			indexEntryId, ownerType, portletId, orderByComparator);
-	}
-
-	/**
 	 * Removes all the index entries where ownerType = &#63; and portletId = &#63; from the database.
 	 *
 	 * @param ownerType the owner type
@@ -805,62 +422,10 @@ public class IndexEntryUtil {
 	}
 
 	/**
-	 * Returns all the index entries where plid = &#63; and portletId = &#63;.
-	 *
-	 * @param plid the plid
-	 * @param portletId the portlet ID
-	 * @return the matching index entries
-	 */
-	public static List<IndexEntry> findByP_P(long plid, String portletId) {
-		return getPersistence().findByP_P(plid, portletId);
-	}
-
-	/**
-	 * Returns a range of all the index entries where plid = &#63; and portletId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>IndexEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param plid the plid
-	 * @param portletId the portlet ID
-	 * @param start the lower bound of the range of index entries
-	 * @param end the upper bound of the range of index entries (not inclusive)
-	 * @return the range of matching index entries
-	 */
-	public static List<IndexEntry> findByP_P(
-		long plid, String portletId, int start, int end) {
-
-		return getPersistence().findByP_P(plid, portletId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the index entries where plid = &#63; and portletId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>IndexEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param plid the plid
-	 * @param portletId the portlet ID
-	 * @param start the lower bound of the range of index entries
-	 * @param end the upper bound of the range of index entries (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching index entries
-	 */
-	public static List<IndexEntry> findByP_P(
-		long plid, String portletId, int start, int end,
-		OrderByComparator<IndexEntry> orderByComparator) {
-
-		return getPersistence().findByP_P(
-			plid, portletId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the index entries where plid = &#63; and portletId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>IndexEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.tools.service.builder.test.model.impl.IndexEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param plid the plid
@@ -916,61 +481,6 @@ public class IndexEntryUtil {
 	}
 
 	/**
-	 * Returns the last index entry in the ordered set where plid = &#63; and portletId = &#63;.
-	 *
-	 * @param plid the plid
-	 * @param portletId the portlet ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching index entry
-	 * @throws NoSuchIndexEntryException if a matching index entry could not be found
-	 */
-	public static IndexEntry findByP_P_Last(
-			long plid, String portletId,
-			OrderByComparator<IndexEntry> orderByComparator)
-		throws com.liferay.portal.tools.service.builder.test.exception.
-			NoSuchIndexEntryException {
-
-		return getPersistence().findByP_P_Last(
-			plid, portletId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last index entry in the ordered set where plid = &#63; and portletId = &#63;.
-	 *
-	 * @param plid the plid
-	 * @param portletId the portlet ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching index entry, or <code>null</code> if a matching index entry could not be found
-	 */
-	public static IndexEntry fetchByP_P_Last(
-		long plid, String portletId,
-		OrderByComparator<IndexEntry> orderByComparator) {
-
-		return getPersistence().fetchByP_P_Last(
-			plid, portletId, orderByComparator);
-	}
-
-	/**
-	 * Returns the index entries before and after the current index entry in the ordered set where plid = &#63; and portletId = &#63;.
-	 *
-	 * @param indexEntryId the primary key of the current index entry
-	 * @param plid the plid
-	 * @param portletId the portlet ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next index entry
-	 * @throws NoSuchIndexEntryException if a index entry with the primary key could not be found
-	 */
-	public static IndexEntry[] findByP_P_PrevAndNext(
-			long indexEntryId, long plid, String portletId,
-			OrderByComparator<IndexEntry> orderByComparator)
-		throws com.liferay.portal.tools.service.builder.test.exception.
-			NoSuchIndexEntryException {
-
-		return getPersistence().findByP_P_PrevAndNext(
-			indexEntryId, plid, portletId, orderByComparator);
-	}
-
-	/**
 	 * Removes all the index entries where plid = &#63; and portletId = &#63; from the database.
 	 *
 	 * @param plid the plid
@@ -992,68 +502,10 @@ public class IndexEntryUtil {
 	}
 
 	/**
-	 * Returns all the index entries where ownerId = &#63; and ownerType = &#63; and plid = &#63;.
-	 *
-	 * @param ownerId the owner ID
-	 * @param ownerType the owner type
-	 * @param plid the plid
-	 * @return the matching index entries
-	 */
-	public static List<IndexEntry> findByO_O_P(
-		long ownerId, int ownerType, long plid) {
-
-		return getPersistence().findByO_O_P(ownerId, ownerType, plid);
-	}
-
-	/**
-	 * Returns a range of all the index entries where ownerId = &#63; and ownerType = &#63; and plid = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>IndexEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param ownerId the owner ID
-	 * @param ownerType the owner type
-	 * @param plid the plid
-	 * @param start the lower bound of the range of index entries
-	 * @param end the upper bound of the range of index entries (not inclusive)
-	 * @return the range of matching index entries
-	 */
-	public static List<IndexEntry> findByO_O_P(
-		long ownerId, int ownerType, long plid, int start, int end) {
-
-		return getPersistence().findByO_O_P(
-			ownerId, ownerType, plid, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the index entries where ownerId = &#63; and ownerType = &#63; and plid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>IndexEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param ownerId the owner ID
-	 * @param ownerType the owner type
-	 * @param plid the plid
-	 * @param start the lower bound of the range of index entries
-	 * @param end the upper bound of the range of index entries (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching index entries
-	 */
-	public static List<IndexEntry> findByO_O_P(
-		long ownerId, int ownerType, long plid, int start, int end,
-		OrderByComparator<IndexEntry> orderByComparator) {
-
-		return getPersistence().findByO_O_P(
-			ownerId, ownerType, plid, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the index entries where ownerId = &#63; and ownerType = &#63; and plid = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>IndexEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.tools.service.builder.test.model.impl.IndexEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param ownerId the owner ID
@@ -1113,64 +565,6 @@ public class IndexEntryUtil {
 	}
 
 	/**
-	 * Returns the last index entry in the ordered set where ownerId = &#63; and ownerType = &#63; and plid = &#63;.
-	 *
-	 * @param ownerId the owner ID
-	 * @param ownerType the owner type
-	 * @param plid the plid
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching index entry
-	 * @throws NoSuchIndexEntryException if a matching index entry could not be found
-	 */
-	public static IndexEntry findByO_O_P_Last(
-			long ownerId, int ownerType, long plid,
-			OrderByComparator<IndexEntry> orderByComparator)
-		throws com.liferay.portal.tools.service.builder.test.exception.
-			NoSuchIndexEntryException {
-
-		return getPersistence().findByO_O_P_Last(
-			ownerId, ownerType, plid, orderByComparator);
-	}
-
-	/**
-	 * Returns the last index entry in the ordered set where ownerId = &#63; and ownerType = &#63; and plid = &#63;.
-	 *
-	 * @param ownerId the owner ID
-	 * @param ownerType the owner type
-	 * @param plid the plid
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching index entry, or <code>null</code> if a matching index entry could not be found
-	 */
-	public static IndexEntry fetchByO_O_P_Last(
-		long ownerId, int ownerType, long plid,
-		OrderByComparator<IndexEntry> orderByComparator) {
-
-		return getPersistence().fetchByO_O_P_Last(
-			ownerId, ownerType, plid, orderByComparator);
-	}
-
-	/**
-	 * Returns the index entries before and after the current index entry in the ordered set where ownerId = &#63; and ownerType = &#63; and plid = &#63;.
-	 *
-	 * @param indexEntryId the primary key of the current index entry
-	 * @param ownerId the owner ID
-	 * @param ownerType the owner type
-	 * @param plid the plid
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next index entry
-	 * @throws NoSuchIndexEntryException if a index entry with the primary key could not be found
-	 */
-	public static IndexEntry[] findByO_O_P_PrevAndNext(
-			long indexEntryId, long ownerId, int ownerType, long plid,
-			OrderByComparator<IndexEntry> orderByComparator)
-		throws com.liferay.portal.tools.service.builder.test.exception.
-			NoSuchIndexEntryException {
-
-		return getPersistence().findByO_O_P_PrevAndNext(
-			indexEntryId, ownerId, ownerType, plid, orderByComparator);
-	}
-
-	/**
 	 * Removes all the index entries where ownerId = &#63; and ownerType = &#63; and plid = &#63; from the database.
 	 *
 	 * @param ownerId the owner ID
@@ -1194,68 +588,10 @@ public class IndexEntryUtil {
 	}
 
 	/**
-	 * Returns all the index entries where ownerId = &#63; and ownerType = &#63; and portletId = &#63;.
-	 *
-	 * @param ownerId the owner ID
-	 * @param ownerType the owner type
-	 * @param portletId the portlet ID
-	 * @return the matching index entries
-	 */
-	public static List<IndexEntry> findByO_O_PI(
-		long ownerId, int ownerType, String portletId) {
-
-		return getPersistence().findByO_O_PI(ownerId, ownerType, portletId);
-	}
-
-	/**
-	 * Returns a range of all the index entries where ownerId = &#63; and ownerType = &#63; and portletId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>IndexEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param ownerId the owner ID
-	 * @param ownerType the owner type
-	 * @param portletId the portlet ID
-	 * @param start the lower bound of the range of index entries
-	 * @param end the upper bound of the range of index entries (not inclusive)
-	 * @return the range of matching index entries
-	 */
-	public static List<IndexEntry> findByO_O_PI(
-		long ownerId, int ownerType, String portletId, int start, int end) {
-
-		return getPersistence().findByO_O_PI(
-			ownerId, ownerType, portletId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the index entries where ownerId = &#63; and ownerType = &#63; and portletId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>IndexEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param ownerId the owner ID
-	 * @param ownerType the owner type
-	 * @param portletId the portlet ID
-	 * @param start the lower bound of the range of index entries
-	 * @param end the upper bound of the range of index entries (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching index entries
-	 */
-	public static List<IndexEntry> findByO_O_PI(
-		long ownerId, int ownerType, String portletId, int start, int end,
-		OrderByComparator<IndexEntry> orderByComparator) {
-
-		return getPersistence().findByO_O_PI(
-			ownerId, ownerType, portletId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the index entries where ownerId = &#63; and ownerType = &#63; and portletId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>IndexEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.tools.service.builder.test.model.impl.IndexEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param ownerId the owner ID
@@ -1315,64 +651,6 @@ public class IndexEntryUtil {
 	}
 
 	/**
-	 * Returns the last index entry in the ordered set where ownerId = &#63; and ownerType = &#63; and portletId = &#63;.
-	 *
-	 * @param ownerId the owner ID
-	 * @param ownerType the owner type
-	 * @param portletId the portlet ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching index entry
-	 * @throws NoSuchIndexEntryException if a matching index entry could not be found
-	 */
-	public static IndexEntry findByO_O_PI_Last(
-			long ownerId, int ownerType, String portletId,
-			OrderByComparator<IndexEntry> orderByComparator)
-		throws com.liferay.portal.tools.service.builder.test.exception.
-			NoSuchIndexEntryException {
-
-		return getPersistence().findByO_O_PI_Last(
-			ownerId, ownerType, portletId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last index entry in the ordered set where ownerId = &#63; and ownerType = &#63; and portletId = &#63;.
-	 *
-	 * @param ownerId the owner ID
-	 * @param ownerType the owner type
-	 * @param portletId the portlet ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching index entry, or <code>null</code> if a matching index entry could not be found
-	 */
-	public static IndexEntry fetchByO_O_PI_Last(
-		long ownerId, int ownerType, String portletId,
-		OrderByComparator<IndexEntry> orderByComparator) {
-
-		return getPersistence().fetchByO_O_PI_Last(
-			ownerId, ownerType, portletId, orderByComparator);
-	}
-
-	/**
-	 * Returns the index entries before and after the current index entry in the ordered set where ownerId = &#63; and ownerType = &#63; and portletId = &#63;.
-	 *
-	 * @param indexEntryId the primary key of the current index entry
-	 * @param ownerId the owner ID
-	 * @param ownerType the owner type
-	 * @param portletId the portlet ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next index entry
-	 * @throws NoSuchIndexEntryException if a index entry with the primary key could not be found
-	 */
-	public static IndexEntry[] findByO_O_PI_PrevAndNext(
-			long indexEntryId, long ownerId, int ownerType, String portletId,
-			OrderByComparator<IndexEntry> orderByComparator)
-		throws com.liferay.portal.tools.service.builder.test.exception.
-			NoSuchIndexEntryException {
-
-		return getPersistence().findByO_O_PI_PrevAndNext(
-			indexEntryId, ownerId, ownerType, portletId, orderByComparator);
-	}
-
-	/**
 	 * Removes all the index entries where ownerId = &#63; and ownerType = &#63; and portletId = &#63; from the database.
 	 *
 	 * @param ownerId the owner ID
@@ -1400,68 +678,10 @@ public class IndexEntryUtil {
 	}
 
 	/**
-	 * Returns all the index entries where ownerType = &#63; and plid = &#63; and portletId = &#63;.
-	 *
-	 * @param ownerType the owner type
-	 * @param plid the plid
-	 * @param portletId the portlet ID
-	 * @return the matching index entries
-	 */
-	public static List<IndexEntry> findByO_P_P(
-		int ownerType, long plid, String portletId) {
-
-		return getPersistence().findByO_P_P(ownerType, plid, portletId);
-	}
-
-	/**
-	 * Returns a range of all the index entries where ownerType = &#63; and plid = &#63; and portletId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>IndexEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param ownerType the owner type
-	 * @param plid the plid
-	 * @param portletId the portlet ID
-	 * @param start the lower bound of the range of index entries
-	 * @param end the upper bound of the range of index entries (not inclusive)
-	 * @return the range of matching index entries
-	 */
-	public static List<IndexEntry> findByO_P_P(
-		int ownerType, long plid, String portletId, int start, int end) {
-
-		return getPersistence().findByO_P_P(
-			ownerType, plid, portletId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the index entries where ownerType = &#63; and plid = &#63; and portletId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>IndexEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param ownerType the owner type
-	 * @param plid the plid
-	 * @param portletId the portlet ID
-	 * @param start the lower bound of the range of index entries
-	 * @param end the upper bound of the range of index entries (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching index entries
-	 */
-	public static List<IndexEntry> findByO_P_P(
-		int ownerType, long plid, String portletId, int start, int end,
-		OrderByComparator<IndexEntry> orderByComparator) {
-
-		return getPersistence().findByO_P_P(
-			ownerType, plid, portletId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the index entries where ownerType = &#63; and plid = &#63; and portletId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>IndexEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.tools.service.builder.test.model.impl.IndexEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param ownerType the owner type
@@ -1521,64 +741,6 @@ public class IndexEntryUtil {
 	}
 
 	/**
-	 * Returns the last index entry in the ordered set where ownerType = &#63; and plid = &#63; and portletId = &#63;.
-	 *
-	 * @param ownerType the owner type
-	 * @param plid the plid
-	 * @param portletId the portlet ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching index entry
-	 * @throws NoSuchIndexEntryException if a matching index entry could not be found
-	 */
-	public static IndexEntry findByO_P_P_Last(
-			int ownerType, long plid, String portletId,
-			OrderByComparator<IndexEntry> orderByComparator)
-		throws com.liferay.portal.tools.service.builder.test.exception.
-			NoSuchIndexEntryException {
-
-		return getPersistence().findByO_P_P_Last(
-			ownerType, plid, portletId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last index entry in the ordered set where ownerType = &#63; and plid = &#63; and portletId = &#63;.
-	 *
-	 * @param ownerType the owner type
-	 * @param plid the plid
-	 * @param portletId the portlet ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching index entry, or <code>null</code> if a matching index entry could not be found
-	 */
-	public static IndexEntry fetchByO_P_P_Last(
-		int ownerType, long plid, String portletId,
-		OrderByComparator<IndexEntry> orderByComparator) {
-
-		return getPersistence().fetchByO_P_P_Last(
-			ownerType, plid, portletId, orderByComparator);
-	}
-
-	/**
-	 * Returns the index entries before and after the current index entry in the ordered set where ownerType = &#63; and plid = &#63; and portletId = &#63;.
-	 *
-	 * @param indexEntryId the primary key of the current index entry
-	 * @param ownerType the owner type
-	 * @param plid the plid
-	 * @param portletId the portlet ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next index entry
-	 * @throws NoSuchIndexEntryException if a index entry with the primary key could not be found
-	 */
-	public static IndexEntry[] findByO_P_P_PrevAndNext(
-			long indexEntryId, int ownerType, long plid, String portletId,
-			OrderByComparator<IndexEntry> orderByComparator)
-		throws com.liferay.portal.tools.service.builder.test.exception.
-			NoSuchIndexEntryException {
-
-		return getPersistence().findByO_P_P_PrevAndNext(
-			indexEntryId, ownerType, plid, portletId, orderByComparator);
-	}
-
-	/**
 	 * Removes all the index entries where ownerType = &#63; and plid = &#63; and portletId = &#63; from the database.
 	 *
 	 * @param ownerType the owner type
@@ -1623,7 +785,7 @@ public class IndexEntryUtil {
 	 * Returns a range of all the index entries where companyId = &#63; and ownerId = &#63; and ownerType = &#63; and portletId LIKE &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>IndexEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.tools.service.builder.test.model.impl.IndexEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -1646,7 +808,7 @@ public class IndexEntryUtil {
 	 * Returns an ordered range of all the index entries where companyId = &#63; and ownerId = &#63; and ownerType = &#63; and portletId LIKE &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>IndexEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.tools.service.builder.test.model.impl.IndexEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -1671,7 +833,7 @@ public class IndexEntryUtil {
 	 * Returns an ordered range of all the index entries where companyId = &#63; and ownerId = &#63; and ownerType = &#63; and portletId LIKE &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>IndexEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.tools.service.builder.test.model.impl.IndexEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -1734,68 +896,6 @@ public class IndexEntryUtil {
 	}
 
 	/**
-	 * Returns the last index entry in the ordered set where companyId = &#63; and ownerId = &#63; and ownerType = &#63; and portletId LIKE &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param ownerId the owner ID
-	 * @param ownerType the owner type
-	 * @param portletId the portlet ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching index entry
-	 * @throws NoSuchIndexEntryException if a matching index entry could not be found
-	 */
-	public static IndexEntry findByC_O_O_LikeP_Last(
-			long companyId, long ownerId, int ownerType, String portletId,
-			OrderByComparator<IndexEntry> orderByComparator)
-		throws com.liferay.portal.tools.service.builder.test.exception.
-			NoSuchIndexEntryException {
-
-		return getPersistence().findByC_O_O_LikeP_Last(
-			companyId, ownerId, ownerType, portletId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last index entry in the ordered set where companyId = &#63; and ownerId = &#63; and ownerType = &#63; and portletId LIKE &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param ownerId the owner ID
-	 * @param ownerType the owner type
-	 * @param portletId the portlet ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching index entry, or <code>null</code> if a matching index entry could not be found
-	 */
-	public static IndexEntry fetchByC_O_O_LikeP_Last(
-		long companyId, long ownerId, int ownerType, String portletId,
-		OrderByComparator<IndexEntry> orderByComparator) {
-
-		return getPersistence().fetchByC_O_O_LikeP_Last(
-			companyId, ownerId, ownerType, portletId, orderByComparator);
-	}
-
-	/**
-	 * Returns the index entries before and after the current index entry in the ordered set where companyId = &#63; and ownerId = &#63; and ownerType = &#63; and portletId LIKE &#63;.
-	 *
-	 * @param indexEntryId the primary key of the current index entry
-	 * @param companyId the company ID
-	 * @param ownerId the owner ID
-	 * @param ownerType the owner type
-	 * @param portletId the portlet ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next index entry
-	 * @throws NoSuchIndexEntryException if a index entry with the primary key could not be found
-	 */
-	public static IndexEntry[] findByC_O_O_LikeP_PrevAndNext(
-			long indexEntryId, long companyId, long ownerId, int ownerType,
-			String portletId, OrderByComparator<IndexEntry> orderByComparator)
-		throws com.liferay.portal.tools.service.builder.test.exception.
-			NoSuchIndexEntryException {
-
-		return getPersistence().findByC_O_O_LikeP_PrevAndNext(
-			indexEntryId, companyId, ownerId, ownerType, portletId,
-			orderByComparator);
-	}
-
-	/**
 	 * Removes all the index entries where companyId = &#63; and ownerId = &#63; and ownerType = &#63; and portletId LIKE &#63; from the database.
 	 *
 	 * @param companyId the company ID
@@ -1842,22 +942,6 @@ public class IndexEntryUtil {
 			NoSuchIndexEntryException {
 
 		return getPersistence().findByO_O_P_P(
-			ownerId, ownerType, plid, portletId);
-	}
-
-	/**
-	 * Returns the index entry where ownerId = &#63; and ownerType = &#63; and plid = &#63; and portletId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
-	 *
-	 * @param ownerId the owner ID
-	 * @param ownerType the owner type
-	 * @param plid the plid
-	 * @param portletId the portlet ID
-	 * @return the matching index entry, or <code>null</code> if a matching index entry could not be found
-	 */
-	public static IndexEntry fetchByO_O_P_P(
-		long ownerId, int ownerType, long plid, String portletId) {
-
-		return getPersistence().fetchByO_O_P_P(
 			ownerId, ownerType, plid, portletId);
 	}
 
@@ -1930,19 +1014,6 @@ public class IndexEntryUtil {
 	}
 
 	/**
-	 * Returns the index entry where externalReferenceCode = &#63; and companyId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
-	 *
-	 * @param externalReferenceCode the external reference code
-	 * @param companyId the company ID
-	 * @return the matching index entry, or <code>null</code> if a matching index entry could not be found
-	 */
-	public static IndexEntry fetchByERC_C(
-		String externalReferenceCode, long companyId) {
-
-		return getPersistence().fetchByERC_C(externalReferenceCode, companyId);
-	}
-
-	/**
 	 * Returns the index entry where externalReferenceCode = &#63; and companyId = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
 	 *
 	 * @param externalReferenceCode the external reference code
@@ -1983,24 +1054,6 @@ public class IndexEntryUtil {
 		String externalReferenceCode, long companyId) {
 
 		return getPersistence().countByERC_C(externalReferenceCode, companyId);
-	}
-
-	/**
-	 * Caches the index entry in the entity cache if it is enabled.
-	 *
-	 * @param indexEntry the index entry
-	 */
-	public static void cacheResult(IndexEntry indexEntry) {
-		getPersistence().cacheResult(indexEntry);
-	}
-
-	/**
-	 * Caches the index entries in the entity cache if it is enabled.
-	 *
-	 * @param indexEntries the index entries
-	 */
-	public static void cacheResult(List<IndexEntry> indexEntries) {
-		getPersistence().cacheResult(indexEntries);
 	}
 
 	/**
@@ -2056,82 +1109,454 @@ public class IndexEntryUtil {
 	}
 
 	/**
-	 * Returns all the index entries.
+	 * Returns the index entry where ownerId = &#63; and ownerType = &#63; and plid = &#63; and portletId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
 	 *
-	 * @return the index entries
+	 * @param ownerId the owner ID
+	 * @param ownerType the owner type
+	 * @param plid the plid
+	 * @param portletId the portlet ID
+	 * @return the matching index entry, or <code>null</code> if a matching index entry could not be found
 	 */
-	public static List<IndexEntry> findAll() {
-		return getPersistence().findAll();
+	public static IndexEntry fetchByO_O_P_P(
+		long ownerId, int ownerType, long plid, String portletId) {
+
+		return getPersistence().fetchByO_O_P_P(
+			ownerId, ownerType, plid, portletId);
 	}
 
 	/**
-	 * Returns a range of all the index entries.
+	 * Returns the index entry where externalReferenceCode = &#63; and companyId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	 *
+	 * @param externalReferenceCode the external reference code
+	 * @param companyId the company ID
+	 * @return the matching index entry, or <code>null</code> if a matching index entry could not be found
+	 */
+	public static IndexEntry fetchByERC_C(
+		String externalReferenceCode, long companyId) {
+
+		return getPersistence().fetchByERC_C(externalReferenceCode, companyId);
+	}
+
+	/**
+	 * Returns all the index entries where ownerId = &#63;.
+	 *
+	 * @param ownerId the owner ID
+	 * @return the matching index entries
+	 */
+	public static List<IndexEntry> findByOwnerId(long ownerId) {
+		return getPersistence().findByOwnerId(ownerId);
+	}
+
+	/**
+	 * Returns a range of all the index entries where ownerId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>IndexEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.tools.service.builder.test.model.impl.IndexEntryModelImpl</code>.
 	 * </p>
 	 *
+	 * @param ownerId the owner ID
 	 * @param start the lower bound of the range of index entries
 	 * @param end the upper bound of the range of index entries (not inclusive)
-	 * @return the range of index entries
+	 * @return the range of matching index entries
 	 */
-	public static List<IndexEntry> findAll(int start, int end) {
-		return getPersistence().findAll(start, end);
+	public static List<IndexEntry> findByOwnerId(
+		long ownerId, int start, int end) {
+
+		return getPersistence().findByOwnerId(ownerId, start, end);
 	}
 
 	/**
-	 * Returns an ordered range of all the index entries.
+	 * Returns an ordered range of all the index entries where ownerId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>IndexEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.tools.service.builder.test.model.impl.IndexEntryModelImpl</code>.
 	 * </p>
 	 *
+	 * @param ownerId the owner ID
 	 * @param start the lower bound of the range of index entries
 	 * @param end the upper bound of the range of index entries (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of index entries
+	 * @return the ordered range of matching index entries
 	 */
-	public static List<IndexEntry> findAll(
-		int start, int end, OrderByComparator<IndexEntry> orderByComparator) {
+	public static List<IndexEntry> findByOwnerId(
+		long ownerId, int start, int end,
+		OrderByComparator<IndexEntry> orderByComparator) {
 
-		return getPersistence().findAll(start, end, orderByComparator);
+		return getPersistence().findByOwnerId(
+			ownerId, start, end, orderByComparator);
 	}
 
 	/**
-	 * Returns an ordered range of all the index entries.
+	 * Returns all the index entries where plid = &#63;.
+	 *
+	 * @param plid the plid
+	 * @return the matching index entries
+	 */
+	public static List<IndexEntry> findByPlid(long plid) {
+		return getPersistence().findByPlid(plid);
+	}
+
+	/**
+	 * Returns a range of all the index entries where plid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>IndexEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.tools.service.builder.test.model.impl.IndexEntryModelImpl</code>.
 	 * </p>
 	 *
+	 * @param plid the plid
+	 * @param start the lower bound of the range of index entries
+	 * @param end the upper bound of the range of index entries (not inclusive)
+	 * @return the range of matching index entries
+	 */
+	public static List<IndexEntry> findByPlid(long plid, int start, int end) {
+		return getPersistence().findByPlid(plid, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the index entries where plid = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.tools.service.builder.test.model.impl.IndexEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param plid the plid
 	 * @param start the lower bound of the range of index entries
 	 * @param end the upper bound of the range of index entries (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param useFinderCache whether to use the finder cache
-	 * @return the ordered range of index entries
+	 * @return the ordered range of matching index entries
 	 */
-	public static List<IndexEntry> findAll(
-		int start, int end, OrderByComparator<IndexEntry> orderByComparator,
-		boolean useFinderCache) {
+	public static List<IndexEntry> findByPlid(
+		long plid, int start, int end,
+		OrderByComparator<IndexEntry> orderByComparator) {
 
-		return getPersistence().findAll(
-			start, end, orderByComparator, useFinderCache);
+		return getPersistence().findByPlid(plid, start, end, orderByComparator);
 	}
 
 	/**
-	 * Removes all the index entries from the database.
-	 */
-	public static void removeAll() {
-		getPersistence().removeAll();
-	}
-
-	/**
-	 * Returns the number of index entries.
+	 * Returns all the index entries where portletId = &#63;.
 	 *
-	 * @return the number of index entries
+	 * @param portletId the portlet ID
+	 * @return the matching index entries
 	 */
-	public static int countAll() {
-		return getPersistence().countAll();
+	public static List<IndexEntry> findByPortletId(String portletId) {
+		return getPersistence().findByPortletId(portletId);
+	}
+
+	/**
+	 * Returns a range of all the index entries where portletId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.tools.service.builder.test.model.impl.IndexEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param portletId the portlet ID
+	 * @param start the lower bound of the range of index entries
+	 * @param end the upper bound of the range of index entries (not inclusive)
+	 * @return the range of matching index entries
+	 */
+	public static List<IndexEntry> findByPortletId(
+		String portletId, int start, int end) {
+
+		return getPersistence().findByPortletId(portletId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the index entries where portletId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.tools.service.builder.test.model.impl.IndexEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param portletId the portlet ID
+	 * @param start the lower bound of the range of index entries
+	 * @param end the upper bound of the range of index entries (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching index entries
+	 */
+	public static List<IndexEntry> findByPortletId(
+		String portletId, int start, int end,
+		OrderByComparator<IndexEntry> orderByComparator) {
+
+		return getPersistence().findByPortletId(
+			portletId, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns all the index entries where ownerType = &#63; and portletId = &#63;.
+	 *
+	 * @param ownerType the owner type
+	 * @param portletId the portlet ID
+	 * @return the matching index entries
+	 */
+	public static List<IndexEntry> findByO_P(int ownerType, String portletId) {
+		return getPersistence().findByO_P(ownerType, portletId);
+	}
+
+	/**
+	 * Returns a range of all the index entries where ownerType = &#63; and portletId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.tools.service.builder.test.model.impl.IndexEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param ownerType the owner type
+	 * @param portletId the portlet ID
+	 * @param start the lower bound of the range of index entries
+	 * @param end the upper bound of the range of index entries (not inclusive)
+	 * @return the range of matching index entries
+	 */
+	public static List<IndexEntry> findByO_P(
+		int ownerType, String portletId, int start, int end) {
+
+		return getPersistence().findByO_P(ownerType, portletId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the index entries where ownerType = &#63; and portletId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.tools.service.builder.test.model.impl.IndexEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param ownerType the owner type
+	 * @param portletId the portlet ID
+	 * @param start the lower bound of the range of index entries
+	 * @param end the upper bound of the range of index entries (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching index entries
+	 */
+	public static List<IndexEntry> findByO_P(
+		int ownerType, String portletId, int start, int end,
+		OrderByComparator<IndexEntry> orderByComparator) {
+
+		return getPersistence().findByO_P(
+			ownerType, portletId, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns all the index entries where plid = &#63; and portletId = &#63;.
+	 *
+	 * @param plid the plid
+	 * @param portletId the portlet ID
+	 * @return the matching index entries
+	 */
+	public static List<IndexEntry> findByP_P(long plid, String portletId) {
+		return getPersistence().findByP_P(plid, portletId);
+	}
+
+	/**
+	 * Returns a range of all the index entries where plid = &#63; and portletId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.tools.service.builder.test.model.impl.IndexEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param plid the plid
+	 * @param portletId the portlet ID
+	 * @param start the lower bound of the range of index entries
+	 * @param end the upper bound of the range of index entries (not inclusive)
+	 * @return the range of matching index entries
+	 */
+	public static List<IndexEntry> findByP_P(
+		long plid, String portletId, int start, int end) {
+
+		return getPersistence().findByP_P(plid, portletId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the index entries where plid = &#63; and portletId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.tools.service.builder.test.model.impl.IndexEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param plid the plid
+	 * @param portletId the portlet ID
+	 * @param start the lower bound of the range of index entries
+	 * @param end the upper bound of the range of index entries (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching index entries
+	 */
+	public static List<IndexEntry> findByP_P(
+		long plid, String portletId, int start, int end,
+		OrderByComparator<IndexEntry> orderByComparator) {
+
+		return getPersistence().findByP_P(
+			plid, portletId, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns all the index entries where ownerId = &#63; and ownerType = &#63; and plid = &#63;.
+	 *
+	 * @param ownerId the owner ID
+	 * @param ownerType the owner type
+	 * @param plid the plid
+	 * @return the matching index entries
+	 */
+	public static List<IndexEntry> findByO_O_P(
+		long ownerId, int ownerType, long plid) {
+
+		return getPersistence().findByO_O_P(ownerId, ownerType, plid);
+	}
+
+	/**
+	 * Returns a range of all the index entries where ownerId = &#63; and ownerType = &#63; and plid = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.tools.service.builder.test.model.impl.IndexEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param ownerId the owner ID
+	 * @param ownerType the owner type
+	 * @param plid the plid
+	 * @param start the lower bound of the range of index entries
+	 * @param end the upper bound of the range of index entries (not inclusive)
+	 * @return the range of matching index entries
+	 */
+	public static List<IndexEntry> findByO_O_P(
+		long ownerId, int ownerType, long plid, int start, int end) {
+
+		return getPersistence().findByO_O_P(
+			ownerId, ownerType, plid, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the index entries where ownerId = &#63; and ownerType = &#63; and plid = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.tools.service.builder.test.model.impl.IndexEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param ownerId the owner ID
+	 * @param ownerType the owner type
+	 * @param plid the plid
+	 * @param start the lower bound of the range of index entries
+	 * @param end the upper bound of the range of index entries (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching index entries
+	 */
+	public static List<IndexEntry> findByO_O_P(
+		long ownerId, int ownerType, long plid, int start, int end,
+		OrderByComparator<IndexEntry> orderByComparator) {
+
+		return getPersistence().findByO_O_P(
+			ownerId, ownerType, plid, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns all the index entries where ownerId = &#63; and ownerType = &#63; and portletId = &#63;.
+	 *
+	 * @param ownerId the owner ID
+	 * @param ownerType the owner type
+	 * @param portletId the portlet ID
+	 * @return the matching index entries
+	 */
+	public static List<IndexEntry> findByO_O_PI(
+		long ownerId, int ownerType, String portletId) {
+
+		return getPersistence().findByO_O_PI(ownerId, ownerType, portletId);
+	}
+
+	/**
+	 * Returns a range of all the index entries where ownerId = &#63; and ownerType = &#63; and portletId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.tools.service.builder.test.model.impl.IndexEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param ownerId the owner ID
+	 * @param ownerType the owner type
+	 * @param portletId the portlet ID
+	 * @param start the lower bound of the range of index entries
+	 * @param end the upper bound of the range of index entries (not inclusive)
+	 * @return the range of matching index entries
+	 */
+	public static List<IndexEntry> findByO_O_PI(
+		long ownerId, int ownerType, String portletId, int start, int end) {
+
+		return getPersistence().findByO_O_PI(
+			ownerId, ownerType, portletId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the index entries where ownerId = &#63; and ownerType = &#63; and portletId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.tools.service.builder.test.model.impl.IndexEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param ownerId the owner ID
+	 * @param ownerType the owner type
+	 * @param portletId the portlet ID
+	 * @param start the lower bound of the range of index entries
+	 * @param end the upper bound of the range of index entries (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching index entries
+	 */
+	public static List<IndexEntry> findByO_O_PI(
+		long ownerId, int ownerType, String portletId, int start, int end,
+		OrderByComparator<IndexEntry> orderByComparator) {
+
+		return getPersistence().findByO_O_PI(
+			ownerId, ownerType, portletId, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns all the index entries where ownerType = &#63; and plid = &#63; and portletId = &#63;.
+	 *
+	 * @param ownerType the owner type
+	 * @param plid the plid
+	 * @param portletId the portlet ID
+	 * @return the matching index entries
+	 */
+	public static List<IndexEntry> findByO_P_P(
+		int ownerType, long plid, String portletId) {
+
+		return getPersistence().findByO_P_P(ownerType, plid, portletId);
+	}
+
+	/**
+	 * Returns a range of all the index entries where ownerType = &#63; and plid = &#63; and portletId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.tools.service.builder.test.model.impl.IndexEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param ownerType the owner type
+	 * @param plid the plid
+	 * @param portletId the portlet ID
+	 * @param start the lower bound of the range of index entries
+	 * @param end the upper bound of the range of index entries (not inclusive)
+	 * @return the range of matching index entries
+	 */
+	public static List<IndexEntry> findByO_P_P(
+		int ownerType, long plid, String portletId, int start, int end) {
+
+		return getPersistence().findByO_P_P(
+			ownerType, plid, portletId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the index entries where ownerType = &#63; and plid = &#63; and portletId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.tools.service.builder.test.model.impl.IndexEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param ownerType the owner type
+	 * @param plid the plid
+	 * @param portletId the portlet ID
+	 * @param start the lower bound of the range of index entries
+	 * @param end the upper bound of the range of index entries (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching index entries
+	 */
+	public static List<IndexEntry> findByO_P_P(
+		int ownerType, long plid, String portletId, int start, int end,
+		OrderByComparator<IndexEntry> orderByComparator) {
+
+		return getPersistence().findByO_P_P(
+			ownerType, plid, portletId, start, end, orderByComparator);
 	}
 
 	public static IndexEntryPersistence getPersistence() {
@@ -2145,3 +1570,4 @@ public class IndexEntryUtil {
 	private static volatile IndexEntryPersistence _persistence;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:1040667613

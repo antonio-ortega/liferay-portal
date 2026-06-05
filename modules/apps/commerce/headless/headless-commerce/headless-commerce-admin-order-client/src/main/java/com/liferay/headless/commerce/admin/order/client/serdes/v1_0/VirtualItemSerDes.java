@@ -257,3 +257,4 @@ public class VirtualItemSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-863984481

@@ -16,6 +16,7 @@ import com.liferay.headless.asset.library.dto.v1_0.MimeTypeLimit;
 import com.liferay.headless.asset.library.dto.v1_0.Settings;
 import com.liferay.headless.asset.library.internal.resource.v1_0.BaseAssetLibraryResourceImpl;
 import com.liferay.headless.asset.library.internal.util.AssetLibraryUtil;
+import com.liferay.headless.asset.library.internal.util.CreatorUtil;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.CompanyLocalService;
@@ -93,6 +94,10 @@ public class AssetLibraryDTOConverter
 							depotEntryGroupRel -> _toConnectedSite(
 								depotEntryGroupRel, dtoConverterContext),
 							ConnectedSite.class)));
+				setCreator(
+					() -> CreatorUtil.toCreator(
+						_portal,
+						_userLocalService.fetchUser(group.getCreatorUserId())));
 				setCreatorUserId(group::getCreatorUserId);
 				setDateCreated(depotEntry::getCreateDate);
 				setDateModified(
@@ -107,6 +112,7 @@ public class AssetLibraryDTOConverter
 						dtoConverterContext.isAcceptAllLanguages(),
 						group.getDescriptionMap()));
 				setExternalReferenceCode(group::getExternalReferenceCode);
+				setFriendlyURL(group::getFriendlyURL);
 				setId(depotEntry::getDepotEntryId);
 				setName(() -> group.getName(dtoConverterContext.getLocale()));
 				setName_i18n(

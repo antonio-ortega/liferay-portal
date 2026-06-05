@@ -4,18 +4,25 @@
 			{
 				"definition": {
 					"fragment": {
+						"key": "com.liferay.site.cmp.site.initializer.internal.fragment.renderer.PageTitleBreadcrumbComponentSectionFragmentRenderer"
+					},
+					"fragmentConfig": {
+					},
+					"fragmentFields": [
+					],
+					"indexed": true
+				},
+				"type": "Fragment"
+			},
+			{
+				"definition": {
+					"fragment": {
 						"key": "com.liferay.site.cmp.site.initializer.internal.fragment.renderer.ViewProjectsJSPSectionFragmentRenderer"
 					},
 					"fragmentConfig": {
 					},
 					"fragmentFields": [
 					],
-					"fragmentStyle": {
-						"paddingBottom": "3",
-						"paddingLeft": "3",
-						"paddingRight": "3",
-						"paddingTop": "3"
-					},
 					"indexed": true
 				},
 				"type": "Fragment"

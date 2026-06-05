@@ -6,7 +6,9 @@
 package com.liferay.headless.commerce.admin.catalog.internal.resource.v1_0;
 
 import com.liferay.commerce.product.exception.NoSuchCPSpecificationOptionException;
+import com.liferay.commerce.product.model.CPOptionCategory;
 import com.liferay.commerce.product.model.CPSpecificationOption;
+import com.liferay.commerce.product.service.CPOptionCategoryService;
 import com.liferay.commerce.product.service.CPSpecificationOptionService;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.OptionCategory;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.Specification;
@@ -322,14 +324,42 @@ public class SpecificationResourceImpl extends BaseSpecificationResourceImpl {
 			cpSpecificationOption.getCPSpecificationOptionId());
 	}
 
-	private long _getCPOptionCategoryId(Specification specification) {
+	private long _getCPOptionCategoryId(Specification specification)
+		throws PortalException {
+
 		OptionCategory optionCategory = specification.getOptionCategory();
 
 		if (optionCategory == null) {
 			return 0;
 		}
 
-		return optionCategory.getId();
+		CPOptionCategory cpOptionCategory = null;
+
+		long optionCategoryId = GetterUtil.getLong(optionCategory.getId());
+
+		if (optionCategoryId > 0) {
+			cpOptionCategory = _cpOptionCategoryService.fetchCPOptionCategory(
+				optionCategoryId);
+		}
+
+		if (cpOptionCategory == null) {
+			String externalReferenceCode = GetterUtil.getString(
+				optionCategory.getExternalReferenceCode());
+
+			if (Validator.isNotNull(externalReferenceCode)) {
+				cpOptionCategory =
+					_cpOptionCategoryService.
+						fetchCPOptionCategoryByExternalReferenceCode(
+							externalReferenceCode,
+							contextCompany.getCompanyId());
+			}
+		}
+
+		if (cpOptionCategory == null) {
+			return 0;
+		}
+
+		return cpOptionCategory.getCPOptionCategoryId();
 	}
 
 	private Specification _toSpecification(Long cpSpecificationOptionId)
@@ -413,6 +443,9 @@ public class SpecificationResourceImpl extends BaseSpecificationResourceImpl {
 
 	private static final EntityModel _entityModel =
 		new SpecificationEntityModel();
+
+	@Reference
+	private CPOptionCategoryService _cpOptionCategoryService;
 
 	@Reference
 	private CPSpecificationOptionService _cpSpecificationOptionService;

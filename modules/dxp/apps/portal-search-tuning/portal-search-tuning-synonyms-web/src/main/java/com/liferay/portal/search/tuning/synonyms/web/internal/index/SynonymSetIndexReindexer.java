@@ -15,7 +15,6 @@ import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.search.background.task.ReindexStatusMessageSenderUtil;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.search.capabilities.SearchCapabilities;
-import com.liferay.portal.search.document.DocumentBuilderFactory;
 import com.liferay.portal.search.engine.adapter.SearchEngineAdapter;
 import com.liferay.portal.search.index.SyncReindexManager;
 import com.liferay.portal.search.spi.reindexer.IndexReindexer;
@@ -67,9 +66,11 @@ public class SynonymSetIndexReindexer implements IndexReindexer {
 			}
 
 			try {
-				_synonymSetIndexCreator.deleteIfExists(synonymSetIndexName);
+				synchronized (synonymSetIndexNameBuilder) {
+					_synonymSetIndexCreator.deleteIfExists(synonymSetIndexName);
 
-				_synonymSetIndexCreator.create(synonymSetIndexName);
+					_synonymSetIndexCreator.create(synonymSetIndexName);
+				}
 			}
 			catch (RuntimeException runtimeException) {
 				_log.error(
@@ -113,7 +114,7 @@ public class SynonymSetIndexReindexer implements IndexReindexer {
 		_synonymSetIndexCreator = new SynonymSetIndexCreator(
 			_searchEngineAdapter);
 		_synonymSetIndexWriter = new SynonymSetIndexWriter(
-			_documentBuilderFactory, _searchEngineAdapter);
+			_searchEngineAdapter);
 	}
 
 	@Reference
@@ -161,9 +162,6 @@ public class SynonymSetIndexReindexer implements IndexReindexer {
 		_syncReindexManagerSnapshot = new Snapshot<>(
 			SynonymSetIndexReindexer.class, SyncReindexManager.class, null,
 			true);
-
-	@Reference
-	private DocumentBuilderFactory _documentBuilderFactory;
 
 	@Reference
 	private SearchEngineAdapter _searchEngineAdapter;

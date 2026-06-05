@@ -41,8 +41,7 @@ public class PortalPreferenceValueLocalServiceImpl
 
 		Map<PortalPreferenceKey, List<PortalPreferenceValue>>
 			portalPreferenceValuesMap = getPortalPreferenceValuesMap(
-				portalPreferenceValuePersistence, portalPreferencesId,
-				useFinderCache);
+				portalPreferenceValuePersistence, portalPreferencesId);
 
 		preferenceMap = new HashMap<>();
 
@@ -69,6 +68,74 @@ public class PortalPreferenceValueLocalServiceImpl
 		return preferenceMap;
 	}
 
+	public static Map<Long, Map<PortalPreferenceKey, String[]>>
+		getPreferenceMaps(
+			PortalPreferenceValuePersistence portalPreferenceValuePersistence,
+			long[] portalPreferencesIds) {
+
+		Map<Long, Map<PortalPreferenceKey, String[]>> preferenceMaps =
+			new HashMap<>();
+
+		boolean cacheMiss = false;
+
+		for (long portalPreferencesId : portalPreferencesIds) {
+			Map<PortalPreferenceKey, String[]> preferenceMap =
+				PortalPreferencesCacheUtil.get(portalPreferencesId);
+
+			if (preferenceMap == null) {
+				cacheMiss = true;
+
+				break;
+			}
+
+			preferenceMaps.put(portalPreferencesId, preferenceMap);
+		}
+
+		if (!cacheMiss) {
+			return preferenceMaps;
+		}
+
+		preferenceMaps.clear();
+
+		Map<Long, Map<PortalPreferenceKey, List<PortalPreferenceValue>>>
+			portalPreferenceValuesMaps = getPortalPreferenceValuesMaps(
+				portalPreferenceValuePersistence, portalPreferencesIds);
+
+		for (Map.Entry
+				<Long, Map<PortalPreferenceKey, List<PortalPreferenceValue>>>
+					entry1 : portalPreferenceValuesMaps.entrySet()) {
+
+			Map<PortalPreferenceKey, String[]> preferenceMap = new HashMap<>();
+
+			Map<PortalPreferenceKey, List<PortalPreferenceValue>>
+				portalPreferenceValuesMap = entry1.getValue();
+
+			for (Map.Entry<PortalPreferenceKey, List<PortalPreferenceValue>>
+					entry2 : portalPreferenceValuesMap.entrySet()) {
+
+				List<PortalPreferenceValue> portalPreferenceValues =
+					entry2.getValue();
+
+				String[] values = new String[portalPreferenceValues.size()];
+
+				for (int i = 0; i < portalPreferenceValues.size(); i++) {
+					PortalPreferenceValue portalPreferenceValue =
+						portalPreferenceValues.get(i);
+
+					values[i] = portalPreferenceValue.getValue();
+				}
+
+				preferenceMap.put(entry2.getKey(), values);
+			}
+
+			preferenceMaps.put(entry1.getKey(), preferenceMap);
+
+			PortalPreferencesCacheUtil.put(entry1.getKey(), preferenceMap);
+		}
+
+		return preferenceMaps;
+	}
+
 	@Override
 	public com.liferay.portal.kernel.portlet.PortalPreferences
 		getPortalPreferences(
@@ -86,7 +153,7 @@ public class PortalPreferenceValueLocalServiceImpl
 	protected static Map<PortalPreferenceKey, List<PortalPreferenceValue>>
 		getPortalPreferenceValuesMap(
 			PortalPreferenceValuePersistence portalPreferenceValuePersistence,
-			long portalPreferencesId, boolean useFinderCache) {
+			long portalPreferencesId) {
 
 		Map<PortalPreferenceKey, List<PortalPreferenceValue>>
 			portalPreferenceValuesMap = new HashMap<>();
@@ -94,7 +161,7 @@ public class PortalPreferenceValueLocalServiceImpl
 		for (PortalPreferenceValue portalPreferenceValue :
 				portalPreferenceValuePersistence.findByPortalPreferencesId(
 					portalPreferencesId, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-					null, useFinderCache)) {
+					null, false)) {
 
 			List<PortalPreferenceValue> portalPreferenceValues =
 				portalPreferenceValuesMap.computeIfAbsent(
@@ -107,6 +174,40 @@ public class PortalPreferenceValueLocalServiceImpl
 		}
 
 		return portalPreferenceValuesMap;
+	}
+
+	protected static Map
+		<Long, Map<PortalPreferenceKey, List<PortalPreferenceValue>>>
+			getPortalPreferenceValuesMaps(
+				PortalPreferenceValuePersistence
+					portalPreferenceValuePersistence,
+				long[] portalPreferencesIds) {
+
+		Map<Long, Map<PortalPreferenceKey, List<PortalPreferenceValue>>>
+			portalPreferenceValuesMaps = new HashMap<>();
+
+		for (PortalPreferenceValue portalPreferenceValue :
+				portalPreferenceValuePersistence.findByPortalPreferencesId(
+					portalPreferencesIds, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+					null, false)) {
+
+			Map<PortalPreferenceKey, List<PortalPreferenceValue>>
+				portalPreferenceValuesMap =
+					portalPreferenceValuesMaps.computeIfAbsent(
+						portalPreferenceValue.getPortalPreferencesId(),
+						key -> new HashMap<>());
+
+			List<PortalPreferenceValue> portalPreferenceValues =
+				portalPreferenceValuesMap.computeIfAbsent(
+					new PortalPreferenceKey(
+						portalPreferenceValue.getNamespace(),
+						portalPreferenceValue.getKey()),
+					key -> new ArrayList<>(1));
+
+			portalPreferenceValues.add(portalPreferenceValue);
+		}
+
+		return portalPreferenceValuesMaps;
 	}
 
 }

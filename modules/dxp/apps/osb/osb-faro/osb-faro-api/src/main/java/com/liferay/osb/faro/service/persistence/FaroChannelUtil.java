@@ -36,6 +36,20 @@ public class FaroChannelUtil {
 	 */
 
 	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(List)
+	 */
+	public static void cacheResult(List<FaroChannel> faroChannels) {
+		getPersistence().cacheResult(faroChannels);
+	}
+
+	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(com.liferay.portal.kernel.model.BaseModel)
+	 */
+	public static void cacheResult(FaroChannel faroChannel) {
+		getPersistence().cacheResult(faroChannel);
+	}
+
+	/**
 	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#clearCache()
 	 */
 	public static void clearCache() {
@@ -111,59 +125,10 @@ public class FaroChannelUtil {
 	}
 
 	/**
-	 * Returns all the faro channels where groupId = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @return the matching faro channels
-	 */
-	public static List<FaroChannel> findByGroupId(long groupId) {
-		return getPersistence().findByGroupId(groupId);
-	}
-
-	/**
-	 * Returns a range of all the faro channels where groupId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FaroChannelModelImpl</code>.
-	 * </p>
-	 *
-	 * @param groupId the group ID
-	 * @param start the lower bound of the range of faro channels
-	 * @param end the upper bound of the range of faro channels (not inclusive)
-	 * @return the range of matching faro channels
-	 */
-	public static List<FaroChannel> findByGroupId(
-		long groupId, int start, int end) {
-
-		return getPersistence().findByGroupId(groupId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the faro channels where groupId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FaroChannelModelImpl</code>.
-	 * </p>
-	 *
-	 * @param groupId the group ID
-	 * @param start the lower bound of the range of faro channels
-	 * @param end the upper bound of the range of faro channels (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching faro channels
-	 */
-	public static List<FaroChannel> findByGroupId(
-		long groupId, int start, int end,
-		OrderByComparator<FaroChannel> orderByComparator) {
-
-		return getPersistence().findByGroupId(
-			groupId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the faro channels where groupId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FaroChannelModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.osb.faro.model.impl.FaroChannelModelImpl</code>.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -212,52 +177,6 @@ public class FaroChannelUtil {
 	}
 
 	/**
-	 * Returns the last faro channel in the ordered set where groupId = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching faro channel
-	 * @throws NoSuchFaroChannelException if a matching faro channel could not be found
-	 */
-	public static FaroChannel findByGroupId_Last(
-			long groupId, OrderByComparator<FaroChannel> orderByComparator)
-		throws com.liferay.osb.faro.exception.NoSuchFaroChannelException {
-
-		return getPersistence().findByGroupId_Last(groupId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last faro channel in the ordered set where groupId = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching faro channel, or <code>null</code> if a matching faro channel could not be found
-	 */
-	public static FaroChannel fetchByGroupId_Last(
-		long groupId, OrderByComparator<FaroChannel> orderByComparator) {
-
-		return getPersistence().fetchByGroupId_Last(groupId, orderByComparator);
-	}
-
-	/**
-	 * Returns the faro channels before and after the current faro channel in the ordered set where groupId = &#63;.
-	 *
-	 * @param faroChannelId the primary key of the current faro channel
-	 * @param groupId the group ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next faro channel
-	 * @throws NoSuchFaroChannelException if a faro channel with the primary key could not be found
-	 */
-	public static FaroChannel[] findByGroupId_PrevAndNext(
-			long faroChannelId, long groupId,
-			OrderByComparator<FaroChannel> orderByComparator)
-		throws com.liferay.osb.faro.exception.NoSuchFaroChannelException {
-
-		return getPersistence().findByGroupId_PrevAndNext(
-			faroChannelId, groupId, orderByComparator);
-	}
-
-	/**
 	 * Removes all the faro channels where groupId = &#63; from the database.
 	 *
 	 * @param groupId the group ID
@@ -277,62 +196,10 @@ public class FaroChannelUtil {
 	}
 
 	/**
-	 * Returns all the faro channels where workspaceGroupId = &#63;.
-	 *
-	 * @param workspaceGroupId the workspace group ID
-	 * @return the matching faro channels
-	 */
-	public static List<FaroChannel> findByWorkspaceGroupId(
-		long workspaceGroupId) {
-
-		return getPersistence().findByWorkspaceGroupId(workspaceGroupId);
-	}
-
-	/**
-	 * Returns a range of all the faro channels where workspaceGroupId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FaroChannelModelImpl</code>.
-	 * </p>
-	 *
-	 * @param workspaceGroupId the workspace group ID
-	 * @param start the lower bound of the range of faro channels
-	 * @param end the upper bound of the range of faro channels (not inclusive)
-	 * @return the range of matching faro channels
-	 */
-	public static List<FaroChannel> findByWorkspaceGroupId(
-		long workspaceGroupId, int start, int end) {
-
-		return getPersistence().findByWorkspaceGroupId(
-			workspaceGroupId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the faro channels where workspaceGroupId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FaroChannelModelImpl</code>.
-	 * </p>
-	 *
-	 * @param workspaceGroupId the workspace group ID
-	 * @param start the lower bound of the range of faro channels
-	 * @param end the upper bound of the range of faro channels (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching faro channels
-	 */
-	public static List<FaroChannel> findByWorkspaceGroupId(
-		long workspaceGroupId, int start, int end,
-		OrderByComparator<FaroChannel> orderByComparator) {
-
-		return getPersistence().findByWorkspaceGroupId(
-			workspaceGroupId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the faro channels where workspaceGroupId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FaroChannelModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.osb.faro.model.impl.FaroChannelModelImpl</code>.
 	 * </p>
 	 *
 	 * @param workspaceGroupId the workspace group ID
@@ -384,56 +251,6 @@ public class FaroChannelUtil {
 	}
 
 	/**
-	 * Returns the last faro channel in the ordered set where workspaceGroupId = &#63;.
-	 *
-	 * @param workspaceGroupId the workspace group ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching faro channel
-	 * @throws NoSuchFaroChannelException if a matching faro channel could not be found
-	 */
-	public static FaroChannel findByWorkspaceGroupId_Last(
-			long workspaceGroupId,
-			OrderByComparator<FaroChannel> orderByComparator)
-		throws com.liferay.osb.faro.exception.NoSuchFaroChannelException {
-
-		return getPersistence().findByWorkspaceGroupId_Last(
-			workspaceGroupId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last faro channel in the ordered set where workspaceGroupId = &#63;.
-	 *
-	 * @param workspaceGroupId the workspace group ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching faro channel, or <code>null</code> if a matching faro channel could not be found
-	 */
-	public static FaroChannel fetchByWorkspaceGroupId_Last(
-		long workspaceGroupId,
-		OrderByComparator<FaroChannel> orderByComparator) {
-
-		return getPersistence().fetchByWorkspaceGroupId_Last(
-			workspaceGroupId, orderByComparator);
-	}
-
-	/**
-	 * Returns the faro channels before and after the current faro channel in the ordered set where workspaceGroupId = &#63;.
-	 *
-	 * @param faroChannelId the primary key of the current faro channel
-	 * @param workspaceGroupId the workspace group ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next faro channel
-	 * @throws NoSuchFaroChannelException if a faro channel with the primary key could not be found
-	 */
-	public static FaroChannel[] findByWorkspaceGroupId_PrevAndNext(
-			long faroChannelId, long workspaceGroupId,
-			OrderByComparator<FaroChannel> orderByComparator)
-		throws com.liferay.osb.faro.exception.NoSuchFaroChannelException {
-
-		return getPersistence().findByWorkspaceGroupId_PrevAndNext(
-			faroChannelId, workspaceGroupId, orderByComparator);
-	}
-
-	/**
 	 * Removes all the faro channels where workspaceGroupId = &#63; from the database.
 	 *
 	 * @param workspaceGroupId the workspace group ID
@@ -453,62 +270,10 @@ public class FaroChannelUtil {
 	}
 
 	/**
-	 * Returns all the faro channels where groupId = &#63; and userId = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param userId the user ID
-	 * @return the matching faro channels
-	 */
-	public static List<FaroChannel> findByG_U(long groupId, long userId) {
-		return getPersistence().findByG_U(groupId, userId);
-	}
-
-	/**
-	 * Returns a range of all the faro channels where groupId = &#63; and userId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FaroChannelModelImpl</code>.
-	 * </p>
-	 *
-	 * @param groupId the group ID
-	 * @param userId the user ID
-	 * @param start the lower bound of the range of faro channels
-	 * @param end the upper bound of the range of faro channels (not inclusive)
-	 * @return the range of matching faro channels
-	 */
-	public static List<FaroChannel> findByG_U(
-		long groupId, long userId, int start, int end) {
-
-		return getPersistence().findByG_U(groupId, userId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the faro channels where groupId = &#63; and userId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FaroChannelModelImpl</code>.
-	 * </p>
-	 *
-	 * @param groupId the group ID
-	 * @param userId the user ID
-	 * @param start the lower bound of the range of faro channels
-	 * @param end the upper bound of the range of faro channels (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching faro channels
-	 */
-	public static List<FaroChannel> findByG_U(
-		long groupId, long userId, int start, int end,
-		OrderByComparator<FaroChannel> orderByComparator) {
-
-		return getPersistence().findByG_U(
-			groupId, userId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the faro channels where groupId = &#63; and userId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FaroChannelModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.osb.faro.model.impl.FaroChannelModelImpl</code>.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -563,59 +328,6 @@ public class FaroChannelUtil {
 	}
 
 	/**
-	 * Returns the last faro channel in the ordered set where groupId = &#63; and userId = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param userId the user ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching faro channel
-	 * @throws NoSuchFaroChannelException if a matching faro channel could not be found
-	 */
-	public static FaroChannel findByG_U_Last(
-			long groupId, long userId,
-			OrderByComparator<FaroChannel> orderByComparator)
-		throws com.liferay.osb.faro.exception.NoSuchFaroChannelException {
-
-		return getPersistence().findByG_U_Last(
-			groupId, userId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last faro channel in the ordered set where groupId = &#63; and userId = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param userId the user ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching faro channel, or <code>null</code> if a matching faro channel could not be found
-	 */
-	public static FaroChannel fetchByG_U_Last(
-		long groupId, long userId,
-		OrderByComparator<FaroChannel> orderByComparator) {
-
-		return getPersistence().fetchByG_U_Last(
-			groupId, userId, orderByComparator);
-	}
-
-	/**
-	 * Returns the faro channels before and after the current faro channel in the ordered set where groupId = &#63; and userId = &#63;.
-	 *
-	 * @param faroChannelId the primary key of the current faro channel
-	 * @param groupId the group ID
-	 * @param userId the user ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next faro channel
-	 * @throws NoSuchFaroChannelException if a faro channel with the primary key could not be found
-	 */
-	public static FaroChannel[] findByG_U_PrevAndNext(
-			long faroChannelId, long groupId, long userId,
-			OrderByComparator<FaroChannel> orderByComparator)
-		throws com.liferay.osb.faro.exception.NoSuchFaroChannelException {
-
-		return getPersistence().findByG_U_PrevAndNext(
-			faroChannelId, groupId, userId, orderByComparator);
-	}
-
-	/**
 	 * Removes all the faro channels where groupId = &#63; and userId = &#63; from the database.
 	 *
 	 * @param groupId the group ID
@@ -648,19 +360,6 @@ public class FaroChannelUtil {
 		throws com.liferay.osb.faro.exception.NoSuchFaroChannelException {
 
 		return getPersistence().findByC_W(channelId, workspaceGroupId);
-	}
-
-	/**
-	 * Returns the faro channel where channelId = &#63; and workspaceGroupId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
-	 *
-	 * @param channelId the channel ID
-	 * @param workspaceGroupId the workspace group ID
-	 * @return the matching faro channel, or <code>null</code> if a matching faro channel could not be found
-	 */
-	public static FaroChannel fetchByC_W(
-		String channelId, long workspaceGroupId) {
-
-		return getPersistence().fetchByC_W(channelId, workspaceGroupId);
 	}
 
 	/**
@@ -701,24 +400,6 @@ public class FaroChannelUtil {
 	 */
 	public static int countByC_W(String channelId, long workspaceGroupId) {
 		return getPersistence().countByC_W(channelId, workspaceGroupId);
-	}
-
-	/**
-	 * Caches the faro channel in the entity cache if it is enabled.
-	 *
-	 * @param faroChannel the faro channel
-	 */
-	public static void cacheResult(FaroChannel faroChannel) {
-		getPersistence().cacheResult(faroChannel);
-	}
-
-	/**
-	 * Caches the faro channels in the entity cache if it is enabled.
-	 *
-	 * @param faroChannels the faro channels
-	 */
-	public static void cacheResult(List<FaroChannel> faroChannels) {
-		getPersistence().cacheResult(faroChannels);
 	}
 
 	/**
@@ -772,82 +453,169 @@ public class FaroChannelUtil {
 	}
 
 	/**
-	 * Returns all the faro channels.
+	 * Returns the faro channel where channelId = &#63; and workspaceGroupId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
 	 *
-	 * @return the faro channels
+	 * @param channelId the channel ID
+	 * @param workspaceGroupId the workspace group ID
+	 * @return the matching faro channel, or <code>null</code> if a matching faro channel could not be found
 	 */
-	public static List<FaroChannel> findAll() {
-		return getPersistence().findAll();
+	public static FaroChannel fetchByC_W(
+		String channelId, long workspaceGroupId) {
+
+		return getPersistence().fetchByC_W(channelId, workspaceGroupId);
 	}
 
 	/**
-	 * Returns a range of all the faro channels.
+	 * Returns all the faro channels where groupId = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @return the matching faro channels
+	 */
+	public static List<FaroChannel> findByGroupId(long groupId) {
+		return getPersistence().findByGroupId(groupId);
+	}
+
+	/**
+	 * Returns a range of all the faro channels where groupId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FaroChannelModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.osb.faro.model.impl.FaroChannelModelImpl</code>.
 	 * </p>
 	 *
+	 * @param groupId the group ID
 	 * @param start the lower bound of the range of faro channels
 	 * @param end the upper bound of the range of faro channels (not inclusive)
-	 * @return the range of faro channels
+	 * @return the range of matching faro channels
 	 */
-	public static List<FaroChannel> findAll(int start, int end) {
-		return getPersistence().findAll(start, end);
+	public static List<FaroChannel> findByGroupId(
+		long groupId, int start, int end) {
+
+		return getPersistence().findByGroupId(groupId, start, end);
 	}
 
 	/**
-	 * Returns an ordered range of all the faro channels.
+	 * Returns an ordered range of all the faro channels where groupId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FaroChannelModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.osb.faro.model.impl.FaroChannelModelImpl</code>.
 	 * </p>
 	 *
+	 * @param groupId the group ID
 	 * @param start the lower bound of the range of faro channels
 	 * @param end the upper bound of the range of faro channels (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of faro channels
+	 * @return the ordered range of matching faro channels
 	 */
-	public static List<FaroChannel> findAll(
-		int start, int end, OrderByComparator<FaroChannel> orderByComparator) {
+	public static List<FaroChannel> findByGroupId(
+		long groupId, int start, int end,
+		OrderByComparator<FaroChannel> orderByComparator) {
 
-		return getPersistence().findAll(start, end, orderByComparator);
+		return getPersistence().findByGroupId(
+			groupId, start, end, orderByComparator);
 	}
 
 	/**
-	 * Returns an ordered range of all the faro channels.
+	 * Returns all the faro channels where workspaceGroupId = &#63;.
+	 *
+	 * @param workspaceGroupId the workspace group ID
+	 * @return the matching faro channels
+	 */
+	public static List<FaroChannel> findByWorkspaceGroupId(
+		long workspaceGroupId) {
+
+		return getPersistence().findByWorkspaceGroupId(workspaceGroupId);
+	}
+
+	/**
+	 * Returns a range of all the faro channels where workspaceGroupId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FaroChannelModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.osb.faro.model.impl.FaroChannelModelImpl</code>.
 	 * </p>
 	 *
+	 * @param workspaceGroupId the workspace group ID
+	 * @param start the lower bound of the range of faro channels
+	 * @param end the upper bound of the range of faro channels (not inclusive)
+	 * @return the range of matching faro channels
+	 */
+	public static List<FaroChannel> findByWorkspaceGroupId(
+		long workspaceGroupId, int start, int end) {
+
+		return getPersistence().findByWorkspaceGroupId(
+			workspaceGroupId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the faro channels where workspaceGroupId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.osb.faro.model.impl.FaroChannelModelImpl</code>.
+	 * </p>
+	 *
+	 * @param workspaceGroupId the workspace group ID
 	 * @param start the lower bound of the range of faro channels
 	 * @param end the upper bound of the range of faro channels (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param useFinderCache whether to use the finder cache
-	 * @return the ordered range of faro channels
+	 * @return the ordered range of matching faro channels
 	 */
-	public static List<FaroChannel> findAll(
-		int start, int end, OrderByComparator<FaroChannel> orderByComparator,
-		boolean useFinderCache) {
+	public static List<FaroChannel> findByWorkspaceGroupId(
+		long workspaceGroupId, int start, int end,
+		OrderByComparator<FaroChannel> orderByComparator) {
 
-		return getPersistence().findAll(
-			start, end, orderByComparator, useFinderCache);
+		return getPersistence().findByWorkspaceGroupId(
+			workspaceGroupId, start, end, orderByComparator);
 	}
 
 	/**
-	 * Removes all the faro channels from the database.
-	 */
-	public static void removeAll() {
-		getPersistence().removeAll();
-	}
-
-	/**
-	 * Returns the number of faro channels.
+	 * Returns all the faro channels where groupId = &#63; and userId = &#63;.
 	 *
-	 * @return the number of faro channels
+	 * @param groupId the group ID
+	 * @param userId the user ID
+	 * @return the matching faro channels
 	 */
-	public static int countAll() {
-		return getPersistence().countAll();
+	public static List<FaroChannel> findByG_U(long groupId, long userId) {
+		return getPersistence().findByG_U(groupId, userId);
+	}
+
+	/**
+	 * Returns a range of all the faro channels where groupId = &#63; and userId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.osb.faro.model.impl.FaroChannelModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param userId the user ID
+	 * @param start the lower bound of the range of faro channels
+	 * @param end the upper bound of the range of faro channels (not inclusive)
+	 * @return the range of matching faro channels
+	 */
+	public static List<FaroChannel> findByG_U(
+		long groupId, long userId, int start, int end) {
+
+		return getPersistence().findByG_U(groupId, userId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the faro channels where groupId = &#63; and userId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.osb.faro.model.impl.FaroChannelModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param userId the user ID
+	 * @param start the lower bound of the range of faro channels
+	 * @param end the upper bound of the range of faro channels (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching faro channels
+	 */
+	public static List<FaroChannel> findByG_U(
+		long groupId, long userId, int start, int end,
+		OrderByComparator<FaroChannel> orderByComparator) {
+
+		return getPersistence().findByG_U(
+			groupId, userId, start, end, orderByComparator);
 	}
 
 	public static FaroChannelPersistence getPersistence() {
@@ -861,3 +629,4 @@ public class FaroChannelUtil {
 	private static volatile FaroChannelPersistence _persistence;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:335222743

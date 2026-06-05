@@ -297,3 +297,4 @@ public interface KaleoConditionLocalService
 		throws E;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:158915531

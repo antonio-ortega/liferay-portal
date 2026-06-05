@@ -17,6 +17,7 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
 
 /**
  * @author Mikel Lorza
@@ -24,8 +25,9 @@ import com.liferay.portal.kernel.util.Validator;
 public class FragmentLinkUtil {
 
 	public static FragmentLink toFragmentLink(
-		long companyId, InfoItemServiceRegistry infoItemServiceRegistry,
-		JSONObject jsonObject, long scopeGroupId) {
+		long companyId, DTOConverterContext dtoConverterContext,
+		InfoItemServiceRegistry infoItemServiceRegistry, JSONObject jsonObject,
+		long scopeGroupId) {
 
 		if (jsonObject == null) {
 			return null;
@@ -58,8 +60,8 @@ public class FragmentLinkUtil {
 					});
 				setValue(
 					() -> _toFragmentLinkValue(
-						companyId, infoItemServiceRegistry, jsonObject,
-						mappedValue, scopeGroupId));
+						companyId, dtoConverterContext, infoItemServiceRegistry,
+						jsonObject, mappedValue, scopeGroupId));
 			}
 		};
 	}
@@ -114,7 +116,8 @@ public class FragmentLinkUtil {
 	}
 
 	private static FragmentLinkMappedValue _toFragmentLinkMappedValue(
-			long companyId, InfoItemServiceRegistry infoItemServiceRegistry,
+			long companyId, DTOConverterContext dtoConverterContext,
+			InfoItemServiceRegistry infoItemServiceRegistry,
 			JSONObject jsonObject, long scopeGroupId)
 		throws Exception {
 
@@ -133,7 +136,9 @@ public class FragmentLinkUtil {
 			() -> new Mapping() {
 				{
 					setFieldKey(
-						() -> FragmentMappingUtil.getFieldKey(jsonObject));
+						() -> FragmentMappingFieldUtil.getFieldKey(
+							dtoConverterContext, infoItemServiceRegistry,
+							jsonObject, scopeGroupId));
 					setItemReference(() -> fragmentMappedValueItemReference);
 				}
 			});
@@ -144,13 +149,15 @@ public class FragmentLinkUtil {
 	}
 
 	private static FragmentLinkValue _toFragmentLinkValue(
-			long companyId, InfoItemServiceRegistry infoItemServiceRegistry,
+			long companyId, DTOConverterContext dtoConverterContext,
+			InfoItemServiceRegistry infoItemServiceRegistry,
 			JSONObject jsonObject, boolean mappedValue, long scopeGroupId)
 		throws Exception {
 
 		if (mappedValue) {
 			return _toFragmentLinkMappedValue(
-				companyId, infoItemServiceRegistry, jsonObject, scopeGroupId);
+				companyId, dtoConverterContext, infoItemServiceRegistry,
+				jsonObject, scopeGroupId);
 		}
 
 		FragmentLinkInlineValue fragmentLinkInlineValue =

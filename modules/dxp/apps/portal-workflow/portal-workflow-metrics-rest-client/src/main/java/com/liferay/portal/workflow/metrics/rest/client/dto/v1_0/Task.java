@@ -477,3 +477,4 @@ public class Task implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-335862263

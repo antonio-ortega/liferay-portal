@@ -5,12 +5,12 @@
 
 package com.liferay.portal.instances.internal.instance.lifecycle;
 
+import com.liferay.petra.io.unsync.UnsyncByteArrayInputStream;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.persistence.ReloadablePersistenceManager;
 import com.liferay.portal.db.partition.util.DBPartitionUtil;
 import com.liferay.portal.instance.lifecycle.BasePortalInstanceLifecycleListener;
 import com.liferay.portal.instance.lifecycle.PortalInstanceLifecycleListener;
-import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayInputStream;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.PropsValues;
@@ -55,12 +55,12 @@ public class ConfigurationPortalInstanceLifecycleListener
 	public void portalInstanceRegistered(Company company) throws Exception {
 		if (!PropsValues.DATABASE_PARTITION_ENABLED ||
 			(!PortalInstances.isCompanyInCopyProcess() &&
-			 !PortalInstances.isCompanyInInsertionProcess())) {
+			 !PortalInstances.isCompanyInImportProcess())) {
 
 			return;
 		}
 
-		if (PortalInstances.isCompanyInInsertionProcess()) {
+		if (PortalInstances.isCompanyInImportProcess()) {
 			Map<String, String> configurations =
 				DBPartitionUtil.getConfigurations(company.getCompanyId());
 

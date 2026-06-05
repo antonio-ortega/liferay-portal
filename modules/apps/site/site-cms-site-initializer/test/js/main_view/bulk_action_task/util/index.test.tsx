@@ -12,9 +12,9 @@ import {
 } from '../../../../../src/main/resources/META-INF/resources/js/main_view/bulk_actions_monitor/util';
 import {URL_BULK_ACTION_TASK} from '../../../../../src/main/resources/META-INF/resources/js/main_view/bulk_actions_monitor/util/constants';
 
-describe.skip('Bulk Actions Monitor Utils', () => {
+describe('Bulk Actions Monitor Utils', () => {
 	describe('composeCreateTaskURL', () => {
-		it('return the download URL when useDownloadUrl is true', () => {
+		it('return the download URL when type is DownloadBulkAction', () => {
 			const taskUrl = composeCreateTaskURL(
 				URL_BULK_ACTION_TASK,
 				{
@@ -22,7 +22,7 @@ describe.skip('Bulk Actions Monitor Utils', () => {
 					searchQuery: '',
 					selectAll: false,
 				},
-				true
+				'DownloadBulkAction'
 			);
 
 			expect(taskUrl).toBe(
@@ -30,7 +30,7 @@ describe.skip('Bulk Actions Monitor Utils', () => {
 			);
 		});
 
-		it('return the bulk action URL when useDownloadUrl is false', () => {
+		it('return the bulk action URL when type is not DownloadBulkAction or ExportTranslationBulkAction', () => {
 			const taskUrl = composeCreateTaskURL(
 				URL_BULK_ACTION_TASK,
 				{
@@ -38,11 +38,11 @@ describe.skip('Bulk Actions Monitor Utils', () => {
 					searchQuery: '',
 					selectAll: false,
 				},
-				false
+				'DeleteObjectBulkSelectionAction'
 			);
 
 			expect(taskUrl).toBe(
-				`${Liferay.ThemeDisplay.getPortalURL()}${'/o/bulk/v1.0/bulk-action?nestedFields=embedded'}`
+				`${Liferay.ThemeDisplay.getPortalURL()}${'/o/bulk/v1.0/bulk-action'}`
 			);
 		});
 
@@ -61,11 +61,52 @@ describe.skip('Bulk Actions Monitor Utils', () => {
 					searchQuery: 'test',
 					selectAll: true,
 				},
-				false
+				'DeleteObjectBulkSelectionAction'
 			);
 
 			expect(taskUrl).toBe(
-				`${Liferay.ThemeDisplay.getPortalURL()}${'/o/headless-cms/v1.0/bulk-action?nestedFields=embedded&search=test&filter=asset'}`
+				`${Liferay.ThemeDisplay.getPortalURL()}${'/o/bulk/v1.0/bulk-action?search=test&filter=asset'}`
+			);
+		});
+
+		it('include emptySearch parameters when searchQuery is not provided', () => {
+			const taskUrl = composeCreateTaskURL(
+				URL_BULK_ACTION_TASK,
+				{
+					filters: [
+						{
+							id: 1,
+							multiple: false,
+							odataFilterString: 'asset',
+							selectedItemsLabel: '',
+						},
+					],
+					selectAll: true,
+				},
+				'DeleteObjectBulkSelectionAction'
+			);
+
+			expect(taskUrl).toBe(
+				`${Liferay.ThemeDisplay.getPortalURL()}${'/o/bulk/v1.0/bulk-action?emptySearch=true&filter=asset'}`
+			);
+		});
+
+		it('applies specific filter for ExportTranslationBulkAction when selectAll is true', () => {
+			const apiURLWithFilter =
+				'/o/search/v1.0/search?filter=folderId eq 123 and groupIds/any(g:g in (456))';
+
+			const taskUrl = composeCreateTaskURL(
+				apiURLWithFilter,
+				{
+					filters: [],
+					searchQuery: '',
+					selectAll: true,
+				},
+				'ExportTranslationBulkAction'
+			);
+
+			expect(taskUrl).toBe(
+				`${Liferay.ThemeDisplay.getPortalURL()}/o/cms/translations?type=ExportTranslationBulkAction&emptySearch=true&filter=cmsRoot+eq+true+and+cmsSection+eq+%27contents%27+and+status+in+%280%2C+2%2C+3%29+and+folderId+eq+123+and+groupIds%2Fany%28g%3Ag+in+%28456%29%29`
 			);
 		});
 	});
@@ -73,16 +114,22 @@ describe.skip('Bulk Actions Monitor Utils', () => {
 	describe('composeCreateTaskDTO', () => {
 		it('includes keyValues in the final DTO', () => {
 			const keyValues = {destinationFolderId: 12345};
-			const result = composeCreateTaskDTO('MoveBulkAction', keyValues, {
-				items: [],
-				selectAll: false,
-			});
+			const result = composeCreateTaskDTO(
+				'MoveObjectBulkSelectionAction',
+				keyValues,
+				{
+					items: [],
+					selectAll: false,
+				}
+			);
 
 			expect(result).toEqual({
 				bulkActionItems: [],
 				destinationFolderId: 12345,
-				selectAll: false,
-				type: 'MoveBulkAction',
+				selectionScope: {
+					selectAll: false,
+				},
+				type: 'MoveObjectBulkSelectionAction',
 			});
 		});
 
@@ -99,7 +146,7 @@ describe.skip('Bulk Actions Monitor Utils', () => {
 			] as unknown as ISearchAssetObjectEntry[];
 
 			const result = composeCreateTaskDTO(
-				'DeleteBulkAction',
+				'DeleteObjectBulkSelectionAction',
 				{},
 
 				{items, selectAll: false}
@@ -128,7 +175,7 @@ describe.skip('Bulk Actions Monitor Utils', () => {
 			] as unknown as ISearchAssetObjectEntry[];
 
 			const result = composeCreateTaskDTO(
-				'DeleteBulkAction',
+				'DeleteObjectBulkSelectionAction',
 				{},
 
 				{items, selectAll: false}
@@ -158,7 +205,7 @@ describe.skip('Bulk Actions Monitor Utils', () => {
 			] as unknown as ISearchAssetObjectEntry[];
 
 			const result = composeCreateTaskDTO(
-				'DeleteBulkAction',
+				'DeleteObjectBulkSelectionAction',
 				{},
 
 				{items, selectAll: false}
@@ -176,15 +223,17 @@ describe.skip('Bulk Actions Monitor Utils', () => {
 
 		it('sets selectAll to true when specified', () => {
 			const result = composeCreateTaskDTO(
-				'DeleteBulkAction',
+				'DeleteObjectBulkSelectionAction',
 				{},
 				{items: [], selectAll: true}
 			);
 
 			expect(result).toEqual({
 				bulkActionItems: [],
-				selectAll: true,
-				type: 'DeleteBulkAction',
+				selectionScope: {
+					selectAll: true,
+				},
+				type: 'DeleteObjectBulkSelectionAction',
 			});
 		});
 	});

@@ -17,9 +17,11 @@ import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.exception.NoSuchModelException;
 import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -29,6 +31,7 @@ import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.vulcan.pagination.Page;
@@ -110,7 +113,7 @@ public class WorkflowDefinitionResourceImpl
 		throws Exception {
 
 		_workflowDefinitionManager.undeployWorkflowDefinition(
-			contextCompany.getCompanyId(), contextUser.getUserId(), name,
+			contextCompany.getCompanyId(), name, contextUser.getUserId(),
 			GetterUtil.getInteger(version));
 	}
 
@@ -152,7 +155,7 @@ public class WorkflowDefinitionResourceImpl
 
 	@Override
 	public Page<WorkflowDefinition> getWorkflowDefinitionsPage(
-			Boolean active, Pagination pagination, Sort[] sorts)
+			Boolean active, String scope, Pagination pagination, Sort[] sorts)
 		throws Exception {
 
 		return Page.of(
@@ -190,8 +193,11 @@ public class WorkflowDefinitionResourceImpl
 			transform(
 				_workflowDefinitionManager.getLatestWorkflowDefinitions(
 					active, contextCompany.getCompanyId(),
-					pagination.getStartPosition(), pagination.getEndPosition(),
-					_toOrderByComparator((Sort)ArrayUtil.getValue(sorts, 0))),
+					pagination.getEndPosition(),
+					_toOrderByComparator((Sort)ArrayUtil.getValue(sorts, 0)),
+					GetterUtil.getString(
+						scope, WorkflowDefinitionConstants.SCOPE_ALL),
+					pagination.getStartPosition(), contextUser.getUserId()),
 				this::_toWorkflowDefinition),
 			pagination,
 			_workflowDefinitionManager.getLatestWorkflowDefinitionsCount(
@@ -215,13 +221,14 @@ public class WorkflowDefinitionResourceImpl
 
 		return _toWorkflowDefinition(
 			_workflowDefinitionManager.deployWorkflowDefinition(
+				content.getBytes(), contextCompany.getCompanyId(),
 				workflowDefinition.getExternalReferenceCode(),
-				contextCompany.getCompanyId(), contextUser.getUserId(),
-				_getTitle(workflowDefinition), workflowDefinition.getName(),
+				_getGroupId(workflowDefinition.getGroupExternalReferenceCode()),
+				workflowDefinition.getName(),
 				GetterUtil.getString(
 					workflowDefinition.getScope(),
 					WorkflowDefinitionConstants.SCOPE_ALL),
-				content.getBytes()));
+				_getTitle(workflowDefinition), contextUser.getUserId()));
 	}
 
 	@Override
@@ -233,13 +240,14 @@ public class WorkflowDefinitionResourceImpl
 
 		return _toWorkflowDefinition(
 			_workflowDefinitionManager.saveWorkflowDefinition(
+				content.getBytes(), contextCompany.getCompanyId(),
 				workflowDefinition.getExternalReferenceCode(),
-				contextCompany.getCompanyId(), contextUser.getUserId(),
-				_getTitle(workflowDefinition), workflowDefinition.getName(),
+				_getGroupId(workflowDefinition.getGroupExternalReferenceCode()),
+				workflowDefinition.getName(),
 				GetterUtil.getString(
 					workflowDefinition.getScope(),
 					WorkflowDefinitionConstants.SCOPE_ALL),
-				content.getBytes()));
+				_getTitle(workflowDefinition), contextUser.getUserId()));
 	}
 
 	@Override
@@ -249,8 +257,8 @@ public class WorkflowDefinitionResourceImpl
 
 		return _toWorkflowDefinition(
 			_workflowDefinitionManager.updateActive(
-				contextCompany.getCompanyId(), contextUser.getUserId(), name,
-				GetterUtil.getInteger(version), active));
+				active, contextCompany.getCompanyId(), name,
+				contextUser.getUserId(), GetterUtil.getInteger(version)));
 	}
 
 	@Override
@@ -262,6 +270,21 @@ public class WorkflowDefinitionResourceImpl
 			contextCompany.getCompanyId(), workflowDefinition.getName());
 
 		return postWorkflowDefinitionDeploy(workflowDefinition);
+	}
+
+	private long _getGroupId(String externalReferenceCode) throws Exception {
+		if (Validator.isNull(externalReferenceCode)) {
+			return 0;
+		}
+
+		Group group = _groupLocalService.fetchGroupByExternalReferenceCode(
+			externalReferenceCode, contextCompany.getCompanyId());
+
+		if (group == null) {
+			return 0;
+		}
+
+		return group.getGroupId();
 	}
 
 	private String _getTitle(WorkflowDefinition workflowDefinition)
@@ -357,6 +380,8 @@ public class WorkflowDefinitionResourceImpl
 				setDescription(workflowDefinition::getDescription);
 				setExternalReferenceCode(
 					workflowDefinition::getExternalReferenceCode);
+				setGroupExternalReferenceCode(
+					workflowDefinition::getGroupExternalReferenceCode);
 				setId(workflowDefinition::getWorkflowDefinitionId);
 				setName(workflowDefinition::getName);
 				setNodes(
@@ -409,6 +434,9 @@ public class WorkflowDefinitionResourceImpl
 
 	private static final EntityModel _entityModel =
 		new WorkflowDefinitionEntityModel();
+
+	@Reference
+	private GroupLocalService _groupLocalService;
 
 	@Reference
 	private Language _language;

@@ -75,8 +75,7 @@ public class UserBulkReindexer implements BulkReindexer {
 			(User user) -> {
 				if (!user.isGuestUser()) {
 					try {
-						indexableActionableDynamicQuery.addDocuments(
-							indexer.getDocument(user));
+						return indexer.getDocument(user);
 					}
 					catch (PortalException portalException) {
 						if (_log.isWarnEnabled()) {
@@ -86,14 +85,11 @@ public class UserBulkReindexer implements BulkReindexer {
 						}
 					}
 				}
+
+				return null;
 			});
 
-		try {
-			indexableActionableDynamicQuery.performActions();
-		}
-		catch (PortalException portalException) {
-			throw new RuntimeException(portalException);
-		}
+		indexableActionableDynamicQuery.performActions();
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

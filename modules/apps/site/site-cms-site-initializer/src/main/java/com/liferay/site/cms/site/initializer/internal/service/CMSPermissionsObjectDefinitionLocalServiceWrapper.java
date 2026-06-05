@@ -5,6 +5,7 @@
 
 package com.liferay.site.cms.site.initializer.internal.service;
 
+import com.liferay.depot.constants.DepotRolesConstants;
 import com.liferay.object.constants.ObjectActionKeys;
 import com.liferay.object.constants.ObjectFolderConstants;
 import com.liferay.object.model.ObjectDefinition;
@@ -12,6 +13,7 @@ import com.liferay.object.service.ObjectDefinitionLocalServiceWrapper;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.role.RoleConstants;
@@ -19,6 +21,7 @@ import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.ServiceWrapper;
+import com.liferay.site.cms.site.initializer.util.RoleUtil;
 
 import java.util.Objects;
 
@@ -33,12 +36,57 @@ public class CMSPermissionsObjectDefinitionLocalServiceWrapper
 	extends ObjectDefinitionLocalServiceWrapper {
 
 	@Override
+	public ObjectDefinition publishCustomObjectDefinition(
+			long userId, long objectDefinitionId)
+		throws PortalException {
+
+		return _setResourcePermissions(
+			super.publishCustomObjectDefinition(userId, objectDefinitionId));
+	}
+
+	@Override
 	public ObjectDefinition publishSystemObjectDefinition(
 			long userId, long objectDefinitionId)
 		throws PortalException {
 
-		ObjectDefinition objectDefinition = super.publishSystemObjectDefinition(
-			userId, objectDefinitionId);
+		return _setResourcePermissions(
+			super.publishSystemObjectDefinition(userId, objectDefinitionId));
+	}
+
+	private void _addResourcePermission(
+			ObjectDefinition objectDefinition, String roleName)
+		throws PortalException {
+
+		Role role = _roleLocalService.fetchRole(
+			objectDefinition.getCompanyId(), roleName);
+
+		if (role == null) {
+			return;
+		}
+
+		_resourcePermissionLocalService.addResourcePermission(
+			objectDefinition.getCompanyId(), objectDefinition.getResourceName(),
+			ResourceConstants.SCOPE_GROUP_TEMPLATE,
+			String.valueOf(GroupConstants.DEFAULT_PARENT_GROUP_ID),
+			role.getRoleId(), ObjectActionKeys.ADD_OBJECT_ENTRY);
+	}
+
+	private void _setObjectDefinitionResourcePermissions(
+			ObjectDefinition objectDefinition, String roleName)
+		throws PortalException {
+
+		Role role = _roleLocalService.getRole(
+			objectDefinition.getCompanyId(), roleName);
+
+		_resourcePermissionLocalService.setResourcePermissions(
+			objectDefinition.getCompanyId(), ObjectDefinition.class.getName(),
+			ResourceConstants.SCOPE_INDIVIDUAL,
+			String.valueOf(objectDefinition.getObjectDefinitionId()),
+			role.getRoleId(), new String[] {ActionKeys.VIEW});
+	}
+
+	private ObjectDefinition _setResourcePermissions(
+		ObjectDefinition objectDefinition) {
 
 		String objectFolderExternalReferenceCode =
 			objectDefinition.getObjectFolderExternalReferenceCode();
@@ -55,7 +103,7 @@ public class CMSPermissionsObjectDefinitionLocalServiceWrapper
 		}
 
 		try {
-			Role role = _getOrAddCMSAdministratorRoleAndPermissions(
+			Role role = RoleUtil.getOrAddCMSAdministratorRole(
 				objectDefinition.getCompanyId(), objectDefinition.getUserId());
 
 			_resourcePermissionLocalService.addResourcePermission(
@@ -76,45 +124,23 @@ public class CMSPermissionsObjectDefinitionLocalServiceWrapper
 					ActionKeys.UPDATE, ActionKeys.VIEW
 				});
 
-			_setResourcePermissions(objectDefinition, RoleConstants.GUEST);
-			_setResourcePermissions(objectDefinition, RoleConstants.USER);
+			_setObjectDefinitionResourcePermissions(
+				objectDefinition, RoleConstants.GUEST);
+			_setObjectDefinitionResourcePermissions(
+				objectDefinition, RoleConstants.USER);
+
+			_addResourcePermission(
+				objectDefinition,
+				DepotRolesConstants.ASSET_LIBRARY_ADMINISTRATOR);
+			_addResourcePermission(
+				objectDefinition,
+				DepotRolesConstants.ASSET_LIBRARY_CONTENT_REVIEWER);
 		}
 		catch (Exception exception) {
 			_log.error(exception);
 		}
 
 		return objectDefinition;
-	}
-
-	private Role _getOrAddCMSAdministratorRoleAndPermissions(
-			long companyId, long userId)
-		throws Exception {
-
-		String name = RoleConstants.CMS_ADMINISTRATOR;
-
-		Role role = _roleLocalService.fetchRole(companyId, name);
-
-		if (role != null) {
-			return role;
-		}
-
-		return _roleLocalService.addRole(
-			null, userId, null, 0, name, null, null, RoleConstants.TYPE_REGULAR,
-			null, null);
-	}
-
-	private void _setResourcePermissions(
-			ObjectDefinition objectDefinition, String roleName)
-		throws PortalException {
-
-		Role role = _roleLocalService.getRole(
-			objectDefinition.getCompanyId(), roleName);
-
-		_resourcePermissionLocalService.setResourcePermissions(
-			objectDefinition.getCompanyId(), ObjectDefinition.class.getName(),
-			ResourceConstants.SCOPE_INDIVIDUAL,
-			String.valueOf(objectDefinition.getObjectDefinitionId()),
-			role.getRoleId(), new String[] {ActionKeys.VIEW});
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

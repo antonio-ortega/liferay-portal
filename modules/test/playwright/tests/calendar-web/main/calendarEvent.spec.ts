@@ -658,9 +658,37 @@ test('event ending at midnight does not render on the next day', async ({
 
 	await calendarWidgetPage.closeModalEvent();
 	await calendarWidgetPage.monthViewTab.click();
-
-	await expect(page.getByTitle(title, {exact: true})).toHaveCount(1);
+	await expect(
+		page.getByTitle(title, {exact: true}).locator('visible=true')
+	).toHaveCount(1);
 	await expect(page.locator('.lfr-busy-day')).toHaveCount(1);
+});
+
+test('event popover does not trap focus to it', async ({
+	calendarWidgetPage,
+	page,
+}) => {
+	const title = getRandomInt().toString();
+
+	await calendarWidgetPage.addEvent({
+		allDay: false,
+		publishEvent: true,
+		title,
+	});
+
+	await calendarWidgetPage.closeModalEvent();
+
+	if (!(await page.locator('[id$="siteCalendarList"]').isVisible())) {
+		await page.locator('[id$="columnToggler"]').click();
+	}
+
+	await calendarWidgetPage.clickEvent(title);
+
+	const addCalendarInput = page.getByPlaceholder('Add other calendars');
+
+	await addCalendarInput.click();
+
+	await expect(addCalendarInput).toBeFocused();
 });
 
 test('event with weekly recurrence has default value for repeat on field and has at least one value for repeat on options', async ({
@@ -694,4 +722,33 @@ test('event with weekly recurrence has default value for repeat on field and has
 	await calendarWidgetPage.publishEvent();
 
 	await expect(calendarWidgetPage.successAlert).toBeVisible();
+});
+
+test('update on calendar does not trigger workflow alert if there is no workflow assigned', async ({
+	calendarWidgetPage,
+	page,
+}) => {
+	await calendarWidgetPage.addEvent({
+		allDay: true,
+		publishEvent: true,
+		title: 'Event' + getRandomString(),
+	});
+
+	await page
+		.frameLocator('iframe')
+		.getByRole('button', {name: 'Details'})
+		.click();
+
+	await page
+		.frameLocator('iframe')
+		.getByRole('combobox', {name: 'Calendar'})
+		.selectOption('Test Test');
+
+	await expect(
+		page
+			.frameLocator('iframe')
+			.getByText(
+				'This Calendar Event is approved. Publishing these changes will cause it to be unpublished and go through the approval process again.'
+			)
+	).toBeHidden();
 });

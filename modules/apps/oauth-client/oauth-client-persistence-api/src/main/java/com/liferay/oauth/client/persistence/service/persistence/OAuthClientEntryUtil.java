@@ -36,6 +36,20 @@ public class OAuthClientEntryUtil {
 	 */
 
 	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(List)
+	 */
+	public static void cacheResult(List<OAuthClientEntry> oAuthClientEntries) {
+		getPersistence().cacheResult(oAuthClientEntries);
+	}
+
+	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(com.liferay.portal.kernel.model.BaseModel)
+	 */
+	public static void cacheResult(OAuthClientEntry oAuthClientEntry) {
+		getPersistence().cacheResult(oAuthClientEntry);
+	}
+
+	/**
 	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#clearCache()
 	 */
 	public static void clearCache() {
@@ -111,59 +125,225 @@ public class OAuthClientEntryUtil {
 	}
 
 	/**
-	 * Returns all the o auth client entries where companyId = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @return the matching o auth client entries
-	 */
-	public static List<OAuthClientEntry> findByCompanyId(long companyId) {
-		return getPersistence().findByCompanyId(companyId);
-	}
-
-	/**
-	 * Returns a range of all the o auth client entries where companyId = &#63;.
+	 * Returns an ordered range of all the o auth client entries where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuthClientEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.oauth.client.persistence.model.impl.OAuthClientEntryModelImpl</code>.
 	 * </p>
 	 *
-	 * @param companyId the company ID
+	 * @param uuid the uuid
 	 * @param start the lower bound of the range of o auth client entries
 	 * @param end the upper bound of the range of o auth client entries (not inclusive)
-	 * @return the range of matching o auth client entries
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the ordered range of matching o auth client entries
 	 */
-	public static List<OAuthClientEntry> findByCompanyId(
-		long companyId, int start, int end) {
+	public static List<OAuthClientEntry> findByUuid(
+		String uuid, int start, int end,
+		OrderByComparator<OAuthClientEntry> orderByComparator,
+		boolean useFinderCache) {
 
-		return getPersistence().findByCompanyId(companyId, start, end);
+		return getPersistence().findByUuid(
+			uuid, start, end, orderByComparator, useFinderCache);
 	}
 
 	/**
-	 * Returns an ordered range of all the o auth client entries where companyId = &#63;.
+	 * Returns the first o auth client entry in the ordered set where uuid = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching o auth client entry
+	 * @throws NoSuchOAuthClientEntryException if a matching o auth client entry could not be found
+	 */
+	public static OAuthClientEntry findByUuid_First(
+			String uuid, OrderByComparator<OAuthClientEntry> orderByComparator)
+		throws com.liferay.oauth.client.persistence.exception.
+			NoSuchOAuthClientEntryException {
+
+		return getPersistence().findByUuid_First(uuid, orderByComparator);
+	}
+
+	/**
+	 * Returns the first o auth client entry in the ordered set where uuid = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching o auth client entry, or <code>null</code> if a matching o auth client entry could not be found
+	 */
+	public static OAuthClientEntry fetchByUuid_First(
+		String uuid, OrderByComparator<OAuthClientEntry> orderByComparator) {
+
+		return getPersistence().fetchByUuid_First(uuid, orderByComparator);
+	}
+
+	/**
+	 * Returns an ordered range of all the o auth client entries that the user has permissions to view where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuthClientEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.oauth.client.persistence.model.impl.OAuthClientEntryModelImpl</code>.
 	 * </p>
 	 *
+	 * @param uuid the uuid
+	 * @param start the lower bound of the range of o auth client entries
+	 * @param end the upper bound of the range of o auth client entries (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching o auth client entries that the user has permission to view
+	 */
+	public static List<OAuthClientEntry> filterFindByUuid(
+		String uuid, int start, int end,
+		OrderByComparator<OAuthClientEntry> orderByComparator) {
+
+		return getPersistence().filterFindByUuid(
+			uuid, start, end, orderByComparator);
+	}
+
+	/**
+	 * Removes all the o auth client entries where uuid = &#63; from the database.
+	 *
+	 * @param uuid the uuid
+	 */
+	public static void removeByUuid(String uuid) {
+		getPersistence().removeByUuid(uuid);
+	}
+
+	/**
+	 * Returns the number of o auth client entries where uuid = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @return the number of matching o auth client entries
+	 */
+	public static int countByUuid(String uuid) {
+		return getPersistence().countByUuid(uuid);
+	}
+
+	/**
+	 * Returns the number of o auth client entries that the user has permission to view where uuid = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @return the number of matching o auth client entries that the user has permission to view
+	 */
+	public static int filterCountByUuid(String uuid) {
+		return getPersistence().filterCountByUuid(uuid);
+	}
+
+	/**
+	 * Returns an ordered range of all the o auth client entries where uuid = &#63; and companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.oauth.client.persistence.model.impl.OAuthClientEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param uuid the uuid
 	 * @param companyId the company ID
 	 * @param start the lower bound of the range of o auth client entries
 	 * @param end the upper bound of the range of o auth client entries (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching o auth client entries
 	 */
-	public static List<OAuthClientEntry> findByCompanyId(
-		long companyId, int start, int end,
+	public static List<OAuthClientEntry> findByUuid_C(
+		String uuid, long companyId, int start, int end,
+		OrderByComparator<OAuthClientEntry> orderByComparator,
+		boolean useFinderCache) {
+
+		return getPersistence().findByUuid_C(
+			uuid, companyId, start, end, orderByComparator, useFinderCache);
+	}
+
+	/**
+	 * Returns the first o auth client entry in the ordered set where uuid = &#63; and companyId = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching o auth client entry
+	 * @throws NoSuchOAuthClientEntryException if a matching o auth client entry could not be found
+	 */
+	public static OAuthClientEntry findByUuid_C_First(
+			String uuid, long companyId,
+			OrderByComparator<OAuthClientEntry> orderByComparator)
+		throws com.liferay.oauth.client.persistence.exception.
+			NoSuchOAuthClientEntryException {
+
+		return getPersistence().findByUuid_C_First(
+			uuid, companyId, orderByComparator);
+	}
+
+	/**
+	 * Returns the first o auth client entry in the ordered set where uuid = &#63; and companyId = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching o auth client entry, or <code>null</code> if a matching o auth client entry could not be found
+	 */
+	public static OAuthClientEntry fetchByUuid_C_First(
+		String uuid, long companyId,
 		OrderByComparator<OAuthClientEntry> orderByComparator) {
 
-		return getPersistence().findByCompanyId(
-			companyId, start, end, orderByComparator);
+		return getPersistence().fetchByUuid_C_First(
+			uuid, companyId, orderByComparator);
+	}
+
+	/**
+	 * Returns an ordered range of all the o auth client entries that the user has permissions to view where uuid = &#63; and companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.oauth.client.persistence.model.impl.OAuthClientEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of o auth client entries
+	 * @param end the upper bound of the range of o auth client entries (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching o auth client entries that the user has permission to view
+	 */
+	public static List<OAuthClientEntry> filterFindByUuid_C(
+		String uuid, long companyId, int start, int end,
+		OrderByComparator<OAuthClientEntry> orderByComparator) {
+
+		return getPersistence().filterFindByUuid_C(
+			uuid, companyId, start, end, orderByComparator);
+	}
+
+	/**
+	 * Removes all the o auth client entries where uuid = &#63; and companyId = &#63; from the database.
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 */
+	public static void removeByUuid_C(String uuid, long companyId) {
+		getPersistence().removeByUuid_C(uuid, companyId);
+	}
+
+	/**
+	 * Returns the number of o auth client entries where uuid = &#63; and companyId = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @return the number of matching o auth client entries
+	 */
+	public static int countByUuid_C(String uuid, long companyId) {
+		return getPersistence().countByUuid_C(uuid, companyId);
+	}
+
+	/**
+	 * Returns the number of o auth client entries that the user has permission to view where uuid = &#63; and companyId = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @return the number of matching o auth client entries that the user has permission to view
+	 */
+	public static int filterCountByUuid_C(String uuid, long companyId) {
+		return getPersistence().filterCountByUuid_C(uuid, companyId);
 	}
 
 	/**
 	 * Returns an ordered range of all the o auth client entries where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuthClientEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.oauth.client.persistence.model.impl.OAuthClientEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -215,89 +395,10 @@ public class OAuthClientEntryUtil {
 	}
 
 	/**
-	 * Returns the last o auth client entry in the ordered set where companyId = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching o auth client entry
-	 * @throws NoSuchOAuthClientEntryException if a matching o auth client entry could not be found
-	 */
-	public static OAuthClientEntry findByCompanyId_Last(
-			long companyId,
-			OrderByComparator<OAuthClientEntry> orderByComparator)
-		throws com.liferay.oauth.client.persistence.exception.
-			NoSuchOAuthClientEntryException {
-
-		return getPersistence().findByCompanyId_Last(
-			companyId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last o auth client entry in the ordered set where companyId = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching o auth client entry, or <code>null</code> if a matching o auth client entry could not be found
-	 */
-	public static OAuthClientEntry fetchByCompanyId_Last(
-		long companyId, OrderByComparator<OAuthClientEntry> orderByComparator) {
-
-		return getPersistence().fetchByCompanyId_Last(
-			companyId, orderByComparator);
-	}
-
-	/**
-	 * Returns the o auth client entries before and after the current o auth client entry in the ordered set where companyId = &#63;.
-	 *
-	 * @param oAuthClientEntryId the primary key of the current o auth client entry
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next o auth client entry
-	 * @throws NoSuchOAuthClientEntryException if a o auth client entry with the primary key could not be found
-	 */
-	public static OAuthClientEntry[] findByCompanyId_PrevAndNext(
-			long oAuthClientEntryId, long companyId,
-			OrderByComparator<OAuthClientEntry> orderByComparator)
-		throws com.liferay.oauth.client.persistence.exception.
-			NoSuchOAuthClientEntryException {
-
-		return getPersistence().findByCompanyId_PrevAndNext(
-			oAuthClientEntryId, companyId, orderByComparator);
-	}
-
-	/**
-	 * Returns all the o auth client entries that the user has permission to view where companyId = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @return the matching o auth client entries that the user has permission to view
-	 */
-	public static List<OAuthClientEntry> filterFindByCompanyId(long companyId) {
-		return getPersistence().filterFindByCompanyId(companyId);
-	}
-
-	/**
-	 * Returns a range of all the o auth client entries that the user has permission to view where companyId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuthClientEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param start the lower bound of the range of o auth client entries
-	 * @param end the upper bound of the range of o auth client entries (not inclusive)
-	 * @return the range of matching o auth client entries that the user has permission to view
-	 */
-	public static List<OAuthClientEntry> filterFindByCompanyId(
-		long companyId, int start, int end) {
-
-		return getPersistence().filterFindByCompanyId(companyId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the o auth client entries that the user has permissions to view where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuthClientEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.oauth.client.persistence.model.impl.OAuthClientEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -312,25 +413,6 @@ public class OAuthClientEntryUtil {
 
 		return getPersistence().filterFindByCompanyId(
 			companyId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns the o auth client entries before and after the current o auth client entry in the ordered set of o auth client entries that the user has permission to view where companyId = &#63;.
-	 *
-	 * @param oAuthClientEntryId the primary key of the current o auth client entry
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next o auth client entry
-	 * @throws NoSuchOAuthClientEntryException if a o auth client entry with the primary key could not be found
-	 */
-	public static OAuthClientEntry[] filterFindByCompanyId_PrevAndNext(
-			long oAuthClientEntryId, long companyId,
-			OrderByComparator<OAuthClientEntry> orderByComparator)
-		throws com.liferay.oauth.client.persistence.exception.
-			NoSuchOAuthClientEntryException {
-
-		return getPersistence().filterFindByCompanyId_PrevAndNext(
-			oAuthClientEntryId, companyId, orderByComparator);
 	}
 
 	/**
@@ -363,59 +445,10 @@ public class OAuthClientEntryUtil {
 	}
 
 	/**
-	 * Returns all the o auth client entries where userId = &#63;.
-	 *
-	 * @param userId the user ID
-	 * @return the matching o auth client entries
-	 */
-	public static List<OAuthClientEntry> findByUserId(long userId) {
-		return getPersistence().findByUserId(userId);
-	}
-
-	/**
-	 * Returns a range of all the o auth client entries where userId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuthClientEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param userId the user ID
-	 * @param start the lower bound of the range of o auth client entries
-	 * @param end the upper bound of the range of o auth client entries (not inclusive)
-	 * @return the range of matching o auth client entries
-	 */
-	public static List<OAuthClientEntry> findByUserId(
-		long userId, int start, int end) {
-
-		return getPersistence().findByUserId(userId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the o auth client entries where userId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuthClientEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param userId the user ID
-	 * @param start the lower bound of the range of o auth client entries
-	 * @param end the upper bound of the range of o auth client entries (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching o auth client entries
-	 */
-	public static List<OAuthClientEntry> findByUserId(
-		long userId, int start, int end,
-		OrderByComparator<OAuthClientEntry> orderByComparator) {
-
-		return getPersistence().findByUserId(
-			userId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the o auth client entries where userId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuthClientEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.oauth.client.persistence.model.impl.OAuthClientEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param userId the user ID
@@ -464,86 +497,10 @@ public class OAuthClientEntryUtil {
 	}
 
 	/**
-	 * Returns the last o auth client entry in the ordered set where userId = &#63;.
-	 *
-	 * @param userId the user ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching o auth client entry
-	 * @throws NoSuchOAuthClientEntryException if a matching o auth client entry could not be found
-	 */
-	public static OAuthClientEntry findByUserId_Last(
-			long userId, OrderByComparator<OAuthClientEntry> orderByComparator)
-		throws com.liferay.oauth.client.persistence.exception.
-			NoSuchOAuthClientEntryException {
-
-		return getPersistence().findByUserId_Last(userId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last o auth client entry in the ordered set where userId = &#63;.
-	 *
-	 * @param userId the user ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching o auth client entry, or <code>null</code> if a matching o auth client entry could not be found
-	 */
-	public static OAuthClientEntry fetchByUserId_Last(
-		long userId, OrderByComparator<OAuthClientEntry> orderByComparator) {
-
-		return getPersistence().fetchByUserId_Last(userId, orderByComparator);
-	}
-
-	/**
-	 * Returns the o auth client entries before and after the current o auth client entry in the ordered set where userId = &#63;.
-	 *
-	 * @param oAuthClientEntryId the primary key of the current o auth client entry
-	 * @param userId the user ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next o auth client entry
-	 * @throws NoSuchOAuthClientEntryException if a o auth client entry with the primary key could not be found
-	 */
-	public static OAuthClientEntry[] findByUserId_PrevAndNext(
-			long oAuthClientEntryId, long userId,
-			OrderByComparator<OAuthClientEntry> orderByComparator)
-		throws com.liferay.oauth.client.persistence.exception.
-			NoSuchOAuthClientEntryException {
-
-		return getPersistence().findByUserId_PrevAndNext(
-			oAuthClientEntryId, userId, orderByComparator);
-	}
-
-	/**
-	 * Returns all the o auth client entries that the user has permission to view where userId = &#63;.
-	 *
-	 * @param userId the user ID
-	 * @return the matching o auth client entries that the user has permission to view
-	 */
-	public static List<OAuthClientEntry> filterFindByUserId(long userId) {
-		return getPersistence().filterFindByUserId(userId);
-	}
-
-	/**
-	 * Returns a range of all the o auth client entries that the user has permission to view where userId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuthClientEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param userId the user ID
-	 * @param start the lower bound of the range of o auth client entries
-	 * @param end the upper bound of the range of o auth client entries (not inclusive)
-	 * @return the range of matching o auth client entries that the user has permission to view
-	 */
-	public static List<OAuthClientEntry> filterFindByUserId(
-		long userId, int start, int end) {
-
-		return getPersistence().filterFindByUserId(userId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the o auth client entries that the user has permissions to view where userId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuthClientEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.oauth.client.persistence.model.impl.OAuthClientEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param userId the user ID
@@ -558,25 +515,6 @@ public class OAuthClientEntryUtil {
 
 		return getPersistence().filterFindByUserId(
 			userId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns the o auth client entries before and after the current o auth client entry in the ordered set of o auth client entries that the user has permission to view where userId = &#63;.
-	 *
-	 * @param oAuthClientEntryId the primary key of the current o auth client entry
-	 * @param userId the user ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next o auth client entry
-	 * @throws NoSuchOAuthClientEntryException if a o auth client entry with the primary key could not be found
-	 */
-	public static OAuthClientEntry[] filterFindByUserId_PrevAndNext(
-			long oAuthClientEntryId, long userId,
-			OrderByComparator<OAuthClientEntry> orderByComparator)
-		throws com.liferay.oauth.client.persistence.exception.
-			NoSuchOAuthClientEntryException {
-
-		return getPersistence().filterFindByUserId_PrevAndNext(
-			oAuthClientEntryId, userId, orderByComparator);
 	}
 
 	/**
@@ -609,65 +547,10 @@ public class OAuthClientEntryUtil {
 	}
 
 	/**
-	 * Returns all the o auth client entries where companyId = &#63; and authServerWellKnownURI = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param authServerWellKnownURI the auth server well known uri
-	 * @return the matching o auth client entries
-	 */
-	public static List<OAuthClientEntry> findByC_A(
-		long companyId, String authServerWellKnownURI) {
-
-		return getPersistence().findByC_A(companyId, authServerWellKnownURI);
-	}
-
-	/**
-	 * Returns a range of all the o auth client entries where companyId = &#63; and authServerWellKnownURI = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuthClientEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param authServerWellKnownURI the auth server well known uri
-	 * @param start the lower bound of the range of o auth client entries
-	 * @param end the upper bound of the range of o auth client entries (not inclusive)
-	 * @return the range of matching o auth client entries
-	 */
-	public static List<OAuthClientEntry> findByC_A(
-		long companyId, String authServerWellKnownURI, int start, int end) {
-
-		return getPersistence().findByC_A(
-			companyId, authServerWellKnownURI, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the o auth client entries where companyId = &#63; and authServerWellKnownURI = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuthClientEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param authServerWellKnownURI the auth server well known uri
-	 * @param start the lower bound of the range of o auth client entries
-	 * @param end the upper bound of the range of o auth client entries (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching o auth client entries
-	 */
-	public static List<OAuthClientEntry> findByC_A(
-		long companyId, String authServerWellKnownURI, int start, int end,
-		OrderByComparator<OAuthClientEntry> orderByComparator) {
-
-		return getPersistence().findByC_A(
-			companyId, authServerWellKnownURI, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the o auth client entries where companyId = &#63; and authServerWellKnownURI = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuthClientEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.oauth.client.persistence.model.impl.OAuthClientEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -724,101 +607,10 @@ public class OAuthClientEntryUtil {
 	}
 
 	/**
-	 * Returns the last o auth client entry in the ordered set where companyId = &#63; and authServerWellKnownURI = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param authServerWellKnownURI the auth server well known uri
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching o auth client entry
-	 * @throws NoSuchOAuthClientEntryException if a matching o auth client entry could not be found
-	 */
-	public static OAuthClientEntry findByC_A_Last(
-			long companyId, String authServerWellKnownURI,
-			OrderByComparator<OAuthClientEntry> orderByComparator)
-		throws com.liferay.oauth.client.persistence.exception.
-			NoSuchOAuthClientEntryException {
-
-		return getPersistence().findByC_A_Last(
-			companyId, authServerWellKnownURI, orderByComparator);
-	}
-
-	/**
-	 * Returns the last o auth client entry in the ordered set where companyId = &#63; and authServerWellKnownURI = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param authServerWellKnownURI the auth server well known uri
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching o auth client entry, or <code>null</code> if a matching o auth client entry could not be found
-	 */
-	public static OAuthClientEntry fetchByC_A_Last(
-		long companyId, String authServerWellKnownURI,
-		OrderByComparator<OAuthClientEntry> orderByComparator) {
-
-		return getPersistence().fetchByC_A_Last(
-			companyId, authServerWellKnownURI, orderByComparator);
-	}
-
-	/**
-	 * Returns the o auth client entries before and after the current o auth client entry in the ordered set where companyId = &#63; and authServerWellKnownURI = &#63;.
-	 *
-	 * @param oAuthClientEntryId the primary key of the current o auth client entry
-	 * @param companyId the company ID
-	 * @param authServerWellKnownURI the auth server well known uri
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next o auth client entry
-	 * @throws NoSuchOAuthClientEntryException if a o auth client entry with the primary key could not be found
-	 */
-	public static OAuthClientEntry[] findByC_A_PrevAndNext(
-			long oAuthClientEntryId, long companyId,
-			String authServerWellKnownURI,
-			OrderByComparator<OAuthClientEntry> orderByComparator)
-		throws com.liferay.oauth.client.persistence.exception.
-			NoSuchOAuthClientEntryException {
-
-		return getPersistence().findByC_A_PrevAndNext(
-			oAuthClientEntryId, companyId, authServerWellKnownURI,
-			orderByComparator);
-	}
-
-	/**
-	 * Returns all the o auth client entries that the user has permission to view where companyId = &#63; and authServerWellKnownURI = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param authServerWellKnownURI the auth server well known uri
-	 * @return the matching o auth client entries that the user has permission to view
-	 */
-	public static List<OAuthClientEntry> filterFindByC_A(
-		long companyId, String authServerWellKnownURI) {
-
-		return getPersistence().filterFindByC_A(
-			companyId, authServerWellKnownURI);
-	}
-
-	/**
-	 * Returns a range of all the o auth client entries that the user has permission to view where companyId = &#63; and authServerWellKnownURI = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuthClientEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param authServerWellKnownURI the auth server well known uri
-	 * @param start the lower bound of the range of o auth client entries
-	 * @param end the upper bound of the range of o auth client entries (not inclusive)
-	 * @return the range of matching o auth client entries that the user has permission to view
-	 */
-	public static List<OAuthClientEntry> filterFindByC_A(
-		long companyId, String authServerWellKnownURI, int start, int end) {
-
-		return getPersistence().filterFindByC_A(
-			companyId, authServerWellKnownURI, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the o auth client entries that the user has permissions to view where companyId = &#63; and authServerWellKnownURI = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuthClientEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.oauth.client.persistence.model.impl.OAuthClientEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -834,28 +626,6 @@ public class OAuthClientEntryUtil {
 
 		return getPersistence().filterFindByC_A(
 			companyId, authServerWellKnownURI, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns the o auth client entries before and after the current o auth client entry in the ordered set of o auth client entries that the user has permission to view where companyId = &#63; and authServerWellKnownURI = &#63;.
-	 *
-	 * @param oAuthClientEntryId the primary key of the current o auth client entry
-	 * @param companyId the company ID
-	 * @param authServerWellKnownURI the auth server well known uri
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next o auth client entry
-	 * @throws NoSuchOAuthClientEntryException if a o auth client entry with the primary key could not be found
-	 */
-	public static OAuthClientEntry[] filterFindByC_A_PrevAndNext(
-			long oAuthClientEntryId, long companyId,
-			String authServerWellKnownURI,
-			OrderByComparator<OAuthClientEntry> orderByComparator)
-		throws com.liferay.oauth.client.persistence.exception.
-			NoSuchOAuthClientEntryException {
-
-		return getPersistence().filterFindByC_A_PrevAndNext(
-			oAuthClientEntryId, companyId, authServerWellKnownURI,
-			orderByComparator);
 	}
 
 	/**
@@ -916,21 +686,6 @@ public class OAuthClientEntryUtil {
 	}
 
 	/**
-	 * Returns the o auth client entry where companyId = &#63; and authServerWellKnownURI = &#63; and clientId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
-	 *
-	 * @param companyId the company ID
-	 * @param authServerWellKnownURI the auth server well known uri
-	 * @param clientId the client ID
-	 * @return the matching o auth client entry, or <code>null</code> if a matching o auth client entry could not be found
-	 */
-	public static OAuthClientEntry fetchByC_A_C(
-		long companyId, String authServerWellKnownURI, String clientId) {
-
-		return getPersistence().fetchByC_A_C(
-			companyId, authServerWellKnownURI, clientId);
-	}
-
-	/**
 	 * Returns the o auth client entry where companyId = &#63; and authServerWellKnownURI = &#63; and clientId = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
 	 *
 	 * @param companyId the company ID
@@ -980,21 +735,62 @@ public class OAuthClientEntryUtil {
 	}
 
 	/**
-	 * Caches the o auth client entry in the entity cache if it is enabled.
+	 * Returns the o auth client entry where externalReferenceCode = &#63; and companyId = &#63; or throws a <code>NoSuchOAuthClientEntryException</code> if it could not be found.
 	 *
-	 * @param oAuthClientEntry the o auth client entry
+	 * @param externalReferenceCode the external reference code
+	 * @param companyId the company ID
+	 * @return the matching o auth client entry
+	 * @throws NoSuchOAuthClientEntryException if a matching o auth client entry could not be found
 	 */
-	public static void cacheResult(OAuthClientEntry oAuthClientEntry) {
-		getPersistence().cacheResult(oAuthClientEntry);
+	public static OAuthClientEntry findByERC_C(
+			String externalReferenceCode, long companyId)
+		throws com.liferay.oauth.client.persistence.exception.
+			NoSuchOAuthClientEntryException {
+
+		return getPersistence().findByERC_C(externalReferenceCode, companyId);
 	}
 
 	/**
-	 * Caches the o auth client entries in the entity cache if it is enabled.
+	 * Returns the o auth client entry where externalReferenceCode = &#63; and companyId = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
 	 *
-	 * @param oAuthClientEntries the o auth client entries
+	 * @param externalReferenceCode the external reference code
+	 * @param companyId the company ID
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the matching o auth client entry, or <code>null</code> if a matching o auth client entry could not be found
 	 */
-	public static void cacheResult(List<OAuthClientEntry> oAuthClientEntries) {
-		getPersistence().cacheResult(oAuthClientEntries);
+	public static OAuthClientEntry fetchByERC_C(
+		String externalReferenceCode, long companyId, boolean useFinderCache) {
+
+		return getPersistence().fetchByERC_C(
+			externalReferenceCode, companyId, useFinderCache);
+	}
+
+	/**
+	 * Removes the o auth client entry where externalReferenceCode = &#63; and companyId = &#63; from the database.
+	 *
+	 * @param externalReferenceCode the external reference code
+	 * @param companyId the company ID
+	 * @return the o auth client entry that was removed
+	 */
+	public static OAuthClientEntry removeByERC_C(
+			String externalReferenceCode, long companyId)
+		throws com.liferay.oauth.client.persistence.exception.
+			NoSuchOAuthClientEntryException {
+
+		return getPersistence().removeByERC_C(externalReferenceCode, companyId);
+	}
+
+	/**
+	 * Returns the number of o auth client entries where externalReferenceCode = &#63; and companyId = &#63;.
+	 *
+	 * @param externalReferenceCode the external reference code
+	 * @param companyId the company ID
+	 * @return the number of matching o auth client entries
+	 */
+	public static int countByERC_C(
+		String externalReferenceCode, long companyId) {
+
+		return getPersistence().countByERC_C(externalReferenceCode, companyId);
 	}
 
 	/**
@@ -1052,84 +848,436 @@ public class OAuthClientEntryUtil {
 	}
 
 	/**
-	 * Returns all the o auth client entries.
+	 * Returns the o auth client entry where companyId = &#63; and authServerWellKnownURI = &#63; and clientId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
 	 *
-	 * @return the o auth client entries
+	 * @param companyId the company ID
+	 * @param authServerWellKnownURI the auth server well known uri
+	 * @param clientId the client ID
+	 * @return the matching o auth client entry, or <code>null</code> if a matching o auth client entry could not be found
 	 */
-	public static List<OAuthClientEntry> findAll() {
-		return getPersistence().findAll();
+	public static OAuthClientEntry fetchByC_A_C(
+		long companyId, String authServerWellKnownURI, String clientId) {
+
+		return getPersistence().fetchByC_A_C(
+			companyId, authServerWellKnownURI, clientId);
 	}
 
 	/**
-	 * Returns a range of all the o auth client entries.
+	 * Returns the o auth client entry where externalReferenceCode = &#63; and companyId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	 *
+	 * @param externalReferenceCode the external reference code
+	 * @param companyId the company ID
+	 * @return the matching o auth client entry, or <code>null</code> if a matching o auth client entry could not be found
+	 */
+	public static OAuthClientEntry fetchByERC_C(
+		String externalReferenceCode, long companyId) {
+
+		return getPersistence().fetchByERC_C(externalReferenceCode, companyId);
+	}
+
+	/**
+	 * Returns all the o auth client entries where uuid = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @return the matching o auth client entries
+	 */
+	public static List<OAuthClientEntry> findByUuid(String uuid) {
+		return getPersistence().findByUuid(uuid);
+	}
+
+	/**
+	 * Returns a range of all the o auth client entries where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuthClientEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.oauth.client.persistence.model.impl.OAuthClientEntryModelImpl</code>.
 	 * </p>
 	 *
+	 * @param uuid the uuid
 	 * @param start the lower bound of the range of o auth client entries
 	 * @param end the upper bound of the range of o auth client entries (not inclusive)
-	 * @return the range of o auth client entries
+	 * @return the range of matching o auth client entries
 	 */
-	public static List<OAuthClientEntry> findAll(int start, int end) {
-		return getPersistence().findAll(start, end);
+	public static List<OAuthClientEntry> findByUuid(
+		String uuid, int start, int end) {
+
+		return getPersistence().findByUuid(uuid, start, end);
 	}
 
 	/**
-	 * Returns an ordered range of all the o auth client entries.
+	 * Returns an ordered range of all the o auth client entries where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuthClientEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.oauth.client.persistence.model.impl.OAuthClientEntryModelImpl</code>.
 	 * </p>
 	 *
+	 * @param uuid the uuid
 	 * @param start the lower bound of the range of o auth client entries
 	 * @param end the upper bound of the range of o auth client entries (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of o auth client entries
+	 * @return the ordered range of matching o auth client entries
 	 */
-	public static List<OAuthClientEntry> findAll(
-		int start, int end,
+	public static List<OAuthClientEntry> findByUuid(
+		String uuid, int start, int end,
 		OrderByComparator<OAuthClientEntry> orderByComparator) {
 
-		return getPersistence().findAll(start, end, orderByComparator);
+		return getPersistence().findByUuid(uuid, start, end, orderByComparator);
 	}
 
 	/**
-	 * Returns an ordered range of all the o auth client entries.
+	 * Returns all the o auth client entries that the user has permission to view where uuid = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @return the matching o auth client entries that the user has permission to view
+	 */
+	public static List<OAuthClientEntry> filterFindByUuid(String uuid) {
+		return getPersistence().filterFindByUuid(uuid);
+	}
+
+	/**
+	 * Returns a range of all the o auth client entries that the user has permission to view where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuthClientEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.oauth.client.persistence.model.impl.OAuthClientEntryModelImpl</code>.
 	 * </p>
 	 *
+	 * @param uuid the uuid
+	 * @param start the lower bound of the range of o auth client entries
+	 * @param end the upper bound of the range of o auth client entries (not inclusive)
+	 * @return the range of matching o auth client entries that the user has permission to view
+	 */
+	public static List<OAuthClientEntry> filterFindByUuid(
+		String uuid, int start, int end) {
+
+		return getPersistence().filterFindByUuid(uuid, start, end);
+	}
+
+	/**
+	 * Returns all the o auth client entries where uuid = &#63; and companyId = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @return the matching o auth client entries
+	 */
+	public static List<OAuthClientEntry> findByUuid_C(
+		String uuid, long companyId) {
+
+		return getPersistence().findByUuid_C(uuid, companyId);
+	}
+
+	/**
+	 * Returns a range of all the o auth client entries where uuid = &#63; and companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.oauth.client.persistence.model.impl.OAuthClientEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of o auth client entries
+	 * @param end the upper bound of the range of o auth client entries (not inclusive)
+	 * @return the range of matching o auth client entries
+	 */
+	public static List<OAuthClientEntry> findByUuid_C(
+		String uuid, long companyId, int start, int end) {
+
+		return getPersistence().findByUuid_C(uuid, companyId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the o auth client entries where uuid = &#63; and companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.oauth.client.persistence.model.impl.OAuthClientEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
 	 * @param start the lower bound of the range of o auth client entries
 	 * @param end the upper bound of the range of o auth client entries (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param useFinderCache whether to use the finder cache
-	 * @return the ordered range of o auth client entries
+	 * @return the ordered range of matching o auth client entries
 	 */
-	public static List<OAuthClientEntry> findAll(
-		int start, int end,
-		OrderByComparator<OAuthClientEntry> orderByComparator,
-		boolean useFinderCache) {
+	public static List<OAuthClientEntry> findByUuid_C(
+		String uuid, long companyId, int start, int end,
+		OrderByComparator<OAuthClientEntry> orderByComparator) {
 
-		return getPersistence().findAll(
-			start, end, orderByComparator, useFinderCache);
+		return getPersistence().findByUuid_C(
+			uuid, companyId, start, end, orderByComparator);
 	}
 
 	/**
-	 * Removes all the o auth client entries from the database.
-	 */
-	public static void removeAll() {
-		getPersistence().removeAll();
-	}
-
-	/**
-	 * Returns the number of o auth client entries.
+	 * Returns all the o auth client entries that the user has permission to view where uuid = &#63; and companyId = &#63;.
 	 *
-	 * @return the number of o auth client entries
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @return the matching o auth client entries that the user has permission to view
 	 */
-	public static int countAll() {
-		return getPersistence().countAll();
+	public static List<OAuthClientEntry> filterFindByUuid_C(
+		String uuid, long companyId) {
+
+		return getPersistence().filterFindByUuid_C(uuid, companyId);
+	}
+
+	/**
+	 * Returns a range of all the o auth client entries that the user has permission to view where uuid = &#63; and companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.oauth.client.persistence.model.impl.OAuthClientEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of o auth client entries
+	 * @param end the upper bound of the range of o auth client entries (not inclusive)
+	 * @return the range of matching o auth client entries that the user has permission to view
+	 */
+	public static List<OAuthClientEntry> filterFindByUuid_C(
+		String uuid, long companyId, int start, int end) {
+
+		return getPersistence().filterFindByUuid_C(uuid, companyId, start, end);
+	}
+
+	/**
+	 * Returns all the o auth client entries where companyId = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @return the matching o auth client entries
+	 */
+	public static List<OAuthClientEntry> findByCompanyId(long companyId) {
+		return getPersistence().findByCompanyId(companyId);
+	}
+
+	/**
+	 * Returns a range of all the o auth client entries where companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.oauth.client.persistence.model.impl.OAuthClientEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of o auth client entries
+	 * @param end the upper bound of the range of o auth client entries (not inclusive)
+	 * @return the range of matching o auth client entries
+	 */
+	public static List<OAuthClientEntry> findByCompanyId(
+		long companyId, int start, int end) {
+
+		return getPersistence().findByCompanyId(companyId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the o auth client entries where companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.oauth.client.persistence.model.impl.OAuthClientEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of o auth client entries
+	 * @param end the upper bound of the range of o auth client entries (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching o auth client entries
+	 */
+	public static List<OAuthClientEntry> findByCompanyId(
+		long companyId, int start, int end,
+		OrderByComparator<OAuthClientEntry> orderByComparator) {
+
+		return getPersistence().findByCompanyId(
+			companyId, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns all the o auth client entries that the user has permission to view where companyId = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @return the matching o auth client entries that the user has permission to view
+	 */
+	public static List<OAuthClientEntry> filterFindByCompanyId(long companyId) {
+		return getPersistence().filterFindByCompanyId(companyId);
+	}
+
+	/**
+	 * Returns a range of all the o auth client entries that the user has permission to view where companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.oauth.client.persistence.model.impl.OAuthClientEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of o auth client entries
+	 * @param end the upper bound of the range of o auth client entries (not inclusive)
+	 * @return the range of matching o auth client entries that the user has permission to view
+	 */
+	public static List<OAuthClientEntry> filterFindByCompanyId(
+		long companyId, int start, int end) {
+
+		return getPersistence().filterFindByCompanyId(companyId, start, end);
+	}
+
+	/**
+	 * Returns all the o auth client entries where userId = &#63;.
+	 *
+	 * @param userId the user ID
+	 * @return the matching o auth client entries
+	 */
+	public static List<OAuthClientEntry> findByUserId(long userId) {
+		return getPersistence().findByUserId(userId);
+	}
+
+	/**
+	 * Returns a range of all the o auth client entries where userId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.oauth.client.persistence.model.impl.OAuthClientEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param userId the user ID
+	 * @param start the lower bound of the range of o auth client entries
+	 * @param end the upper bound of the range of o auth client entries (not inclusive)
+	 * @return the range of matching o auth client entries
+	 */
+	public static List<OAuthClientEntry> findByUserId(
+		long userId, int start, int end) {
+
+		return getPersistence().findByUserId(userId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the o auth client entries where userId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.oauth.client.persistence.model.impl.OAuthClientEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param userId the user ID
+	 * @param start the lower bound of the range of o auth client entries
+	 * @param end the upper bound of the range of o auth client entries (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching o auth client entries
+	 */
+	public static List<OAuthClientEntry> findByUserId(
+		long userId, int start, int end,
+		OrderByComparator<OAuthClientEntry> orderByComparator) {
+
+		return getPersistence().findByUserId(
+			userId, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns all the o auth client entries that the user has permission to view where userId = &#63;.
+	 *
+	 * @param userId the user ID
+	 * @return the matching o auth client entries that the user has permission to view
+	 */
+	public static List<OAuthClientEntry> filterFindByUserId(long userId) {
+		return getPersistence().filterFindByUserId(userId);
+	}
+
+	/**
+	 * Returns a range of all the o auth client entries that the user has permission to view where userId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.oauth.client.persistence.model.impl.OAuthClientEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param userId the user ID
+	 * @param start the lower bound of the range of o auth client entries
+	 * @param end the upper bound of the range of o auth client entries (not inclusive)
+	 * @return the range of matching o auth client entries that the user has permission to view
+	 */
+	public static List<OAuthClientEntry> filterFindByUserId(
+		long userId, int start, int end) {
+
+		return getPersistence().filterFindByUserId(userId, start, end);
+	}
+
+	/**
+	 * Returns all the o auth client entries where companyId = &#63; and authServerWellKnownURI = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param authServerWellKnownURI the auth server well known uri
+	 * @return the matching o auth client entries
+	 */
+	public static List<OAuthClientEntry> findByC_A(
+		long companyId, String authServerWellKnownURI) {
+
+		return getPersistence().findByC_A(companyId, authServerWellKnownURI);
+	}
+
+	/**
+	 * Returns a range of all the o auth client entries where companyId = &#63; and authServerWellKnownURI = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.oauth.client.persistence.model.impl.OAuthClientEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param authServerWellKnownURI the auth server well known uri
+	 * @param start the lower bound of the range of o auth client entries
+	 * @param end the upper bound of the range of o auth client entries (not inclusive)
+	 * @return the range of matching o auth client entries
+	 */
+	public static List<OAuthClientEntry> findByC_A(
+		long companyId, String authServerWellKnownURI, int start, int end) {
+
+		return getPersistence().findByC_A(
+			companyId, authServerWellKnownURI, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the o auth client entries where companyId = &#63; and authServerWellKnownURI = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.oauth.client.persistence.model.impl.OAuthClientEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param authServerWellKnownURI the auth server well known uri
+	 * @param start the lower bound of the range of o auth client entries
+	 * @param end the upper bound of the range of o auth client entries (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching o auth client entries
+	 */
+	public static List<OAuthClientEntry> findByC_A(
+		long companyId, String authServerWellKnownURI, int start, int end,
+		OrderByComparator<OAuthClientEntry> orderByComparator) {
+
+		return getPersistence().findByC_A(
+			companyId, authServerWellKnownURI, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns all the o auth client entries that the user has permission to view where companyId = &#63; and authServerWellKnownURI = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param authServerWellKnownURI the auth server well known uri
+	 * @return the matching o auth client entries that the user has permission to view
+	 */
+	public static List<OAuthClientEntry> filterFindByC_A(
+		long companyId, String authServerWellKnownURI) {
+
+		return getPersistence().filterFindByC_A(
+			companyId, authServerWellKnownURI);
+	}
+
+	/**
+	 * Returns a range of all the o auth client entries that the user has permission to view where companyId = &#63; and authServerWellKnownURI = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.oauth.client.persistence.model.impl.OAuthClientEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param authServerWellKnownURI the auth server well known uri
+	 * @param start the lower bound of the range of o auth client entries
+	 * @param end the upper bound of the range of o auth client entries (not inclusive)
+	 * @return the range of matching o auth client entries that the user has permission to view
+	 */
+	public static List<OAuthClientEntry> filterFindByC_A(
+		long companyId, String authServerWellKnownURI, int start, int end) {
+
+		return getPersistence().filterFindByC_A(
+			companyId, authServerWellKnownURI, start, end);
 	}
 
 	public static OAuthClientEntryPersistence getPersistence() {
@@ -1143,3 +1291,4 @@ public class OAuthClientEntryUtil {
 	private static volatile OAuthClientEntryPersistence _persistence;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-188777735

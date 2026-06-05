@@ -119,6 +119,10 @@ public interface ObjectDefinitionSettingLocalService
 	public ObjectDefinitionSetting deleteObjectDefinitionSetting(
 		ObjectDefinitionSetting objectDefinitionSetting);
 
+	public void deleteObjectDefinitionSettingByObjectDefinitionId(
+			long objectDefinitionId)
+		throws PortalException;
+
 	/**
 	 * @throws PortalException
 	 */
@@ -323,3 +327,4 @@ public interface ObjectDefinitionSettingLocalService
 		ObjectDefinitionSetting objectDefinitionSetting);
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:1347008793

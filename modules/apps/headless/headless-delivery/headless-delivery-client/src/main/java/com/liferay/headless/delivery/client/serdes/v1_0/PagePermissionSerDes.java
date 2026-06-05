@@ -239,3 +239,4 @@ public class PagePermissionSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:1720022660

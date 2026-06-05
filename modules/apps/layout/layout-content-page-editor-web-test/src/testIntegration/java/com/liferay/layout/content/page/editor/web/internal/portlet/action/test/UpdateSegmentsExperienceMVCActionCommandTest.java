@@ -28,7 +28,6 @@ import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.LocaleUtil;
-import com.liferay.portal.kernel.util.ScopeUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.test.rule.Inject;
@@ -92,9 +91,7 @@ public class UpdateSegmentsExperienceMVCActionCommandTest {
 		SegmentsExperience segmentsExperience =
 			_segmentsExperienceService.addSegmentsExperience(
 				null, _group.getGroupId(),
-				segmentsEntry1.getExternalReferenceCode(),
-				ScopeUtil.getItemScopeExternalReferenceCode(
-					segmentsEntry1.getGroupId(), _draftLayout.getGroupId()),
+				segmentsEntry1.getExternalReferenceCode(), null,
 				_draftLayout.getPlid(), RandomTestUtil.randomLocaleStringMap(),
 				true, new UnicodeProperties(),
 				ServiceContextTestUtil.getServiceContext(
@@ -108,13 +105,10 @@ public class UpdateSegmentsExperienceMVCActionCommandTest {
 		SegmentsEntry segmentsEntry2 = SegmentsTestUtil.addSegmentsEntry(
 			companyGroup.getGroupId());
 
-		String segmentsEntryScopeERC =
-			ScopeUtil.getItemScopeExternalReferenceCode(
-				segmentsEntry2.getGroupId(), _group.getGroupId());
-
 		JSONObject responseJSONObject = _updateSegmentsExperience(
 			segmentsExperience.getSegmentsExperienceId(), newName,
-			segmentsEntry2.getExternalReferenceCode(), segmentsEntryScopeERC);
+			segmentsEntry2.getExternalReferenceCode(),
+			companyGroup.getExternalReferenceCode());
 
 		JSONObject segmentsExperienceJSONObject = _jsonFactory.createJSONObject(
 			responseJSONObject.getString("segmentsExperience"));
@@ -128,11 +122,8 @@ public class UpdateSegmentsExperienceMVCActionCommandTest {
 			segmentsEntry2.getExternalReferenceCode(),
 			segmentsExperience.getSegmentsEntryERC());
 		Assert.assertEquals(
-			segmentsEntryScopeERC,
+			companyGroup.getExternalReferenceCode(),
 			segmentsExperience.getSegmentsEntryScopeERC());
-		Assert.assertEquals(
-			segmentsEntry2.getGroupId(),
-			segmentsExperience.getSegmentsEntryGroupId());
 	}
 
 	private MockLiferayPortletActionRequest _getMockLiferayPortletActionRequest(

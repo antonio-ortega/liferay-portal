@@ -1,0 +1,35 @@
+@import 'atlas-variables';
+
+.design-library-breadcrumb {
+	.breadcrumb-item {
+		font-size: var(--font-size-lg);
+	}
+}
+
+.design-library-fds-wrapper {
+	.table-list {
+		border-radius: 0;
+	}
+}
+
+.design-library-fds-wrapper--landing {
+	.design-library-fds-sticker-designlibrary {
+		background-color: $teal-l3;
+		color: $teal;
+	}
+
+	.card-item-first {
+		background-color: $teal-l3;
+
+		.card-type-asset-icon {
+			color: $teal;
+		}
+	}
+}
+
+.design-library-fds-wrapper--resources {
+	.card-item-first .card-type-asset-icon,
+	.design-library-fds-sticker-stylebook {
+		color: $purple;
+	}
+}

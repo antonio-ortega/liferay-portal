@@ -279,6 +279,50 @@ public class Settings implements Serializable {
 	private Supplier<ClientExtension[]> _globalJSClientExtensionsSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The IconImage of the page specification."
+	)
+	@Valid
+	public IconImageURL getIconImageURL() {
+		if (_iconImageURLSupplier != null) {
+			iconImageURL = _iconImageURLSupplier.get();
+
+			_iconImageURLSupplier = null;
+		}
+
+		return iconImageURL;
+	}
+
+	public void setIconImageURL(IconImageURL iconImageURL) {
+		this.iconImageURL = iconImageURL;
+
+		_iconImageURLSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setIconImageURL(
+		UnsafeSupplier<IconImageURL, Exception> iconImageURLUnsafeSupplier) {
+
+		_iconImageURLSupplier = () -> {
+			try {
+				return iconImageURLUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(description = "The IconImage of the page specification.")
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected IconImageURL iconImageURL;
+
+	@JsonIgnore
+	private Supplier<IconImageURL> _iconImageURLSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The page specification's JavaScript."
 	)
 	public String getJavascript() {
@@ -727,6 +771,18 @@ public class Settings implements Serializable {
 			sb.append("]");
 		}
 
+		IconImageURL iconImageURL = getIconImageURL();
+
+		if (iconImageURL != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"iconImageURL\": ");
+
+			sb.append(String.valueOf(iconImageURL));
+		}
+
 		String javascript = getJavascript();
 
 		if (javascript != null) {
@@ -923,3 +979,4 @@ public class Settings implements Serializable {
 	private Map<String, Serializable> _extendedProperties;
 
 }
+// LIFERAY-REST-BUILDER-HASH:1792327023

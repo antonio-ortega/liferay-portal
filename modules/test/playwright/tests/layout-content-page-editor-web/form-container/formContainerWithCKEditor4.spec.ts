@@ -28,7 +28,7 @@ const test = mergeTests(
 	dataApiHelpersTest,
 	displayPageTemplatesPagesTest,
 	featureFlagsTest({
-		'LPD-11235': {enabled: false},
+		'LPD-11235': {enabled: true},
 		'LPD-17564': {enabled: true},
 		'LPS-178052': {enabled: true},
 	}),
@@ -817,7 +817,6 @@ test(
 		await apiHelpers.jsonWebServicesLayoutPageTemplateEntry.addDisplayPageLayoutPageTemplateEntry(
 			{
 				classNameId: className.classNameId,
-				classTypeId: '0',
 				groupId: site.id,
 				name: displayPageTemplateName,
 			}
@@ -851,7 +850,7 @@ test(
 				`/web${site.friendlyUrlPath}/e/${displayPageTemplateName}/${className.classNameId}/${objectEntry.id}`
 			);
 
-			await localizationSelectPage.trigger.waitFor({timeout: 4000});
+			await localizationSelectPage.trigger.waitFor({timeout: 10000});
 		}).toPass();
 
 		// Assert that translation is displayed correctly

@@ -54,6 +54,20 @@ public class MessageSerDes {
 			sb.append(String.valueOf(message.getChat()));
 		}
 
+		if (message.getChatbotExternalReferenceCode() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"chatbotExternalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(message.getChatbotExternalReferenceCode()));
+
+			sb.append("\"");
+		}
+
 		if (message.getContext() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -64,14 +78,16 @@ public class MessageSerDes {
 			sb.append(_toJSON(message.getContext()));
 		}
 
-		if (message.getScope() != null) {
+		if (message.getInstructionDefinitionScope() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"scope\": ");
+			sb.append("\"instructionDefinitionScope\": ");
 
-			sb.append(String.valueOf(message.getScope()));
+			sb.append("\"");
+			sb.append(message.getInstructionDefinitionScope());
+			sb.append("\"");
 		}
 
 		if (message.getText() != null) {
@@ -113,6 +129,15 @@ public class MessageSerDes {
 			map.put("chat", String.valueOf(message.getChat()));
 		}
 
+		if (message.getChatbotExternalReferenceCode() == null) {
+			map.put("chatbotExternalReferenceCode", null);
+		}
+		else {
+			map.put(
+				"chatbotExternalReferenceCode",
+				String.valueOf(message.getChatbotExternalReferenceCode()));
+		}
+
 		if (message.getContext() == null) {
 			map.put("context", null);
 		}
@@ -120,11 +145,13 @@ public class MessageSerDes {
 			map.put("context", String.valueOf(message.getContext()));
 		}
 
-		if (message.getScope() == null) {
-			map.put("scope", null);
+		if (message.getInstructionDefinitionScope() == null) {
+			map.put("instructionDefinitionScope", null);
 		}
 		else {
-			map.put("scope", String.valueOf(message.getScope()));
+			map.put(
+				"instructionDefinitionScope",
+				String.valueOf(message.getInstructionDefinitionScope()));
 		}
 
 		if (message.getText() == null) {
@@ -154,10 +181,17 @@ public class MessageSerDes {
 			if (Objects.equals(jsonParserFieldName, "chat")) {
 				return false;
 			}
+			else if (Objects.equals(
+						jsonParserFieldName, "chatbotExternalReferenceCode")) {
+
+				return false;
+			}
 			else if (Objects.equals(jsonParserFieldName, "context")) {
 				return true;
 			}
-			else if (Objects.equals(jsonParserFieldName, "scope")) {
+			else if (Objects.equals(
+						jsonParserFieldName, "instructionDefinitionScope")) {
+
 				return false;
 			}
 			else if (Objects.equals(jsonParserFieldName, "text")) {
@@ -178,15 +212,26 @@ public class MessageSerDes {
 						ChatSerDes.toDTO((String)jsonParserFieldValue));
 				}
 			}
+			else if (Objects.equals(
+						jsonParserFieldName, "chatbotExternalReferenceCode")) {
+
+				if (jsonParserFieldValue != null) {
+					message.setChatbotExternalReferenceCode(
+						(String)jsonParserFieldValue);
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "context")) {
 				if (jsonParserFieldValue != null) {
 					message.setContext((Map<String, ?>)jsonParserFieldValue);
 				}
 			}
-			else if (Objects.equals(jsonParserFieldName, "scope")) {
+			else if (Objects.equals(
+						jsonParserFieldName, "instructionDefinitionScope")) {
+
 				if (jsonParserFieldValue != null) {
-					message.setScope(
-						ScopeSerDes.toDTO((String)jsonParserFieldValue));
+					message.setInstructionDefinitionScope(
+						Message.InstructionDefinitionScope.create(
+							(String)jsonParserFieldValue));
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "text")) {
@@ -275,3 +320,4 @@ public class MessageSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:317814480

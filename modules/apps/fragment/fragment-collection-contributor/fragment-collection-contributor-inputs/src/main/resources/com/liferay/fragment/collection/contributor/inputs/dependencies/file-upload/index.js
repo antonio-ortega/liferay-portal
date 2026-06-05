@@ -7,6 +7,13 @@ const wrapper = fragmentElement;
 
 const fileInput = document.getElementById(`${fragmentElementId}-file-upload`);
 const fileName = wrapper.querySelector('.forms-file-upload-file-name');
+const fileSizeError = document.getElementById(
+	`${fragmentElementId}-file-upload-error`
+);
+const fileSizeErrorMessage = document.getElementById(
+	`${fragmentElementId}-file-upload-error-message`
+);
+const formGroup = wrapper.querySelector('.form-group');
 const hiddenFileInput = document.getElementById(
 	`${fragmentElementId}-file-upload-hidden`
 );
@@ -31,8 +38,34 @@ if (
 }
 
 let previousFiles = null;
+let showInputError = null;
+
+function mbToBytes(mb) {
+	return mb * 1024 * 1024;
+}
 
 function onInputChange() {
+	if (
+		input.attributes.maxFileSize &&
+		fileInput.files[0] &&
+		fileInput.files[0].size > mbToBytes(input.attributes.maxFileSize)
+	) {
+		showInputError({
+			errorContainer: fileSizeError,
+			errorMessageContainer: fileSizeErrorMessage,
+			errorType: 'file-size',
+			formGroup,
+		});
+
+		fileInput.value = '';
+
+		return;
+	}
+	else {
+		fileSizeError.classList.add('sr-only');
+		formGroup.classList.remove('has-error');
+	}
+
 	if (!fileInput.files.length && previousFiles) {
 		const dataTransfer = new DataTransfer();
 
@@ -46,7 +79,10 @@ function onInputChange() {
 	}
 
 	fileName.innerText = fileInput.files[0].name;
-	fileInput.setAttribute('name', input.name);
+
+	if (!input.localizable) {
+		fileInput.setAttribute('name', input.name);
+	}
 
 	hiddenFileInput.setAttribute('name', '');
 	hiddenFileInput.value = '';
@@ -73,23 +109,67 @@ function onRemoveFile() {
 function onSelectFile(event, onChange, setTranslationInputValue) {
 	event.preventDefault();
 
+	const updateInputData = ({title, value}) => {
+		if (onChange) {
+			setTranslationInputValue({fileName: title, value});
+
+			onChange();
+		}
+
+		fileInput.value = value;
+		fileName.innerText = title;
+
+		showRemoveButton();
+	};
+
+	if (input.attributes.isCMS) {
+		import('@liferay/fragment-impl/api').then(
+			({openCMSFileSelectorModal}) => {
+				const items = [];
+
+				if (fileInput.value) {
+					items.push({
+						embedded: {
+							file: {
+								id: Number(fileInput.value),
+								name: fileName.innerText,
+							},
+						},
+					});
+				}
+
+				openCMSFileSelectorModal({
+					allowDragAndDrop: true,
+					allowedExtensions: input.attributes.allowedFileExtensions,
+					config: {
+						items,
+						locator: {
+							id: 'embedded.file.id',
+							label: 'embedded.file.name',
+							value: 'embedded.file.id',
+						},
+					},
+					groupId: input.attributes.groupId,
+					maxFileSize: mbToBytes(input.attributes.maxFileSize),
+					onSelect(items) {
+						if (items.length) {
+							const {file} = items[0].embedded;
+
+							updateInputData({title: file.name, value: file.id});
+						}
+					},
+				});
+			}
+		);
+
+		return;
+	}
+
 	Liferay.Util.openSelectionModal({
 		onSelect(selectedItem) {
 			const {fileEntryId, title} = JSON.parse(selectedItem.value);
 
-			if (onChange) {
-				setTranslationInputValue({
-					fileName: title,
-					value: fileEntryId,
-				});
-
-				onChange();
-			}
-
-			fileInput.value = fileEntryId;
-			fileName.innerText = title;
-
-			showRemoveButton();
+			updateInputData({title, value: fileEntryId});
 		},
 		selectEventName: `${fragmentNamespace}selectFileEntry`,
 		url: input.attributes.selectFromDocumentLibraryURL,
@@ -138,7 +218,7 @@ else {
 		showRemoveButton();
 	}
 
-	const defaultLanguageId = themeDisplay.getDefaultLanguageId();
+	const defaultLanguageId = input.attributes.defaultLanguageId;
 	const inputElement = fileInput;
 
 	let currentLanguageId = defaultLanguageId;
@@ -148,7 +228,10 @@ else {
 			getTranslationInput,
 			registerLocalizedInput,
 			registerUnlocalizedInput,
+			showInputError: showInputErrorFn,
 		}) => {
+			showInputError = showInputErrorFn;
+
 			if (input.localizable) {
 
 				// Set initial values
@@ -180,6 +263,7 @@ else {
 					input.attributes.selectFromDocumentLibrary;
 
 				const {onChange} = registerLocalizedInput({
+					availableLanguageIds: input.attributes.availableLanguageIds,
 					changeTextDirection: false,
 					customLocaleChangeHandler: true,
 					defaultLanguageId,

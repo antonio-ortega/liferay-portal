@@ -6,16 +6,17 @@
 import {useProvider} from '@clayui/provider';
 import {
 	Keys,
-	PanelResizer,
 	useControlledState,
 	useId,
 	useIsMobileDevice,
+	useObservedMaxWidth,
 } from '@clayui/shared';
 import classnames from 'classnames';
 import React, {useEffect, useLayoutEffect, useRef, useState} from 'react';
 import {CSSTransition} from 'react-transition-group';
 
 import {FocusTrap} from '../focus-trap';
+import {ResizeHandle} from '../resize-handle';
 import {Body} from './Body';
 import {Footer} from './Footer';
 import {Header} from './Header';
@@ -73,6 +74,15 @@ export type Props = {
 	 * Sets the CSS className for the component.
 	 */
 	'className'?: string;
+
+	/**
+	 * Flag to determine whether the SidePanel should close when pressing
+	 * the Escape key.
+	 * NOTE: The default behavior is to close on Escape but it will be forced
+	 * to `true` on mobile devices and can be set to `false` for desktop if
+	 * needed.
+	 */
+	'closeOnEscape'?: boolean;
 
 	/**
 	 * Element reference to the container of the SidePanel and primary content.
@@ -136,12 +146,14 @@ export function SidePanel({
 	'as': As = 'div',
 	children,
 	className,
+	'closeOnEscape': externalCloseOnEscape = true,
 	containerRef,
 	defaultOpen,
 	direction = 'right',
 	displayType = 'light',
 	externalSidePanelRef,
 	fluid = false,
+	'id': externalId,
 	onOpenChange,
 	'open': externalOpen,
 	'panelWidth': externalPanelWidth,
@@ -156,9 +168,10 @@ export function SidePanel({
 	const sidePanelRef = externalSidePanelRef || internalSidePanelRef;
 
 	const isMobile = useIsMobileDevice();
-	const panelWidthMax = usePanelWidthMax(sidePanelRef);
+	const sidePanelObservedMaxWidth = useObservedMaxWidth(sidePanelRef);
 	const {prefersReducedMotion} = useProvider();
 
+	const closeOnEscape = isMobile || externalCloseOnEscape;
 	const isResizable = fluid && !isMobile;
 
 	const [open, setOpen] = useControlledState({
@@ -209,7 +222,7 @@ export function SidePanel({
 	useEffect(() => {
 		if (open) {
 			const onKeyDown = (event: KeyboardEvent) => {
-				if (event.key === Keys.Esc) {
+				if (event.key === Keys.Esc && closeOnEscape) {
 					event.stopImmediatePropagation();
 					event.preventDefault();
 
@@ -233,14 +246,16 @@ export function SidePanel({
 
 			sidePanelRef.current?.setAttribute('inert', '');
 		}
-	}, [open]);
+	}, [closeOnEscape, open]);
 
+	const internalPanelId = useId();
 	const titleId = useId();
 
 	const offsetTop = useOffsetTop(containerRef);
 
+	const panelId = externalId ?? internalPanelId;
 	const panelWidth = isResizable
-		? Math.min(panelWidthMax, resizeWidth)
+		? Math.min(sidePanelObservedMaxWidth, resizeWidth)
 		: externalPanelWidth && Math.max(externalPanelWidth, PANEL_WIDTH_MIN);
 
 	return (
@@ -324,6 +339,7 @@ export function SidePanel({
 					aria-labelledby={
 						!ariaLabelledby && !ariaLabel ? titleId : ariaLabelledby
 					}
+					id={panelId}
 					ref={sidePanelRef}
 					style={panelWidth ? {width: panelWidth} : undefined}
 					tabIndex={-1}
@@ -336,12 +352,13 @@ export function SidePanel({
 						</FocusTrap>
 
 						{isResizable && (
-							<PanelResizer
-								onPanelWidthChange={setResizeWidth}
-								panelWidth={panelWidth}
-								panelWidthMax={panelWidthMax}
-								panelWidthMin={PANEL_WIDTH_MIN}
+							<ResizeHandle
+								aria-controls={panelId}
+								maxWidth={sidePanelObservedMaxWidth}
+								minWidth={PANEL_WIDTH_MIN}
+								onWidthChange={setResizeWidth}
 								position={direction}
+								width={panelWidth}
 							/>
 						)}
 					</SidePanelContext.Provider>
@@ -386,30 +403,6 @@ function useOffsetTop(ref: React.RefObject<HTMLElement>) {
 	}, []);
 
 	return offsetTop;
-}
-
-function usePanelWidthMax(ref: React.RefObject<HTMLElement>) {
-	const [maxWidth, setMaxWidth] = useState<number>(window.innerWidth / 2);
-
-	const handleResize = () => {
-		if (ref.current) {
-			setMaxWidth(
-				parseFloat(window.getComputedStyle(ref.current).maxWidth)
-			);
-		}
-	};
-
-	useEffect(() => {
-		handleResize();
-
-		window.addEventListener('resize', handleResize);
-
-		return () => {
-			window.removeEventListener('resize', handleResize);
-		};
-	}, []);
-
-	return maxWidth;
 }
 
 SidePanel.Header = Header;

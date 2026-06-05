@@ -465,7 +465,7 @@ public class SearchResultSummaryDisplayContextBuilderTest {
 		).when(
 			indexer
 		).getSummary(
-			Mockito.any(), Mockito.anyString(), Mockito.any(), Mockito.any()
+			Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()
 		);
 
 		return indexer;
@@ -622,7 +622,7 @@ public class SearchResultSummaryDisplayContextBuilderTest {
 		_searchUtilMockedStatic.when(
 			() -> SearchUtil.getSearchResultViewURL(
 				Mockito.any(), Mockito.any(), Mockito.eq(className),
-				Mockito.eq(classPK), Mockito.eq(false), Mockito.isNull())
+				Mockito.eq(classPK), Mockito.eq(false))
 		).thenReturn(
 			className + classPK
 		);

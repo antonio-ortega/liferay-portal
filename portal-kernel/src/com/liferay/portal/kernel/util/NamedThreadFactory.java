@@ -5,6 +5,7 @@
 
 package com.liferay.portal.kernel.util;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 
 import java.util.concurrent.ThreadFactory;
@@ -40,8 +41,7 @@ public class NamedThreadFactory implements ThreadFactory {
 		Thread thread = new Thread(
 			_group, runnable,
 			StringBundler.concat(
-				_name, StringPool.MINUS,
-				String.valueOf(_counter.incrementAndGet())));
+				_name, StringPool.MINUS, _counter.incrementAndGet()));
 
 		thread.setDaemon(true);
 		thread.setPriority(_priority);

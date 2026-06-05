@@ -165,3 +165,4 @@ public class SitePageNavigationMenuSettings implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:84160931

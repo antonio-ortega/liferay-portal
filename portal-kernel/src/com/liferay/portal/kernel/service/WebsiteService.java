@@ -74,3 +74,4 @@ public interface WebsiteService extends BaseService {
 		throws PortalException;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:226629186

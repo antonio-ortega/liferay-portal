@@ -10,7 +10,6 @@ import {
 import {expect, mergeTests} from '@playwright/test';
 
 import {dataApiHelpersTest} from '../../../fixtures/dataApiHelpersTest';
-import {featureFlagsTest} from '../../../fixtures/featureFlagsTest';
 import {loginTest} from '../../../fixtures/loginTest';
 import {checkAccessibility} from '../../../utils/checkAccessibility';
 import getRandomString from '../../../utils/getRandomString';
@@ -22,10 +21,6 @@ import {objectDefitionRequestData} from './utils/objectDefitionRequestData';
 export const test = mergeTests(
 	dataApiHelpersTest,
 	exportImportPagesTest,
-	featureFlagsTest({
-		'LPD-35443': {enabled: true},
-		'LPD-35914': {enabled: true},
-	}),
 	loginTest()
 );
 
@@ -188,7 +183,7 @@ test(
 			const suggestedFilename = download.suggestedFilename();
 
 			expect(suggestedFilename).toMatch(
-				new RegExp(`^${taskName}-(\\d+)_report_entries\\.zip$`)
+				new RegExp(`^${taskName}_report_entries\\.zip$`)
 			);
 
 			const filePath = getTempFile(suggestedFilename);

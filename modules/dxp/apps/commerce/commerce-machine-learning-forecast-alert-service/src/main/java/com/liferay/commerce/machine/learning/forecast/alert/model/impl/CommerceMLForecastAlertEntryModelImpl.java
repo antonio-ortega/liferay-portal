@@ -101,6 +101,8 @@ public class CommerceMLForecastAlertEntryModelImpl
 	public static final String TABLE_SQL_DROP =
 		"drop table CommerceMLForecastAlertEntry";
 
+	public static final String ENTITY_ALIAS = "commerceMLForecastAlertEntry";
+
 	public static final String ORDER_BY_JPQL =
 		" ORDER BY commerceMLForecastAlertEntry.timestamp ASC";
 
@@ -1102,3 +1104,4 @@ public class CommerceMLForecastAlertEntryModelImpl
 	private CommerceMLForecastAlertEntry _escapedModel;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:763056730

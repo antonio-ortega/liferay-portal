@@ -224,3 +224,4 @@ public class OriginSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:1736198365

@@ -6,9 +6,11 @@
 package com.liferay.site.cms.site.initializer.internal.display.context.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.depot.constants.DepotConstants;
 import com.liferay.depot.service.DepotEntryLocalService;
 import com.liferay.fragment.renderer.FragmentRenderer;
 import com.liferay.frontend.data.set.model.FDSActionDropdownItem;
+import com.liferay.frontend.data.set.test.util.FrontendDataSetTestUtil;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.info.constants.InfoDisplayWebKeys;
@@ -25,7 +27,9 @@ import com.liferay.portal.kernel.test.rule.Sync;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
@@ -35,7 +39,6 @@ import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -89,24 +92,17 @@ public class ViewRelatedAssetsSectionDisplayContextTest
 	}
 
 	@Test
-	public void testGetAdditionalProps() throws Exception {
-		HashMap<String, Object> additionalProps = ReflectionTestUtil.invoke(
+	public void testGetAdditionalAPIURLParameters() throws Exception {
+		String additionalAPIURLParameters = ReflectionTestUtil.invoke(
 			_getViewRelatedAssetsSectionDisplayContext(mockHttpServletRequest),
-			"getAdditionalProps", new Class<?>[0]);
-
-		Assert.assertEquals(
-			_objectDefinition.getExternalReferenceCode() + _KEYWORD_SUFFIX,
-			additionalProps.get("keywords"));
-	}
-
-	@Test
-	public void testGetAPIURL() throws Exception {
-		String apiURL = ReflectionTestUtil.invoke(
-			_getViewRelatedAssetsSectionDisplayContext(mockHttpServletRequest),
-			"getAPIURL", new Class<?>[0]);
+			"getAdditionalAPIURLParameters", new Class<?>[0]);
 
 		Assert.assertTrue(
-			apiURL.contains(
+			additionalAPIURLParameters,
+			additionalAPIURLParameters.contains("sort=dateModified:desc"));
+		Assert.assertTrue(
+			additionalAPIURLParameters,
+			additionalAPIURLParameters.contains(
 				StringBundler.concat(
 					"(cmsSection eq 'contents' or cmsSection eq 'files') and ",
 					"keywords/any(k:k in ('",
@@ -118,18 +114,41 @@ public class ViewRelatedAssetsSectionDisplayContextTest
 			_objectDefinition.getObjectDefinitionId(), 0, null,
 			Collections.emptyMap(), ServiceContextTestUtil.getServiceContext());
 
-		apiURL = ReflectionTestUtil.invoke(
+		additionalAPIURLParameters = ReflectionTestUtil.invoke(
 			_getViewRelatedAssetsSectionDisplayContext(mockHttpServletRequest),
-			"getAPIURL", new Class<?>[0]);
+			"getAdditionalAPIURLParameters", new Class<?>[0]);
 
 		Assert.assertTrue(
-			apiURL.contains(
+			additionalAPIURLParameters,
+			additionalAPIURLParameters.contains(
 				"(cmsSection eq 'contents' or cmsSection eq 'files') and " +
 					"keywords/any(k:k in (''))"));
 	}
 
 	@Test
+	public void testGetAdditionalProps() throws Exception {
+		Map<String, Object> additionalProps = ReflectionTestUtil.invoke(
+			_getViewRelatedAssetsSectionDisplayContext(mockHttpServletRequest),
+			"getAdditionalProps", new Class<?>[0]);
+
+		Assert.assertEquals(
+			_objectDefinition.getExternalReferenceCode() + _KEYWORD_SUFFIX,
+			additionalProps.get("keywords"));
+	}
+
+	@Test
 	public void testGetCreationMenu() throws Exception {
+		_depotEntryLocalService.addDepotEntry(
+			HashMapBuilder.put(
+				LocaleUtil.getDefault(), RandomTestUtil.randomString()
+			).build(),
+			HashMapBuilder.put(
+				LocaleUtil.getDefault(), StringUtil.randomString()
+			).build(),
+			DepotConstants.TYPE_SPACE,
+			ServiceContextTestUtil.getServiceContext(
+				group.getGroupId(), TestPropsValues.getUserId()));
+
 		CreationMenu creationMenu = ReflectionTestUtil.invoke(
 			_getViewRelatedAssetsSectionDisplayContext(
 				getMockHttpServletRequest()),
@@ -178,22 +197,20 @@ public class ViewRelatedAssetsSectionDisplayContextTest
 			fdsActionDropdownItems.toString(), 5,
 			fdsActionDropdownItems.size());
 
-		assertFDSActionDropdownItem(
-			fdsActionDropdownItems.get(0), "pencil", "actionLink", "Edit",
-			"get", "item");
-		assertFDSActionDropdownItem(
-			fdsActionDropdownItems.get(1), "view", "view-content", "View", null,
-			"item");
-		assertFDSActionDropdownItem(
-			fdsActionDropdownItems.get(2), "view", "view-file", "View", null,
-			"item");
-		assertFDSActionDropdownItem(
-			fdsActionDropdownItems.get(3), "share", "share", "Share", "get",
-			"item");
-		assertFDSActionDropdownItem(
-			fdsActionDropdownItems.get(4), "chain-broken", "unlink-asset",
+		FrontendDataSetTestUtil.assertFDSActionDropdownItem(
+			"pencil", "actionLink", "Edit", "get",
+			fdsActionDropdownItems.get(0));
+		FrontendDataSetTestUtil.assertFDSActionDropdownItem(
+			"view", "view-content", "View", null,
+			fdsActionDropdownItems.get(1));
+		FrontendDataSetTestUtil.assertFDSActionDropdownItem(
+			"view", "view-file", "View", null, fdsActionDropdownItems.get(2));
+		FrontendDataSetTestUtil.assertFDSActionDropdownItem(
+			"share", "share", "Share", "get", fdsActionDropdownItems.get(3));
+		FrontendDataSetTestUtil.assertFDSActionDropdownItem(
+			"chain-broken", "unlink-asset",
 			"Remove from " + _objectDefinition.getLabel(LocaleUtil.US), null,
-			"item");
+			fdsActionDropdownItems.get(4));
 	}
 
 	private void _assertDropdownItem(

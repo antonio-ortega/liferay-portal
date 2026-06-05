@@ -89,9 +89,7 @@ public class DuplicateSegmentsExperienceMVCActionCommandTest {
 		SegmentsExperience segmentsExperience =
 			_segmentsExperienceService.addSegmentsExperience(
 				null, _group.getGroupId(),
-				segmentsEntry.getExternalReferenceCode(),
-				ScopeUtil.getItemScopeExternalReferenceCode(
-					segmentsEntry.getGroupId(), _group.getGroupId()),
+				segmentsEntry.getExternalReferenceCode(), null,
 				_layout.getPlid(),
 				Collections.singletonMap(
 					LocaleUtil.getSiteDefault(), "Experience"),
@@ -163,9 +161,18 @@ public class DuplicateSegmentsExperienceMVCActionCommandTest {
 		Assert.assertEquals(
 			sourceFragmentEntryLink.getFragmentEntryERC(),
 			targetFragmentEntryLink.getFragmentEntryERC());
-		Assert.assertEquals(
-			sourceFragmentEntryLink.getFragmentEntryGroupId(),
-			targetFragmentEntryLink.getFragmentEntryGroupId());
+
+		Long groupId1 = ScopeUtil.getItemGroupId(
+			sourceFragmentEntryLink.getCompanyId(),
+			sourceFragmentEntryLink.getFragmentEntryScopeERC(),
+			sourceFragmentEntryLink.getGroupId());
+		Long groupId2 = ScopeUtil.getItemGroupId(
+			targetFragmentEntryLink.getCompanyId(),
+			targetFragmentEntryLink.getFragmentEntryScopeERC(),
+			targetFragmentEntryLink.getGroupId());
+
+		Assert.assertEquals(groupId1, groupId2);
+
 		Assert.assertEquals(
 			sourceFragmentEntryLink.getHtml(),
 			targetFragmentEntryLink.getHtml());

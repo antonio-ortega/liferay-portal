@@ -5,19 +5,27 @@
 
 package com.liferay.portal.workflow.kaleo.runtime.integration.internal.security.permission.resource;
 
+import com.liferay.account.model.AccountEntry;
+import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.workflow.configuration.WorkflowDefinitionConfiguration;
 
 import java.util.Map;
+import java.util.Objects;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Modified;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Rafael Praxedes
@@ -45,7 +53,8 @@ public class WorkflowPortletResourcePermission
 
 		if (!contains(permissionChecker, groupId, actionId)) {
 			throw new PrincipalException.MustHavePermission(
-				permissionChecker, WorkflowConstants.RESOURCE_NAME, actionId);
+				permissionChecker, WorkflowConstants.RESOURCE_NAME, 0,
+				actionId);
 		}
 	}
 
@@ -60,14 +69,14 @@ public class WorkflowPortletResourcePermission
 	public boolean contains(
 		PermissionChecker permissionChecker, long groupId, String actionId) {
 
-		if (permissionChecker.isOmniadmin() ||
-			(_companyAdministratorCanPublish &&
-			 permissionChecker.isCompanyAdmin())) {
-
-			return true;
+		try {
+			return _contains(permissionChecker, groupId);
 		}
+		catch (PortalException portalException) {
+			_log.error(portalException);
 
-		return false;
+			return false;
+		}
 	}
 
 	@Override
@@ -86,6 +95,43 @@ public class WorkflowPortletResourcePermission
 			workflowDefinitionConfiguration.companyAdministratorCanPublish();
 	}
 
+	private boolean _contains(PermissionChecker permissionChecker, long groupId)
+		throws PortalException {
+
+		if (permissionChecker.isOmniadmin() ||
+			(_companyAdministratorCanPublish &&
+			 permissionChecker.isCompanyAdmin())) {
+
+			return true;
+		}
+
+		if (groupId == 0) {
+			return false;
+		}
+
+		Group group = _groupLocalService.fetchGroup(groupId);
+
+		AccountEntry accountEntry =
+			_accountEntryLocalService.fetchUserAccountEntry(
+				permissionChecker.getUserId(), group.getClassPK());
+
+		if (accountEntry == null) {
+			return false;
+		}
+
+		return !Objects.equals(
+			accountEntry.getExternalReferenceCode(), "L_AI_HUB");
+	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		WorkflowPortletResourcePermission.class);
+
+	@Reference
+	private AccountEntryLocalService _accountEntryLocalService;
+
 	private volatile boolean _companyAdministratorCanPublish;
+
+	@Reference
+	private GroupLocalService _groupLocalService;
 
 }

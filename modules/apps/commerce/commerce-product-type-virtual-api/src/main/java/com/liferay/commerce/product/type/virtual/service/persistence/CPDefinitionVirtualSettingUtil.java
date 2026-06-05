@@ -36,6 +36,24 @@ public class CPDefinitionVirtualSettingUtil {
 	 */
 
 	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(List)
+	 */
+	public static void cacheResult(
+		List<CPDefinitionVirtualSetting> cpDefinitionVirtualSettings) {
+
+		getPersistence().cacheResult(cpDefinitionVirtualSettings);
+	}
+
+	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(com.liferay.portal.kernel.model.BaseModel)
+	 */
+	public static void cacheResult(
+		CPDefinitionVirtualSetting cpDefinitionVirtualSetting) {
+
+		getPersistence().cacheResult(cpDefinitionVirtualSetting);
+	}
+
+	/**
 	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#clearCache()
 	 */
 	public static void clearCache() {
@@ -117,58 +135,10 @@ public class CPDefinitionVirtualSettingUtil {
 	}
 
 	/**
-	 * Returns all the cp definition virtual settings where uuid = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @return the matching cp definition virtual settings
-	 */
-	public static List<CPDefinitionVirtualSetting> findByUuid(String uuid) {
-		return getPersistence().findByUuid(uuid);
-	}
-
-	/**
-	 * Returns a range of all the cp definition virtual settings where uuid = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPDefinitionVirtualSettingModelImpl</code>.
-	 * </p>
-	 *
-	 * @param uuid the uuid
-	 * @param start the lower bound of the range of cp definition virtual settings
-	 * @param end the upper bound of the range of cp definition virtual settings (not inclusive)
-	 * @return the range of matching cp definition virtual settings
-	 */
-	public static List<CPDefinitionVirtualSetting> findByUuid(
-		String uuid, int start, int end) {
-
-		return getPersistence().findByUuid(uuid, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the cp definition virtual settings where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPDefinitionVirtualSettingModelImpl</code>.
-	 * </p>
-	 *
-	 * @param uuid the uuid
-	 * @param start the lower bound of the range of cp definition virtual settings
-	 * @param end the upper bound of the range of cp definition virtual settings (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching cp definition virtual settings
-	 */
-	public static List<CPDefinitionVirtualSetting> findByUuid(
-		String uuid, int start, int end,
-		OrderByComparator<CPDefinitionVirtualSetting> orderByComparator) {
-
-		return getPersistence().findByUuid(uuid, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the cp definition virtual settings where uuid = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPDefinitionVirtualSettingModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.product.type.virtual.model.impl.CPDefinitionVirtualSettingModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -219,56 +189,6 @@ public class CPDefinitionVirtualSettingUtil {
 	}
 
 	/**
-	 * Returns the last cp definition virtual setting in the ordered set where uuid = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching cp definition virtual setting
-	 * @throws NoSuchCPDefinitionVirtualSettingException if a matching cp definition virtual setting could not be found
-	 */
-	public static CPDefinitionVirtualSetting findByUuid_Last(
-			String uuid,
-			OrderByComparator<CPDefinitionVirtualSetting> orderByComparator)
-		throws com.liferay.commerce.product.type.virtual.exception.
-			NoSuchCPDefinitionVirtualSettingException {
-
-		return getPersistence().findByUuid_Last(uuid, orderByComparator);
-	}
-
-	/**
-	 * Returns the last cp definition virtual setting in the ordered set where uuid = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching cp definition virtual setting, or <code>null</code> if a matching cp definition virtual setting could not be found
-	 */
-	public static CPDefinitionVirtualSetting fetchByUuid_Last(
-		String uuid,
-		OrderByComparator<CPDefinitionVirtualSetting> orderByComparator) {
-
-		return getPersistence().fetchByUuid_Last(uuid, orderByComparator);
-	}
-
-	/**
-	 * Returns the cp definition virtual settings before and after the current cp definition virtual setting in the ordered set where uuid = &#63;.
-	 *
-	 * @param CPDefinitionVirtualSettingId the primary key of the current cp definition virtual setting
-	 * @param uuid the uuid
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next cp definition virtual setting
-	 * @throws NoSuchCPDefinitionVirtualSettingException if a cp definition virtual setting with the primary key could not be found
-	 */
-	public static CPDefinitionVirtualSetting[] findByUuid_PrevAndNext(
-			long CPDefinitionVirtualSettingId, String uuid,
-			OrderByComparator<CPDefinitionVirtualSetting> orderByComparator)
-		throws com.liferay.commerce.product.type.virtual.exception.
-			NoSuchCPDefinitionVirtualSettingException {
-
-		return getPersistence().findByUuid_PrevAndNext(
-			CPDefinitionVirtualSettingId, uuid, orderByComparator);
-	}
-
-	/**
 	 * Removes all the cp definition virtual settings where uuid = &#63; from the database.
 	 *
 	 * @param uuid the uuid
@@ -301,19 +221,6 @@ public class CPDefinitionVirtualSettingUtil {
 			NoSuchCPDefinitionVirtualSettingException {
 
 		return getPersistence().findByUUID_G(uuid, groupId);
-	}
-
-	/**
-	 * Returns the cp definition virtual setting where uuid = &#63; and groupId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
-	 *
-	 * @param uuid the uuid
-	 * @param groupId the group ID
-	 * @return the matching cp definition virtual setting, or <code>null</code> if a matching cp definition virtual setting could not be found
-	 */
-	public static CPDefinitionVirtualSetting fetchByUUID_G(
-		String uuid, long groupId) {
-
-		return getPersistence().fetchByUUID_G(uuid, groupId);
 	}
 
 	/**
@@ -357,64 +264,10 @@ public class CPDefinitionVirtualSettingUtil {
 	}
 
 	/**
-	 * Returns all the cp definition virtual settings where uuid = &#63; and companyId = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @return the matching cp definition virtual settings
-	 */
-	public static List<CPDefinitionVirtualSetting> findByUuid_C(
-		String uuid, long companyId) {
-
-		return getPersistence().findByUuid_C(uuid, companyId);
-	}
-
-	/**
-	 * Returns a range of all the cp definition virtual settings where uuid = &#63; and companyId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPDefinitionVirtualSettingModelImpl</code>.
-	 * </p>
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param start the lower bound of the range of cp definition virtual settings
-	 * @param end the upper bound of the range of cp definition virtual settings (not inclusive)
-	 * @return the range of matching cp definition virtual settings
-	 */
-	public static List<CPDefinitionVirtualSetting> findByUuid_C(
-		String uuid, long companyId, int start, int end) {
-
-		return getPersistence().findByUuid_C(uuid, companyId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the cp definition virtual settings where uuid = &#63; and companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPDefinitionVirtualSettingModelImpl</code>.
-	 * </p>
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param start the lower bound of the range of cp definition virtual settings
-	 * @param end the upper bound of the range of cp definition virtual settings (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching cp definition virtual settings
-	 */
-	public static List<CPDefinitionVirtualSetting> findByUuid_C(
-		String uuid, long companyId, int start, int end,
-		OrderByComparator<CPDefinitionVirtualSetting> orderByComparator) {
-
-		return getPersistence().findByUuid_C(
-			uuid, companyId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the cp definition virtual settings where uuid = &#63; and companyId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPDefinitionVirtualSettingModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.product.type.virtual.model.impl.CPDefinitionVirtualSettingModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -470,61 +323,6 @@ public class CPDefinitionVirtualSettingUtil {
 	}
 
 	/**
-	 * Returns the last cp definition virtual setting in the ordered set where uuid = &#63; and companyId = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching cp definition virtual setting
-	 * @throws NoSuchCPDefinitionVirtualSettingException if a matching cp definition virtual setting could not be found
-	 */
-	public static CPDefinitionVirtualSetting findByUuid_C_Last(
-			String uuid, long companyId,
-			OrderByComparator<CPDefinitionVirtualSetting> orderByComparator)
-		throws com.liferay.commerce.product.type.virtual.exception.
-			NoSuchCPDefinitionVirtualSettingException {
-
-		return getPersistence().findByUuid_C_Last(
-			uuid, companyId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last cp definition virtual setting in the ordered set where uuid = &#63; and companyId = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching cp definition virtual setting, or <code>null</code> if a matching cp definition virtual setting could not be found
-	 */
-	public static CPDefinitionVirtualSetting fetchByUuid_C_Last(
-		String uuid, long companyId,
-		OrderByComparator<CPDefinitionVirtualSetting> orderByComparator) {
-
-		return getPersistence().fetchByUuid_C_Last(
-			uuid, companyId, orderByComparator);
-	}
-
-	/**
-	 * Returns the cp definition virtual settings before and after the current cp definition virtual setting in the ordered set where uuid = &#63; and companyId = &#63;.
-	 *
-	 * @param CPDefinitionVirtualSettingId the primary key of the current cp definition virtual setting
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next cp definition virtual setting
-	 * @throws NoSuchCPDefinitionVirtualSettingException if a cp definition virtual setting with the primary key could not be found
-	 */
-	public static CPDefinitionVirtualSetting[] findByUuid_C_PrevAndNext(
-			long CPDefinitionVirtualSettingId, String uuid, long companyId,
-			OrderByComparator<CPDefinitionVirtualSetting> orderByComparator)
-		throws com.liferay.commerce.product.type.virtual.exception.
-			NoSuchCPDefinitionVirtualSettingException {
-
-		return getPersistence().findByUuid_C_PrevAndNext(
-			CPDefinitionVirtualSettingId, uuid, companyId, orderByComparator);
-	}
-
-	/**
 	 * Removes all the cp definition virtual settings where uuid = &#63; and companyId = &#63; from the database.
 	 *
 	 * @param uuid the uuid
@@ -559,19 +357,6 @@ public class CPDefinitionVirtualSettingUtil {
 			NoSuchCPDefinitionVirtualSettingException {
 
 		return getPersistence().findByC_C(classNameId, classPK);
-	}
-
-	/**
-	 * Returns the cp definition virtual setting where classNameId = &#63; and classPK = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
-	 *
-	 * @param classNameId the class name ID
-	 * @param classPK the class pk
-	 * @return the matching cp definition virtual setting, or <code>null</code> if a matching cp definition virtual setting could not be found
-	 */
-	public static CPDefinitionVirtualSetting fetchByC_C(
-		long classNameId, long classPK) {
-
-		return getPersistence().fetchByC_C(classNameId, classPK);
 	}
 
 	/**
@@ -613,28 +398,6 @@ public class CPDefinitionVirtualSettingUtil {
 	 */
 	public static int countByC_C(long classNameId, long classPK) {
 		return getPersistence().countByC_C(classNameId, classPK);
-	}
-
-	/**
-	 * Caches the cp definition virtual setting in the entity cache if it is enabled.
-	 *
-	 * @param cpDefinitionVirtualSetting the cp definition virtual setting
-	 */
-	public static void cacheResult(
-		CPDefinitionVirtualSetting cpDefinitionVirtualSetting) {
-
-		getPersistence().cacheResult(cpDefinitionVirtualSetting);
-	}
-
-	/**
-	 * Caches the cp definition virtual settings in the entity cache if it is enabled.
-	 *
-	 * @param cpDefinitionVirtualSettings the cp definition virtual settings
-	 */
-	public static void cacheResult(
-		List<CPDefinitionVirtualSetting> cpDefinitionVirtualSettings) {
-
-		getPersistence().cacheResult(cpDefinitionVirtualSettings);
 	}
 
 	/**
@@ -698,84 +461,131 @@ public class CPDefinitionVirtualSettingUtil {
 	}
 
 	/**
-	 * Returns all the cp definition virtual settings.
+	 * Returns the cp definition virtual setting where uuid = &#63; and groupId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
 	 *
-	 * @return the cp definition virtual settings
+	 * @param uuid the uuid
+	 * @param groupId the group ID
+	 * @return the matching cp definition virtual setting, or <code>null</code> if a matching cp definition virtual setting could not be found
 	 */
-	public static List<CPDefinitionVirtualSetting> findAll() {
-		return getPersistence().findAll();
+	public static CPDefinitionVirtualSetting fetchByUUID_G(
+		String uuid, long groupId) {
+
+		return getPersistence().fetchByUUID_G(uuid, groupId);
 	}
 
 	/**
-	 * Returns a range of all the cp definition virtual settings.
+	 * Returns the cp definition virtual setting where classNameId = &#63; and classPK = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	 *
+	 * @param classNameId the class name ID
+	 * @param classPK the class pk
+	 * @return the matching cp definition virtual setting, or <code>null</code> if a matching cp definition virtual setting could not be found
+	 */
+	public static CPDefinitionVirtualSetting fetchByC_C(
+		long classNameId, long classPK) {
+
+		return getPersistence().fetchByC_C(classNameId, classPK);
+	}
+
+	/**
+	 * Returns all the cp definition virtual settings where uuid = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @return the matching cp definition virtual settings
+	 */
+	public static List<CPDefinitionVirtualSetting> findByUuid(String uuid) {
+		return getPersistence().findByUuid(uuid);
+	}
+
+	/**
+	 * Returns a range of all the cp definition virtual settings where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPDefinitionVirtualSettingModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.product.type.virtual.model.impl.CPDefinitionVirtualSettingModelImpl</code>.
 	 * </p>
 	 *
+	 * @param uuid the uuid
 	 * @param start the lower bound of the range of cp definition virtual settings
 	 * @param end the upper bound of the range of cp definition virtual settings (not inclusive)
-	 * @return the range of cp definition virtual settings
+	 * @return the range of matching cp definition virtual settings
 	 */
-	public static List<CPDefinitionVirtualSetting> findAll(int start, int end) {
-		return getPersistence().findAll(start, end);
+	public static List<CPDefinitionVirtualSetting> findByUuid(
+		String uuid, int start, int end) {
+
+		return getPersistence().findByUuid(uuid, start, end);
 	}
 
 	/**
-	 * Returns an ordered range of all the cp definition virtual settings.
+	 * Returns an ordered range of all the cp definition virtual settings where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPDefinitionVirtualSettingModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.product.type.virtual.model.impl.CPDefinitionVirtualSettingModelImpl</code>.
 	 * </p>
 	 *
+	 * @param uuid the uuid
 	 * @param start the lower bound of the range of cp definition virtual settings
 	 * @param end the upper bound of the range of cp definition virtual settings (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of cp definition virtual settings
+	 * @return the ordered range of matching cp definition virtual settings
 	 */
-	public static List<CPDefinitionVirtualSetting> findAll(
-		int start, int end,
+	public static List<CPDefinitionVirtualSetting> findByUuid(
+		String uuid, int start, int end,
 		OrderByComparator<CPDefinitionVirtualSetting> orderByComparator) {
 
-		return getPersistence().findAll(start, end, orderByComparator);
+		return getPersistence().findByUuid(uuid, start, end, orderByComparator);
 	}
 
 	/**
-	 * Returns an ordered range of all the cp definition virtual settings.
+	 * Returns all the cp definition virtual settings where uuid = &#63; and companyId = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @return the matching cp definition virtual settings
+	 */
+	public static List<CPDefinitionVirtualSetting> findByUuid_C(
+		String uuid, long companyId) {
+
+		return getPersistence().findByUuid_C(uuid, companyId);
+	}
+
+	/**
+	 * Returns a range of all the cp definition virtual settings where uuid = &#63; and companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPDefinitionVirtualSettingModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.product.type.virtual.model.impl.CPDefinitionVirtualSettingModelImpl</code>.
 	 * </p>
 	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of cp definition virtual settings
+	 * @param end the upper bound of the range of cp definition virtual settings (not inclusive)
+	 * @return the range of matching cp definition virtual settings
+	 */
+	public static List<CPDefinitionVirtualSetting> findByUuid_C(
+		String uuid, long companyId, int start, int end) {
+
+		return getPersistence().findByUuid_C(uuid, companyId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the cp definition virtual settings where uuid = &#63; and companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.product.type.virtual.model.impl.CPDefinitionVirtualSettingModelImpl</code>.
+	 * </p>
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
 	 * @param start the lower bound of the range of cp definition virtual settings
 	 * @param end the upper bound of the range of cp definition virtual settings (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param useFinderCache whether to use the finder cache
-	 * @return the ordered range of cp definition virtual settings
+	 * @return the ordered range of matching cp definition virtual settings
 	 */
-	public static List<CPDefinitionVirtualSetting> findAll(
-		int start, int end,
-		OrderByComparator<CPDefinitionVirtualSetting> orderByComparator,
-		boolean useFinderCache) {
+	public static List<CPDefinitionVirtualSetting> findByUuid_C(
+		String uuid, long companyId, int start, int end,
+		OrderByComparator<CPDefinitionVirtualSetting> orderByComparator) {
 
-		return getPersistence().findAll(
-			start, end, orderByComparator, useFinderCache);
-	}
-
-	/**
-	 * Removes all the cp definition virtual settings from the database.
-	 */
-	public static void removeAll() {
-		getPersistence().removeAll();
-	}
-
-	/**
-	 * Returns the number of cp definition virtual settings.
-	 *
-	 * @return the number of cp definition virtual settings
-	 */
-	public static int countAll() {
-		return getPersistence().countAll();
+		return getPersistence().findByUuid_C(
+			uuid, companyId, start, end, orderByComparator);
 	}
 
 	public static CPDefinitionVirtualSettingPersistence getPersistence() {
@@ -791,3 +601,4 @@ public class CPDefinitionVirtualSettingUtil {
 	private static volatile CPDefinitionVirtualSettingPersistence _persistence;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-776798697

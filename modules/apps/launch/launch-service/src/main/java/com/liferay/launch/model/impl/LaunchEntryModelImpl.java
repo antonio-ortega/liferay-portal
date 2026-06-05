@@ -97,6 +97,8 @@ public class LaunchEntryModelImpl
 
 	public static final String TABLE_SQL_DROP = "drop table LaunchEntry";
 
+	public static final String ENTITY_ALIAS = "launchEntry";
+
 	public static final String ORDER_BY_JPQL =
 		" ORDER BY launchEntry.launchEntryId ASC";
 
@@ -1067,3 +1069,4 @@ public class LaunchEntryModelImpl
 	private LaunchEntry _escapedModel;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-2021997869

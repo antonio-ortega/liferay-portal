@@ -9,15 +9,19 @@ import com.liferay.depot.constants.DepotConstants;
 import com.liferay.depot.constants.DepotRolesConstants;
 import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.service.DepotEntryLocalServiceWrapper;
+import com.liferay.object.constants.ObjectActionKeys;
 import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.constants.ObjectEntryFolderConstants;
+import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.field.attachment.AttachmentManager;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntry;
 import com.liferay.object.model.ObjectEntryFolder;
+import com.liferay.object.model.ObjectField;
 import com.liferay.object.rest.filter.factory.FilterFactory;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectEntryLocalService;
+import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.sql.dsl.expression.Predicate;
 import com.liferay.petra.string.StringPool;
@@ -32,9 +36,12 @@ import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceWrapper;
+import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.site.cms.site.initializer.internal.util.ObjectEntryFolderUtil;
 import com.liferay.site.cms.site.initializer.util.CMSDefaultPermissionUtil;
 
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -59,10 +66,10 @@ public class CMSObjectEntryFolderDepotEntryLocalServiceWrapper
 				depotEntry.getCompanyId(), "LPD-17564") &&
 			(depotEntry.getType() == DepotConstants.TYPE_SPACE)) {
 
+			_addCMSDefaultPermissions(group);
+
 			ObjectEntryFolderUtil.addObjectEntryFolders(
 				depotEntry, _attachmentManager);
-
-			_addCMSDefaultPermissions(group);
 		}
 
 		return depotEntry;
@@ -81,10 +88,10 @@ public class CMSObjectEntryFolderDepotEntryLocalServiceWrapper
 				depotEntry.getCompanyId(), "LPD-17564") &&
 			(depotEntry.getType() == DepotConstants.TYPE_SPACE)) {
 
+			_addCMSDefaultPermissions(depotEntry.getGroup());
+
 			ObjectEntryFolderUtil.addObjectEntryFolders(
 				depotEntry, _attachmentManager);
-
-			_addCMSDefaultPermissions(depotEntry.getGroup());
 		}
 
 		return depotEntry;
@@ -94,7 +101,10 @@ public class CMSObjectEntryFolderDepotEntryLocalServiceWrapper
 	public DepotEntry deleteDepotEntry(DepotEntry depotEntry)
 		throws PortalException {
 
-		if (depotEntry.getType() == DepotConstants.TYPE_SPACE) {
+		if (FeatureFlagManagerUtil.isEnabled(
+				depotEntry.getCompanyId(), "LPD-17564") &&
+			(depotEntry.getType() == DepotConstants.TYPE_SPACE)) {
+
 			ObjectEntryFolderUtil.deleteObjectEntryFolders(depotEntry);
 
 			_deleteCMSDefaultPermissions(depotEntry.getGroup());
@@ -149,16 +159,18 @@ public class CMSObjectEntryFolderDepotEntryLocalServiceWrapper
 				JSONUtil.put(
 					DepotRolesConstants.ASSET_LIBRARY_ADMINISTRATOR,
 					new String[] {
-						ActionKeys.ADD_ENTRY, ActionKeys.DELETE,
-						ActionKeys.PERMISSIONS, ActionKeys.UPDATE,
-						ActionKeys.SUBSCRIBE, ActionKeys.VIEW
+						ActionKeys.ADD_ENTRY,
+						ObjectActionKeys.ADD_OBJECT_ENTRY_FOLDER,
+						ActionKeys.DELETE, ActionKeys.PERMISSIONS,
+						ActionKeys.UPDATE, ActionKeys.SUBSCRIBE, ActionKeys.VIEW
 					}
 				).put(
 					DepotRolesConstants.ASSET_LIBRARY_CONTENT_REVIEWER,
 					new String[] {
-						ActionKeys.ADD_ENTRY, ActionKeys.DELETE,
-						ActionKeys.PERMISSIONS, ActionKeys.UPDATE,
-						ActionKeys.SUBSCRIBE, ActionKeys.VIEW
+						ActionKeys.ADD_ENTRY,
+						ObjectActionKeys.ADD_OBJECT_ENTRY_FOLDER,
+						ActionKeys.DELETE, ActionKeys.PERMISSIONS,
+						ActionKeys.UPDATE, ActionKeys.SUBSCRIBE, ActionKeys.VIEW
 					}
 				).put(
 					DepotRolesConstants.ASSET_LIBRARY_MEMBER,
@@ -212,32 +224,49 @@ public class CMSObjectEntryFolderDepotEntryLocalServiceWrapper
 				getObjectDefinitionByExternalReferenceCode(
 					externalReferenceCode, companyId);
 
-		String[] actionIds = TransformUtil.transformToArray(
+		String[] assetLibraryMemberObjectEntryActionIds = {
+			ActionKeys.ADD_DISCUSSION, ActionKeys.DOWNLOAD, ActionKeys.VIEW
+		};
+		String[] objectDefinitionActionIds = TransformUtil.transformToArray(
 			_resourceActionLocalService.getResourceActions(
 				objectDefinition.getClassName()),
 			ResourceAction::getActionId, String.class);
+		String[] objectEntryActionIds = {
+			ActionKeys.ADD_DISCUSSION, ActionKeys.DELETE,
+			ActionKeys.DELETE_DISCUSSION, ActionKeys.DOWNLOAD,
+			ActionKeys.PERMISSIONS, ActionKeys.UPDATE,
+			ActionKeys.UPDATE_DISCUSSION, ActionKeys.VIEW
+		};
+
+		List<ObjectField> objectFields =
+			_objectFieldLocalService.getObjectFieldsByBusinessType(
+				objectDefinition.getObjectDefinitionId(),
+				ObjectFieldConstants.BUSINESS_TYPE_ATTACHMENT);
+
+		if (ListUtil.isNotEmpty(objectFields)) {
+			ObjectField objectField = objectFields.get(0);
+
+			assetLibraryMemberObjectEntryActionIds = ArrayUtil.append(
+				assetLibraryMemberObjectEntryActionIds,
+				objectField.getAttachmentDownloadActionKey());
+			objectEntryActionIds = ArrayUtil.append(
+				objectEntryActionIds,
+				objectField.getAttachmentDownloadActionKey());
+		}
 
 		return JSONUtil.put(
 			DepotRolesConstants.ASSET_LIBRARY_ADMINISTRATOR,
-			new String[] {
-				ActionKeys.ADD_DISCUSSION, ActionKeys.DELETE,
-				ActionKeys.DELETE_DISCUSSION, ActionKeys.PERMISSIONS,
-				ActionKeys.UPDATE, ActionKeys.UPDATE_DISCUSSION, ActionKeys.VIEW
-			}
+			objectEntryActionIds
 		).put(
 			DepotRolesConstants.ASSET_LIBRARY_CONTENT_REVIEWER,
-			new String[] {
-				ActionKeys.ADD_DISCUSSION, ActionKeys.DELETE,
-				ActionKeys.DELETE_DISCUSSION, ActionKeys.PERMISSIONS,
-				ActionKeys.UPDATE, ActionKeys.UPDATE_DISCUSSION, ActionKeys.VIEW
-			}
+			objectEntryActionIds
 		).put(
 			DepotRolesConstants.ASSET_LIBRARY_MEMBER,
-			new String[] {ActionKeys.ADD_DISCUSSION, ActionKeys.VIEW}
+			assetLibraryMemberObjectEntryActionIds
 		).put(
-			RoleConstants.CMS_ADMINISTRATOR, actionIds
+			RoleConstants.CMS_ADMINISTRATOR, objectDefinitionActionIds
 		).put(
-			RoleConstants.OWNER, actionIds
+			RoleConstants.OWNER, objectDefinitionActionIds
 		).put(
 			RoleConstants.USER, new String[] {ActionKeys.VIEW}
 		);
@@ -256,6 +285,9 @@ public class CMSObjectEntryFolderDepotEntryLocalServiceWrapper
 
 	@Reference
 	private ObjectEntryLocalService _objectEntryLocalService;
+
+	@Reference
+	private ObjectFieldLocalService _objectFieldLocalService;
 
 	@Reference
 	private ResourceActionLocalService _resourceActionLocalService;

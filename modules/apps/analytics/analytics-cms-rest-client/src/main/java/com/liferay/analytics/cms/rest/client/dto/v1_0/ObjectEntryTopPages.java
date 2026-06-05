@@ -99,3 +99,4 @@ public class ObjectEntryTopPages implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:831837008

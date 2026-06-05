@@ -5,6 +5,7 @@
 
 package com.liferay.headless.commerce.admin.catalog.internal.resource.v1_0;
 
+import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.ProductConfigurationListAccount;
 import com.liferay.headless.commerce.admin.catalog.resource.v1_0.ProductConfigurationListAccountResource;
 import com.liferay.petra.function.UnsafeBiConsumer;
@@ -74,6 +75,9 @@ public abstract class BaseProductConfigurationListAccountResourceImpl
 	 *
 	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/product-configuration-list-accounts/{productConfigurationListAccountId}'  -u 'test@liferay.com:test'
 	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Removes the account binding identified by id from its product configuration list. Calls CPConfigurationListRelService.deleteCPConfigurationListRel. Validation -- Service-level NoSuchCPConfigurationListRelException -> 404. Side effects -- Removes the account <-> configuration list association."
+	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
@@ -157,6 +161,9 @@ public abstract class BaseProductConfigurationListAccountResourceImpl
 	 *
 	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/product-configuration-lists/by-externalReferenceCode/{externalReferenceCode}/product-configuration-list-accounts'  -u 'test@liferay.com:test'
 	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Lists the account bindings of the product configuration list identified by external reference code. Calls CPConfigurationListService.fetchCPConfigurationListByExternalReferenceCode -> getProductConfigurationListIdProductConfigurationListAccountsPage. Validation -- NoSuchCPConfigurationListException -> 404 when ERC not found."
+	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
@@ -203,6 +210,9 @@ public abstract class BaseProductConfigurationListAccountResourceImpl
 	 *
 	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/product-configuration-lists/{id}/product-configuration-list-accounts'  -u 'test@liferay.com:test'
 	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Lists the account bindings of the product configuration list identified by id. Calls CPConfigurationListRelService.getAccountEntryCPConfigurationListRels. Validation -- None at this layer."
+	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
@@ -268,6 +278,9 @@ public abstract class BaseProductConfigurationListAccountResourceImpl
 	 *
 	 * curl -X 'POST' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/product-configuration-lists/by-externalReferenceCode/{externalReferenceCode}/product-configuration-list-accounts' -d $'{"accountExternalReferenceCode": ___, "accountId": ___, "productConfigurationListExternalReferenceCode": ___, "productConfigurationListId": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Binds an account to the product configuration list identified by external reference code. Calls CPConfigurationListService.fetchCPConfigurationListByExternalReferenceCode -> postProductConfigurationListIdProductConfigurationListAccount. Validation -- NoSuchCPConfigurationListException -> 404 when ERC not found; NoSuchAccountEntryException -> 404 when account lookup fails. Side effects -- Creates a CPConfigurationListRel binding the account to the configuration list."
+	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
@@ -307,6 +320,9 @@ public abstract class BaseProductConfigurationListAccountResourceImpl
 	 *
 	 * curl -X 'POST' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/product-configuration-lists/{id}/product-configuration-list-accounts' -d $'{"accountExternalReferenceCode": ___, "accountId": ___, "productConfigurationListExternalReferenceCode": ___, "productConfigurationListId": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Binds an account to the product configuration list identified by id. Calls CPConfigurationListService.getCPConfigurationList + AccountEntryService.fetchAccountEntryByExternalReferenceCode/getAccountEntry + CPConfigurationListRelService.addCPConfigurationListRel. Validation -- NoSuchCPConfigurationListException -> 404 when id not found; NoSuchAccountEntryException -> 404 when account lookup fails. Side effects -- Creates a CPConfigurationListRel binding the account to the configuration list."
+	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
@@ -541,6 +557,15 @@ public abstract class BaseProductConfigurationListAccountResourceImpl
 			@Override
 			public Locale getPreferredLocale() {
 				return LocaleUtil.fromLanguageId(languageId);
+			}
+
+			@Override
+			public boolean isAcceptAllLanguages() {
+				if (ExportImportThreadLocal.isExportInProcess()) {
+					return true;
+				}
+
+				return AcceptLanguage.super.isAcceptAllLanguages();
 			}
 
 		};
@@ -1125,3 +1150,4 @@ public abstract class BaseProductConfigurationListAccountResourceImpl
 			BaseProductConfigurationListAccountResourceImpl.class);
 
 }
+// LIFERAY-REST-BUILDER-HASH:208179941

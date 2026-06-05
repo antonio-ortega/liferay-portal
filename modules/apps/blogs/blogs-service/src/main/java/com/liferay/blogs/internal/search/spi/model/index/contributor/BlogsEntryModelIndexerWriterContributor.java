@@ -7,48 +7,19 @@ package com.liferay.blogs.internal.search.spi.model.index.contributor;
 
 import com.liferay.blogs.model.BlogsEntry;
 import com.liferay.blogs.service.BlogsEntryLocalService;
-import com.liferay.portal.search.batch.BatchIndexingActionable;
-import com.liferay.portal.search.batch.DynamicQueryBatchIndexingActionableFactory;
 import com.liferay.portal.search.spi.model.index.contributor.ModelIndexerWriterContributor;
 import com.liferay.portal.search.spi.model.index.contributor.helper.IndexerWriterMode;
-import com.liferay.portal.search.spi.model.index.contributor.helper.ModelIndexerWriterDocumentHelper;
 
 /**
  * @author Luan Maoski
  */
 public class BlogsEntryModelIndexerWriterContributor
-	implements ModelIndexerWriterContributor<BlogsEntry> {
+	extends ModelIndexerWriterContributor<BlogsEntry> {
 
 	public BlogsEntryModelIndexerWriterContributor(
-		BlogsEntryLocalService blogsEntryLocalService,
-		DynamicQueryBatchIndexingActionableFactory
-			dynamicQueryBatchIndexingActionableFactory) {
+		BlogsEntryLocalService blogsEntryLocalService) {
 
-		_blogsEntryLocalService = blogsEntryLocalService;
-		_dynamicQueryBatchIndexingActionableFactory =
-			dynamicQueryBatchIndexingActionableFactory;
-	}
-
-	@Override
-	public void customize(
-		BatchIndexingActionable batchIndexingActionable,
-		ModelIndexerWriterDocumentHelper modelIndexerWriterDocumentHelper) {
-
-		batchIndexingActionable.setPerformActionMethod(
-			(BlogsEntry blogsEntry) -> batchIndexingActionable.addDocuments(
-				modelIndexerWriterDocumentHelper.getDocument(blogsEntry)));
-	}
-
-	@Override
-	public BatchIndexingActionable getBatchIndexingActionable() {
-		return _dynamicQueryBatchIndexingActionableFactory.
-			getBatchIndexingActionable(
-				_blogsEntryLocalService.getIndexableActionableDynamicQuery());
-	}
-
-	@Override
-	public long getCompanyId(BlogsEntry blogsEntry) {
-		return blogsEntry.getCompanyId();
+		super(blogsEntryLocalService::getIndexableActionableDynamicQuery);
 	}
 
 	@Override
@@ -66,9 +37,5 @@ public class BlogsEntryModelIndexerWriterContributor
 
 		return IndexerWriterMode.DELETE;
 	}
-
-	private final BlogsEntryLocalService _blogsEntryLocalService;
-	private final DynamicQueryBatchIndexingActionableFactory
-		_dynamicQueryBatchIndexingActionableFactory;
 
 }

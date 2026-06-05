@@ -15,6 +15,7 @@ import com.liferay.portal.kernel.cache.PortalCacheManagerNames;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBInspector;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
+import com.liferay.portal.kernel.dao.jdbc.AutoBatchPreparedStatementUtil;
 import com.liferay.portal.kernel.dao.jdbc.CurrentConnection;
 import com.liferay.portal.kernel.dao.jdbc.CurrentConnectionUtil;
 import com.liferay.portal.kernel.dao.jdbc.DataAccess;
@@ -262,15 +263,16 @@ public abstract class BaseDBPartitionTestCase {
 				PreparedStatement preparedStatement1 =
 					connection.prepareStatement(
 						"insert into Group_ (mvccVersion, ctCollectionId, " +
-							"companyId, groupId, classNameId, classPK) " +
-								"values (?, ?, ?, ?, ?, ?)");
+							"companyId, groupId, classNameId, classPK, " +
+								"groupKey) values (?, ?, ?, ?, ?, ?, ?)");
 				PreparedStatement preparedStatement2 =
 					connection.prepareStatement(
 						"insert into PasswordPolicy (mvccVersion, " +
 							"passwordPolicyId, companyId, defaultPolicy) " +
 								"values (?, ?, ?, ?)");
 				PreparedStatement preparedStatement3 =
-					connection.prepareStatement(
+					AutoBatchPreparedStatementUtil.autoBatch(
+						connection,
 						"insert into Role_ (mvccVersion, ctCollectionId, " +
 							"roleId, companyId, name, type_) values (?, ?, " +
 								"?, ?, ?, ?)");
@@ -287,6 +289,7 @@ public abstract class BaseDBPartitionTestCase {
 				preparedStatement1.setLong(
 					5, ClassNameLocalServiceUtil.getClassNameId(Company.class));
 				preparedStatement1.setLong(6, companyId);
+				preparedStatement1.setString(7, RandomTestUtil.randomString());
 
 				preparedStatement1.executeUpdate();
 
@@ -305,8 +308,10 @@ public abstract class BaseDBPartitionTestCase {
 					preparedStatement3.setString(5, ROLE_NAMES[i]);
 					preparedStatement3.setLong(6, 1);
 
-					preparedStatement3.executeUpdate();
+					preparedStatement3.addBatch();
 				}
+
+				preparedStatement3.executeBatch();
 
 				preparedStatement4.setLong(1, 1);
 				preparedStatement4.setLong(2, companyId);
@@ -426,6 +431,7 @@ public abstract class BaseDBPartitionTestCase {
 		DataSource dataSource = InfrastructureUtil.getDataSource();
 
 		try (Connection connection = dataSource.getConnection();
+
 			Statement statement = connection.createStatement()) {
 
 			statement.execute(getCreateTableSQL(tableName));

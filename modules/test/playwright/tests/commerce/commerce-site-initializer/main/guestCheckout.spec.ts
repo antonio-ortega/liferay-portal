@@ -6,7 +6,6 @@
 import {expect, mergeTests} from '@playwright/test';
 
 import {apiHelpersTest} from '../../../../fixtures/apiHelpersTest';
-import {applicationsMenuPageTest} from '../../../../fixtures/applicationsMenuPageTest';
 import {commercePagesTest} from '../../../../fixtures/commercePagesTest';
 import {dataApiHelpersTest} from '../../../../fixtures/dataApiHelpersTest';
 import {featureFlagsTest} from '../../../../fixtures/featureFlagsTest';
@@ -20,7 +19,6 @@ import {classicCommerceSetUp, guestCheckoutSetUp} from '../../utils/commerce';
 
 export const test = mergeTests(
 	apiHelpersTest,
-	applicationsMenuPageTest,
 	commercePagesTest,
 	dataApiHelpersTest,
 	featureFlagsTest({
@@ -30,72 +28,9 @@ export const test = mergeTests(
 	loginTest()
 );
 
-test('LPD-35678 Guest can directly checkout a new order in B2B channel site', async ({
-	apiHelpers,
-	checkoutPage,
-	commerceAdminChannelDetailsPage,
-	commerceAdminChannelsPage,
-	commerceMiniCartPage,
-	commerceThemeClassicCatalogPage,
-	page,
-}) => {
-	test.setTimeout(90000);
-
-	const {channel, site} = await classicCommerceSetUp(
-		apiHelpers,
-		`B2B_${getRandomString()}`
-	);
-
-	await guestCheckoutSetUp(
-		channel,
-		commerceAdminChannelDetailsPage,
-		commerceAdminChannelsPage,
-		page,
-		site
-	);
-
-	try {
-		await commerceThemeClassicCatalogPage
-			.productCardAddToCartButton('Wear Sensors')
-			.click();
-
-		await page.waitForLoadState('networkidle');
-
-		await expect(commerceMiniCartPage.miniCartButton).toHaveClass(
-			'has-badge mini-cart-opener'
-		);
-
-		await commerceMiniCartPage.miniCartButton.click();
-
-		await commerceMiniCartPage.proceedAsGuest.click();
-
-		await checkoutPage.performCheckout({
-			shippingAddress: {
-				asGuest: true,
-				city: 'testCity',
-				countryLabel: 'United States',
-				name: 'John Doe Guest',
-				regionLabel: 'Florida',
-				street: 'testStreet',
-				zip: '12345',
-			},
-		});
-	}
-	finally {
-		await performLoginViaApi({page, screenName: 'test'});
-
-		const orders =
-			await apiHelpers.headlessCommerceAdminOrder.getOrdersPage();
-
-		if (orders.items[0]) {
-			apiHelpers.data.push({id: orders.items[0].id, type: 'order'});
-		}
-	}
-});
-
 test(
-	'Guest can checkout a new order on sign-in in B2B channel site',
-	{tag: '@LPD-35678'},
+	'Guest can directly checkout a new order in B2B channel site',
+	{tag: ['@LPD-35678', '@LPD-84664']},
 	async ({
 		apiHelpers,
 		checkoutPage,
@@ -112,11 +47,6 @@ test(
 			`B2B_${getRandomString()}`
 		);
 
-		const account = await apiHelpers.headlessAdminUser.postAccount({
-			name: getRandomString(),
-			type: 'business',
-		});
-
 		await guestCheckoutSetUp(
 			channel,
 			commerceAdminChannelDetailsPage,
@@ -126,60 +56,170 @@ test(
 		);
 
 		try {
-			await commerceThemeClassicCatalogPage
-				.productCardAddToCartButton('Wear Sensors')
-				.click();
+			await test.step('Add an item to the cart and open the mini cart', async () => {
+				await commerceThemeClassicCatalogPage
+					.productCardAddToCartButton('Wear Sensors')
+					.click();
 
-			await page.waitForLoadState('networkidle');
+				await page.waitForLoadState('networkidle');
 
-			await expect(commerceMiniCartPage.miniCartButton).toHaveClass(
-				'has-badge mini-cart-opener'
-			);
+				await expect(commerceMiniCartPage.miniCartButton).toHaveClass(
+					'has-badge mini-cart-opener'
+				);
 
-			await commerceMiniCartPage.miniCartButton.click();
-
-			await commerceMiniCartPage.signInToCheckoutButton.click();
-
-			const signInToCheckoutModal = page.locator('#guest-sign-in-modal');
-
-			await expect(signInToCheckoutModal).toBeVisible();
-
-			const emailAddressInput = signInToCheckoutModal.locator(
-				'input[id*="LoginPortlet_login"]'
-			);
-			const passInput = signInToCheckoutModal.locator(
-				'input[id*="LoginPortlet_pass"]'
-			);
-			const signInButton = signInToCheckoutModal.getByRole('button', {
-				name: 'Sign In',
+				await commerceMiniCartPage.miniCartButton.click();
 			});
 
-			await emailAddressInput.fill('test@liferay.com');
-			await passInput.fill('test');
+			await test.step('Open the order details and verify that no error alert is shown', async () => {
+				await commerceMiniCartPage.viewDetailsButton.click();
 
-			await signInButton.click();
+				await page.waitForLoadState('networkidle');
 
-			await expect(
-				page.locator('.btn-account-selector', {hasText: account.name})
-			).toBeVisible();
+				await expect(page.locator('.alert-danger')).toHaveCount(0);
+			});
 
-			await commerceMiniCartPage.miniCartButton.click();
+			await test.step('Proceed as guest from the mini cart and verify the checkout survives a page reload', async () => {
+				await commerceMiniCartPage.miniCartButton.click();
 
-			await expect(
-				commerceMiniCartPage.miniCartItem('Wear Sensors')
-			).toBeVisible();
+				await commerceMiniCartPage.proceedAsGuest.click();
 
-			await commerceMiniCartPage.miniCartButtonClose.click();
+				await expect(checkoutPage.activeCheckoutStep).toBeVisible();
 
-			await checkoutPage.performCheckout({
-				shippingAddress: {
-					city: 'testCity',
-					countryLabel: 'United States',
-					name: `Guest to ${account.name}`,
-					regionLabel: 'Florida',
-					street: 'testStreet',
-					zip: '12345',
-				},
+				await page.reload();
+
+				await expect(checkoutPage.activeCheckoutStep).toBeVisible();
+			});
+
+			await test.step('Complete the checkout flow', async () => {
+				await checkoutPage.performCheckout({
+					shippingAddress: {
+						asGuest: true,
+						city: 'testCity',
+						countryLabel: 'United States',
+						name: 'John Doe Guest',
+						regionLabel: 'Florida',
+						street: 'testStreet',
+						zip: '12345',
+					},
+				});
+			});
+		}
+		finally {
+			await performLoginViaApi({page, screenName: 'test'});
+
+			const orders =
+				await apiHelpers.headlessCommerceAdminOrder.getOrdersPage();
+
+			if (orders.items[0]) {
+				apiHelpers.data.push({id: orders.items[0].id, type: 'order'});
+			}
+		}
+	}
+);
+
+test(
+	'Guest can checkout a new order on sign-in in B2B channel site',
+	{tag: '@LPD-35678'},
+	async ({
+		apiHelpers,
+		checkoutPage,
+		commerceAdminChannelDetailsPage,
+		commerceAdminChannelsPage,
+		commerceMiniCartPage,
+		commerceThemeClassicCatalogPage,
+		page,
+	}) => {
+		test.setTimeout(90000);
+
+		let account;
+
+		const {channel, site} =
+			await test.step('Set up classic commerce B2B site, create an account', async () => {
+				const setUp = await classicCommerceSetUp(
+					apiHelpers,
+					`B2B_${getRandomString()}`
+				);
+
+				account = await apiHelpers.headlessAdminUser.postAccount({
+					name: getRandomString(),
+					type: 'business',
+				});
+
+				return setUp;
+			});
+
+		await test.step('Enable guest checkout on the channel', async () => {
+			await guestCheckoutSetUp(
+				channel,
+				commerceAdminChannelDetailsPage,
+				commerceAdminChannelsPage,
+				page,
+				site
+			);
+		});
+
+		try {
+			await test.step('Add a product to the cart as guest', async () => {
+				await commerceThemeClassicCatalogPage
+					.productCardAddToCartButton('Wear Sensors')
+					.click();
+
+				await page.waitForLoadState('networkidle');
+
+				await expect(commerceMiniCartPage.miniCartButton).toHaveClass(
+					'has-badge mini-cart-opener'
+				);
+			});
+
+			await test.step('Sign in to checkout from the mini cart', async () => {
+				await commerceMiniCartPage.miniCartButton.click();
+
+				await commerceMiniCartPage.signInToCheckoutButton.click();
+
+				const signInToCheckoutModal = page.locator(
+					'#guest-sign-in-modal'
+				);
+
+				await expect(signInToCheckoutModal).toBeVisible();
+
+				await signInToCheckoutModal
+					.locator('input[id*="LoginPortlet_login"]')
+					.fill('test@liferay.com');
+				await signInToCheckoutModal
+					.locator('input[id*="LoginPortlet_pass"]')
+					.fill('test');
+				await signInToCheckoutModal
+					.getByRole('button', {name: 'Sign In'})
+					.click();
+			});
+
+			await test.step('Verify the account is selected and the cart still has the product', async () => {
+				await expect(
+					page.locator('.btn-account-selector', {
+						hasText: account.name,
+					})
+				).toBeVisible();
+
+				await commerceMiniCartPage.miniCartButton.click();
+
+				await expect(
+					commerceMiniCartPage.miniCartItem('Wear Sensors')
+				).toBeVisible();
+
+				await commerceMiniCartPage.miniCartButtonClose.click();
+			});
+
+			await test.step('Complete the checkout flow', async () => {
+				await checkoutPage.performCheckout({
+					shippingAddress: {
+						city: 'testCity',
+						countryLabel: 'United States',
+						name: `Guest to ${account.name}`,
+						regionLabel: 'Florida',
+						street: 'testStreet',
+						zip: '12345',
+					},
+				});
 			});
 		}
 		finally {
@@ -189,8 +229,10 @@ test(
 			const orders =
 				await apiHelpers.headlessCommerceAdminOrder.getOrdersPage();
 
-			if (orders.items[0]) {
-				apiHelpers.data.push({id: orders.items[0].id, type: 'order'});
+			for (const order of orders.items) {
+				await apiHelpers.headlessCommerceAdminOrder.deleteOrder(
+					order.id
+				);
 			}
 		}
 	}

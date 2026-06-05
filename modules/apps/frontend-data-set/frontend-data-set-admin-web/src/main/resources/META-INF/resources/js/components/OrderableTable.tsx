@@ -355,7 +355,7 @@ const Table = ({
 						fields={fields}
 						index={index}
 						item={item}
-						key={item.id || index}
+						key={item.externalReferenceCode || item.id || index}
 						onDragCrossover={onDragCrossover}
 						onDrop={onDrop}
 						query={query}
@@ -397,7 +397,7 @@ const OrderableTable = ({
 }: IOrderableTableProps) => {
 	const [items, setItems] = useState(initialItems);
 	const [order, setOrder] = useState(
-		initialItems.map((item) => item.id).join(',')
+		initialItems.map((item) => item.externalReferenceCode).join(',')
 	);
 	const [query, setQuery] = useState('');
 
@@ -508,7 +508,7 @@ const OrderableTable = ({
 							}}
 							onDrop={() => {
 								const newOrder = items
-									.map((item) => item.id)
+									.map((item) => item.externalReferenceCode)
 									.join(',');
 
 								if (newOrder !== order) {

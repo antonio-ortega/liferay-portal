@@ -6,6 +6,7 @@
 package com.liferay.segments.web.internal.display.context;
 
 import com.liferay.item.selector.ItemSelector;
+import com.liferay.learn.LearnMessageUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.bean.BeanParamUtil;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -42,6 +43,7 @@ import com.liferay.segments.model.SegmentsEntry;
 import com.liferay.segments.provider.SegmentsEntryProviderRegistry;
 import com.liferay.segments.service.SegmentsEntryService;
 import com.liferay.segments.web.internal.security.permission.resource.SegmentsEntryPermission;
+import com.liferay.segments.web.internal.util.AudiencesPortletUtil;
 
 import jakarta.portlet.PortletURL;
 import jakarta.portlet.RenderRequest;
@@ -106,6 +108,10 @@ public class EditSegmentsEntryDisplayContext {
 			return backURLTitle;
 		}
 
+		if (AudiencesPortletUtil.isAudiencesPortlet(_renderRequest)) {
+			return LanguageUtil.get(_httpServletRequest, "audiences");
+		}
+
 		return LanguageUtil.get(_httpServletRequest, "segments");
 	}
 
@@ -125,10 +131,20 @@ public class EditSegmentsEntryDisplayContext {
 				_log.debug(exception);
 			}
 
-			hashMapWrapper.put(
-				"error",
-				LanguageUtil.get(
-					_httpServletRequest, "the-segment-is-no-longer-available"));
+			if (AudiencesPortletUtil.isAudiencesPortlet(_renderRequest)) {
+				hashMapWrapper.put(
+					"error",
+					LanguageUtil.get(
+						_httpServletRequest,
+						"the-audience-is-no-longer-available"));
+			}
+			else {
+				hashMapWrapper.put(
+					"error",
+					LanguageUtil.get(
+						_httpServletRequest,
+						"the-segment-is-no-longer-available"));
+			}
 		}
 
 		_data = hashMapWrapper.build();
@@ -199,6 +215,9 @@ public class EditSegmentsEntryDisplayContext {
 
 		if (segmentsEntry != null) {
 			_title = segmentsEntry.getName(locale);
+		}
+		else if (AudiencesPortletUtil.isAudiencesPortlet(_renderRequest)) {
+			_title = LanguageUtil.get(_httpServletRequest, "new-audience");
 		}
 		else {
 			String type = ResourceActionsUtil.getModelResource(
@@ -347,6 +366,10 @@ public class EditSegmentsEntryDisplayContext {
 				_segmentsCriteriaContributorRegistry.
 					getSegmentsCriteriaContributors()) {
 
+			if (segmentsCriteriaContributor.isDisabled(_renderRequest)) {
+				continue;
+			}
+
 			jsonContributorsJSONArray.put(
 				JSONUtil.put(
 					"entityName", segmentsCriteriaContributor.getEntityName()
@@ -368,6 +391,8 @@ public class EditSegmentsEntryDisplayContext {
 
 	private Map<String, Object> _getProps() throws Exception {
 		return HashMapBuilder.<String, Object>put(
+			"audiences", AudiencesPortletUtil.isAudiencesPortlet(_renderRequest)
+		).put(
 			"availableLocales", _getAvailableLocales()
 		).put(
 			"contributors", _getContributorsJSONArray()
@@ -388,6 +413,16 @@ public class EditSegmentsEntryDisplayContext {
 		).put(
 			"isSegmentationEnabled",
 			_isSegmentationEnabled(_themeDisplay.getCompanyId())
+		).put(
+			"learnResources",
+			HashMapBuilder.put(
+				"frontend-js-components-web",
+				LearnMessageUtil.getReactDataJSONObject(
+					"frontend-js-components-web")
+			).put(
+				"segments-web",
+				LearnMessageUtil.getReactDataJSONObject("segments-web")
+			).build()
 		).put(
 			"locale", _locale.toString()
 		).put(

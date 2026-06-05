@@ -971,3 +971,4 @@ public class AssetVocabularyWrapper
 	}
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:673150587

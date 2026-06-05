@@ -50,8 +50,14 @@ public class EditContentItemCommentStrutsAction implements StrutsAction {
 		try {
 			long commentId = ParamUtil.getLong(httpServletRequest, "commentId");
 
-			_discussionPermission.checkUpdatePermission(
-				themeDisplay.getPermissionChecker(), commentId);
+			Comment comment = _commentManager.fetchComment(commentId);
+
+			if ((comment != null) &&
+				(themeDisplay.getUserId() != comment.getUserId())) {
+
+				_discussionPermission.checkUpdatePermission(
+					themeDisplay.getPermissionChecker(), commentId);
+			}
 
 			String className1 = ParamUtil.getString(
 				httpServletRequest, "className", null);
@@ -73,13 +79,13 @@ public class EditContentItemCommentStrutsAction implements StrutsAction {
 				themeDisplay.getUserId(), className1, classPK, commentId, null,
 				body, new ServiceContextFunction(httpServletRequest));
 
-			Comment comment = _commentManager.fetchComment(commentId);
+			comment = _commentManager.fetchComment(commentId);
 
 			ServletResponseUtil.write(
 				httpServletResponse,
 				JSONUtil.toString(
 					CommentUtil.getCommentJSONObject(
-						comment, httpServletRequest)));
+						comment, _discussionPermission, httpServletRequest)));
 		}
 		catch (Exception exception) {
 			_log.error(exception);

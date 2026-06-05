@@ -83,3 +83,4 @@ public class URLActionInteraction
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:281604491

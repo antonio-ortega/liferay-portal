@@ -6,22 +6,24 @@
 import {Page, expect, mergeTests} from '@playwright/test';
 
 import {apiHelpersTest} from '../../../fixtures/apiHelpersTest';
-import {applicationsMenuPageTest} from '../../../fixtures/applicationsMenuPageTest';
 import {customFieldsPagesTest} from '../../../fixtures/customFieldsPagesTest';
+import {dataApiHelpersTest} from '../../../fixtures/dataApiHelpersTest';
 import {featureFlagsTest} from '../../../fixtures/featureFlagsTest';
 import {formsPagesTest} from '../../../fixtures/formsPagesTest';
 import {isolatedSiteTest} from '../../../fixtures/isolatedSiteTest';
 import {loginTest} from '../../../fixtures/loginTest';
 import {pageViewModePagesTest} from '../../../fixtures/pageViewModePagesTest';
 import {pagesAdminPagesTest} from '../../../fixtures/pagesAdminPagesTest';
-import {productMenuPageTest} from '../../../fixtures/productMenuPageTest';
+import {ApiHelpers} from '../../../helpers/ApiHelpers';
 import {TCustomField} from '../../../helpers/CustomFieldTypesHelper';
-import {ProductMenuPage} from '../../../pages/product-navigation-control-menu-web/ProductMenuPage';
 import {clickAndExpectToBeVisible} from '../../../utils/clickAndExpectToBeVisible';
+import getGlobalSite from '../../../utils/getGlobalSite';
 import getRandomString from '../../../utils/getRandomString';
-import performLoginViaApi, {performLogout} from '../../../utils/performLogin';
+import {performLogout} from '../../../utils/performLogin';
 import {PORTLET_URLS} from '../../../utils/portletUrls';
+import {closeProductMenu} from '../../../utils/productMenu';
 import getBasicWebContentStructureId from '../../../utils/structured-content/getBasicWebContentStructureId';
+import {waitForAlert} from '../../../utils/waitForAlert';
 import {journalPagesTest} from '../../journal-web/main/fixtures/journalPagesTest';
 import {pagesPagesTest} from '../../layout-admin-web/main/fixtures/pagesPagesTest';
 import {sitesAdminPagesTest} from '../../site-admin-web/main/fixtures/sitesAdminPagesTest';
@@ -32,8 +34,8 @@ import {navigationMenuWidgetPagesTest} from './fixtures/navigationMenuWidgetPage
 
 export const test = mergeTests(
 	apiHelpersTest,
-	applicationsMenuPageTest,
 	customFieldsPagesTest,
+	dataApiHelpersTest,
 	featureFlagsTest({
 		'LPS-178052': {enabled: true},
 	}),
@@ -44,120 +46,102 @@ export const test = mergeTests(
 	navigationMenusPagesTest,
 	pagesAdminPagesTest,
 	pagesPagesTest,
-	productMenuPageTest,
 	templatesPageTest,
 	pageViewModePagesTest,
 	sitesAdminPagesTest,
 	navigationMenuWidgetPagesTest
 );
 
-async function deleteGlobalNavigationMenus(
-	navigationMenusPage: NavigationMenusPage,
-	productMenuPage: ProductMenuPage
-) {
-	await navigationMenusPage.gotoGlobalSiteNavigationMenuPortlet();
-
-	await productMenuPage.page
-		.getByLabel('Select All Items on the Page')
-		.check();
-
-	await productMenuPage.page.getByRole('button', {name: 'Delete'}).click();
-
-	await productMenuPage.page
-		.getByLabel('Delete Navigation Menus')
-		.getByRole('button', {name: 'Delete'})
-		.click();
-}
-
 test.describe('Missing reference warnings for Navigation Menu Items', () => {
-	let navigationMenuName: string;
-
-	test.beforeEach(
-		'Create Navigation Menu',
-		async ({navigationMenusPage, site}) => {
-			await navigationMenusPage.goto(site.friendlyUrlPath);
-
-			navigationMenuName = getRandomString();
-
-			await navigationMenusPage.createNavigationMenu(navigationMenuName);
-		}
-	);
-
 	test(
 		'Missing reference for a Asset Vocabulary type Navigation Menu Item',
 		{
 			tag: '@LPD-71409',
 		},
 		async ({apiHelpers, navigationMenusPage, page, site}) => {
-			const vocabularyName1 = getRandomString();
-			let vocabularyId1: number;
 			const categoryName1 = getRandomString();
-
-			const vocabularyName2 = getRandomString();
 			const categoryName2 = getRandomString();
 
-			await test.step('Create Vocabulary', async () => {
-				({id: vocabularyId1} =
-					await apiHelpers.headlessAdminTaxonomy.postSiteTaxonomyVocabulary(
-						{
-							name: vocabularyName1,
-							siteId: site.id,
-						}
-					));
+			const {vocabulary1, vocabulary2} =
+				await test.step('Create Vocabulary', async () => {
+					const vocabulary1 =
+						await apiHelpers.headlessAdminTaxonomy.postSiteTaxonomyVocabulary(
+							{
+								name: getRandomString(),
+								siteId: site.id,
+							}
+						);
 
-				await apiHelpers.headlessAdminTaxonomy.postTaxonomyVocabularyTaxonomyCategory(
-					{
-						name: categoryName1,
-						vocabularyId: vocabularyId1,
-					}
-				);
-
-				const {id: vocabularyId2} =
-					await apiHelpers.headlessAdminTaxonomy.postSiteTaxonomyVocabulary(
+					await apiHelpers.headlessAdminTaxonomy.postTaxonomyVocabularyTaxonomyCategory(
 						{
-							name: vocabularyName2,
-							siteId: site.id,
+							name: categoryName1,
+							vocabularyId: vocabulary1.id,
 						}
 					);
 
-				await apiHelpers.headlessAdminTaxonomy.postTaxonomyVocabularyTaxonomyCategory(
+					const vocabulary2 =
+						await apiHelpers.headlessAdminTaxonomy.postSiteTaxonomyVocabulary(
+							{
+								name: getRandomString(),
+								siteId: site.id,
+							}
+						);
+
+					await apiHelpers.headlessAdminTaxonomy.postTaxonomyVocabularyTaxonomyCategory(
+						{
+							name: categoryName2,
+							vocabularyId: vocabulary2.id,
+						}
+					);
+
+					return {vocabulary1, vocabulary2};
+				});
+
+			const navigationMenuName = getRandomString();
+
+			await test.step('Add Navigation Menu Items for created Vocabularies', async () => {
+				await apiHelpers.headlessAdminSite.postSiteNavigationMenu(
+					site.externalReferenceCode,
 					{
-						name: categoryName2,
-						vocabularyId: vocabularyId2,
+						name: navigationMenuName,
+						navigationMenuItems: [
+							{
+								navigationMenuItemSettings: {
+									externalReferenceCode:
+										vocabulary1.externalReferenceCode,
+									title: vocabulary1.name,
+								},
+								type: 'asset_vocabulary',
+							},
+							{
+								navigationMenuItemSettings: {
+									externalReferenceCode:
+										vocabulary2.externalReferenceCode,
+									title: vocabulary2.name,
+								},
+								type: 'asset_vocabulary',
+							},
+						],
 					}
 				);
 			});
 
-			await test.step('Add Navigation Menu Items for created Vocabularies', async () => {
+			await test.step('Delete a Vocabulary to simulate a missing reference', async () => {
+				await apiHelpers.headlessAdminTaxonomy.deleteTaxonomyVocabulary(
+					vocabulary1.id
+				);
+			});
+
+			await test.step('Verify missing reference warnings in left and right panes', async () => {
 				await navigationMenusPage.goto(site.friendlyUrlPath);
 
 				await page
 					.getByRole('link', {name: navigationMenuName})
 					.click();
 
-				await navigationMenusPage.openAddVocabularyModal();
-
-				await navigationMenusPage.vocabulariesModal
-					.getByLabel(vocabularyName1)
-					.check();
-
-				await navigationMenusPage.vocabulariesModal
-					.getByLabel(vocabularyName2)
-					.check();
-
-				await page.getByRole('button', {name: 'Select'}).click();
-			});
-
-			await test.step('Delete a Vocabulary to simulate a missing reference', async () => {
-				await apiHelpers.headlessAdminTaxonomy.deleteTaxonomyVocabulary(
-					vocabularyId1
-				);
-			});
-
-			await test.step('Verify missing reference warnings in left and right panes', async () => {
 				await assertMissingReferenceWarnings(
 					page,
-					vocabularyName1,
+					vocabulary1.name,
 					navigationMenusPage
 				);
 			});
@@ -185,54 +169,78 @@ test.describe('Missing reference warnings for Navigation Menu Items', () => {
 			tag: '@LPD-71409',
 		},
 		async ({apiHelpers, navigationMenusPage, page, site}) => {
-			const webContentTitle1 = getRandomString();
-			let webContentId1: string;
+			const {webContent1, webContent2} =
+				await test.step('Create Web Content Articles', async () => {
+					const ddmStructureId =
+						await getBasicWebContentStructureId(apiHelpers);
 
-			const webContentTitle2 = getRandomString();
+					const webContent1 =
+						await apiHelpers.jsonWebServicesJournal.addWebContent({
+							ddmStructureId,
+							groupId: site.id,
+							title: getRandomString(),
+						});
 
-			await test.step('Create Web Content Articles', async () => {
-				({articleId: webContentId1} =
-					await apiHelpers.jsonWebServicesJournal.addWebContent({
-						ddmStructureId:
-							await getBasicWebContentStructureId(apiHelpers),
-						groupId: site.id,
-						titleMap: {en_US: webContentTitle1},
-					}));
+					const webContent2 =
+						await apiHelpers.jsonWebServicesJournal.addWebContent({
+							ddmStructureId,
+							groupId: site.id,
+							title: getRandomString(),
+						});
 
-				await apiHelpers.jsonWebServicesJournal.addWebContent({
-					ddmStructureId:
-						await getBasicWebContentStructureId(apiHelpers),
-					groupId: site.id,
-					titleMap: {en_US: webContentTitle2},
+					return {webContent1, webContent2};
 				});
-			});
+
+			const navigationMenuName = getRandomString();
 
 			await test.step('Add Navigation Menu Items for created Web Content Articles', async () => {
-				await navigationMenusPage.goto(site.friendlyUrlPath);
-
-				await page
-					.getByRole('link', {name: navigationMenuName})
-					.click();
-
-				await navigationMenusPage.addWebContentArticleItem(
-					webContentTitle1
-				);
-				await navigationMenusPage.addWebContentArticleItem(
-					webContentTitle2
+				await apiHelpers.headlessAdminSite.postSiteNavigationMenu(
+					site.externalReferenceCode,
+					{
+						name: navigationMenuName,
+						navigationMenuItems: [
+							{
+								navigationMenuItemSettings: {
+									className:
+										'com.liferay.journal.model.JournalArticle',
+									externalReferenceCode:
+										webContent1.externalReferenceCode,
+									title: webContent1.title,
+								},
+								type: 'com.liferay.journal.model.JournalArticle',
+							},
+							{
+								navigationMenuItemSettings: {
+									className:
+										'com.liferay.journal.model.JournalArticle',
+									externalReferenceCode:
+										webContent2.externalReferenceCode,
+									title: webContent2.title,
+								},
+								type: 'com.liferay.journal.model.JournalArticle',
+							},
+						],
+					}
 				);
 			});
 
 			await test.step('Delete a Web Content Article to simulate a missing reference', async () => {
 				await apiHelpers.jsonWebServicesJournal.moveArticleToTrash(
 					site.id,
-					webContentId1
+					webContent1.articleId
 				);
 			});
 
 			await test.step('Verify missing reference warnings in left and right panes', async () => {
+				await navigationMenusPage.goto(site.friendlyUrlPath);
+
+				await page
+					.getByRole('link', {name: navigationMenuName})
+					.click();
+
 				await assertMissingReferenceWarnings(
 					page,
-					webContentTitle1,
+					webContent1.title,
 					navigationMenusPage
 				);
 			});
@@ -245,10 +253,14 @@ test.describe('Missing reference warnings for Navigation Menu Items', () => {
 				);
 
 				await expect(
-					await navigationMenusPage.getModalListItem(webContentTitle1)
+					await navigationMenusPage.getModalListItem(
+						webContent1.title
+					)
 				).not.toBeVisible();
 				await expect(
-					await navigationMenusPage.getModalListItem(webContentTitle2)
+					await navigationMenusPage.getModalListItem(
+						webContent2.title
+					)
 				).toBeVisible();
 			});
 		}
@@ -260,47 +272,72 @@ test.describe('Missing reference warnings for Navigation Menu Items', () => {
 			tag: '@LPD-71409',
 		},
 		async ({apiHelpers, navigationMenusPage, page, site}) => {
-			const layoutTitle1 = getRandomString();
-			let plid1: string;
+			const {layout1, layout2} =
+				await test.step('Create Layouts', async () => {
+					const layout1 =
+						await apiHelpers.jsonWebServicesLayout.addLayout({
+							groupId: site.id,
+							title: getRandomString(),
+						});
 
-			const layoutTitle2 = getRandomString();
+					const layout2 =
+						await apiHelpers.jsonWebServicesLayout.addLayout({
+							groupId: site.id,
+							title: getRandomString(),
+						});
 
-			await test.step('Create Layouts', async () => {
-				({plid: plid1} =
-					await apiHelpers.jsonWebServicesLayout.addLayout({
-						groupId: site.id,
-						title: layoutTitle1,
-					}));
-
-				await apiHelpers.jsonWebServicesLayout.addLayout({
-					groupId: site.id,
-					title: layoutTitle2,
+					return {layout1, layout2};
 				});
-			});
+
+			const navigationMenuName = getRandomString();
 
 			await test.step('Add Navigation Menu Items for created Layouts', async () => {
+				await apiHelpers.headlessAdminSite.postSiteNavigationMenu(
+					site.externalReferenceCode,
+					{
+						name: navigationMenuName,
+						navigationMenuItems: [
+							{
+								navigationMenuItemSettings: {
+									externalReferenceCode:
+										layout1.externalReferenceCode,
+									privatePage: false,
+									title: layout1.nameCurrentValue,
+								},
+								type: 'layout',
+							},
+							{
+								navigationMenuItemSettings: {
+									externalReferenceCode:
+										layout2.externalReferenceCode,
+									privatePage: false,
+									title: layout2.nameCurrentValue,
+								},
+								type: 'layout',
+							},
+						],
+					}
+				);
+			});
+
+			await test.step('Delete a Layout to simulate a missing reference', async () => {
+				await apiHelpers.jsonWebServicesLayout.deleteLayout(
+					layout1.plid
+				);
+			});
+
+			await test.step('Verify missing reference warnings in left and right panes', async () => {
 				await navigationMenusPage.goto(site.friendlyUrlPath);
 
 				await page
 					.getByRole('link', {name: navigationMenuName})
 					.click();
 
-				await navigationMenusPage.addPageItem([
-					layoutTitle1,
-					layoutTitle2,
-				]);
-			});
-
-			await test.step('Delete a Layout to simulate a missing reference', async () => {
-				await apiHelpers.jsonWebServicesLayout.deleteLayout(plid1);
-			});
-
-			await test.step('Verify missing reference warnings in left and right panes', async () => {
-				await page.reload();
-
 				// Layout type Navigation Menu Items are deleted from the Navigation Menu when the Layout is deleted
 
-				await expect(page.getByText(layoutTitle1)).not.toBeVisible();
+				await expect(
+					page.getByText(layout1.nameCurrentValue)
+				).not.toBeVisible();
 			});
 
 			await test.step("Verify that Navigation Menu's rendered preview doesn't show Menu Items with missing references", async () => {
@@ -311,10 +348,14 @@ test.describe('Missing reference warnings for Navigation Menu Items', () => {
 				);
 
 				await expect(
-					await navigationMenusPage.getModalListItem(layoutTitle1)
+					await navigationMenusPage.getModalListItem(
+						layout1.nameCurrentValue
+					)
 				).not.toBeVisible();
 				await expect(
-					await navigationMenusPage.getModalListItem(layoutTitle2)
+					await navigationMenusPage.getModalListItem(
+						layout2.nameCurrentValue
+					)
 				).toBeVisible();
 			});
 		}
@@ -325,8 +366,6 @@ test.describe('Missing reference warnings for Navigation Menu Items', () => {
 		menuItemName: string,
 		navigationMenusPage: NavigationMenusPage
 	) {
-		await page.reload();
-
 		await expect(page.getByText(menuItemName)).toBeVisible();
 
 		const menuItemCard1 =
@@ -432,11 +471,9 @@ test(
 
 		await navigationMenuWidgetPage.saveAndCloseConfigurationModal();
 
-		await page.getByText(urlItemName).click();
-
 		const [newPage] = await Promise.all([
-			await page.context().waitForEvent('page'),
-			await page.getByText(urlItemName).click(),
+			page.context().waitForEvent('page'),
+			page.getByText(urlItemName).click(),
 		]);
 
 		await newPage.waitForLoadState();
@@ -457,82 +494,81 @@ test(
 		navigationMenuWidgetPage,
 		navigationMenusPage,
 		page,
-		productMenuPage,
 		site,
 		widgetPagePage,
 	}) => {
-		try {
-			const navigationMenuName = getRandomString();
+		const navigationMenuName = getRandomString();
+		const urlMenuItemName = getRandomString();
 
-			await navigationMenusPage.addNavigationMenuToGlobalSite(
-				navigationMenuName
-			);
+		const globalSite = await getGlobalSite(apiHelpers);
 
-			const urlMenuItemName = getRandomString();
+		await apiHelpers.headlessAdminSite.postSiteNavigationMenu(
+			globalSite.externalReferenceCode,
+			{
+				name: navigationMenuName,
+				navigationMenuItems: [
+					{
+						name_i18n: {en_US: urlMenuItemName},
+						navigationMenuItemSettings: {
+							url: 'https://www.liferay.com',
+						},
+						type: 'url',
+					},
+				],
+			}
+		);
 
-			await navigationMenusPage.addURLItem(urlMenuItemName);
+		await navigationMenusPage.gotoGlobalSiteNavigationMenuPortlet();
 
-			await page.waitForLoadState();
-
-			await navigationMenusPage.gotoGlobalSiteNavigationMenuPortlet();
-
-			await page
+		await clickAndExpectToBeVisible({
+			autoClick: true,
+			target: page.getByRole('menuitem', {name: 'Permissions'}),
+			trigger: page
 				.getByRole('row', {name: navigationMenuName})
-				.getByLabel('Show Actions')
-				.click();
+				.getByLabel('Show Actions'),
+		});
 
-			await page.getByRole('menuitem', {name: 'Permissions'}).click();
+		const permissionsModal = page.frameLocator(
+			'iframe[title="Permissions"]'
+		);
 
-			const permissionsModal = page.frameLocator(
-				'iframe[title="Permissions"]'
-			);
+		const guestViewCheckbox =
+			permissionsModal.locator('#guest_ACTION_VIEW');
 
-			await page.waitForTimeout(1500);
+		await guestViewCheckbox.uncheck({trial: true});
 
-			await permissionsModal.locator('#guest_ACTION_VIEW').uncheck();
+		await guestViewCheckbox.uncheck();
 
-			await page.waitForTimeout(1500);
+		await permissionsModal.getByRole('button', {name: 'Save'}).click();
 
-			await permissionsModal.getByRole('button', {name: 'Save'}).click();
+		await waitForAlert(permissionsModal);
 
-			await page
-				.locator('.modal')
-				.getByLabel('Close', {exact: true})
-				.click();
+		await page.locator('.modal').getByLabel('Close', {exact: true}).click();
 
-			const layout = await apiHelpers.jsonWebServicesLayout.addLayout({
-				groupId: site.id,
-				title: getRandomString(),
-			});
+		const layout = await apiHelpers.jsonWebServicesLayout.addLayout({
+			groupId: site.id,
+			title: getRandomString(),
+		});
 
-			await widgetPagePage.goto(layout, site.friendlyUrlPath);
+		await widgetPagePage.goto(layout, site.friendlyUrlPath);
 
-			await navigationMenuWidgetPage.openConfigurationModal(
-				layout.nameCurrentValue
-			);
+		await navigationMenuWidgetPage.openConfigurationModal(
+			layout.nameCurrentValue
+		);
 
-			await navigationMenuWidgetPage.selectCustomNavigationMenu(
-				navigationMenuName
-			);
+		await navigationMenuWidgetPage.selectCustomNavigationMenu(
+			navigationMenuName
+		);
 
-			await navigationMenuWidgetPage.saveAndCloseConfigurationModal();
+		await navigationMenuWidgetPage.saveAndCloseConfigurationModal();
 
-			await performLogout(page);
+		await performLogout(page);
 
-			await widgetPagePage.goto(layout, site.friendlyUrlPath);
+		await widgetPagePage.goto(layout, site.friendlyUrlPath);
 
-			await expect(
-				page.getByRole('menuitem', {name: urlMenuItemName})
-			).not.toBeVisible();
-		}
-		finally {
-			await performLoginViaApi(page, 'test');
-
-			await deleteGlobalNavigationMenus(
-				navigationMenusPage,
-				productMenuPage
-			);
-		}
+		await expect(
+			page.getByRole('menuitem', {name: urlMenuItemName})
+		).not.toBeVisible();
 	}
 );
 
@@ -627,58 +663,59 @@ test(
 	async ({
 		apiHelpers,
 		navigationMenuWidgetPage,
-		navigationMenusPage,
 		page,
-		productMenuPage,
 		site,
 		widgetPagePage,
 	}) => {
-		try {
-			const navigationMenuName = getRandomString();
+		const navigationMenuName = getRandomString();
+		const urlMenuItemName = getRandomString();
 
-			await navigationMenusPage.addNavigationMenuToGlobalSite(
-				navigationMenuName
-			);
+		const globalSite = await getGlobalSite(apiHelpers);
 
-			const urlMenuItemName = getRandomString();
+		await apiHelpers.headlessAdminSite.postSiteNavigationMenu(
+			globalSite.externalReferenceCode,
+			{
+				name: navigationMenuName,
+				navigationMenuItems: [
+					{
+						name_i18n: {en_US: urlMenuItemName},
+						navigationMenuItemSettings: {
+							url: 'https://www.liferay.com',
+						},
+						type: 'url',
+					},
+				],
+			}
+		);
 
-			await navigationMenusPage.addURLItem(urlMenuItemName);
+		const layoutName = getRandomString();
 
-			const layoutName = getRandomString();
+		const layout = await apiHelpers.jsonWebServicesLayout.addLayout({
+			groupId: site.id,
+			title: layoutName,
+		});
 
-			const layout = await apiHelpers.jsonWebServicesLayout.addLayout({
-				groupId: site.id,
-				title: layoutName,
-			});
+		await widgetPagePage.goto(layout, site.friendlyUrlPath);
 
-			await widgetPagePage.goto(layout, site.friendlyUrlPath);
+		await navigationMenuWidgetPage.openConfigurationModal(layoutName);
 
-			await navigationMenuWidgetPage.openConfigurationModal(layoutName);
+		await navigationMenuWidgetPage.selectCustomNavigationMenu(
+			navigationMenuName
+		);
 
-			await navigationMenuWidgetPage.selectCustomNavigationMenu(
-				navigationMenuName
-			);
+		await navigationMenuWidgetPage.saveAndCloseConfigurationModal();
 
-			await navigationMenuWidgetPage.saveAndCloseConfigurationModal();
+		await expect(
+			page.getByRole('menuitem', {name: urlMenuItemName})
+		).toBeVisible();
 
-			await expect(
-				page.getByRole('menuitem', {name: urlMenuItemName})
-			).toBeVisible();
+		await page.getByRole('button', {name: 'Edit'}).click();
 
-			await page.getByRole('button', {name: 'Edit'}).click();
+		await page.getByRole('menuitem', {name: 'Edit'}).click();
 
-			await page.getByRole('menuitem', {name: 'Edit'}).click();
+		await page.waitForTimeout(1500);
 
-			await page.waitForTimeout(1500);
-
-			expect(page.url()).toContain(PORTLET_URLS.navigationMenus);
-		}
-		finally {
-			await deleteGlobalNavigationMenus(
-				navigationMenusPage,
-				productMenuPage
-			);
-		}
+		expect(page.url()).toContain(PORTLET_URLS.navigationMenus);
 	}
 );
 
@@ -768,57 +805,97 @@ test(
 	}
 );
 
+test('Navigation Menu widget defaults to public pages when menu is deleted', async ({
+	navigationMenuWidgetPage,
+	page,
+	site,
+	widgetPagePage,
+}) => {
+	const apiHelpers = new ApiHelpers(page);
+
+	const layoutName = getRandomString();
+
+	const layout = await apiHelpers.jsonWebServicesLayout.addLayout({
+		groupId: site.id,
+		title: layoutName,
+	});
+
+	const navigationMenuName = getRandomString();
+	const urlItemName = getRandomString();
+	const navigationMenuERC = getRandomString();
+
+	await apiHelpers.headlessAdminSite.postSiteNavigationMenu(
+		site.externalReferenceCode,
+		{
+			externalReferenceCode: navigationMenuERC,
+			name: navigationMenuName,
+			navigationMenuItems: [
+				{
+					name_i18n: {en_US: urlItemName},
+					navigationMenuItemSettings: {
+						url: 'https://www.liferay.com',
+					},
+					type: 'url',
+				},
+			],
+		}
+	);
+
+	await widgetPagePage.goto(layout, site.friendlyUrlPath);
+
+	await navigationMenuWidgetPage.openConfigurationModal(layoutName);
+
+	await navigationMenuWidgetPage.selectCustomNavigationMenu(
+		navigationMenuName
+	);
+
+	await navigationMenuWidgetPage.saveAndCloseConfigurationModal();
+
+	await expect(page.getByRole('menuitem', {name: urlItemName})).toBeVisible();
+
+	await apiHelpers.headlessAdminSite.deleteSiteNavigationMenu(
+		site.externalReferenceCode,
+		navigationMenuERC
+	);
+
+	await widgetPagePage.goto(layout, site.friendlyUrlPath);
+
+	await expect(page.getByRole('menuitem', {name: layoutName})).toBeVisible();
+});
+
 test(
 	'Select global Navigation Menu in normal site',
 	{
 		tag: '@LPD-50258',
 	},
-	async ({
-		apiHelpers,
-		navigationMenuWidgetPage,
-		navigationMenusPage,
-		page,
-		site,
-		widgetPagePage,
-	}) => {
-		try {
-			const navigationMenuName = getRandomString();
+	async ({apiHelpers, navigationMenuWidgetPage, site, widgetPagePage}) => {
+		const navigationMenuName = getRandomString();
 
-			await navigationMenusPage.addNavigationMenuToGlobalSite(
-				navigationMenuName
-			);
+		const globalSite = await getGlobalSite(apiHelpers);
 
-			const layoutName = getRandomString();
+		await apiHelpers.headlessAdminSite.postSiteNavigationMenu(
+			globalSite.externalReferenceCode,
+			{
+				name: navigationMenuName,
+			}
+		);
 
-			const layout = await apiHelpers.jsonWebServicesLayout.addLayout({
-				groupId: site.id,
-				title: layoutName,
-			});
+		const layoutName = getRandomString();
 
-			await widgetPagePage.goto(layout, site.friendlyUrlPath);
+		const layout = await apiHelpers.jsonWebServicesLayout.addLayout({
+			groupId: site.id,
+			title: layoutName,
+		});
 
-			await navigationMenuWidgetPage.openConfigurationModal(layoutName);
+		await widgetPagePage.goto(layout, site.friendlyUrlPath);
 
-			await navigationMenuWidgetPage.selectCustomNavigationMenu(
-				navigationMenuName
-			);
+		await navigationMenuWidgetPage.openConfigurationModal(layoutName);
 
-			await navigationMenuWidgetPage.saveAndCloseConfigurationModal();
-		}
-		finally {
-			await navigationMenusPage.gotoGlobalSiteNavigationMenuPortlet();
+		await navigationMenuWidgetPage.selectCustomNavigationMenu(
+			navigationMenuName
+		);
 
-			await page.waitForTimeout(1500);
-
-			await page.getByLabel('Select All Items on the Page').check();
-
-			await page.getByRole('button', {name: 'Delete'}).click();
-
-			await page
-				.getByLabel('Delete Navigation Menus')
-				.getByRole('button', {name: 'Delete'})
-				.click();
-		}
+		await navigationMenuWidgetPage.saveAndCloseConfigurationModal();
 	}
 );
 
@@ -827,85 +904,70 @@ test(
 	{
 		tag: '@LPD-50258',
 	},
-	async ({
-		apiHelpers,
-		navigationMenuWidgetPage,
-		navigationMenusPage,
-		page,
-		widgetPagePage,
-	}) => {
-		let parentSiteId: string;
+	async ({navigationMenuWidgetPage, page, widgetPagePage}) => {
+		const apiHelpers = new ApiHelpers(page);
 
-		let childSiteId: string;
+		// Create sites
 
-		let grandchildSiteId: string;
+		const parentSite = await apiHelpers.headlessAdminSite.postSite({
+			name: getRandomString(),
+		});
 
-		try {
+		const childSite = await apiHelpers.headlessAdminSite.postSite({
+			name: getRandomString(),
+			parentSiteExternalReferenceCode: parentSite.externalReferenceCode,
+		});
 
-			// Create sites
+		const grandchildSite = await apiHelpers.headlessAdminSite.postSite({
+			name: getRandomString(),
+			parentSiteExternalReferenceCode: childSite.externalReferenceCode,
+		});
 
-			const parentSite = await apiHelpers.headlessSite.createSite({
-				name: getRandomString(),
-			});
+		// Add Layout to the grandchild site
 
-			parentSiteId = parentSite.id;
+		const layoutName = getRandomString();
 
-			const childSite = await apiHelpers.headlessSite.createSite({
-				name: getRandomString(),
-				parentSiteKey: parentSite.name,
-			});
+		const layout = await apiHelpers.jsonWebServicesLayout.addLayout({
+			groupId: String(grandchildSite.id),
+			title: layoutName,
+		});
 
-			childSiteId = childSite.id;
+		// Add Navigation Menu to the Parent site
 
-			const grandchildSite = await apiHelpers.headlessSite.createSite({
-				name: getRandomString(),
-				parentSiteKey: childSite.name,
-			});
+		const navigationMenuERC = getRandomString();
+		const navigationMenuName = getRandomString();
+		const urlItemName = getRandomString();
 
-			grandchildSiteId = grandchildSite.id;
+		await apiHelpers.headlessAdminSite.postSiteNavigationMenu(
+			parentSite.externalReferenceCode,
+			{
+				externalReferenceCode: navigationMenuERC,
+				name: navigationMenuName,
+				navigationMenuItems: [
+					{
+						name_i18n: {en_US: urlItemName},
+						navigationMenuItemSettings: {
+							url: 'https://www.liferay.com',
+						},
+						type: 'url',
+					},
+				],
+			}
+		);
 
-			// Add Layout to the grandchild site
+		await widgetPagePage.goto(layout, grandchildSite.friendlyUrlPath);
 
-			const layoutName = getRandomString();
+		await navigationMenuWidgetPage.openConfigurationModal(layoutName);
 
-			const layout = await apiHelpers.jsonWebServicesLayout.addLayout({
-				groupId: grandchildSite.id,
-				title: layoutName,
-			});
+		await navigationMenuWidgetPage.selectCustomNavigationMenu(
+			navigationMenuName
+		);
 
-			// Add Navigation Menu to the Parent site
+		await navigationMenuWidgetPage.saveAndCloseConfigurationModal();
 
-			await navigationMenusPage.goto(parentSite.friendlyUrlPath);
-
-			const navigationMenuName = getRandomString();
-
-			await navigationMenusPage.createNavigationMenu(navigationMenuName);
-
-			const urlItemName = getRandomString();
-
-			await navigationMenusPage.addURLItem(urlItemName);
-
-			await widgetPagePage.goto(layout, grandchildSite.friendlyUrlPath);
-
-			await navigationMenuWidgetPage.openConfigurationModal(layoutName);
-
-			await navigationMenuWidgetPage.selectCustomNavigationMenu(
-				navigationMenuName
-			);
-
-			await navigationMenuWidgetPage.saveAndCloseConfigurationModal();
-
-			await expect(
-				page.getByRole('menuitem', {name: urlItemName})
-			).toBeVisible();
-		}
-		finally {
-			await apiHelpers.headlessSite.deleteSite(grandchildSiteId);
-
-			await apiHelpers.headlessSite.deleteSite(childSiteId);
-
-			await apiHelpers.headlessSite.deleteSite(parentSiteId);
-		}
+		await expect(
+			page.getByRole('menuitem', {name: urlItemName})
+		).toBeVisible();
 	}
 );
 
@@ -917,63 +979,60 @@ test(
 	async ({
 		apiHelpers,
 		navigationMenuWidgetPage,
-		navigationMenusPage,
 		page,
 		site,
 		widgetPagePage,
 	}) => {
-		let childSiteId: string;
 
-		try {
+		// Create Navigation Menu
 
-			// Create Navigation Menu
+		const navigationMenuName = getRandomString();
+		const urlItemName = getRandomString();
 
-			await navigationMenusPage.goto(site.friendlyUrlPath);
+		await apiHelpers.headlessAdminSite.postSiteNavigationMenu(
+			site.externalReferenceCode,
+			{
+				name: navigationMenuName,
+				navigationMenuItems: [
+					{
+						name_i18n: {en_US: urlItemName},
+						navigationMenuItemSettings: {
+							url: 'https://www.liferay.com',
+						},
+						type: 'url',
+					},
+				],
+			}
+		);
 
-			const navigationMenuName = getRandomString();
+		const childSiteName = getRandomString();
 
-			await navigationMenusPage.createNavigationMenu(navigationMenuName);
+		const childSite = await apiHelpers.headlessAdminSite.postSite({
+			name: childSiteName,
+			parentSiteExternalReferenceCode: site.externalReferenceCode,
+		});
 
-			// Create Navigation Menu Items
+		const layoutName = getRandomString();
 
-			const urlItemName = getRandomString();
+		const layout = await apiHelpers.jsonWebServicesLayout.addLayout({
+			externalReferenceCode: getRandomString(),
+			groupId: childSite.id,
+			title: layoutName,
+		});
 
-			await navigationMenusPage.addURLItem(urlItemName);
+		await widgetPagePage.goto(layout, childSite.friendlyUrlPath);
 
-			const childSiteName = getRandomString();
+		await navigationMenuWidgetPage.openConfigurationModal(
+			layout.nameCurrentValue
+		);
 
-			const childSite = await apiHelpers.headlessSite.createSite({
-				name: childSiteName,
-				parentSiteKey: site.name,
-			});
+		await navigationMenuWidgetPage.selectCustomNavigationMenu(
+			navigationMenuName
+		);
 
-			childSiteId = childSite.id;
+		await navigationMenuWidgetPage.saveAndCloseConfigurationModal();
 
-			const layoutName = getRandomString();
-
-			const layout = await apiHelpers.jsonWebServicesLayout.addLayout({
-				externalReferenceCode: getRandomString(),
-				groupId: childSite.id,
-				title: layoutName,
-			});
-
-			await widgetPagePage.goto(layout, childSite.friendlyUrlPath);
-
-			await navigationMenuWidgetPage.openConfigurationModal(
-				layout.nameCurrentValue
-			);
-
-			await navigationMenuWidgetPage.selectCustomNavigationMenu(
-				navigationMenuName
-			);
-
-			await navigationMenuWidgetPage.saveAndCloseConfigurationModal();
-
-			await expect(page.getByText(urlItemName)).toBeVisible();
-		}
-		finally {
-			await apiHelpers.headlessSite.deleteSite(childSiteId);
-		}
+		await expect(page.getByText(urlItemName)).toBeVisible();
 	}
 );
 
@@ -995,6 +1054,8 @@ test(
 		});
 
 		await widgetPagePage.goto(parentLayout, site.friendlyUrlPath);
+
+		await closeProductMenu(page);
 
 		await widgetPagePage.clickOnAction('Menu Display', 'Configuration');
 
@@ -1041,7 +1102,6 @@ test(
 	async ({
 		apiHelpers,
 		navigationMenuWidgetPage,
-		navigationMenusPage,
 		page,
 		site,
 		widgetPagePage,
@@ -1059,37 +1119,82 @@ test(
 
 		const layoutNames = [layoutName2, layoutName3, layoutName4];
 
-		const layout = await apiHelpers.jsonWebServicesLayout.addLayout({
-			externalReferenceCode: getRandomString(),
-			groupId: site.id,
-			title: layoutName1,
-		});
+		const layouts = [];
 
-		for (let index = 0; index < 3; index++) {
+		layouts.push(
 			await apiHelpers.jsonWebServicesLayout.addLayout({
 				externalReferenceCode: getRandomString(),
 				groupId: site.id,
-				title: layoutNames[index],
-			});
+				title: layoutName1,
+			})
+		);
+
+		for (const name of layoutNames) {
+			layouts.push(
+				await apiHelpers.jsonWebServicesLayout.addLayout({
+					externalReferenceCode: getRandomString(),
+					groupId: site.id,
+					title: name,
+				})
+			);
 		}
-
-		// Create Navigation Menu
-
-		await navigationMenusPage.goto(site.friendlyUrlPath);
 
 		const navigationMenuName = getRandomString();
 
-		await navigationMenusPage.createNavigationMenu(navigationMenuName);
+		await apiHelpers.headlessAdminSite.postSiteNavigationMenu(
+			site.externalReferenceCode,
+			{
+				name: navigationMenuName,
+				navigationMenuItems: [
+					{
+						navigationMenuItemSettings: {
+							externalReferenceCode:
+								layouts[0].externalReferenceCode,
+							privatePage: false,
+							title: layoutName1,
+						},
+						navigationMenuItems: [
+							{
+								navigationMenuItemSettings: {
+									externalReferenceCode:
+										layouts[1].externalReferenceCode,
+									privatePage: false,
+									title: layoutName2,
+								},
+								navigationMenuItems: [
+									{
+										navigationMenuItemSettings: {
+											externalReferenceCode:
+												layouts[2]
+													.externalReferenceCode,
+											privatePage: false,
+											title: layoutName3,
+										},
+										navigationMenuItems: [
+											{
+												navigationMenuItemSettings: {
+													externalReferenceCode:
+														layouts[3]
+															.externalReferenceCode,
+													privatePage: false,
+													title: layoutName4,
+												},
+												type: 'layout',
+											},
+										],
+										type: 'layout',
+									},
+								],
+								type: 'layout',
+							},
+						],
+						type: 'layout',
+					},
+				],
+			}
+		);
 
-		// Create Page Navigation Menu Items on different levels
-
-		await navigationMenusPage.addPageItem([layoutName1]);
-
-		await navigationMenusPage.addChildPage(layoutName1, layoutName2);
-
-		await navigationMenusPage.addChildPage(layoutName2, layoutName3);
-
-		await navigationMenusPage.addChildPage(layoutName3, layoutName4);
+		const layout = layouts[0];
 
 		// Select the created Navigation Menu in the Navigation Menu Widget
 
@@ -1552,9 +1657,7 @@ test(
 		await apiHelpers.jsonWebServicesLayoutPageTemplateEntry.addDisplayPageLayoutPageTemplateEntry(
 			{
 				classNameId: className.classNameId,
-				classTypeId: String(
-					await getBasicWebContentStructureId(apiHelpers)
-				),
+				classTypeKey: 'BASIC-WEB-CONTENT',
 				groupId: site.id,
 				name: displayPageTemplateName,
 			}
@@ -1620,7 +1723,6 @@ test(
 	async ({
 		apiHelpers,
 		navigationMenuWidgetPage,
-		navigationMenusPage,
 		page,
 		site,
 		widgetPagePage,
@@ -1630,40 +1732,38 @@ test(
 			title: getRandomString(),
 		});
 
-		await navigationMenusPage.goto(site.friendlyUrlPath);
-
 		const navigationMenuName = getRandomString();
-
-		await navigationMenusPage.createNavigationMenu(navigationMenuName);
-
 		const parentSubmenuItemName = getRandomString();
-
-		await navigationMenusPage.addSubmenuItem(parentSubmenuItemName);
-
 		const childSubmenuItemName = getRandomString();
-
-		await navigationMenusPage.addSubmenuItem(
-			childSubmenuItemName,
-			parentSubmenuItemName
-		);
-
 		const urlItemName = getRandomString();
 
-		await navigationMenusPage.addURLItem(urlItemName);
-
-		const source = page.getByRole('button', {name: 'Move ' + urlItemName});
-		const target = page
-			.locator('.site_navigation_menu_editor_MenuItem')
-			.nth(1);
-
-		const targetRect = await target.evaluate((element) =>
-			element.getBoundingClientRect()
+		await apiHelpers.headlessAdminSite.postSiteNavigationMenu(
+			site.externalReferenceCode,
+			{
+				name: navigationMenuName,
+				navigationMenuItems: [
+					{
+						name_i18n: {en_US: parentSubmenuItemName},
+						navigationMenuItems: [
+							{
+								name_i18n: {en_US: childSubmenuItemName},
+								navigationMenuItems: [
+									{
+										name_i18n: {en_US: urlItemName},
+										navigationMenuItemSettings: {
+											url: 'https://www.liferay.com',
+										},
+										type: 'url',
+									},
+								],
+								type: 'node',
+							},
+						],
+						type: 'node',
+					},
+				],
+			}
 		);
-
-		await source.hover();
-		await page.mouse.down();
-		await page.mouse.move(targetRect.right - 1, targetRect.bottom - 1);
-		await page.mouse.up();
 
 		await widgetPagePage.goto(layout, site.friendlyUrlPath);
 
@@ -1691,7 +1791,6 @@ test(
 	async ({
 		apiHelpers,
 		navigationMenuWidgetPage,
-		navigationMenusPage,
 		page,
 		pagesAdminPage,
 		site,
@@ -1721,38 +1820,54 @@ test(
 			['guest_ACTION_VIEW']
 		);
 
-		await navigationMenusPage.goto(site.friendlyUrlPath);
-
 		const navigationMenuName = getRandomString();
-
-		await navigationMenusPage.createNavigationMenu(navigationMenuName);
-
 		const parentSubmenuItemName = getRandomString();
-
-		await navigationMenusPage.addSubmenuItem(parentSubmenuItemName);
-
 		const firstChildSubmenuItemName = getRandomString();
-
-		await navigationMenusPage.addSubmenuItem(
-			firstChildSubmenuItemName,
-			parentSubmenuItemName
-		);
-
-		await navigationMenusPage.addChildPage(
-			firstChildSubmenuItemName,
-			layoutWithViewPermission.nameCurrentValue
-		);
-
 		const secondChildSubmenuItemName = getRandomString();
 
-		await navigationMenusPage.addSubmenuItem(
-			secondChildSubmenuItemName,
-			parentSubmenuItemName
-		);
-
-		await navigationMenusPage.addChildPage(
-			secondChildSubmenuItemName,
-			layoutWithoutViewPermission.nameCurrentValue
+		await apiHelpers.headlessAdminSite.postSiteNavigationMenu(
+			site.externalReferenceCode,
+			{
+				name: navigationMenuName,
+				navigationMenuItems: [
+					{
+						name_i18n: {en_US: parentSubmenuItemName},
+						navigationMenuItems: [
+							{
+								name_i18n: {en_US: firstChildSubmenuItemName},
+								navigationMenuItems: [
+									{
+										navigationMenuItemSettings: {
+											externalReferenceCode:
+												layoutWithViewPermission.externalReferenceCode,
+											privatePage: false,
+											title: layoutWithViewPermission.nameCurrentValue,
+										},
+										type: 'layout',
+									},
+								],
+								type: 'node',
+							},
+							{
+								name_i18n: {en_US: secondChildSubmenuItemName},
+								navigationMenuItems: [
+									{
+										navigationMenuItemSettings: {
+											externalReferenceCode:
+												layoutWithoutViewPermission.externalReferenceCode,
+											privatePage: false,
+											title: layoutWithoutViewPermission.nameCurrentValue,
+										},
+										type: 'layout',
+									},
+								],
+								type: 'node',
+							},
+						],
+						type: 'node',
+					},
+				],
+			}
 		);
 
 		await widgetPagePage.goto(layout, site.friendlyUrlPath);

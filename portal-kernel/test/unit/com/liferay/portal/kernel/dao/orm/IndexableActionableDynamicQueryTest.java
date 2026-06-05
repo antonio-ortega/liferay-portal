@@ -12,9 +12,15 @@ import com.liferay.portal.kernel.search.IndexWriterHelper;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistry;
 
+import java.lang.reflect.Method;
+
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -29,7 +35,21 @@ import org.osgi.framework.ServiceRegistration;
 public class IndexableActionableDynamicQueryTest {
 
 	@Before
-	public void setUp() {
+	public void setUp() throws Exception {
+		Mockito.doAnswer(
+			invocation -> {
+				Collection<Document> documents = invocation.getArgument(1);
+
+				_updatedDocuments.addAll(documents);
+
+				return null;
+			}
+		).when(
+			indexWriterHelper
+		).updateDocuments(
+			Mockito.anyLong(), Mockito.anyCollection(), Mockito.anyBoolean()
+		);
+
 		_indexWriterHelperServiceRegistration = _bundleContext.registerService(
 			IndexWriterHelper.class, indexWriterHelper, null);
 		_indexerRegistryServiceRegistration = _bundleContext.registerService(
@@ -56,39 +76,34 @@ public class IndexableActionableDynamicQueryTest {
 	}
 
 	@Test
-	public void testAddDocuments() throws Exception {
+	public void testAddDocument() throws Exception {
 		indexableActionableDynamicQuery.setInterval(1);
 
-		indexableActionableDynamicQuery.addDocuments(document1, document2);
+		_addDocument(document1);
 
-		verifyDocumentsUpdated(document1, document2);
+		verifyDocumentsUpdated(document1);
 	}
 
 	@Test
-	public void testAddDocumentsWithinInterval() throws Exception {
+	public void testAddDocumentWithinInterval() throws Exception {
 		indexableActionableDynamicQuery.setInterval(3);
 
-		indexableActionableDynamicQuery.addDocuments(document1, document2);
+		_addDocument(document1);
+		_addDocument(document2);
 
 		verifyNoDocumentsUpdated();
 
-		indexableActionableDynamicQuery.addDocuments(document3);
+		_addDocument(document3);
 
 		verifyDocumentsUpdated(document1, document2, document3);
 	}
 
-	protected void verifyDocumentsUpdated(Document... documents)
-		throws Exception {
-
-		Mockito.verify(
-			indexWriterHelper
-		).updateDocuments(
-			0, Arrays.asList(documents), false
-		);
+	protected void verifyDocumentsUpdated(Document... documents) {
+		Assert.assertEquals(Arrays.asList(documents), _updatedDocuments);
 	}
 
 	protected void verifyNoDocumentsUpdated() {
-		Mockito.verifyNoInteractions(indexWriterHelper);
+		Assert.assertTrue(_updatedDocuments.isEmpty());
 	}
 
 	protected Document document1 = Mockito.mock(Document.class);
@@ -99,14 +114,25 @@ public class IndexableActionableDynamicQueryTest {
 	protected IndexWriterHelper indexWriterHelper = Mockito.mock(
 		IndexWriterHelper.class);
 
+	private void _addDocument(Document document) throws Exception {
+		Method method = IndexableActionableDynamicQuery.class.getDeclaredMethod(
+			"_addDocument", Document.class, List.class);
+
+		method.setAccessible(true);
+
+		method.invoke(indexableActionableDynamicQuery, document, _documents);
+	}
+
 	private static final BundleContext _bundleContext =
 		SystemBundleUtil.getBundleContext();
 
+	private final List<Document> _documents = new ArrayList<>();
 	private ServiceRegistration<IndexerRegistry>
 		_indexerRegistryServiceRegistration;
 	private ServiceRegistration<IndexWriterHelper>
 		_indexWriterHelperServiceRegistration;
 	private ServiceRegistration<PortalExecutorManager>
 		_portalExecutorManagerServiceRegistration;
+	private final List<Document> _updatedDocuments = new ArrayList<>();
 
 }

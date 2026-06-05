@@ -178,7 +178,6 @@ public class FreeMarkerFragmentEntryProcessorTest {
 		fragmentEntryLink.setGroupId(fragmentEntry.getGroupId());
 		fragmentEntryLink.setFragmentEntryERC(
 			fragmentEntry.getExternalReferenceCode());
-		fragmentEntryLink.setFragmentEntryScopeERC(fragmentEntry.getScopeERC());
 		fragmentEntryLink.setHtml(fragmentEntry.getHtml());
 
 		Assert.assertEquals(

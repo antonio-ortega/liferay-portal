@@ -163,3 +163,4 @@ public interface DSEnvelopeResource {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:77569529

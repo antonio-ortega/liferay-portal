@@ -6,22 +6,23 @@
 import {Locator, Page, expect} from '@playwright/test';
 
 import {clickAndExpectToBeVisible} from '../../utils/clickAndExpectToBeVisible';
-import {ApplicationsMenuPage} from '../product-navigation-applications-menu/ApplicationsMenuPage';
+import {GlobalMenuPage} from '../product-navigation-applications-menu/GlobalMenuPage';
 
 export class ViewAttributesPage {
 	readonly addCustomFieldButton: Locator;
-	readonly applicationsMenuPage: ApplicationsMenuPage;
+	readonly globalMenuPage: GlobalMenuPage;
 	readonly customFieldTableRowLink: (
 		customFieldName: string
 	) => Promise<Locator>;
 	readonly page: Page;
+	readonly selectAllItemsCheckbox: Locator;
 	readonly successMessage: Locator;
 
 	constructor(page: Page) {
 		this.addCustomFieldButton = page.getByRole('link', {
 			name: 'Add Custom Field',
 		});
-		this.applicationsMenuPage = new ApplicationsMenuPage(page);
+		this.globalMenuPage = new GlobalMenuPage(page);
 		this.customFieldTableRowLink = async (customFieldName: string) => {
 			const customFieldTableRow = await page
 				.getByRole('row')
@@ -36,13 +37,20 @@ export class ViewAttributesPage {
 			);
 		};
 		this.page = page;
+		this.selectAllItemsCheckbox = page.getByRole('checkbox', {
+			name: 'Select All Items on the Page',
+		});
 		this.successMessage = page.getByText(
 			'Your request completed successfully'
 		);
 	}
 
 	async goto(resource: string, forceReload = false) {
-		await this.applicationsMenuPage.goToCustomFields(forceReload);
+		if (forceReload) {
+			this.globalMenuPage.goToHome();
+		}
+
+		await this.globalMenuPage.goToControlPanel('Custom Fields');
 
 		await this.page
 			.getByRole('link', {exact: true, name: resource})
@@ -66,7 +74,22 @@ export class ViewAttributesPage {
 			trigger: row.locator('.dropdown-toggle'),
 		});
 
-		await expect(await this.successMessage).toBeVisible();
-		await this.page.getByLabel('Close').click();
+		await expect(this.successMessage).toBeVisible();
+
+		await this.page.locator('.alert').getByLabel('Close').click();
+	}
+
+	async deleteCustomFields(resource: string) {
+		await this.goto(resource);
+
+		await this.addCustomFieldButton.waitFor();
+
+		await this.selectAllItemsCheckbox.check();
+
+		await this.page.getByRole('button', {name: 'Delete'}).click();
+
+		await expect(this.successMessage).toBeVisible();
+
+		await this.page.locator('.alert').getByLabel('Close').click();
 	}
 }

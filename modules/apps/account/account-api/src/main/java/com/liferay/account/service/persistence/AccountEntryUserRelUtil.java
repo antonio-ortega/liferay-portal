@@ -36,6 +36,22 @@ public class AccountEntryUserRelUtil {
 	 */
 
 	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(List)
+	 */
+	public static void cacheResult(
+		List<AccountEntryUserRel> accountEntryUserRels) {
+
+		getPersistence().cacheResult(accountEntryUserRels);
+	}
+
+	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(com.liferay.portal.kernel.model.BaseModel)
+	 */
+	public static void cacheResult(AccountEntryUserRel accountEntryUserRel) {
+		getPersistence().cacheResult(accountEntryUserRel);
+	}
+
+	/**
 	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#clearCache()
 	 */
 	public static void clearCache() {
@@ -114,62 +130,10 @@ public class AccountEntryUserRelUtil {
 	}
 
 	/**
-	 * Returns all the account entry user rels where accountEntryId = &#63;.
-	 *
-	 * @param accountEntryId the account entry ID
-	 * @return the matching account entry user rels
-	 */
-	public static List<AccountEntryUserRel> findByAccountEntryId(
-		long accountEntryId) {
-
-		return getPersistence().findByAccountEntryId(accountEntryId);
-	}
-
-	/**
-	 * Returns a range of all the account entry user rels where accountEntryId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AccountEntryUserRelModelImpl</code>.
-	 * </p>
-	 *
-	 * @param accountEntryId the account entry ID
-	 * @param start the lower bound of the range of account entry user rels
-	 * @param end the upper bound of the range of account entry user rels (not inclusive)
-	 * @return the range of matching account entry user rels
-	 */
-	public static List<AccountEntryUserRel> findByAccountEntryId(
-		long accountEntryId, int start, int end) {
-
-		return getPersistence().findByAccountEntryId(
-			accountEntryId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the account entry user rels where accountEntryId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AccountEntryUserRelModelImpl</code>.
-	 * </p>
-	 *
-	 * @param accountEntryId the account entry ID
-	 * @param start the lower bound of the range of account entry user rels
-	 * @param end the upper bound of the range of account entry user rels (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching account entry user rels
-	 */
-	public static List<AccountEntryUserRel> findByAccountEntryId(
-		long accountEntryId, int start, int end,
-		OrderByComparator<AccountEntryUserRel> orderByComparator) {
-
-		return getPersistence().findByAccountEntryId(
-			accountEntryId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the account entry user rels where accountEntryId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AccountEntryUserRelModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.account.model.impl.AccountEntryUserRelModelImpl</code>.
 	 * </p>
 	 *
 	 * @param accountEntryId the account entry ID
@@ -221,56 +185,6 @@ public class AccountEntryUserRelUtil {
 	}
 
 	/**
-	 * Returns the last account entry user rel in the ordered set where accountEntryId = &#63;.
-	 *
-	 * @param accountEntryId the account entry ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching account entry user rel
-	 * @throws NoSuchEntryUserRelException if a matching account entry user rel could not be found
-	 */
-	public static AccountEntryUserRel findByAccountEntryId_Last(
-			long accountEntryId,
-			OrderByComparator<AccountEntryUserRel> orderByComparator)
-		throws com.liferay.account.exception.NoSuchEntryUserRelException {
-
-		return getPersistence().findByAccountEntryId_Last(
-			accountEntryId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last account entry user rel in the ordered set where accountEntryId = &#63;.
-	 *
-	 * @param accountEntryId the account entry ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching account entry user rel, or <code>null</code> if a matching account entry user rel could not be found
-	 */
-	public static AccountEntryUserRel fetchByAccountEntryId_Last(
-		long accountEntryId,
-		OrderByComparator<AccountEntryUserRel> orderByComparator) {
-
-		return getPersistence().fetchByAccountEntryId_Last(
-			accountEntryId, orderByComparator);
-	}
-
-	/**
-	 * Returns the account entry user rels before and after the current account entry user rel in the ordered set where accountEntryId = &#63;.
-	 *
-	 * @param accountEntryUserRelId the primary key of the current account entry user rel
-	 * @param accountEntryId the account entry ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next account entry user rel
-	 * @throws NoSuchEntryUserRelException if a account entry user rel with the primary key could not be found
-	 */
-	public static AccountEntryUserRel[] findByAccountEntryId_PrevAndNext(
-			long accountEntryUserRelId, long accountEntryId,
-			OrderByComparator<AccountEntryUserRel> orderByComparator)
-		throws com.liferay.account.exception.NoSuchEntryUserRelException {
-
-		return getPersistence().findByAccountEntryId_PrevAndNext(
-			accountEntryUserRelId, accountEntryId, orderByComparator);
-	}
-
-	/**
 	 * Removes all the account entry user rels where accountEntryId = &#63; from the database.
 	 *
 	 * @param accountEntryId the account entry ID
@@ -290,61 +204,10 @@ public class AccountEntryUserRelUtil {
 	}
 
 	/**
-	 * Returns all the account entry user rels where accountUserId = &#63;.
-	 *
-	 * @param accountUserId the account user ID
-	 * @return the matching account entry user rels
-	 */
-	public static List<AccountEntryUserRel> findByAccountUserId(
-		long accountUserId) {
-
-		return getPersistence().findByAccountUserId(accountUserId);
-	}
-
-	/**
-	 * Returns a range of all the account entry user rels where accountUserId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AccountEntryUserRelModelImpl</code>.
-	 * </p>
-	 *
-	 * @param accountUserId the account user ID
-	 * @param start the lower bound of the range of account entry user rels
-	 * @param end the upper bound of the range of account entry user rels (not inclusive)
-	 * @return the range of matching account entry user rels
-	 */
-	public static List<AccountEntryUserRel> findByAccountUserId(
-		long accountUserId, int start, int end) {
-
-		return getPersistence().findByAccountUserId(accountUserId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the account entry user rels where accountUserId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AccountEntryUserRelModelImpl</code>.
-	 * </p>
-	 *
-	 * @param accountUserId the account user ID
-	 * @param start the lower bound of the range of account entry user rels
-	 * @param end the upper bound of the range of account entry user rels (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching account entry user rels
-	 */
-	public static List<AccountEntryUserRel> findByAccountUserId(
-		long accountUserId, int start, int end,
-		OrderByComparator<AccountEntryUserRel> orderByComparator) {
-
-		return getPersistence().findByAccountUserId(
-			accountUserId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the account entry user rels where accountUserId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AccountEntryUserRelModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.account.model.impl.AccountEntryUserRelModelImpl</code>.
 	 * </p>
 	 *
 	 * @param accountUserId the account user ID
@@ -396,56 +259,6 @@ public class AccountEntryUserRelUtil {
 	}
 
 	/**
-	 * Returns the last account entry user rel in the ordered set where accountUserId = &#63;.
-	 *
-	 * @param accountUserId the account user ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching account entry user rel
-	 * @throws NoSuchEntryUserRelException if a matching account entry user rel could not be found
-	 */
-	public static AccountEntryUserRel findByAccountUserId_Last(
-			long accountUserId,
-			OrderByComparator<AccountEntryUserRel> orderByComparator)
-		throws com.liferay.account.exception.NoSuchEntryUserRelException {
-
-		return getPersistence().findByAccountUserId_Last(
-			accountUserId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last account entry user rel in the ordered set where accountUserId = &#63;.
-	 *
-	 * @param accountUserId the account user ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching account entry user rel, or <code>null</code> if a matching account entry user rel could not be found
-	 */
-	public static AccountEntryUserRel fetchByAccountUserId_Last(
-		long accountUserId,
-		OrderByComparator<AccountEntryUserRel> orderByComparator) {
-
-		return getPersistence().fetchByAccountUserId_Last(
-			accountUserId, orderByComparator);
-	}
-
-	/**
-	 * Returns the account entry user rels before and after the current account entry user rel in the ordered set where accountUserId = &#63;.
-	 *
-	 * @param accountEntryUserRelId the primary key of the current account entry user rel
-	 * @param accountUserId the account user ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next account entry user rel
-	 * @throws NoSuchEntryUserRelException if a account entry user rel with the primary key could not be found
-	 */
-	public static AccountEntryUserRel[] findByAccountUserId_PrevAndNext(
-			long accountEntryUserRelId, long accountUserId,
-			OrderByComparator<AccountEntryUserRel> orderByComparator)
-		throws com.liferay.account.exception.NoSuchEntryUserRelException {
-
-		return getPersistence().findByAccountUserId_PrevAndNext(
-			accountEntryUserRelId, accountUserId, orderByComparator);
-	}
-
-	/**
 	 * Removes all the account entry user rels where accountUserId = &#63; from the database.
 	 *
 	 * @param accountUserId the account user ID
@@ -477,19 +290,6 @@ public class AccountEntryUserRelUtil {
 		throws com.liferay.account.exception.NoSuchEntryUserRelException {
 
 		return getPersistence().findByAEI_AUI(accountEntryId, accountUserId);
-	}
-
-	/**
-	 * Returns the account entry user rel where accountEntryId = &#63; and accountUserId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
-	 *
-	 * @param accountEntryId the account entry ID
-	 * @param accountUserId the account user ID
-	 * @return the matching account entry user rel, or <code>null</code> if a matching account entry user rel could not be found
-	 */
-	public static AccountEntryUserRel fetchByAEI_AUI(
-		long accountEntryId, long accountUserId) {
-
-		return getPersistence().fetchByAEI_AUI(accountEntryId, accountUserId);
 	}
 
 	/**
@@ -530,26 +330,6 @@ public class AccountEntryUserRelUtil {
 	 */
 	public static int countByAEI_AUI(long accountEntryId, long accountUserId) {
 		return getPersistence().countByAEI_AUI(accountEntryId, accountUserId);
-	}
-
-	/**
-	 * Caches the account entry user rel in the entity cache if it is enabled.
-	 *
-	 * @param accountEntryUserRel the account entry user rel
-	 */
-	public static void cacheResult(AccountEntryUserRel accountEntryUserRel) {
-		getPersistence().cacheResult(accountEntryUserRel);
-	}
-
-	/**
-	 * Caches the account entry user rels in the entity cache if it is enabled.
-	 *
-	 * @param accountEntryUserRels the account entry user rels
-	 */
-	public static void cacheResult(
-		List<AccountEntryUserRel> accountEntryUserRels) {
-
-		getPersistence().cacheResult(accountEntryUserRels);
 	}
 
 	/**
@@ -608,84 +388,119 @@ public class AccountEntryUserRelUtil {
 	}
 
 	/**
-	 * Returns all the account entry user rels.
+	 * Returns the account entry user rel where accountEntryId = &#63; and accountUserId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
 	 *
-	 * @return the account entry user rels
+	 * @param accountEntryId the account entry ID
+	 * @param accountUserId the account user ID
+	 * @return the matching account entry user rel, or <code>null</code> if a matching account entry user rel could not be found
 	 */
-	public static List<AccountEntryUserRel> findAll() {
-		return getPersistence().findAll();
+	public static AccountEntryUserRel fetchByAEI_AUI(
+		long accountEntryId, long accountUserId) {
+
+		return getPersistence().fetchByAEI_AUI(accountEntryId, accountUserId);
 	}
 
 	/**
-	 * Returns a range of all the account entry user rels.
+	 * Returns all the account entry user rels where accountEntryId = &#63;.
+	 *
+	 * @param accountEntryId the account entry ID
+	 * @return the matching account entry user rels
+	 */
+	public static List<AccountEntryUserRel> findByAccountEntryId(
+		long accountEntryId) {
+
+		return getPersistence().findByAccountEntryId(accountEntryId);
+	}
+
+	/**
+	 * Returns a range of all the account entry user rels where accountEntryId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AccountEntryUserRelModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.account.model.impl.AccountEntryUserRelModelImpl</code>.
 	 * </p>
 	 *
+	 * @param accountEntryId the account entry ID
 	 * @param start the lower bound of the range of account entry user rels
 	 * @param end the upper bound of the range of account entry user rels (not inclusive)
-	 * @return the range of account entry user rels
+	 * @return the range of matching account entry user rels
 	 */
-	public static List<AccountEntryUserRel> findAll(int start, int end) {
-		return getPersistence().findAll(start, end);
+	public static List<AccountEntryUserRel> findByAccountEntryId(
+		long accountEntryId, int start, int end) {
+
+		return getPersistence().findByAccountEntryId(
+			accountEntryId, start, end);
 	}
 
 	/**
-	 * Returns an ordered range of all the account entry user rels.
+	 * Returns an ordered range of all the account entry user rels where accountEntryId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AccountEntryUserRelModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.account.model.impl.AccountEntryUserRelModelImpl</code>.
 	 * </p>
 	 *
+	 * @param accountEntryId the account entry ID
 	 * @param start the lower bound of the range of account entry user rels
 	 * @param end the upper bound of the range of account entry user rels (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of account entry user rels
+	 * @return the ordered range of matching account entry user rels
 	 */
-	public static List<AccountEntryUserRel> findAll(
-		int start, int end,
+	public static List<AccountEntryUserRel> findByAccountEntryId(
+		long accountEntryId, int start, int end,
 		OrderByComparator<AccountEntryUserRel> orderByComparator) {
 
-		return getPersistence().findAll(start, end, orderByComparator);
+		return getPersistence().findByAccountEntryId(
+			accountEntryId, start, end, orderByComparator);
 	}
 
 	/**
-	 * Returns an ordered range of all the account entry user rels.
+	 * Returns all the account entry user rels where accountUserId = &#63;.
+	 *
+	 * @param accountUserId the account user ID
+	 * @return the matching account entry user rels
+	 */
+	public static List<AccountEntryUserRel> findByAccountUserId(
+		long accountUserId) {
+
+		return getPersistence().findByAccountUserId(accountUserId);
+	}
+
+	/**
+	 * Returns a range of all the account entry user rels where accountUserId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AccountEntryUserRelModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.account.model.impl.AccountEntryUserRelModelImpl</code>.
 	 * </p>
 	 *
+	 * @param accountUserId the account user ID
+	 * @param start the lower bound of the range of account entry user rels
+	 * @param end the upper bound of the range of account entry user rels (not inclusive)
+	 * @return the range of matching account entry user rels
+	 */
+	public static List<AccountEntryUserRel> findByAccountUserId(
+		long accountUserId, int start, int end) {
+
+		return getPersistence().findByAccountUserId(accountUserId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the account entry user rels where accountUserId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.account.model.impl.AccountEntryUserRelModelImpl</code>.
+	 * </p>
+	 *
+	 * @param accountUserId the account user ID
 	 * @param start the lower bound of the range of account entry user rels
 	 * @param end the upper bound of the range of account entry user rels (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param useFinderCache whether to use the finder cache
-	 * @return the ordered range of account entry user rels
+	 * @return the ordered range of matching account entry user rels
 	 */
-	public static List<AccountEntryUserRel> findAll(
-		int start, int end,
-		OrderByComparator<AccountEntryUserRel> orderByComparator,
-		boolean useFinderCache) {
+	public static List<AccountEntryUserRel> findByAccountUserId(
+		long accountUserId, int start, int end,
+		OrderByComparator<AccountEntryUserRel> orderByComparator) {
 
-		return getPersistence().findAll(
-			start, end, orderByComparator, useFinderCache);
-	}
-
-	/**
-	 * Removes all the account entry user rels from the database.
-	 */
-	public static void removeAll() {
-		getPersistence().removeAll();
-	}
-
-	/**
-	 * Returns the number of account entry user rels.
-	 *
-	 * @return the number of account entry user rels
-	 */
-	public static int countAll() {
-		return getPersistence().countAll();
+		return getPersistence().findByAccountUserId(
+			accountUserId, start, end, orderByComparator);
 	}
 
 	public static AccountEntryUserRelPersistence getPersistence() {
@@ -701,3 +516,4 @@ public class AccountEntryUserRelUtil {
 	private static volatile AccountEntryUserRelPersistence _persistence;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-722235586

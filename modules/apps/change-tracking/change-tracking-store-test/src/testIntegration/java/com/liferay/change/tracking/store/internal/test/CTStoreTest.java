@@ -28,12 +28,17 @@ import com.liferay.petra.string.StringUtil;
 import com.liferay.portal.change.tracking.store.CTStoreFactory;
 import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.instance.PortalInstancePool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Company;
+import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.test.log.LogCapture;
+import com.liferay.portal.test.log.LoggerTestUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
@@ -85,6 +90,9 @@ public class CTStoreTest {
 		for (int i = 0; i < 4; i++) {
 			_ctCollections[i] = _createCTCollection();
 		}
+
+		_fileSystemStore.deleteDirectory(
+			_companyId, _REPOSITORY_ID, StringPool.BLANK);
 	}
 
 	@After
@@ -201,6 +209,39 @@ public class CTStoreTest {
 
 		_assertNoSuchCTSContent(fileName);
 		_assertFile(fileName, _DATA_3);
+	}
+
+	@Test
+	public void testDeleteCompany() throws Exception {
+
+		// Production mode, with files
+
+		_addFiles("testDir1/testFile1:v1", "testDir2/testDir3/testFile2:v1,v2");
+
+		_deleteDirectory();
+
+		_assertMethods(_DELETE_DIRECTORY_COMPANY_METHOD);
+
+		_assertFileNames(_ROOT);
+
+		// CT mode, delete company files
+
+		String fileName = "testFile";
+
+		_runInCTMode(
+			_ctCollections[0],
+			() -> {
+				_addCTFile(fileName, _DATA_1);
+				_deleteDirectory();
+
+				_assertMethods(
+					_HAS_FILE_METHOD, _DELETE_DIRECTORY_COMPANY_METHOD);
+				_assertNoSuchCTSContent(fileName);
+				_assertNoSuchFile(fileName);
+			});
+
+		_assertNoSuchCTSContent(fileName);
+		_assertNoSuchFile(fileName);
 	}
 
 	@Test
@@ -803,6 +844,44 @@ public class CTStoreTest {
 			this::_assertFile, _GET_FILE_AS_STREAM_METHOD);
 	}
 
+	@Test
+	public void testVerifyCompanyStores() throws Exception {
+		Company company = _companyLocalService.getCompany(_companyId);
+
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				_STORE_TYPE, LoggerTestUtil.WARN)) {
+
+			_addFiles("testDir1/testFile1:v1");
+
+			_verifyCompanyStores();
+
+			_assertMethods(_VERIFY_COMPANY_STORES_METHOD);
+
+			List<String> messages = logCapture.getMessages();
+
+			Assert.assertTrue(messages.toString(), messages.isEmpty());
+
+			PortalInstancePool.remove(_companyId);
+
+			_verifyCompanyStores();
+
+			_assertMethods(_VERIFY_COMPANY_STORES_METHOD);
+
+			messages = logCapture.getMessages();
+
+			Assert.assertTrue(
+				messages.toString(),
+				messages.contains(
+					StringBundler.concat(
+						"Manually remove unused store ", _companyId,
+						" that belongs to company ", _companyId,
+						" if it is no longer used anywhere else")));
+		}
+		finally {
+			PortalInstancePool.add(company);
+		}
+	}
+
 	private void _addCTFile(String fileName, byte[] data)
 		throws PortalException {
 
@@ -1024,6 +1103,10 @@ public class CTStoreTest {
 	private void _deleteCTSContent(String fileName, String version) {
 		_ctsContentLocalService.deleteCTSContent(
 			_companyId, _REPOSITORY_ID, fileName, version, _STORE_TYPE);
+	}
+
+	private void _deleteDirectory() throws Exception {
+		_ctStore.deleteDirectory(_companyId);
 	}
 
 	private void _deleteDirectory(String dirName) {
@@ -1254,6 +1337,10 @@ public class CTStoreTest {
 		return version;
 	}
 
+	private void _verifyCompanyStores() throws Exception {
+		_ctStore.verifyCompanyStores();
+	}
+
 	private static final Method _ADD_FILE_METHOD;
 
 	private static final byte[] _DATA_1 = "Data1 a".getBytes();
@@ -1261,6 +1348,8 @@ public class CTStoreTest {
 	private static final byte[] _DATA_2 = "Data2 ab".getBytes();
 
 	private static final byte[] _DATA_3 = "Data3 abc".getBytes();
+
+	private static final Method _DELETE_DIRECTORY_COMPANY_METHOD;
 
 	private static final Method _DELETE_DIRECTORY_METHOD;
 
@@ -1283,6 +1372,8 @@ public class CTStoreTest {
 	private static final String _STORE_TYPE =
 		"com.liferay.portal.store.file.system.FileSystemStore";
 
+	private static final Method _VERIFY_COMPANY_STORES_METHOD;
+
 	private static final String _VERSION_1 = Store.VERSION_DEFAULT;
 
 	private static final String _VERSION_2 = "2.0";
@@ -1292,13 +1383,6 @@ public class CTStoreTest {
 	private static final Log _log = LogFactoryUtil.getLog(CTStoreTest.class);
 
 	private static long _companyId;
-
-	@Inject
-	private static CTCollectionLocalService _ctCollectionLocalService;
-
-	@Inject
-	private static CTSContentLocalService _ctsContentLocalService;
-
 	private static Store _ctStore;
 
 	@Inject
@@ -1314,6 +1398,9 @@ public class CTStoreTest {
 			_ADD_FILE_METHOD = Store.class.getMethod(
 				"addFile", long.class, long.class, String.class, String.class,
 				InputStream.class);
+
+			_DELETE_DIRECTORY_COMPANY_METHOD = Store.class.getMethod(
+				"deleteDirectory", long.class);
 
 			_DELETE_DIRECTORY_METHOD = Store.class.getMethod(
 				"deleteDirectory", long.class, long.class, String.class);
@@ -1338,17 +1425,29 @@ public class CTStoreTest {
 
 			_HAS_FILE_METHOD = Store.class.getMethod(
 				"hasFile", long.class, long.class, String.class, String.class);
+
+			_VERIFY_COMPANY_STORES_METHOD = Store.class.getMethod(
+				"verifyCompanyStores");
 		}
 		catch (NoSuchMethodException noSuchMethodException) {
 			throw new ExceptionInInitializerError(noSuchMethodException);
 		}
 	}
 
+	@Inject
+	private CompanyLocalService _companyLocalService;
+
+	@Inject
+	private CTCollectionLocalService _ctCollectionLocalService;
+
 	@DeleteAfterTestRun
 	private final CTCollection[] _ctCollections = new CTCollection[4];
 
 	@Inject
 	private CTProcessLocalService _ctProcessLocalService;
+
+	@Inject
+	private CTSContentLocalService _ctsContentLocalService;
 
 	private static class RecorderInvocationHandler
 		implements InvocationHandler {

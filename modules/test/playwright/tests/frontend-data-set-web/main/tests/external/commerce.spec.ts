@@ -6,17 +6,17 @@
 import {expect, mergeTests} from '@playwright/test';
 
 import {apiHelpersTest} from '../../../../../fixtures/apiHelpersTest';
-import {applicationsMenuPageTest} from '../../../../../fixtures/applicationsMenuPageTest';
 import {commercePagesTest} from '../../../../../fixtures/commercePagesTest';
 import {dataApiHelpersTest} from '../../../../../fixtures/dataApiHelpersTest';
+import {globalMenuPagesTest} from '../../../../../fixtures/globalMenuPagesTest';
 import {loginTest} from '../../../../../fixtures/loginTest';
 import getRandomString from '../../../../../utils/getRandomString';
 
 const test = mergeTests(
 	apiHelpersTest,
-	applicationsMenuPageTest,
 	commercePagesTest,
 	dataApiHelpersTest,
+	globalMenuPagesTest,
 	loginTest()
 );
 
@@ -40,17 +40,15 @@ test(
 	{
 		tag: ['@LPD-31378'],
 	},
-	async ({apiHelpers, applicationsMenuPage, page}) => {
+	async ({apiHelpers, globalMenuPage, page}) => {
 		await test.step('Create commerce site', async () => {
-			const site = await apiHelpers.headlessSite.createSite({
+			await apiHelpers.headlessAdminSite.postSite({
 				name: 'Minium',
 				templateKey: 'minium-initializer',
 				templateType: 'site-initializer',
 			});
 
-			apiHelpers.data.push({id: site.id, type: 'site'});
-
-			await applicationsMenuPage.goToSite('Minium');
+			await globalMenuPage.goToSite('Minium');
 		});
 
 		await test.step('Add transmission to shopping cart', async () => {

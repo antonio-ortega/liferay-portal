@@ -16,9 +16,6 @@ import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.exception.SystemException;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.search.BaseIndexer;
 import com.liferay.portal.kernel.search.BooleanClauseOccur;
@@ -28,14 +25,13 @@ import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Hits;
 import com.liferay.portal.kernel.search.IndexWriterHelper;
 import com.liferay.portal.kernel.search.Indexer;
+import com.liferay.portal.kernel.search.IndexerPostProcessor;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
-import com.liferay.portal.kernel.search.ParseException;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.search.Summary;
+import com.liferay.portal.kernel.search.TermQuery;
 import com.liferay.portal.kernel.search.filter.BooleanFilter;
-import com.liferay.portal.kernel.search.generic.BooleanQueryImpl;
-import com.liferay.portal.kernel.search.generic.TermQueryImpl;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
@@ -82,6 +78,32 @@ public class KBArticleIndexer extends BaseIndexer<KBArticle> {
 	}
 
 	@Override
+	public Summary getSummary(Document document, Locale locale, String snippet)
+		throws SearchException {
+
+		try {
+			Summary summary = doGetSummary(
+				document, locale, snippet, null, null);
+
+			if (summary == null) {
+				return null;
+			}
+
+			for (IndexerPostProcessor indexerPostProcessor :
+					IndexerRegistryUtil.getIndexerPostProcessors(this)) {
+
+				indexerPostProcessor.postProcessSummary(
+					summary, document, locale, snippet);
+			}
+
+			return summary;
+		}
+		catch (Exception exception) {
+			throw new SearchException(exception);
+		}
+	}
+
+	@Override
 	public boolean hasPermission(
 			PermissionChecker permissionChecker, String entryClassName,
 			long entryClassPK, String actionId)
@@ -108,7 +130,7 @@ public class KBArticleIndexer extends BaseIndexer<KBArticle> {
 			return;
 		}
 
-		BooleanQuery keywordsBooleanQuery = new BooleanQueryImpl();
+		BooleanQuery keywordsBooleanQuery = new BooleanQuery();
 
 		addSearchTerm(keywordsBooleanQuery, searchContext, Field.CONTENT, true);
 		addSearchTerm(
@@ -121,20 +143,14 @@ public class KBArticleIndexer extends BaseIndexer<KBArticle> {
 			return;
 		}
 
-		try {
-			BooleanQuery modelBooleanQuery = new BooleanQueryImpl();
+		BooleanQuery modelBooleanQuery = new BooleanQuery();
 
-			modelBooleanQuery.add(
-				new TermQueryImpl("entryClassName", CLASS_NAME),
-				BooleanClauseOccur.MUST);
-			modelBooleanQuery.add(
-				keywordsBooleanQuery, BooleanClauseOccur.MUST);
+		modelBooleanQuery.add(
+			new TermQuery("entryClassName", CLASS_NAME),
+			BooleanClauseOccur.MUST);
+		modelBooleanQuery.add(keywordsBooleanQuery, BooleanClauseOccur.MUST);
 
-			searchQuery.add(modelBooleanQuery, BooleanClauseOccur.SHOULD);
-		}
-		catch (ParseException parseException) {
-			throw new SystemException(parseException);
-		}
+		searchQuery.add(modelBooleanQuery, BooleanClauseOccur.SHOULD);
 	}
 
 	@Override
@@ -237,10 +253,21 @@ public class KBArticleIndexer extends BaseIndexer<KBArticle> {
 	}
 
 	@Override
-	protected void doReindex(String[] ids) throws Exception {
-		long companyId = GetterUtil.getLong(ids[0]);
+	protected IndexableActionableDynamicQuery
+		getIndexableActionableDynamicQuery() {
 
-		_reindexKBArticles(companyId);
+		IndexableActionableDynamicQuery indexableActionableDynamicQuery =
+			kbArticleLocalService.getIndexableActionableDynamicQuery();
+
+		indexableActionableDynamicQuery.setAddCriteriaMethod(
+			dynamicQuery -> {
+				Property property = PropertyFactoryUtil.forName("status");
+
+				dynamicQuery.add(
+					property.eq(WorkflowConstants.STATUS_APPROVED));
+			});
+
+		return indexableActionableDynamicQuery;
 	}
 
 	@Reference
@@ -282,40 +309,6 @@ public class KBArticleIndexer extends BaseIndexer<KBArticle> {
 		indexWriterHelper.updateDocuments(
 			kbArticle.getCompanyId(), documents, isCommitImmediately());
 	}
-
-	private void _reindexKBArticles(long companyId) throws Exception {
-		IndexableActionableDynamicQuery indexableActionableDynamicQuery =
-			kbArticleLocalService.getIndexableActionableDynamicQuery();
-
-		indexableActionableDynamicQuery.setAddCriteriaMethod(
-			dynamicQuery -> {
-				Property property = PropertyFactoryUtil.forName("status");
-
-				dynamicQuery.add(
-					property.eq(WorkflowConstants.STATUS_APPROVED));
-			});
-		indexableActionableDynamicQuery.setCompanyId(companyId);
-		indexableActionableDynamicQuery.setPerformActionMethod(
-			(KBArticle kbArticle) -> {
-				try {
-					indexableActionableDynamicQuery.addDocuments(
-						getDocument(kbArticle));
-				}
-				catch (PortalException portalException) {
-					if (_log.isWarnEnabled()) {
-						_log.warn(
-							"Unable to index knowledge base article " +
-								kbArticle.getKbArticleId(),
-							portalException);
-					}
-				}
-			});
-
-		indexableActionableDynamicQuery.performActions();
-	}
-
-	private static final Log _log = LogFactoryUtil.getLog(
-		KBArticleIndexer.class);
 
 	@Reference(
 		target = "(model.class.name=com.liferay.knowledge.base.model.KBArticle)"

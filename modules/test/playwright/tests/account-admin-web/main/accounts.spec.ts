@@ -8,9 +8,9 @@ import path from 'path';
 
 import {accountsPagesTest} from '../../../fixtures/accountsPagesTest';
 import {apiHelpersTest} from '../../../fixtures/apiHelpersTest';
-import {applicationsMenuPageTest} from '../../../fixtures/applicationsMenuPageTest';
 import {customFieldsPagesTest} from '../../../fixtures/customFieldsPagesTest';
 import {dataApiHelpersTest} from '../../../fixtures/dataApiHelpersTest';
+import {globalMenuPagesTest} from '../../../fixtures/globalMenuPagesTest';
 import {loginTest} from '../../../fixtures/loginTest';
 import {serverAdministrationPageTest} from '../../../fixtures/serverAdministrationPageTest';
 import {usersAndOrganizationsPagesTest} from '../../../fixtures/usersAndOrganizationsPagesTest';
@@ -19,19 +19,16 @@ import {TCustomField} from '../../../helpers/CustomFieldTypesHelper';
 import getGlobalSiteId from '../../../utils/getGlobalSiteId';
 import getRandomString from '../../../utils/getRandomString';
 import {nextPage, setItemsPerPage} from '../../../utils/pagination';
-import performLogin, {
-	performLogout,
-	userData,
-} from '../../../utils/performLogin';
+import {performUserSwitch, userData} from '../../../utils/performLogin';
 import {waitForAlert} from '../../../utils/waitForAlert';
 import {tagsPagesTest} from '../../asset-tags-admin-web/main/fixtures/tagsAdminPagesTest';
 
 export const test = mergeTests(
 	accountsPagesTest,
 	apiHelpersTest,
-	applicationsMenuPageTest,
 	customFieldsPagesTest,
 	dataApiHelpersTest,
+	globalMenuPagesTest,
 	loginTest(),
 	serverAdministrationPageTest,
 	tagsPagesTest,
@@ -293,8 +290,7 @@ test('LPD-32045 All account entry can be seen by admin user', async ({
 		userAccount.id
 	);
 
-	await performLogout(page);
-	await performLogin(page, userAccount.alternateName);
+	await performUserSwitch(page, userAccount.alternateName);
 
 	try {
 		await accountsPage.goto();
@@ -310,22 +306,21 @@ test('LPD-32045 All account entry can be seen by admin user', async ({
 		).toHaveCount(1);
 	}
 	finally {
-		await performLogout(page);
-		await performLogin(page, 'test');
+		await performUserSwitch(page, 'test');
 	}
 });
 
 test('LPD-33636 Email address is not deleted by saving in the UI', async ({
 	accountsPage,
 	apiHelpers,
-	applicationsMenuPage,
 	editAccountPage,
+	globalMenuPage,
 	page,
 	serverAdministrationPage,
 }) => {
 	const account = await apiHelpers.headlessAdminUser.postAccount();
 
-	await applicationsMenuPage.goToServerAdministration();
+	await globalMenuPage.goToControlPanel('Server Administration');
 
 	const emailAddress = getRandomString() + '@liferay.com';
 
@@ -344,7 +339,7 @@ test('LPD-33636 Email address is not deleted by saving in the UI', async ({
 	await editAccountPage.saveButton.click();
 	await waitForAlert(page);
 
-	await applicationsMenuPage.goToServerAdministration();
+	await globalMenuPage.goToControlPanel('Server Administration');
 
 	const fetchScript = `
 		import com.liferay.account.model.*; 
@@ -1434,11 +1429,11 @@ test('LPD-47225 Can add and remove tags to an account', async ({
 	await accountsPage.accountNameLink(account.name).click();
 
 	await editAccountPage.selectTagsButton.click();
-	await accountTagSelectorPage.selectTag([tags[0].name, tags[2].name]);
+	await accountTagSelectorPage.selectTag([tags[0].name, tags[1].name]);
 
 	await expect(editAccountPage.tagInput(tags[0].name)).toBeVisible();
-	await expect(editAccountPage.tagInput(tags[1].name)).toHaveCount(0);
-	await expect(editAccountPage.tagInput(tags[2].name)).toBeVisible();
+	await expect(editAccountPage.tagInput(tags[1].name)).toBeVisible();
+	await expect(editAccountPage.tagInput(tags[2].name)).toHaveCount(0);
 
 	await editAccountPage.saveButton.click();
 
@@ -1448,8 +1443,8 @@ test('LPD-47225 Can add and remove tags to an account', async ({
 	await accountsPage.accountNameLink(account.name).click();
 
 	await expect(editAccountPage.tagInput(tags[0].name)).toBeVisible();
-	await expect(editAccountPage.tagInput(tags[1].name)).toHaveCount(0);
-	await expect(editAccountPage.tagInput(tags[2].name)).toBeVisible();
+	await expect(editAccountPage.tagInput(tags[1].name)).toBeVisible();
+	await expect(editAccountPage.tagInput(tags[2].name)).toHaveCount(0);
 
 	await editAccountPage.categoryClearAllButton.click();
 
@@ -1621,8 +1616,7 @@ test('LPD-47589 Check delete and deactivate permissions work independently', asy
 		surname: userAccount.familyName,
 	};
 
-	await performLogout(page);
-	await performLogin(page, userAccount.alternateName);
+	await performUserSwitch(page, userAccount.alternateName);
 
 	await accountsPage.goto();
 

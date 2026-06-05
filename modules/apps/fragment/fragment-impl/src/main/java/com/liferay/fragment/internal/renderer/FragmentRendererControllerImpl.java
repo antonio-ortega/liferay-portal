@@ -100,8 +100,7 @@ public class FragmentRendererControllerImpl
 						"Unable to render content of fragment entry ",
 						fragmentEntryLink.getFragmentEntryERC(),
 						" with fragment entry link ",
-						fragmentEntryLink.getFragmentEntryLinkId(), ", group ",
-						fragmentEntryLink.getFragmentEntryGroupId(),
+						fragmentEntryLink.getFragmentEntryLinkId(),
 						", and PLID ", fragmentEntryLink.getPlid(), ": ",
 						throwable.getMessage()),
 					exception);
@@ -176,12 +175,12 @@ public class FragmentRendererControllerImpl
 		if ((fragmentRenderer == null) && fragmentEntryLink.isTypeReact()) {
 			fragmentRenderer = _fragmentRendererRegistry.getFragmentRenderer(
 				FragmentRendererConstants.
-					FRAGMENT_ENTRY_FRAGMENT_RENDERER_KEY_REACT);
+					FRAGMENT_RENDERER_KEY_FRAGMENT_ENTRY_REACT);
 		}
 
 		if (fragmentRenderer == null) {
 			fragmentRenderer = _fragmentRendererRegistry.getFragmentRenderer(
-				FragmentRendererConstants.FRAGMENT_ENTRY_FRAGMENT_RENDERER_KEY);
+				FragmentRendererConstants.FRAGMENT_RENDERER_KEY_FRAGMENT_ENTRY);
 		}
 
 		return fragmentRenderer;

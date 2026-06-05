@@ -5,7 +5,6 @@
 
 package com.liferay.gradle.plugins.defaults;
 
-import com.liferay.gradle.plugins.defaults.internal.util.FileUtil;
 import com.liferay.gradle.plugins.defaults.internal.util.GradlePluginsDefaultsUtil;
 import com.liferay.gradle.plugins.defaults.internal.util.GradleUtil;
 import com.liferay.gradle.util.Validator;
@@ -24,7 +23,6 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Objects;
 import java.util.Set;
 
 import org.gradle.api.Plugin;
@@ -142,27 +140,6 @@ public class LiferaySettingsPlugin implements Plugin<Settings> {
 		return ProjectDirType.UNKNOWN;
 	}
 
-	private boolean _includeDXPProjects(
-		String buildProfile, Set<String> buildProfileFileNames,
-		Path projectPathRootDirPath) {
-
-		if ((buildProfile == null) && (buildProfileFileNames == null)) {
-			File portalRootDir = GradleUtil.getRootDir(
-				projectPathRootDirPath.toFile(), "portal-impl");
-
-			if (portalRootDir == null) {
-				return false;
-			}
-
-			File buildProfileDXPPropertiesFile = new File(
-				portalRootDir, "build.profile-dxp.properties");
-
-			return buildProfileDXPPropertiesFile.exists();
-		}
-
-		return Objects.equals(buildProfile, "dxp");
-	}
-
 	private void _includeProject(
 			Settings settings, Path projectDirPath, Path projectPathRootDirPath,
 			String projectPathPrefix)
@@ -176,25 +153,6 @@ public class LiferaySettingsPlugin implements Plugin<Settings> {
 				projectPath.replace(File.separatorChar, ':');
 
 		File projectDir = projectDirPath.toFile();
-
-		if (Boolean.parseBoolean(System.getProperty("skip.read.only"))) {
-			boolean publicBranch = GradleUtil.getProperty(
-				settings, "liferay.releng.public", false);
-
-			if (publicBranch && projectPath.startsWith(":private:")) {
-				return;
-			}
-
-			File gitRepoDir = GradleUtil.getRootDir(projectDir, ".gitrepo");
-
-			if (gitRepoDir != null) {
-				File gitRepoFile = new File(gitRepoDir, ".gitrepo");
-
-				if (FileUtil.contains(gitRepoFile, "mode = pull")) {
-					return;
-				}
-			}
-		}
 
 		settings.include(new String[] {projectPath});
 
@@ -223,9 +181,6 @@ public class LiferaySettingsPlugin implements Plugin<Settings> {
 		final Set<ProjectDirType> excludedProjectDirTypes = _getFlags(
 			"build.exclude.", ProjectDirType.class);
 
-		final boolean includeDXPProjects = _includeDXPProjects(
-			buildProfile, buildProfileFileNames, projectPathRootDirPath);
-
 		Files.walkFileTree(
 			projectPathRootDirPath, EnumSet.of(FileVisitOption.FOLLOW_LINKS),
 			10,
@@ -241,14 +196,6 @@ public class LiferaySettingsPlugin implements Plugin<Settings> {
 
 					if (excludedDirPaths.contains(dirPath)) {
 						return FileVisitResult.SKIP_SUBTREE;
-					}
-
-					if (!includeDXPProjects) {
-						Path dxpPath = projectPathRootDirPath.resolve("dxp");
-
-						if (dirPath.equals(dxpPath)) {
-							return FileVisitResult.SKIP_SUBTREE;
-						}
 					}
 
 					String dirName = String.valueOf(dirPath.getFileName());

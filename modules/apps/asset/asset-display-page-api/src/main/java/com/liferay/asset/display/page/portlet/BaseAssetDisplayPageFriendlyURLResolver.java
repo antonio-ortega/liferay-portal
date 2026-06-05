@@ -89,7 +89,7 @@ public abstract class BaseAssetDisplayPageFriendlyURLResolver
 			(HttpServletRequest)requestContext.get("request");
 
 		LayoutDisplayPageProvider<?> layoutDisplayPageProvider =
-			getLayoutDisplayPageProvider(friendlyURL);
+			getLayoutDisplayPageProvider(companyId, friendlyURL);
 
 		LayoutDisplayPageObjectProvider<?> layoutDisplayPageObjectProvider =
 			getLayoutDisplayPageObjectProvider(
@@ -115,7 +115,8 @@ public abstract class BaseAssetDisplayPageFriendlyURLResolver
 			LayoutDisplayPageWebKeys.LAYOUT_DISPLAY_PAGE_PROVIDER,
 			layoutDisplayPageProvider);
 
-		AssetEntry assetEntry = _getAssetEntry(layoutDisplayPageObjectProvider);
+		AssetEntry assetEntry = _getAssetEntry(
+			infoItem, layoutDisplayPageObjectProvider);
 
 		httpServletRequest.setAttribute(WebKeys.LAYOUT_ASSET_ENTRY, assetEntry);
 
@@ -177,7 +178,7 @@ public abstract class BaseAssetDisplayPageFriendlyURLResolver
 		throws PortalException {
 
 		LayoutDisplayPageProvider<?> layoutDisplayPageProvider =
-			getLayoutDisplayPageProvider(friendlyURL);
+			getLayoutDisplayPageProvider(companyId, friendlyURL);
 
 		LayoutDisplayPageObjectProvider<?> layoutDisplayPageObjectProvider =
 			getLayoutDisplayPageObjectProvider(
@@ -271,10 +272,10 @@ public abstract class BaseAssetDisplayPageFriendlyURLResolver
 	}
 
 	protected LayoutDisplayPageProvider<?> getLayoutDisplayPageProvider(
-			String friendlyURL)
+			long companyId, String friendlyURL)
 		throws PortalException {
 
-		return _getLayoutDisplayPageProvider(friendlyURL);
+		return _getLayoutDisplayPageProvider(companyId, friendlyURL);
 	}
 
 	protected Locale getLocale(Map<String, Object> requestContext) {
@@ -343,13 +344,14 @@ public abstract class BaseAssetDisplayPageFriendlyURLResolver
 	@Reference
 	protected Portal portal;
 
-	private AssetEntry _getAssetEntry(
+	private <T> AssetEntry _getAssetEntry(
+		T infoItem,
 		LayoutDisplayPageObjectProvider<?> layoutDisplayPageObjectProvider) {
 
 		String className = infoSearchClassMapperRegistry.getSearchClassName(
 			layoutDisplayPageObjectProvider.getClassName());
 
-		AssetRendererFactory<?> assetRendererFactory =
+		AssetRendererFactory<T> assetRendererFactory =
 			AssetRendererFactoryRegistryUtil.getAssetRendererFactoryByClassName(
 				className);
 
@@ -357,7 +359,11 @@ public abstract class BaseAssetDisplayPageFriendlyURLResolver
 			return null;
 		}
 
-		long classPK = layoutDisplayPageObjectProvider.getClassPK();
+		long classPK = assetRendererFactory.getAssetEntryClassPK(infoItem);
+
+		if (classPK == 0) {
+			return null;
+		}
 
 		try {
 			AssetEntry assetEntry = assetRendererFactory.getAssetEntry(
@@ -477,14 +483,14 @@ public abstract class BaseAssetDisplayPageFriendlyURLResolver
 	}
 
 	private LayoutDisplayPageProvider<?> _getLayoutDisplayPageProvider(
-			String friendlyURL)
+			long companyId, String friendlyURL)
 		throws PortalException {
 
 		String urlSeparator = _getURLSeparator(friendlyURL);
 
 		FriendlyURLResolver friendlyURLResolver =
 			FriendlyURLResolverRegistryUtil.getFriendlyURLResolver(
-				urlSeparator);
+				companyId, urlSeparator);
 
 		if ((friendlyURLResolver != null) &&
 			friendlyURLResolver.isURLSeparatorConfigurable()) {
@@ -494,7 +500,8 @@ public abstract class BaseAssetDisplayPageFriendlyURLResolver
 
 		LayoutDisplayPageProvider<?> layoutDisplayPageProvider =
 			layoutDisplayPageProviderRegistry.
-				getLayoutDisplayPageProviderByURLSeparator(urlSeparator);
+				getLayoutDisplayPageProviderByURLSeparator(
+					companyId, urlSeparator);
 
 		if (layoutDisplayPageProvider == null) {
 			throw new PortalException(

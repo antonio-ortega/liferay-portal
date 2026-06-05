@@ -178,11 +178,11 @@ public class DefaultPortalKaleoManager
 			User guestUser = userLocalService.getGuestUser(companyId);
 
 			_workflowDefinitionManager.deployWorkflowDefinition(
+				FileUtil.getBytes(inputStream), serviceContext.getCompanyId(),
 				WorkflowDefinitionConstants.
 					EXTERNAL_REFERENCE_CODE_SINGLE_APPROVER,
-				serviceContext.getCompanyId(), guestUser.getUserId(),
-				_getLocalizedTitle(companyId, definitionName), definitionName,
-				FileUtil.getBytes(inputStream));
+				definitionName, _getLocalizedTitle(companyId, definitionName),
+				guestUser.getUserId());
 		}
 	}
 
@@ -262,8 +262,9 @@ public class DefaultPortalKaleoManager
 
 		List<WorkflowDefinition> workflowDefinitions =
 			_workflowDefinitionManager.getActiveWorkflowDefinitions(
-				companyId, workflowDefinitionName, 0, 20,
-				workflowComparatorFactory.getDefinitionNameComparator(false));
+				companyId, 20, workflowDefinitionName,
+				workflowComparatorFactory.getDefinitionNameComparator(false),
+				0);
 
 		if (workflowDefinitions.isEmpty()) {
 			if (_log.isWarnEnabled()) {

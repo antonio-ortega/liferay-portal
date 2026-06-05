@@ -4,77 +4,107 @@
  */
 
 import React from 'react';
-import {HashRouter as Router, Route, Switch} from 'react-router-dom';
+import {
+	HashRouter,
+	Navigate,
+	Route,
+	Routes,
+	createRoutesFromElements,
+} from 'react-router';
 
+import {FilterContextProvider} from '../shared/components/filter/FilterContext.es';
 import HeaderController from '../shared/components/header/HeaderController.es';
-import {withParams} from '../shared/components/router/routerUtil.es';
 import {AppContextProvider} from './AppContext.es';
 import InstanceListPage from './instance-list-page/InstanceListPage.es';
 import PerformanceByAssigneePage from './performance-by-assignee-page/PerformanceByAssigneePage.es';
 import PerformanceByStepPage from './performance-by-step-page/PerformanceByStepPage.es';
 import ProcessListPage from './process-list-page/ProcessListPage.es';
-import ProcessMetricsContainer from './process-metrics/ProcessMetricsContainer.es';
+import ProcessMetricsContainer, {
+	DashboardTab,
+	PerformanceTab,
+} from './process-metrics/ProcessMetricsContainer.es';
 import SettingsContainer from './settings/SettingsContainer.es';
+import IndexesPage from './settings/indexes-page/IndexesPage.es';
 import SLAContainer from './sla/SLAContainer.es';
+import SLAFormPage from './sla/form-page/SLAFormPage.es';
+import SLAListPage from './sla/list-page/SLAListPage.es';
 import WorkloadByAssigneePage from './workload-by-assignee-page/WorkloadByAssigneePage.es';
+
+const appRoutes = (
+	<>
+		<Route
+			element={
+				<Navigate
+					replace
+					to="/processes/20/1/overdueInstanceCount:desc"
+				/>
+			}
+			path="/"
+		/>
+
+		<Route
+			element={<ProcessListPage />}
+			path="/processes/:pageSize/:page/:sort"
+		/>
+
+		<Route element={<ProcessMetricsContainer />} path="/metrics/:processId">
+			<Route
+				element={<DashboardTab />}
+				path="dashboard/:pageSize/:page/:sort"
+			/>
+
+			<Route element={<PerformanceTab />} path="performance" />
+		</Route>
+
+		<Route
+			element={<InstanceListPage />}
+			path="/instance/:processId/:pageSize/:page/:sort"
+		/>
+
+		<Route element={<SLAContainer />} path="/sla/:processId">
+			<Route element={<SLAListPage />} path="list/:pageSize/:page" />
+
+			<Route element={<SLAFormPage />} path="new" />
+
+			<Route element={<SLAFormPage />} path="edit/:id" />
+		</Route>
+
+		<Route
+			element={<PerformanceByStepPage />}
+			path="/performance/step/:processId/:pageSize/:page/:sort"
+		/>
+
+		<Route
+			element={<WorkloadByAssigneePage />}
+			path="/workload/assignee/:processId/:pageSize/:page/:sort"
+		/>
+
+		<Route
+			element={<PerformanceByAssigneePage />}
+			path="/performance/assignee/:processId/:pageSize/:page/:sort"
+		/>
+
+		<Route element={<SettingsContainer />} path="/settings">
+			<Route element={<IndexesPage />} path="indexes" />
+		</Route>
+	</>
+);
+
+export const appDataRoutes = createRoutesFromElements(appRoutes);
 
 const App = (props) => {
 	return (
-		<Router>
-			<AppContextProvider {...props}>
-				<HeaderController basePath="/processes" />
+		<AppContextProvider {...props}>
+			<FilterContextProvider>
+				<HashRouter>
+					<HeaderController basePath="/processes" />
 
-				<div className="portal-workflow-metrics-app">
-					<Switch>
-						<Route
-							exact
-							path="/"
-							render={withParams(ProcessListPage)}
-						/>
-
-						<Route
-							path="/processes/:pageSize/:page/:sort"
-							render={withParams(ProcessListPage)}
-						/>
-
-						<Route
-							path="/metrics/:processId"
-							render={withParams(ProcessMetricsContainer)}
-						/>
-
-						<Route
-							path="/instance/:processId/:pageSize/:page/:sort"
-							render={withParams(InstanceListPage)}
-						/>
-
-						<Route
-							component={SLAContainer}
-							path="/sla/:processId"
-						/>
-
-						<Route
-							exact
-							path="/performance/step/:processId/:pageSize/:page/:sort"
-							render={withParams(PerformanceByStepPage)}
-						/>
-
-						<Route
-							exact
-							path="/workload/assignee/:processId/:pageSize/:page/:sort"
-							render={withParams(WorkloadByAssigneePage)}
-						/>
-
-						<Route
-							exact
-							path="/performance/assignee/:processId/:pageSize/:page/:sort"
-							render={withParams(PerformanceByAssigneePage)}
-						/>
-
-						<Route component={SettingsContainer} path="/settings" />
-					</Switch>
-				</div>
-			</AppContextProvider>
-		</Router>
+					<div className="portal-workflow-metrics-app">
+						<Routes>{appRoutes}</Routes>
+					</div>
+				</HashRouter>
+			</FilterContextProvider>
+		</AppContextProvider>
 	);
 };
 

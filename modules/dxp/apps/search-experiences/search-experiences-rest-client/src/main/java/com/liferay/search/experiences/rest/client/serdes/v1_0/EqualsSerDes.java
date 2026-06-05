@@ -259,3 +259,4 @@ public class EqualsSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-497788811

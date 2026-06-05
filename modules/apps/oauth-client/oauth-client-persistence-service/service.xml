@@ -3,7 +3,7 @@
 
 <service-builder auto-import-default-references="false" auto-namespace-tables="false" dependency-injector="ds" mvcc-enabled="true" package-path="com.liferay.oauth.client.persistence" short-no-such-exception-enabled="false">
 	<namespace>OAuthClient</namespace>
-	<entity local-service="true" name="OAuthClientASLocalMetadata" remote-service="true">
+	<entity external-reference-code="company" local-service="true" name="OAuthClientASLocalMetadata" remote-service="true" uuid="true">
 
 		<!-- PK fields -->
 
@@ -34,9 +34,6 @@
 		<finder name="UserId" return-type="Collection">
 			<finder-column name="userId" />
 		</finder>
-		<finder name="LocalWellKnownURI" return-type="OAuthClientASLocalMetadata" unique="true">
-			<finder-column name="localWellKnownURI" />
-		</finder>
 		<finder name="C_I" return-type="OAuthClientASLocalMetadata" unique="true">
 			<finder-column name="companyId" />
 			<finder-column name="issuer" />
@@ -45,12 +42,16 @@
 			<finder-column name="companyId" />
 			<finder-column name="localWellKnownEnabled" />
 		</finder>
+		<finder name="C_LWKURI" return-type="OAuthClientASLocalMetadata" unique="true">
+			<finder-column name="companyId" />
+			<finder-column name="localWellKnownURI" />
+		</finder>
 		<finder name="C_O" return-type="OAuthClientASLocalMetadata" unique="true">
 			<finder-column name="companyId" />
 			<finder-column name="oAuthASLocalWellKnownURI" />
 		</finder>
 	</entity>
-	<entity local-service="true" name="OAuthClientEntry" remote-service="true">
+	<entity external-reference-code="company" local-service="true" name="OAuthClientEntry" remote-service="true" uuid="true">
 
 		<!-- PK fields -->
 
@@ -71,6 +72,7 @@
 		<column name="clientId" type="String" />
 		<column name="customClaimsJSON" type="String" />
 		<column name="infoJSON" type="String" />
+		<column name="matcherField" type="String" />
 		<column name="metadataCacheTime" type="long" />
 		<column method-name="OIDCUserInfoMapperJSON" name="oidcUserInfoMapperJSON" type="String" />
 		<column name="tokenRequestParametersJSON" type="String" />

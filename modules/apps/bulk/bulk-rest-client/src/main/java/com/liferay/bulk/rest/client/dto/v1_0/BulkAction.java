@@ -129,15 +129,37 @@ public abstract class BulkAction implements Cloneable, Serializable {
 
 	public static enum Type {
 
-		DEFAULT_PERMISSION_BULK_ACTION("DefaultPermissionBulkAction"),
-		DELETE_BULK_ACTION("DeleteBulkAction"),
-		EXPIRE_BULK_ACTION("ExpireBulkAction"),
-		KEYWORD_BULK_ACTION("KeywordBulkAction"),
-		MOVE_BULK_ACTION("MoveBulkAction"),
-		PERMISSION_BULK_ACTION("PermissionBulkAction"),
-		RESET_PERMISSION_BULK_ACTION("ResetPermissionBulkAction"),
-		STATUS_BULK_ACTION("StatusBulkAction"),
-		TAXONOMY_CATEGORY_BULK_ACTION("TaxonomyCategoryBulkAction");
+		ASSIGN_STRUCTURE_DEFAULT_WORKFLOW_BULK_SELECTION_ACTION(
+			"AssignStructureDefaultWorkflowBulkSelectionAction"),
+		ASSIGN_TO_OBJECT_BULK_SELECTION_ACTION(
+			"AssignToObjectBulkSelectionAction"),
+		COPY_OBJECT_BULK_SELECTION_ACTION("CopyObjectBulkSelectionAction"),
+		DEFAULT_PERMISSION_OBJECT_BULK_SELECTION_ACTION(
+			"DefaultPermissionObjectBulkSelectionAction"),
+		DELETE_OBJECT_ASSET_VERSION_BULK_SELECTION_ACTION(
+			"DeleteObjectAssetVersionBulkSelectionAction"),
+		DELETE_OBJECT_BULK_SELECTION_ACTION("DeleteObjectBulkSelectionAction"),
+		DELETE_OBJECT_ENTRY_BULK_SELECTION_ACTION(
+			"DeleteObjectEntryBulkSelectionAction"),
+		DUE_DATE_OBJECT_BULK_SELECTION_ACTION(
+			"DueDateObjectBulkSelectionAction"),
+		DUPLICATE_OBJECT_BULK_SELECTION_ACTION(
+			"DuplicateObjectBulkSelectionAction"),
+		EXPIRE_OBJECT_BULK_SELECTION_ACTION("ExpireObjectBulkSelectionAction"),
+		EDIT_OBJECT_TAGS_BULK_SELECTION_ACTION(
+			"EditObjectTagsBulkSelectionAction"),
+		MOVE_OBJECT_BULK_SELECTION_ACTION("MoveObjectBulkSelectionAction"),
+		PERMISSION_OBJECT_BULK_SELECTION_ACTION(
+			"PermissionObjectBulkSelectionAction"),
+		RESET_PERMISSION_OBJECT_BULK_SELECTION_ACTION(
+			"ResetPermissionObjectBulkSelectionAction"),
+		RESTORE_OBJECT_BULK_SELECTION_ACTION(
+			"RestoreObjectBulkSelectionAction"),
+		STATUS_OBJECT_BULK_SELECTION_ACTION("StatusObjectBulkSelectionAction"),
+		EDIT_OBJECT_CATEGORIES_BULK_SELECTION_ACTION(
+			"EditObjectCategoriesBulkSelectionAction"),
+		UPDATE_OBJECT_VALUES_BULK_SELECTION_ACTION(
+			"UpdateObjectValuesBulkSelectionAction");
 
 		public static Type create(String value) {
 			for (Type type : values()) {
@@ -169,3 +191,4 @@ public abstract class BulkAction implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-336127652

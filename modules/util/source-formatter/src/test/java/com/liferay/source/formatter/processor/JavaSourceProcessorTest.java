@@ -120,32 +120,6 @@ public class JavaSourceProcessorTest extends BaseSourceProcessorTestCase {
 	}
 
 	@Test
-	public void testCompanyThreadLocalUsage() throws Exception {
-		test(
-			SourceProcessorTestParameters.create(
-				"CompanyThreadLocalUsage.testjava"
-			).addExpectedMessage(
-				StringBundler.concat(
-					"Do not use \"CompanyThreadLocal.setCompanyId\", use ",
-					"\"CompanyThreadLocal.setCompanyIdWithSafeCloseable\" ",
-					"instead"),
-				16
-			).addExpectedMessage(
-				StringBundler.concat(
-					"Missing calling \"close\" to variable ",
-					"\"_safeCloseable1\", use \"_safeCloseable1.close\" or ",
-					"try-with-resources statement instead"),
-				28
-			).addExpectedMessage(
-				StringBundler.concat(
-					"Missing calling \"close\" to variable ",
-					"\"_safeCloseable2\", use \"_safeCloseable2.close\" or ",
-					"try-with-resources statement instead"),
-				29
-			));
-	}
-
-	@Test
 	public void testConstructorParameterOrder() throws Exception {
 		test("ConstructorParameterOrder.testjava");
 	}
@@ -239,6 +213,20 @@ public class JavaSourceProcessorTest extends BaseSourceProcessorTestCase {
 	}
 
 	@Test
+	public void testExecuteBatchWithoutAutoBatchPreparedStatementUtil()
+		throws Exception {
+
+		test(
+			"ExecuteBatchWithoutAutoBatchPreparedStatementUtil.testjava",
+			StringBundler.concat(
+				"Use \"AutoBatchPreparedStatementUtil.autoBatch\" or \"",
+				"AutoBatchPreparedStatementUtil.concurrentAutoBatch\" to ",
+				"create a prepared statement when using \"preparedStatement.",
+				"executeBatch()\""),
+			20);
+	}
+
+	@Test
 	public void testFeatureFlagsAnnotationTest() throws Exception {
 		test(
 			SourceProcessorTestParameters.create(
@@ -323,6 +311,15 @@ public class JavaSourceProcessorTest extends BaseSourceProcessorTestCase {
 	@Test
 	public void testIncorrectEmptyLinesInUpgradeProcess() throws Exception {
 		test("IncorrectEmptyLinesInUpgradeProcess.testjava");
+	}
+
+	@Test
+	public void testIncorrectExecuteUpdateCall() throws Exception {
+		test(
+			"IncorrectExecuteUpdateCall.testjava",
+			"Use \"addBatch()\" and \"executeBatch()\" instead of \"" +
+				"executeUpdate()\" inside loops",
+			28);
 	}
 
 	@Test
@@ -843,24 +840,46 @@ public class JavaSourceProcessorTest extends BaseSourceProcessorTestCase {
 	}
 
 	@Test
-	public void testResultCountSet() throws Exception {
-		test(
-			"ResultSetCount.testjava", "Use resultSet.getInt(1) for count", 26);
-	}
-
-	@Test
 	public void testResultSetGetCall() throws Exception {
 		test(
-			"ResultSetGetCall.testjava",
-			"Do not use \"TableName.ColumnName\" as the parameter when " +
-				"calling method \"resultSet.get*\", use column index or " +
-					"column name instead",
-			43);
+			SourceProcessorTestParameters.create(
+				"ResultSetGetCall.testjava"
+			).addExpectedMessage(
+				"Use the simple column name instead of \"TableName.ColumnName" +
+					"\" when calling method \"resultSet.get*\"",
+				43
+			).addExpectedMessage(
+				"Use the simple column name instead of column index when " +
+					"calling method \"resultSet.get*\"",
+				60
+			).addExpectedMessage(
+				"Use \"resultSet.getLong\" for count", 74
+			));
 	}
 
 	@Test
 	public void testRunSQLStyling() throws Exception {
 		test("RunSQLStyling.testjava");
+	}
+
+	@Test
+	public void testSafeCloseableMissingClose() throws Exception {
+		test(
+			SourceProcessorTestParameters.create(
+				"SafeCloseableMissingClose.testjava"
+			).addExpectedMessage(
+				StringBundler.concat(
+					"Missing calling \"close\" to variable ",
+					"\"_safeCloseable1\", use \"_safeCloseable1.close\" or ",
+					"try-with-resources statement instead"),
+				28
+			).addExpectedMessage(
+				StringBundler.concat(
+					"Missing calling \"close\" to variable ",
+					"\"_safeCloseable2\", use \"_safeCloseable2.close\" or ",
+					"try-with-resources statement instead"),
+				29
+			));
 	}
 
 	@Test
@@ -1002,7 +1021,23 @@ public class JavaSourceProcessorTest extends BaseSourceProcessorTestCase {
 
 	@Test
 	public void testTextBlock() throws Exception {
-		test("TextBlock.testjava", "Do not use text block", 14);
+		test(
+			SourceProcessorTestParameters.create(
+				"TextBlock.testjava"
+			).addExpectedMessage(
+				"Do not use text block", 14
+			).addExpectedMessage(
+				"Do not use text block", 23
+			).addExpectedMessage(
+				"Do not use text block", 29
+			));
+	}
+
+	@Test
+	public void testThreadVariableName() throws Exception {
+		test(
+			"ThreadVariableName.testjava",
+			"Rename thread to \"Lock Create Thread\"", 14);
 	}
 
 	@Test

@@ -78,6 +78,8 @@ public class ResourceActionModelImpl
 
 	public static final String TABLE_SQL_DROP = "drop table ResourceAction";
 
+	public static final String ENTITY_ALIAS = "resourceAction";
+
 	public static final String ORDER_BY_JPQL =
 		" ORDER BY resourceAction.name ASC, resourceAction.bitwiseValue ASC";
 
@@ -697,3 +699,4 @@ public class ResourceActionModelImpl
 	private ResourceAction _escapedModel;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-1786016938

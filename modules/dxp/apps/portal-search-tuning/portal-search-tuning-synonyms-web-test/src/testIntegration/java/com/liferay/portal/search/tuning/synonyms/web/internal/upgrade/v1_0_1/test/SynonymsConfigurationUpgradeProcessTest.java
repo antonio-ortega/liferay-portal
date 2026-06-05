@@ -6,12 +6,12 @@
 package com.liferay.portal.search.tuning.synonyms.web.internal.upgrade.v1_0_1.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.petra.io.unsync.UnsyncByteArrayInputStream;
+import com.liferay.petra.io.unsync.UnsyncByteArrayOutputStream;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.jdbc.DataAccess;
-import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayInputStream;
-import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayOutputStream;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
@@ -76,6 +76,7 @@ public class SynonymsConfigurationUpgradeProcessTest {
 			).build());
 
 		try (Connection connection = DataAccess.getConnection();
+
 			PreparedStatement preparedStatement = connection.prepareStatement(
 				"insert into Configuration_ (configurationId, dictionary) " +
 					"values(?, ?)")) {
@@ -90,6 +91,7 @@ public class SynonymsConfigurationUpgradeProcessTest {
 
 	private void _assertConfiguration() throws Exception {
 		try (Connection connection = DataAccess.getConnection();
+
 			PreparedStatement preparedStatement = connection.prepareStatement(
 				"select dictionary from Configuration_ where configurationId " +
 					"= ?")) {
@@ -150,6 +152,6 @@ public class SynonymsConfigurationUpgradeProcessTest {
 	@Inject(
 		filter = "(&(component.name=com.liferay.portal.search.tuning.synonyms.web.internal.upgrade.registry.SynonymsWebUpgradeStepRegistrator))"
 	)
-	private static UpgradeStepRegistrator _upgradeStepRegistrator;
+	private UpgradeStepRegistrator _upgradeStepRegistrator;
 
 }

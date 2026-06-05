@@ -32,16 +32,18 @@ const SpacesDropdown: React.FC<React.HTMLAttributes<HTMLElement>> = ({
 
 	const fetchSpaces = async (keywords: string = '') => {
 		const queryParams = buildQueryString({
+			filter: "type eq 'Space'",
 			keywords,
 		});
 		const endpoint = `${PATH}${queryParams}`;
 
 		const {data, error} = await ApiHelper.get<{
-			items: {id: string; name: string}[];
+			items: {externalReferenceCode: string; id: string; name: string}[];
 		}>(endpoint);
 
 		if (data) {
-			return data.items.map(({id, name}) => ({
+			return data.items.map(({externalReferenceCode, id, name}) => ({
+				externalReferenceCode,
 				label: name,
 				value: String(id),
 			}));

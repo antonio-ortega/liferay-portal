@@ -10,6 +10,8 @@ definition {
 
 		User.firstLoginPG();
 
+		Questions.enableWidgetQuestions();
+
 		JSONLayout.addPublicLayout(
 			groupName = "Guest",
 			layoutName = "Questions Page");

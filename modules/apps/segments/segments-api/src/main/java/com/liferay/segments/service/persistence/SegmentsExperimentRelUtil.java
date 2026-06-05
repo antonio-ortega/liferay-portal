@@ -36,6 +36,24 @@ public class SegmentsExperimentRelUtil {
 	 */
 
 	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(List)
+	 */
+	public static void cacheResult(
+		List<SegmentsExperimentRel> segmentsExperimentRels) {
+
+		getPersistence().cacheResult(segmentsExperimentRels);
+	}
+
+	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(com.liferay.portal.kernel.model.BaseModel)
+	 */
+	public static void cacheResult(
+		SegmentsExperimentRel segmentsExperimentRel) {
+
+		getPersistence().cacheResult(segmentsExperimentRel);
+	}
+
+	/**
 	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#clearCache()
 	 */
 	public static void clearCache() {
@@ -114,63 +132,10 @@ public class SegmentsExperimentRelUtil {
 	}
 
 	/**
-	 * Returns all the segments experiment rels where segmentsExperimentId = &#63;.
-	 *
-	 * @param segmentsExperimentId the segments experiment ID
-	 * @return the matching segments experiment rels
-	 */
-	public static List<SegmentsExperimentRel> findBySegmentsExperimentId(
-		long segmentsExperimentId) {
-
-		return getPersistence().findBySegmentsExperimentId(
-			segmentsExperimentId);
-	}
-
-	/**
-	 * Returns a range of all the segments experiment rels where segmentsExperimentId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SegmentsExperimentRelModelImpl</code>.
-	 * </p>
-	 *
-	 * @param segmentsExperimentId the segments experiment ID
-	 * @param start the lower bound of the range of segments experiment rels
-	 * @param end the upper bound of the range of segments experiment rels (not inclusive)
-	 * @return the range of matching segments experiment rels
-	 */
-	public static List<SegmentsExperimentRel> findBySegmentsExperimentId(
-		long segmentsExperimentId, int start, int end) {
-
-		return getPersistence().findBySegmentsExperimentId(
-			segmentsExperimentId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the segments experiment rels where segmentsExperimentId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SegmentsExperimentRelModelImpl</code>.
-	 * </p>
-	 *
-	 * @param segmentsExperimentId the segments experiment ID
-	 * @param start the lower bound of the range of segments experiment rels
-	 * @param end the upper bound of the range of segments experiment rels (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching segments experiment rels
-	 */
-	public static List<SegmentsExperimentRel> findBySegmentsExperimentId(
-		long segmentsExperimentId, int start, int end,
-		OrderByComparator<SegmentsExperimentRel> orderByComparator) {
-
-		return getPersistence().findBySegmentsExperimentId(
-			segmentsExperimentId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the segments experiment rels where segmentsExperimentId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SegmentsExperimentRelModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.segments.model.impl.SegmentsExperimentRelModelImpl</code>.
 	 * </p>
 	 *
 	 * @param segmentsExperimentId the segments experiment ID
@@ -223,57 +188,6 @@ public class SegmentsExperimentRelUtil {
 	}
 
 	/**
-	 * Returns the last segments experiment rel in the ordered set where segmentsExperimentId = &#63;.
-	 *
-	 * @param segmentsExperimentId the segments experiment ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching segments experiment rel
-	 * @throws NoSuchExperimentRelException if a matching segments experiment rel could not be found
-	 */
-	public static SegmentsExperimentRel findBySegmentsExperimentId_Last(
-			long segmentsExperimentId,
-			OrderByComparator<SegmentsExperimentRel> orderByComparator)
-		throws com.liferay.segments.exception.NoSuchExperimentRelException {
-
-		return getPersistence().findBySegmentsExperimentId_Last(
-			segmentsExperimentId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last segments experiment rel in the ordered set where segmentsExperimentId = &#63;.
-	 *
-	 * @param segmentsExperimentId the segments experiment ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching segments experiment rel, or <code>null</code> if a matching segments experiment rel could not be found
-	 */
-	public static SegmentsExperimentRel fetchBySegmentsExperimentId_Last(
-		long segmentsExperimentId,
-		OrderByComparator<SegmentsExperimentRel> orderByComparator) {
-
-		return getPersistence().fetchBySegmentsExperimentId_Last(
-			segmentsExperimentId, orderByComparator);
-	}
-
-	/**
-	 * Returns the segments experiment rels before and after the current segments experiment rel in the ordered set where segmentsExperimentId = &#63;.
-	 *
-	 * @param segmentsExperimentRelId the primary key of the current segments experiment rel
-	 * @param segmentsExperimentId the segments experiment ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next segments experiment rel
-	 * @throws NoSuchExperimentRelException if a segments experiment rel with the primary key could not be found
-	 */
-	public static SegmentsExperimentRel[]
-			findBySegmentsExperimentId_PrevAndNext(
-				long segmentsExperimentRelId, long segmentsExperimentId,
-				OrderByComparator<SegmentsExperimentRel> orderByComparator)
-		throws com.liferay.segments.exception.NoSuchExperimentRelException {
-
-		return getPersistence().findBySegmentsExperimentId_PrevAndNext(
-			segmentsExperimentRelId, segmentsExperimentId, orderByComparator);
-	}
-
-	/**
 	 * Removes all the segments experiment rels where segmentsExperimentId = &#63; from the database.
 	 *
 	 * @param segmentsExperimentId the segments experiment ID
@@ -294,63 +208,10 @@ public class SegmentsExperimentRelUtil {
 	}
 
 	/**
-	 * Returns all the segments experiment rels where segmentsExperienceId = &#63;.
-	 *
-	 * @param segmentsExperienceId the segments experience ID
-	 * @return the matching segments experiment rels
-	 */
-	public static List<SegmentsExperimentRel> findBySegmentsExperienceId(
-		long segmentsExperienceId) {
-
-		return getPersistence().findBySegmentsExperienceId(
-			segmentsExperienceId);
-	}
-
-	/**
-	 * Returns a range of all the segments experiment rels where segmentsExperienceId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SegmentsExperimentRelModelImpl</code>.
-	 * </p>
-	 *
-	 * @param segmentsExperienceId the segments experience ID
-	 * @param start the lower bound of the range of segments experiment rels
-	 * @param end the upper bound of the range of segments experiment rels (not inclusive)
-	 * @return the range of matching segments experiment rels
-	 */
-	public static List<SegmentsExperimentRel> findBySegmentsExperienceId(
-		long segmentsExperienceId, int start, int end) {
-
-		return getPersistence().findBySegmentsExperienceId(
-			segmentsExperienceId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the segments experiment rels where segmentsExperienceId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SegmentsExperimentRelModelImpl</code>.
-	 * </p>
-	 *
-	 * @param segmentsExperienceId the segments experience ID
-	 * @param start the lower bound of the range of segments experiment rels
-	 * @param end the upper bound of the range of segments experiment rels (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching segments experiment rels
-	 */
-	public static List<SegmentsExperimentRel> findBySegmentsExperienceId(
-		long segmentsExperienceId, int start, int end,
-		OrderByComparator<SegmentsExperimentRel> orderByComparator) {
-
-		return getPersistence().findBySegmentsExperienceId(
-			segmentsExperienceId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the segments experiment rels where segmentsExperienceId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SegmentsExperimentRelModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.segments.model.impl.SegmentsExperimentRelModelImpl</code>.
 	 * </p>
 	 *
 	 * @param segmentsExperienceId the segments experience ID
@@ -403,57 +264,6 @@ public class SegmentsExperimentRelUtil {
 	}
 
 	/**
-	 * Returns the last segments experiment rel in the ordered set where segmentsExperienceId = &#63;.
-	 *
-	 * @param segmentsExperienceId the segments experience ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching segments experiment rel
-	 * @throws NoSuchExperimentRelException if a matching segments experiment rel could not be found
-	 */
-	public static SegmentsExperimentRel findBySegmentsExperienceId_Last(
-			long segmentsExperienceId,
-			OrderByComparator<SegmentsExperimentRel> orderByComparator)
-		throws com.liferay.segments.exception.NoSuchExperimentRelException {
-
-		return getPersistence().findBySegmentsExperienceId_Last(
-			segmentsExperienceId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last segments experiment rel in the ordered set where segmentsExperienceId = &#63;.
-	 *
-	 * @param segmentsExperienceId the segments experience ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching segments experiment rel, or <code>null</code> if a matching segments experiment rel could not be found
-	 */
-	public static SegmentsExperimentRel fetchBySegmentsExperienceId_Last(
-		long segmentsExperienceId,
-		OrderByComparator<SegmentsExperimentRel> orderByComparator) {
-
-		return getPersistence().fetchBySegmentsExperienceId_Last(
-			segmentsExperienceId, orderByComparator);
-	}
-
-	/**
-	 * Returns the segments experiment rels before and after the current segments experiment rel in the ordered set where segmentsExperienceId = &#63;.
-	 *
-	 * @param segmentsExperimentRelId the primary key of the current segments experiment rel
-	 * @param segmentsExperienceId the segments experience ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next segments experiment rel
-	 * @throws NoSuchExperimentRelException if a segments experiment rel with the primary key could not be found
-	 */
-	public static SegmentsExperimentRel[]
-			findBySegmentsExperienceId_PrevAndNext(
-				long segmentsExperimentRelId, long segmentsExperienceId,
-				OrderByComparator<SegmentsExperimentRel> orderByComparator)
-		throws com.liferay.segments.exception.NoSuchExperimentRelException {
-
-		return getPersistence().findBySegmentsExperienceId_PrevAndNext(
-			segmentsExperimentRelId, segmentsExperienceId, orderByComparator);
-	}
-
-	/**
 	 * Removes all the segments experiment rels where segmentsExperienceId = &#63; from the database.
 	 *
 	 * @param segmentsExperienceId the segments experience ID
@@ -486,20 +296,6 @@ public class SegmentsExperimentRelUtil {
 		throws com.liferay.segments.exception.NoSuchExperimentRelException {
 
 		return getPersistence().findByS_S(
-			segmentsExperimentId, segmentsExperienceId);
-	}
-
-	/**
-	 * Returns the segments experiment rel where segmentsExperimentId = &#63; and segmentsExperienceId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
-	 *
-	 * @param segmentsExperimentId the segments experiment ID
-	 * @param segmentsExperienceId the segments experience ID
-	 * @return the matching segments experiment rel, or <code>null</code> if a matching segments experiment rel could not be found
-	 */
-	public static SegmentsExperimentRel fetchByS_S(
-		long segmentsExperimentId, long segmentsExperienceId) {
-
-		return getPersistence().fetchByS_S(
 			segmentsExperimentId, segmentsExperienceId);
 	}
 
@@ -546,28 +342,6 @@ public class SegmentsExperimentRelUtil {
 
 		return getPersistence().countByS_S(
 			segmentsExperimentId, segmentsExperienceId);
-	}
-
-	/**
-	 * Caches the segments experiment rel in the entity cache if it is enabled.
-	 *
-	 * @param segmentsExperimentRel the segments experiment rel
-	 */
-	public static void cacheResult(
-		SegmentsExperimentRel segmentsExperimentRel) {
-
-		getPersistence().cacheResult(segmentsExperimentRel);
-	}
-
-	/**
-	 * Caches the segments experiment rels in the entity cache if it is enabled.
-	 *
-	 * @param segmentsExperimentRels the segments experiment rels
-	 */
-	public static void cacheResult(
-		List<SegmentsExperimentRel> segmentsExperimentRels) {
-
-		getPersistence().cacheResult(segmentsExperimentRels);
 	}
 
 	/**
@@ -626,84 +400,123 @@ public class SegmentsExperimentRelUtil {
 	}
 
 	/**
-	 * Returns all the segments experiment rels.
+	 * Returns the segments experiment rel where segmentsExperimentId = &#63; and segmentsExperienceId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
 	 *
-	 * @return the segments experiment rels
+	 * @param segmentsExperimentId the segments experiment ID
+	 * @param segmentsExperienceId the segments experience ID
+	 * @return the matching segments experiment rel, or <code>null</code> if a matching segments experiment rel could not be found
 	 */
-	public static List<SegmentsExperimentRel> findAll() {
-		return getPersistence().findAll();
+	public static SegmentsExperimentRel fetchByS_S(
+		long segmentsExperimentId, long segmentsExperienceId) {
+
+		return getPersistence().fetchByS_S(
+			segmentsExperimentId, segmentsExperienceId);
 	}
 
 	/**
-	 * Returns a range of all the segments experiment rels.
+	 * Returns all the segments experiment rels where segmentsExperimentId = &#63;.
+	 *
+	 * @param segmentsExperimentId the segments experiment ID
+	 * @return the matching segments experiment rels
+	 */
+	public static List<SegmentsExperimentRel> findBySegmentsExperimentId(
+		long segmentsExperimentId) {
+
+		return getPersistence().findBySegmentsExperimentId(
+			segmentsExperimentId);
+	}
+
+	/**
+	 * Returns a range of all the segments experiment rels where segmentsExperimentId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SegmentsExperimentRelModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.segments.model.impl.SegmentsExperimentRelModelImpl</code>.
 	 * </p>
 	 *
+	 * @param segmentsExperimentId the segments experiment ID
 	 * @param start the lower bound of the range of segments experiment rels
 	 * @param end the upper bound of the range of segments experiment rels (not inclusive)
-	 * @return the range of segments experiment rels
+	 * @return the range of matching segments experiment rels
 	 */
-	public static List<SegmentsExperimentRel> findAll(int start, int end) {
-		return getPersistence().findAll(start, end);
+	public static List<SegmentsExperimentRel> findBySegmentsExperimentId(
+		long segmentsExperimentId, int start, int end) {
+
+		return getPersistence().findBySegmentsExperimentId(
+			segmentsExperimentId, start, end);
 	}
 
 	/**
-	 * Returns an ordered range of all the segments experiment rels.
+	 * Returns an ordered range of all the segments experiment rels where segmentsExperimentId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SegmentsExperimentRelModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.segments.model.impl.SegmentsExperimentRelModelImpl</code>.
 	 * </p>
 	 *
+	 * @param segmentsExperimentId the segments experiment ID
 	 * @param start the lower bound of the range of segments experiment rels
 	 * @param end the upper bound of the range of segments experiment rels (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of segments experiment rels
+	 * @return the ordered range of matching segments experiment rels
 	 */
-	public static List<SegmentsExperimentRel> findAll(
-		int start, int end,
+	public static List<SegmentsExperimentRel> findBySegmentsExperimentId(
+		long segmentsExperimentId, int start, int end,
 		OrderByComparator<SegmentsExperimentRel> orderByComparator) {
 
-		return getPersistence().findAll(start, end, orderByComparator);
+		return getPersistence().findBySegmentsExperimentId(
+			segmentsExperimentId, start, end, orderByComparator);
 	}
 
 	/**
-	 * Returns an ordered range of all the segments experiment rels.
+	 * Returns all the segments experiment rels where segmentsExperienceId = &#63;.
+	 *
+	 * @param segmentsExperienceId the segments experience ID
+	 * @return the matching segments experiment rels
+	 */
+	public static List<SegmentsExperimentRel> findBySegmentsExperienceId(
+		long segmentsExperienceId) {
+
+		return getPersistence().findBySegmentsExperienceId(
+			segmentsExperienceId);
+	}
+
+	/**
+	 * Returns a range of all the segments experiment rels where segmentsExperienceId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SegmentsExperimentRelModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.segments.model.impl.SegmentsExperimentRelModelImpl</code>.
 	 * </p>
 	 *
+	 * @param segmentsExperienceId the segments experience ID
+	 * @param start the lower bound of the range of segments experiment rels
+	 * @param end the upper bound of the range of segments experiment rels (not inclusive)
+	 * @return the range of matching segments experiment rels
+	 */
+	public static List<SegmentsExperimentRel> findBySegmentsExperienceId(
+		long segmentsExperienceId, int start, int end) {
+
+		return getPersistence().findBySegmentsExperienceId(
+			segmentsExperienceId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the segments experiment rels where segmentsExperienceId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.segments.model.impl.SegmentsExperimentRelModelImpl</code>.
+	 * </p>
+	 *
+	 * @param segmentsExperienceId the segments experience ID
 	 * @param start the lower bound of the range of segments experiment rels
 	 * @param end the upper bound of the range of segments experiment rels (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param useFinderCache whether to use the finder cache
-	 * @return the ordered range of segments experiment rels
+	 * @return the ordered range of matching segments experiment rels
 	 */
-	public static List<SegmentsExperimentRel> findAll(
-		int start, int end,
-		OrderByComparator<SegmentsExperimentRel> orderByComparator,
-		boolean useFinderCache) {
+	public static List<SegmentsExperimentRel> findBySegmentsExperienceId(
+		long segmentsExperienceId, int start, int end,
+		OrderByComparator<SegmentsExperimentRel> orderByComparator) {
 
-		return getPersistence().findAll(
-			start, end, orderByComparator, useFinderCache);
-	}
-
-	/**
-	 * Removes all the segments experiment rels from the database.
-	 */
-	public static void removeAll() {
-		getPersistence().removeAll();
-	}
-
-	/**
-	 * Returns the number of segments experiment rels.
-	 *
-	 * @return the number of segments experiment rels
-	 */
-	public static int countAll() {
-		return getPersistence().countAll();
+		return getPersistence().findBySegmentsExperienceId(
+			segmentsExperienceId, start, end, orderByComparator);
 	}
 
 	public static SegmentsExperimentRelPersistence getPersistence() {
@@ -719,3 +532,4 @@ public class SegmentsExperimentRelUtil {
 	private static volatile SegmentsExperimentRelPersistence _persistence;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-1591523712

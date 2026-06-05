@@ -131,3 +131,4 @@ public interface SLAResultResource {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:1047012166

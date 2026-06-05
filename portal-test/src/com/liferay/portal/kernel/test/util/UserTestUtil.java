@@ -45,10 +45,16 @@ import java.util.Locale;
 public class UserTestUtil {
 
 	public static User addCompanyAdminUser(Company company) throws Exception {
+		return addCompanyUser(company, RoleConstants.ADMINISTRATOR);
+	}
+
+	public static User addCompanyUser(Company company, String roleName)
+		throws Exception {
+
 		User user = addUser(company);
 
 		Role role = RoleLocalServiceUtil.getRole(
-			company.getCompanyId(), RoleConstants.ADMINISTRATOR);
+			company.getCompanyId(), roleName);
 
 		UserLocalServiceUtil.addRoleUser(role.getRoleId(), user);
 
@@ -193,6 +199,28 @@ public class UserTestUtil {
 
 		return addUser(
 			company.getCompanyId(), user.getUserId(),
+			RandomTestUtil.randomString(
+				NumericStringRandomizerBumper.INSTANCE,
+				UniqueStringRandomizerBumper.INSTANCE),
+			LocaleUtil.getDefault(), RandomTestUtil.randomString(),
+			RandomTestUtil.randomString(), new long[] {group.getGroupId()},
+			ServiceContextTestUtil.getServiceContext());
+	}
+
+	public static User addUser(Company company, String password)
+		throws Exception {
+
+		User user = getAdminUser(company.getCompanyId());
+
+		Group group = GroupLocalServiceUtil.getGroup(
+			company.getCompanyId(), GroupConstants.GUEST);
+
+		String emailAddress =
+			RandomTestUtil.randomString() + RandomTestUtil.nextLong() +
+				"@liferay.com";
+
+		return addUser(
+			company.getCompanyId(), user.getUserId(), password, emailAddress,
 			RandomTestUtil.randomString(
 				NumericStringRandomizerBumper.INSTANCE,
 				UniqueStringRandomizerBumper.INSTANCE),

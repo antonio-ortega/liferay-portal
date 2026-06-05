@@ -7,17 +7,18 @@ package com.liferay.portal.upgrade.data.cleanup;
 
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.db.DBResourceUtil;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBInspector;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.db.DBType;
+import com.liferay.portal.kernel.db.DBResourceUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.upgrade.data.cleanup.DataCleanupPreupgradeProcess;
 import com.liferay.portal.kernel.upgrade.data.cleanup.util.DataCleanupLoggingUtil;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
@@ -28,7 +29,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.TreeSet;
 
 /**
  * @author Jorge Avalos
@@ -47,16 +47,8 @@ public class DatabaseTableAndColumnCaseDataCleanupPreupgradeProcess
 			return;
 		}
 
-		Set<String> expectedTableNames = new TreeSet<>();
-
-		expectedTableNames.addAll(
-			DBResourceUtil.getModuleTableNames(connection));
-		expectedTableNames.addAll(
-			DBResourceUtil.getPortalTableNames(connection));
-		expectedTableNames.addAll(
-			DBResourceUtil.getServiceComponentModuleTableNames(connection));
-		expectedTableNames.addAll(
-			DBResourceUtil.getServiceComponentPortalTableNames(connection));
+		Set<String> expectedTableNames = DBResourceUtil.getLiferayTableNames(
+			connection);
 
 		CompanyLocalServiceUtil.forEachCompanyId(
 			companyId -> {
@@ -72,6 +64,8 @@ public class DatabaseTableAndColumnCaseDataCleanupPreupgradeProcess
 				}
 			});
 
+		DatabaseMetaData databaseMetaData = connection.getMetaData();
+
 		DBInspector dbInspector = new DBInspector(connection);
 
 		Map<String, String> tableNames = new TreeMap<>(
@@ -82,19 +76,23 @@ public class DatabaseTableAndColumnCaseDataCleanupPreupgradeProcess
 		}
 
 		for (String expectedTableName : expectedTableNames) {
+			expectedTableName = dbInspector.normalizeName(expectedTableName);
+
 			String tableName = tableNames.get(expectedTableName);
 
 			if ((tableName == null) || tableName.equals(expectedTableName)) {
 				continue;
 			}
 
-			DataCleanupLoggingUtil.logAlter(
-				_log, expectedTableName,
-				"incorrect table name casing, was " + tableName);
+			DataCleanupLoggingUtil.logRename(
+				_log, tableName, expectedTableName, "it was incorrectly cased");
 
-			alterTableName(tableName, expectedTableName + "_temp");
+			String tempTableName = _getTempName(
+				databaseMetaData.getMaxTableNameLength(), expectedTableName);
 
-			alterTableName(expectedTableName + "_temp", expectedTableName);
+			alterTableName(tableName, tempTableName);
+
+			alterTableName(tempTableName, expectedTableName);
 		}
 
 		Map<String, List<String>> columnDefinitionsMap =
@@ -110,7 +108,6 @@ public class DatabaseTableAndColumnCaseDataCleanupPreupgradeProcess
 				connection));
 
 		Map<String, Map<String, String>> columnsMap = new TreeMap<>();
-		DatabaseMetaData databaseMetaData = connection.getMetaData();
 
 		for (String tableName : expectedTableNames) {
 			try (ResultSet resultSet = databaseMetaData.getColumns(
@@ -140,13 +137,29 @@ public class DatabaseTableAndColumnCaseDataCleanupPreupgradeProcess
 
 			_validateColumnNamesCasing(
 				dbInspector, columnDefinitions, columnNames,
+				databaseMetaData.getMaxColumnNameLength(),
 				dbInspector.normalizeName(tableName));
 		}
 	}
 
+	private String _getTempName(int maxNameLength, String name) {
+		if ((maxNameLength == 0) ||
+			((name.length() + _TEMP_SUFFIX.length()) <= maxNameLength)) {
+
+			return name.concat(_TEMP_SUFFIX);
+		}
+
+		return name.substring(
+			0, maxNameLength - _TEMP_SUFFIX.length()
+		).concat(
+			_TEMP_SUFFIX
+		);
+	}
+
 	private void _validateColumnNamesCasing(
 			DBInspector dbInspector, List<String> columnDefinitions,
-			Map<String, String> columnNames, String tableName)
+			Map<String, String> columnNames, int maxColumnNameLength,
+			String tableName)
 		throws Exception {
 
 		if ((columnNames == null) || columnNames.isEmpty()) {
@@ -160,9 +173,15 @@ public class DatabaseTableAndColumnCaseDataCleanupPreupgradeProcess
 				continue;
 			}
 
-			String expectedColumnName = StringUtil.split(
-				dbInspector.normalizeName(columnDefinition), StringPool.SPACE)
-				[0];
+			String expectedColumnName =
+				StringUtil.split(columnDefinition, StringPool.SPACE)[0];
+
+			if ((db.getDBType() != DBType.MARIADB) &&
+				(db.getDBType() != DBType.MYSQL)) {
+
+				expectedColumnName = dbInspector.normalizeName(
+					expectedColumnName);
+			}
 
 			String columnName = columnNames.get(expectedColumnName);
 
@@ -170,28 +189,48 @@ public class DatabaseTableAndColumnCaseDataCleanupPreupgradeProcess
 				continue;
 			}
 
-			DataCleanupLoggingUtil.logAlter(
-				_log, tableName,
-				StringBundler.concat(
-					"incorrect column name casing, column: ", columnName,
-					" renamed to ", expectedColumnName));
+			if (PropsValues.DATABASE_PARTITION_ENABLED &&
+				StringUtil.equalsIgnoreCase(tableName, "Company")) {
+
+				if (_log.isWarnEnabled()) {
+					_log.warn(
+						StringBundler.concat(
+							"Table ", tableName, ", column ", columnName,
+							" must be manually renamed to ", expectedColumnName,
+							" because it is incorrectly cased"));
+				}
+
+				continue;
+			}
+
+			DataCleanupLoggingUtil.logRename(
+				_log, tableName + ", column " + columnName, expectedColumnName,
+				"it was incorrectly cased");
 
 			int index = columnDefinition.indexOf(StringPool.SPACE);
 
 			String columnDataType =
 				(index != -1) ? columnDefinition.substring(index + 1) : "";
 
+			String tempColumnName = _getTempName(
+				maxColumnNameLength, expectedColumnName);
+
 			String tempColumnDefinition =
-				expectedColumnName + "_temp " + columnDataType;
+				tempColumnName + StringPool.SPACE + columnDataType;
 
 			db.alterColumnName(
 				connection, tableName, columnName, tempColumnDefinition);
 
+			String expectedColumnDefinition =
+				expectedColumnName + StringPool.SPACE + columnDataType;
+
 			db.alterColumnName(
-				connection, tableName, expectedColumnName + "_temp",
-				columnDefinition);
+				connection, tableName, tempColumnName,
+				expectedColumnDefinition);
 		}
 	}
+
+	private static final String _TEMP_SUFFIX = "_temp";
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		DatabaseTableAndColumnCaseDataCleanupPreupgradeProcess.class);

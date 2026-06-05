@@ -4,11 +4,11 @@ import CriteriaCard from 'segment/components/criteria-card';
 import DistributionCard from 'contacts/hoc/segment/DistributionCard';
 import InterestsCard from 'contacts/hoc/segment/InterestsCard';
 import React, {useCallback, useEffect, useRef} from 'react';
+import SegmentActivationCard from 'segment/components/SegmentActivationCard';
 import SegmentProfileCard from 'segment/components/ProfileCard';
 import {debounce} from 'lodash';
 import {ReferencedObjectsProvider} from 'segment/segment-editor/dynamic/context/referencedObjects';
 import {Segment} from 'shared/util/records';
-import {SegmentActivationCard} from 'segment/components/SegmentActivationCard';
 import {SegmentTypes} from 'shared/util/constants';
 import {useTimeZone} from 'shared/hooks/useTimeZone';
 
@@ -22,13 +22,14 @@ const HEADER_MARGIN = 16;
 
 const Overview: React.FC<IOverviewProps> = ({channelId, groupId, segment}) => {
 	const {
-		activationStatus,
+		activation,
 		activeIndividualCount,
 		criteriaString,
 		id,
 		includeAnonymousUsers,
 		individualCount,
-		knownIndividualCount
+		knownIndividualCount,
+		sequential
 	} = segment;
 	const {timeZoneId} = useTimeZone();
 
@@ -55,9 +56,9 @@ const Overview: React.FC<IOverviewProps> = ({channelId, groupId, segment}) => {
 	return (
 		<div className='overview-layout'>
 			<div className='overview-column-main'>
-				{activationStatus && (
+				{activation && (
 					<SegmentActivationCard
-						segmentActivation={activationStatus}
+						segmentActivation={activation}
 						segmentType={SegmentTypes.Batch}
 					/>
 				)}
@@ -85,9 +86,12 @@ const Overview: React.FC<IOverviewProps> = ({channelId, groupId, segment}) => {
 			<div className='overview-column-side' ref={_sideColumnRef}>
 				<ReferencedObjectsProvider segment={segment}>
 					<CriteriaCard
-						criteriaString={criteriaString}
+						channelId={channelId}
+						criteriaString={criteriaString ?? ''}
+						groupId={groupId}
 						includeAnonymousUsers={includeAnonymousUsers}
 						segmentType={SegmentTypes.Batch}
+						sequential={sequential}
 						timeZoneId={timeZoneId}
 					/>
 				</ReferencedObjectsProvider>

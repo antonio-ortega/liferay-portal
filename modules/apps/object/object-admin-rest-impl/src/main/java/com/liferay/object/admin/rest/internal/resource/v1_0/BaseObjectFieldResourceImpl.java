@@ -5,6 +5,7 @@
 
 package com.liferay.object.admin.rest.internal.resource.v1_0;
 
+import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.object.admin.rest.dto.v1_0.ObjectField;
 import com.liferay.object.admin.rest.resource.v1_0.ObjectFieldResource;
 import com.liferay.petra.function.UnsafeBiConsumer;
@@ -849,6 +850,15 @@ public abstract class BaseObjectFieldResourceImpl
 				return LocaleUtil.fromLanguageId(languageId);
 			}
 
+			@Override
+			public boolean isAcceptAllLanguages() {
+				if (ExportImportThreadLocal.isExportInProcess()) {
+					return true;
+				}
+
+				return AcceptLanguage.super.isAcceptAllLanguages();
+			}
+
 		};
 	}
 
@@ -1473,3 +1483,4 @@ public abstract class BaseObjectFieldResourceImpl
 		LogFactoryUtil.getLog(BaseObjectFieldResourceImpl.class);
 
 }
+// LIFERAY-REST-BUILDER-HASH:625914717

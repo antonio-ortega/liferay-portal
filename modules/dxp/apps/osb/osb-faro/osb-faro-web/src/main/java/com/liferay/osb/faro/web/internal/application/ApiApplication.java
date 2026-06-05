@@ -8,9 +8,12 @@ package com.liferay.osb.faro.web.internal.application;
 import com.fasterxml.jackson.jakarta.rs.json.JacksonJsonProvider;
 
 import com.liferay.osb.faro.web.internal.context.GroupInfoContextProvider;
-import com.liferay.osb.faro.web.internal.controller.api.GraphQLController;
-import com.liferay.osb.faro.web.internal.controller.api.RecommendationController;
-import com.liferay.osb.faro.web.internal.controller.api.ReportController;
+import com.liferay.osb.faro.web.internal.controller.api.DemandbaseAccountFaroController;
+import com.liferay.osb.faro.web.internal.controller.api.GraphQLFaroController;
+import com.liferay.osb.faro.web.internal.controller.api.HubSpotWebhookFaroController;
+import com.liferay.osb.faro.web.internal.controller.api.MarketoWebhookFaroController;
+import com.liferay.osb.faro.web.internal.controller.api.RecommendationFaroController;
+import com.liferay.osb.faro.web.internal.controller.api.ReportFaroController;
 import com.liferay.osb.faro.web.internal.util.JSONUtil;
 
 import jakarta.ws.rs.core.Application;
@@ -40,16 +43,28 @@ public class ApiApplication extends Application {
 	public Set<Object> getSingletons() {
 		Set<Object> singletons = new HashSet<>();
 
-		singletons.add(_graphQLController);
+		singletons.add(_demandbaseAccountFaroController);
+		singletons.add(_graphQLFaroController);
 		singletons.add(_groupInfoContextProvider);
+		singletons.add(_hubSpotWebhookFaroController);
 		singletons.add(new JacksonJsonProvider(JSONUtil.getObjectMapper()));
-		singletons.add(_recommendationController);
-		singletons.add(_reportController);
+		singletons.add(_marketoWebhookFaroController);
+		singletons.add(_recommendationFaroController);
+		singletons.add(_reportFaroController);
 
 		return singletons;
 	}
 
 	public static class OAuth2ScopeAliases {
+
+		public static final String ACCOUNTS_WRITE =
+			"Liferay.Analytics.Cloud.REST.accounts.write";
+
+		public static final String HUBSPOT_WRITE =
+			"Liferay.Analytics.Cloud.REST.hubspot.write";
+
+		public static final String MARKETO_WRITE =
+			"Liferay.Analytics.Cloud.REST.marketo.write";
 
 		public static final String RECOMMENDATIONS_EVERYTHING =
 			"Liferay.Analytics.Cloud.REST.recommendations.everything";
@@ -60,15 +75,24 @@ public class ApiApplication extends Application {
 	}
 
 	@Reference
-	private GraphQLController _graphQLController;
+	private DemandbaseAccountFaroController _demandbaseAccountFaroController;
+
+	@Reference
+	private GraphQLFaroController _graphQLFaroController;
 
 	@Reference
 	private GroupInfoContextProvider _groupInfoContextProvider;
 
 	@Reference
-	private RecommendationController _recommendationController;
+	private HubSpotWebhookFaroController _hubSpotWebhookFaroController;
 
 	@Reference
-	private ReportController _reportController;
+	private MarketoWebhookFaroController _marketoWebhookFaroController;
+
+	@Reference
+	private RecommendationFaroController _recommendationFaroController;
+
+	@Reference
+	private ReportFaroController _reportFaroController;
 
 }

@@ -58,4 +58,7 @@ public interface KaleoInstance extends KaleoInstanceModel, PersistedModel {
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException;
 
+	public boolean shouldIndex();
+
 }
+// LIFERAY-SERVICE-BUILDER-HASH:826151866

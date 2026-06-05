@@ -5,6 +5,7 @@
 
 package com.liferay.portal.url.builder.internal;
 
+import com.liferay.portal.kernel.frontend.hashed.files.CachingStrategy;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 import com.liferay.portal.url.builder.AbsolutePortalURLBuilder;
 import com.liferay.portal.url.builder.ServletAbsolutePortalURLBuilder;
@@ -48,9 +49,9 @@ public class ServletAbsolutePortalURLBuilderTest
 		super.setUp();
 
 		_absolutePortalURLBuilder = new AbsolutePortalURLBuilderImpl(
-			mockCacheHelper(), mockConfigurationProvider(),
-			mockHashedFilesRegistry(), mockPortal(context, proxy, cdnHost),
-			mockHttpServletRequest());
+			mockCacheHelper(),
+			mockHashedFilesRegistry(CachingStrategy.DO_NOT_USE_HASHES),
+			mockPortal(context, proxy, cdnHost), mockHttpServletRequest());
 
 		_servletAbsolutePortalURLBuilder = _absolutePortalURLBuilder.forServlet(
 			"path/to/resource");

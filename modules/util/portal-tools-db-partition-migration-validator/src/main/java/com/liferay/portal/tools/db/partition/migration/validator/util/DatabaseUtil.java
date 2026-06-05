@@ -66,13 +66,16 @@ public class DatabaseUtil {
 				"select Company.companyId, webId, name, hostname from " +
 					"Company left join VirtualHost on Company.companyId = " +
 						"VirtualHost.companyId");
+
 			ResultSet resultSet = preparedStatement.executeQuery()) {
 
 			while (resultSet.next()) {
 				companies.add(
 					new Company(
-						resultSet.getLong(1), resultSet.getString(3),
-						resultSet.getString(4), resultSet.getString(2)));
+						resultSet.getLong("companyId"),
+						resultSet.getString("name"),
+						resultSet.getString("hostname"),
+						resultSet.getString("webId")));
 			}
 		}
 
@@ -86,6 +89,7 @@ public class DatabaseUtil {
 
 		try (PreparedStatement preparedStatement = connection.prepareStatement(
 				"select companyId from Company");
+
 			ResultSet resultSet = preparedStatement.executeQuery()) {
 
 			while (resultSet.next()) {
@@ -102,10 +106,11 @@ public class DatabaseUtil {
 
 		try (PreparedStatement preparedStatement = connection.prepareStatement(
 				"select companyId from CompanyInfo");
+
 			ResultSet resultSet = preparedStatement.executeQuery()) {
 
 			while (resultSet.next()) {
-				if (companyId == resultSet.getLong(1)) {
+				if (companyId == resultSet.getLong("companyId")) {
 					return companyId;
 				}
 			}
@@ -143,14 +148,17 @@ public class DatabaseUtil {
 		try (PreparedStatement preparedStatement = connection.prepareStatement(
 				"select servletContextName, schemaVersion, state_, verified " +
 					"from Release_");
+
 			ResultSet resultSet = preparedStatement.executeQuery()) {
 
 			while (resultSet.next()) {
 				releases.add(
 					new Release(
-						Version.parseVersion(resultSet.getString(2)),
-						resultSet.getString(1), resultSet.getInt(3),
-						resultSet.getBoolean(4)));
+						Version.parseVersion(
+							resultSet.getString("schemaVersion")),
+						resultSet.getString("servletContextName"),
+						resultSet.getInt("state_"),
+						resultSet.getBoolean("verified")));
 			}
 		}
 

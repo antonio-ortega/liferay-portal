@@ -204,3 +204,4 @@ public class QueryAttributes implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1545418962

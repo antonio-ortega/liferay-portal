@@ -68,3 +68,4 @@ public interface CommerceVirtualOrderItemFileEntryService extends BaseService {
 		throws PortalException;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:1959774223

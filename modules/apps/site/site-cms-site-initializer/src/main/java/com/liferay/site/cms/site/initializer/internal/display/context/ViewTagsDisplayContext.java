@@ -5,11 +5,7 @@
 
 package com.liferay.site.cms.site.initializer.internal.display.context;
 
-import com.liferay.asset.categories.admin.web.constants.AssetCategoriesAdminPortletKeys;
-import com.liferay.asset.tags.constants.AssetTagsAdminPortletKeys;
 import com.liferay.asset.util.AssetHelper;
-import com.liferay.portal.kernel.json.JSONUtil;
-import com.liferay.portal.kernel.service.GroupService;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HashMapBuilder;
@@ -27,10 +23,8 @@ import java.util.Map;
 public class ViewTagsDisplayContext {
 
 	public ViewTagsDisplayContext(
-		GroupService groupService, HttpServletRequest httpServletRequest,
-		ThemeDisplay themeDisplay) {
+		HttpServletRequest httpServletRequest, ThemeDisplay themeDisplay) {
 
-		_groupService = groupService;
 		_httpServletRequest = httpServletRequest;
 		_themeDisplay = themeDisplay;
 	}
@@ -38,14 +32,8 @@ public class ViewTagsDisplayContext {
 	public Map<String, Object> getReactData() throws Exception {
 		return HashMapBuilder.<String, Object>put(
 			"actionItems",
-			JSONUtil.putAll(
-				ExportImportUtil.getActionItemJSONObject(
-					_httpServletRequest, "export-import-vocabularies",
-					AssetCategoriesAdminPortletKeys.ASSET_CATEGORIES_ADMIN,
-					_themeDisplay),
-				ExportImportUtil.getActionItemJSONObject(
-					_httpServletRequest, "export-import-tags",
-					AssetTagsAdminPortletKeys.ASSET_TAGS_ADMIN, _themeDisplay))
+			ExportImportUtil.getCategorizationActionItemsJSONArray(
+				_httpServletRequest, _themeDisplay)
 		).put(
 			"cmsGroupId", _themeDisplay.getScopeGroupId()
 		).put(
@@ -77,7 +65,6 @@ public class ViewTagsDisplayContext {
 		).build();
 	}
 
-	private final GroupService _groupService;
 	private final HttpServletRequest _httpServletRequest;
 	private final ThemeDisplay _themeDisplay;
 

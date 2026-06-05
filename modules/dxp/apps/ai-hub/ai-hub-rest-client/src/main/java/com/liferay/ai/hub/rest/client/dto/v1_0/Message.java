@@ -45,6 +45,31 @@ public class Message implements Cloneable, Serializable {
 
 	protected Chat chat;
 
+	public String getChatbotExternalReferenceCode() {
+		return chatbotExternalReferenceCode;
+	}
+
+	public void setChatbotExternalReferenceCode(
+		String chatbotExternalReferenceCode) {
+
+		this.chatbotExternalReferenceCode = chatbotExternalReferenceCode;
+	}
+
+	public void setChatbotExternalReferenceCode(
+		UnsafeSupplier<String, Exception>
+			chatbotExternalReferenceCodeUnsafeSupplier) {
+
+		try {
+			chatbotExternalReferenceCode =
+				chatbotExternalReferenceCodeUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String chatbotExternalReferenceCode;
+
 	public Map<String, ?> getContext() {
 		return context;
 	}
@@ -66,24 +91,38 @@ public class Message implements Cloneable, Serializable {
 
 	protected Map<String, ?> context;
 
-	public Scope getScope() {
-		return scope;
+	public InstructionDefinitionScope getInstructionDefinitionScope() {
+		return instructionDefinitionScope;
 	}
 
-	public void setScope(Scope scope) {
-		this.scope = scope;
+	public String getInstructionDefinitionScopeAsString() {
+		if (instructionDefinitionScope == null) {
+			return null;
+		}
+
+		return instructionDefinitionScope.toString();
 	}
 
-	public void setScope(UnsafeSupplier<Scope, Exception> scopeUnsafeSupplier) {
+	public void setInstructionDefinitionScope(
+		InstructionDefinitionScope instructionDefinitionScope) {
+
+		this.instructionDefinitionScope = instructionDefinitionScope;
+	}
+
+	public void setInstructionDefinitionScope(
+		UnsafeSupplier<InstructionDefinitionScope, Exception>
+			instructionDefinitionScopeUnsafeSupplier) {
+
 		try {
-			scope = scopeUnsafeSupplier.get();
+			instructionDefinitionScope =
+				instructionDefinitionScopeUnsafeSupplier.get();
 		}
 		catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 	}
 
-	protected Scope scope;
+	protected InstructionDefinitionScope instructionDefinitionScope;
 
 	public String getText() {
 		return text;
@@ -135,4 +174,41 @@ public class Message implements Cloneable, Serializable {
 		return MessageSerDes.toJSON(this);
 	}
 
+	public static enum InstructionDefinitionScope {
+
+		CLICK_TO_CHAT("clickToChat"), CMS("cms"), EVERYWHERE("everywhere");
+
+		public static InstructionDefinitionScope create(String value) {
+			for (InstructionDefinitionScope instructionDefinitionScope :
+					values()) {
+
+				if (Objects.equals(
+						instructionDefinitionScope.getValue(), value) ||
+					Objects.equals(instructionDefinitionScope.name(), value)) {
+
+					return instructionDefinitionScope;
+				}
+			}
+
+			return null;
+		}
+
+		public String getValue() {
+			return _value;
+		}
+
+		@Override
+		public String toString() {
+			return _value;
+		}
+
+		private InstructionDefinitionScope(String value) {
+			_value = value;
+		}
+
+		private final String _value;
+
+	}
+
 }
+// LIFERAY-REST-BUILDER-HASH:666336095

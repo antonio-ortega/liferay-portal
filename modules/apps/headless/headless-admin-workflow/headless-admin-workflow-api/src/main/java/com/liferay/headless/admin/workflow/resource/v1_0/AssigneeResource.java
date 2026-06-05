@@ -145,3 +145,4 @@ public interface AssigneeResource {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:1448475805

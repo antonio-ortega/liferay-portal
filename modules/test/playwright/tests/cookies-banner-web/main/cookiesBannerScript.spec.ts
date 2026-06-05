@@ -12,8 +12,9 @@ import {waitForAlert} from '../../../utils/waitForAlert';
 import {journalPagesTest} from '../../journal-web/main/fixtures/journalPagesTest';
 import {
 	clearConsentCookies,
-	resetCookieManagerConfiguration,
-} from './utils/cookieManagerAfterEach';
+	resetConsentManagerConfiguration,
+	updateConsentManagerConfiguration,
+} from './utils/consentManagerConfigurationHelper';
 
 export const test = mergeTests(
 	journalPagesTest,
@@ -22,62 +23,31 @@ export const test = mergeTests(
 );
 
 test.afterEach(async ({systemSettingsPage}) => {
-	await test.step('Reset Cookie Manager Configuration', async () => {
-		await resetCookieManagerConfiguration(systemSettingsPage);
+	await test.step('Reset Consent Manager Configuration', async () => {
+		await resetConsentManagerConfiguration(systemSettingsPage);
 	});
 
 	await test.step('Clear Consent Cookies if present', async () => {
-		await clearConsentCookies(systemSettingsPage);
+		await clearConsentCookies(systemSettingsPage.page);
 	});
 });
 
 test(
 	'Cookie Banner Script',
 	{tag: '@LPD-25701'},
-	async ({journalEditArticlePage, page, systemSettingsPage}) => {
+	async ({journalEditArticlePage, page}) => {
 		await test.step('Enable Third Party Cookies', async () => {
-			await systemSettingsPage.goToSystemSetting(
-				'Privacy',
-				'Cookie Manager'
-			);
-
-			const enabledButton = page.getByLabel('Enabled');
-
-			await enabledButton.waitFor({state: 'visible'});
-
-			const isChecked = await enabledButton.isChecked();
-
-			if (!isChecked) {
-				await enabledButton.click();
-			}
-
-			await expect(enabledButton).toBeChecked();
-
-			const updateButton = page.getByRole('button', {
-				name: 'Update',
+			await updateConsentManagerConfiguration(page, {
+				enabled: true,
+				forceReload: true,
 			});
-
-			const saveButton = page.getByRole('button', {
-				name: 'Save',
-			});
-
-			if (await saveButton.isVisible()) {
-				await saveButton.dispatchEvent('click');
-			}
-			else if (await updateButton.isVisible()) {
-				await updateButton.dispatchEvent('click');
-			}
-
-			await waitForAlert(page);
 		});
 
 		await test.step('Created Web Content with script and check script loads', async () => {
 			await page.goto('/');
 
 			await page
-				.locator(
-					'#p_p_id_com_liferay_cookies_banner_web_portlet_CookiesBannerPortlet_'
-				)
+				.locator('div[role="dialog"][aria-modal="true"]')
 				.waitFor({state: 'visible'});
 
 			const acceptAll = page.getByRole('button', {name: 'Accept All'});

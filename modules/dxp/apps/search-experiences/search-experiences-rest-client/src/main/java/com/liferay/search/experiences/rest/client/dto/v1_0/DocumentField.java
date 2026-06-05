@@ -78,3 +78,4 @@ public class DocumentField implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-470251422

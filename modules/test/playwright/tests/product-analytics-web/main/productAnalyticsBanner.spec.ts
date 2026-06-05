@@ -5,7 +5,6 @@
 
 import {expect, mergeTests} from '@playwright/test';
 
-import {accountSettingsPagesTest} from '../../../fixtures/accountSettingsPagesTest';
 import {featureFlagsTest} from '../../../fixtures/featureFlagsTest';
 import {instanceSettingsPagesTest} from '../../../fixtures/instanceSettingsPagesTest';
 import {loginTest} from '../../../fixtures/loginTest';
@@ -16,7 +15,6 @@ import {clickAndExpectToBeVisible} from '../../../utils/clickAndExpectToBeVisibl
 import {waitForAlert} from '../../../utils/waitForAlert';
 
 export const test = mergeTests(
-	accountSettingsPagesTest,
 	featureFlagsTest({
 		'LPD-51356': {enabled: true},
 	}),
@@ -62,11 +60,14 @@ test.afterEach(async ({systemSettingsPage}) => {
 	});
 
 	await test.step('Reset Cookies System Settings if needed', async () => {
-		await systemSettingsPage.goToSystemSetting('Privacy', 'Cookie Manager');
+		await systemSettingsPage.goToSystemSetting(
+			'Privacy',
+			'Consent Manager'
+		);
 
 		await systemSettingsPage.page
 			.getByRole('heading', {
-				name: 'Cookie Manager',
+				name: 'Consent Manager',
 			})
 			.waitFor();
 
@@ -245,7 +246,7 @@ test(
 		});
 
 		await test.step('Verify Product Analytics Banner is no longer present', async () => {
-			page.reload();
+			await page.reload();
 
 			await expect(
 				productAnalyticsBannerPage.bannerLocator
@@ -261,7 +262,7 @@ test(
 		await test.step('Enable Preference Handling Cookies', async () => {
 			await systemSettingsPage.goToSystemSetting(
 				'Privacy',
-				'Cookie Manager'
+				'Consent Manager'
 			);
 
 			await systemSettingsPage.page.waitForTimeout(1000);
@@ -305,7 +306,7 @@ test(
 		await acceptAll.click();
 
 		await test.step('Verify Product Analytics Banner is no longer present', async () => {
-			page.reload();
+			await page.reload();
 
 			await expect(
 				productAnalyticsBannerPage.bannerLocator
@@ -329,7 +330,7 @@ test(
 		await test.step('Enable Preference Handling Cookies', async () => {
 			await systemSettingsPage.goToSystemSetting(
 				'Privacy',
-				'Cookie Manager'
+				'Consent Manager'
 			);
 
 			await systemSettingsPage.page.waitForTimeout(1000);
@@ -388,88 +389,5 @@ test(
 				)
 			).toBeVisible();
 		});
-	}
-);
-
-test(
-	'Verify Data Privacy center is not present when both Cookie Manager and Product Analytics are disabled',
-	{tag: '@LPD-72749'},
-	async ({accountSettingsPage, page, systemSettingsPage}) => {
-		await test.step('Disable Product Analytics', async () => {
-			await systemSettingsPage.goToSystemSetting(
-				'Privacy',
-				'Product Analytics'
-			);
-
-			await page
-				.getByRole('heading', {
-					name: 'Product Analytics',
-				})
-				.waitFor();
-
-			const enabledButton = await page.getByLabel('Enabled');
-
-			await enabledButton.setChecked(false);
-
-			if (await page.getByRole('button', {name: 'Save'}).isVisible()) {
-				await page
-					.getByRole('button', {name: 'Save'})
-					.dispatchEvent('click');
-			}
-			else {
-				await page
-					.getByRole('button', {name: 'Update'})
-					.dispatchEvent('click');
-			}
-
-			await waitForAlert(page);
-
-			await expect(enabledButton).not.toBeChecked();
-		});
-
-		await test.step('Disable Cookie Manager', async () => {
-			await systemSettingsPage.goToSystemSetting(
-				'Privacy',
-				'Cookie Manager'
-			);
-
-			await page
-				.getByRole('heading', {
-					name: 'Cookie Manager',
-				})
-				.waitFor();
-
-			const enabledButton = await page.getByLabel('Enabled');
-
-			await enabledButton.setChecked(false);
-
-			if (await page.getByRole('button', {name: 'Save'}).isVisible()) {
-				await page
-					.getByRole('button', {name: 'Save'})
-					.dispatchEvent('click');
-			}
-			else {
-				await page
-					.getByRole('button', {name: 'Update'})
-					.dispatchEvent('click');
-			}
-
-			await waitForAlert(page);
-
-			await expect(enabledButton).not.toBeChecked();
-		});
-
-		await accountSettingsPage.goToAccountSettings();
-
-		page.reload();
-
-		const dataAndPrivacyTab = await accountSettingsPage.page.locator(
-			'.nav-link',
-			{
-				hasText: 'Data And Privacy',
-			}
-		);
-
-		await expect(await dataAndPrivacyTab).not.toBeVisible();
 	}
 );

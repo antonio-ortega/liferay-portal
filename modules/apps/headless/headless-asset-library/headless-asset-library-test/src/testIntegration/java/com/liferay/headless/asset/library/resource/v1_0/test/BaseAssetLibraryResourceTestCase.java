@@ -47,6 +47,7 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Time;
@@ -143,7 +144,8 @@ public abstract class BaseAssetLibraryResourceTestCase {
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
 		).endpoint(
-			testCompany.getVirtualHostname(), 8080, "http"
+			testCompany.getVirtualHostname(),
+			PortalUtil.getPortalServerPort(false), "http"
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -153,7 +155,8 @@ public abstract class BaseAssetLibraryResourceTestCase {
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
 		).endpoint(
-			testCompany.getVirtualHostname(), 8080, "http"
+			testCompany.getVirtualHostname(),
+			PortalUtil.getPortalServerPort(false), "http"
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -163,7 +166,8 @@ public abstract class BaseAssetLibraryResourceTestCase {
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
 		).endpoint(
-			testCompany.getVirtualHostname(), 8080, "http"
+			testCompany.getVirtualHostname(),
+			PortalUtil.getPortalServerPort(false), "http"
 		).locale(
 			LocaleUtil.getDefault()
 		).parameter(
@@ -173,6 +177,9 @@ public abstract class BaseAssetLibraryResourceTestCase {
 
 	@After
 	public void tearDown() throws Exception {
+		DepotEntryLocalServiceUtil.deleteDepotEntry(irrelevantDepotEntry);
+		DepotEntryLocalServiceUtil.deleteDepotEntry(testDepotEntry);
+
 		GroupTestUtil.deleteGroup(irrelevantGroup);
 		GroupTestUtil.deleteGroup(testGroup);
 	}
@@ -230,6 +237,7 @@ public abstract class BaseAssetLibraryResourceTestCase {
 		assetLibrary.setAssetLibraryKey(regex);
 		assetLibrary.setDescription(regex);
 		assetLibrary.setExternalReferenceCode(regex);
+		assetLibrary.setFriendlyURL(regex);
 		assetLibrary.setName(regex);
 
 		String json = AssetLibrarySerDes.toJSON(assetLibrary);
@@ -241,6 +249,7 @@ public abstract class BaseAssetLibraryResourceTestCase {
 		Assert.assertEquals(regex, assetLibrary.getAssetLibraryKey());
 		Assert.assertEquals(regex, assetLibrary.getDescription());
 		Assert.assertEquals(regex, assetLibrary.getExternalReferenceCode());
+		Assert.assertEquals(regex, assetLibrary.getFriendlyURL());
 		Assert.assertEquals(regex, assetLibrary.getName());
 	}
 
@@ -1116,7 +1125,8 @@ public abstract class BaseAssetLibraryResourceTestCase {
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
 		).endpoint(
-			testCompany.getVirtualHostname(), 8080, "http"
+			testCompany.getVirtualHostname(),
+			PortalUtil.getPortalServerPort(false), "http"
 		).parameters(
 			parameters
 		).build();
@@ -1261,6 +1271,14 @@ public abstract class BaseAssetLibraryResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("creator", additionalAssertFieldName)) {
+				if (assetLibrary.getCreator() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("creatorUserId", additionalAssertFieldName)) {
 				if (assetLibrary.getCreatorUserId() == null) {
 					valid = false;
@@ -1289,6 +1307,14 @@ public abstract class BaseAssetLibraryResourceTestCase {
 					"externalReferenceCode", additionalAssertFieldName)) {
 
 				if (assetLibrary.getExternalReferenceCode() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("friendlyURL", additionalAssertFieldName)) {
+				if (assetLibrary.getFriendlyURL() == null) {
 					valid = false;
 				}
 
@@ -1528,6 +1554,17 @@ public abstract class BaseAssetLibraryResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("creator", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						assetLibrary1.getCreator(),
+						assetLibrary2.getCreator())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("creatorUserId", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						assetLibrary1.getCreatorUserId(),
@@ -1589,6 +1626,17 @@ public abstract class BaseAssetLibraryResourceTestCase {
 				if (!Objects.deepEquals(
 						assetLibrary1.getExternalReferenceCode(),
 						assetLibrary2.getExternalReferenceCode())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("friendlyURL", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						assetLibrary1.getFriendlyURL(),
+						assetLibrary2.getFriendlyURL())) {
 
 					return false;
 				}
@@ -1883,6 +1931,11 @@ public abstract class BaseAssetLibraryResourceTestCase {
 				"Invalid entity field " + entityFieldName);
 		}
 
+		if (entityFieldName.equals("creator")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
 		if (entityFieldName.equals("creatorUserId")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
@@ -1999,6 +2052,52 @@ public abstract class BaseAssetLibraryResourceTestCase {
 
 		if (entityFieldName.equals("externalReferenceCode")) {
 			Object object = assetLibrary.getExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
+
+			return sb.toString();
+		}
+
+		if (entityFieldName.equals("friendlyURL")) {
+			Object object = assetLibrary.getFriendlyURL();
 
 			String value = String.valueOf(object);
 
@@ -2160,7 +2259,9 @@ public abstract class BaseAssetLibraryResourceTestCase {
 			).toString(),
 			"application/json");
 		httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
-		httpInvoker.path("http://localhost:8080/o/graphql");
+		httpInvoker.path(
+			"http://localhost:" + PortalUtil.getPortalServerPort(false) +
+				"/o/graphql");
 		httpInvoker.userNameAndPassword(
 			"test@liferay.com:" + PropsValues.DEFAULT_ADMIN_PASSWORD);
 
@@ -2200,6 +2301,8 @@ public abstract class BaseAssetLibraryResourceTestCase {
 				description = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
 				externalReferenceCode = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
+				friendlyURL = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
 				id = RandomTestUtil.randomLong();
 				name = StringUtil.toLowerCase(RandomTestUtil.randomString());
@@ -2484,3 +2587,4 @@ public abstract class BaseAssetLibraryResourceTestCase {
 			_assetLibraryResource;
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1076140529

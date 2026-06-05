@@ -9,6 +9,7 @@ import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.service.AssetCategoryLocalService;
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.service.DLFileEntryLocalService;
+import com.liferay.friendly.url.constants.FriendlyURLEntryConstants;
 import com.liferay.friendly.url.model.FriendlyURLEntryLocalization;
 import com.liferay.friendly.url.service.FriendlyURLEntryLocalService;
 import com.liferay.headless.common.spi.service.context.ServiceContextBuilder;
@@ -102,6 +103,8 @@ import com.liferay.segments.model.SegmentsExperience;
 import com.liferay.segments.processor.SegmentsExperienceRequestProcessorRegistry;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 import com.liferay.segments.service.SegmentsExperienceService;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import jakarta.ws.rs.core.MultivaluedMap;
 
@@ -576,6 +579,8 @@ public class SitePageResourceImpl
 		FriendlyURLEntryLocalization friendlyURLEntryLocalization =
 			_friendlyURLEntryLocalService.fetchFriendlyURLEntryLocalization(
 				groupId, classNameId,
+				FriendlyURLEntryConstants.
+					FRIENDLY_URL_ENTRY_PARENT_CLASS_PK_DEFAULT,
 				contextAcceptLanguage.getPreferredLanguageId(),
 				friendlyUrlPath);
 
@@ -593,12 +598,12 @@ public class SitePageResourceImpl
 	}
 
 	private SegmentsExperience _getSegmentsExperience(
-			Layout layout, String segmentsExperienceKey,
-			ThemeDisplay themeDisplay)
+			HttpServletRequest httpServletRequest, Layout layout,
+			String segmentsExperienceKey)
 		throws Exception {
 
 		if (Validator.isNull(segmentsExperienceKey)) {
-			return _getUserSegmentsExperience(layout, themeDisplay);
+			return _getUserSegmentsExperience(httpServletRequest, layout);
 		}
 
 		return _segmentsExperienceService.fetchSegmentsExperience(
@@ -617,21 +622,17 @@ public class SitePageResourceImpl
 	}
 
 	private SegmentsExperience _getUserSegmentsExperience(
-			Layout layout, ThemeDisplay themeDisplay)
+			HttpServletRequest httpServletRequest, Layout layout)
 		throws Exception {
-
-		contextHttpServletRequest.setAttribute(
-			WebKeys.THEME_DISPLAY, themeDisplay);
-
-		long[] segmentsEntryIds = _segmentsEntryRetriever.getSegmentsEntryIds(
-			layout.getGroupId(), contextUser.getUserId(),
-			_requestContextMapper.map(contextHttpServletRequest), new long[0]);
 
 		long[] segmentsExperienceIds =
 			_segmentsExperienceRequestProcessorRegistry.
 				getSegmentsExperienceIds(
-					contextHttpServletRequest, null, layout.getGroupId(),
-					layout.getPlid(), segmentsEntryIds);
+					httpServletRequest, null, layout.getGroupId(),
+					layout.getPlid(),
+					_segmentsEntryRetriever.getSegmentsEntryIds(
+						layout.getGroupId(), contextUser.getUserId(),
+						_requestContextMapper.map(httpServletRequest)));
 
 		if (ArrayUtil.isEmpty(segmentsExperienceIds)) {
 			return _segmentsExperienceLocalService.fetchSegmentsExperience(
@@ -744,9 +745,6 @@ public class SitePageResourceImpl
 
 		Layout layout = _getLayout(groupId, friendlyUrlPath);
 
-		contextHttpServletRequest = DynamicServletRequest.addQueryString(
-			contextHttpServletRequest, "p_l_id=" + layout.getPlid(), false);
-
 		try (AutoCloseable autoCloseable =
 				_layoutServiceContextHelper.getServiceContextAutoCloseable(
 					layout, contextUser)) {
@@ -754,29 +752,39 @@ public class SitePageResourceImpl
 			ServiceContext serviceContext =
 				ServiceContextThreadLocal.getServiceContext();
 
+			HttpServletRequest httpServletRequest =
+				_portal.getOriginalServletRequest(contextHttpServletRequest);
+
+			httpServletRequest = DynamicServletRequest.addQueryString(
+				httpServletRequest, "p_l_id=" + layout.getPlid(), false);
+
+			serviceContext.setRequest(httpServletRequest);
+
+			ThemeDisplay themeDisplay = serviceContext.getThemeDisplay();
+
+			themeDisplay.setRequest(httpServletRequest);
+
 			SegmentsExperience segmentsExperience = _getSegmentsExperience(
-				layout, segmentsExperienceKey,
-				serviceContext.getThemeDisplay());
+				httpServletRequest, layout, segmentsExperienceKey);
 
 			if (segmentsExperience != null) {
-				contextHttpServletRequest.setAttribute(
+				httpServletRequest.setAttribute(
 					SegmentsWebKeys.SEGMENTS_EXPERIENCE_IDS,
 					new long[] {segmentsExperience.getSegmentsExperienceId()});
 			}
 
 			layout.includeLayoutContent(
-				contextHttpServletRequest, contextHttpServletResponse);
+				httpServletRequest, contextHttpServletResponse);
 
-			StringBundler sb =
-				(StringBundler)contextHttpServletRequest.getAttribute(
-					WebKeys.LAYOUT_CONTENT);
+			StringBundler sb = (StringBundler)httpServletRequest.getAttribute(
+				WebKeys.LAYOUT_CONTENT);
 
 			LayoutSet layoutSet = layout.getLayoutSet();
 
 			Document document = Jsoup.parse(
 				ThemeUtil.include(
 					ServletContextPool.get(StringPool.BLANK),
-					contextHttpServletRequest, contextHttpServletResponse,
+					httpServletRequest, contextHttpServletResponse,
 					"portal_normal.ftl", layoutSet.getTheme(), false));
 
 			Element bodyElement = document.body();
@@ -809,10 +817,11 @@ public class SitePageResourceImpl
 			ServiceContext serviceContext =
 				ServiceContextThreadLocal.getServiceContext();
 
+			ThemeDisplay themeDisplay = serviceContext.getThemeDisplay();
+
 			dtoConverterContext.setAttribute(
 				"segmentsExperience",
-				_getUserSegmentsExperience(
-					layout, serviceContext.getThemeDisplay()));
+				_getUserSegmentsExperience(themeDisplay.getRequest(), layout));
 
 			return _sitePageDTOConverter.toDTO(dtoConverterContext, layout);
 		}

@@ -7,7 +7,6 @@ package com.liferay.commerce.discount.service.base;
 
 import com.liferay.commerce.discount.model.CommerceDiscountRel;
 import com.liferay.commerce.discount.service.CommerceDiscountRelLocalService;
-import com.liferay.commerce.discount.service.persistence.CommerceDiscountRelFinder;
 import com.liferay.commerce.discount.service.persistence.CommerceDiscountRelPersistence;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.aop.AopService;
@@ -470,9 +469,6 @@ public abstract class CommerceDiscountRelLocalServiceBaseImpl
 	protected CommerceDiscountRelPersistence commerceDiscountRelPersistence;
 
 	@Reference
-	protected CommerceDiscountRelFinder commerceDiscountRelFinder;
-
-	@Reference
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
 
@@ -480,3 +476,4 @@ public abstract class CommerceDiscountRelLocalServiceBaseImpl
 		CommerceDiscountRelLocalServiceBaseImpl.class);
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:378768475

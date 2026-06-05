@@ -145,8 +145,7 @@ public class ClientExtensionEntryLocalServiceUtil {
 	}
 
 	public static void deployClientExtensionEntry(
-			ClientExtensionEntry clientExtensionEntry)
-		throws PortalException {
+		ClientExtensionEntry clientExtensionEntry) {
 
 		getService().deployClientExtensionEntry(clientExtensionEntry);
 	}
@@ -458,3 +457,4 @@ public class ClientExtensionEntryLocalServiceUtil {
 			ClientExtensionEntryLocalService.class);
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:1851473346

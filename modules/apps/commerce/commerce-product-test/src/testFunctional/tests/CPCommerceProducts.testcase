@@ -2,6 +2,7 @@
 definition {
 
 	property browser.chrome.version = "139.0";
+	property custom.properties = "feature.flag.LPD-11235=true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Product Info Management";
@@ -11,6 +12,10 @@ definition {
 
 		task ("Enable private pages") {
 			PagesAdmin.enablePrivatePages();
+		}
+
+		task ("Enable CKE4") {
+			PagesAdmin.enableCKE4();
 		}
 	}
 
@@ -400,7 +405,7 @@ definition {
 	@description = "This is a test for COMMERCE-9253. CanCheckTheApprovedStatusForSingleApproverWorkflow"
 	@priority = 5
 	test CanCheckApprovedProductWorkflowStatusWithSingleApproverWorkflow {
-		property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
+		property custom.properties = "company.security.strangers.verify=false${line.separator}feature.flag.LPD-11235=true${line.separator}jsonws.web.service.paths.excludes=";
 		property portal.acceptance = "true";
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
@@ -465,7 +470,7 @@ definition {
 
 		CommerceProducts.openProductsAdmin();
 
-		AppBuilderAdmin.searchByItem(itemName = "Simple T-Shirt");
+		CommerceNavigator.searchEntry(entryName = "Simple T-Shirt");
 
 		CommerceNavigator.gotoEntry(entryName = "Simple T-Shirt");
 
@@ -627,7 +632,7 @@ definition {
 	@description = "This is a test for COMMERCE-9182. VerifyDraftProductNotAppearOnMiniumCatalogPage"
 	@priority = 5
 	test CanCheckDraftProductVisibilityOnMiniumCatalogPage {
-		property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
+		property custom.properties = "company.security.strangers.verify=false${line.separator}feature.flag.LPD-11235=true${line.separator}jsonws.web.service.paths.excludes=";
 		property portal.acceptance = "true";
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
@@ -657,7 +662,7 @@ definition {
 
 		Click(locator1 = "Icon#BACK");
 
-		AppBuilderAdmin.searchByItem(itemName = "Simple T-Shirt");
+		CommerceNavigator.searchEntry(entryName = "Simple T-Shirt");
 
 		AssertElementPresent(
 			key_status = "Draft",
@@ -686,7 +691,7 @@ definition {
 
 		CommerceProducts.openProductsAdmin();
 
-		AppBuilderAdmin.searchByItem(itemName = "Simple T-Shirt");
+		CommerceNavigator.searchEntry(entryName = "Simple T-Shirt");
 
 		CommerceNavigator.gotoEntry(entryName = "Simple T-Shirt");
 
@@ -694,7 +699,7 @@ definition {
 
 		Click(locator1 = "Icon#BACK");
 
-		AppBuilderAdmin.searchByItem(itemName = "Simple T-Shirt");
+		CommerceNavigator.searchEntry(entryName = "Simple T-Shirt");
 
 		AssertElementPresent(
 			key_status = "Approved",
@@ -742,7 +747,7 @@ definition {
 	@description = "This is a test for COMMERCE-9290. CanCheckTheDraftStatusForSingleApproverWorkflow"
 	@priority = 5
 	test CanCheckDraftProductWorkflowStatusWithSingleApproverWorkflow {
-		property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
+		property custom.properties = "company.security.strangers.verify=false${line.separator}feature.flag.LPD-11235=true${line.separator}jsonws.web.service.paths.excludes=";
 		property portal.acceptance = "true";
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
@@ -889,6 +894,8 @@ definition {
 	test CanCheckPendingProductWorkflowStatus {
 		property portal.acceptance = "false";
 
+		CommerceProducts.enableProductSingleApproverWorkflow();
+
 		CommerceProducts.addProductWithStatusViaAPI(
 			catalogName = "Master",
 			productStatusCode = 1,
@@ -908,7 +915,7 @@ definition {
 	@description = "This is a test for COMMERCE-9292. CanCheckThePendingReviewStatusForSingleApproverWorkflow"
 	@priority = 5
 	test CanCheckPendingProductWorkflowStatusWithSingleApproverWorkflow {
-		property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
+		property custom.properties = "company.security.strangers.verify=false${line.separator}feature.flag.LPD-11235=true${line.separator}jsonws.web.service.paths.excludes=";
 		property portal.acceptance = "true";
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
@@ -972,7 +979,7 @@ definition {
 
 		CommerceProducts.openProductsAdmin();
 
-		AppBuilderAdmin.searchByItem(itemName = "Simple T-Shirt");
+		CommerceNavigator.searchEntry(entryName = "Simple T-Shirt");
 
 		CommerceNavigator.gotoEntry(entryName = "Simple T-Shirt");
 
@@ -1120,7 +1127,7 @@ definition {
 	@description = "This is a test for the COMMERCE-10763, to verify that a buyer user can download the virtual product by the URL retrieved using API"
 	@priority = 4
 	test CanDownloadConfiguredVirtualProduct {
-		property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
+		property custom.properties = "company.security.strangers.verify=false${line.separator}feature.flag.LPD-11235=true${line.separator}jsonws.web.service.paths.excludes=";
 		property portal.acceptance = "false";
 
 		var baseURL = PropsUtil.get("portal.url");
@@ -1274,7 +1281,7 @@ definition {
 	@description = "This is a test for the COMMERCE-10763, to verify that a buyer user can not download the virtual product by the URL retrieved using API without permissions"
 	@priority = 4
 	test CanDownloadConfiguredVirtualProductWithoutPermissions {
-		property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
+		property custom.properties = "company.security.strangers.verify=false${line.separator}feature.flag.LPD-11235=true${line.separator}jsonws.web.service.paths.excludes=";
 		property portal.acceptance = "false";
 
 		var baseURL = PropsUtil.get("portal.url");
@@ -1437,6 +1444,121 @@ definition {
 				key_fieldLabel = "Friendly URL",
 				locator1 = "TextInput#GENERIC_TEXT_INPUT",
 				value1 = "copy-of-abs-sensor");
+		}
+	}
+
+	@description = "COMMERCE-12657. As a Sales Agent, I want to be able to view product details page as part of an account group that has visibility."
+	@priority = 5
+	test CanSalesAgentViewProductDetailsPage {
+		property portal.acceptance = "true";
+
+		task ("Given Manage Available Accounts Via User Channel Rel permission is added to the Sales Agent role") {
+			Permissions.definePermissionViaJSONAPI(
+				resourceAction = "MANAGE_AVAILABLE_ACCOUNTS_VIA_USER_CHANNEL_REL",
+				resourceName = "com.liferay.account.model.AccountEntry",
+				roleTitle = "Sales Agent");
+		}
+
+		task ("And 2 accounts are created") {
+			for (var account : list "A,B") {
+				JSONAccountEntry.addAccountEntry(
+					accountEntryName = "Account ${account}",
+					accountEntryType = "Business");
+			}
+		}
+
+		task ("And a user with the Sales Agent role and Minium site membership is created") {
+			JSONUser.addUserWithRole(
+				roleTitle = "Sales Agent",
+				userEmailAddress = "sales.agent@liferay.com",
+				userFirstName = "Sales",
+				userLastName = "Agent",
+				userScreenName = "salesagent");
+
+			JSONUser.addUserToSite(
+				groupName = "Minium",
+				userEmailAddress = "sales.agent@liferay.com");
+		}
+
+		task ("And Manage Available Accounts is the only permission for the Sales Agent role") {
+			for (var permissions : list "ADD_USER,ASSIGN_USERS,INVITE_USER,MANAGE_ORGANIZATIONS,UNASSIGN_USERS,UPDATE_USERS,VIEW_USERS") {
+				Permissions.removePermissionViaAPI(
+					resourceAction = ${permissions},
+					resourceName = "com.liferay.account.model.AccountEntry",
+					roleTitle = "Sales Agent");
+			}
+
+			Permissions.removePermissionViaAPI(
+				resourceAction = "VIEW",
+				resourceName = "com.liferay.account.model.AccountRole",
+				roleTitle = "Sales Agent");
+		}
+
+		task ("And an Account Group is created and contains Account B") {
+			JSONAccountGroup.addAccountGroup(
+				accountGroupDescription = "This is an Account Group.",
+				accountGroupName = "Account Group Name");
+
+			AccountGroups.openAccountGroupsAdmin();
+
+			LexiconEntry.gotoEntry(rowEntry = "Account Group Name");
+
+			AccountGroups.addAssignee(
+				accountGroupName = "Account Group Name",
+				assigneeNames = "Account B");
+		}
+
+		task ("And Channel Account Managers entries are created for Account A and Account B") {
+			for (var account : list "A,B") {
+				Account.openAccountsAdmin();
+
+				LexiconEntry.gotoEntry(rowEntry = "Account ${account}");
+
+				Account.gotoAssigneeTab(assigneeTab = "Channel Defaults");
+
+				CommerceAccountChannelDefaults.addChannelAccountManagersEntry(
+					channelName = "Minium Portal",
+					userName = "salesagent");
+			}
+		}
+
+		task ("And the product's account group visibility is set") {
+			CommerceProducts.openProductsAdmin();
+
+			CommerceProducts.searchAndGoToProductEntry(entryProductName = "U-Joint");
+
+			CommerceEntry.gotoMenuTab(menuTab = "Visibility");
+
+			CommerceDiagram.setVisibility(
+				checkboxName = "Account Group Name",
+				name = "Account Groups",
+				webContentTitle = "Add Account Group Relation to U-Joint");
+		}
+
+		task ("When the sales agent logs in -> Minium and selects the Account B") {
+			User.logoutPG();
+
+			CommerceLogin.miniumLogin(
+				password = PropsUtil.get("default.admin.password"),
+				urlAppend = "web/minium",
+				userEmailAddress = "sales.agent@liferay.com");
+
+			CommerceAcceleratorsInitializer.gotoAccountSelectorAccountsList();
+
+			Click(
+				key_accountName = "Account B",
+				locator1 = "CommerceAccelerators#ACCOUNT_SELECTOR_ACCOUNT_LIST_ITEM");
+		}
+
+		task ("And navigates to the product details page") {
+			CommerceNavigator.gotoProductDetails(productName = "U-Joint");
+		}
+
+		task ("Then the sales agent can see the product details successfully") {
+			FrontStore.assertProductDetails(
+				productListPrice = "24.00",
+				productName = "U-Joint",
+				productSKU = "MIN55861");
 		}
 	}
 
@@ -1641,7 +1763,7 @@ definition {
 		task ("Then into the product ABS Sensor Media tab a new entry is present with the png extension") {
 			CommerceProducts.openProductsAdmin();
 
-			AppBuilderAdmin.searchByItem(itemName = "ABS Sensor");
+			CommerceNavigator.searchEntry(entryName = "ABS Sensor");
 
 			CommerceNavigator.gotoEntry(entryName = "ABS Sensor");
 
@@ -1717,7 +1839,7 @@ definition {
 		task ("Then the image is uploaded successfully") {
 			CommerceProducts.openProductsAdmin();
 
-			AppBuilderAdmin.searchByItem(itemName = "Brake Fluid");
+			CommerceNavigator.searchEntry(entryName = "Brake Fluid");
 
 			CommerceNavigator.gotoEntry(entryName = "Brake Fluid");
 
@@ -1808,7 +1930,7 @@ definition {
 	@description = "This is a test for bug COMMERCE-9999. Verify a product image can be uploaded via headless API with CDN."
 	@priority = 3
 	test CanUploadProductImageViaAPIUsingCDN {
-		property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
+		property custom.properties = "company.security.strangers.verify=false${line.separator}feature.flag.LPD-11235=true${line.separator}jsonws.web.service.paths.excludes=";
 		property portal.acceptance = "false";
 
 		task ("Given a Minium Site is created") {
@@ -1847,7 +1969,7 @@ definition {
 		task ("And the image is uploaded successfully") {
 			CommerceProducts.openProductsAdmin();
 
-			AppBuilderAdmin.searchByItem(itemName = "ABS Sensor");
+			CommerceNavigator.searchEntry(entryName = "ABS Sensor");
 
 			takeScreenshot();
 
@@ -1991,86 +2113,6 @@ definition {
 					key_filter = ${filterItemName},
 					locator1 = "FrontendDataSet#FILTER_OPTION");
 			}
-		}
-	}
-
-	@description = "This is a test for COMMERCE-10603. Can view products with category imported from another instance via JSON add"
-	@priority = 3
-	test CanViewProductsWithCategoryImportedFromAnotherInstanceViaJSONAdd {
-		property portal.acceptance = "false";
-
-		task ("Given a Minium site is created") {
-			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
-		}
-
-		task ("And a 'Cat' category is created under Global site's Topic and export it") {
-			JSONCategory.addCategory(
-				groupName = "Global",
-				title = "Cat",
-				vocabularyName = "Topic");
-
-			Category.openCategoriesAdmin(siteURLKey = "global");
-
-			LAR.exportPortlet(larFileName = "Category_Topic_Cat.portlet.lar");
-		}
-
-		task ("And the category related to Topic is also selected inside the 'ABS Sensor' product") {
-			CommerceProducts.openProductsAdmin();
-
-			CommerceNavigator.gotoEntry(entryName = "ABS Sensor");
-
-			AssetCategorization.removeCategories(categoryNameList = "Brake System");
-
-			Click(
-				key_fieldName = "Topic",
-				locator1 = "Button#SELECT_BUTTON");
-
-			AssetCategorization.selectCategories(categoryNameList = "Cat");
-
-			Button.clickPublish();
-		}
-
-		task ("When another Minium site is created in a virtual instance") {
-			HeadlessPortalInstanceAPI.addPortalInstance(
-				domain = "www.able.com",
-				portalInstanceId = "www.able.com",
-				virtualHost = "www.able.com");
-
-			User.firstLoginPG(
-				password = PropsUtil.get("default.admin.password"),
-				userEmailAddress = "test@www.able.com",
-				virtualHostsURL = "http://www.able.com:8080");
-
-			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
-		}
-
-		task ("And the category created before is imported in the virtual instance") {
-			Category.openCategoriesAdmin(
-				baseURL = "http://www.able.com:8080",
-				siteURLKey = "global");
-
-			LAR.importPortlet(larFileName = "Category_Topic_Cat.portlet.lar");
-		}
-
-		task ("And a product with the imported category is added to the virtual instance via JSON") {
-			CommerceJSONProductsAPI._addCommerceProduct(
-				baseURL = "http://www.able.com:8080",
-				catalogName = "Minium",
-				categoryName = "Cat",
-				externalReferenceCode = "MIN93015minium-initializer",
-				productName = "Imported ABS Sensor",
-				productType = "Simple",
-				userEmailAddress = "test@www.able.com");
-		}
-
-		task ("Then the new product with imported category is shown in the virtual instance") {
-			CommerceProducts.openProductsAdmin(baseURL = "http://www.able.com:8080");
-
-			CommerceNavigator.searchEntry(entryName = "ABS");
-
-			CommerceNavigator.gotoEntry(entryName = "Imported ABS Sensor");
-
-			AssetCategorization.viewCategory(categoryName = "Cat");
 		}
 	}
 
@@ -2733,7 +2775,7 @@ definition {
 
 		CommerceProducts.openProductsAdmin();
 
-		AppBuilderAdmin.searchByItem(itemName = '''"Brake Fluid"''');
+		CommerceNavigator.searchEntry(entryName = '''"Brake Fluid"''');
 
 		Click(
 			key_entryName = "Brake Fluid",
@@ -2777,9 +2819,9 @@ definition {
 
 		AssertTextEquals(
 			locator1 = "CP2ActivationKeys#PAGINATION_BUTTON",
-			value1 = "10 items");
+			value1 = "20 items");
 
-		Pagination.viewResults(results = "Showing 11 to 20 of 50 entries.");
+		Pagination.viewResults(results = "Showing 21 to 40 of 50 entries.");
 
 		CommerceProducts.searchProduct(search = "U-Joint");
 
@@ -2803,7 +2845,7 @@ definition {
 
 		Click(locator1 = "ACUtils#NEXT_PAGES");
 
-		CommerceEntry.viewPaginationResults(results = "Showing 11 to 20 of 54 entries.");
+		CommerceEntry.viewPaginationResults(results = "Showing 21 to 40 of 54 entries.");
 
 		CommerceProducts.searchProduct(search = "MIN55861");
 

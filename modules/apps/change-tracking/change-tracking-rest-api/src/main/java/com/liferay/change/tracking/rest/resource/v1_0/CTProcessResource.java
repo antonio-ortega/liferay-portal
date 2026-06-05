@@ -167,3 +167,4 @@ public interface CTProcessResource {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-274450016

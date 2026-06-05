@@ -39,12 +39,13 @@ public class UpgradeRegion extends UpgradeProcess {
 
 		try (PreparedStatement preparedStatement = connection.prepareStatement(
 				SQLTransformer.transform(sql));
+
 			ResultSet resultSet = preparedStatement.executeQuery()) {
 
 			if (resultSet.next()) {
-				companyId = resultSet.getLong(1);
-				userId = resultSet.getLong(2);
-				languageId = resultSet.getString(3);
+				companyId = resultSet.getLong("companyId");
+				userId = resultSet.getLong("userId");
+				languageId = resultSet.getString("languageId");
 			}
 		}
 
@@ -77,7 +78,8 @@ public class UpgradeRegion extends UpgradeProcess {
 
 				while (resultSet.next()) {
 					preparedStatement2.setString(1, PortalUUIDUtil.generate());
-					preparedStatement2.setLong(2, resultSet.getLong(1));
+					preparedStatement2.setLong(
+						2, resultSet.getLong("regionId"));
 
 					preparedStatement2.addBatch();
 				}

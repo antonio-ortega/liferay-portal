@@ -39,6 +39,8 @@ public interface Store {
 			String versionLabel, InputStream inputStream)
 		throws PortalException;
 
+	public void deleteDirectory(long companyId) throws PortalException;
+
 	/**
 	 * Deletes a directory.
 	 *
@@ -121,5 +123,8 @@ public interface Store {
 	public boolean hasFile(
 		long companyId, long repositoryId, String fileName,
 		String versionLabel);
+
+	public default void verifyCompanyStores() throws PortalException {
+	}
 
 }

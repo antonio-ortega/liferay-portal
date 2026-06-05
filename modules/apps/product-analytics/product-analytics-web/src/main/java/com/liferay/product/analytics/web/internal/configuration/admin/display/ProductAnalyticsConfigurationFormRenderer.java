@@ -42,11 +42,15 @@ public class ProductAnalyticsConfigurationFormRenderer
 	public Map<String, Object> getRequestParameters(
 		HttpServletRequest httpServletRequest) {
 
+		if (!ParamUtil.getBoolean(httpServletRequest, "enabled")) {
+			return Map.of("enabled", false);
+		}
+
 		return HashMapBuilder.<String, Object>put(
 			"consentRenewalPeriod",
-			ParamUtil.getInteger(httpServletRequest, "consentRenewalPeriod")
+			ParamUtil.getInteger(httpServletRequest, "consentRenewalPeriod", 12)
 		).put(
-			"enabled", ParamUtil.getBoolean(httpServletRequest, "enabled")
+			"enabled", true
 		).put(
 			"lastModified",
 			() -> {

@@ -4,6 +4,7 @@ import React from 'react';
 import {Attribute, Filter} from 'event-analysis/utils/types';
 import {DeleteFilter} from '../context/attributes';
 import {getFilterDisplay} from 'event-analysis/utils/utils';
+import {getSafeDecodedURIComponent} from 'shared/util/util';
 
 const AttributeFilterChip: React.FC<{
 	attribute: Attribute;
@@ -45,12 +46,12 @@ const AttributeFilterChip: React.FC<{
 					displayName={displayName}
 					draggable={false}
 					dragType={DragTypes.AttributeFilterChip}
-					id={filter.id}
+					id={filter.id ?? ''}
 					index={index}
 					label={label}
 					onCloseClick={onCloseClick}
 					onMove={onMove}
-					value={decodeURIComponent(value)}
+					value={getSafeDecodedURIComponent(value)}
 				/>
 			}
 			uneditableIds={uneditableIds}

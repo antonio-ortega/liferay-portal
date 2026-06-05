@@ -5,18 +5,18 @@
 
 import {FrameLocator, Locator, Page} from '@playwright/test';
 
-import {ApplicationsMenuPage} from '../../product-navigation-applications-menu/ApplicationsMenuPage';
+import {GlobalMenuPage} from '../../product-navigation-applications-menu/GlobalMenuPage';
 import {searchTableRowByValue} from '../commerceDNDTablePage';
 import {CommerceIframeDNDTablePage} from '../commerceIframeDNDTablePage';
 
 export class CommerceAdminShipmentsPage extends CommerceIframeDNDTablePage {
 	readonly addQuantityInShipment: Locator;
 	readonly addProductsToShipment: Locator;
-	readonly applicationsMenuPage: ApplicationsMenuPage;
 	readonly backLink: Locator;
 	readonly carrierDetailsEditLink: Locator;
 	readonly carrierDetailsSubmitButton: Locator;
 	readonly editProductCloseButton: Locator;
+	readonly editProductFrame: FrameLocator;
 	readonly editProductMenuItem: Locator;
 	readonly editProductSaveButton: Locator;
 	readonly editProductTable: Locator;
@@ -35,9 +35,10 @@ export class CommerceAdminShipmentsPage extends CommerceIframeDNDTablePage {
 		value: number | string,
 		strictEqual?: boolean
 	) => Promise<{column: Locator; row: Locator}>;
+	readonly globalMenuPage: GlobalMenuPage;
 	readonly keyShipmentStatus: (orderStatus: string) => Locator;
 	readonly page: Page;
-	readonly productEllipsis: Locator;
+	readonly productEllipsis: (productName: string) => Locator;
 	readonly productsSkuLink: (sku: string) => Locator;
 	readonly shipmentIdLink: (shipmentId: string) => Locator;
 	readonly shipmentsItemSubmitButton: Locator;
@@ -62,13 +63,13 @@ export class CommerceAdminShipmentsPage extends CommerceIframeDNDTablePage {
 			'iframe >> nth=1',
 			'#_com_liferay_commerce_shipment_web_internal_portlet_CommerceShipmentPortlet_fm .fds table'
 		);
-		this.addQuantityInShipment = page
-			.frameLocator('iframe')
-			.getByRole('spinbutton');
-		this.addProductsToShipment = page.getByText(
-			'Add Products to This Shipment'
-		);
-		this.applicationsMenuPage = new ApplicationsMenuPage(page);
+		this.editProductFrame = page.frameLocator('iframe');
+		this.addQuantityInShipment =
+			this.editProductFrame.getByRole('spinbutton');
+		this.addProductsToShipment = page
+			.getByTestId('managementToolbar')
+			.locator('[data-testid="fdsCreationActionButton"]');
+		this.globalMenuPage = new GlobalMenuPage(page);
 		this.carrierDetailsEditLink = page
 			.getByText('Carrier Details Edit')
 			.getByRole('link');
@@ -76,17 +77,17 @@ export class CommerceAdminShipmentsPage extends CommerceIframeDNDTablePage {
 			.locator('.modal-item-last')
 			.getByRole('button', {exact: true, name: 'Submit'});
 		this.backLink = page.locator('span[title="Back"]');
-		this.editProductCloseButton = page
-			.frameLocator('iframe')
+		this.editProductCloseButton = this.editProductFrame
 			.getByRole('button')
 			.first();
 		this.editProductMenuItem = page.getByRole('menuitem', {
 			exact: true,
 			name: 'Edit',
 		});
-		this.editProductSaveButton = page
-			.frameLocator('iframe')
-			.getByRole('button', {exact: true, name: 'Save'});
+		this.editProductSaveButton = this.editProductFrame.getByRole('button', {
+			exact: true,
+			name: 'Save',
+		});
 		this.editProductTable = page.locator(
 			'#_com_liferay_commerce_shipment_web_internal_portlet_CommerceShipmentPortlet_editShipmentContainer .fds table'
 		);
@@ -122,9 +123,8 @@ export class CommerceAdminShipmentsPage extends CommerceIframeDNDTablePage {
 
 			throw new Error(`Cannot locate row with rowValue: ${rowValue}`);
 		};
-		this.editProductWarehouseAvailabilityTable = page
-			.frameLocator('iframe')
-			.locator(
+		this.editProductWarehouseAvailabilityTable =
+			this.editProductFrame.locator(
 				'#_com_liferay_commerce_shipment_web_internal_portlet_CommerceShipmentPortlet_fm .fds table'
 			);
 		this.editProductWarehouseAvailabilityTableRow = async (
@@ -142,10 +142,11 @@ export class CommerceAdminShipmentsPage extends CommerceIframeDNDTablePage {
 		this.keyShipmentStatus = (orderStatus: string) =>
 			page.getByText(orderStatus);
 		this.page = page;
-		this.productEllipsis = page.getByRole('button', {
-			exact: true,
-			name: 'Actions',
-		});
+		this.productEllipsis = (productName: string) =>
+			page.getByRole('button', {
+				exact: true,
+				name: `${productName} Actions`,
+			});
 		this.productsSkuLink = (sku: string) =>
 			page.getByRole('link', {exact: true, name: sku});
 		this.shipmentIdLink = (shipmentId: string) =>
@@ -169,7 +170,7 @@ export class CommerceAdminShipmentsPage extends CommerceIframeDNDTablePage {
 			);
 
 			if (shipmentTableRow && shipmentTableRow.column) {
-				return shipmentTableRow.row.getByLabel('', {exact: true});
+				return shipmentTableRow.row.getByLabel('');
 			}
 
 			throw new Error(`Cannot locate shipment row with value ${value}`);
@@ -183,6 +184,6 @@ export class CommerceAdminShipmentsPage extends CommerceIframeDNDTablePage {
 	}
 
 	async goTo() {
-		await this.applicationsMenuPage.goToCommerceShipments();
+		await this.globalMenuPage.goToCommerce('Shipments');
 	}
 }

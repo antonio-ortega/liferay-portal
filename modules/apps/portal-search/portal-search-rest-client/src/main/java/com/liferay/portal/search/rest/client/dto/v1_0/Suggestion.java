@@ -116,3 +116,4 @@ public class Suggestion implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:1982244541

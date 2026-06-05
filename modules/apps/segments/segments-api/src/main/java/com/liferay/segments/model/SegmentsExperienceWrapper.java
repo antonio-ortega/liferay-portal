@@ -409,11 +409,6 @@ public class SegmentsExperienceWrapper
 	}
 
 	@Override
-	public long getSegmentsEntryGroupId() {
-		return model.getSegmentsEntryGroupId();
-	}
-
-	@Override
 	public long getSegmentsEntryId() {
 		return model.getSegmentsEntryId();
 	}
@@ -868,3 +863,4 @@ public class SegmentsExperienceWrapper
 	}
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-1969423120

@@ -324,3 +324,4 @@ public interface CommerceQualifierEntryLocalService
 		CommerceQualifierEntry commerceQualifierEntry);
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-1985086463

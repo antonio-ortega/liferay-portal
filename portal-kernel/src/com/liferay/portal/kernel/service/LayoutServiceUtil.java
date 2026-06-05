@@ -674,12 +674,12 @@ public class LayoutServiceUtil {
 	}
 
 	public static Layout getOrAddEmptyLayout(
-			String externalReferenceCode, long groupId,
+			String externalReferenceCode, long groupId, boolean privateLayout,
 			ServiceContext serviceContext)
 		throws Exception {
 
 		return getService().getOrAddEmptyLayout(
-			externalReferenceCode, groupId, serviceContext);
+			externalReferenceCode, groupId, privateLayout, serviceContext);
 	}
 
 	/**
@@ -864,6 +864,12 @@ public class LayoutServiceUtil {
 		throws PortalException {
 
 		return getService().updateIconImage(plid, bytes);
+	}
+
+	public static Layout updateIconImageId(long plid, long iconImageId)
+		throws PortalException {
+
+		return getService().updateIconImageId(plid, iconImageId);
 	}
 
 	/**
@@ -1131,3 +1137,4 @@ public class LayoutServiceUtil {
 	private static volatile LayoutService _service;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:2069132619

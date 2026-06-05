@@ -600,3 +600,4 @@ public abstract class BaseOverviewResourceImpl implements OverviewResource {
 		LogFactoryUtil.getLog(BaseOverviewResourceImpl.class);
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1408355357

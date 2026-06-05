@@ -1,7 +1,7 @@
 $timeline-border-color: $gray-300 !default;
 $timeline-border-width: 2px !default;
 
-$timeline-border-modifier: ceil($timeline-border-width * 0.5) !default;
+$timeline-border-modifier: calc(#{$timeline-border-width} * 0.5) !default;
 
 $timeline-icon-active-bg: $component-active-bg !default;
 $timeline-icon-active-border-color: $timeline-icon-active-bg !default;
@@ -26,4 +26,5 @@ $timeline-item-padding-top: 5px !default;
 
 $timeline-inner-spacing-xl: 50px !default;
 $timeline-outer-spacing-xl: 25px !default;
+
 $timeline-item-padding-y-xl: 15px !default;

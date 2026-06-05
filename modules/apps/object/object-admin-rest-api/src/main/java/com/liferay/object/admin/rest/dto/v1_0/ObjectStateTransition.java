@@ -231,3 +231,4 @@ public class ObjectStateTransition implements Serializable {
 	private Map<String, Serializable> _extendedProperties;
 
 }
+// LIFERAY-REST-BUILDER-HASH:3131624

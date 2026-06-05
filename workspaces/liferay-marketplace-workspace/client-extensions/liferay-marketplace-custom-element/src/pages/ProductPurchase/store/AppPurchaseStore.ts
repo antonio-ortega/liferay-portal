@@ -42,6 +42,7 @@ export const productPurchaseStore = createStore({
 			type: PaymentMethodType.PAY_NOW,
 		},
 		project: null as unknown as ConsoleUserProject,
+		salesforceProject: null as SalesforceProject | null,
 	},
 	on: {
 		setAccountTaxId: {
@@ -89,6 +90,13 @@ export const productPurchaseStore = createStore({
 
 		setProject: {
 			project: (_, event: {project: ConsoleUserProject}) => event.project,
+		},
+
+		setSalesforceProject: {
+			salesforceProject: (
+				_,
+				event: {salesforceProject: SalesforceProject}
+			) => event.salesforceProject,
 		},
 
 		toggleEulaAgreement: {

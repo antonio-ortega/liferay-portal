@@ -13,7 +13,7 @@ import com.liferay.fragment.processor.FragmentEntryProcessorRegistry;
 import com.liferay.headless.admin.site.dto.v1_0.ActionFragmentEditableElementValue;
 import com.liferay.headless.admin.site.dto.v1_0.ActionInteraction;
 import com.liferay.headless.admin.site.dto.v1_0.BackgroundImageFragmentEditableElementValue;
-import com.liferay.headless.admin.site.dto.v1_0.DirectFragmentImageValue;
+import com.liferay.headless.admin.site.dto.v1_0.DateFragmentEditableElementValue;
 import com.liferay.headless.admin.site.dto.v1_0.DisplayPageActionInteraction;
 import com.liferay.headless.admin.site.dto.v1_0.FragmentEditableElement;
 import com.liferay.headless.admin.site.dto.v1_0.FragmentEditableElementValue;
@@ -30,11 +30,7 @@ import com.liferay.headless.admin.site.dto.v1_0.HTMLFragmentInlineValue;
 import com.liferay.headless.admin.site.dto.v1_0.HTMLFragmentMappedValue;
 import com.liferay.headless.admin.site.dto.v1_0.HTMLFragmentValue;
 import com.liferay.headless.admin.site.dto.v1_0.ImageFragmentEditableElementValue;
-import com.liferay.headless.admin.site.dto.v1_0.ImageValue;
-import com.liferay.headless.admin.site.dto.v1_0.ItemExternalReference;
-import com.liferay.headless.admin.site.dto.v1_0.ItemImageValue;
 import com.liferay.headless.admin.site.dto.v1_0.LinkFragmentEditableElementValue;
-import com.liferay.headless.admin.site.dto.v1_0.MappedFragmentImageValue;
 import com.liferay.headless.admin.site.dto.v1_0.NoneActionInteraction;
 import com.liferay.headless.admin.site.dto.v1_0.NotificationActionInteraction;
 import com.liferay.headless.admin.site.dto.v1_0.PageActionInteraction;
@@ -43,13 +39,11 @@ import com.liferay.headless.admin.site.dto.v1_0.TextFragmentInlineValue;
 import com.liferay.headless.admin.site.dto.v1_0.TextFragmentMappedValue;
 import com.liferay.headless.admin.site.dto.v1_0.TextFragmentValue;
 import com.liferay.headless.admin.site.dto.v1_0.URLActionInteraction;
-import com.liferay.headless.admin.site.dto.v1_0.URLImageValue;
 import com.liferay.headless.admin.site.internal.resource.v1_0.layout.structure.item.importer.context.LayoutStructureItemImporterContext;
 import com.liferay.info.item.InfoItemServiceRegistry;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.function.transform.TransformUtil;
-import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
@@ -58,6 +52,7 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
 import java.util.Map;
@@ -100,7 +95,8 @@ public class FragmentEditableElementUtil {
 	}
 
 	public static FragmentEditableElement[] getFragmentEditableElements(
-			long companyId, FragmentEntryLink fragmentEntryLink,
+			long companyId, DTOConverterContext dtoConverterContext,
+			FragmentEntryLink fragmentEntryLink,
 			FragmentEntryProcessorRegistry fragmentEntryProcessorRegistry,
 			InfoItemServiceRegistry infoItemServiceRegistry, long scopeGroupId,
 			User user)
@@ -130,7 +126,7 @@ public class FragmentEditableElementUtil {
 		}
 
 		return _getFragmentEditableElements(
-			companyId,
+			companyId, dtoConverterContext,
 			EditableFragmentEntryProcessorUtil.getEditableTypes(
 				FragmentEntryLinkUtil.getProcessedHTML(
 					fragmentEntryLink, fragmentEntryProcessorRegistry, user)),
@@ -272,7 +268,7 @@ public class FragmentEditableElementUtil {
 									fragmentEditableElement.
 										getFragmentEditableElementValue();
 
-						return _toFragmentImageValueJSONObject(
+						return ImageValueUtil.toFragmentImageValueJSONObject(
 							backgroundImageFragmentEditableElementValue.
 								getBackgroundFragmentImageValue(),
 							layoutStructureItemImporterContext);
@@ -280,6 +276,48 @@ public class FragmentEditableElementUtil {
 		}
 
 		return jsonObject;
+	}
+
+	private static JSONObject _getDateFragmentEditableElementJSONObject(
+			long companyId,
+			DateFragmentEditableElementValue dateFragmentEditableElementValue,
+			InfoItemServiceRegistry infoItemServiceRegistry, long scopeGroupId)
+		throws Exception {
+
+		FragmentMappedValue fragmentMappedValue =
+			dateFragmentEditableElementValue.getDate();
+
+		if (fragmentMappedValue == null) {
+			return null;
+		}
+
+		JSONObject jsonObject =
+			FragmentMappingUtil.getFragmentMappedValueJSONObject(
+				companyId, fragmentMappedValue, infoItemServiceRegistry,
+				scopeGroupId);
+
+		if (JSONUtil.isEmpty(jsonObject)) {
+			return null;
+		}
+
+		FragmentInlineValue dateFormat =
+			dateFragmentEditableElementValue.getDateFormat();
+
+		if (dateFormat == null) {
+			return jsonObject;
+		}
+
+		JSONObject dateFormatJSONObject = _getFragmentInlineValueJSONObject(
+			dateFormat);
+
+		if (JSONUtil.isEmpty(dateFormatJSONObject)) {
+			return jsonObject;
+		}
+
+		return JSONUtil.merge(
+			jsonObject,
+			JSONUtil.put(
+				"config", JSONUtil.put("dateFormat", dateFormatJSONObject)));
 	}
 
 	private static JSONObject _getEditableFragmentEntryProcessorJSONObject(
@@ -319,6 +357,24 @@ public class FragmentEditableElementUtil {
 							(ActionFragmentEditableElementValue)
 								fragmentEditableElementValue,
 							layoutStructureItemImporterContext.getCompanyId(),
+							layoutStructureItemImporterContext.
+								getInfoItemServiceRegistry(),
+							layoutStructureItemImporterContext.getGroupId())));
+
+				continue;
+			}
+
+			if (Objects.equals(
+					fragmentEditableElementValue.getType(),
+					FragmentEditableElementValue.Type.DATE)) {
+
+				jsonObject.put(
+					fragmentEditableElement.getId(),
+					() -> _getJSONObject(
+						() -> _getDateFragmentEditableElementJSONObject(
+							layoutStructureItemImporterContext.getCompanyId(),
+							(DateFragmentEditableElementValue)
+								fragmentEditableElementValue,
 							layoutStructureItemImporterContext.
 								getInfoItemServiceRegistry(),
 							layoutStructureItemImporterContext.getGroupId())));
@@ -411,7 +467,8 @@ public class FragmentEditableElementUtil {
 	}
 
 	private static FragmentEditableElement[] _getFragmentEditableElements(
-		long companyId, Map<String, String> editableTypes,
+		long companyId, DTOConverterContext dtoConverterContext,
+		Map<String, String> editableTypes,
 		InfoItemServiceRegistry infoItemServiceRegistry, JSONObject jsonObject,
 		long scopeGroupId) {
 
@@ -420,7 +477,7 @@ public class FragmentEditableElementUtil {
 			fieldId -> {
 				FragmentEditableElementValue fragmentEditableElementValue =
 					_getFragmentEditableElementValue(
-						companyId, infoItemServiceRegistry,
+						companyId, dtoConverterContext, infoItemServiceRegistry,
 						jsonObject.getJSONObject(fieldId), scopeGroupId,
 						editableTypes.getOrDefault(fieldId, "text"));
 
@@ -442,45 +499,59 @@ public class FragmentEditableElementUtil {
 
 	private static FragmentEditableElementValue
 			_getFragmentEditableElementValue(
-				long companyId, InfoItemServiceRegistry infoItemServiceRegistry,
+				long companyId, DTOConverterContext dtoConverterContext,
+				InfoItemServiceRegistry infoItemServiceRegistry,
 				JSONObject jsonObject, long scopeGroupId, String type)
 		throws Exception {
 
 		if (Objects.equals(type, "action")) {
 			return _toActionFragmentEditableElementValue(
-				companyId, infoItemServiceRegistry, jsonObject, scopeGroupId);
+				companyId, dtoConverterContext, infoItemServiceRegistry,
+				jsonObject, scopeGroupId);
 		}
 
 		if (Objects.equals(type, "background-image")) {
 			return _toBackgroundImageFragmentEditableElementValue(
-				companyId, infoItemServiceRegistry, jsonObject, scopeGroupId);
+				companyId, dtoConverterContext, infoItemServiceRegistry,
+				jsonObject, scopeGroupId);
+		}
+
+		if (Objects.equals(type, "date-time")) {
+			return _toDateFragmentEditableElementValue(
+				companyId, dtoConverterContext, infoItemServiceRegistry,
+				jsonObject, scopeGroupId);
 		}
 
 		if (Objects.equals(type, "html")) {
 			return _toHTMLFragmentEditableElementValue(
-				companyId, FragmentEditableElementValue.Type.HTML,
-				infoItemServiceRegistry, jsonObject, scopeGroupId);
+				companyId, dtoConverterContext,
+				FragmentEditableElementValue.Type.HTML, infoItemServiceRegistry,
+				jsonObject, scopeGroupId);
 		}
 
 		if (Objects.equals(type, "image")) {
 			return _toImageFragmentEditableElementValue(
-				companyId, infoItemServiceRegistry, jsonObject, scopeGroupId);
+				companyId, dtoConverterContext, infoItemServiceRegistry,
+				jsonObject, scopeGroupId);
 		}
 
 		if (Objects.equals(type, "link")) {
 			return _toLinkFragmentEditableElementValue(
-				companyId, infoItemServiceRegistry, jsonObject, scopeGroupId);
+				companyId, dtoConverterContext, infoItemServiceRegistry,
+				jsonObject, scopeGroupId);
 		}
 
 		if (Objects.equals(type, "rich-text")) {
 			return _toHTMLFragmentEditableElementValue(
-				companyId, FragmentEditableElementValue.Type.RICH_TEXT,
+				companyId, dtoConverterContext,
+				FragmentEditableElementValue.Type.RICH_TEXT,
 				infoItemServiceRegistry, jsonObject, scopeGroupId);
 		}
 
 		if (Objects.equals(type, "text")) {
 			return _toTextFragmentEditableElementValue(
-				companyId, infoItemServiceRegistry, jsonObject, scopeGroupId);
+				companyId, dtoConverterContext, infoItemServiceRegistry,
+				jsonObject, scopeGroupId);
 		}
 
 		return null;
@@ -570,20 +641,6 @@ public class FragmentEditableElementUtil {
 				fragmentLinkTextValue.getTextFragmentValue()));
 	}
 
-	private static JSONObject _getFragmentMappedValueJSONObject(
-			long companyId, FragmentMappedValue fragmentMappedValue,
-			InfoItemServiceRegistry infoItemServiceRegistry, long scopeGroupId)
-		throws Exception {
-
-		if (fragmentMappedValue == null) {
-			return JSONFactoryUtil.createJSONObject();
-		}
-
-		return FragmentMappingUtil.getFragmentMappedValueJSONObject(
-			companyId, infoItemServiceRegistry,
-			fragmentMappedValue.getMapping(), scopeGroupId);
-	}
-
 	private static JSONObject _getHTMLFragmentEditableElementJSONObject(
 			long companyId,
 			HTMLFragmentEditableElementValue htmlFragmentEditableElementValue,
@@ -612,7 +669,7 @@ public class FragmentEditableElementUtil {
 		HTMLFragmentMappedValue htmlFragmentMappedValue =
 			(HTMLFragmentMappedValue)htmlFragmentValue;
 
-		return _getFragmentMappedValueJSONObject(
+		return FragmentMappingUtil.getFragmentMappedValueJSONObject(
 			companyId, htmlFragmentMappedValue.getFragmentMappedValue(),
 			infoItemServiceRegistry, scopeGroupId);
 	}
@@ -688,97 +745,9 @@ public class FragmentEditableElementUtil {
 									fragmentImage.getLazyLoading());
 							}
 						)))),
-			_toFragmentImageValueJSONObject(
+			ImageValueUtil.toFragmentImageValueJSONObject(
 				fragmentImage.getFragmentImageValue(),
 				layoutStructureItemImporterContext));
-	}
-
-	private static ImageValue _getImageValue(
-			long companyId, long scopeGroupId, Object value)
-		throws Exception {
-
-		JSONObject jsonObject = null;
-
-		if (value instanceof JSONObject) {
-			jsonObject = (JSONObject)value;
-		}
-		else {
-			String valueString = GetterUtil.getString(value);
-
-			if (Validator.isNull(valueString)) {
-				return null;
-			}
-
-			jsonObject = JSONFactoryUtil.safeCreateJSONObject(
-				valueString, true);
-
-			if (jsonObject == null) {
-				return _getURLImageValue(valueString);
-			}
-		}
-
-		if (JSONUtil.isEmpty(jsonObject)) {
-			return null;
-		}
-
-		if (FileEntryUtil.isItemImageValue(jsonObject)) {
-			ItemExternalReference itemExternalReference =
-				FileEntryUtil.getFileEntryItemExternalReference(
-					companyId, jsonObject, scopeGroupId);
-
-			if (itemExternalReference == null) {
-				return null;
-			}
-
-			ItemImageValue itemImageValue = new ItemImageValue();
-
-			itemImageValue.setItemExternalReference(
-				() -> itemExternalReference);
-			itemImageValue.setType(ImageValue.Type.ITEM);
-
-			return itemImageValue;
-		}
-
-		return _getURLImageValue(jsonObject.getString("url"));
-	}
-
-	private static JSONObject _getImageValueJSONObject(
-			ImageValue imageValue,
-			LayoutStructureItemImporterContext
-				layoutStructureItemImporterContext)
-		throws PortalException {
-
-		if (imageValue == null) {
-			return null;
-		}
-
-		if (Objects.equals(imageValue.getType(), ImageValue.Type.ITEM)) {
-			ItemImageValue itemImageValue = (ItemImageValue)imageValue;
-
-			ItemExternalReference itemExternalReference =
-				itemImageValue.getItemExternalReference();
-
-			if ((itemExternalReference == null) ||
-				Validator.isNull(
-					itemExternalReference.getExternalReferenceCode())) {
-
-				return null;
-			}
-
-			return FileEntryUtil.getFileEntryJSONObject(
-				layoutStructureItemImporterContext.getCompanyId(),
-				itemExternalReference.getExternalReferenceCode(),
-				itemExternalReference.getScope(),
-				layoutStructureItemImporterContext.getGroupId());
-		}
-
-		URLImageValue urlImageValue = (URLImageValue)imageValue;
-
-		if (Validator.isNull(urlImageValue.getUrl())) {
-			return null;
-		}
-
-		return JSONUtil.put("url", urlImageValue.getUrl());
 	}
 
 	private static JSONObject _getJSONObject(
@@ -818,34 +787,23 @@ public class FragmentEditableElementUtil {
 		TextFragmentMappedValue textFragmentMappedValue =
 			(TextFragmentMappedValue)textFragmentValue;
 
-		return _getFragmentMappedValueJSONObject(
+		return FragmentMappingUtil.getFragmentMappedValueJSONObject(
 			companyId, textFragmentMappedValue.getFragmentMappedValue(),
 			infoItemServiceRegistry, scopeGroupId);
 	}
 
-	private static URLImageValue _getURLImageValue(String url) {
-		if (Validator.isNull(url)) {
-			return null;
-		}
-
-		URLImageValue urlImageValue = new URLImageValue();
-
-		urlImageValue.setType(URLImageValue.Type.URL);
-		urlImageValue.setUrl(() -> url);
-
-		return urlImageValue;
-	}
-
 	private static ActionFragmentEditableElementValue
 			_toActionFragmentEditableElementValue(
-				long companyId, InfoItemServiceRegistry infoItemServiceRegistry,
+				long companyId, DTOConverterContext dtoConverterContext,
+				InfoItemServiceRegistry infoItemServiceRegistry,
 				JSONObject jsonObject, long scopeGroupId)
 		throws Exception {
 
 		JSONObject configJSONObject = jsonObject.getJSONObject("config");
 
 		TextFragmentValue textFragmentValue = _toTextFragmentValue(
-			companyId, infoItemServiceRegistry, jsonObject, scopeGroupId);
+			companyId, dtoConverterContext, infoItemServiceRegistry, jsonObject,
+			scopeGroupId);
 
 		if ((configJSONObject == null) ||
 			!configJSONObject.has("mappedAction")) {
@@ -855,7 +813,7 @@ public class FragmentEditableElementUtil {
 
 		FragmentMappedValue fragmentMappedValue =
 			FragmentMappingUtil.toFragmentMappedValue(
-				companyId, infoItemServiceRegistry,
+				companyId, dtoConverterContext, infoItemServiceRegistry,
 				configJSONObject.getJSONObject("mappedAction"), scopeGroupId);
 
 		if (fragmentMappedValue == null) {
@@ -934,7 +892,8 @@ public class FragmentEditableElementUtil {
 
 	private static FragmentEditableElementValue
 			_toBackgroundImageFragmentEditableElementValue(
-				long companyId, InfoItemServiceRegistry infoItemServiceRegistry,
+				long companyId, DTOConverterContext dtoConverterContext,
+				InfoItemServiceRegistry infoItemServiceRegistry,
 				JSONObject jsonObject, long scopeGroupId)
 		throws Exception {
 
@@ -942,8 +901,10 @@ public class FragmentEditableElementUtil {
 			return null;
 		}
 
-		FragmentImageValue backgroundFragmentImageValue = _toFragmentImageValue(
-			companyId, infoItemServiceRegistry, jsonObject, scopeGroupId);
+		FragmentImageValue backgroundFragmentImageValue =
+			ImageValueUtil.toFragmentImageValue(
+				companyId, dtoConverterContext, infoItemServiceRegistry,
+				jsonObject, scopeGroupId);
 
 		if (backgroundFragmentImageValue == null) {
 			return null;
@@ -971,7 +932,7 @@ public class FragmentEditableElementUtil {
 			"config",
 			JSONUtil.put(
 				"mappedAction",
-				() -> _getFragmentMappedValueJSONObject(
+				() -> FragmentMappingUtil.getFragmentMappedValueJSONObject(
 					companyId, fragmentMappedValue, infoItemServiceRegistry,
 					scopeGroupId)
 			).put(
@@ -1043,6 +1004,42 @@ public class FragmentEditableElementUtil {
 			});
 	}
 
+	private static DateFragmentEditableElementValue
+		_toDateFragmentEditableElementValue(
+			long companyId, DTOConverterContext dtoConverterContext,
+			InfoItemServiceRegistry infoItemServiceRegistry,
+			JSONObject jsonObject, long scopeGroupId) {
+
+		if (!FragmentMappingUtil.isMappedValue(jsonObject)) {
+			return null;
+		}
+
+		DateFragmentEditableElementValue dateFragmentEditableElementValue =
+			new DateFragmentEditableElementValue();
+
+		dateFragmentEditableElementValue.setDate(
+			() -> FragmentMappingUtil.toFragmentMappedValue(
+				companyId, dtoConverterContext, infoItemServiceRegistry,
+				jsonObject, scopeGroupId));
+
+		JSONObject configJSONObject = jsonObject.getJSONObject("config");
+
+		if (configJSONObject != null) {
+			JSONObject dateFormatJSONObject = configJSONObject.getJSONObject(
+				"dateFormat");
+
+			if (dateFormatJSONObject != null) {
+				dateFragmentEditableElementValue.setDateFormat(
+					() -> _getFragmentInlineValue(dateFormatJSONObject));
+			}
+		}
+
+		dateFragmentEditableElementValue.setType(
+			() -> FragmentEditableElementValue.Type.DATE);
+
+		return dateFragmentEditableElementValue;
+	}
+
 	private static DisplayPageActionInteraction _toDisplayPageActionInteraction(
 		JSONObject jsonObject) {
 
@@ -1059,11 +1056,13 @@ public class FragmentEditableElementUtil {
 
 	private static FragmentEditableElementValueFragmentLink
 		_toFragmentEditableElementValueFragmentLink(
-			long companyId, InfoItemServiceRegistry infoItemServiceRegistry,
+			long companyId, DTOConverterContext dtoConverterContext,
+			InfoItemServiceRegistry infoItemServiceRegistry,
 			JSONObject jsonObject, long scopeGroupId) {
 
 		FragmentLink fragmentLink = FragmentLinkUtil.toFragmentLink(
-			companyId, infoItemServiceRegistry, jsonObject, scopeGroupId);
+			companyId, dtoConverterContext, infoItemServiceRegistry, jsonObject,
+			scopeGroupId);
 
 		if (fragmentLink == null) {
 			return null;
@@ -1104,7 +1103,8 @@ public class FragmentEditableElementUtil {
 	}
 
 	private static FragmentImage _toFragmentImage(
-			long companyId, InfoItemServiceRegistry infoItemServiceRegistry,
+			long companyId, DTOConverterContext dtoConverterContext,
+			InfoItemServiceRegistry infoItemServiceRegistry,
 			JSONObject jsonObject, long scopeGroupId)
 		throws Exception {
 
@@ -1112,8 +1112,10 @@ public class FragmentEditableElementUtil {
 			return null;
 		}
 
-		FragmentImageValue fragmentImageValue = _toFragmentImageValue(
-			companyId, infoItemServiceRegistry, jsonObject, scopeGroupId);
+		FragmentImageValue fragmentImageValue =
+			ImageValueUtil.toFragmentImageValue(
+				companyId, dtoConverterContext, infoItemServiceRegistry,
+				jsonObject, scopeGroupId);
 
 		JSONObject configJSONObject = jsonObject.getJSONObject("config");
 
@@ -1184,87 +1186,10 @@ public class FragmentEditableElementUtil {
 		return fragmentImage;
 	}
 
-	private static FragmentImageValue _toFragmentImageValue(
-			long companyId, InfoItemServiceRegistry infoItemServiceRegistry,
-			JSONObject jsonObject, long scopeGroupId)
-		throws Exception {
-
-		if (FragmentMappingUtil.isMappedValue(jsonObject)) {
-			FragmentMappedValue fragmentMappedValue =
-				FragmentMappingUtil.toFragmentMappedValue(
-					companyId, infoItemServiceRegistry, jsonObject,
-					scopeGroupId);
-
-			if (fragmentMappedValue == null) {
-				return null;
-			}
-
-			MappedFragmentImageValue mappedFragmentImageValue =
-				new MappedFragmentImageValue();
-
-			mappedFragmentImageValue.setFragmentMappedValue(
-				() -> fragmentMappedValue);
-			mappedFragmentImageValue.setType(FragmentImageValue.Type.MAPPED);
-
-			return mappedFragmentImageValue;
-		}
-
-		Map<String, ImageValue> imageValueMap =
-			LocalizedValueUtil.toLocalizedValues(
-				jsonObject,
-				key -> _getImageValue(
-					companyId, scopeGroupId, jsonObject.get(key)));
-
-		if (MapUtil.isEmpty(imageValueMap)) {
-			return null;
-		}
-
-		DirectFragmentImageValue directFragmentImageValue =
-			new DirectFragmentImageValue();
-
-		directFragmentImageValue.setValue_i18n(() -> imageValueMap);
-		directFragmentImageValue.setType(FragmentImageValue.Type.DIRECT);
-
-		return directFragmentImageValue;
-	}
-
-	private static JSONObject _toFragmentImageValueJSONObject(
-			FragmentImageValue fragmentImageValue,
-			LayoutStructureItemImporterContext
-				layoutStructureItemImporterContext)
-		throws Exception {
-
-		if (fragmentImageValue == null) {
-			return null;
-		}
-
-		if (fragmentImageValue instanceof DirectFragmentImageValue) {
-			DirectFragmentImageValue directFragmentImageValue =
-				(DirectFragmentImageValue)fragmentImageValue;
-
-			return LocalizedValueUtil.toJSONObject(
-				directFragmentImageValue.getValue_i18n(),
-				imageValue -> _getImageValueJSONObject(
-					imageValue, layoutStructureItemImporterContext));
-		}
-
-		if (!(fragmentImageValue instanceof MappedFragmentImageValue)) {
-			return null;
-		}
-
-		MappedFragmentImageValue mappedFragmentImageValue =
-			(MappedFragmentImageValue)fragmentImageValue;
-
-		return _getFragmentMappedValueJSONObject(
-			layoutStructureItemImporterContext.getCompanyId(),
-			mappedFragmentImageValue.getFragmentMappedValue(),
-			layoutStructureItemImporterContext.getInfoItemServiceRegistry(),
-			layoutStructureItemImporterContext.getGroupId());
-	}
-
 	private static FragmentLinkTextValue _toFragmentLinkTextValue(
-		long companyId, InfoItemServiceRegistry infoItemServiceRegistry,
-		JSONObject jsonObject, long scopeGroupId) {
+		long companyId, DTOConverterContext dtoConverterContext,
+		InfoItemServiceRegistry infoItemServiceRegistry, JSONObject jsonObject,
+		long scopeGroupId) {
 
 		if (jsonObject == null) {
 			return null;
@@ -1273,11 +1198,12 @@ public class FragmentEditableElementUtil {
 		FragmentEditableElementValueFragmentLink
 			fragmentEditableElementValueFragmentLink =
 				_toFragmentEditableElementValueFragmentLink(
-					companyId, infoItemServiceRegistry,
+					companyId, dtoConverterContext, infoItemServiceRegistry,
 					jsonObject.getJSONObject("config"), scopeGroupId);
 
 		TextFragmentValue textFragmentValue = _toTextFragmentValue(
-			companyId, infoItemServiceRegistry, jsonObject, scopeGroupId);
+			companyId, dtoConverterContext, infoItemServiceRegistry, jsonObject,
+			scopeGroupId);
 
 		if ((fragmentEditableElementValueFragmentLink == null) &&
 			(textFragmentValue == null)) {
@@ -1297,7 +1223,7 @@ public class FragmentEditableElementUtil {
 
 	private static HTMLFragmentEditableElementValue
 		_toHTMLFragmentEditableElementValue(
-			long companyId,
+			long companyId, DTOConverterContext dtoConverterContext,
 			FragmentEditableElementValue.Type fragmentEditableElementValueType,
 			InfoItemServiceRegistry infoItemServiceRegistry,
 			JSONObject jsonObject, long scopeGroupId) {
@@ -1307,7 +1233,8 @@ public class FragmentEditableElementUtil {
 		}
 
 		HTMLFragmentValue htmlFragmentValue = _toHTMLFragmentValue(
-			companyId, infoItemServiceRegistry, jsonObject, scopeGroupId);
+			companyId, dtoConverterContext, infoItemServiceRegistry, jsonObject,
+			scopeGroupId);
 
 		if (htmlFragmentValue == null) {
 			return null;
@@ -1325,8 +1252,9 @@ public class FragmentEditableElementUtil {
 	}
 
 	private static HTMLFragmentValue _toHTMLFragmentValue(
-		long companyId, InfoItemServiceRegistry infoItemServiceRegistry,
-		JSONObject jsonObject, long scopeGroupId) {
+		long companyId, DTOConverterContext dtoConverterContext,
+		InfoItemServiceRegistry infoItemServiceRegistry, JSONObject jsonObject,
+		long scopeGroupId) {
 
 		if (jsonObject == null) {
 			return null;
@@ -1338,8 +1266,8 @@ public class FragmentEditableElementUtil {
 
 			htmlFragmentMappedValue.setFragmentMappedValue(
 				() -> FragmentMappingUtil.toFragmentMappedValue(
-					companyId, infoItemServiceRegistry, jsonObject,
-					scopeGroupId));
+					companyId, dtoConverterContext, infoItemServiceRegistry,
+					jsonObject, scopeGroupId));
 			htmlFragmentMappedValue.setType(HTMLFragmentValue.Type.MAPPED);
 
 			return htmlFragmentMappedValue;
@@ -1364,18 +1292,20 @@ public class FragmentEditableElementUtil {
 
 	private static FragmentEditableElementValue
 			_toImageFragmentEditableElementValue(
-				long companyId, InfoItemServiceRegistry infoItemServiceRegistry,
+				long companyId, DTOConverterContext dtoConverterContext,
+				InfoItemServiceRegistry infoItemServiceRegistry,
 				JSONObject jsonObject, long scopeGroupId)
 		throws Exception {
 
 		FragmentEditableElementValueFragmentLink
 			fragmentEditableElementValueFragmentLink =
 				_toFragmentEditableElementValueFragmentLink(
-					companyId, infoItemServiceRegistry,
+					companyId, dtoConverterContext, infoItemServiceRegistry,
 					jsonObject.getJSONObject("config"), scopeGroupId);
 
 		FragmentImage fragmentImage = _toFragmentImage(
-			companyId, infoItemServiceRegistry, jsonObject, scopeGroupId);
+			companyId, dtoConverterContext, infoItemServiceRegistry, jsonObject,
+			scopeGroupId);
 
 		if ((fragmentEditableElementValueFragmentLink == null) &&
 			(fragmentImage == null)) {
@@ -1398,11 +1328,13 @@ public class FragmentEditableElementUtil {
 
 	private static LinkFragmentEditableElementValue
 		_toLinkFragmentEditableElementValue(
-			long companyId, InfoItemServiceRegistry infoItemServiceRegistry,
+			long companyId, DTOConverterContext dtoConverterContext,
+			InfoItemServiceRegistry infoItemServiceRegistry,
 			JSONObject jsonObject, long scopeGroupId) {
 
 		FragmentLinkTextValue fragmentLinkTextValue = _toFragmentLinkTextValue(
-			companyId, infoItemServiceRegistry, jsonObject, scopeGroupId);
+			companyId, dtoConverterContext, infoItemServiceRegistry, jsonObject,
+			scopeGroupId);
 
 		if (fragmentLinkTextValue == null) {
 			return null;
@@ -1463,11 +1395,17 @@ public class FragmentEditableElementUtil {
 
 	private static TextFragmentEditableElementValue
 		_toTextFragmentEditableElementValue(
-			long companyId, InfoItemServiceRegistry infoItemServiceRegistry,
+			long companyId, DTOConverterContext dtoConverterContext,
+			InfoItemServiceRegistry infoItemServiceRegistry,
 			JSONObject jsonObject, long scopeGroupId) {
 
+		if (jsonObject == null) {
+			return null;
+		}
+
 		FragmentLinkTextValue fragmentLinkTextValue = _toFragmentLinkTextValue(
-			companyId, infoItemServiceRegistry, jsonObject, scopeGroupId);
+			companyId, dtoConverterContext, infoItemServiceRegistry, jsonObject,
+			scopeGroupId);
 
 		if (fragmentLinkTextValue == null) {
 			return null;
@@ -1485,8 +1423,9 @@ public class FragmentEditableElementUtil {
 	}
 
 	private static TextFragmentValue _toTextFragmentValue(
-		long companyId, InfoItemServiceRegistry infoItemServiceRegistry,
-		JSONObject jsonObject, long scopeGroupId) {
+		long companyId, DTOConverterContext dtoConverterContext,
+		InfoItemServiceRegistry infoItemServiceRegistry, JSONObject jsonObject,
+		long scopeGroupId) {
 
 		if (jsonObject == null) {
 			return null;
@@ -1498,8 +1437,8 @@ public class FragmentEditableElementUtil {
 
 			textFragmentMappedValue.setFragmentMappedValue(
 				() -> FragmentMappingUtil.toFragmentMappedValue(
-					companyId, infoItemServiceRegistry, jsonObject,
-					scopeGroupId));
+					companyId, dtoConverterContext, infoItemServiceRegistry,
+					jsonObject, scopeGroupId));
 			textFragmentMappedValue.setType(
 				() -> TextFragmentValue.Type.MAPPED);
 

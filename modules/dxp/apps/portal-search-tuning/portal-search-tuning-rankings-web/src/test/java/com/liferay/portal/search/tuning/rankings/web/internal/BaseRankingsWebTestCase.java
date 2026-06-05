@@ -26,7 +26,6 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.search.document.Document;
-import com.liferay.portal.search.document.DocumentBuilderFactory;
 import com.liferay.portal.search.engine.adapter.SearchEngineAdapter;
 import com.liferay.portal.search.engine.adapter.document.DeleteDocumentRequest;
 import com.liferay.portal.search.engine.adapter.document.DocumentResponse;
@@ -43,10 +42,6 @@ import com.liferay.portal.search.filter.ComplexQueryPart;
 import com.liferay.portal.search.filter.ComplexQueryPartBuilder;
 import com.liferay.portal.search.filter.ComplexQueryPartBuilderFactory;
 import com.liferay.portal.search.hits.SearchHits;
-import com.liferay.portal.search.query.BooleanQuery;
-import com.liferay.portal.search.query.IdsQuery;
-import com.liferay.portal.search.query.MatchAllQuery;
-import com.liferay.portal.search.query.Queries;
 import com.liferay.portal.search.searcher.SearchRequest;
 import com.liferay.portal.search.searcher.SearchRequestBuilder;
 import com.liferay.portal.search.searcher.SearchRequestBuilderFactory;
@@ -100,10 +95,6 @@ public abstract class BaseRankingsWebTestCase {
 			bundleContext.getBundle()
 		);
 
-		documentBuilderFactoryServiceRegistration =
-			bundleContext.registerService(
-				DocumentBuilderFactory.class, documentBuilderFactory, null);
-
 		searchResultInterpreterProviderServiceRegistration =
 			bundleContext.registerService(
 				SearchResultInterpreterProvider.class,
@@ -113,8 +104,6 @@ public abstract class BaseRankingsWebTestCase {
 	@AfterClass
 	public static void tearDownClass() {
 		frameworkUtilMockedStatic.close();
-
-		documentBuilderFactoryServiceRegistration.unregister();
 
 		searchResultInterpreterProviderServiceRegistration.unregister();
 	}
@@ -534,42 +523,6 @@ public abstract class BaseRankingsWebTestCase {
 		);
 	}
 
-	protected void setUpQuery() {
-		IdsQuery idsQuery = Mockito.mock(IdsQuery.class);
-
-		Mockito.doNothing(
-		).when(
-			idsQuery
-		).addIds(
-			Mockito.any()
-		);
-
-		Mockito.doNothing(
-		).when(
-			idsQuery
-		).setBoost(
-			Mockito.anyFloat()
-		);
-
-		Mockito.doReturn(
-			Mockito.mock(BooleanQuery.class)
-		).when(
-			queries
-		).booleanQuery();
-
-		Mockito.doReturn(
-			idsQuery
-		).when(
-			queries
-		).ids();
-
-		Mockito.doReturn(
-			Mockito.mock(MatchAllQuery.class)
-		).when(
-			queries
-		).matchAll();
-	}
-
 	protected void setUpRankingHelper() {
 		Mockito.doReturn(
 			StringPool.BLANK
@@ -813,10 +766,6 @@ public abstract class BaseRankingsWebTestCase {
 		return Mockito.mock(SearchSearchResponse.class);
 	}
 
-	protected static final DocumentBuilderFactory documentBuilderFactory =
-		Mockito.mock(DocumentBuilderFactory.class);
-	protected static ServiceRegistration<DocumentBuilderFactory>
-		documentBuilderFactoryServiceRegistration;
 	protected static final MockedStatic<FrameworkUtil>
 		frameworkUtilMockedStatic = Mockito.mockStatic(FrameworkUtil.class);
 	protected static final SearchResultInterpreterProvider
@@ -833,7 +782,6 @@ public abstract class BaseRankingsWebTestCase {
 		GroupLocalService.class);
 	protected Language language = Mockito.mock(Language.class);
 	protected Portal portal = Mockito.mock(Portal.class);
-	protected Queries queries = Mockito.mock(Queries.class);
 	protected RankingHelper rankingHelper = Mockito.spy(
 		RankingHelperImpl.class);
 	protected RankingIndexNameBuilder rankingIndexNameBuilder = Mockito.mock(

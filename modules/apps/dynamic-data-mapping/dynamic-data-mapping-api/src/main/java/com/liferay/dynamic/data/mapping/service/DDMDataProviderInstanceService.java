@@ -116,3 +116,4 @@ public interface DDMDataProviderInstanceService extends BaseService {
 		throws PortalException;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:2055475237

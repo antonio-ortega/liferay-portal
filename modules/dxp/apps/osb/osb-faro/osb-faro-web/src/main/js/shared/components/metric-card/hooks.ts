@@ -1,28 +1,42 @@
-import {DocumentNode} from 'apollo-boost';
+import {DocumentNode, useQuery} from '@apollo/client';
+
 import {fetchPolicyDefinition} from 'shared/util/graphql';
-import {Filters, getFilters, RawFilters} from 'shared/util/filter';
-import {getSafeRangeSelectors, getSafeTouchpoint} from 'shared/util/util';
-import {Interval, RangeSelectors, SafeRangeSelectors} from 'shared/types';
+import {getFilters, RawFilters} from 'shared/util/filter';
+import {
+	getSafeDecodedURIComponent,
+	getSafeRangeSelectors,
+	getSafeTouchpoint
+} from 'shared/util/util';
+import {ICommonVariables, Interval, RangeSelectors} from 'shared/types';
 import {useParams} from 'react-router-dom';
-import {useQuery} from '@apollo/react-hooks';
 
-interface ICommonVariables extends SafeRangeSelectors, Filters {
-	interval: Interval;
-}
-
-export const useAssetVariables = (commonVariables: ICommonVariables) => {
-	const {assetId, channelId, title, touchpoint} = useParams();
+export const useAssetVariables = (variables: ICommonVariables) => {
+	const {type, ...commonVariables} = variables;
+	const {
+		assetId = '',
+		channelId = '',
+		title = '',
+		touchpoint = ''
+	} = useParams<{
+		assetId: string;
+		channelId: string;
+		title: string;
+		touchpoint: string;
+	}>();
 
 	return {
-		assetId: decodeURIComponent(assetId),
-		channelId,
-		title: decodeURIComponent(title),
+		assetId: getSafeDecodedURIComponent(assetId),
 		touchpoint: getSafeTouchpoint(touchpoint),
+		...(type !== 'objectEntry' && {
+			channelId,
+			title: getSafeDecodedURIComponent(title)
+		}),
 		...commonVariables
 	};
 };
 
-type TMetricQuery = {
+type TMetricQueryParams = {
+	experienceId?: string;
 	filters: RawFilters;
 	interval: Interval;
 	Query: DocumentNode;
@@ -30,19 +44,36 @@ type TMetricQuery = {
 	variables: (commonVariables: ICommonVariables) => any;
 };
 
-export const useMetricQuery = ({
+const buildQueryVariables = ({
+	experienceId,
 	filters,
 	interval,
-	Query,
 	rangeSelectors,
 	variables
-}: TMetricQuery) => {
+}: Omit<TMetricQueryParams, 'Query'>) =>
+	variables({
+		interval,
+		...getFilters(filters),
+		...getSafeRangeSelectors(rangeSelectors),
+		...(experienceId && {experienceId})
+	});
+
+export const useMetricQuery = ({
+	Query,
+	experienceId,
+	filters,
+	interval,
+	rangeSelectors,
+	variables
+}: TMetricQueryParams) => {
 	const {data, error, loading} = useQuery(Query, {
 		fetchPolicy: fetchPolicyDefinition(rangeSelectors),
-		variables: variables({
+		variables: buildQueryVariables({
+			experienceId,
+			filters,
 			interval,
-			...getFilters(filters),
-			...getSafeRangeSelectors(rangeSelectors)
+			rangeSelectors,
+			variables
 		})
 	});
 

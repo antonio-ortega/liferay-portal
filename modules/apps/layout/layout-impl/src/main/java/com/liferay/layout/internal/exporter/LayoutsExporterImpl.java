@@ -16,6 +16,7 @@ import com.liferay.headless.delivery.dto.v1_0.UtilityPageTemplate;
 import com.liferay.info.item.InfoItemFormVariation;
 import com.liferay.info.item.InfoItemServiceRegistry;
 import com.liferay.info.item.provider.InfoItemFormVariationsProvider;
+import com.liferay.info.search.InfoSearchClassMapperRegistry;
 import com.liferay.layout.exporter.LayoutsExporter;
 import com.liferay.layout.internal.headless.delivery.dto.v1_0.util.MasterPageUtil;
 import com.liferay.layout.internal.headless.delivery.dto.v1_0.util.PageTemplateCollectionUtil;
@@ -28,7 +29,6 @@ import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.model.LayoutPageTemplateStructure;
 import com.liferay.layout.page.template.service.LayoutPageTemplateCollectionLocalService;
 import com.liferay.layout.page.template.service.LayoutPageTemplateCollectionService;
-import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryService;
 import com.liferay.layout.page.template.service.LayoutPageTemplateStructureLocalService;
 import com.liferay.layout.util.structure.LayoutStructure;
@@ -45,6 +45,8 @@ import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.portletfilerepository.PortletFileRepositoryUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.service.LayoutLocalService;
+import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.kernel.zip.ZipWriter;
 import com.liferay.portal.kernel.zip.ZipWriterFactory;
@@ -78,7 +80,7 @@ public class LayoutsExporterImpl implements LayoutsExporter {
 			TransformUtil.transformToList(
 				layoutPageTemplateCollectionIds,
 				layoutPageTemplateCollectionId ->
-					_layoutPageTemplateCollectionLocalService.
+					_layoutPageTemplateCollectionService.
 						fetchLayoutPageTemplateCollection(
 							layoutPageTemplateCollectionId)),
 			_getPageDefinitionDTOConverter(), StringPool.BLANK, zipWriter);
@@ -166,7 +168,7 @@ public class LayoutsExporterImpl implements LayoutsExporter {
 
 		for (long layoutPageTemplateEntryId : layoutPageTemplateEntryIds) {
 			LayoutPageTemplateEntry layoutPageTemplateEntry =
-				_layoutPageTemplateEntryLocalService.getLayoutPageTemplateEntry(
+				_layoutPageTemplateEntryService.getLayoutPageTemplateEntry(
 					layoutPageTemplateEntryId);
 
 			if (layoutPageTemplateEntry.isDraft() ||
@@ -185,7 +187,7 @@ public class LayoutsExporterImpl implements LayoutsExporter {
 			TransformUtil.transformToList(
 				layoutPageTemplateCollectionIds,
 				layoutPageTemplateCollectionId ->
-					_layoutPageTemplateCollectionLocalService.
+					_layoutPageTemplateCollectionService.
 						fetchLayoutPageTemplateCollection(
 							layoutPageTemplateCollectionId)),
 			_getPageDefinitionDTOConverter(), StringPool.BLANK, zipWriter);
@@ -272,7 +274,7 @@ public class LayoutsExporterImpl implements LayoutsExporter {
 
 		for (long layoutPageTemplateEntryId : layoutPageTemplateEntryIds) {
 			LayoutPageTemplateEntry layoutPageTemplateEntry =
-				_layoutPageTemplateEntryLocalService.getLayoutPageTemplateEntry(
+				_layoutPageTemplateEntryService.getLayoutPageTemplateEntry(
 					layoutPageTemplateEntryId);
 
 			if (layoutPageTemplateEntry.isDraft() ||
@@ -286,6 +288,33 @@ public class LayoutsExporterImpl implements LayoutsExporter {
 		}
 
 		return zipWriter.getFile();
+	}
+
+	private ContentSubtype _getContentSubtype(
+		LayoutPageTemplateEntry layoutPageTemplateEntry) {
+
+		return new ContentSubtype() {
+			{
+				setSubtypeId(
+					() -> {
+						if (layoutPageTemplateEntry.getClassTypeId() < 0) {
+							return null;
+						}
+
+						return layoutPageTemplateEntry.getClassTypeId();
+					});
+				setSubtypeKey(
+					() -> {
+						if (Validator.isNull(
+								layoutPageTemplateEntry.getClassTypeKey())) {
+
+							return null;
+						}
+
+						return layoutPageTemplateEntry.getClassTypeKey();
+					});
+			}
+		};
 	}
 
 	private DTOConverterContext _getDTOConverterContext(
@@ -335,22 +364,6 @@ public class LayoutsExporterImpl implements LayoutsExporter {
 		}
 
 		return null;
-	}
-
-	private String _getSubtypeKey(
-		InfoItemFormVariationsProvider<?> infoItemFormVariationsProvider,
-		LayoutPageTemplateEntry layoutPageTemplateEntry) {
-
-		InfoItemFormVariation infoItemFormVariation =
-			infoItemFormVariationsProvider.getInfoItemFormVariation(
-				layoutPageTemplateEntry.getGroupId(),
-				String.valueOf(layoutPageTemplateEntry.getClassTypeId()));
-
-		if (infoItemFormVariation == null) {
-			return null;
-		}
-
-		return infoItemFormVariation.getExternalReferenceCode();
 	}
 
 	private void _populateDisplayPagesZipWriter(
@@ -579,7 +592,10 @@ public class LayoutsExporterImpl implements LayoutsExporter {
 			{
 				setContentSubtype(
 					() -> {
-						if (layoutPageTemplateEntry.getClassTypeId() < 0) {
+						if ((layoutPageTemplateEntry.getClassTypeId() < 0) &&
+							Validator.isNull(
+								layoutPageTemplateEntry.getClassTypeKey())) {
+
 							return null;
 						}
 
@@ -588,23 +604,38 @@ public class LayoutsExporterImpl implements LayoutsExporter {
 								_infoItemServiceRegistry.
 									getFirstInfoItemService(
 										InfoItemFormVariationsProvider.class,
-										layoutPageTemplateEntry.getClassName());
+										_infoSearchClassMapperRegistry.
+											getClassName(
+												layoutPageTemplateEntry.
+													getClassName()));
 
 						if (infoItemFormVariationsProvider == null) {
-							return null;
+							return _getContentSubtype(layoutPageTemplateEntry);
+						}
+
+						InfoItemFormVariation infoItemFormVariation =
+							infoItemFormVariationsProvider.
+								getInfoItemFormVariation(
+									layoutPageTemplateEntry.getGroupId(),
+									layoutPageTemplateEntry.getClassTypeKey(),
+									String.valueOf(
+										layoutPageTemplateEntry.
+											getClassTypeId()));
+
+						if (infoItemFormVariation == null) {
+							return _getContentSubtype(layoutPageTemplateEntry);
 						}
 
 						return new ContentSubtype() {
 							{
 								setSubtypeId(
-									() ->
-										layoutPageTemplateEntry.
-											getClassTypeId());
+									() -> GetterUtil.getLong(
+										infoItemFormVariation.getKey()));
 
 								setSubtypeKey(
-									() -> _getSubtypeKey(
-										infoItemFormVariationsProvider,
-										layoutPageTemplateEntry));
+									() ->
+										infoItemFormVariation.
+											getExternalReferenceCode());
 							}
 						};
 					});
@@ -629,6 +660,9 @@ public class LayoutsExporterImpl implements LayoutsExporter {
 	private InfoItemServiceRegistry _infoItemServiceRegistry;
 
 	@Reference
+	private InfoSearchClassMapperRegistry _infoSearchClassMapperRegistry;
+
+	@Reference
 	private LayoutLocalService _layoutLocalService;
 
 	@Reference
@@ -638,10 +672,6 @@ public class LayoutsExporterImpl implements LayoutsExporter {
 	@Reference
 	private LayoutPageTemplateCollectionService
 		_layoutPageTemplateCollectionService;
-
-	@Reference
-	private LayoutPageTemplateEntryLocalService
-		_layoutPageTemplateEntryLocalService;
 
 	@Reference
 	private LayoutPageTemplateEntryService _layoutPageTemplateEntryService;

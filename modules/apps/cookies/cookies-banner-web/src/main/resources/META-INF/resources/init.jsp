@@ -22,7 +22,6 @@ page import="com.liferay.cookies.banner.web.internal.display.context.CookiesBann
 page import="com.liferay.cookies.banner.web.internal.display.context.CookiesPreferenceHandlingConfigurationDisplayContext" %><%@
 page import="com.liferay.petra.string.StringPool" %><%@
 page import="com.liferay.portal.kernel.cookies.ConsentCookieType" %><%@
-page import="com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil" %><%@
 page import="com.liferay.portal.kernel.language.LanguageUtil" %><%@
 page import="com.liferay.portal.kernel.model.User" %><%@
 page import="com.liferay.portal.kernel.util.HtmlUtil" %><%@
@@ -31,6 +30,8 @@ page import="com.liferay.portal.kernel.util.PortalUtil" %><%@
 page import="com.liferay.users.admin.constants.UsersAdminPortletKeys" %>
 
 <%@ page import="jakarta.portlet.PortletURL" %>
+
+<%@ page import="java.util.Objects" %>
 
 <liferay-frontend:defineObjects />
 

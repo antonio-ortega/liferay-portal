@@ -392,3 +392,4 @@ public class ResourceTypeSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1076667367

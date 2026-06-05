@@ -18,19 +18,17 @@ import {
 	Structure,
 } from '../types/Structure';
 import {Uuid} from '../types/Uuid';
-import {Field, FieldType, MultiselectField, SingleSelectField} from './field';
+import {Field, FieldType, SelectFromListField} from './field';
 import getUuid from './getUuid';
 import isCustomObjectField from './isCustomObjectField';
-import sortChildren from './sortChildren';
+import sortChildren from './state/sortChildren';
 
 export default function buildStructure({
 	mainObjectDefinition,
 	objectDefinitions,
-	relatedContentObjectRelationships,
 }: {
 	mainObjectDefinition: ObjectDefinition;
 	objectDefinitions: ObjectDefinitions;
-	relatedContentObjectRelationships: ObjectRelationship[];
 }): Structure {
 	const uuid = getUuid();
 
@@ -41,12 +39,12 @@ export default function buildStructure({
 			objectDefinition: mainObjectDefinition,
 			objectDefinitions,
 			parent: uuid,
-			relatedContentObjectRelationships,
 		}),
 		erc: mainObjectDefinition.externalReferenceCode,
 		id: mainObjectDefinition.id,
 		label: mainObjectDefinition.label,
 		name: mainObjectDefinition.name ?? '',
+		path: mainObjectDefinition.restContextPath ?? '',
 		spaces: getSpaces(mainObjectDefinition),
 		status: isPublished ? 'published' : 'draft',
 		system: mainObjectDefinition.system ?? false,
@@ -61,13 +59,11 @@ export function buildChildren({
 	objectDefinition,
 	objectDefinitions,
 	parent,
-	relatedContentObjectRelationships,
 }: {
 	ancestors?: Array<ObjectDefinition['externalReferenceCode']>;
 	objectDefinition: ObjectDefinition;
 	objectDefinitions: ObjectDefinitions;
 	parent: Uuid;
-	relatedContentObjectRelationships?: ObjectRelationship[];
 }) {
 	const objectFields = objectDefinition.objectFields || [];
 	const objectRelationships = objectDefinition.objectRelationships || [];
@@ -79,7 +75,12 @@ export function buildChildren({
 	}
 
 	for (const objectField of objectFields) {
-		if (!isCustomObjectField(objectField)) {
+		if (
+			!isCustomObjectField(
+				objectField,
+				objectDefinition.externalReferenceCode
+			)
+		) {
 			continue;
 		}
 
@@ -119,7 +120,7 @@ export function buildChildren({
 
 			children.set(repeatableGroup.uuid, repeatableGroup);
 		}
-		else if (objectRelationship.edge) {
+		else if (objectRelationship.deletionType === 'cascade') {
 			const referencedStructure = buildReferencedStructure({
 				ancestors: [
 					...ancestors,
@@ -136,22 +137,26 @@ export function buildChildren({
 		}
 	}
 
-	if (relatedContentObjectRelationships) {
-		for (const relatedContentObjectRelationship of relatedContentObjectRelationships) {
-			const relatedContent: RelatedContent = {
-				erc: relatedContentObjectRelationship.externalReferenceCode,
-				label: relatedContentObjectRelationship.label,
-				multiselection: false,
-				name: relatedContentObjectRelationship.name,
-				parent,
-				relatedStructureERC:
-					relatedContentObjectRelationship.objectDefinitionExternalReferenceCode1,
-				type: 'related-content',
-				uuid: getUuid(),
-			};
+	const relatedContentObjectRelationships =
+		getRelatedContentObjectRelationships(
+			objectDefinition,
+			objectDefinitions
+		);
 
-			children.set(relatedContent.uuid, relatedContent);
-		}
+	for (const relatedContentObjectRelationship of relatedContentObjectRelationships) {
+		const relatedContent: RelatedContent = {
+			erc: relatedContentObjectRelationship.externalReferenceCode,
+			label: relatedContentObjectRelationship.label,
+			multiselection: false,
+			name: relatedContentObjectRelationship.name,
+			parent,
+			relatedStructureERC:
+				relatedContentObjectRelationship.objectDefinitionExternalReferenceCode1,
+			type: 'related-content',
+			uuid: getUuid(),
+		};
+
+		children.set(relatedContent.uuid, relatedContent);
 	}
 
 	return sortChildren(children);
@@ -194,11 +199,19 @@ export function buildField({
 	};
 
 	if (
-		(field.type === 'single-select' || field.type === 'multiselect') &&
+		field.type === 'select-from-list' &&
 		!isNullOrUndefined(objectField.listTypeDefinitionId)
 	) {
-		(field as SingleSelectField | MultiselectField).picklistId =
+		(field as SelectFromListField).picklistId =
 			objectField.listTypeDefinitionId;
+	}
+
+	if (objectField.businessType === 'MultiselectPicklist') {
+		(field as SelectFromListField).multiselection = true;
+	}
+
+	if (objectField.businessType === 'Picklist') {
+		(field as SelectFromListField).multiselection = false;
 	}
 
 	return field;
@@ -303,12 +316,16 @@ function getFieldSettings(objectField: ObjectField): Field['settings'] {
 			objectFieldSettings.acceptedFileExtensions;
 		settings.fileSource = objectFieldSettings.fileSource;
 		settings.maximumFileSize = objectFieldSettings.maximumFileSize;
+		settings.storageDepotGroup = objectFieldSettings.storageDepotGroup;
 
-		if (objectFieldSettings.fileSource === 'userComputer') {
-			settings.showFilesInDocumentsAndMedia =
-				objectFieldSettings.showFilesInDocumentsAndMedia;
+		if (
+			objectFieldSettings.fileSource === 'userComputerToCMSBasicDocument'
+		) {
+			settings.showFilesInLibrary =
+				objectFieldSettings.showFilesInLibrary;
 			settings.storageDLFolderPath =
 				objectFieldSettings.storageDLFolderPath;
+			settings.storageDepotGroup = objectFieldSettings.storageDepotGroup;
 		}
 	}
 	else if (objectField.businessType === 'DateTime') {
@@ -331,33 +348,43 @@ function getFieldSettings(objectField: ObjectField): Field['settings'] {
 			settings.uniqueValues = objectFieldSettings.uniqueValues;
 		}
 	}
+	else if (objectField.businessType === 'PhoneNumber') {
+		settings.countrySource = objectFieldSettings.countrySource;
+
+		if (objectFieldSettings.country) {
+			settings.country = objectFieldSettings.country;
+		}
+
+		if (objectFieldSettings.uniqueValues) {
+			settings.uniqueValues = objectFieldSettings.uniqueValues;
+		}
+	}
 
 	return settings as Field['settings'];
 }
 
 function getFieldType(objectField: ObjectField): FieldType {
-	if (objectField.businessType === 'Picklist') {
-		return 'single-select';
-	}
-	else if (objectField.businessType === 'MultiselectPicklist') {
-		return 'multiselect';
+	if (
+		objectField.businessType === 'Picklist' ||
+		objectField.businessType === 'MultiselectPicklist'
+	) {
+		return 'select-from-list';
 	}
 
-	const DB_TYPE_TO_FIELD_TYPE: Record<string, FieldType> = {
-		BigDecimal: 'decimal',
+	const BUSINESS_TYPE_TO_FIELD_TYPE: Record<string, FieldType> = {
+		Attachment: 'upload',
 		Boolean: 'boolean',
-		Clob: 'long-text',
 		Date: 'date',
 		DateTime: 'datetime',
-		Double: 'decimal',
+		Decimal: 'decimal',
 		Integer: 'integer',
-		Long: 'upload',
+		LongText: 'long-text',
+		PhoneNumber: 'phone-number',
 		RichText: 'rich-text',
-		String: 'text',
-		Upload: 'upload',
+		Text: 'text',
 	} as const;
 
-	return DB_TYPE_TO_FIELD_TYPE[objectField.DBType];
+	return BUSINESS_TYPE_TO_FIELD_TYPE[objectField.businessType];
 }
 
 export function getSpaces(objectDefinition: ObjectDefinition) {
@@ -418,4 +445,34 @@ function isRelatedContent(objectRelationship: ObjectRelationship) {
 	}
 
 	return false;
+}
+
+function getRelatedContentObjectRelationships(
+	mainObjectDefinition: ObjectDefinition,
+	objectDefinitions: ObjectDefinitions
+) {
+	const relationships: ObjectRelationship[] = [];
+
+	for (const objectDefinition of Object.values(objectDefinitions)) {
+		if (
+			mainObjectDefinition.externalReferenceCode ===
+			objectDefinition.externalReferenceCode
+		) {
+			continue;
+		}
+
+		for (const objectRelationship of objectDefinition.objectRelationships ||
+			[]) {
+			if (
+				objectRelationship.objectDefinitionExternalReferenceCode2 ===
+					mainObjectDefinition.externalReferenceCode &&
+				objectRelationship.type === 'oneToMany' &&
+				objectRelationship.deletionType === 'disassociate'
+			) {
+				relationships.push(objectRelationship);
+			}
+		}
+	}
+
+	return relationships;
 }

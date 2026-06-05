@@ -111,11 +111,19 @@ public abstract class BaseSQLTransformerLogicTestCase {
 	}
 
 	@Test
-	public void testReplaceInstrWithExtraWhitespace() {
+	public void testReplaceInstrWithPostColumnModificator() {
 		Assert.assertEquals(
-			getInstrTransformedSQL(),
+			getInstrWithPostColumnModificatorTransformedSQL(),
 			sqlTransformer.transform(
-				_addExtraWhitespaceFunction.apply(getInstrOriginalSQL())));
+				getInstrWithPostColumnModificatorOriginalSQL()));
+	}
+
+	@Test
+	public void testReplaceInstrWithPreColumnModificator() {
+		Assert.assertEquals(
+			getInstrWithPreColumnModificatorTransformedSQL(),
+			sqlTransformer.transform(
+				getInstrWithPreColumnModificatorOriginalSQL()));
 	}
 
 	@Test
@@ -278,11 +286,28 @@ public abstract class BaseSQLTransformerLogicTestCase {
 	protected abstract String getDropTableIfExistsTextTransformedSQL();
 
 	protected String getInstrOriginalSQL() {
-		return "select INSTR(foo) from Foo";
+		return "select INSTR(foo, 'fooText') from Foo";
 	}
 
 	protected String getInstrTransformedSQL() {
 		return getInstrOriginalSQL();
+	}
+
+	protected String getInstrWithPostColumnModificatorOriginalSQL() {
+		return "select INSTR(foo COLLATE Latin1_General_100_BIN2, CHR(10)) " +
+			"from Foo";
+	}
+
+	protected String getInstrWithPostColumnModificatorTransformedSQL() {
+		return getInstrWithPostColumnModificatorOriginalSQL();
+	}
+
+	protected String getInstrWithPreColumnModificatorOriginalSQL() {
+		return "select INSTR(BINARY foo, CHAR(10)) from Foo";
+	}
+
+	protected String getInstrWithPreColumnModificatorTransformedSQL() {
+		return getInstrWithPreColumnModificatorOriginalSQL();
 	}
 
 	protected String getIntegerDivisionOriginalSQL() {

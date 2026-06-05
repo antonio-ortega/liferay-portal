@@ -31,6 +31,11 @@ public class LenientStore implements Store {
 	}
 
 	@Override
+	public void deleteDirectory(long companyId) throws PortalException {
+		_store.deleteDirectory(companyId);
+	}
+
+	@Override
 	public void deleteDirectory(
 		long companyId, long repositoryId, String dirName) {
 
@@ -97,6 +102,11 @@ public class LenientStore implements Store {
 		String versionLabel) {
 
 		return true;
+	}
+
+	@Override
+	public void verifyCompanyStores() throws PortalException {
+		_store.verifyCompanyStores();
 	}
 
 	private static final byte[] _DUMMY_CONTENT =

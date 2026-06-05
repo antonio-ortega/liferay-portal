@@ -182,3 +182,4 @@ public interface AccountChannelShippingOptionResource {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:555931218

@@ -205,6 +205,12 @@ public class FileUtil {
 		return fileNames;
 	}
 
+	public static void move(String sourceFilePath, String newFilePath)
+		throws IOException {
+
+		FileUtils.moveFile(new File(sourceFilePath), new File(newFilePath));
+	}
+
 	public static String read(File file) throws IOException {
 		return read(getURL(file));
 	}

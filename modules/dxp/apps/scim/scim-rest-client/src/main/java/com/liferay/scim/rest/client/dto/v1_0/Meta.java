@@ -163,3 +163,4 @@ public class Meta implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-429739086

@@ -173,8 +173,7 @@ public class LayoutPageTemplateEntryIndexerReindexTest {
 	}
 
 	private void _reindex() throws Exception {
-		indexer.reindex(
-			new String[] {String.valueOf(TestPropsValues.getCompanyId())});
+		indexer.reindexCompany(TestPropsValues.getCompanyId());
 	}
 
 	private void _reindex(LayoutPageTemplateEntry layoutPageTemplateEntry)

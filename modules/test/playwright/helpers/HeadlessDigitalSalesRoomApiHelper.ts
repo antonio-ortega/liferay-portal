@@ -11,18 +11,43 @@ export class HeadlessDigitalSalesRoomApiHelper {
 
 	constructor(apiHelpers: ApiHelpers | DataApiHelpers) {
 		this.apiHelpers = apiHelpers;
-		this.basePath = 'headless-digital-sales-room/v1.0';
+		this.basePath = 'digital-sales-room';
 	}
 
-	async getDigitalSalesRooms() {
-		return this.apiHelpers.get(
-			`${this.apiHelpers.baseUrl}${this.basePath}/digital-sales-rooms`
+	async addRoom({
+		accountEntryId,
+		friendlyURL,
+		name,
+		siteTemplateKey = 'L_DSR_LAYOUT_SET_PROTOTYPE',
+	}: {
+		accountEntryId: number;
+		friendlyURL?: string;
+		name: string;
+		siteTemplateKey?: string;
+	}) {
+		return this.apiHelpers.post(
+			`${this.apiHelpers.baseUrl}${this.basePath}/rooms/`,
+			{
+				data: {
+					friendlyURL: friendlyURL || `/${name.toLowerCase()}`,
+					name,
+					r_accountToDSRRooms_accountEntryId: accountEntryId,
+					siteTemplateKey,
+				},
+				failOnStatusCode: true,
+			}
 		);
 	}
 
-	async getDigitalSalesRoomTemplates() {
+	async getRooms() {
 		return this.apiHelpers.get(
-			`${this.apiHelpers.baseUrl}${this.basePath}/digital-sales-room-templates`
+			`${this.apiHelpers.baseUrl}${this.basePath}/rooms`
+		);
+	}
+
+	async deleteRoom(roomId: number) {
+		return this.apiHelpers.delete(
+			`${this.apiHelpers.baseUrl}${this.basePath}/rooms/${roomId}`
 		);
 	}
 }

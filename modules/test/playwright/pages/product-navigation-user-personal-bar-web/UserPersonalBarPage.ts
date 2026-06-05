@@ -6,12 +6,14 @@
 import {Locator, Page} from '@playwright/test';
 
 import {waitForAlert} from '../../utils/waitForAlert';
-import {ApplicationsMenuPage} from '../product-navigation-applications-menu/ApplicationsMenuPage';
+import {GlobalMenuPage} from '../product-navigation-applications-menu/GlobalMenuPage';
 
 export class UserPersonalBarPage {
-	readonly applicationsMenuPage: ApplicationsMenuPage;
+	readonly backArrow: Locator;
 	readonly editConfigurationSubmitButton: Locator;
+	readonly globalMenuPage: GlobalMenuPage;
 	readonly notificationBadge: Locator;
+	readonly notificationsMenuItem: Locator;
 	readonly page: Page;
 	readonly processBuilderConfigurationTab: Locator;
 	readonly productsMenuItem: Locator;
@@ -20,6 +22,7 @@ export class UserPersonalBarPage {
 	readonly searchSubmit: Locator;
 	readonly showNotificationBadgeInPersonalMenuLabel: Locator;
 	readonly submitForWorkflowButton: Locator;
+	readonly userMenuButton: Locator;
 	readonly usersSetting: Locator;
 	readonly workflowDefinitionLinkCancelButton: Locator;
 	readonly workflowDefinitionLinkEditButton: Locator;
@@ -27,11 +30,16 @@ export class UserPersonalBarPage {
 	readonly workflowDefinitionLinkSelectButton: Locator;
 
 	constructor(page: Page) {
-		this.applicationsMenuPage = new ApplicationsMenuPage(page);
+		this.backArrow = page.getByRole('link', {exact: true, name: 'Back'});
 		this.editConfigurationSubmitButton = page.getByTestId(
 			'submitConfiguration'
 		);
+		this.globalMenuPage = new GlobalMenuPage(page);
 		this.notificationBadge = page.getByLabel('New Notification');
+		this.notificationsMenuItem = page.getByRole('menuitem', {
+			exact: true,
+			name: 'Notifications',
+		});
 		this.page = page;
 		this.processBuilderConfigurationTab = page.getByRole('link', {
 			name: 'Configuration',
@@ -58,6 +66,7 @@ export class UserPersonalBarPage {
 		this.submitForWorkflowButton = page.getByRole('link', {
 			name: 'Submit for Workflow',
 		});
+		this.userMenuButton = page.getByTestId('userPersonalMenu');
 		this.usersSetting = page.getByRole('link', {
 			name: 'Users',
 		});
@@ -75,7 +84,7 @@ export class UserPersonalBarPage {
 	}
 
 	async disableNotificationBadgeInPersonalMenu() {
-		await this.applicationsMenuPage.goToInstanceSettings();
+		await this.globalMenuPage.goToControlPanel('Instance Settings');
 		await this.usersSetting.click();
 		await this.showNotificationBadgeInPersonalMenuLabel.uncheck();
 		await this.editConfigurationSubmitButton.click();
@@ -98,7 +107,7 @@ export class UserPersonalBarPage {
 	}
 
 	async enableNotificationBadgeInPersonalMenu() {
-		await this.applicationsMenuPage.goToInstanceSettings();
+		await this.globalMenuPage.goToControlPanel('Instance Settings');
 		await this.usersSetting.click();
 		await this.showNotificationBadgeInPersonalMenuLabel.check();
 		await this.editConfigurationSubmitButton.click();
@@ -121,7 +130,7 @@ export class UserPersonalBarPage {
 	}
 
 	async goToProcessBuilderConfigurationTab() {
-		await this.applicationsMenuPage.goToProcessBuilder();
+		await this.globalMenuPage.goToApplications('Process Builder');
 		await Promise.all([
 			this.processBuilderConfigurationTab.click(),
 			this.page.waitForResponse(

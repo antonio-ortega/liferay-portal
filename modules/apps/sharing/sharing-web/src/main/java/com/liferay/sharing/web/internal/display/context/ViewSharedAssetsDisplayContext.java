@@ -5,6 +5,7 @@
 
 package com.liferay.sharing.web.internal.display.context;
 
+import com.liferay.asset.kernel.model.AssetRenderer;
 import com.liferay.frontend.taglib.clay.servlet.taglib.display.context.ManagementToolbarDisplayContext;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
@@ -21,6 +22,7 @@ import com.liferay.portal.kernel.portlet.PortletURLUtil;
 import com.liferay.portal.kernel.portlet.SearchOrderByUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.service.ClassNameLocalServiceUtil;
+import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HtmlUtil;
@@ -42,6 +44,7 @@ import com.liferay.sharing.util.comparator.SharingEntryModifiedDateComparator;
 import com.liferay.sharing.web.internal.constants.SharingPortletKeys;
 import com.liferay.sharing.web.internal.filter.SharedAssetsFilterItemRegistry;
 import com.liferay.sharing.web.internal.servlet.taglib.ui.SharingEntryDropdownItemContributorRegistry;
+import com.liferay.sharing.web.internal.util.AssetRendererSharingUtil;
 
 import jakarta.portlet.PortletURL;
 
@@ -57,6 +60,7 @@ import java.util.function.Function;
 public class ViewSharedAssetsDisplayContext {
 
 	public ViewSharedAssetsDisplayContext(
+		CompanyLocalService companyLocalService,
 		GroupLocalService groupLocalService, ItemSelector itemSelector,
 		LiferayPortletRequest liferayPortletRequest,
 		LiferayPortletResponse liferayPortletResponse,
@@ -70,6 +74,7 @@ public class ViewSharedAssetsDisplayContext {
 		SharingEntryLocalService sharingEntryLocalService,
 		SharingPermission sharingPermission) {
 
+		_companyLocalService = companyLocalService;
 		_groupLocalService = groupLocalService;
 		_itemSelector = itemSelector;
 		_liferayPortletRequest = liferayPortletRequest;
@@ -245,11 +250,36 @@ public class ViewSharedAssetsDisplayContext {
 		).build();
 	}
 
-	public PortletURL getSharingEntryRowPortletURL(SharingEntry sharingEntry)
-		throws PortalException {
+	public String getSharingEntryRowPortletURL(SharingEntry sharingEntry)
+		throws Exception {
 
 		if (!isSharingEntryVisible(sharingEntry)) {
-			return null;
+			return StringPool.BLANK;
+		}
+
+		AssetRenderer<?> assetRenderer =
+			AssetRendererSharingUtil.getAssetRenderer(sharingEntry);
+
+		if (assetRenderer != null) {
+			String entryRowPortletURL =
+				assetRenderer.getSharingEntryRowPortletURL(
+					_hasEditPermission(
+						sharingEntry.getClassNameId(),
+						sharingEntry.getClassPK()),
+					_themeDisplay);
+
+			if (!Validator.isBlank(entryRowPortletURL)) {
+				return entryRowPortletURL;
+			}
+		}
+
+		SharingEntryInterpreter sharingEntryInterpreter =
+			_sharingEntryInterpreterFunction.apply(sharingEntry);
+
+		if ((sharingEntryInterpreter == null) ||
+			(sharingEntryInterpreter.getSharingEntryViewRenderer() == null)) {
+
+			return StringPool.BLANK;
 		}
 
 		return PortletURLBuilder.createRenderURL(
@@ -260,7 +290,7 @@ public class ViewSharedAssetsDisplayContext {
 			_currentURLObj
 		).setParameter(
 			"sharingEntryId", sharingEntry.getSharingEntryId()
-		).buildRenderURL();
+		).buildString();
 	}
 
 	public String getSharingEntryTitle(SharingEntry sharingEntry) {
@@ -299,11 +329,24 @@ public class ViewSharedAssetsDisplayContext {
 			return false;
 		}
 
-		SharingConfiguration groupSharingConfiguration =
-			_sharingConfigurationFactory.getGroupSharingConfiguration(
-				_groupLocalService.getGroup(sharingEntry.getGroupId()));
+		// See LPD-90975. ObjectEntry implements GroupedModel, but can be
+		// instance scoped.
 
-		return groupSharingConfiguration.isEnabled();
+		SharingConfiguration sharingConfiguration = null;
+
+		if (sharingEntry.getGroupId() > 0) {
+			sharingConfiguration =
+				_sharingConfigurationFactory.getGroupSharingConfiguration(
+					_groupLocalService.getGroup(sharingEntry.getGroupId()));
+		}
+		else {
+			sharingConfiguration =
+				_sharingConfigurationFactory.getCompanySharingConfiguration(
+					_companyLocalService.getCompany(
+						sharingEntry.getCompanyId()));
+		}
+
+		return sharingConfiguration.isEnabled();
 	}
 
 	private PortletURL _getURLEdit(
@@ -352,6 +395,7 @@ public class ViewSharedAssetsDisplayContext {
 		return ParamUtil.getBoolean(_httpServletRequest, "incoming", true);
 	}
 
+	private final CompanyLocalService _companyLocalService;
 	private final PortletURL _currentURLObj;
 	private final GroupLocalService _groupLocalService;
 	private final HttpServletRequest _httpServletRequest;

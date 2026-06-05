@@ -5,11 +5,9 @@
 
 package com.liferay.data.engine.internal.search;
 
-import com.liferay.data.engine.internal.search.spi.model.index.contributor.DEDataListViewModelIndexerWriterContributor;
 import com.liferay.data.engine.model.DEDataListView;
 import com.liferay.data.engine.service.DEDataListViewLocalService;
 import com.liferay.portal.kernel.search.Field;
-import com.liferay.portal.search.batch.DynamicQueryBatchIndexingActionableFactory;
 import com.liferay.portal.search.spi.model.index.contributor.ModelIndexerWriterContributor;
 import com.liferay.portal.search.spi.model.registrar.ModelSearchConfigurator;
 
@@ -51,18 +49,12 @@ public class DEDataListViewModelSearchConfigurator
 
 	@Activate
 	protected void activate() {
-		_modelIndexWriterContributor =
-			new DEDataListViewModelIndexerWriterContributor(
-				_deDataListViewLocalService,
-				_dynamicQueryBatchIndexingActionableFactory);
+		_modelIndexWriterContributor = new ModelIndexerWriterContributor<>(
+			_deDataListViewLocalService::getIndexableActionableDynamicQuery);
 	}
 
 	@Reference
 	private DEDataListViewLocalService _deDataListViewLocalService;
-
-	@Reference
-	private DynamicQueryBatchIndexingActionableFactory
-		_dynamicQueryBatchIndexingActionableFactory;
 
 	private ModelIndexerWriterContributor<DEDataListView>
 		_modelIndexWriterContributor;

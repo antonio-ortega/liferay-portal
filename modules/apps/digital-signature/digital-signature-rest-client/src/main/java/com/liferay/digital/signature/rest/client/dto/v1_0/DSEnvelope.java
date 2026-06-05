@@ -285,3 +285,4 @@ public class DSEnvelope implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:483172295

@@ -9,7 +9,10 @@ import {checkConsent, getOpener} from 'frontend-js-web';
 import {
 	acceptAllCookies,
 	declineAllCookies,
+	deleteStoredCookies,
 	getCookie,
+	hasGuestUserConfigCookie,
+	hasPreviouslyStoredConsent,
 	removeAllCookies,
 	setCookie,
 	setUserConfigCookie,
@@ -27,10 +30,15 @@ export default function ({
 	configurationNamespace,
 	configurationURL,
 	consentRenewalPeriod = 12,
+	consentRenewalPeriodTimeUnit = 'months',
+	dissentRenewalPeriod = consentRenewalPeriod,
+	dissentRenewalPeriodTimeUnit = consentRenewalPeriodTimeUnit,
+	globalPrivacyControlSignalActive = false,
 	includeDeclineAllButton,
 	modifiedDate = 0,
 	namespace,
 	optionalConsentCookieTypeNames,
+	previewMode = false,
 	requiredConsentCookieTypeNames,
 	title,
 }) {
@@ -43,26 +51,70 @@ export default function ({
 	const declineAllButton = document.getElementById(
 		`${namespace}declineAllButton`
 	);
+	let storeConsentCheckbox = document.getElementById(
+		`${namespace}storeConsent`
+	);
 	const cookieBanner = document.querySelector('.cookies-banner');
+
+	if (!cookieBanner) {
+		return;
+	}
+
 	const editMode = document.body.classList.contains('has-edit-mode-menu');
 
 	if (!editMode) {
-		if (isCookiesPreferenceHandlingConfigurationModified(modifiedDate)) {
-			removeAllCookies(
-				optionalConsentCookieTypeNames,
-				requiredConsentCookieTypeNames
+		if (!globalPrivacyControlSignalActive) {
+			isCookiesPreferenceHandlingConfigurationModified(modifiedDate).then(
+				(value) => {
+					if (value) {
+						removeAllCookies(
+							optionalConsentCookieTypeNames,
+							requiredConsentCookieTypeNames
+						);
+					}
+				}
 			);
+
+			if (
+				Liferay.ThemeDisplay.isSignedIn() &&
+				hasGuestUserConfigCookie()
+			) {
+				hasPreviouslyStoredConsent().then(
+					(hasPreviouslyStoredConsent) => {
+						if (hasPreviouslyStoredConsent) {
+							removeAllCookies(
+								optionalConsentCookieTypeNames,
+								requiredConsentCookieTypeNames
+							);
+						}
+					}
+				);
+			}
 		}
 
-		const cookieManager = document.getElementById(
+		const consentManager = document.getElementById(
 			'_com_liferay_my_account_web_portlet_MyAccountPortlet_cookiesBannerConfigurationForm'
 		);
 		const productAnalyticsBanner = document.querySelector(
 			'.product-analytics-banner'
 		);
 
-		if (
-			cookieManager ||
+		if (previewMode) {
+			cookieBanner.style.display = 'block';
+
+			document.documentElement.classList.add(
+				'cookies-banner-preview-mode'
+			);
+
+			cookieBanner.querySelectorAll('a').forEach((link) => {
+				link.addEventListener('click', (event) => {
+					event.preventDefault();
+				});
+			});
+		}
+		else if (
+			globalPrivacyControlSignalActive ||
+			consentManager ||
 			(productAnalyticsBanner &&
 				productAnalyticsBanner.style.display === 'block')
 		) {
@@ -81,21 +133,55 @@ export default function ({
 			}
 		);
 
+		requiredConsentCookieTypeNames.forEach(
+			(requiredConsentCookieTypeName) => {
+				cookiePreferences[requiredConsentCookieTypeName] =
+					getCookie(requiredConsentCookieTypeName) || 'true';
+			}
+		);
+
 		Liferay.on('cookiePreferenceUpdate', (event) => {
 			cookiePreferences[event.key] = event.value;
 		});
 
+		Liferay.on('storeCookiesConsentPreferenceUpdate', (event) => {
+			storeConsentCheckbox.checked = event.value;
+
+			if (!storeConsentCheckbox.checked) {
+				deleteStoredCookies();
+			}
+		});
+
 		acceptAllButton.addEventListener('click', () => {
+			if (previewMode) {
+				return;
+			}
+
 			cookieBanner.style.display = 'none';
+
+			storeConsentCheckbox = document.getElementById(
+				`${namespace}storeConsent`
+			);
 
 			acceptAllCookies(
 				consentRenewalPeriod,
 				optionalConsentCookieTypeNames,
-				requiredConsentCookieTypeNames
+				requiredConsentCookieTypeNames,
+				storeConsentCheckbox?.checked,
+				consentRenewalPeriodTimeUnit
 			);
 
-			setUserConfigCookie(consentRenewalPeriod);
+			setUserConfigCookie(
+				consentRenewalPeriod,
+				storeConsentCheckbox?.checked,
+				consentRenewalPeriodTimeUnit
+			);
 		});
+
+		if (dissentRenewalPeriod === 0) {
+			dissentRenewalPeriod = consentRenewalPeriod;
+			dissentRenewalPeriodTimeUnit = consentRenewalPeriodTimeUnit;
+		}
 
 		openCookieConsentModal = ({
 			alertDisplayType,
@@ -122,13 +208,25 @@ export default function ({
 							'use-necessary-cookies-only'
 						),
 						onClick() {
+							if (previewMode) {
+								return;
+							}
+
 							declineAllCookies(
 								consentRenewalPeriod,
+								consentRenewalPeriodTimeUnit,
+								dissentRenewalPeriod,
+								dissentRenewalPeriodTimeUnit,
 								optionalConsentCookieTypeNames,
-								requiredConsentCookieTypeNames
+								requiredConsentCookieTypeNames,
+								storeConsentCheckbox?.checked
 							);
 
-							setUserConfigCookie(consentRenewalPeriod);
+							setUserConfigCookie(
+								consentRenewalPeriod,
+								storeConsentCheckbox?.checked,
+								consentRenewalPeriodTimeUnit
+							);
 
 							setBannerVisibility(cookieBanner);
 
@@ -139,9 +237,27 @@ export default function ({
 						displayType: 'secondary',
 						label: Liferay.Language.get('accept-selected'),
 						onClick() {
+							if (previewMode) {
+								return;
+							}
+
 							Object.entries(cookiePreferences).forEach(
 								([key, value]) => {
-									setCookie(consentRenewalPeriod, key, value);
+									let renewalPeriod = consentRenewalPeriod;
+									let timeUnit = consentRenewalPeriodTimeUnit;
+
+									if (value !== 'true') {
+										renewalPeriod = dissentRenewalPeriod;
+										timeUnit = dissentRenewalPeriodTimeUnit;
+									}
+
+									setCookie(
+										renewalPeriod,
+										key,
+										storeConsentCheckbox?.checked,
+										timeUnit,
+										value
+									);
 								}
 							);
 
@@ -150,12 +266,18 @@ export default function ({
 									setCookie(
 										consentRenewalPeriod,
 										requiredConsentCookieTypeName,
+										storeConsentCheckbox?.checked,
+										consentRenewalPeriodTimeUnit,
 										'true'
 									);
 								}
 							);
 
-							setUserConfigCookie(consentRenewalPeriod);
+							setUserConfigCookie(
+								consentRenewalPeriod,
+								storeConsentCheckbox?.checked,
+								consentRenewalPeriodTimeUnit
+							);
 
 							setBannerVisibility(cookieBanner);
 
@@ -166,13 +288,23 @@ export default function ({
 						displayType: 'secondary',
 						label: Liferay.Language.get('accept-all'),
 						onClick() {
+							if (previewMode) {
+								return;
+							}
+
 							acceptAllCookies(
 								consentRenewalPeriod,
 								optionalConsentCookieTypeNames,
-								requiredConsentCookieTypeNames
+								requiredConsentCookieTypeNames,
+								storeConsentCheckbox?.checked,
+								consentRenewalPeriodTimeUnit
 							);
 
-							setUserConfigCookie(consentRenewalPeriod);
+							setUserConfigCookie(
+								consentRenewalPeriod,
+								storeConsentCheckbox?.checked,
+								consentRenewalPeriodTimeUnit
+							);
 
 							setBannerVisibility(cookieBanner);
 
@@ -197,18 +329,36 @@ export default function ({
 
 		if (declineAllButton !== null) {
 			declineAllButton.addEventListener('click', () => {
+				if (previewMode) {
+					return;
+				}
+
 				cookieBanner.style.display = 'none';
+
+				storeConsentCheckbox = document.getElementById(
+					`${namespace}storeConsent`
+				);
 
 				declineAllCookies(
 					consentRenewalPeriod,
+					consentRenewalPeriodTimeUnit,
+					dissentRenewalPeriod,
+					dissentRenewalPeriodTimeUnit,
 					optionalConsentCookieTypeNames,
-					requiredConsentCookieTypeNames
+					requiredConsentCookieTypeNames,
+					storeConsentCheckbox?.checked
 				);
 
-				setUserConfigCookie(consentRenewalPeriod);
+				setUserConfigCookie(
+					consentRenewalPeriod,
+					storeConsentCheckbox?.checked,
+					consentRenewalPeriodTimeUnit
+				);
 			});
 		}
 	}
+
+	checkFloatingIcon(cookieBanner, namespace);
 }
 
 function checkCookieConsentForTypes(cookieTypes, modalOptions) {
@@ -228,6 +378,52 @@ function checkCookieConsentForTypes(cookieTypes, modalOptions) {
 	});
 }
 
+function checkFloatingIcon(cookieBanner, namespace) {
+	const floatingIconButton = document.getElementById(
+		`${namespace}floatingIconButton`
+	);
+
+	if (!floatingIconButton) {
+		return;
+	}
+
+	const toggleIconVisibility = () => {
+		let isBannerVisible = false;
+
+		if (cookieBanner) {
+			isBannerVisible =
+				cookieBanner.style.display !== 'none' &&
+				!cookieBanner.classList.contains('d-none');
+		}
+
+		if (isBannerVisible) {
+			floatingIconButton.classList.remove('d-inline-flex');
+			floatingIconButton.classList.add('d-none');
+		}
+		else {
+			floatingIconButton.classList.remove('d-none');
+			floatingIconButton.classList.add('d-inline-flex');
+		}
+	};
+
+	toggleIconVisibility();
+
+	if (cookieBanner) {
+		const observer = new MutationObserver(() => {
+			toggleIconVisibility();
+		});
+
+		observer.observe(cookieBanner, {
+			attributeFilter: ['style', 'class'],
+			attributes: true,
+		});
+	}
+
+	floatingIconButton.addEventListener('click', () => {
+		openCookieConsentModal({});
+	});
+}
+
 function isCookieTypesAccepted(cookieTypes) {
 	if (!Array.isArray(cookieTypes)) {
 		cookieTypes = [cookieTypes];
@@ -236,12 +432,12 @@ function isCookieTypesAccepted(cookieTypes) {
 	return cookieTypes.every((cookieType) => checkConsent(cookieType));
 }
 
-function isCookiesPreferenceHandlingConfigurationModified(modifiedDate) {
+async function isCookiesPreferenceHandlingConfigurationModified(modifiedDate) {
 	if (modifiedDate === 0) {
 		return false;
 	}
 
-	const userConfigDateCookie = getCookie(userConfigDateCookieName);
+	const userConfigDateCookie = await getCookie(userConfigDateCookieName);
 
 	if (
 		userConfigDateCookie === undefined ||
@@ -254,15 +450,23 @@ function isCookiesPreferenceHandlingConfigurationModified(modifiedDate) {
 }
 
 function setBannerVisibility(cookieBanner, modifiedDate) {
-	if (
-		!isCookiesPreferenceHandlingConfigurationModified(modifiedDate) &&
-		getCookie(userConfigCookieName)
-	) {
-		cookieBanner.style.display = 'none';
-	}
-	else {
-		cookieBanner.style.display = 'block';
-	}
+	isCookiesPreferenceHandlingConfigurationModified(modifiedDate).then(
+		(value) => {
+			if (!value) {
+				getCookie(userConfigCookieName).then((cookie) => {
+					if (cookie) {
+						cookieBanner.style.display = 'none';
+					}
+					else {
+						cookieBanner.style.display = 'block';
+					}
+				});
+			}
+			else {
+				cookieBanner.style.display = 'block';
+			}
+		}
+	);
 }
 
 export {checkCookieConsentForTypes, openCookieConsentModal};

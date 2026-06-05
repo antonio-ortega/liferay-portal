@@ -29,6 +29,16 @@ export class ObjectEntryApiHelper {
 		);
 	}
 
+	async expireObjectEntryByExternalReferenceCode(
+		applicationName: string,
+		scopeKey: string,
+		externalReferenceCode: string
+	) {
+		return this.apiHelpers.post(
+			`${this.apiHelpers.baseUrl}${applicationName}/scopes/${scopeKey}/by-external-reference-code/${externalReferenceCode}/expire`
+		);
+	}
+
 	async getObjectDefinitionObjectEntries(
 		applicationName: string,
 		searchParams?: URLSearchParams
@@ -46,11 +56,16 @@ export class ObjectEntryApiHelper {
 
 	async getObjectDefinitionObjectEntriesByScope(
 		applicationName: string,
-		scopeKey: string
+		scopeKey: string,
+		searchParams?: URLSearchParams
 	) {
-		return this.apiHelpers.get(
-			`${this.apiHelpers.baseUrl}/${applicationName}/scopes/${scopeKey}`
-		);
+		const url = `${this.apiHelpers.baseUrl}${applicationName}/scopes/${scopeKey}`;
+
+		if (searchParams) {
+			return this.apiHelpers.get(`${url}?${searchParams.toString()}`);
+		}
+
+		return this.apiHelpers.get(url);
 	}
 
 	async getObjectEntryByExternalReferenceCode({
@@ -113,6 +128,24 @@ export class ObjectEntryApiHelper {
 		);
 	}
 
+	async postObjectEntriesBatch(
+		applicationName: string,
+		data: DataObject[],
+		scopeKey?: string
+	): Promise<ObjectEntry[]> {
+		if (scopeKey) {
+			return this.apiHelpers.post(
+				`${this.apiHelpers.baseUrl}${applicationName}/scopes/${scopeKey}/batch`,
+				{data}
+			);
+		}
+
+		return this.apiHelpers.post(
+			`${this.apiHelpers.baseUrl}${applicationName}/batch/`,
+			{data}
+		);
+	}
+
 	async postObjectEntry(
 		data: DataObject,
 		applicationName: string,
@@ -127,6 +160,17 @@ export class ObjectEntryApiHelper {
 
 		return this.apiHelpers.post(
 			`${this.apiHelpers.baseUrl}${applicationName}/`,
+			{data}
+		);
+	}
+
+	async postObjectEntryCollaborators(
+		data: DataObject[],
+		applicationName: string,
+		objectEntryId: number
+	) {
+		return this.apiHelpers.post(
+			`${this.apiHelpers.baseUrl}${applicationName}/${objectEntryId}/collaborators`,
 			{data}
 		);
 	}

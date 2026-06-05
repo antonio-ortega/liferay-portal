@@ -11,7 +11,9 @@
 // Components
 
 @import 'accordion';
+@import 'account_activity_stream';
 @import 'account_overview';
+@import 'account_profile';
 @import 'activities_chart_timeline';
 @import 'add_data_source';
 @import 'add_report';
@@ -92,6 +94,7 @@
 @import 'footer';
 @import 'form_navigation';
 @import 'forms';
+@import 'frontend_data_set';
 @import 'geomap_chart';
 @import 'grid';
 @import 'header';
@@ -114,6 +117,7 @@
 @import 'interval_selector';
 @import 'invite_users_modal';
 @import 'label';
+@import 'lifecycle_chart';
 @import 'liferay_data_source';
 @import 'list';
 @import 'list_card';
@@ -203,10 +207,10 @@
 @import 'transitions';
 @import 'trend';
 @import 'type_trend';
+@import 'ui_kit';
 @import 'ui-kit/colors';
 @import 'ui-kit/item';
 @import 'ui-kit/row';
-@import 'ui_kit';
 @import 'unassigned_segments_modal';
 @import 'upload_csv_root';
 @import 'usage_overview';

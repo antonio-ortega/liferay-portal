@@ -302,3 +302,4 @@ public interface CSDiagramPinLocalService
 		throws E;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:1986322366

@@ -1,4 +1,4 @@
-import {gql} from 'apollo-boost';
+import {gql} from '@apollo/client';
 import {SessionEntityTypes} from 'shared/util/constants';
 import {TREND_FRAGMENT_EVENT_METRIC} from 'shared/queries/fragments';
 
@@ -21,9 +21,9 @@ export interface EventMetricsVariables {
 	entityType: SessionEntityTypes;
 	interval: string;
 	keywords?: string;
-	rangeEnd?: string;
-	rangeKey?: number;
-	rangeStart?: string;
+	rangeEnd?: string | null;
+	rangeKey?: number | null;
+	rangeStart?: string | null;
 }
 
 interface Metric {
@@ -46,6 +46,7 @@ export default gql`
 			channelId: $channelId
 			entityId: $entityId
 			entityType: $entityType
+			includeWebhookEvents: true
 			interval: $interval
 			keywords: $keywords
 			rangeEnd: $rangeEnd

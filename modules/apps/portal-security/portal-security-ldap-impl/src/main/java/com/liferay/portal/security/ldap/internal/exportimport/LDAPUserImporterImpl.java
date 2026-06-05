@@ -54,6 +54,7 @@ import com.liferay.portal.kernel.util.CalendarFactoryUtil;
 import com.liferay.portal.kernel.util.DateUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Localization;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
@@ -659,21 +660,18 @@ public class LDAPUserImporterImpl implements LDAPUserImporter {
 			}
 		}
 
-		Calendar birthdayCal = CalendarFactoryUtil.getCalendar();
+		Calendar calendar = CalendarFactoryUtil.getCalendar();
 
-		birthdayCal.setTime(ldapUser.getBirthday());
-
-		int birthdayMonth = birthdayCal.get(Calendar.MONTH);
-		int birthdayDay = birthdayCal.get(Calendar.DAY_OF_MONTH);
-		int birthdayYear = birthdayCal.get(Calendar.YEAR);
+		calendar.setTime(ldapUser.getBirthday());
 
 		User user = _userLocalService.addUser(
 			ldapUser.getCreatorUserId(), companyId, autoPassword, password,
 			password, ldapUser.isAutoScreenName(), ldapUser.getScreenName(),
 			ldapUser.getEmailAddress(), ldapUser.getLocale(),
 			ldapUser.getFirstName(), ldapUser.getMiddleName(),
-			ldapUser.getLastName(), 0, 0, ldapUser.isMale(), birthdayMonth,
-			birthdayDay, birthdayYear, StringPool.BLANK,
+			ldapUser.getLastName(), 0, 0, ldapUser.isMale(),
+			calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH),
+			calendar.get(Calendar.YEAR), StringPool.BLANK,
 			UserConstants.TYPE_REGULAR, ldapUser.getGroupIds(),
 			ldapUser.getOrganizationIds(), ldapUser.getRoleIds(),
 			ldapUser.getUserGroupIds(), ldapUser.isSendEmail(),
@@ -698,10 +696,6 @@ public class LDAPUserImporterImpl implements LDAPUserImporter {
 		}
 
 		return user;
-	}
-
-	protected String escapeLDAPName(String ldapName) {
-		return StringUtil.replace(ldapName, '\\', "\\\\");
 	}
 
 	protected User getUser(long companyId, LDAPUser ldapUser) throws Exception {
@@ -1825,14 +1819,12 @@ public class LDAPUserImporterImpl implements LDAPUserImporter {
 			passwordReset = user.isPasswordReset();
 		}
 
-		ServiceContext serviceContext = ldapUser.getServiceContext();
 		boolean updatedCustomMappings = false;
 
 		if (Validator.isNotNull(ldapServerConfiguration.modifiedDate())) {
 			Date serverConfigurationModifiedDate = DateUtil.parseDate(
 				"EEE MMM d HH:mm:ss zzz yyyy",
-				ldapServerConfiguration.modifiedDate(),
-				serviceContext.getLocale());
+				ldapServerConfiguration.modifiedDate(), LocaleUtil.US);
 
 			updatedCustomMappings = serverConfigurationModifiedDate.after(
 				new Date(_lastImportTime));
@@ -1935,6 +1927,8 @@ public class LDAPUserImporterImpl implements LDAPUserImporter {
 		int birthdayMonth = birthdayCal.get(Calendar.MONTH);
 		int birthdayDay = birthdayCal.get(Calendar.DAY_OF_MONTH);
 		int birthdayYear = birthdayCal.get(Calendar.YEAR);
+
+		ServiceContext serviceContext = ldapUser.getServiceContext();
 
 		if (modifiedDate != null) {
 			serviceContext.setModifiedDate(modifiedDate);

@@ -87,9 +87,11 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -243,17 +245,18 @@ public class CPDefinitionsImporter {
 			locale, description);
 
 		return _cpDefinitionLocalService.addCPDefinition(
-			externalReferenceCode, user.getUserId(), catalogGroupId, nameMap,
-			shortDescriptionMap, descriptionMap, nameMap, null, null, null,
-			"simple", true, shippable, false, false, 0D, width, height, depth,
-			weight, _getCPTaxCategoryId(taxCategory, serviceContext), false,
-			false, null, true, displayDateMonth, displayDateDay,
-			displayDateYear, displayDateHour, displayDateMinute,
-			expirationDateMonth, expirationDateDay, expirationDateYear,
-			expirationDateHour, expirationDateMinute, true, sku,
-			subscriptionEnabled, subscriptionLength, subscriptionType,
-			subscriptionTypeSettingsUnicodeProperties, maxSubscriptionCycles,
-			WorkflowConstants.STATUS_DRAFT, serviceContext);
+			externalReferenceCode, user.getUserId(), catalogGroupId,
+			_getCPTaxCategoryId(taxCategory, serviceContext), false, false,
+			null, sku, 0, false, 1, null, null, depth, descriptionMap,
+			displayDateDay, displayDateHour, displayDateMinute,
+			displayDateMonth, displayDateYear, expirationDateDay,
+			expirationDateHour, expirationDateMinute, expirationDateMonth,
+			expirationDateYear, false, height, true, maxSubscriptionCycles,
+			null, null, null, nameMap, true, "simple", true, false, shippable,
+			0D, shortDescriptionMap, subscriptionEnabled, subscriptionLength,
+			subscriptionType, subscriptionTypeSettingsUnicodeProperties, false,
+			false, nameMap, weight, width, WorkflowConstants.STATUS_DRAFT,
+			serviceContext);
 	}
 
 	private void _addWarehouseQuantities(
@@ -377,7 +380,7 @@ public class CPDefinitionsImporter {
 		CPDefinition cpDefinition =
 			_cpDefinitionLocalService.
 				fetchCPDefinitionByCProductExternalReferenceCode(
-					externalReferenceCode, company.getCompanyId());
+					externalReferenceCode, company.getCompanyId(), false);
 
 		if (cpDefinition != null) {
 			CommerceChannelRel commerceChannelRel =
@@ -397,12 +400,16 @@ public class CPDefinitionsImporter {
 					cpDefinition.getModelClassName(),
 					cpDefinition.getCPDefinitionId());
 
-			assetCategories.addAll(cpDefinitionAssetCategories);
+			Set<AssetCategory> mergedAssetCategories = new HashSet<>(
+				assetCategories);
+
+			mergedAssetCategories.addAll(cpDefinitionAssetCategories);
 
 			cpDefinition = _updateCPDefinition(
 				cpDefinition,
 				ListUtil.toLongArray(
-					assetCategories, AssetCategory.CATEGORY_ID_ACCESSOR),
+					new ArrayList<>(mergedAssetCategories),
+					AssetCategory.CATEGORY_ID_ACCESSOR),
 				serviceContext);
 
 			Indexer<CPDefinition> indexer =
@@ -1055,21 +1062,21 @@ public class CPDefinitionsImporter {
 		}
 
 		return _cpDefinitionLocalService.updateCPDefinition(
-			cpDefinition.getCPDefinitionId(), cpDefinition.getNameMap(),
-			cpDefinition.getShortDescriptionMap(),
-			cpDefinition.getDescriptionMap(), cpDefinition.getUrlTitleMap(),
-			cpDefinition.getMetaTitleMap(),
+			cpDefinition.getCPDefinitionId(), cpDefinition.getCPTaxCategoryId(),
+			cpDefinition.isAccountGroupFilterEnabled(),
+			cpDefinition.isChannelFilterEnabled(),
+			cpDefinition.getDDMStructureKey(), cpDefinition.getDepth(),
+			cpDefinition.getDescriptionMap(), day, hour, minute, month, year,
+			day, hour, minute, month, year, cpDefinition.isFreeShipping(),
+			cpDefinition.getHeight(), cpDefinition.isIgnoreSKUCombinations(),
 			cpDefinition.getMetaDescriptionMap(),
-			cpDefinition.getMetaKeywordsMap(),
-			cpDefinition.isIgnoreSKUCombinations(), cpDefinition.isShippable(),
-			cpDefinition.isFreeShipping(), cpDefinition.isShipSeparately(),
-			cpDefinition.getShippingExtraPrice(), cpDefinition.getWidth(),
-			cpDefinition.getHeight(), cpDefinition.getDepth(),
-			cpDefinition.getWeight(), cpDefinition.getCPTaxCategoryId(),
-			cpDefinition.isTaxExempt(), cpDefinition.isTelcoOrElectronics(),
-			cpDefinition.getDDMStructureKey(), cpDefinition.isPublished(),
-			month, day, year, hour, minute, month, day, year, hour, minute,
-			true, serviceContext);
+			cpDefinition.getMetaKeywordsMap(), cpDefinition.getMetaTitleMap(),
+			cpDefinition.getNameMap(), true, cpDefinition.isPublished(),
+			cpDefinition.isShipSeparately(), cpDefinition.isShippable(),
+			cpDefinition.getShippingExtraPrice(),
+			cpDefinition.getShortDescriptionMap(), cpDefinition.isTaxExempt(),
+			cpDefinition.isTelcoOrElectronics(), cpDefinition.getUrlTitleMap(),
+			cpDefinition.getWeight(), cpDefinition.getWidth(), serviceContext);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

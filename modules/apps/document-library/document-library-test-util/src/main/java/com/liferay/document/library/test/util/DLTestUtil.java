@@ -22,6 +22,7 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.ContentTypes;
+import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.ByteArrayInputStream;
 
@@ -94,6 +95,16 @@ public class DLTestUtil {
 		throws PortalException {
 
 		return addDLFolder(groupId, true, serviceContext);
+	}
+
+	public static byte[] randomTextFileBytes() {
+		return randomTextFileBytes(8);
+	}
+
+	public static byte[] randomTextFileBytes(int length) {
+		String string = StringUtil.randomId(length);
+
+		return string.getBytes();
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(DLTestUtil.class);

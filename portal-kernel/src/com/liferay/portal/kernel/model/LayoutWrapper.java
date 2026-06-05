@@ -721,11 +721,6 @@ public class LayoutWrapper
 		return model.getFaviconFileEntryERC();
 	}
 
-	@Override
-	public long getFaviconFileEntryGroupId() {
-		return model.getFaviconFileEntryGroupId();
-	}
-
 	/**
 	 * Returns the favicon file entry scope erc of this layout.
 	 *
@@ -2843,3 +2838,4 @@ public class LayoutWrapper
 	}
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:297716866

@@ -27,9 +27,12 @@ export class CategoriesPage {
 		);
 
 		this.breadcrumbBar = this.page.locator('.breadcrumb-bar');
-		this.createNewCategoryButton = this.page.getByTitle('New Category');
-		this.createNewSubcategoryButton =
-			this.page.getByTitle('New Subcategory');
+		this.createNewCategoryButton = this.page.getByRole('button', {
+			name: 'New Category',
+		});
+		this.createNewSubcategoryButton = this.page.getByRole('button', {
+			name: 'New Subcategory',
+		});
 		this.closePermissionsModalButton = this.page
 			.locator('.modal-header')
 			.getByLabel('Close', {exact: true});
@@ -65,6 +68,13 @@ export class CategoriesPage {
 		}
 
 		await this.closePermissionsModalButton.click();
+	}
+
+	async clearSearch() {
+		await this.page
+			.locator('.search-resume')
+			.getByRole('button', {name: 'Clear Search'})
+			.click();
 	}
 
 	async clickCreateNewCategoryButton() {
@@ -128,5 +138,9 @@ export class CategoriesPage {
 			: await this.deleteConfirmationModal
 					.getByRole('button', {name: 'Cancel'})
 					.click();
+	}
+
+	async search(value: string) {
+		await this.dataSetFragmentPage.search(value);
 	}
 }

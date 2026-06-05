@@ -226,6 +226,13 @@ public class KaleoTimerLocalServiceUtil {
 		return getService().getIndexableActionableDynamicQuery();
 	}
 
+	public static List<KaleoTimer> getKaleoDefinitionVersionKaleoTimers(
+		String kaleoClassName, long kaleoDefinitionVersionId) {
+
+		return getService().getKaleoDefinitionVersionKaleoTimers(
+			kaleoClassName, kaleoDefinitionVersionId);
+	}
+
 	/**
 	 * Returns the kaleo timer with the primary key.
 	 *
@@ -317,3 +324,4 @@ public class KaleoTimerLocalServiceUtil {
 			KaleoTimerLocalServiceUtil.class, KaleoTimerLocalService.class);
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-593709228

@@ -6,10 +6,21 @@
 package com.liferay.portal.security.sso.openid.connect.internal;
 
 import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.test.ReflectionTestUtil;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.util.Http;
+import com.liferay.portal.kernel.util.HttpUtil;
+import com.liferay.portal.security.sso.openid.connect.OpenIdConnectServiceException;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.oauth2.sdk.token.AccessToken;
+import com.nimbusds.oauth2.sdk.util.JSONObjectUtils;
+import com.nimbusds.openid.connect.sdk.op.OIDCProviderMetadata;
+
+import java.net.SocketTimeoutException;
+import java.net.URI;
 
 import java.util.Map;
 
@@ -18,6 +29,7 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
 /**
@@ -53,6 +65,70 @@ public class OpenIdConnectAuthenticationHandlerImplTest {
 		Assert.assertNull(claims.get("email"));
 	}
 
+	@Test
+	public void testRequestUserInfoJSON() throws Exception {
+		String emailAddress = RandomTestUtil.randomString() + "@liferay.com";
+		String subject = RandomTestUtil.randomString();
+
+		try (MockedStatic<HttpUtil> httpUtilMockedStatic = Mockito.mockStatic(
+				HttpUtil.class)) {
+
+			httpUtilMockedStatic.when(
+				() -> HttpUtil.URLtoString(Mockito.any(Http.Options.class))
+			).thenAnswer(
+				invocation -> {
+					Http.Options httpOptions = invocation.getArgument(0);
+
+					Http.Response httpResponse = new Http.Response();
+
+					httpResponse.setContentType("application/json");
+					httpResponse.setResponseCode(200);
+
+					httpOptions.setResponse(httpResponse);
+
+					return JSONUtil.put(
+						"email", emailAddress
+					).put(
+						"sub", subject
+					).toString();
+				}
+			);
+
+			String userInfoJSON = _requestUserInfoJSON();
+
+			Assert.assertNotNull(userInfoJSON);
+
+			Map<String, Object> userInfo = JSONObjectUtils.parse(userInfoJSON);
+
+			Assert.assertEquals(emailAddress, userInfo.get("email"));
+			Assert.assertEquals(subject, userInfo.get("sub"));
+		}
+
+		try (MockedStatic<HttpUtil> httpUtilMockedStatic = Mockito.mockStatic(
+				HttpUtil.class)) {
+
+			httpUtilMockedStatic.when(
+				() -> HttpUtil.URLtoString(Mockito.any(Http.Options.class))
+			).thenThrow(
+				new SocketTimeoutException("Read timed out")
+			);
+
+			try {
+				_requestUserInfoJSON();
+
+				Assert.fail();
+			}
+			catch (OpenIdConnectServiceException.UserInfoException
+						userInfoException) {
+
+				Throwable throwable = userInfoException.getCause();
+
+				Assert.assertTrue(throwable instanceof SocketTimeoutException);
+				Assert.assertEquals("Read timed out", throwable.getMessage());
+			}
+		}
+	}
+
 	private Map<String, Object> _getUserInfoClaims(String claimSetJSON)
 		throws Exception {
 
@@ -70,6 +146,34 @@ public class OpenIdConnectAuthenticationHandlerImplTest {
 
 		return openIdConnectAuthenticationHandlerImpl.getUserInfoClaims(
 			mockJWT);
+	}
+
+	private String _requestUserInfoJSON() throws Exception {
+		OpenIdConnectAuthenticationHandlerImpl
+			openIdConnectAuthenticationHandlerImpl =
+				new OpenIdConnectAuthenticationHandlerImpl();
+
+		OIDCProviderMetadata oidcProviderMetadata = Mockito.mock(
+			OIDCProviderMetadata.class);
+
+		Mockito.when(
+			oidcProviderMetadata.getUserInfoEndpointURI()
+		).thenReturn(
+			new URI("http://" + RandomTestUtil.randomString() + "/")
+		);
+
+		AccessToken accessToken = AccessToken.parse(
+			JSONObjectUtils.parse(
+				JSONUtil.put(
+					"access_token", RandomTestUtil.randomString()
+				).put(
+					"token_type", "Bearer"
+				).toString()));
+
+		return ReflectionTestUtil.invoke(
+			openIdConnectAuthenticationHandlerImpl, "_requestUserInfoJSON",
+			new Class<?>[] {AccessToken.class, OIDCProviderMetadata.class},
+			accessToken, oidcProviderMetadata);
 	}
 
 }

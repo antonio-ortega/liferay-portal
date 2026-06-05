@@ -1,10 +1,25 @@
-locals {
-	cluster_name="${var.deployment_name}-eks"
-	oidc_provider_arn="arn:${var.arn_partition}:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/${module.eks.oidc_provider}"
-}
 module "eks" {
 	addons={
 		amazon-cloudwatch-observability={
+			configuration_values=jsonencode(
+				{
+					containerLogs={
+						enabled=true
+					},
+					dcgmExporter={
+						enabled=false
+					},
+					manager={
+						applicationSignals={
+							autoMonitor={
+								monitorAllServices=false
+							}
+						}
+					},
+					neuronMonitor={
+						enabled=false
+					}
+				})
 			most_recent=true
 		}
 		aws-ebs-csi-driver={
@@ -24,6 +39,14 @@ module "eks" {
 		}
 		vpc-cni={
 			before_compute=true
+			configuration_values=jsonencode(
+				{
+					enableNetworkPolicy="true"
+					nodeAgent={
+						healthProbeBindAddr="8163"
+						metricsBindAddr="8162"
+					}
+				})
 			most_recent=true
 		}
 	}
@@ -41,7 +64,8 @@ module "eks" {
 		provider_key_arn=aws_kms_key.eks_secrets.arn
 	}
 	endpoint_private_access=true
-	endpoint_public_access=true
+	endpoint_public_access=var.eks_allow_public_access
+	endpoint_public_access_cidrs=local.eks_api_public_access_cidrs
 	iam_role_additional_policies={
 		AmazonEKSBlockStoragePolicy="arn:${var.arn_partition}:iam::aws:policy/AmazonEKSBlockStoragePolicy"
 		AmazonEKSComputePolicy="arn:${var.arn_partition}:iam::aws:policy/AmazonEKSComputePolicy"
@@ -54,9 +78,8 @@ module "eks" {
 		AWSXRayDaemonWriteAccess="arn:${var.arn_partition}:iam::aws:policy/AWSXRayDaemonWriteAccess"
 		CloudWatchAgentServerPolicy="arn:${var.arn_partition}:iam::aws:policy/CloudWatchAgentServerPolicy"
 	}
-	source="terraform-aws-modules/eks/aws"
+	source="git::https://github.com/terraform-aws-modules/terraform-aws-eks.git?ref=de2aa10f25c7f2d2ab1264f6451f7cbf57f784c4"
 	subnet_ids=module.vpc.private_subnets
-	version="21.3.1"
 	vpc_id=module.vpc.vpc_id
 }
 resource "aws_eks_addon" "s3_csi" {
@@ -101,7 +124,7 @@ resource "aws_iam_role" "irsa" {
 							"${module.eks.oidc_provider}:aud"="sts.amazonaws.com"
 						}
 						StringLike={
-							"${module.eks.oidc_provider}:sub"="system:serviceaccount:liferay-*:liferay-default"
+							"${module.eks.oidc_provider}:sub"="system:serviceaccount:${local.liferay_namespace_pattern}:liferay-default"
 						}
 					}
 					Effect="Allow"
@@ -111,8 +134,7 @@ resource "aws_iam_role" "irsa" {
 				}
 			]
 			Version="2012-10-17"
-		}
-	)
+		})
 	force_detach_policies=true
 	name="${var.deployment_name}-irsa"
 }
@@ -138,8 +160,7 @@ resource "aws_iam_role" "s3_csi_driver" {
 				}
 			]
 			Version="2012-10-17"
-		}
-	)
+		})
 	force_detach_policies=true
 	name="${var.deployment_name}-s3_csi_driver"
 }
@@ -193,19 +214,45 @@ resource "aws_iam_role_policy_attachment" "role_policy_attachment_ebs_csi_driver
 	role=aws_iam_role.ebs_csi_driver.name
 }
 resource "aws_kms_alias" "eks_kms_alias" {
+	depends_on=[aws_kms_key.eks_secrets]
 	name="alias/${local.cluster_name}_kms"
 	target_key_id=aws_kms_key.eks_secrets.key_id
 }
 resource "aws_kms_key" "eks_secrets" {
 	deletion_window_in_days=7
 	description="KMS key for EKS secrets encryption"
-}
-resource "aws_vpc_security_group_ingress_rule" "node_liferay_ingress" {
-	cidr_ipv4=var.vpc_cidr
-	from_port=8080
-	ip_protocol="tcp"
-	security_group_id=module.eks.node_security_group_id
-	to_port=8080
+	enable_key_rotation=true
+	policy=jsonencode(
+		{
+			Statement=[
+				{
+					Action="kms:*"
+					Effect="Allow"
+					Principal={
+						AWS="arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+					}
+					Resource="*"
+					Sid="EnableIAMUserPermissions"
+				},
+				{
+					Action=[
+						"kms:CreateGrant",
+						"kms:Decrypt",
+						"kms:DescribeKey",
+						"kms:Encrypt",
+						"kms:GenerateDataKey*",
+						"kms:ReEncrypt*",
+					]
+					Effect="Allow"
+					Principal={
+						Service="eks.amazonaws.com"
+					}
+					Resource="*"
+					Sid="KMSAllowEKS"
+				},
+			]
+			Version="2012-10-17"
+		})
 }
 resource "kubernetes_storage_class_v1" "gp3_storage_class" {
 	allowed_topologies {

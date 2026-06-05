@@ -6,8 +6,9 @@
 import {useIsMounted} from '@liferay/frontend-js-react-web';
 import {navigate} from 'frontend-js-web';
 import PropTypes from 'prop-types';
-import {useEffect} from 'react';
+import {useContext, useEffect, useRef} from 'react';
 
+import {CollectionItemContext} from '../../contexts/CollectionItemContext';
 import {
 	useEditableProcessorClickPosition,
 	useEditableProcessorUniqueId,
@@ -31,6 +32,7 @@ export default function FragmentContentProcessor({
 	const languageId = useSelector(selectLanguageId);
 	const setEditableProcessorUniqueId = useSetEditableProcessorUniqueId();
 	const isMounted = useIsMounted();
+	const isNavigatingRef = useRef(false);
 
 	const editable = editables.find(
 		(editable) => editableProcessorUniqueId === editable.itemId
@@ -44,22 +46,33 @@ export default function FragmentContentProcessor({
 		[fragmentEntryLinkId]
 	);
 
+	const {isDisabled} = useContext(CollectionItemContext);
+
 	useEffect(() => {
-		const onBeforeNavigate = (event) => {
+		const onBeforeNavigate = async (event) => {
 			if (!editable) {
 				return;
 			}
 
+			if (isNavigatingRef.current) {
+				isNavigatingRef.current = false;
+
+				return;
+			}
+
 			event.originalEvent.preventDefault();
+
+			isNavigatingRef.current = true;
 
 			const editableValue =
 				editableValues[editable.editableValueNamespace][
 					editable.editableId
 				];
 
-			editable.processor.destroyEditor(
+			await editable.processor.destroyEditor(
 				editable.element,
-				editableValue.config
+				editableValue.config,
+				true
 			);
 
 			navigate(event.path);
@@ -76,7 +89,8 @@ export default function FragmentContentProcessor({
 		if (
 			!editable ||
 			!editableValues ||
-			editableCollectionItemId !== editableProcessorUniqueId
+			editableCollectionItemId !== editableProcessorUniqueId ||
+			isDisabled
 		) {
 			return;
 		}
@@ -125,7 +139,7 @@ export default function FragmentContentProcessor({
 					})
 				);
 			},
-			() => {
+			async () => {
 				if (editableCollectionItemId === editableProcessorUniqueId) {
 					setEditableProcessorUniqueId(null);
 				}
@@ -134,9 +148,11 @@ export default function FragmentContentProcessor({
 					return;
 				}
 
-				editable.processor.destroyEditor(
-					editable.element,
-					editableValue.config
+				await Promise.resolve(
+					editable.processor.destroyEditor(
+						editable.element,
+						editableValue.config
+					)
 				);
 			},
 			editableProcessorClickPosition,
@@ -150,6 +166,7 @@ export default function FragmentContentProcessor({
 		editableProcessorUniqueId,
 		editableValues,
 		fragmentEntryLinkId,
+		isDisabled,
 		isMounted,
 		languageId,
 		setEditableProcessorUniqueId,

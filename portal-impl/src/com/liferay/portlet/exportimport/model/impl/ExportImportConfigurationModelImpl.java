@@ -104,6 +104,8 @@ public class ExportImportConfigurationModelImpl
 	public static final String TABLE_SQL_DROP =
 		"drop table ExportImportConfiguration";
 
+	public static final String ENTITY_ALIAS = "exportImportConfiguration";
+
 	public static final String ORDER_BY_JPQL =
 		" ORDER BY exportImportConfiguration.createDate ASC";
 
@@ -1309,3 +1311,4 @@ public class ExportImportConfigurationModelImpl
 	private ExportImportConfiguration _escapedModel;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:76369918

@@ -179,3 +179,4 @@ public class GoogleAnalyticsConfiguration implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1483852865

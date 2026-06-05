@@ -393,3 +393,4 @@ public class COREntryRelWrapper
 	}
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-1152775772

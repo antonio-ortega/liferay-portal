@@ -5,6 +5,7 @@
 
 package com.liferay.product.analytics.web.internal.servlet.taglib;
 
+import com.liferay.layout.utility.page.kernel.provider.LayoutUtilityPageEntryLayoutProvider;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.log.Log;
@@ -20,6 +21,8 @@ import com.liferay.portal.kernel.servlet.taglib.DynamicInclude;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.product.analytics.web.internal.configuration.ProductAnalyticsConfiguration;
+import com.liferay.product.analytics.web.internal.constants.ProductAnalyticsWebKeys;
+import com.liferay.product.analytics.web.internal.display.context.ProductAnalyticsConfigurationDisplayContext;
 
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.http.HttpServletRequest;
@@ -48,15 +51,16 @@ public class ProductAnalyticsBottomJSPDynamicInclude
 			HttpServletResponse httpServletResponse, String key)
 		throws IOException {
 
-		if (!FeatureFlagManagerUtil.isEnabled("LPD-51356") ||
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
+
+		if (!FeatureFlagManagerUtil.isEnabled(
+				themeDisplay.getCompanyId(), "LPD-51356") ||
 			LiferayWindowState.isPopUp(httpServletRequest)) {
 
 			return;
 		}
-
-		ThemeDisplay themeDisplay =
-			(ThemeDisplay)httpServletRequest.getAttribute(
-				WebKeys.THEME_DISPLAY);
 
 		Group group = themeDisplay.getScopeGroup();
 
@@ -82,6 +86,12 @@ public class ProductAnalyticsBottomJSPDynamicInclude
 		catch (Exception exception) {
 			_log.error(exception);
 		}
+
+		httpServletRequest.setAttribute(
+			ProductAnalyticsWebKeys.
+				PRODUCT_ANALYTICS_CONFIGURATION_DISPLAY_CONTEXT,
+			new ProductAnalyticsConfigurationDisplayContext(
+				httpServletRequest, _layoutUtilityPageEntryLayoutProvider));
 
 		super.include(httpServletRequest, httpServletResponse, key);
 	}
@@ -128,6 +138,10 @@ public class ProductAnalyticsBottomJSPDynamicInclude
 
 	@Reference
 	private LayoutSetLocalService _layoutSetLocalService;
+
+	@Reference
+	private LayoutUtilityPageEntryLayoutProvider
+		_layoutUtilityPageEntryLayoutProvider;
 
 	@Reference(
 		target = "(osgi.web.symbolicname=com.liferay.product.analytics.web)"

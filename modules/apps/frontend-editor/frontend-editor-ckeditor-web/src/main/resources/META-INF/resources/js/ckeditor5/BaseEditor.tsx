@@ -5,6 +5,7 @@
 
 import {EventInfo} from '@ckeditor/ckeditor5-utils/dist/index.js';
 import {useControlledState} from '@clayui/shared';
+import classNames from 'classnames';
 import {loadEditorClientExtensions} from 'frontend-js-web';
 import React, {useEffect, useRef, useState} from 'react';
 
@@ -19,7 +20,7 @@ const BaseEditor = ({
 	className,
 	config,
 	data,
-	disabled,
+	disabled: initialDisabled,
 	editor,
 	formInputEnabled = false,
 	formInputName,
@@ -40,7 +41,10 @@ const BaseEditor = ({
 	onFocus?: (event: EventInfo, editor: TEditor) => void;
 	onReady?: (editor: TEditor) => void;
 }) => {
+	const [disabled, setDisabled] = useState(initialDisabled);
 	const [editorConfig, setEditorConfig] = useState(config);
+	const [loading, setLoading] = useState(true);
+
 	const [formInputValue, setFormInputValue] = useControlledState({
 		defaultName: 'data',
 		defaultValue: config?.initialData ?? '',
@@ -48,7 +52,6 @@ const BaseEditor = ({
 		name: 'data',
 		value: data,
 	});
-	const [loading, setLoading] = useState(true);
 
 	const firstRenderRef = useRef(true);
 
@@ -88,11 +91,15 @@ const BaseEditor = ({
 	return loading ? (
 		<ClayLoadingIndicator />
 	) : (
-		<div className={`lfr-ck ${className ? className : ''}`}>
+		<div
+			className={classNames('lfr-ck', className, {
+				'lfr-ck-disabled': disabled,
+			})}
+		>
 			<CKEditor
 				config={editorConfig}
 				data={data}
-				disabled={disabled}
+				disabled={initialDisabled}
 				editor={editor}
 				onBlur={onBlur}
 				onChange={(event, editor) => {
@@ -103,7 +110,15 @@ const BaseEditor = ({
 					}
 				}}
 				onFocus={onFocus}
-				onReady={onReady}
+				onReady={(editor) => {
+					editor.on(
+						'change:isReadOnly',
+						(event, propertyName, isReadOnly) =>
+							setDisabled(isReadOnly)
+					);
+
+					onReady?.(editor);
+				}}
 			/>
 
 			{formInputEnabled && formInputName && (

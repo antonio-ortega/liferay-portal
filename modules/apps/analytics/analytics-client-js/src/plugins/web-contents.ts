@@ -22,8 +22,24 @@ function getWebContentPayload({dataset}: AnalyticsType.HTMLElement) {
 		articleId: dataset.analyticsAssetId.trim(),
 	};
 
+	if (dataset.analyticsAssetCategories) {
+		Object.assign(payload, {
+			assetCategories: dataset.analyticsAssetCategories.trim(),
+		});
+	}
+
+	if (dataset.analyticsAssetMimeType) {
+		Object.assign(payload, {
+			mimeType: dataset.analyticsAssetMimeType.trim(),
+		});
+	}
+
 	if (dataset.analyticsAssetSubtype) {
 		Object.assign(payload, {subtype: dataset.analyticsAssetSubtype.trim()});
+	}
+
+	if (dataset.analyticsAssetTags) {
+		Object.assign(payload, {assetTags: dataset.analyticsAssetTags.trim()});
 	}
 
 	if (dataset.analyticsAssetTitle) {
@@ -32,6 +48,12 @@ function getWebContentPayload({dataset}: AnalyticsType.HTMLElement) {
 
 	if (dataset.analyticsAssetType) {
 		Object.assign(payload, {type: dataset.analyticsAssetType.trim()});
+	}
+
+	if (dataset.analyticsAssetVocabularies) {
+		Object.assign(payload, {
+			assetVocabularies: dataset.analyticsAssetVocabularies.trim(),
+		});
 	}
 
 	if (dataset.analyticsWebContentResourcePk) {

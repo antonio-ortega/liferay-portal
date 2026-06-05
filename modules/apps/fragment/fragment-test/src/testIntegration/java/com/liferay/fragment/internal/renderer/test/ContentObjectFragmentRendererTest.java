@@ -31,6 +31,7 @@ import com.liferay.layout.test.util.ContentLayoutTestUtil;
 import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.layout.util.LayoutServiceContextHelper;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.configuration.test.util.CompanyConfigurationTemporarySwapper;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Group;
@@ -57,12 +58,12 @@ import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.struts.Definition;
 import com.liferay.portal.struts.TilesUtil;
-import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
@@ -118,7 +119,6 @@ public class ContentObjectFragmentRendererTest {
 		ServiceContextThreadLocal.popServiceContext();
 	}
 
-	@FeatureFlag("LPD-39437")
 	@Test
 	public void testRenderAssertAnalyticsAttributesInEditMode()
 		throws Exception {
@@ -129,32 +129,60 @@ public class ContentObjectFragmentRendererTest {
 		Assert.assertFalse(content.contains("data-analytics-asset-action"));
 	}
 
-	@FeatureFlag("LPD-39437")
 	@Test
 	public void testRenderAssertAnalyticsAttributesInViewMode()
+		throws Exception {
+
+		try (CompanyConfigurationTemporarySwapper
+				companyConfigurationTemporarySwapper =
+					new CompanyConfigurationTemporarySwapper(
+						TestPropsValues.getCompanyId(),
+						"com.liferay.analytics.settings.configuration." +
+							"AnalyticsConfiguration",
+						HashMapDictionaryBuilder.<String, Object>put(
+							"liferayAnalyticsDataSourceId",
+							RandomTestUtil.randomString()
+						).put(
+							"liferayAnalyticsFaroBackendSecuritySignature",
+							RandomTestUtil.randomString()
+						).put(
+							"liferayAnalyticsFaroBackendURL",
+							"http://" + RandomTestUtil.randomString()
+						).build())) {
+
+			String content = _render(
+				_addFragmentEntryLink(), FragmentEntryLinkConstants.VIEW);
+
+			Assert.assertTrue(
+				content.contains("data-analytics-asset-action=\"view\""));
+			Assert.assertTrue(
+				content.contains(
+					"data-analytics-asset-id=\"" +
+						_journalArticle.getResourcePrimKey() + "\""));
+			Assert.assertTrue(
+				content.contains(
+					"data-analytics-asset-subtype=\"" +
+						_journalArticle.getDDMStructureId() + "\""));
+			Assert.assertTrue(
+				content.contains(
+					"data-analytics-asset-title=\"" +
+						_journalArticle.getTitle(LocaleUtil.US) + "\""));
+			Assert.assertTrue(
+				content.contains(
+					"data-analytics-asset-type=\"" +
+						JournalArticle.class.getName() + "\""));
+		}
+	}
+
+	@Test
+	@TestInfo("LPD-86211")
+	public void testRenderAssertAnalyticsAttributesNotInViewModeWhenAnalyticsDisabled()
 		throws Exception {
 
 		String content = _render(
 			_addFragmentEntryLink(), FragmentEntryLinkConstants.VIEW);
 
-		Assert.assertTrue(
-			content.contains("data-analytics-asset-action=\"view\""));
-		Assert.assertTrue(
-			content.contains(
-				"data-analytics-asset-id=\"" +
-					_journalArticle.getResourcePrimKey() + "\""));
-		Assert.assertTrue(
-			content.contains(
-				"data-analytics-asset-subtype=\"" +
-					_journalArticle.getDDMStructureId() + "\""));
-		Assert.assertTrue(
-			content.contains(
-				"data-analytics-asset-title=\"" +
-					_journalArticle.getTitle(LocaleUtil.US) + "\""));
-		Assert.assertTrue(
-			content.contains(
-				"data-analytics-asset-type=\"" +
-					JournalArticle.class.getName() + "\""));
+		Assert.assertFalse(content.contains("data-analytics-asset-action"));
 	}
 
 	@Test

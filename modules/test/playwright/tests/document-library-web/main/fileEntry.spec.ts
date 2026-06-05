@@ -8,15 +8,17 @@ import {createReadStream} from 'fs';
 import path from 'path';
 
 import {apiHelpersTest} from '../../../fixtures/apiHelpersTest';
-import {applicationsMenuPageTest} from '../../../fixtures/applicationsMenuPageTest';
 import {documentLibraryPagesTest} from '../../../fixtures/documentLibraryPages.fixtures';
 import {featureFlagsTest} from '../../../fixtures/featureFlagsTest';
+import {globalMenuPagesTest} from '../../../fixtures/globalMenuPagesTest';
 import {isolatedSiteTest} from '../../../fixtures/isolatedSiteTest';
 import {loginTest} from '../../../fixtures/loginTest';
 import {pageEditorPagesTest} from '../../../fixtures/pageEditorPagesTest';
 import {siteSettingsPagesTest} from '../../../fixtures/siteSettingsPagesTest';
+import {workflowPagesTest} from '../../../fixtures/workflowPagesTest';
 import {createCategories} from '../../../helpers/CreateCategories';
 import {DLFILE_STATUS} from '../../../helpers/json-web-services/JSONWebServicesDocumentLibraryApiHelper';
+import {checkAccessibility} from '../../../utils/checkAccessibility';
 import {clickAndExpectToBeHidden} from '../../../utils/clickAndExpectToBeHidden';
 import {clickAndExpectToBeVisible} from '../../../utils/clickAndExpectToBeVisible';
 import getRandomString from '../../../utils/getRandomString';
@@ -29,11 +31,12 @@ import getWidgetDefinition from '../../layout-content-page-editor-web/main/utils
 
 const test = mergeTests(
 	apiHelpersTest,
-	applicationsMenuPageTest,
 	documentLibraryPagesTest,
+	workflowPagesTest,
 	featureFlagsTest({
 		'LPS-178052': {enabled: true},
 	}),
+	globalMenuPagesTest,
 	isolatedSiteTest,
 	loginTest(),
 	pageEditorPagesTest,
@@ -126,19 +129,19 @@ test(
 	{
 		tag: '@LPD-32481',
 	},
-	async ({documentLibraryEditFilePage, documentLibraryPage, page, site}) => {
-		await documentLibraryEditFilePage.publishNewBasicFileEntry(
-			'test',
-			site.friendlyUrlPath
-		);
-		await documentLibraryEditFilePage.publishNewBasicFileEntry(
-			getRandomString(),
-			site.friendlyUrlPath
-		);
-		await documentLibraryEditFilePage.publishNewBasicFileEntry(
-			getRandomString(),
-			site.friendlyUrlPath
-		);
+	async ({apiHelpers, documentLibraryPage, page, site}) => {
+		const imagePath = path.join(__dirname, '/dependencies/image1.jpeg');
+
+		for (const title of ['test', getRandomString(), getRandomString()]) {
+			await apiHelpers.headlessDelivery.postDocument(
+				site.id,
+				createReadStream(imagePath),
+				{title}
+			);
+		}
+
+		await documentLibraryPage.goto(site.friendlyUrlPath);
+
 		await documentLibraryPage.orderMenu.click();
 		await expect(
 			page.getByRole('menuitem', {name: 'Relevance'})
@@ -146,13 +149,14 @@ test(
 
 		await page.reload();
 
-		await documentLibraryPage.searchInDL('test');
+		await documentLibraryPage.search('test');
 
 		await documentLibraryPage.orderBy('relevance');
 
-		await expect(
-			page.locator('dd.list-group-item[data-title="test"]')
-		).toHaveAttribute('id', /_entries_1$/);
+		await expect(page.locator('dd[data-title="test"]')).toHaveAttribute(
+			'id',
+			/_entries_1$/
+		);
 	}
 );
 
@@ -161,29 +165,29 @@ test(
 	{
 		tag: '@LPD-32483',
 	},
-	async ({documentLibraryEditFilePage, documentLibraryPage, page, site}) => {
+	async ({apiHelpers, documentLibraryPage, page, site}) => {
+		const imagePath = path.join(__dirname, '/dependencies/image1.jpeg');
+
 		const title = getRandomString();
-		await documentLibraryEditFilePage.publishNewBasicFileEntry(
-			title,
-			site.friendlyUrlPath
+		const document = await apiHelpers.headlessDelivery.postDocument(
+			site.id,
+			createReadStream(imagePath),
+			{title}
 		);
 
 		const title2 = getRandomString();
-		await documentLibraryEditFilePage.publishNewBasicFileEntry(
-			title2,
-			site.friendlyUrlPath
+		await apiHelpers.headlessDelivery.postDocument(
+			site.id,
+			createReadStream(imagePath),
+			{title: title2}
 		);
 
-		await documentLibraryPage.goToEditFileEntry(title);
-		await documentLibraryEditFilePage.descriptionInput.fill(
-			getRandomString()
-		);
-		await documentLibraryEditFilePage.publishButton.click();
-		await waitForAlert(
-			page,
-			'Success:Your request completed successfully.'
-		);
-		await page.getByRole('link', {name: 'Back'}).click();
+		await apiHelpers.headlessDelivery.patchDocument({
+			document: {description: getRandomString()},
+			documentId: document.id,
+		});
+
+		await documentLibraryPage.goto(site.friendlyUrlPath);
 
 		await documentLibraryPage.orderBy('Modified Date');
 		await documentLibraryPage.orderBy('Descending');
@@ -230,13 +234,17 @@ test(
 test(
 	'Identify at a glance if a Document is visible for guests',
 	{tag: '@LPD-16313'},
-	async ({documentLibraryEditFilePage, documentLibraryPage, site}) => {
-		const title = getRandomString();
-
-		await documentLibraryEditFilePage.publishNewFileWithoutGuestViewPermission(
-			title,
-			site.friendlyUrlPath
+	async ({apiHelpers, documentLibraryPage, site}) => {
+		await apiHelpers.headlessDelivery.postDocument(
+			site.id,
+			createReadStream(path.join(__dirname, '/dependencies/image1.jpeg')),
+			{
+				title: getRandomString(),
+				viewableBy: 'Members',
+			}
 		);
+
+		await documentLibraryPage.goto(site.friendlyUrlPath);
 
 		await documentLibraryPage.changeView('cards');
 		await documentLibraryPage.assertPrivateFileIcon();
@@ -252,13 +260,19 @@ test(
 test(
 	'Show icon in the content admin and content editor',
 	{tag: '@LPD-16313'},
-	async ({documentLibraryEditFilePage, documentLibraryPage, page, site}) => {
+	async ({apiHelpers, documentLibraryPage, page, site}) => {
 		const title = getRandomString();
 
-		await documentLibraryEditFilePage.publishNewFileWithoutGuestViewPermission(
-			title,
-			site.friendlyUrlPath
+		await apiHelpers.headlessDelivery.postDocument(
+			site.id,
+			createReadStream(path.join(__dirname, '/dependencies/image1.jpeg')),
+			{
+				title,
+				viewableBy: 'Members',
+			}
 		);
+
+		await documentLibraryPage.goto(site.friendlyUrlPath);
 
 		await documentLibraryPage.changeView('cards');
 
@@ -278,8 +292,10 @@ test(
 	'Show icon in the DL item selector',
 	{tag: '@LPD-16313'},
 	async ({
+		apiHelpers,
 		documentLibraryEditDocumentTypesPage,
 		documentLibraryEditFilePage,
+		documentLibraryPage,
 		site,
 	}) => {
 		const dTypeTitle = getRandomString();
@@ -290,10 +306,16 @@ test(
 			site.friendlyUrlPath
 		);
 
-		await documentLibraryEditFilePage.publishNewFileWithoutGuestViewPermission(
-			title,
-			site.friendlyUrlPath
+		await apiHelpers.headlessDelivery.postDocument(
+			site.id,
+			createReadStream(path.join(__dirname, '/dependencies/image1.jpeg')),
+			{
+				title,
+				viewableBy: 'Members',
+			}
 		);
+
+		await documentLibraryPage.goto(site.friendlyUrlPath);
 
 		await documentLibraryEditFilePage.goToNewFileDifferentType(
 			dTypeTitle,
@@ -331,7 +353,6 @@ test(
 	{
 		tag: '@LPD-29609',
 	},
-
 	async ({
 		documentLibraryEditDocumentTypesPage,
 		documentLibraryEditFilePage,
@@ -361,7 +382,6 @@ test(
 	{
 		tag: '@LPD-50971',
 	},
-
 	async ({apiHelpers, documentLibraryPage, page, site}) => {
 		const vocabularyName = getRandomString();
 
@@ -481,18 +501,12 @@ test(
 test(
 	'Search in DL portlet does not show results in card view',
 	{tag: ['@LPD-31694', '@LPD-202909']},
-	async ({
-		apiHelpers,
-		documentLibraryEditFilePage,
-		documentLibraryPage,
-		page,
-		site,
-	}) => {
+	async ({apiHelpers, documentLibraryPage, page, site}) => {
 		const title = getRandomString();
-		await documentLibraryPage.goto(site.friendlyUrlPath);
-		await documentLibraryPage.goToCreateNewFile();
-		await documentLibraryEditFilePage.publishNewBasicFileEntryWithoutGoTo(
-			title
+		await apiHelpers.headlessDelivery.postDocument(
+			site.id,
+			createReadStream(path.join(__dirname, '/dependencies/image1.jpeg')),
+			{title}
 		);
 
 		const portletId = getRandomString();
@@ -649,7 +663,6 @@ test(
 	{
 		tag: ['@LPD-27899', '@LPSA-74819'],
 	},
-
 	async ({
 		apiHelpers,
 		documentLibraryEditFilePage,
@@ -729,7 +742,6 @@ test(
 	{
 		tag: '@LPD-42737',
 	},
-
 	async ({
 		apiHelpers,
 		documentLibraryPage,
@@ -857,13 +869,15 @@ test(
 	{
 		tag: '@LPD-44784',
 	},
-	async ({documentLibraryEditFilePage, documentLibraryPage, page, site}) => {
+	async ({apiHelpers, documentLibraryPage, page, site}) => {
 		const title = getRandomString();
-		await documentLibraryEditFilePage.publishNewBasicFileEntry(
-			title,
-			site.friendlyUrlPath
+		await apiHelpers.headlessDelivery.postDocument(
+			site.id,
+			createReadStream(path.join(__dirname, '/dependencies/image1.jpeg')),
+			{title}
 		);
 
+		await documentLibraryPage.goto(site.friendlyUrlPath);
 		await documentLibraryPage.goToViewHistoryFileEntry(title);
 
 		await page.locator('span[title="Back"]').click();
@@ -879,15 +893,13 @@ test(
 	{
 		tag: '@LPP-53324',
 	},
-
 	async ({
 		apiHelpers,
-		applicationsMenuPage,
 		documentLibraryEditDocumentTypesPage,
 		documentLibraryEditFilePage,
 		documentLibraryPage,
+		globalMenuPage,
 		page,
-		site,
 		siteSettingsLocalizationPage,
 	}) => {
 		const dTypeTitle = getRandomString();
@@ -896,6 +908,10 @@ test(
 			dTypeTitle,
 			'/global'
 		);
+
+		const site = await apiHelpers.headlessAdminSite.postSite({
+			name: getRandomString(),
+		});
 
 		await siteSettingsLocalizationPage.setCustomDefaultLanguage(
 			'Spanish (Spain)',
@@ -921,8 +937,10 @@ test(
 			'Success:Your request completed successfully.'
 		);
 
-		await apiHelpers.headlessSite.deleteSite(site.id);
-		await applicationsMenuPage.goToGlobalSite();
+		await globalMenuPage.goToSite('Global');
+		await apiHelpers.headlessAdminSite.deleteSite(
+			site.externalReferenceCode
+		);
 		await documentLibraryPage.deleteDocumentType(dTypeTitle);
 
 		await waitForAlert(
@@ -999,13 +1017,15 @@ test(
 test(
 	'User search is working properly in share modal',
 	{tag: '@LPD-40725'},
-	async ({documentLibraryEditFilePage, documentLibraryPage, page, site}) => {
+	async ({apiHelpers, documentLibraryPage, page, site}) => {
 		const title = getRandomString();
-		await documentLibraryEditFilePage.publishNewBasicFileEntry(
-			title,
-			site.friendlyUrlPath
+		await apiHelpers.headlessDelivery.postDocument(
+			site.id,
+			createReadStream(path.join(__dirname, '/dependencies/image1.jpeg')),
+			{title}
 		);
 
+		await documentLibraryPage.goto(site.friendlyUrlPath);
 		await documentLibraryPage.goToShareFileEntry(title);
 
 		const iframeLocator = page.frameLocator('iframe[title^="Share"]');
@@ -1022,7 +1042,6 @@ test(
 	{
 		tag: '@LPD-57911',
 	},
-
 	async ({
 		documentLibraryEditDocumentTypesPage,
 		documentLibraryEditFilePage,
@@ -1082,23 +1101,16 @@ test(
 	{
 		tag: ['@LPD-71053'],
 	},
-
-	async ({
-		documentLibraryEditFilePage,
-		documentLibraryEditFolderPage,
-		documentLibraryPage,
-		page,
-		site,
-	}) => {
+	async ({apiHelpers, documentLibraryPage, page, site}) => {
 		const folderTitle = 'Folder' + getRandomString();
 
-		await documentLibraryPage.goto(site.friendlyUrlPath);
-
 		for (let i = 0; i < 21; i++) {
-			await documentLibraryPage.goToCreateNewFolder();
-			await documentLibraryEditFolderPage.fillTitle(folderTitle + i);
-			await documentLibraryEditFilePage.saveButton.click();
+			await apiHelpers.headlessDelivery.postDocumentFolder(site.id, {
+				name: folderTitle + i,
+			});
 		}
+
+		await documentLibraryPage.goto(site.friendlyUrlPath);
 
 		await documentLibraryPage.searchInDL('Folder');
 
@@ -1107,5 +1119,121 @@ test(
 		await expect(
 			page.getByRole('button', {name: 'Select All'})
 		).not.toBeVisible();
+	}
+);
+
+test(
+	'Show the last modified date of the most recent version of a document, even if that version is still pending',
+	{
+		tag: ['@LPD-83517'],
+	},
+	async ({
+		documentLibraryEditFilePage,
+		documentLibraryEditFolderPage,
+		documentLibraryPage,
+		page,
+		site,
+		workflowTasksPage,
+	}) => {
+		const docTitle = getRandomString();
+		const expectSuccessToast = async () => {
+			await expect(
+				page.getByText('Your request completed successfully.')
+			).toBeVisible();
+		};
+		const folderTitle = getRandomString();
+		const newDocTitle = docTitle + ' Edited';
+
+		await test.step('Create a new Folder', async () => {
+			await documentLibraryPage.goto(site.friendlyUrlPath);
+			await documentLibraryPage.goToCreateNewFolder();
+			await documentLibraryEditFolderPage.publishNewFolder(folderTitle);
+		});
+
+		await test.step('Add workflow to the Folder', async () => {
+			await documentLibraryPage.goToEditFolder(folderTitle);
+			await page.waitForURL(/edit_folder/);
+			await documentLibraryEditFolderPage.setWorkflow('Single Approver');
+			await documentLibraryPage.goto(site.friendlyUrlPath);
+		});
+
+		await test.step('Create a new File in the Folder', async () => {
+			await page.getByRole('link', {name: folderTitle}).click();
+			await page.waitForURL(/view_folder/);
+			const folderUrl = page.url();
+			await documentLibraryPage.goToCreateNewFile();
+			await documentLibraryEditFilePage.submitWorkflowForBasicFileEntry(
+				docTitle
+			);
+			await page.waitForURL(folderUrl);
+		});
+
+		await test.step('Approve the workflow task', async () => {
+			await workflowTasksPage.goToAssignedToMyRoles();
+			await workflowTasksPage.assignToMe(docTitle);
+			await workflowTasksPage.approve(docTitle);
+		});
+
+		await test.step('Edit the new File', async () => {
+			await documentLibraryPage.goto(site.friendlyUrlPath);
+			await page.getByRole('link', {name: folderTitle}).click();
+			await page.waitForURL(/view_folder/);
+			await documentLibraryPage.goToEditFileEntry(docTitle);
+			await page.waitForURL(/edit_file_entry/);
+			await expect(
+				documentLibraryEditFilePage.titleSelector
+			).toBeVisible();
+			await documentLibraryEditFilePage.submitWorkflowForBasicFileEntry(
+				newDocTitle
+			);
+			await expectSuccessToast();
+		});
+
+		await test.step('Verify modified date of the file', async () => {
+			await documentLibraryPage.goto(site.friendlyUrlPath);
+			await page.getByRole('link', {name: folderTitle}).click();
+			await page.waitForURL(/view_folder/);
+
+			const editedCard = page.locator('.card', {hasText: newDocTitle});
+			const recentlyModified =
+				/Modified ((\d{1,2} Seconds? ago)|Just now)/;
+			await expect(editedCard.locator('.card-subtitle')).toHaveText(
+				recentlyModified
+			);
+		});
+	}
+);
+
+test(
+	'Check accessibility of the search container in DM',
+	{
+		tag: ['@LPD-83985'],
+	},
+	async ({apiHelpers, documentLibraryPage, page, site}) => {
+		const title = getRandomString();
+
+		await apiHelpers.headlessDelivery.postDocument(
+			site.id,
+			createReadStream(path.join(__dirname, '/dependencies/image1.jpeg')),
+			{title}
+		);
+
+		await documentLibraryPage.goto(site.friendlyUrlPath);
+
+		const views: string[] = ['table', 'list', 'cards'];
+
+		for (const view of views) {
+			await test.step(`Change visualization mode to ${view}`, async () => {
+				await documentLibraryPage.changeView(view);
+
+				await checkAccessibility({
+					bestPractices: true,
+					page,
+					selectors: [
+						'#_com_liferay_document_library_web_portlet_DLAdminPortlet_documentLibraryContainer',
+					],
+				});
+			});
+		}
 	}
 );

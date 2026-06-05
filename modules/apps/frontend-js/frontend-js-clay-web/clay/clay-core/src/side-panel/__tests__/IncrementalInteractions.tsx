@@ -130,7 +130,7 @@ describe('SidePanel incremental interactions', () => {
 			expect(panel).not.toHaveAttribute('inert');
 		});
 
-		userEvent.keyboard('[Escape]');
+		userEvent.keyboard('{Escape}');
 
 		expect(button).toHaveFocus();
 		expect(panel).toHaveAttribute('inert');

@@ -36,6 +36,20 @@ public class CTSGrandParentUtil {
 	 */
 
 	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(List)
+	 */
+	public static void cacheResult(List<CTSGrandParent> ctsGrandParents) {
+		getPersistence().cacheResult(ctsGrandParents);
+	}
+
+	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(com.liferay.portal.kernel.model.BaseModel)
+	 */
+	public static void cacheResult(CTSGrandParent ctsGrandParent) {
+		getPersistence().cacheResult(ctsGrandParent);
+	}
+
+	/**
 	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#clearCache()
 	 */
 	public static void clearCache() {
@@ -111,59 +125,10 @@ public class CTSGrandParentUtil {
 	}
 
 	/**
-	 * Returns all the cts grand parents where companyId = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @return the matching cts grand parents
-	 */
-	public static List<CTSGrandParent> findByCompanyId(long companyId) {
-		return getPersistence().findByCompanyId(companyId);
-	}
-
-	/**
-	 * Returns a range of all the cts grand parents where companyId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CTSGrandParentModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param start the lower bound of the range of cts grand parents
-	 * @param end the upper bound of the range of cts grand parents (not inclusive)
-	 * @return the range of matching cts grand parents
-	 */
-	public static List<CTSGrandParent> findByCompanyId(
-		long companyId, int start, int end) {
-
-		return getPersistence().findByCompanyId(companyId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the cts grand parents where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CTSGrandParentModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param start the lower bound of the range of cts grand parents
-	 * @param end the upper bound of the range of cts grand parents (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching cts grand parents
-	 */
-	public static List<CTSGrandParent> findByCompanyId(
-		long companyId, int start, int end,
-		OrderByComparator<CTSGrandParent> orderByComparator) {
-
-		return getPersistence().findByCompanyId(
-			companyId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the cts grand parents where companyId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CTSGrandParentModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.change.tracking.sample.model.impl.CTSGrandParentModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -214,56 +179,6 @@ public class CTSGrandParentUtil {
 	}
 
 	/**
-	 * Returns the last cts grand parent in the ordered set where companyId = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching cts grand parent
-	 * @throws NoSuchCTSGrandParentException if a matching cts grand parent could not be found
-	 */
-	public static CTSGrandParent findByCompanyId_Last(
-			long companyId, OrderByComparator<CTSGrandParent> orderByComparator)
-		throws com.liferay.change.tracking.sample.exception.
-			NoSuchCTSGrandParentException {
-
-		return getPersistence().findByCompanyId_Last(
-			companyId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last cts grand parent in the ordered set where companyId = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching cts grand parent, or <code>null</code> if a matching cts grand parent could not be found
-	 */
-	public static CTSGrandParent fetchByCompanyId_Last(
-		long companyId, OrderByComparator<CTSGrandParent> orderByComparator) {
-
-		return getPersistence().fetchByCompanyId_Last(
-			companyId, orderByComparator);
-	}
-
-	/**
-	 * Returns the cts grand parents before and after the current cts grand parent in the ordered set where companyId = &#63;.
-	 *
-	 * @param ctsGrandParentId the primary key of the current cts grand parent
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next cts grand parent
-	 * @throws NoSuchCTSGrandParentException if a cts grand parent with the primary key could not be found
-	 */
-	public static CTSGrandParent[] findByCompanyId_PrevAndNext(
-			long ctsGrandParentId, long companyId,
-			OrderByComparator<CTSGrandParent> orderByComparator)
-		throws com.liferay.change.tracking.sample.exception.
-			NoSuchCTSGrandParentException {
-
-		return getPersistence().findByCompanyId_PrevAndNext(
-			ctsGrandParentId, companyId, orderByComparator);
-	}
-
-	/**
 	 * Removes all the cts grand parents where companyId = &#63; from the database.
 	 *
 	 * @param companyId the company ID
@@ -280,24 +195,6 @@ public class CTSGrandParentUtil {
 	 */
 	public static int countByCompanyId(long companyId) {
 		return getPersistence().countByCompanyId(companyId);
-	}
-
-	/**
-	 * Caches the cts grand parent in the entity cache if it is enabled.
-	 *
-	 * @param ctsGrandParent the cts grand parent
-	 */
-	public static void cacheResult(CTSGrandParent ctsGrandParent) {
-		getPersistence().cacheResult(ctsGrandParent);
-	}
-
-	/**
-	 * Caches the cts grand parents in the entity cache if it is enabled.
-	 *
-	 * @param ctsGrandParents the cts grand parents
-	 */
-	public static void cacheResult(List<CTSGrandParent> ctsGrandParents) {
-		getPersistence().cacheResult(ctsGrandParents);
 	}
 
 	/**
@@ -353,83 +250,52 @@ public class CTSGrandParentUtil {
 	}
 
 	/**
-	 * Returns all the cts grand parents.
+	 * Returns all the cts grand parents where companyId = &#63;.
 	 *
-	 * @return the cts grand parents
+	 * @param companyId the company ID
+	 * @return the matching cts grand parents
 	 */
-	public static List<CTSGrandParent> findAll() {
-		return getPersistence().findAll();
+	public static List<CTSGrandParent> findByCompanyId(long companyId) {
+		return getPersistence().findByCompanyId(companyId);
 	}
 
 	/**
-	 * Returns a range of all the cts grand parents.
+	 * Returns a range of all the cts grand parents where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CTSGrandParentModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.change.tracking.sample.model.impl.CTSGrandParentModelImpl</code>.
 	 * </p>
 	 *
+	 * @param companyId the company ID
 	 * @param start the lower bound of the range of cts grand parents
 	 * @param end the upper bound of the range of cts grand parents (not inclusive)
-	 * @return the range of cts grand parents
+	 * @return the range of matching cts grand parents
 	 */
-	public static List<CTSGrandParent> findAll(int start, int end) {
-		return getPersistence().findAll(start, end);
+	public static List<CTSGrandParent> findByCompanyId(
+		long companyId, int start, int end) {
+
+		return getPersistence().findByCompanyId(companyId, start, end);
 	}
 
 	/**
-	 * Returns an ordered range of all the cts grand parents.
+	 * Returns an ordered range of all the cts grand parents where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CTSGrandParentModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.change.tracking.sample.model.impl.CTSGrandParentModelImpl</code>.
 	 * </p>
 	 *
+	 * @param companyId the company ID
 	 * @param start the lower bound of the range of cts grand parents
 	 * @param end the upper bound of the range of cts grand parents (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of cts grand parents
+	 * @return the ordered range of matching cts grand parents
 	 */
-	public static List<CTSGrandParent> findAll(
-		int start, int end,
+	public static List<CTSGrandParent> findByCompanyId(
+		long companyId, int start, int end,
 		OrderByComparator<CTSGrandParent> orderByComparator) {
 
-		return getPersistence().findAll(start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the cts grand parents.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CTSGrandParentModelImpl</code>.
-	 * </p>
-	 *
-	 * @param start the lower bound of the range of cts grand parents
-	 * @param end the upper bound of the range of cts grand parents (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param useFinderCache whether to use the finder cache
-	 * @return the ordered range of cts grand parents
-	 */
-	public static List<CTSGrandParent> findAll(
-		int start, int end, OrderByComparator<CTSGrandParent> orderByComparator,
-		boolean useFinderCache) {
-
-		return getPersistence().findAll(
-			start, end, orderByComparator, useFinderCache);
-	}
-
-	/**
-	 * Removes all the cts grand parents from the database.
-	 */
-	public static void removeAll() {
-		getPersistence().removeAll();
-	}
-
-	/**
-	 * Returns the number of cts grand parents.
-	 *
-	 * @return the number of cts grand parents
-	 */
-	public static int countAll() {
-		return getPersistence().countAll();
+		return getPersistence().findByCompanyId(
+			companyId, start, end, orderByComparator);
 	}
 
 	public static CTSGrandParentPersistence getPersistence() {
@@ -443,3 +309,4 @@ public class CTSGrandParentUtil {
 	private static volatile CTSGrandParentPersistence _persistence;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:599055486

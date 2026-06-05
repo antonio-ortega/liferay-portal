@@ -11,6 +11,7 @@ import {
 	IDataSetData,
 	IFDSState,
 	IInlineEditingSettings,
+	IInternalRenderer,
 	IItemsActions,
 	TRenderer,
 	TSort,
@@ -25,8 +26,8 @@ export interface IFrontendDataSetContext {
 	createInlineItem: Function;
 	customDataRenderers?: Array<any>;
 	customRenderers?: {
+		listSection?: Array<IInternalRenderer>;
 		tableCell?: Array<TRenderer>;
-		views?: Array<TRenderer>;
 	};
 	executeAsyncItemAction: ({
 		errorMessage,
@@ -74,6 +75,7 @@ export interface IFrontendDataSetContext {
 	onItemsChange: ({itemKey, items}: {itemKey: string; items: any}) => void;
 	onSearch: ({query}: {query: string}) => void;
 	onSnapshotChange: Function;
+	onViewChange: (viewName: string) => void;
 	openModal: Function;
 	openSidePanel: Function;
 	portletId?: string;

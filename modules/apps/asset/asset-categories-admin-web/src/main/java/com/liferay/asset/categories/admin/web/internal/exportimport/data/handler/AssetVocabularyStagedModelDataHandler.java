@@ -25,6 +25,7 @@ import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -236,8 +237,6 @@ public class AssetVocabularyStagedModelDataHandler
 				null, portletDataContext.getScopeGroupId(),
 				vocabulary.getName(), 2);
 
-			serviceContext.setUuid(vocabulary.getUuid());
-
 			importedVocabulary = _assetVocabularyLocalService.addVocabulary(
 				vocabulary.getExternalReferenceCode(), userId,
 				portletDataContext.getScopeGroupId(), name,
@@ -260,6 +259,12 @@ public class AssetVocabularyStagedModelDataHandler
 				vocabulary.getDescriptionMap(), vocabulary.getSettings(),
 				vocabulary.getVisibilityType(), serviceContext);
 		}
+
+		importedVocabulary.setUuid(vocabulary.getUuid());
+		importedVocabulary.setModifiedDate(vocabulary.getModifiedDate());
+
+		importedVocabulary = _assetVocabularyLocalService.updateAssetVocabulary(
+			importedVocabulary);
 
 		Group group = _groupLocalService.getGroup(
 			portletDataContext.getScopeGroupId());
@@ -300,7 +305,9 @@ public class AssetVocabularyStagedModelDataHandler
 		for (AssetVocabularyGroupRel assetVocabularyGroupRel :
 				assetVocabularyGroupRels) {
 
-			if (assetVocabularyGroupRel.getGroupId() == _GROUP_ID_ALL) {
+			if (assetVocabularyGroupRel.getGroupId() ==
+					GroupConstants.GROUP_ID_ALL) {
+
 				continue;
 			}
 
@@ -461,7 +468,7 @@ public class AssetVocabularyStagedModelDataHandler
 		}
 
 		if (groupIds.isEmpty()) {
-			groupIds.add(_GROUP_ID_ALL);
+			groupIds.add(GroupConstants.GROUP_ID_ALL);
 		}
 
 		_assetVocabularyGroupRelLocalService.setAssetVocabularyGroupRels(
@@ -487,8 +494,6 @@ public class AssetVocabularyStagedModelDataHandler
 
 		return true;
 	}
-
-	private static final long _GROUP_ID_ALL = -1L;
 
 	private static final String _SETTINGS_METADATA = "settings-metadata";
 

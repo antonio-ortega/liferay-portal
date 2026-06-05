@@ -98,3 +98,4 @@ public class LowStockAction implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:33468245

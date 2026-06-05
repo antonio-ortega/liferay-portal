@@ -60,7 +60,11 @@ PortletURL portletURL = PortletURLBuilder.createRenderURL(
 			/>
 		</c:if>
 
-		<div class="portlet-export-import-container" id="<portlet:namespace />exportImportPortletContainer">
+		<%
+		Group group = themeDisplay.getScopeGroup();
+		%>
+
+		<div class="portlet-export-import-container <%= group.isCMS() ? "site-cms-export-import-dialog" : "" %>" id="<portlet:namespace />exportImportPortletContainer">
 			<liferay-util:include page="/export_import_error.jsp" servletContext="<%= application %>" />
 
 			<c:choose>

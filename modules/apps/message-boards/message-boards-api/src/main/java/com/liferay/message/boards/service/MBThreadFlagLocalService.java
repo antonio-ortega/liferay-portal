@@ -362,3 +362,4 @@ public interface MBThreadFlagLocalService
 		throws E;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-1569622709

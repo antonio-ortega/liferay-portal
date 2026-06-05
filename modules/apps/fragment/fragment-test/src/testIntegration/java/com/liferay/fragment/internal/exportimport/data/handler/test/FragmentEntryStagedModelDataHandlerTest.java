@@ -187,8 +187,7 @@ public class FragmentEntryStagedModelDataHandlerTest
 		FragmentEntryLink fragmentEntryLink =
 			_fragmentEntryLinkLocalService.addFragmentEntryLink(
 				null, TestPropsValues.getUserId(), stagingGroup.getGroupId(),
-				null, fragmentEntry.getExternalReferenceCode(),
-				fragmentEntry.getScopeERC(),
+				null, fragmentEntry.getExternalReferenceCode(), null,
 				_segmentsExperienceLocalService.
 					fetchDefaultSegmentsExperienceId(_layout.getPlid()),
 				stagingGroup.getDefaultPublicPlid(), fragmentEntry.getCss(),
@@ -245,13 +244,12 @@ public class FragmentEntryStagedModelDataHandlerTest
 		String itemId = ContentLayoutTestUtil.addFragmentEntryLinkToLayout(
 			_fragmentEntryLinkLocalService.addFragmentEntryLink(
 				null, TestPropsValues.getUserId(), stagingGroup.getGroupId(),
-				null, fragmentEntry.getExternalReferenceCode(),
-				fragmentEntry.getScopeERC(), segmentsExperienceId,
-				draftLayout.getPlid(), fragmentEntry.getCss(),
-				fragmentEntry.getHtml(), fragmentEntry.getJs(),
-				fragmentEntry.getConfiguration(), StringPool.BLANK,
-				StringPool.BLANK, 0, StringPool.BLANK, fragmentEntry.getType(),
-				serviceContext),
+				null, fragmentEntry.getExternalReferenceCode(), null,
+				segmentsExperienceId, draftLayout.getPlid(),
+				fragmentEntry.getCss(), fragmentEntry.getHtml(),
+				fragmentEntry.getJs(), fragmentEntry.getConfiguration(),
+				StringPool.BLANK, StringPool.BLANK, 0, StringPool.BLANK,
+				fragmentEntry.getType(), serviceContext),
 			draftLayout, null, 0, segmentsExperienceId);
 
 		String dropZoneId1 = RandomTestUtil.randomString();
@@ -296,26 +294,18 @@ public class FragmentEntryStagedModelDataHandlerTest
 			"<h1> Drop Zone 1 </h1>", dropZoneId1 + "HeadingContent",
 			"<h1> Drop Zone 2 </h1>", dropZoneId2 + "HeadingContent");
 
-		_exportImportStagedModel(fragmentEntry, _layout);
+		_exportImportStagedModel(fragmentEntry);
 
-		Layout liveLayout = _layoutLocalService.fetchLayout(
-			_layout.getUuid(), liveGroup.getGroupId(),
-			_layout.isPrivateLayout());
+		FragmentEntry liveFragmentEntry =
+			_fragmentEntryLocalService.getFragmentEntryByUuidAndGroupId(
+				fragmentEntry.getUuid(), liveGroup.getGroupId());
 
-		_assertHTML(
-			_getFragmentEntryLinkRenderHTML(
-				company,
-				_fragmentEntryLinkLocalService.
-					getFragmentEntryLinkByUuidAndGroupId(
-						publishedFragmentEntryLink.getUuid(),
-						liveGroup.getGroupId()),
-				liveGroup, liveLayout, locale),
-			"<h1> Drop Zone 1 </h1>", dropZoneId1 + "HeadingContent",
-			"<h1> Drop Zone 2 </h1>", dropZoneId2 + "HeadingContent");
+		Assert.assertEquals(
+			fragmentEntry.getHtml(), liveFragmentEntry.getHtml());
 
 		String addedDropZoneId = RandomTestUtil.randomString();
 
-		fragmentEntry = _updateFragmentEntryWithPropagation(
+		_updateFragmentEntryWithPropagation(
 			fragmentEntry,
 			StringBundler.concat(
 				"<div class=\"fragment_1\"><h1> Drop Zone 1 </h1>",
@@ -336,19 +326,14 @@ public class FragmentEntryStagedModelDataHandlerTest
 			"<h1> Added Drop Zone </h1>", "<h1> Drop Zone 2 </h1>",
 			dropZoneId2 + "HeadingContent");
 
-		_exportImportStagedModel(fragmentEntry, _layout);
+		_exportImportStagedModel(fragmentEntry);
 
-		_assertHTML(
-			_getFragmentEntryLinkRenderHTML(
-				company,
-				_fragmentEntryLinkLocalService.
-					getFragmentEntryLinkByUuidAndGroupId(
-						publishedFragmentEntryLink.getUuid(),
-						liveGroup.getGroupId()),
-				liveGroup, liveLayout, locale),
-			"<h1> Drop Zone 1 </h1>", dropZoneId1 + "HeadingContent",
-			"<h1> Added Drop Zone </h1>", "<h1> Drop Zone 2 </h1>",
-			dropZoneId2 + "HeadingContent");
+		liveFragmentEntry =
+			_fragmentEntryLocalService.getFragmentEntryByUuidAndGroupId(
+				fragmentEntry.getUuid(), liveGroup.getGroupId());
+
+		Assert.assertEquals(
+			fragmentEntry.getHtml(), liveFragmentEntry.getHtml());
 	}
 
 	@Override
@@ -444,11 +429,10 @@ public class FragmentEntryStagedModelDataHandlerTest
 				_fragmentEntryLinkLocalService.addFragmentEntryLink(
 					null, TestPropsValues.getUserId(),
 					stagingGroup.getGroupId(), null,
-					fragmentEntry.getExternalReferenceCode(),
-					fragmentEntry.getScopeERC(), segmentsExperienceId,
-					layout.getPlid(), fragmentEntry.getCss(),
-					fragmentEntry.getHtml(), fragmentEntry.getJs(),
-					fragmentEntry.getConfiguration(),
+					fragmentEntry.getExternalReferenceCode(), null,
+					segmentsExperienceId, layout.getPlid(),
+					fragmentEntry.getCss(), fragmentEntry.getHtml(),
+					fragmentEntry.getJs(), fragmentEntry.getConfiguration(),
 					JSONUtil.put(
 						FragmentEntryProcessorConstants.
 							KEY_EDITABLE_FRAGMENT_ENTRY_PROCESSOR,

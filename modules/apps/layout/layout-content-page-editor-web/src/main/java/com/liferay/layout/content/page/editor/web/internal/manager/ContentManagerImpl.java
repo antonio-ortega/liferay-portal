@@ -95,6 +95,7 @@ import com.liferay.portal.kernel.portlet.PortletProviderUtil;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.security.permission.ResourceActions;
@@ -891,7 +892,7 @@ public class ContentManagerImpl implements ContentManager {
 				_segmentsEntryRetriever.getSegmentsEntryIds(
 					_portal.getScopeGroupId(httpServletRequest),
 					_portal.getUserId(httpServletRequest),
-					_requestContextMapper.map(httpServletRequest), new long[0]),
+					_requestContextMapper.map(httpServletRequest)),
 				StringPool.BLANK);
 
 		long[] allTagIds = assetEntryQuery.getAllTagIds();
@@ -1199,6 +1200,7 @@ public class ContentManagerImpl implements ContentManager {
 			LayoutDisplayPageProvider<?> layoutDisplayPageProvider =
 				_layoutDisplayPageProviderRegistry.
 					getLayoutDisplayPageProviderByClassName(
+						layoutClassedModelUsage.getCompanyId(),
 						layoutClassedModelUsage.getClassName());
 
 			if (layoutDisplayPageProvider == null) {
@@ -1279,7 +1281,8 @@ public class ContentManagerImpl implements ContentManager {
 
 		LayoutDisplayPageProvider<?> layoutDisplayPageProvider =
 			_layoutDisplayPageProviderRegistry.
-				getLayoutDisplayPageProviderByClassName(className);
+				getLayoutDisplayPageProviderByClassName(
+					CompanyThreadLocal.getCompanyId(), className);
 
 		if (layoutDisplayPageProvider == null) {
 			return;

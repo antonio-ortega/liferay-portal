@@ -678,3 +678,4 @@ public class SharedAssetSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:1367836983

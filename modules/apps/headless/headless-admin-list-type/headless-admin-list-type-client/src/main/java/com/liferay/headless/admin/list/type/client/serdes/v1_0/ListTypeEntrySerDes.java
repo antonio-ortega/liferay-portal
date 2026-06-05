@@ -528,3 +528,4 @@ public class ListTypeEntrySerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-210121629

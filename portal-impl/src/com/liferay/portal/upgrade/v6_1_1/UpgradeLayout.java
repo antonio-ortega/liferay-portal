@@ -5,9 +5,9 @@
 
 package com.liferay.portal.upgrade.v6_1_1;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.kernel.util.LoggingTimer;
-import com.liferay.portal.kernel.util.StringBundler;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -47,8 +47,8 @@ public class UpgradeLayout extends UpgradeProcess {
 		throws Exception {
 
 		try (PreparedStatement preparedStatement = connection.prepareStatement(
-				"select count(*) from Layout where uuid_ = ? and groupId = ? " +
-					"and privateLayout = ?")) {
+				"select count(*) as count from Layout where uuid_ = ? and " +
+					"groupId = ? and privateLayout = ?")) {
 
 			preparedStatement.setString(1, sourcePrototypeLayoutUuid);
 			preparedStatement.setLong(2, groupId);
@@ -56,9 +56,7 @@ public class UpgradeLayout extends UpgradeProcess {
 
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				while (resultSet.next()) {
-					int count = resultSet.getInt(1);
-
-					if (count > 0) {
+					if (resultSet.getLong("count") > 0) {
 						return true;
 					}
 
@@ -81,6 +79,7 @@ public class UpgradeLayout extends UpgradeProcess {
 
 			try (PreparedStatement preparedStatement =
 					connection.prepareStatement(sb.toString());
+
 				ResultSet resultSet = preparedStatement.executeQuery()) {
 
 				// Get pages with a sourcePrototypeLayoutUuid that have a page

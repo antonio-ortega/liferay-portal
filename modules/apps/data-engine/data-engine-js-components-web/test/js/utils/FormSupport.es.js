@@ -6,6 +6,7 @@
 import * as FormSupport from '../../../src/main/resources/META-INF/resources/js/utils/FormSupport.es';
 import createElement from '../__mock__/createElement.es';
 import mockPageWithNested from '../__mock__/mockPageWithNested.es';
+import mockPageWithThreeInlineFields from '../__mock__/mockPageWithThreeInlineFields';
 import mockPages from '../__mock__/mockPages.es';
 
 let pages = null;
@@ -156,6 +157,45 @@ describe('FormSupport', () => {
 		).toMatchSnapshot();
 	});
 
+	it('normalizes remaining columns to sum to 12 after column removal', () => {
+		pages = JSON.parse(JSON.stringify(mockPageWithThreeInlineFields));
+
+		pages = FormSupport.removeColumn(pages, 0, 0, 2);
+
+		const updatedRow = pages[0].rows[0];
+
+		const totalSize = updatedRow.columns.reduce(
+			(sum, column) => sum + column.size,
+			0
+		);
+
+		expect(totalSize).toBe(12);
+	});
+
+	it('normalizes single remaining column to size 12 after nested cleanup', () => {
+		pages = JSON.parse(JSON.stringify(mockPageWithNested));
+
+		const nestedFieldset =
+			pages[0].rows[0].columns[0].fields[0].nestedFields[0];
+
+		expect(nestedFieldset.rows[0].columns[0].fields).toEqual([]);
+
+		FormSupport.removeNestedEmptyRows(pages, 0);
+
+		const updatedRows = nestedFieldset.rows;
+
+		expect(updatedRows).toHaveLength(1);
+
+		expect(updatedRows[0].columns).toHaveLength(2);
+
+		const totalSize = updatedRows[0].columns.reduce(
+			(sum, column) => sum + (column.size || 0),
+			0
+		);
+
+		expect(totalSize).toBe(12);
+	});
+
 	it('removes a column from pages and reorder', () => {
 		const columnIndex = 1;
 		const pageIndex = 0;
@@ -210,14 +250,10 @@ describe('FormSupport', () => {
 
 		FormSupport.removeNestedEmptyRows(pages, 0);
 
-		expect(nestedFieldset.rows).toEqual([
-			expect.objectContaining({
-				columns: [
-					expect.objectContaining({
-						fields: ['Text67163348'],
-					}),
-				],
-			}),
+		expect(nestedFieldset.rows).toHaveLength(1);
+
+		expect(nestedFieldset.rows[0].columns[0].fields).toEqual([
+			'Text67163348',
 		]);
 	});
 

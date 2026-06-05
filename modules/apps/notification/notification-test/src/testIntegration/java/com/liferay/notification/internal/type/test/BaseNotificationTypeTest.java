@@ -293,8 +293,8 @@ public class BaseNotificationTypeTest {
 	public void setUp() throws Exception {
 		childObjectDefinition =
 			objectDefinitionLocalService.addCustomObjectDefinition(
-				null, user1.getUserId(), 0, null, false, true, false, true,
-				false, false, false, false, null,
+				null, user1.getUserId(), 0, null, true, false, true, false,
+				true, false, false, false, false, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				ObjectDefinitionTestUtil.getRandomName(), null, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
@@ -321,7 +321,8 @@ public class BaseNotificationTypeTest {
 							).name(
 								ObjectFieldSettingConstants.NAME_FILE_SOURCE
 							).value(
-								ObjectFieldSettingConstants.VALUE_USER_COMPUTER
+								ObjectFieldSettingConstants.
+									VALUE_USER_COMPUTER_TO_DOCS_AND_MEDIA
 							).build(),
 							new ObjectFieldSettingBuilder(
 							).name(
@@ -449,8 +450,8 @@ public class BaseNotificationTypeTest {
 
 		parentObjectDefinition =
 			objectDefinitionLocalService.addCustomObjectDefinition(
-				null, user1.getUserId(), 0, null, false, true, false, true,
-				false, false, false, false, null,
+				null, user1.getUserId(), 0, null, true, false, true, false,
+				true, false, false, false, false, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				"ParentObjectDefinition", null, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
@@ -945,9 +946,6 @@ public class BaseNotificationTypeTest {
 		_listTypeDefinitionLocalService;
 
 	@Inject
-	private static ListTypeEntryLocalService _listTypeEntryLocalService;
-
-	@Inject
 	private static ListTypeLocalService _listTypeLocalService;
 
 	private static String _originalName;
@@ -955,6 +953,9 @@ public class BaseNotificationTypeTest {
 
 	private Map<String, Object> _childAuthorTermValues;
 	private Map<String, Object> _generalTermValues;
+
+	@Inject
+	private ListTypeEntryLocalService _listTypeEntryLocalService;
 
 	@Inject
 	private NotificationRecipientSettingLocalService

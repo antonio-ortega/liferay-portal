@@ -9,7 +9,7 @@ import React from 'react';
 
 import {IInlineNotificationComponent} from '../inline_notification/InlineNotification';
 import {EEntityFieldType} from '../management_bar/controls/filters/utils/types';
-import {ISnapshot} from '../views/ViewsContext';
+import {ISnapshots} from '../views/ViewsContext';
 
 export declare function FrontendDataSet({
 	actionParameterName,
@@ -35,6 +35,7 @@ export declare function FrontendDataSet({
 	nestedItemsReferenceKey,
 	onActionDropdownItemClick,
 	onBulkActionItemClick,
+	onItemsPropSearch,
 	overrideEmptyResultView,
 	pagination,
 	portletId,
@@ -93,6 +94,7 @@ export interface IInlineEditingSettings {
 }
 
 export interface IActionsDropdown extends IBaseActions {
+	accessibleName?: string;
 	loading: boolean;
 	menuActive?: boolean;
 	onClick: Function;
@@ -106,11 +108,28 @@ export interface IBaseActions {
 	itemId: number | string;
 }
 
-interface IBulkActionItem {
+export interface IBulkActionCallbackContext {
+	activeFilters?: Array<IBaseFilterState>;
+	activeSearch?: ISearch;
+	allItemsSelectedActive?: boolean;
+	selectedItems?: Array<any>;
+}
+
+export interface IBulkActionItem {
+	className?: string;
+	data?: {
+		disabled?: boolean;
+		highlighted?: boolean;
+		id?: string;
+		size?: string;
+	};
 	href?: string;
 	icon?: string;
+	isDisabled?: (context: IBulkActionCallbackContext) => boolean;
+	isVisible?: (context: IBulkActionCallbackContext) => boolean;
 	label?: string;
 	method?: string;
+	slug?: string;
 	target?: 'modal' | 'sidePanel';
 }
 export interface ICreationActionItem {
@@ -143,6 +162,7 @@ export enum EItemActionsType {
 }
 
 export interface IItemsActions {
+	accessibleName?: string;
 	className?: string;
 	data?: IItemActionsData;
 	disabled?: boolean;
@@ -165,6 +185,7 @@ export interface IItemsActions {
 		| 'link'
 		| 'modal'
 		| 'modal-permissions'
+		| 'modal-workflow-transition'
 		| 'sidePanel'
 		| 'event';
 	type?: EItemActionsType | `${EItemActionsType}`;
@@ -237,6 +258,7 @@ export interface IDynamicCardLabelSchema extends IBaseCardLabelSchema {
 export type ICardLabelSchema = IStaticCardLabelSchema | IDynamicCardLabelSchema;
 
 export interface ICardSchema {
+	accessibleNameField?: string;
 	description: string;
 	image?: string;
 	labels?: ICardLabelSchema[];
@@ -250,17 +272,14 @@ export interface IHeader {
 	title?: string;
 }
 
-export interface IListTitleRenderer {
-	component: ({itemData}: {itemData: any}) => JSX.Element;
-}
-
 export interface IListSchema {
+	accessibleNameField?: string;
 	description: string;
 	image?: string;
 	sticker?: string;
 	symbol?: string;
 	title: string;
-	titleRenderer: IListTitleRenderer;
+	titleRendererName: string;
 	tooltip?: string;
 }
 
@@ -271,12 +290,13 @@ export interface IView {
 	contentRenderer?: string;
 	contentRendererClientExtension?: boolean;
 	contentRendererModuleURL?: string;
-	dataSetId?: string;
 	default?: boolean;
+	initialPaginationDelta?: number;
 	label?: string;
 	name?: string;
 	schema?: ISchema;
 	setItemComponentProps?: ({item, props}: {item: any; props: any}) => any;
+	showPagination?: boolean;
 	thumbnail?: string;
 	views?: Array<any>;
 }
@@ -289,9 +309,23 @@ export interface IFileDropSettings {
 	onFileDrop?: TOnFileDrop;
 }
 
+export type ILoadDataArgs = {
+	additionalAPIURLParameters?: string;
+	apiURL: string;
+	currentURL?: string;
+	delta?: number;
+	odataFiltersStrings?: Array<string>;
+	page?: number;
+	searchParam?: string;
+	sorts?: TSort[];
+};
+
 export interface IFrontendDataSetProps {
 	actionParameterName?: string;
 	additionalAPIURLParameters?: string;
+	additionalAPIURLParametersTransformer?: (
+		loadDataArgs: ILoadDataArgs
+	) => string | undefined;
 	apiURL?: string;
 	appURL?: string;
 	atom?: Atom<IFDSState>;
@@ -305,8 +339,8 @@ export interface IFrontendDataSetProps {
 	currentURL?: string;
 	customDataRenderers?: any;
 	customRenderers?: {
+		listSection?: Array<IInternalRenderer>;
 		tableCell?: Array<TRenderer>;
-		views?: Array<TRenderer>;
 	};
 	defaultSelectedItems?: any[];
 	emptyState?: IEmptyStateConfiguration;
@@ -336,6 +370,7 @@ export interface IFrontendDataSetProps {
 	nestedItemsReferenceKey?: string;
 	onActionDropdownItemClick?: any;
 	onBulkActionItemClick?: any;
+	onItemsPropSearch?: (item: any, query: string) => boolean;
 	onSelectedItemsChange?: (selectedItems: Array<any>) => void;
 	overrideEmptyResultView?: boolean;
 	pagination?: {
@@ -355,7 +390,7 @@ export interface IFrontendDataSetProps {
 	showSearch?: boolean;
 	showSelectAll?: boolean;
 	sidePanelId?: string;
-	snapshots?: Array<ISnapshot>;
+	snapshots?: Array<ISnapshots>;
 	snapshotsEnabled?: boolean;
 	sorts?: TSort[];
 	style?: 'default' | 'fluid' | 'stacked';
@@ -369,7 +404,7 @@ export interface IInfoPanelComponent {
 }
 
 export interface IManagementBarProps {
-	bulkActions?: Array<IBulkActionItem>;
+	bulkActions: Array<IBulkActionItem>;
 	creationMenu?: {
 		primaryItems: Array<ICreationActionItem>;
 		secondaryItems?: any[];
@@ -491,7 +526,7 @@ export type VisibleFieldNames = {
 	[fieldName: string]: boolean;
 };
 
-interface ISearch {
+export interface ISearch {
 	query: string;
 }
 
@@ -502,11 +537,12 @@ export interface IBaseFilterState {
 	id: string;
 	label: string;
 	moduleURL?: string;
+	multiple?: boolean;
 	odataFilterString?: string;
 	preloadedData: Record<string, unknown>;
 	selectedData?: Record<string, unknown>;
 	selectedItemsLabel: string;
-	type: 'clientExtension' | 'dateRange' | 'selection';
+	type: 'clientExtension' | 'dateRange' | 'dateTimeRange' | 'selection';
 }
 
 export interface IClientExtensionFilterState extends IBaseFilterState {

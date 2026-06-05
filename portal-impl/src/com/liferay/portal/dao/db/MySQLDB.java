@@ -5,14 +5,14 @@
 
 package com.liferay.portal.dao.db;
 
+import com.liferay.petra.io.unsync.UnsyncBufferedReader;
+import com.liferay.petra.io.unsync.UnsyncStringReader;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.db.DBType;
 import com.liferay.portal.kernel.dao.db.Index;
 import com.liferay.portal.kernel.dao.db.IndexMetadata;
-import com.liferay.portal.kernel.io.unsync.UnsyncBufferedReader;
-import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ObjectValuePair;
 import com.liferay.portal.kernel.util.PropsValues;
@@ -112,11 +112,11 @@ public class MySQLDB extends BaseDB {
 	@Override
 	public String getCharacterSet(Connection connection) throws SQLException {
 		try (PreparedStatement preparedStatement = connection.prepareStatement(
-				"select @@character_set_database")) {
+				"select @@character_set_database as characterSetDatabase")) {
 
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				if (resultSet.next()) {
-					return resultSet.getString(1);
+					return resultSet.getString("characterSetDatabase");
 				}
 			}
 		}
@@ -135,6 +135,7 @@ public class MySQLDB extends BaseDB {
 
 		try (PreparedStatement preparedStatement = connection.prepareStatement(
 				sql);
+
 			ResultSet resultSet = preparedStatement.executeQuery()) {
 
 			while (resultSet.next()) {
@@ -216,6 +217,50 @@ public class MySQLDB extends BaseDB {
 		}
 
 		runSQL(connection, sb.toString());
+	}
+
+	@Override
+	protected String getLockedQueryInfosSQL() {
+		return StringBundler.concat(
+			"select information_schema.processlist.time * 1000 as duration, ",
+			"information_schema.processlist.id as id, ",
+			"substring(information_schema.processlist.info, 1, 4000) as ",
+			"query, information_schema.processlist.db as schema_, ",
+			"coalesce(information_schema.innodb_trx.trx_state, ",
+			"information_schema.processlist.state) as state from ",
+			"information_schema.processlist left join ",
+			"information_schema.innodb_trx on ",
+			"information_schema.processlist.id = ",
+			"information_schema.innodb_trx.trx_mysql_thread_id where ",
+			"information_schema.processlist.command != 'Sleep' and ",
+			"information_schema.processlist.id != connection_id() and ",
+			"information_schema.processlist.info is not null and ",
+			"information_schema.processlist.time * 1000 >= ? and (",
+			"information_schema.innodb_trx.trx_state = 'LOCK WAIT' or ",
+			"lower(information_schema.processlist.state) like '%lock%')");
+	}
+
+	@Override
+	protected String getLongRunningQueryInfosSQL() {
+		return StringBundler.concat(
+			"select information_schema.processlist.time * 1000 as duration, ",
+			"information_schema.processlist.id as id, ",
+			"substring(information_schema.processlist.info, 1, 4000) as ",
+			"query, information_schema.processlist.db as schema_, ",
+			"coalesce(information_schema.innodb_trx.trx_state, ",
+			"information_schema.processlist.state) as state from ",
+			"information_schema.processlist left join ",
+			"information_schema.innodb_trx on ",
+			"information_schema.processlist.id = ",
+			"information_schema.innodb_trx.trx_mysql_thread_id where ",
+			"information_schema.processlist.command != 'Sleep' and ",
+			"information_schema.processlist.id != connection_id() and ",
+			"information_schema.processlist.info is not null and ",
+			"information_schema.processlist.time * 1000 >= ? and (",
+			"information_schema.innodb_trx.trx_state is null or ",
+			"information_schema.innodb_trx.trx_state != 'LOCK WAIT') and (",
+			"information_schema.processlist.state is null or ",
+			"lower(information_schema.processlist.state) not like '%lock%')");
 	}
 
 	@Override

@@ -4,7 +4,7 @@
  */
 
 import MultiSelect from '..';
-import {cleanup, render} from '@testing-library/react';
+import {cleanup, render, within} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 
@@ -125,7 +125,7 @@ describe('MultiSelect incremental interactions', () => {
 		expect(queryAllByRole('row').length).toEqual(0);
 	});
 
-	xit('pressing backspace with empty input should focus last item', () => {
+	it('pressing backspace with empty input should focus last item', () => {
 		const {getAllByRole, getByRole} = render(
 			<MultiSelect
 				defaultItems={[labels[0]!, labels[1]!]}
@@ -145,8 +145,52 @@ describe('MultiSelect incremental interactions', () => {
 
 		userEvent.keyboard('[Backspace]');
 
-		const [close] = getAllByRole('button');
+		const rows = getAllByRole('row');
+		const close = within(rows.at(-1)!).getByRole('button', {
+			name: /remove/i,
+		});
 
 		expect(document.activeElement).toEqual(close);
+	});
+
+	describe('keyboard arrows indicator', () => {
+		it('does not render the indicator by default', async () => {
+			const {getByRole} = render(
+				<MultiSelect
+					defaultItems={[labels[0]!]}
+					sourceItems={labels}
+					spritemap="/foo/bar"
+				/>
+			);
+
+			await userEvent.click(getByRole('combobox'));
+
+			expect(
+				document.body.querySelector('.clay-keyboard-arrows-indicator')
+			).not.toBeInTheDocument();
+		});
+
+		it('renders the floating indicator with direction "vertical" when enabled', async () => {
+			const {getByRole} = render(
+				<MultiSelect
+					defaultItems={[labels[0]!]}
+					displayKeyboardArrowsIndicator
+					sourceItems={labels}
+					spritemap="/foo/bar"
+				/>
+			);
+
+			await userEvent.click(getByRole('combobox'));
+
+			const indicator = document.body.querySelector(
+				'.clay-keyboard-arrows-indicator'
+			);
+
+			expect(indicator).toBeInTheDocument();
+			expect(indicator).toHaveClass('clay-keyboard-arrows-vertical');
+			expect(indicator).toHaveClass(
+				'clay-keyboard-arrows-indicator-floating'
+			);
+		});
 	});
 });

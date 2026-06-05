@@ -3,75 +3,36 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {expect, test} from '@playwright/test';
+import {test} from '@playwright/test';
 
 import {faroConfig} from '../tests/osb-faro-web/main/faro.config';
-import createTempFile, {readTempFile} from '../utils/createTempFile';
+import {performAnalyticsCloudLoginViaApi} from '../utils/performLogin';
+
 export interface Login {
 	password: string;
 	sessionId: string;
 	user: string;
 }
 
-let loggedIn = false;
-
 function loginAnalyticsCloudTest() {
-	const fixtureImpl = test.extend<{
+	return test.extend<{
 		loginAnalyticsCloud: Login;
 	}>({
 		loginAnalyticsCloud: [
 			async ({page}, use) => {
-				const user = faroConfig.user.login;
-				const password = faroConfig.user.password;
-
-				if (!loggedIn) {
-					const storageStatePath = createTempFile(
-						'analyticsCloudStorageState.json'
-					);
-
-					await page.goto(faroConfig.environment.baseUrl);
-
-					await page.getByRole('button', {name: 'Sign In'}).click();
-
-					await page.getByLabel('Email Address').fill(user);
-					await page.getByLabel('Password').fill(password);
-					await page.getByLabel('Remember Me').check();
-
-					await page.getByRole('button', {name: 'Sign In'}).click();
-
-					await expect(page.getByText('Your Workspaces')).toBeVisible(
-						{
-							timeout: 100 * 1000,
-						}
-					);
-
-					await page.context().storageState({path: storageStatePath});
-
-					loggedIn = true;
-				}
-				else {
-					const {cookies} = JSON.parse(
-						readTempFile('analyticsCloudStorageState.json')
-					);
-
-					await page.context().addCookies(cookies);
-				}
-
-				const cookies = await page.context().cookies();
+				const cookies = await performAnalyticsCloudLoginViaApi(page);
 
 				await use({
-					password,
+					password: faroConfig.user.password,
 					sessionId: cookies.find(
 						(cookie) => cookie.name === 'JSESSIONID'
 					).value,
-					user,
+					user: faroConfig.user.login,
 				});
 			},
 			{auto: true},
 		],
 	});
-
-	return fixtureImpl;
 }
 
 export {loginAnalyticsCloudTest};

@@ -25,10 +25,15 @@ import {EditOrganizationPage} from '../pages/users-admin-web/EditOrganizationPag
 import {EditUserPage} from '../pages/users-admin-web/EditUserPage';
 import {OnDemandAdminPage} from '../pages/users-admin-web/OnDemandAdminPage';
 import {OrganizationUsersPage} from '../pages/users-admin-web/OrganizationUsersPage';
+import {PersonalMenuInstanceSettingsPage} from '../pages/users-admin-web/PersonalMenuInstanceSettingsPage';
+import {PersonalMenuPage} from '../pages/users-admin-web/PersonalMenuPage';
 import {SMTPMockServerPage} from '../pages/users-admin-web/SMTPMockServerPage';
 import {ServiceAccountsPage} from '../pages/users-admin-web/ServiceAccountsPage';
 import {TeamsPage} from '../pages/users-admin-web/TeamsPage';
+import {UserLoginPage} from '../pages/users-admin-web/UserLoginPage';
 import {UserPersonalSitePage} from '../pages/users-admin-web/UserPersonalSitePage';
+import {UserRegistrationPage} from '../pages/users-admin-web/UserRegistrationPage';
+import {UserSettingsPage} from '../pages/users-admin-web/UserSettingsPage';
 import {UsersAndOrganizationsPage} from '../pages/users-admin-web/UsersAndOrganizationsPage';
 import {DocumentLibraryPage} from '../pages/users-admin-web/document-library-web/DocumentLibraryPage';
 import {SiteMembershipsPage} from '../pages/users-admin-web/site-admin-web/SiteMembershipsPage';
@@ -45,6 +50,8 @@ const usersAndOrganizationsPagesTest = test.extend<{
 	onDemandAdminPage: OnDemandAdminPage;
 	organizationUsersPage: OrganizationUsersPage;
 	personalDataErasurePage: PersonalDataErasurePage;
+	personalMenuInstanceSettingsPage: PersonalMenuInstanceSettingsPage;
+	personalMenuPage: PersonalMenuPage;
 	serviceAccountsPage: ServiceAccountsPage;
 	siteConfigurationDetailsPage: SiteConfigurationDetailsPage;
 	siteMembershipsPage: SiteMembershipsPage;
@@ -65,7 +72,10 @@ const usersAndOrganizationsPagesTest = test.extend<{
 	userAssociatedDataSiteStagingPage: UserAssociatedDataSiteStagingPage;
 	userDocumentLibraryPage: DocumentLibraryPage;
 	userLocaleOptionsPage: UserLocaleOptionsPage;
+	userLoginPage: UserLoginPage;
 	userPersonalSitePage: UserPersonalSitePage;
+	userRegistrationPage: UserRegistrationPage;
+	userSettingsPage: UserSettingsPage;
 	usersAndOrganizationsPage: UsersAndOrganizationsPage;
 }>({
 	assignUsersPage: async ({page}, use) => {
@@ -91,6 +101,12 @@ const usersAndOrganizationsPagesTest = test.extend<{
 	},
 	personalDataErasurePage: async ({page}, use) => {
 		await use(new PersonalDataErasurePage(page));
+	},
+	personalMenuInstanceSettingsPage: async ({page}, use) => {
+		await use(new PersonalMenuInstanceSettingsPage(page));
+	},
+	personalMenuPage: async ({page}, use) => {
+		await use(new PersonalMenuPage(page));
 	},
 	serviceAccountsPage: async ({page}, use) => {
 		await use(new ServiceAccountsPage(page));
@@ -152,8 +168,17 @@ const usersAndOrganizationsPagesTest = test.extend<{
 	userLocaleOptionsPage: async ({page}, use) => {
 		await use(new UserLocaleOptionsPage(page));
 	},
+	userLoginPage: async ({page}, use) => {
+		await use(new UserLoginPage(page));
+	},
 	userPersonalSitePage: async ({page}, use) => {
 		await use(new UserPersonalSitePage(page));
+	},
+	userRegistrationPage: async ({page}, use) => {
+		await use(new UserRegistrationPage(page));
+	},
+	userSettingsPage: async ({page}, use) => {
+		await use(new UserSettingsPage(page));
 	},
 	usersAndOrganizationsPage: async ({page}, use) => {
 		await use(new UsersAndOrganizationsPage(page));

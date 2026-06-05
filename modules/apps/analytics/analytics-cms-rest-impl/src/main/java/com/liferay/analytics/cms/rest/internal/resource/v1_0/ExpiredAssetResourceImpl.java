@@ -26,6 +26,7 @@ import com.liferay.petra.sql.dsl.expression.Predicate;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.license.util.LicenseManagerUtil;
 import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -57,6 +58,8 @@ public class ExpiredAssetResourceImpl extends BaseExpiredAssetResourceImpl {
 			Long depotEntryId, String languageId, Pagination pagination)
 		throws Exception {
 
+		LicenseManagerUtil.checkFreeTier();
+
 		Long[] groupIds = DepotEntryUtil.getGroupIds(
 			DepotEntryUtil.getDepotEntries(
 				contextCompany.getCompanyId(), depotEntryId));
@@ -82,7 +85,7 @@ public class ExpiredAssetResourceImpl extends BaseExpiredAssetResourceImpl {
 							_portal.getPortalURL(contextHttpServletRequest),
 							_portal.getPathMain(),
 							GroupConstants.CMS_FRIENDLY_URL,
-							"/edit_content_item?&p_l_mode=read&p_p_state=",
+							"/edit_content_item?p_l_mode=read&p_p_state=",
 							LiferayWindowState.POP_UP, "&objectEntryId=",
 							objectEntryId));
 

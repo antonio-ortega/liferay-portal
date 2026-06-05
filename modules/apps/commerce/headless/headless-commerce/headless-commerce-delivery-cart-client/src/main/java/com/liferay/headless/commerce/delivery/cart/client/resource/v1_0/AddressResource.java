@@ -607,3 +607,4 @@ public interface AddressResource {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:1490209607

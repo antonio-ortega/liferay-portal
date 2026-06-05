@@ -364,3 +364,4 @@ public class GroupSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:983589325

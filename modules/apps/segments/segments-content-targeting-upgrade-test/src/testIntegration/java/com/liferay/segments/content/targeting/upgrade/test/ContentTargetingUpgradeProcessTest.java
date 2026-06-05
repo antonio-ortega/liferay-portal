@@ -621,6 +621,7 @@ public class ContentTargetingUpgradeProcessTest {
 		throws Exception {
 
 		try (Connection connection = DataAccess.getConnection();
+
 			PreparedStatement preparedStatement = connection.prepareStatement(
 				StringBundler.concat(
 					"insert into CT_RuleInstance(ruleInstanceId, groupId, ",
@@ -655,6 +656,7 @@ public class ContentTargetingUpgradeProcessTest {
 		throws Exception {
 
 		try (Connection connection = DataAccess.getConnection();
+
 			PreparedStatement preparedStatement = connection.prepareStatement(
 				StringBundler.concat(
 					"insert into CT_UserSegment(userSegmentId, groupId, ",
@@ -766,12 +768,12 @@ public class ContentTargetingUpgradeProcessTest {
 		"com.liferay.segments.content.targeting.upgrade.internal.upgrade." +
 			"v1_0_0.ContentTargetingUpgradeProcess";
 
-	private static DB _db;
-
 	private UpgradeProcess _contentTargetingUpgradeProcess;
 
 	@Inject
 	private CounterLocalService _counterLocalService;
+
+	private DB _db;
 
 	@DeleteAfterTestRun
 	private ExpandoTable _expandoTable;

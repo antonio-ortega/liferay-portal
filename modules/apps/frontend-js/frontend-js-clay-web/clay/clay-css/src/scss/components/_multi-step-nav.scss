@@ -219,7 +219,7 @@
 	background-color: $multi-step-divider-bg;
 	height: $multi-step-divider-height;
 	margin-left: $multi-step-icon-size;
-	margin-top: math-sign($multi-step-divider-height);
+	margin-top: calc(#{$multi-step-divider-height} * -1);
 	position: relative;
 	top: $multi-step-divider-top;
 }
@@ -259,7 +259,6 @@
 	border-style: $multi-step-icon-border-style;
 	border-width: $multi-step-icon-border-width;
 	color: $multi-step-icon-color;
-	cursor: $multi-step-icon-cursor;
 	display: flex;
 	font-size: $multi-step-icon-font-size;
 	font-weight: $multi-step-icon-font-weight;
@@ -275,12 +274,6 @@
 
 	width: $multi-step-icon-size;
 
-	&:hover {
-		background-color: $multi-step-icon-hover-bg;
-		color: $multi-step-icon-hover-color;
-		text-decoration: $multi-step-icon-hover-text-decoration;
-	}
-
 	@at-root {
 		&.focus,
 		#{$focus-visible-selector},
@@ -290,6 +283,17 @@
 			color: $multi-step-icon-focus-color;
 			outline: $multi-step-icon-focus-outline;
 			text-decoration: $multi-step-icon-focus-text-decoration;
+		}
+
+		&[role='button'],
+		button#{&} {
+			cursor: $multi-step-icon-cursor;
+
+			&:hover {
+				background-color: $multi-step-icon-hover-bg;
+				color: $multi-step-icon-hover-color;
+				text-decoration: $multi-step-icon-hover-text-decoration;
+			}
 		}
 	}
 
@@ -303,10 +307,26 @@
 
 	@if ($enable-c-inner) {
 		.c-inner {
-			margin-bottom: #{math-sign($multi-step-icon-padding-bottom)};
-			margin-left: #{math-sign($multi-step-icon-padding-left)};
-			margin-right: #{math-sign($multi-step-icon-padding-right)};
-			margin-top: #{math-sign($multi-step-icon-padding-top)};
+			margin-bottom: if(
+				$multi-step-icon-padding-bottom,
+				calc(#{$multi-step-icon-padding-bottom} * -1),
+				null
+			);
+			margin-left: if(
+				$multi-step-icon-padding-left,
+				calc(#{$multi-step-icon-padding-left} * -1),
+				null
+			);
+			margin-right: if(
+				$multi-step-icon-padding-right,
+				calc(#{$multi-step-icon-padding-right} * -1),
+				null
+			);
+			margin-top: if(
+				$multi-step-icon-padding-top,
+				calc(#{$multi-step-icon-padding-top} * -1),
+				null
+			);
 			position: absolute;
 		}
 	}

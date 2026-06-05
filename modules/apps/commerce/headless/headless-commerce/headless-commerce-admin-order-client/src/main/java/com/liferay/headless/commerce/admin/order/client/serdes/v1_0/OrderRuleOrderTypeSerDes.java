@@ -398,3 +398,4 @@ public class OrderRuleOrderTypeSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-93619229

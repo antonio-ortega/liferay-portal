@@ -296,3 +296,4 @@ public interface NotificationQueueEntryLocalService
 		throws PortalException;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:1498452532

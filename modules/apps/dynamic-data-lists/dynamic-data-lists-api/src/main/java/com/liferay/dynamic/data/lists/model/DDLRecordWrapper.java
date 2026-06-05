@@ -749,3 +749,4 @@ public class DDLRecordWrapper
 	}
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-51279411

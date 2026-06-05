@@ -1,0 +1,27 @@
+buildService {
+	apiDir = "../portal-tools-service-builder-test-compat740-api/src/main/java"
+
+	doFirst {
+		if (!System.getenv("JENKINS_HOME") &&
+			!project.hasProperty("build.service.compat")) {
+
+			println "${project.path}:buildService SKIPPED"
+			println "    This is a compatibility test module that guards against unintended changes to older Service Builder outputs."
+			println "    To regenerate locally, run: gradlew ${project.path}:buildService -Pbuild.service.compat"
+
+			throw new StopExecutionException()
+		}
+	}
+}
+
+dependencies {
+	compileOnly group: "com.liferay.portal", name: "com.liferay.portal.kernel", version: "default"
+	compileOnly group: "org.osgi", name: "org.osgi.service.component.annotations", version: "1.4.0"
+	compileOnly project(":apps:portal:portal-aop-api")
+	compileOnly project(":core:petra:petra-function")
+	compileOnly project(":core:petra:petra-io")
+	compileOnly project(":core:petra:petra-lang")
+	compileOnly project(":core:petra:petra-sql-dsl-api")
+	compileOnly project(":core:petra:petra-string")
+	compileOnly project(":util:portal-tools-service-builder-test-compat740-api")
+}

@@ -122,3 +122,4 @@ public class WorkflowTaskAssignToMe implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-2077226058

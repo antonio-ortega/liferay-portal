@@ -199,10 +199,18 @@ public class JobFactory {
 			portalUpstreamBranchName = topLevelBuild.getBranchName();
 		}
 
+		PortalGitWorkingDirectory portalGitWorkingDirectory = null;
+
+		if (JenkinsResultsParserUtil.isCINode()) {
+			portalGitWorkingDirectory =
+				GitWorkingDirectoryFactory.newPortalGitWorkingDirectory(
+					portalUpstreamBranchName);
+		}
+
 		return _newJob(
 			topLevelBuild.getBuildProfile(), topLevelBuild.getJobName(), null,
-			null, portalHotfixRelease, portalUpstreamBranchName,
-			topLevelBuild.getProjectNames(),
+			portalGitWorkingDirectory, portalHotfixRelease,
+			portalUpstreamBranchName, topLevelBuild.getProjectNames(),
 			topLevelBuild.getBaseGitRepositoryName(),
 			topLevelBuild.getTestSuiteName(), topLevelBuild.getBranchName());
 	}
@@ -275,6 +283,14 @@ public class JobFactory {
 		String upstreamBranchName) {
 
 		String key = null;
+
+		if ((jsonObject == null) &&
+			JenkinsResultsParserUtil.isBuildCachingEnabled(
+				jobName, testSuiteName)) {
+
+			jsonObject = JobCacheUtil.getCachedJobJSONObject(
+				jobName, portalGitWorkingDirectory, testSuiteName);
+		}
 
 		if (jsonObject != null) {
 			jobName = jsonObject.getString("job_name");
@@ -376,6 +392,16 @@ public class JobFactory {
 					job = new FixPackBuilderGitRepositoryJob(
 						buildProfile, jobName, testSuiteName,
 						upstreamBranchName);
+				}
+			}
+
+			if (jobName.equals("test-jenkins-acceptance-pullrequest")) {
+				if (jsonObject != null) {
+					job = new JenkinsGitRepositoryJob(jsonObject);
+				}
+				else {
+					job = new JenkinsGitRepositoryJob(
+						buildProfile, jobName, testSuiteName);
 				}
 			}
 

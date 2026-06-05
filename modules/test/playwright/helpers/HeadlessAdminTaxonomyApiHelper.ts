@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {ApiHelpers} from './ApiHelpers';
+import {ApiHelpers, DataApiHelpers} from './ApiHelpers';
 
 interface postSiteTaxonomyVocabularyProps {
 	assetLibraries?: AssetLibrary[];
@@ -33,6 +33,12 @@ export interface postTaxonomyVocabularyTaxonomyCategoryProps {
 	name_i18n?: {['ES-es']: string};
 	vocabularyId: number;
 }
+
+export type TTaxonomyVocabulary = {
+	externalReferenceCode: string;
+	id: number;
+	name: string;
+};
 
 interface patchTaxonomyCategoryProps {
 	id: number;
@@ -120,8 +126,8 @@ export class HeadlessAdminTaxonomyApiHelper {
 		name,
 		siteId,
 		visibilityType,
-	}: postSiteTaxonomyVocabularyProps): Promise<{id: number}> {
-		return this.apiHelpers.post(
+	}: postSiteTaxonomyVocabularyProps): Promise<TTaxonomyVocabulary> {
+		const taxonomyVocabulary = await this.apiHelpers.post(
 			`${this.apiHelpers.baseUrl}${this.basePath}/sites/${siteId}/taxonomy-vocabularies`,
 			{
 				data: {
@@ -133,6 +139,15 @@ export class HeadlessAdminTaxonomyApiHelper {
 				},
 			}
 		);
+
+		if (this.apiHelpers instanceof DataApiHelpers) {
+			this.apiHelpers.data.push({
+				id: taxonomyVocabulary.id,
+				type: 'taxonomyVocabulary',
+			});
+		}
+
+		return taxonomyVocabulary;
 	}
 
 	/**
@@ -164,7 +179,10 @@ export class HeadlessAdminTaxonomyApiHelper {
 		name,
 		name_i18n,
 		vocabularyId,
-	}: postTaxonomyVocabularyTaxonomyCategoryProps): Promise<{id: number}> {
+	}: postTaxonomyVocabularyTaxonomyCategoryProps): Promise<{
+		externalReferenceCode: string;
+		id: number;
+	}> {
 		return this.apiHelpers.post(
 			`${this.apiHelpers.baseUrl}${this.basePath}/taxonomy-vocabularies/${vocabularyId}/taxonomy-categories`,
 			{data: {name, name_i18n}}
@@ -199,10 +217,19 @@ export class HeadlessAdminTaxonomyApiHelper {
 		name,
 		siteId,
 	}: postSiteKeywordProps): Promise<{id: number}> {
-		return this.apiHelpers.post(
+		const keyword = await this.apiHelpers.post(
 			`${this.apiHelpers.baseUrl}${this.basePath}/sites/${siteId}/keywords`,
 			{data: {name}}
 		);
+
+		if (this.apiHelpers instanceof DataApiHelpers) {
+			this.apiHelpers.data.push({
+				id: keyword.id,
+				type: 'keyword',
+			});
+		}
+
+		return keyword;
 	}
 
 	/**

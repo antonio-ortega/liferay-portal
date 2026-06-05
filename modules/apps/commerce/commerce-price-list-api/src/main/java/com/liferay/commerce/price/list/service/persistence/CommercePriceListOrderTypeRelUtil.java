@@ -36,6 +36,24 @@ public class CommercePriceListOrderTypeRelUtil {
 	 */
 
 	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(List)
+	 */
+	public static void cacheResult(
+		List<CommercePriceListOrderTypeRel> commercePriceListOrderTypeRels) {
+
+		getPersistence().cacheResult(commercePriceListOrderTypeRels);
+	}
+
+	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(com.liferay.portal.kernel.model.BaseModel)
+	 */
+	public static void cacheResult(
+		CommercePriceListOrderTypeRel commercePriceListOrderTypeRel) {
+
+		getPersistence().cacheResult(commercePriceListOrderTypeRel);
+	}
+
+	/**
 	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#clearCache()
 	 */
 	public static void clearCache() {
@@ -117,58 +135,10 @@ public class CommercePriceListOrderTypeRelUtil {
 	}
 
 	/**
-	 * Returns all the commerce price list order type rels where uuid = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @return the matching commerce price list order type rels
-	 */
-	public static List<CommercePriceListOrderTypeRel> findByUuid(String uuid) {
-		return getPersistence().findByUuid(uuid);
-	}
-
-	/**
-	 * Returns a range of all the commerce price list order type rels where uuid = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CommercePriceListOrderTypeRelModelImpl</code>.
-	 * </p>
-	 *
-	 * @param uuid the uuid
-	 * @param start the lower bound of the range of commerce price list order type rels
-	 * @param end the upper bound of the range of commerce price list order type rels (not inclusive)
-	 * @return the range of matching commerce price list order type rels
-	 */
-	public static List<CommercePriceListOrderTypeRel> findByUuid(
-		String uuid, int start, int end) {
-
-		return getPersistence().findByUuid(uuid, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the commerce price list order type rels where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CommercePriceListOrderTypeRelModelImpl</code>.
-	 * </p>
-	 *
-	 * @param uuid the uuid
-	 * @param start the lower bound of the range of commerce price list order type rels
-	 * @param end the upper bound of the range of commerce price list order type rels (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching commerce price list order type rels
-	 */
-	public static List<CommercePriceListOrderTypeRel> findByUuid(
-		String uuid, int start, int end,
-		OrderByComparator<CommercePriceListOrderTypeRel> orderByComparator) {
-
-		return getPersistence().findByUuid(uuid, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the commerce price list order type rels where uuid = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CommercePriceListOrderTypeRelModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.price.list.model.impl.CommercePriceListOrderTypeRelModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -219,56 +189,6 @@ public class CommercePriceListOrderTypeRelUtil {
 	}
 
 	/**
-	 * Returns the last commerce price list order type rel in the ordered set where uuid = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching commerce price list order type rel
-	 * @throws NoSuchPriceListOrderTypeRelException if a matching commerce price list order type rel could not be found
-	 */
-	public static CommercePriceListOrderTypeRel findByUuid_Last(
-			String uuid,
-			OrderByComparator<CommercePriceListOrderTypeRel> orderByComparator)
-		throws com.liferay.commerce.price.list.exception.
-			NoSuchPriceListOrderTypeRelException {
-
-		return getPersistence().findByUuid_Last(uuid, orderByComparator);
-	}
-
-	/**
-	 * Returns the last commerce price list order type rel in the ordered set where uuid = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching commerce price list order type rel, or <code>null</code> if a matching commerce price list order type rel could not be found
-	 */
-	public static CommercePriceListOrderTypeRel fetchByUuid_Last(
-		String uuid,
-		OrderByComparator<CommercePriceListOrderTypeRel> orderByComparator) {
-
-		return getPersistence().fetchByUuid_Last(uuid, orderByComparator);
-	}
-
-	/**
-	 * Returns the commerce price list order type rels before and after the current commerce price list order type rel in the ordered set where uuid = &#63;.
-	 *
-	 * @param commercePriceListOrderTypeRelId the primary key of the current commerce price list order type rel
-	 * @param uuid the uuid
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next commerce price list order type rel
-	 * @throws NoSuchPriceListOrderTypeRelException if a commerce price list order type rel with the primary key could not be found
-	 */
-	public static CommercePriceListOrderTypeRel[] findByUuid_PrevAndNext(
-			long commercePriceListOrderTypeRelId, String uuid,
-			OrderByComparator<CommercePriceListOrderTypeRel> orderByComparator)
-		throws com.liferay.commerce.price.list.exception.
-			NoSuchPriceListOrderTypeRelException {
-
-		return getPersistence().findByUuid_PrevAndNext(
-			commercePriceListOrderTypeRelId, uuid, orderByComparator);
-	}
-
-	/**
 	 * Removes all the commerce price list order type rels where uuid = &#63; from the database.
 	 *
 	 * @param uuid the uuid
@@ -288,64 +208,10 @@ public class CommercePriceListOrderTypeRelUtil {
 	}
 
 	/**
-	 * Returns all the commerce price list order type rels where uuid = &#63; and companyId = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @return the matching commerce price list order type rels
-	 */
-	public static List<CommercePriceListOrderTypeRel> findByUuid_C(
-		String uuid, long companyId) {
-
-		return getPersistence().findByUuid_C(uuid, companyId);
-	}
-
-	/**
-	 * Returns a range of all the commerce price list order type rels where uuid = &#63; and companyId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CommercePriceListOrderTypeRelModelImpl</code>.
-	 * </p>
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param start the lower bound of the range of commerce price list order type rels
-	 * @param end the upper bound of the range of commerce price list order type rels (not inclusive)
-	 * @return the range of matching commerce price list order type rels
-	 */
-	public static List<CommercePriceListOrderTypeRel> findByUuid_C(
-		String uuid, long companyId, int start, int end) {
-
-		return getPersistence().findByUuid_C(uuid, companyId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the commerce price list order type rels where uuid = &#63; and companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CommercePriceListOrderTypeRelModelImpl</code>.
-	 * </p>
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param start the lower bound of the range of commerce price list order type rels
-	 * @param end the upper bound of the range of commerce price list order type rels (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching commerce price list order type rels
-	 */
-	public static List<CommercePriceListOrderTypeRel> findByUuid_C(
-		String uuid, long companyId, int start, int end,
-		OrderByComparator<CommercePriceListOrderTypeRel> orderByComparator) {
-
-		return getPersistence().findByUuid_C(
-			uuid, companyId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the commerce price list order type rels where uuid = &#63; and companyId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CommercePriceListOrderTypeRelModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.price.list.model.impl.CommercePriceListOrderTypeRelModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -401,62 +267,6 @@ public class CommercePriceListOrderTypeRelUtil {
 	}
 
 	/**
-	 * Returns the last commerce price list order type rel in the ordered set where uuid = &#63; and companyId = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching commerce price list order type rel
-	 * @throws NoSuchPriceListOrderTypeRelException if a matching commerce price list order type rel could not be found
-	 */
-	public static CommercePriceListOrderTypeRel findByUuid_C_Last(
-			String uuid, long companyId,
-			OrderByComparator<CommercePriceListOrderTypeRel> orderByComparator)
-		throws com.liferay.commerce.price.list.exception.
-			NoSuchPriceListOrderTypeRelException {
-
-		return getPersistence().findByUuid_C_Last(
-			uuid, companyId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last commerce price list order type rel in the ordered set where uuid = &#63; and companyId = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching commerce price list order type rel, or <code>null</code> if a matching commerce price list order type rel could not be found
-	 */
-	public static CommercePriceListOrderTypeRel fetchByUuid_C_Last(
-		String uuid, long companyId,
-		OrderByComparator<CommercePriceListOrderTypeRel> orderByComparator) {
-
-		return getPersistence().fetchByUuid_C_Last(
-			uuid, companyId, orderByComparator);
-	}
-
-	/**
-	 * Returns the commerce price list order type rels before and after the current commerce price list order type rel in the ordered set where uuid = &#63; and companyId = &#63;.
-	 *
-	 * @param commercePriceListOrderTypeRelId the primary key of the current commerce price list order type rel
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next commerce price list order type rel
-	 * @throws NoSuchPriceListOrderTypeRelException if a commerce price list order type rel with the primary key could not be found
-	 */
-	public static CommercePriceListOrderTypeRel[] findByUuid_C_PrevAndNext(
-			long commercePriceListOrderTypeRelId, String uuid, long companyId,
-			OrderByComparator<CommercePriceListOrderTypeRel> orderByComparator)
-		throws com.liferay.commerce.price.list.exception.
-			NoSuchPriceListOrderTypeRelException {
-
-		return getPersistence().findByUuid_C_PrevAndNext(
-			commercePriceListOrderTypeRelId, uuid, companyId,
-			orderByComparator);
-	}
-
-	/**
 	 * Removes all the commerce price list order type rels where uuid = &#63; and companyId = &#63; from the database.
 	 *
 	 * @param uuid the uuid
@@ -478,62 +288,10 @@ public class CommercePriceListOrderTypeRelUtil {
 	}
 
 	/**
-	 * Returns all the commerce price list order type rels where commercePriceListId = &#63;.
-	 *
-	 * @param commercePriceListId the commerce price list ID
-	 * @return the matching commerce price list order type rels
-	 */
-	public static List<CommercePriceListOrderTypeRel> findByCommercePriceListId(
-		long commercePriceListId) {
-
-		return getPersistence().findByCommercePriceListId(commercePriceListId);
-	}
-
-	/**
-	 * Returns a range of all the commerce price list order type rels where commercePriceListId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CommercePriceListOrderTypeRelModelImpl</code>.
-	 * </p>
-	 *
-	 * @param commercePriceListId the commerce price list ID
-	 * @param start the lower bound of the range of commerce price list order type rels
-	 * @param end the upper bound of the range of commerce price list order type rels (not inclusive)
-	 * @return the range of matching commerce price list order type rels
-	 */
-	public static List<CommercePriceListOrderTypeRel> findByCommercePriceListId(
-		long commercePriceListId, int start, int end) {
-
-		return getPersistence().findByCommercePriceListId(
-			commercePriceListId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the commerce price list order type rels where commercePriceListId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CommercePriceListOrderTypeRelModelImpl</code>.
-	 * </p>
-	 *
-	 * @param commercePriceListId the commerce price list ID
-	 * @param start the lower bound of the range of commerce price list order type rels
-	 * @param end the upper bound of the range of commerce price list order type rels (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching commerce price list order type rels
-	 */
-	public static List<CommercePriceListOrderTypeRel> findByCommercePriceListId(
-		long commercePriceListId, int start, int end,
-		OrderByComparator<CommercePriceListOrderTypeRel> orderByComparator) {
-
-		return getPersistence().findByCommercePriceListId(
-			commercePriceListId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the commerce price list order type rels where commercePriceListId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CommercePriceListOrderTypeRelModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.price.list.model.impl.CommercePriceListOrderTypeRelModelImpl</code>.
 	 * </p>
 	 *
 	 * @param commercePriceListId the commerce price list ID
@@ -588,61 +346,6 @@ public class CommercePriceListOrderTypeRelUtil {
 	}
 
 	/**
-	 * Returns the last commerce price list order type rel in the ordered set where commercePriceListId = &#63;.
-	 *
-	 * @param commercePriceListId the commerce price list ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching commerce price list order type rel
-	 * @throws NoSuchPriceListOrderTypeRelException if a matching commerce price list order type rel could not be found
-	 */
-	public static CommercePriceListOrderTypeRel findByCommercePriceListId_Last(
-			long commercePriceListId,
-			OrderByComparator<CommercePriceListOrderTypeRel> orderByComparator)
-		throws com.liferay.commerce.price.list.exception.
-			NoSuchPriceListOrderTypeRelException {
-
-		return getPersistence().findByCommercePriceListId_Last(
-			commercePriceListId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last commerce price list order type rel in the ordered set where commercePriceListId = &#63;.
-	 *
-	 * @param commercePriceListId the commerce price list ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching commerce price list order type rel, or <code>null</code> if a matching commerce price list order type rel could not be found
-	 */
-	public static CommercePriceListOrderTypeRel fetchByCommercePriceListId_Last(
-		long commercePriceListId,
-		OrderByComparator<CommercePriceListOrderTypeRel> orderByComparator) {
-
-		return getPersistence().fetchByCommercePriceListId_Last(
-			commercePriceListId, orderByComparator);
-	}
-
-	/**
-	 * Returns the commerce price list order type rels before and after the current commerce price list order type rel in the ordered set where commercePriceListId = &#63;.
-	 *
-	 * @param commercePriceListOrderTypeRelId the primary key of the current commerce price list order type rel
-	 * @param commercePriceListId the commerce price list ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next commerce price list order type rel
-	 * @throws NoSuchPriceListOrderTypeRelException if a commerce price list order type rel with the primary key could not be found
-	 */
-	public static CommercePriceListOrderTypeRel[]
-			findByCommercePriceListId_PrevAndNext(
-				long commercePriceListOrderTypeRelId, long commercePriceListId,
-				OrderByComparator<CommercePriceListOrderTypeRel>
-					orderByComparator)
-		throws com.liferay.commerce.price.list.exception.
-			NoSuchPriceListOrderTypeRelException {
-
-		return getPersistence().findByCommercePriceListId_PrevAndNext(
-			commercePriceListOrderTypeRelId, commercePriceListId,
-			orderByComparator);
-	}
-
-	/**
 	 * Removes all the commerce price list order type rels where commercePriceListId = &#63; from the database.
 	 *
 	 * @param commercePriceListId the commerce price list ID
@@ -675,20 +378,6 @@ public class CommercePriceListOrderTypeRelUtil {
 			NoSuchPriceListOrderTypeRelException {
 
 		return getPersistence().findByCPI_COTI(
-			commercePriceListId, commerceOrderTypeId);
-	}
-
-	/**
-	 * Returns the commerce price list order type rel where commercePriceListId = &#63; and commerceOrderTypeId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
-	 *
-	 * @param commercePriceListId the commerce price list ID
-	 * @param commerceOrderTypeId the commerce order type ID
-	 * @return the matching commerce price list order type rel, or <code>null</code> if a matching commerce price list order type rel could not be found
-	 */
-	public static CommercePriceListOrderTypeRel fetchByCPI_COTI(
-		long commercePriceListId, long commerceOrderTypeId) {
-
-		return getPersistence().fetchByCPI_COTI(
 			commercePriceListId, commerceOrderTypeId);
 	}
 
@@ -736,28 +425,6 @@ public class CommercePriceListOrderTypeRelUtil {
 
 		return getPersistence().countByCPI_COTI(
 			commercePriceListId, commerceOrderTypeId);
-	}
-
-	/**
-	 * Caches the commerce price list order type rel in the entity cache if it is enabled.
-	 *
-	 * @param commercePriceListOrderTypeRel the commerce price list order type rel
-	 */
-	public static void cacheResult(
-		CommercePriceListOrderTypeRel commercePriceListOrderTypeRel) {
-
-		getPersistence().cacheResult(commercePriceListOrderTypeRel);
-	}
-
-	/**
-	 * Caches the commerce price list order type rels in the entity cache if it is enabled.
-	 *
-	 * @param commercePriceListOrderTypeRels the commerce price list order type rels
-	 */
-	public static void cacheResult(
-		List<CommercePriceListOrderTypeRel> commercePriceListOrderTypeRels) {
-
-		getPersistence().cacheResult(commercePriceListOrderTypeRels);
 	}
 
 	/**
@@ -823,86 +490,171 @@ public class CommercePriceListOrderTypeRelUtil {
 	}
 
 	/**
-	 * Returns all the commerce price list order type rels.
+	 * Returns the commerce price list order type rel where commercePriceListId = &#63; and commerceOrderTypeId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
 	 *
-	 * @return the commerce price list order type rels
+	 * @param commercePriceListId the commerce price list ID
+	 * @param commerceOrderTypeId the commerce order type ID
+	 * @return the matching commerce price list order type rel, or <code>null</code> if a matching commerce price list order type rel could not be found
 	 */
-	public static List<CommercePriceListOrderTypeRel> findAll() {
-		return getPersistence().findAll();
+	public static CommercePriceListOrderTypeRel fetchByCPI_COTI(
+		long commercePriceListId, long commerceOrderTypeId) {
+
+		return getPersistence().fetchByCPI_COTI(
+			commercePriceListId, commerceOrderTypeId);
 	}
 
 	/**
-	 * Returns a range of all the commerce price list order type rels.
+	 * Returns all the commerce price list order type rels where uuid = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @return the matching commerce price list order type rels
+	 */
+	public static List<CommercePriceListOrderTypeRel> findByUuid(String uuid) {
+		return getPersistence().findByUuid(uuid);
+	}
+
+	/**
+	 * Returns a range of all the commerce price list order type rels where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CommercePriceListOrderTypeRelModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.price.list.model.impl.CommercePriceListOrderTypeRelModelImpl</code>.
 	 * </p>
 	 *
+	 * @param uuid the uuid
 	 * @param start the lower bound of the range of commerce price list order type rels
 	 * @param end the upper bound of the range of commerce price list order type rels (not inclusive)
-	 * @return the range of commerce price list order type rels
+	 * @return the range of matching commerce price list order type rels
 	 */
-	public static List<CommercePriceListOrderTypeRel> findAll(
-		int start, int end) {
+	public static List<CommercePriceListOrderTypeRel> findByUuid(
+		String uuid, int start, int end) {
 
-		return getPersistence().findAll(start, end);
+		return getPersistence().findByUuid(uuid, start, end);
 	}
 
 	/**
-	 * Returns an ordered range of all the commerce price list order type rels.
+	 * Returns an ordered range of all the commerce price list order type rels where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CommercePriceListOrderTypeRelModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.price.list.model.impl.CommercePriceListOrderTypeRelModelImpl</code>.
 	 * </p>
 	 *
+	 * @param uuid the uuid
 	 * @param start the lower bound of the range of commerce price list order type rels
 	 * @param end the upper bound of the range of commerce price list order type rels (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of commerce price list order type rels
+	 * @return the ordered range of matching commerce price list order type rels
 	 */
-	public static List<CommercePriceListOrderTypeRel> findAll(
-		int start, int end,
+	public static List<CommercePriceListOrderTypeRel> findByUuid(
+		String uuid, int start, int end,
 		OrderByComparator<CommercePriceListOrderTypeRel> orderByComparator) {
 
-		return getPersistence().findAll(start, end, orderByComparator);
+		return getPersistence().findByUuid(uuid, start, end, orderByComparator);
 	}
 
 	/**
-	 * Returns an ordered range of all the commerce price list order type rels.
+	 * Returns all the commerce price list order type rels where uuid = &#63; and companyId = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @return the matching commerce price list order type rels
+	 */
+	public static List<CommercePriceListOrderTypeRel> findByUuid_C(
+		String uuid, long companyId) {
+
+		return getPersistence().findByUuid_C(uuid, companyId);
+	}
+
+	/**
+	 * Returns a range of all the commerce price list order type rels where uuid = &#63; and companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CommercePriceListOrderTypeRelModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.price.list.model.impl.CommercePriceListOrderTypeRelModelImpl</code>.
 	 * </p>
 	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of commerce price list order type rels
+	 * @param end the upper bound of the range of commerce price list order type rels (not inclusive)
+	 * @return the range of matching commerce price list order type rels
+	 */
+	public static List<CommercePriceListOrderTypeRel> findByUuid_C(
+		String uuid, long companyId, int start, int end) {
+
+		return getPersistence().findByUuid_C(uuid, companyId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the commerce price list order type rels where uuid = &#63; and companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.price.list.model.impl.CommercePriceListOrderTypeRelModelImpl</code>.
+	 * </p>
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
 	 * @param start the lower bound of the range of commerce price list order type rels
 	 * @param end the upper bound of the range of commerce price list order type rels (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param useFinderCache whether to use the finder cache
-	 * @return the ordered range of commerce price list order type rels
+	 * @return the ordered range of matching commerce price list order type rels
 	 */
-	public static List<CommercePriceListOrderTypeRel> findAll(
-		int start, int end,
-		OrderByComparator<CommercePriceListOrderTypeRel> orderByComparator,
-		boolean useFinderCache) {
+	public static List<CommercePriceListOrderTypeRel> findByUuid_C(
+		String uuid, long companyId, int start, int end,
+		OrderByComparator<CommercePriceListOrderTypeRel> orderByComparator) {
 
-		return getPersistence().findAll(
-			start, end, orderByComparator, useFinderCache);
+		return getPersistence().findByUuid_C(
+			uuid, companyId, start, end, orderByComparator);
 	}
 
 	/**
-	 * Removes all the commerce price list order type rels from the database.
-	 */
-	public static void removeAll() {
-		getPersistence().removeAll();
-	}
-
-	/**
-	 * Returns the number of commerce price list order type rels.
+	 * Returns all the commerce price list order type rels where commercePriceListId = &#63;.
 	 *
-	 * @return the number of commerce price list order type rels
+	 * @param commercePriceListId the commerce price list ID
+	 * @return the matching commerce price list order type rels
 	 */
-	public static int countAll() {
-		return getPersistence().countAll();
+	public static List<CommercePriceListOrderTypeRel> findByCommercePriceListId(
+		long commercePriceListId) {
+
+		return getPersistence().findByCommercePriceListId(commercePriceListId);
+	}
+
+	/**
+	 * Returns a range of all the commerce price list order type rels where commercePriceListId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.price.list.model.impl.CommercePriceListOrderTypeRelModelImpl</code>.
+	 * </p>
+	 *
+	 * @param commercePriceListId the commerce price list ID
+	 * @param start the lower bound of the range of commerce price list order type rels
+	 * @param end the upper bound of the range of commerce price list order type rels (not inclusive)
+	 * @return the range of matching commerce price list order type rels
+	 */
+	public static List<CommercePriceListOrderTypeRel> findByCommercePriceListId(
+		long commercePriceListId, int start, int end) {
+
+		return getPersistence().findByCommercePriceListId(
+			commercePriceListId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the commerce price list order type rels where commercePriceListId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.price.list.model.impl.CommercePriceListOrderTypeRelModelImpl</code>.
+	 * </p>
+	 *
+	 * @param commercePriceListId the commerce price list ID
+	 * @param start the lower bound of the range of commerce price list order type rels
+	 * @param end the upper bound of the range of commerce price list order type rels (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching commerce price list order type rels
+	 */
+	public static List<CommercePriceListOrderTypeRel> findByCommercePriceListId(
+		long commercePriceListId, int start, int end,
+		OrderByComparator<CommercePriceListOrderTypeRel> orderByComparator) {
+
+		return getPersistence().findByCommercePriceListId(
+			commercePriceListId, start, end, orderByComparator);
 	}
 
 	public static CommercePriceListOrderTypeRelPersistence getPersistence() {
@@ -919,3 +671,4 @@ public class CommercePriceListOrderTypeRelUtil {
 		_persistence;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:772264425

@@ -9,7 +9,10 @@ import ProgressBarContent from './components/ProgressBarContent';
 
 import './ProjectUsage.css';
 
+import {useMemo} from 'react';
+import {useAppContext} from '~/features/project/context';
 import i18n from '~/utils/I18n';
+import {EXPERIENCE_SUBSCRIPTIONS, PLAN_SUBSCRIPTIONS} from '~/utils/constants';
 
 import AddOnContent from './components/AddOnContent';
 import ContactBanner from './components/ContactBanner';
@@ -17,7 +20,27 @@ import ProjectUsageSection from './components/ProjectUsageSection';
 import useProjectUsageData from './hooks/useProjectUsageData';
 
 const ProjectUsage = () => {
-	const {addOns, displayUsage, isLoading, usageData} = useProjectUsageData();
+	const [{hasExperienceSubscription, hasLegacySubscription}] =
+		useAppContext();
+
+	const acceptedSubscriptions = useMemo(() => {
+		if (hasExperienceSubscription) {
+			return EXPERIENCE_SUBSCRIPTIONS;
+		}
+
+		return PLAN_SUBSCRIPTIONS;
+	}, [hasExperienceSubscription]);
+
+	const {
+		addOns,
+		displayUsage: isUsageDisplayed,
+		isLoading,
+		usageData,
+	} = useProjectUsageData(acceptedSubscriptions, hasExperienceSubscription);
+
+	const isLegacySubscription = hasLegacySubscription;
+
+	const displayUsage = isUsageDisplayed && !isLegacySubscription;
 
 	return (
 		<div className="container-xl cp-project-usage-page m-0 p-0">
@@ -32,7 +55,7 @@ const ProjectUsage = () => {
 
 			{!isLoading && (
 				<>
-					{!displayUsage && (
+					{(isLegacySubscription || !displayUsage) && (
 						<ContactBanner
 							className="mb-5"
 							description={i18n.translate(
@@ -49,48 +72,67 @@ const ProjectUsage = () => {
 							<div className="fade-panel position-absolute" />
 						)}
 
-						<ProjectUsageSection
-							className="mb-5"
-							title={i18n.translate('sites-and-users')}
-						>
-							{usageData?.siteAndUsers.map((chartData, index) => (
-								<CardContainer
-									displayUsage={displayUsage}
-									infoButtonText={chartData.infoText}
-									key={`${chartData.title}-${index}`}
-								>
-									<ProgressBarContent
-										displayUsage={displayUsage}
-										maxCount={chartData?.maxCount}
-										title={chartData?.title}
-										usedCount={chartData?.usedCount}
-									/>
-								</CardContainer>
-							))}
-						</ProjectUsageSection>
+						{!hasExperienceSubscription && (
+							<ProjectUsageSection
+								className="mb-5"
+								title={i18n.translate('sites-and-users')}
+							>
+								{usageData?.siteAndUsers.map(
+									(chartData: any, index: number) => (
+										<CardContainer
+											displayUsage={displayUsage}
+											infoButtonText={chartData.infoText}
+											key={`${chartData.title}-${index}`}
+										>
+											<ProgressBarContent
+												displayUsage={displayUsage}
+												maxCount={chartData?.maxCount}
+												maxCountUnits={
+													chartData?.maxCountUnits
+												}
+												percentage={
+													chartData?.percentage
+												}
+												title={chartData?.title}
+												usedCount={chartData?.usedCount}
+												usedCountUnits={
+													chartData?.usedCountUnits
+												}
+											/>
+										</CardContainer>
+									)
+								)}
+							</ProjectUsageSection>
+						)}
 
 						<ProjectUsageSection
-							className="mb-5"
+							className={`mb-5 ${hasExperienceSubscription ? 'cp-project-usage-grid' : ''}`}
 							title={i18n.translate('resource-usage')}
+							tooltipClassName="text-neutral-7"
+							tooltipText={`${i18n.translate('monthly-usage-overview')}: ${i18n.translate('view-a-breakdown-of-your-usage-and-overage-details-at-a-glance-values-reset-at-the-start-of-every-month')}`}
 						>
 							{usageData?.resourceUsage.map(
-								(chartData, index) => (
+								(chartData: any, index: number) => (
 									<CardContainer
 										displayUsage={displayUsage}
 										infoButtonText={chartData.infoText}
 										key={`${chartData.title}-${index}`}
 									>
 										<ChartContent
-											dataSizeUnits={
-												chartData.dataSizeUnits
-											}
 											displayUsage={displayUsage}
 											maxCount={chartData.maxCount}
 											maxCountText={
 												chartData.maxCountText
 											}
+											maxCountUnits={
+												chartData.maxCountUnits
+											}
+											percentage={chartData.percentage}
 											title={chartData.title}
 											usedCount={chartData.usedCount}
+											usedCountUnits={
+												chartData.usedCountUnits
+											}
 										/>
 									</CardContainer>
 								)
@@ -99,25 +141,32 @@ const ProjectUsage = () => {
 
 						{displayUsage && (
 							<>
-								{!!addOns.length && (
-									<ProjectUsageSection
-										className="mb-5"
-										title={i18n.translate('add-ons')}
-									>
-										{addOns?.map((addOn, index) => (
-											<CardContainer
-												className="align-items-center d-flex p-4"
-												displayUsage={displayUsage}
-												infoButtonText={addOn.infoText}
-												key={`${addOn.title}-${index}`}
-											>
-												<AddOnContent
-													title={addOn.title}
-												/>
-											</CardContainer>
-										))}
-									</ProjectUsageSection>
-								)}
+								{!hasExperienceSubscription &&
+									!!addOns.length && (
+										<ProjectUsageSection
+											className="mb-5"
+											title={i18n.translate('add-ons')}
+										>
+											{addOns?.map(
+												(addOn: any, index: number) => (
+													<CardContainer
+														className="align-items-center d-flex p-4"
+														displayUsage={
+															displayUsage
+														}
+														infoButtonText={
+															addOn.infoText
+														}
+														key={`${addOn.title}-${index}`}
+													>
+														<AddOnContent
+															title={addOn.title}
+														/>
+													</CardContainer>
+												)
+											)}
+										</ProjectUsageSection>
+									)}
 
 								<ContactBanner
 									description={i18n.translate(

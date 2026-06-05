@@ -14,11 +14,13 @@ import com.liferay.batch.engine.model.BatchEngineExportTask;
 import com.liferay.batch.engine.model.BatchEngineImportTask;
 import com.liferay.batch.engine.service.BatchEngineExportTaskLocalService;
 import com.liferay.batch.engine.service.BatchEngineImportTaskService;
+import com.liferay.changeset.service.ChangesetEntryLocalService;
 import com.liferay.exportimport.internal.lar.ExportImportDescriptorThreadLocal;
 import com.liferay.exportimport.internal.lar.PortletDataContextImpl;
 import com.liferay.exportimport.internal.lar.PortletDataContextThreadLocal;
 import com.liferay.exportimport.kernel.lar.BasePortletDataHandler;
 import com.liferay.exportimport.kernel.lar.DataLevel;
+import com.liferay.exportimport.kernel.lar.ExportImportHelper;
 import com.liferay.exportimport.kernel.lar.ExportImportPathUtil;
 import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.exportimport.kernel.lar.ManifestSummary;
@@ -26,6 +28,7 @@ import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.exportimport.kernel.lar.PortletDataException;
 import com.liferay.exportimport.kernel.lar.PortletDataHandlerBoolean;
 import com.liferay.exportimport.kernel.lar.PortletDataHandlerControl;
+import com.liferay.exportimport.kernel.lar.PortletDataHandlerKeys;
 import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.exportimport.vulcan.batch.engine.ExportImportVulcanBatchEngineTaskItemDelegate;
 import com.liferay.object.constants.ObjectPortletKeys;
@@ -35,17 +38,34 @@ import com.liferay.petra.io.unsync.UnsyncByteArrayOutputStream;
 import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.json.JSONArray;
+import com.liferay.portal.kernel.json.JSONFactoryUtil;
+import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.BaseModel;
+import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.model.SystemEvent;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
+import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.LayoutLocalService;
+import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
+import com.liferay.portal.kernel.systemevent.SystemEventExtraDataContributor;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.TransactionConfig;
-import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.MapUtil;
+import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.staging.StagingGroupHelper;
 
 import jakarta.portlet.PortletPreferences;
@@ -53,24 +73,29 @@ import jakarta.portlet.PortletPreferences;
 import java.io.InputStream;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 
 /**
  * @author Vendel Toreki
  * @author Alejandro Tardín
  */
 public class BatchEnginePortletDataHandler extends BasePortletDataHandler {
-
-	public static final String BATCH_DELETE_CLASS_NAME_POSTFIX =
-		"_batchDeleteExternalReferenceCodes";
 
 	public static final String SCHEMA_VERSION = "4.0.0";
 
@@ -79,56 +104,119 @@ public class BatchEnginePortletDataHandler extends BasePortletDataHandler {
 		BatchEngineExportTaskLocalService batchEngineExportTaskLocalService,
 		BatchEngineImportTaskExecutor batchEngineImportTaskExecutor,
 		BatchEngineImportTaskService batchEngineImportTaskService,
+		ChangesetEntryLocalService changesetEntryLocalService,
+		ClassNameLocalService classNameLocalService,
+		ExportImportHelper exportImportHelper,
 		GroupLocalService groupLocalService,
+		LayoutLocalService layoutLocalService,
 		StagingGroupHelper stagingGroupHelper) {
 
 		_batchEngineExportTaskExecutor = batchEngineExportTaskExecutor;
 		_batchEngineExportTaskLocalService = batchEngineExportTaskLocalService;
 		_batchEngineImportTaskExecutor = batchEngineImportTaskExecutor;
 		_batchEngineImportTaskService = batchEngineImportTaskService;
+		_changesetEntryLocalService = changesetEntryLocalService;
+		_classNameLocalService = classNameLocalService;
+		_exportImportHelper = exportImportHelper;
 		_groupLocalService = groupLocalService;
+		_layoutLocalService = layoutLocalService;
 		_stagingGroupHelper = stagingGroupHelper;
 	}
 
 	public void exportDeletionSystemEvents(
-			PortletDataContext portletDataContext)
+			String className, PortletDataContext portletDataContext,
+			List<SystemEvent> systemEvents)
 		throws Exception {
 
-		for (Registration registration :
-				_getActiveRegistrations(portletDataContext)) {
+		List<Registration> activeRegistrations = _getActiveRegistrations(
+			portletDataContext);
 
+		Map<String, List<String>> typedExternalReferenceCodesMap =
+			new HashMap<>();
+		List<String> untypedExternalReferenceCodes = new ArrayList<>();
+
+		for (SystemEvent systemEvent : systemEvents) {
+			String externalReferenceCode =
+				systemEvent.getClassExternalReferenceCode();
+
+			if (externalReferenceCode == null) {
+				continue;
+			}
+
+			JSONObject jsonObject = JSONFactoryUtil.createJSONObject(
+				systemEvent.getExtraData());
+
+			String type = jsonObject.getString("type");
+
+			if (Validator.isNull(type)) {
+				untypedExternalReferenceCodes.add(externalReferenceCode);
+			}
+			else {
+				typedExternalReferenceCodesMap.computeIfAbsent(
+					type, __ -> new ArrayList<>()
+				).add(
+					externalReferenceCode
+				);
+			}
+		}
+
+		ManifestSummary manifestSummary =
+			portletDataContext.getManifestSummary();
+
+		for (Registration registration : activeRegistrations) {
 			ExportImportVulcanBatchEngineTaskItemDelegate.ExportImportDescriptor
 				exportImportDescriptor =
 					registration.getExportImportDescriptor();
 
-			Map<String, String> newPrimaryKeysMap =
-				(Map<String, String>)portletDataContext.getNewPrimaryKeysMap(
-					exportImportDescriptor.getModelClassName() +
-						BATCH_DELETE_CLASS_NAME_POSTFIX);
+			if (!StringUtil.equals(
+					className, exportImportDescriptor.getModelClassName()) ||
+				((activeRegistrations.size() > 1) &&
+				 !portletDataContext.getBooleanParameter(
+					 getPortletId(), exportImportDescriptor.getKey()))) {
+
+				continue;
+			}
+
+			List<String> externalReferenceCodes = new ArrayList<>(
+				typedExternalReferenceCodesMap.getOrDefault(
+					exportImportDescriptor.getKey(), Collections.emptyList()));
+
+			externalReferenceCodes.addAll(untypedExternalReferenceCodes);
+
+			if (externalReferenceCodes.isEmpty()) {
+				continue;
+			}
 
 			portletDataContext.addZipEntry(
 				_normalize(
 					registration.getDeletionsFileName(),
 					portletDataContext.getScopeGroupId()),
 				JSONUtil.toJSONArray(
-					ListUtil.filter(
-						ListUtil.fromCollection(newPrimaryKeysMap.keySet()),
-						exportImportDescriptor::
-							isApplicableExternalReferenceCode),
+					externalReferenceCodes,
 					externalReferenceCode -> JSONUtil.put(
 						"externalReferenceCode", externalReferenceCode)
 				).toString());
+
+			manifestSummary.addModelDeletionCount(
+				exportImportDescriptor.getKey(), externalReferenceCodes.size());
 		}
+
+		manifestSummary.addModelDeletionCount(className, systemEvents.size());
 	}
 
 	@Override
 	public String[] getClassNames() {
-		return TransformUtil.transformToArray(
-			TransformUtil.transform(
-				_registrations, Registration::getExportImportDescriptor),
-			ExportImportVulcanBatchEngineTaskItemDelegate.
-				ExportImportDescriptor::getModelClassName,
-			String.class);
+		Set<String> classNames = new LinkedHashSet<>();
+
+		for (Registration registration : _registrations) {
+			ExportImportVulcanBatchEngineTaskItemDelegate.ExportImportDescriptor
+				exportImportDescriptor =
+					registration.getExportImportDescriptor();
+
+			classNames.add(exportImportDescriptor.getModelClassName());
+		}
+
+		return classNames.toArray(new String[0]);
 	}
 
 	@Override
@@ -138,9 +226,10 @@ public class BatchEnginePortletDataHandler extends BasePortletDataHandler {
 				locale));
 	}
 
-	@Override
-	public String getName() {
-		return getPortletId();
+	public String getKey() {
+		return _getSoleProperty(
+			ExportImportVulcanBatchEngineTaskItemDelegate.
+				ExportImportDescriptor::getKey);
 	}
 
 	@Override
@@ -170,9 +259,44 @@ public class BatchEnginePortletDataHandler extends BasePortletDataHandler {
 	}
 
 	@Override
+	public String getSectionKey() {
+		Set<String> sectionKeys = SetUtil.fromList(
+			TransformUtil.transform(
+				_registrations,
+				registration -> {
+					ExportImportVulcanBatchEngineTaskItemDelegate.
+						ExportImportDescriptor exportImportDescriptor =
+							registration.getExportImportDescriptor();
+
+					return exportImportDescriptor.getSectionKey();
+				}));
+
+		if (sectionKeys.isEmpty()) {
+			return super.getSectionKey();
+		}
+
+		Iterator<String> iterator = sectionKeys.iterator();
+
+		return iterator.next();
+	}
+
+	@Override
 	public String getTag(Locale locale) {
 		return _getSoleProperty(
 			exportImportDescriptor -> exportImportDescriptor.getTag(locale));
+	}
+
+	@Override
+	public String getTitle(Locale locale) {
+		String labelLanguageKey = _getSoleProperty(
+			ExportImportVulcanBatchEngineTaskItemDelegate.
+				ExportImportDescriptor::getLabelLanguageKey);
+
+		if (labelLanguageKey == null) {
+			return super.getTitle(locale);
+		}
+
+		return LanguageUtil.get(locale, labelLanguageKey);
 	}
 
 	@Override
@@ -183,10 +307,6 @@ public class BatchEnginePortletDataHandler extends BasePortletDataHandler {
 	@Override
 	public boolean isConfigurationEnabled() {
 		long companyId = CompanyThreadLocal.getCompanyId();
-
-		if (!FeatureFlagManagerUtil.isEnabled(companyId, "LPD-41367")) {
-			return false;
-		}
 
 		PortletDataContext portletDataContext = new PortletDataContextImpl(
 			null, false);
@@ -207,6 +327,13 @@ public class BatchEnginePortletDataHandler extends BasePortletDataHandler {
 					ExportImportDescriptor::isHidden));
 	}
 
+	public boolean isMissingPortletSupported() {
+		return Boolean.TRUE.equals(
+			_getSoleProperty(
+				ExportImportVulcanBatchEngineTaskItemDelegate.
+					ExportImportDescriptor::isMissingPortletSupported));
+	}
+
 	@Override
 	public boolean isStaged() {
 		return !StringUtil.startsWith(
@@ -214,13 +341,11 @@ public class BatchEnginePortletDataHandler extends BasePortletDataHandler {
 	}
 
 	public void registerExportImportVulcanBatchEngineTaskItemDelegate(
-		String batchEngineClassName,
+		String batchEngineClassName, BundleContext bundleContext,
+		long companyId,
 		ExportImportVulcanBatchEngineTaskItemDelegate.ExportImportDescriptor
 			exportImportDescriptor,
 		String taskItemDelegateName) {
-
-		String fileNamePrefix = GetterUtil.getString(
-			taskItemDelegateName, batchEngineClassName);
 
 		_registrations.add(
 			new Registration() {
@@ -232,7 +357,7 @@ public class BatchEnginePortletDataHandler extends BasePortletDataHandler {
 
 				@Override
 				public String getDeletionsFileName() {
-					return fileNamePrefix + "_deletions.json";
+					return exportImportDescriptor.getKey() + "_deletions.json";
 				}
 
 				@Override
@@ -244,7 +369,7 @@ public class BatchEnginePortletDataHandler extends BasePortletDataHandler {
 
 				@Override
 				public String getFileName() {
-					return fileNamePrefix + ".json";
+					return exportImportDescriptor.getKey() + ".json";
 				}
 
 				@Override
@@ -272,32 +397,38 @@ public class BatchEnginePortletDataHandler extends BasePortletDataHandler {
 
 		setPublishToLiveByDefault(true);
 		_updateDeletionSystemEventStagedModelTypes();
-		_updateExportPortletDataHandlerControls();
+		_updatePortletDataHandlerControls();
+
+		_updateSystemEventExtraDataContributor(bundleContext, companyId);
 	}
 
-	public void unregisterExportImportVulcanBatchEngineTaskItemDelegate(
-		String batchEngineClassName, String taskItemDelegateName) {
+	public ExportImportVulcanBatchEngineTaskItemDelegate.ExportImportDescriptor
+		unregisterExportImportVulcanBatchEngineTaskItemDelegate(
+			BundleContext bundleContext, long companyId, String key) {
 
 		Iterator<Registration> iterator = _registrations.iterator();
 
 		while (iterator.hasNext()) {
 			Registration registration = iterator.next();
 
-			if (Objects.equals(
-					registration.getBatchEngineClassName(),
-					batchEngineClassName) &&
-				Objects.equals(
-					registration.getTaskItemDelegateName(),
-					taskItemDelegateName)) {
+			ExportImportVulcanBatchEngineTaskItemDelegate.ExportImportDescriptor
+				exportImportDescriptor =
+					registration.getExportImportDescriptor();
 
+			if (StringUtil.equals(key, exportImportDescriptor.getKey())) {
 				iterator.remove();
 
 				_updateDeletionSystemEventStagedModelTypes();
-				_updateExportPortletDataHandlerControls();
+				_updatePortletDataHandlerControls();
 
-				return;
+				_updateSystemEventExtraDataContributor(
+					bundleContext, companyId);
+
+				return exportImportDescriptor;
 			}
 		}
+
+		return null;
 	}
 
 	@Override
@@ -320,7 +451,7 @@ public class BatchEnginePortletDataHandler extends BasePortletDataHandler {
 						portletDataContext.getSourceGroupId()));
 
 			if (inputStream == null) {
-				return portletPreferences;
+				continue;
 			}
 
 			BatchEngineImportTask batchEngineDeleteTask =
@@ -369,8 +500,7 @@ public class BatchEnginePortletDataHandler extends BasePortletDataHandler {
 
 				if ((activeRegistrations.size() > 1) &&
 					!portletDataContext.getBooleanParameter(
-						getPortletId(),
-						exportImportDescriptor.getResourceClassName())) {
+						getPortletId(), exportImportDescriptor.getKey())) {
 
 					continue;
 				}
@@ -406,8 +536,7 @@ public class BatchEnginePortletDataHandler extends BasePortletDataHandler {
 						portletDataContext.getManifestSummary();
 
 					manifestSummary.addModelAdditionCount(
-						new StagedModelType(
-							exportImportDescriptor.getResourceClassName()),
+						exportImportDescriptor.getKey(),
 						batchEngineExportTask.getProcessedItemsCount());
 				}
 			}
@@ -416,7 +545,8 @@ public class BatchEnginePortletDataHandler extends BasePortletDataHandler {
 					portletDataContext.getCompanyId(),
 					portletDataContext.getScopeGroupId())) {
 
-				portletDataContext.setValidateExistingDataHandler(false);
+				portletDataContext.setValidateExistingDataHandler(
+					!isMissingPortletSupported() || (getKey() == null));
 			}
 			else {
 				portletDataContext.setValidateExistingDataHandler(true);
@@ -443,8 +573,7 @@ public class BatchEnginePortletDataHandler extends BasePortletDataHandler {
 
 			if ((activeRegistrations.size() > 1) &&
 				!portletDataContext.getBooleanParameter(
-					getPortletId(),
-					exportImportDescriptor.getResourceClassName())) {
+					getPortletId(), exportImportDescriptor.getKey())) {
 
 				continue;
 			}
@@ -503,6 +632,27 @@ public class BatchEnginePortletDataHandler extends BasePortletDataHandler {
 					"Unable to import batch data: " +
 						batchEngineImportTask.getErrorMessage());
 			}
+
+			if (Objects.equals(
+					Layout.class.getName(),
+					exportImportDescriptor.getModelClassName()) &&
+				!portletDataContext.isPrivateLayout() &&
+				MapUtil.getBoolean(
+					portletDataContext.getParameterMap(),
+					PortletDataHandlerKeys.DELETE_MISSING_LAYOUTS, false)) {
+
+				try {
+					_deleteMissingLayouts(portletDataContext, registration);
+				}
+				catch (Exception exception) {
+					if (_log.isWarnEnabled()) {
+						_log.warn(
+							"Unable to delete missing layouts after batch " +
+								"import",
+							exception);
+					}
+				}
+			}
 		}
 
 		return portletPreferences;
@@ -510,16 +660,23 @@ public class BatchEnginePortletDataHandler extends BasePortletDataHandler {
 
 	@Override
 	protected void doPrepareManifestSummary(
-		PortletDataContext portletDataContext,
-		PortletPreferences portletPreferences) {
+			PortletDataContext portletDataContext,
+			PortletPreferences portletPreferences)
+		throws PortalException {
 
-		for (Registration registration :
-				_getActiveRegistrations(portletDataContext)) {
+		try (SafeCloseable safeCloseable =
+				PortletDataContextThreadLocal.
+					setPortletDataContextWithSafeCloseable(
+						portletDataContext)) {
 
-			try (SafeCloseable safeCloseable =
-					PortletDataContextThreadLocal.
-						setPortletDataContextWithSafeCloseable(
-							portletDataContext)) {
+			ExportImportThreadLocal.setPortletExportInProcess(true);
+
+			ManifestSummary manifestSummary =
+				portletDataContext.getManifestSummary();
+			Set<String> sharedClassNames = _getSharedClassNames();
+
+			for (Registration registration :
+					_getActiveRegistrations(portletDataContext)) {
 
 				BatchEngineExportTaskExecutor.Result result =
 					_executeExportTask(1, portletDataContext, registration);
@@ -528,9 +685,6 @@ public class BatchEnginePortletDataHandler extends BasePortletDataHandler {
 					continue;
 				}
 
-				ManifestSummary manifestSummary =
-					portletDataContext.getManifestSummary();
-
 				ExportImportVulcanBatchEngineTaskItemDelegate.
 					ExportImportDescriptor exportImportDescriptor =
 						registration.getExportImportDescriptor();
@@ -538,10 +692,39 @@ public class BatchEnginePortletDataHandler extends BasePortletDataHandler {
 					result.getBatchEngineExportTask();
 
 				manifestSummary.addModelAdditionCount(
-					new StagedModelType(
-						exportImportDescriptor.getResourceClassName()),
+					exportImportDescriptor.getKey(),
 					batchEngineExportTask.getTotalItemsCount());
+
+				String type = null;
+
+				if (sharedClassNames.contains(
+						exportImportDescriptor.getModelClassName())) {
+
+					type = exportImportDescriptor.getKey();
+				}
+
+				manifestSummary.addModelDeletionCount(
+					exportImportDescriptor.getKey(),
+					_exportImportHelper.getModelDeletionCount(
+						portletDataContext,
+						new StagedModelType(
+							exportImportDescriptor.getModelClassName(),
+							StagedModelType.REFERRER_CLASS_NAME_ALL),
+						type));
 			}
+
+			for (String modelClassName : getClassNames()) {
+				manifestSummary.addModelDeletionCount(
+					modelClassName,
+					_exportImportHelper.getModelDeletionCount(
+						portletDataContext,
+						new StagedModelType(
+							modelClassName,
+							StagedModelType.REFERRER_CLASS_NAME_ALL)));
+			}
+		}
+		finally {
+			ExportImportThreadLocal.setPortletExportInProcess(false);
 		}
 	}
 
@@ -566,6 +749,76 @@ public class BatchEnginePortletDataHandler extends BasePortletDataHandler {
 		TransactionConfig.Factory.create(
 			Propagation.REQUIRES_NEW, new Class<?>[] {Exception.class});
 
+	private void _deleteMissingLayouts(
+			PortletDataContext portletDataContext, Registration registration)
+		throws Exception {
+
+		Set<String> exportedLayoutERCs = _getExportedLayoutERCs(
+			portletDataContext, registration);
+
+		if (exportedLayoutERCs.isEmpty()) {
+			return;
+		}
+
+		Map<Long, Long> layoutPlids =
+			(Map<Long, Long>)portletDataContext.getNewPrimaryKeysMap(
+				Layout.class);
+
+		ServiceContext serviceContext =
+			ServiceContextThreadLocal.getServiceContext();
+
+		if (serviceContext == null) {
+			serviceContext = new ServiceContext();
+		}
+
+		for (Layout layout :
+				_layoutLocalService.getLayouts(
+					portletDataContext.getGroupId(),
+					portletDataContext.isPrivateLayout())) {
+
+			String layoutERC = layout.getExternalReferenceCode();
+
+			if ((layoutERC == null) || layoutERC.isEmpty() ||
+				exportedLayoutERCs.contains(layoutERC) ||
+				layoutPlids.containsValue(layout.getPlid())) {
+
+				continue;
+			}
+
+			layout = _layoutLocalService.fetchLayout(layout.getPlid());
+
+			if (layout == null) {
+				continue;
+			}
+
+			try {
+				long sourceGroupId = portletDataContext.getSourceGroupId();
+				long targetGroupId = portletDataContext.getGroupId();
+
+				if (sourceGroupId != targetGroupId) {
+					Layout stagedLayout =
+						_layoutLocalService.fetchLayoutByUuidAndGroupId(
+							layout.getUuid(), sourceGroupId,
+							!layout.isPublicLayout());
+
+					if (stagedLayout != null) {
+						continue;
+					}
+				}
+
+				_layoutLocalService.deleteLayout(layout, serviceContext);
+			}
+			catch (Exception exception) {
+				if (_log.isWarnEnabled()) {
+					_log.warn(
+						"Unable to delete layout with external reference " +
+							"code " + layoutERC,
+						exception);
+				}
+			}
+		}
+	}
+
 	private BatchEngineExportTaskExecutor.Result _executeExportTask(
 		int maxItems, PortletDataContext portletDataContext,
 		Registration registration) {
@@ -577,6 +830,7 @@ public class BatchEnginePortletDataHandler extends BasePortletDataHandler {
 				BatchEngineTaskExecuteStatus.INITIAL.name(),
 				Collections.emptyList(),
 				BatchEnginePortletDataHandlerUtil.buildExportParameters(
+					_changesetEntryLocalService, _classNameLocalService,
 					registration.getExportImportDescriptor(),
 					_groupLocalService, portletDataContext,
 					_stagingGroupHelper),
@@ -648,6 +902,55 @@ public class BatchEnginePortletDataHandler extends BasePortletDataHandler {
 		return unsyncByteArrayOutputStream.toByteArray();
 	}
 
+	private Set<String> _getExportedLayoutERCs(
+			PortletDataContext portletDataContext, Registration registration)
+		throws Exception {
+
+		Set<String> exportedLayoutERCs = new HashSet<>();
+
+		String normalizedFileName = _normalize(
+			registration.getFileName(), portletDataContext.getSourceGroupId());
+
+		InputStream inputStream = portletDataContext.getZipEntryAsInputStream(
+			normalizedFileName);
+
+		if (inputStream == null) {
+			return exportedLayoutERCs;
+		}
+
+		try {
+			String jsonContent = StreamUtil.toString(inputStream);
+
+			if ((jsonContent == null) || jsonContent.isEmpty()) {
+				return exportedLayoutERCs;
+			}
+
+			JSONArray jsonArray = JSONFactoryUtil.createJSONArray(jsonContent);
+
+			for (int i = 0; i < jsonArray.length(); i++) {
+				JSONObject jsonObject = jsonArray.getJSONObject(i);
+
+				if (jsonObject == null) {
+					continue;
+				}
+
+				String externalReferenceCode = jsonObject.getString(
+					"externalReferenceCode");
+
+				if ((externalReferenceCode != null) &&
+					!externalReferenceCode.isEmpty()) {
+
+					exportedLayoutERCs.add(externalReferenceCode);
+				}
+			}
+		}
+		finally {
+			StreamUtil.cleanUp(inputStream);
+		}
+
+		return exportedLayoutERCs;
+	}
+
 	private PortletDataHandlerControl _getPortletDataHandlerControl(
 		Registration registration) {
 
@@ -655,9 +958,28 @@ public class BatchEnginePortletDataHandler extends BasePortletDataHandler {
 			exportImportDescriptor = registration.getExportImportDescriptor();
 
 		return new PortletDataHandlerBoolean(
-			getPortletId(), exportImportDescriptor.getResourceClassName(),
+			getPortletId(), exportImportDescriptor.getKey(),
 			exportImportDescriptor.getLabelLanguageKey(), true, false, null,
-			exportImportDescriptor.getResourceClassName(), null);
+			exportImportDescriptor.getKey(), null);
+	}
+
+	private Set<String> _getSharedClassNames() {
+		Set<String> classNames = new LinkedHashSet<>();
+		Set<String> sharedClassNames = new HashSet<>();
+
+		for (Registration registration : _registrations) {
+			ExportImportVulcanBatchEngineTaskItemDelegate.ExportImportDescriptor
+				exportImportDescriptor =
+					registration.getExportImportDescriptor();
+
+			String modelClassName = exportImportDescriptor.getModelClassName();
+
+			if (!classNames.add(modelClassName)) {
+				sharedClassNames.add(modelClassName);
+			}
+		}
+
+		return sharedClassNames;
 	}
 
 	private <T> T _getSoleProperty(
@@ -673,6 +995,48 @@ public class BatchEnginePortletDataHandler extends BasePortletDataHandler {
 		Registration registration = _registrations.get(0);
 
 		return function.apply(registration.getExportImportDescriptor());
+	}
+
+	private String _getSystemEventType(
+		BaseModel<?> baseModel, Set<String> sharedClassNames) {
+
+		for (Registration registration : _registrations) {
+			ExportImportVulcanBatchEngineTaskItemDelegate.ExportImportDescriptor
+				exportImportDescriptor =
+					registration.getExportImportDescriptor();
+
+			String modelClassName = exportImportDescriptor.getModelClassName();
+
+			if (!StringUtil.equals(
+					baseModel.getModelClassName(), modelClassName) ||
+				!sharedClassNames.contains(modelClassName)) {
+
+				continue;
+			}
+
+			Function<BaseModel<?>, Boolean> applicableModelFunction =
+				exportImportDescriptor.getApplicableModelFunction();
+
+			if (applicableModelFunction == null) {
+				if (_log.isWarnEnabled()) {
+					_log.warn(
+						StringBundler.concat(
+							"ExportImportDescriptor with key ",
+							exportImportDescriptor.getKey(),
+							"  declares shared model class ", modelClassName,
+							" but does not implement ",
+							"getApplicableModelFunction"));
+				}
+
+				continue;
+			}
+
+			if (applicableModelFunction.apply(baseModel)) {
+				return exportImportDescriptor.getKey();
+			}
+		}
+
+		return null;
 	}
 
 	private long _getUserId() {
@@ -692,39 +1056,93 @@ public class BatchEnginePortletDataHandler extends BasePortletDataHandler {
 	private void _updateDeletionSystemEventStagedModelTypes() {
 		setDeletionSystemEventStagedModelTypes(
 			TransformUtil.transformToArray(
-				_registrations,
-				registration -> {
-					ExportImportVulcanBatchEngineTaskItemDelegate.
-						ExportImportDescriptor exportImportDescriptor =
-							registration.getExportImportDescriptor();
-
-					return new StagedModelType(
-						exportImportDescriptor.getModelClassName());
-				},
+				Arrays.asList(getClassNames()),
+				className -> new StagedModelType(
+					className, StagedModelType.REFERRER_CLASS_NAME_ALL),
 				StagedModelType.class));
 	}
 
-	private void _updateExportPortletDataHandlerControls() {
+	private void _updatePortletDataHandlerControls() {
 		if (_registrations.size() > 1) {
 			setEmptyControlsAllowed(false);
 			setExportPortletDataHandlerControls(
 				TransformUtil.transformToArray(
 					_registrations, this::_getPortletDataHandlerControl,
 					PortletDataHandlerControl.class));
+			setStagingPortletDataHandlerControls(
+				getExportPortletDataHandlerControls());
 		}
 		else {
 			setEmptyControlsAllowed(true);
 			setExportPortletDataHandlerControls();
+			setStagingPortletDataHandlerControls();
 		}
 	}
+
+	private void _updateSystemEventExtraDataContributor(
+		BundleContext bundleContext, long companyId) {
+
+		Set<String> sharedClassNames = _getSharedClassNames();
+
+		if (_serviceRegistration == null) {
+			if ((_registrations.size() > 1) && !sharedClassNames.isEmpty()) {
+				SystemEventExtraDataContributor
+					systemEventExtraDataContributor =
+						(baseModel, extraData) -> {
+							if (baseModel == null) {
+								return extraData;
+							}
+
+							String type = _getSystemEventType(
+								baseModel, _getSharedClassNames());
+
+							if (type != null) {
+								JSONObject jsonObject =
+									JSONFactoryUtil.createJSONObject(extraData);
+
+								jsonObject.put("type", type);
+
+								return jsonObject.toString();
+							}
+
+							return extraData;
+						};
+
+				_serviceRegistration = bundleContext.registerService(
+					SystemEventExtraDataContributor.class,
+					systemEventExtraDataContributor,
+					HashMapDictionaryBuilder.<String, Object>put(
+						"companyId", String.valueOf(companyId)
+					).put(
+						"jakarta.portlet.name", getPortletId()
+					).build());
+			}
+		}
+		else if ((_registrations.size() <= 1) || sharedClassNames.isEmpty()) {
+			try {
+				_serviceRegistration.unregister();
+			}
+			finally {
+				_serviceRegistration = null;
+			}
+		}
+	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		BatchEnginePortletDataHandler.class);
 
 	private final BatchEngineExportTaskExecutor _batchEngineExportTaskExecutor;
 	private final BatchEngineExportTaskLocalService
 		_batchEngineExportTaskLocalService;
 	private final BatchEngineImportTaskExecutor _batchEngineImportTaskExecutor;
 	private final BatchEngineImportTaskService _batchEngineImportTaskService;
+	private final ChangesetEntryLocalService _changesetEntryLocalService;
+	private final ClassNameLocalService _classNameLocalService;
+	private final ExportImportHelper _exportImportHelper;
 	private final GroupLocalService _groupLocalService;
+	private final LayoutLocalService _layoutLocalService;
 	private final List<Registration> _registrations = new ArrayList<>();
+	private ServiceRegistration<?> _serviceRegistration;
 	private final StagingGroupHelper _stagingGroupHelper;
 
 	private interface Registration {

@@ -247,11 +247,11 @@ public class CommerceSubscriptionEntryTest {
 			cpDefinition = _cpDefinitionLocalService.getCPDefinition(
 				cpDefinition.getCPDefinitionId());
 
+			cpDefinition.setMaxSubscriptionCycles(
+				cpDefinitionMaxSubscriptionCycles);
 			cpDefinition.setSubscriptionEnabled(true);
 			cpDefinition.setSubscriptionLength(cpDefinitionSubscriptionLength);
 			cpDefinition.setSubscriptionType(cpDefinitionSubscriptionType);
-			cpDefinition.setMaxSubscriptionCycles(
-				cpDefinitionMaxSubscriptionCycles);
 
 			cpDefinition = CPDefinitionLocalServiceUtil.updateCPDefinition(
 				cpDefinition);
@@ -393,8 +393,6 @@ public class CommerceSubscriptionEntryTest {
 		}
 	}
 
-	private static User _user;
-
 	@DeleteAfterTestRun
 	private CommerceChannel _commerceChannel;
 
@@ -428,5 +426,6 @@ public class CommerceSubscriptionEntryTest {
 	private CPOptionLocalService _cpOptionLocalService;
 
 	private Group _group;
+	private User _user;
 
 }

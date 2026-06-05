@@ -3,9 +3,10 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {IView} from '@liferay/frontend-data-set-web';
+import {IBulkActionItem, IView} from '@liferay/frontend-data-set-web';
 
 import {OBJECT_ENTRY_FOLDER_CLASS_NAME} from '../../common/utils/constants';
+import {allFDSAtom} from '../quick_filters/atoms';
 import AssetsFDSPropsTransformer, {
 	AdditionalProps,
 } from './AssetsFDSPropsTransformer';
@@ -33,17 +34,52 @@ export default function AssetsFilesDropFDSPropsTransformer({
 		views,
 	});
 
+	const isCreationMenuEmpty = !creationMenu?.primaryItems?.length;
+
 	return {
 		...assetsData,
+		atom: allFDSAtom,
+		bulkActions: (assetsData.bulkActions || []).map(
+			(action: IBulkActionItem) => {
+				if (action?.data?.id !== 'find-and-replace') {
+					return action;
+				}
+
+				return {
+					...action,
+					isVisible: ({
+						selectedItems,
+					}: {
+						selectedItems?: Array<any>;
+					} = {}): boolean => {
+						return (
+							selectedItems?.every(
+								(item: any) => item?.actions?.update
+							) ?? false
+						);
+					},
+				};
+			}
+		),
 		fileDropSettings: {
-			enabled: true,
+			enabled: !isCreationMenuEmpty,
 			isDropTarget: ({item}: {item: any}) => {
 				return item.entryClassName.includes(
 					OBJECT_ENTRY_FOLDER_CLASS_NAME
 				);
 			},
-			onFileDrop: (droppedFiles: any, dropTarget?: any) =>
-				fileDropAction(additionalProps, droppedFiles, dropTarget),
+			onFileDrop: (droppedFiles: any, dropTarget?: any) => {
+				if (isCreationMenuEmpty) {
+					return;
+				}
+
+				return fileDropAction(
+					additionalProps,
+					droppedFiles,
+					dropTarget
+				);
+			},
 		},
+		snapshotsEnabled: true,
 	};
 }

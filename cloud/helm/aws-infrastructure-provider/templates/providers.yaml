@@ -4,6 +4,32 @@ metadata:
     annotations:
         argocd.argoproj.io/sync-options: ServerSideApply=true
         argocd.argoproj.io/sync-wave: "-80"
+    name: provider-aws-backup
+spec:
+    package: xpkg.upbound.io/upbound/provider-aws-backup:v2.3.0
+    runtimeConfigRef:
+        name: aws-backup-config
+    skipDependencyResolution: true
+---
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+    annotations:
+        argocd.argoproj.io/sync-options: ServerSideApply=true
+        argocd.argoproj.io/sync-wave: "-80"
+    name: provider-aws-cloudwatchlogs
+spec:
+    package: xpkg.upbound.io/upbound/provider-aws-cloudwatchlogs:v2.3.0
+    runtimeConfigRef:
+        name: aws-cloudwatchlogs-config
+    skipDependencyResolution: true
+---
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+    annotations:
+        argocd.argoproj.io/sync-options: ServerSideApply=true
+        argocd.argoproj.io/sync-wave: "-80"
     name: provider-aws-ec2
 spec:
     package: xpkg.upbound.io/upbound/provider-aws-ec2:v2.3.0
@@ -22,6 +48,19 @@ spec:
     package: xpkg.upbound.io/upbound/provider-aws-iam:v2.3.0
     runtimeConfigRef:
         name: aws-iam-config
+    skipDependencyResolution: true
+---
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+    annotations:
+        argocd.argoproj.io/sync-options: ServerSideApply=true
+        argocd.argoproj.io/sync-wave: "-80"
+    name: provider-aws-kms
+spec:
+    package: xpkg.upbound.io/upbound/provider-aws-kms:v2.3.0
+    runtimeConfigRef:
+        name: aws-kms-config
     skipDependencyResolution: true
 ---
 apiVersion: pkg.crossplane.io/v1
@@ -72,6 +111,8 @@ metadata:
     name: provider-family-aws
 spec:
     package: xpkg.upbound.io/upbound/provider-family-aws:v2.3.0
+    runtimeConfigRef:
+        name: aws-family-config
     skipDependencyResolution: true
 ---
 apiVersion: pkg.crossplane.io/v1

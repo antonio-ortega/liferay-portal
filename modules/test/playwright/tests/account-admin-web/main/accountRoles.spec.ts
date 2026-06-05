@@ -14,11 +14,7 @@ import {usersAndOrganizationsPagesTest} from '../../../fixtures/usersAndOrganiza
 import {DataApiHelpers} from '../../../helpers/ApiHelpers';
 import {TRole} from '../../../helpers/HeadlessAdminUserApiHelper';
 import getRandomString from '../../../utils/getRandomString';
-import {
-	performLoginViaApi,
-	performLogout,
-	userData,
-} from '../../../utils/performLogin';
+import {performUserSwitch, userData} from '../../../utils/performLogin';
 import {waitForAlert} from '../../../utils/waitForAlert';
 import {addAccountRole, initAccountManager} from './utils/roles';
 
@@ -27,7 +23,6 @@ export const test = mergeTests(
 	dataApiHelpersTest,
 	featureFlagsTest({
 		'LPD-35443': {enabled: true},
-		'LPD-35914': {enabled: true},
 	}),
 	loginTest(),
 	rolesPagesTest,
@@ -357,8 +352,6 @@ test(
 			).check();
 
 			await accountUserSelectorPage.assignButton.click();
-
-			await waitForAlert(page);
 
 			await expect(
 				accountRolesPage.assignUsersTable.cell(user.name)
@@ -990,11 +983,7 @@ test(
 			userAccountManager.emailAddress
 		);
 
-		await performLogout(page);
-		await performLoginViaApi({
-			page,
-			screenName: userAccountManager.alternateName,
-		});
+		await performUserSwitch(page, userAccountManager.alternateName);
 
 		await accountsPage.gotoAccountAdmin();
 
@@ -1064,11 +1053,7 @@ test(
 		const userAccount2 =
 			await apiHelpers.headlessAdminUser.postUserAccount();
 
-		await performLogout(page);
-		await performLoginViaApi({
-			page,
-			screenName: userAccountManager.alternateName,
-		});
+		await performUserSwitch(page, userAccountManager.alternateName);
 
 		await accountsPage.gotoAccountAdmin();
 
@@ -1166,11 +1151,7 @@ test(
 				'3'
 			);
 
-			await performLogout(page);
-			await performLoginViaApi({
-				page,
-				screenName: userAccountManager1.alternateName,
-			});
+			await performUserSwitch(page, userAccountManager1.alternateName);
 
 			await accountsPage.gotoAccountAdmin();
 
@@ -1196,11 +1177,7 @@ test(
 				)
 			).toBeVisible();
 
-			await performLogout(page);
-			await performLoginViaApi({
-				page,
-				screenName: userAccountManager2.alternateName,
-			});
+			await performUserSwitch(page, userAccountManager2.alternateName);
 
 			await accountsPage.gotoAccountAdmin();
 
@@ -1222,8 +1199,7 @@ test(
 			).toHaveCount(0);
 		}
 		finally {
-			await performLogout(page);
-			await performLoginViaApi({page, screenName: 'test'});
+			await performUserSwitch(page, 'test');
 
 			await apiHelpers.jsonWebServicesResourcePermissionApiHelper.addResourcePermission(
 				'VIEW',
@@ -1254,8 +1230,7 @@ test(
 			userAccount,
 		} = await setupPermissionsTest(apiHelpers, page);
 
-		await performLogout(page);
-		await performLoginViaApi({page, screenName: userAccount.alternateName});
+		await performUserSwitch(page, userAccount.alternateName);
 
 		await accountsPage.gotoAccountAdmin();
 		await accountsPage.accountNameLink(account.name).click();
@@ -1266,8 +1241,7 @@ test(
 		).toBeVisible();
 		await expect(accountRolesPage.rolesTable.newButton).toHaveCount(0);
 
-		await performLogout(page);
-		await performLoginViaApi({page, screenName: 'test'});
+		await performUserSwitch(page, 'test');
 
 		const {accountRole: accountRole2, role: role2} = await addAccountRole(
 			apiHelpers,
@@ -1288,8 +1262,7 @@ test(
 			userAccount.id
 		);
 
-		await performLogout(page);
-		await performLoginViaApi({page, screenName: userAccount.alternateName});
+		await performUserSwitch(page, userAccount.alternateName);
 
 		await accountsPage.gotoAccountAdmin();
 		await accountsPage.accountNameLink(account.name).click();
@@ -1351,11 +1324,7 @@ test(
 			[userAccount2.emailAddress]
 		);
 
-		await performLogout(page);
-		await performLoginViaApi({
-			page,
-			screenName: userAccount1.alternateName,
-		});
+		await performUserSwitch(page, userAccount1.alternateName);
 
 		await accountsPage.gotoAccountAdmin();
 		await accountsPage.accountNameLink(account.name).click();
@@ -1368,8 +1337,7 @@ test(
 			await accountRolesPage.rolesTable.rowActions(ownedAccountRole.name)
 		).toHaveCount(0);
 
-		await performLogout(page);
-		await performLoginViaApi({page, screenName: 'test'});
+		await performUserSwitch(page, 'test');
 
 		const {accountRole: accountRole2} = await addAccountRole(
 			apiHelpers,
@@ -1390,11 +1358,7 @@ test(
 			userAccount1.id
 		);
 
-		await performLogout(page);
-		await performLoginViaApi({
-			page,
-			screenName: userAccount1.alternateName,
-		});
+		await performUserSwitch(page, userAccount1.alternateName);
 
 		await accountsPage.gotoAccountAdmin();
 		await accountsPage.accountNameLink(account.name).click();
@@ -1437,11 +1401,7 @@ test(
 			userAccount: userAccount1,
 		} = await setupPermissionsTest(apiHelpers, page);
 
-		await performLogout(page);
-		await performLoginViaApi({
-			page,
-			screenName: userAccount1.alternateName,
-		});
+		await performUserSwitch(page, userAccount1.alternateName);
 
 		await accountsPage.gotoAccountAdmin();
 		await accountsPage.accountNameLink(account.name).click();
@@ -1454,8 +1414,7 @@ test(
 			await accountRolesPage.rolesTable.rowActions(ownedAccountRole.name)
 		).toHaveCount(0);
 
-		await performLogout(page);
-		await performLoginViaApi({page, screenName: 'test'});
+		await performUserSwitch(page, 'test');
 
 		const {accountRole: accountRole2} = await addAccountRole(
 			apiHelpers,
@@ -1476,11 +1435,7 @@ test(
 			userAccount1.id
 		);
 
-		await performLogout(page);
-		await performLoginViaApi({
-			page,
-			screenName: userAccount1.alternateName,
-		});
+		await performUserSwitch(page, userAccount1.alternateName);
 
 		await accountsPage.gotoAccountAdmin();
 		await accountsPage.accountNameLink(account.name).click();
@@ -1526,11 +1481,7 @@ test(
 			userAccount: userAccount1,
 		} = await setupPermissionsTest(apiHelpers, page);
 
-		await performLogout(page);
-		await performLoginViaApi({
-			page,
-			screenName: userAccount1.alternateName,
-		});
+		await performUserSwitch(page, userAccount1.alternateName);
 
 		await accountsPage.gotoAccountAdmin();
 		await accountsPage.accountNameLink(account.name).click();
@@ -1543,8 +1494,7 @@ test(
 			await accountRolesPage.rolesTable.rowActions(ownedAccountRole.name)
 		).toHaveCount(0);
 
-		await performLogout(page);
-		await performLoginViaApi({page, screenName: 'test'});
+		await performUserSwitch(page, 'test');
 
 		const {accountRole: accountRole2} = await addAccountRole(
 			apiHelpers,
@@ -1565,11 +1515,7 @@ test(
 			userAccount1.id
 		);
 
-		await performLogout(page);
-		await performLoginViaApi({
-			page,
-			screenName: userAccount1.alternateName,
-		});
+		await performUserSwitch(page, userAccount1.alternateName);
 
 		await accountsPage.gotoAccountAdmin();
 		await accountsPage.accountNameLink(account.name).click();
@@ -1623,11 +1569,7 @@ test(
 			userAccount: userAccount1,
 		} = await setupPermissionsTest(apiHelpers, page);
 
-		await performLogout(page);
-		await performLoginViaApi({
-			page,
-			screenName: userAccount1.alternateName,
-		});
+		await performUserSwitch(page, userAccount1.alternateName);
 
 		await accountsPage.gotoAccountAdmin();
 		await accountsPage.accountNameLink(account.name).click();
@@ -1640,8 +1582,7 @@ test(
 			await accountRolesPage.rolesTable.rowActions(ownedAccountRole.name)
 		).toHaveCount(0);
 
-		await performLogout(page);
-		await performLoginViaApi({page, screenName: 'test'});
+		await performUserSwitch(page, 'test');
 
 		const {accountRole: accountRole2} = await addAccountRole(
 			apiHelpers,
@@ -1662,11 +1603,7 @@ test(
 			userAccount1.id
 		);
 
-		await performLogout(page);
-		await performLoginViaApi({
-			page,
-			screenName: userAccount1.alternateName,
-		});
+		await performUserSwitch(page, userAccount1.alternateName);
 
 		await accountsPage.gotoAccountAdmin();
 		await accountsPage.accountNameLink(account.name).click();
@@ -1846,11 +1783,7 @@ test(
 			userAccountManager.id
 		);
 
-		await performLogout(page);
-		await performLoginViaApi({
-			page,
-			screenName: userAccountManager.alternateName,
-		});
+		await performUserSwitch(page, userAccountManager.alternateName);
 
 		await accountsPage.gotoAccountAdmin();
 
@@ -1867,8 +1800,7 @@ test(
 			accountsPage.accountsTable.cell(account2.name)
 		).toHaveCount(0);
 
-		await performLogout(page);
-		await performLoginViaApi({page, screenName: 'test'});
+		await performUserSwitch(page, 'test');
 
 		const role = await (
 			await apiHelpers.headlessAdminUser.getAccountRoles(account1.id)
@@ -1880,11 +1812,7 @@ test(
 			userAccountManager.id
 		);
 
-		await performLogout(page);
-		await performLoginViaApi({
-			page,
-			screenName: userAccountManager.alternateName,
-		});
+		await performUserSwitch(page, userAccountManager.alternateName);
 
 		await accountsPage.gotoAccountAdmin();
 

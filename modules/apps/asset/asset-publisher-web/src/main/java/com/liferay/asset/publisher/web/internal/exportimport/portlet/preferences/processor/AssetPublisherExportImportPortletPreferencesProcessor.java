@@ -23,7 +23,6 @@ import com.liferay.asset.publisher.web.internal.constants.AssetPublisherSelectio
 import com.liferay.asset.publisher.web.internal.display.context.AssetPublisherDisplayContext;
 import com.liferay.asset.publisher.web.internal.helper.AssetPublisherWebHelper;
 import com.liferay.asset.publisher.web.internal.util.AssetPublisherUtil;
-import com.liferay.asset.publisher.web.internal.util.FF_LPD_39304_CompanyTemporarySwapper;
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.model.DLFileEntryType;
 import com.liferay.document.library.kernel.service.DLFileEntryTypeLocalService;
@@ -43,7 +42,6 @@ import com.liferay.exportimport.portlet.preferences.processor.ExportImportPortle
 import com.liferay.exportimport.portlet.preferences.processor.base.BaseExportImportPortletPreferencesProcessor;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.petra.function.transform.TransformUtil;
-import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
@@ -475,22 +473,20 @@ public class AssetPublisherExportImportPortletPreferencesProcessor
 			PortletPreferences portletPreferences)
 		throws Exception {
 
+		long plid = portletDataContext.getPlid();
+
+		if (plid <= 0) {
+			return;
+		}
+
 		List<AssetEntry> assetEntries = null;
 
-		Layout layout = layoutLocalService.getLayout(
-			portletDataContext.getPlid());
+		Layout layout = layoutLocalService.getLayout(plid);
 
-		String selectionStyle = StringPool.BLANK;
-
-		try (SafeCloseable safeCloseable =
-				FF_LPD_39304_CompanyTemporarySwapper.
-					setCompanyIdWithSafeCloseable(layout.getCompanyId())) {
-
-			selectionStyle = portletPreferences.getValue(
-				"selectionStyle",
-				AssetPublisherSelectionStyleConfigurationUtil.
-					defaultSelectionStyle());
-		}
+		String selectionStyle = portletPreferences.getValue(
+			"selectionStyle",
+			AssetPublisherSelectionStyleConfigurationUtil.
+				defaultSelectionStyle());
 
 		if (selectionStyle.equals(
 				AssetPublisherSelectionStyleConstants.TYPE_DYNAMIC)) {
@@ -584,17 +580,12 @@ public class AssetPublisherExportImportPortletPreferencesProcessor
 			assetPublisherHelper.getAssetEntryQuery(
 				portletPreferences, groupId, layout, null, null);
 
-		try (SafeCloseable safeCloseable =
-				FF_LPD_39304_CompanyTemporarySwapper.
-					setCompanyIdWithSafeCloseable(companyId)) {
-
-			assetEntryQuery.setClassNameIds(
-				assetPublisherHelper.getClassNameIds(
-					portletPreferences,
-					AssetRendererFactoryRegistryUtil.getClassNameIds(
-						companyId, true)));
-			assetEntryQuery.setEnablePermissions(false);
-		}
+		assetEntryQuery.setClassNameIds(
+			assetPublisherHelper.getClassNameIds(
+				portletPreferences,
+				AssetRendererFactoryRegistryUtil.getClassNameIds(
+					companyId, true)));
+		assetEntryQuery.setEnablePermissions(false);
 
 		int end = _assetPublisherWebConfiguration.dynamicExportLimit();
 
@@ -843,9 +834,15 @@ public class AssetPublisherExportImportPortletPreferencesProcessor
 			PortletPreferences portletPreferences)
 		throws Exception {
 
+		long plid = portletDataContext.getPlid();
+
+		if (plid <= 0) {
+			return;
+		}
+
 		PortletPreferences originalPortletPreferences =
 			PortletPreferencesFactoryUtil.getLayoutPortletSetup(
-				layoutLocalService.getLayout(portletDataContext.getPlid()),
+				layoutLocalService.getLayout(plid),
 				portletDataContext.getPortletId());
 
 		String[] values = originalPortletPreferences.getValues(
@@ -1194,7 +1191,7 @@ public class AssetPublisherExportImportPortletPreferencesProcessor
 
 		String[] oldValues = portletPreferences.getValues(key, null);
 
-		if (oldValues == null) {
+		if ((oldValues == null) || (plid <= 0)) {
 			return;
 		}
 
@@ -1394,15 +1391,19 @@ public class AssetPublisherExportImportPortletPreferencesProcessor
 			return;
 		}
 
-		StagedModelDataHandler<StagedGroup> stagedModelDataHandler =
-			(StagedModelDataHandler<StagedGroup>)
-				StagedModelDataHandlerRegistryUtil.getStagedModelDataHandler(
-					StagedGroup.class.getName());
-
 		Element rootElement = portletDataContext.getImportDataRootElement();
 
 		Element groupIdMappingsElement = rootElement.element(
 			"group-id-mappings");
+
+		if (groupIdMappingsElement == null) {
+			return;
+		}
+
+		StagedModelDataHandler<StagedGroup> stagedModelDataHandler =
+			(StagedModelDataHandler<StagedGroup>)
+				StagedModelDataHandlerRegistryUtil.getStagedModelDataHandler(
+					StagedGroup.class.getName());
 
 		for (Element groupIdMappingElement :
 				groupIdMappingsElement.elements("group-id-mapping")) {
@@ -1411,11 +1412,15 @@ public class AssetPublisherExportImportPortletPreferencesProcessor
 				portletDataContext, groupIdMappingElement);
 		}
 
+		Layout layout = layoutLocalService.fetchLayout(plid);
+
+		if (layout == null) {
+			return;
+		}
+
 		Map<Long, Long> groupIds =
 			(Map<Long, Long>)portletDataContext.getNewPrimaryKeysMap(
 				Group.class);
-
-		Layout layout = layoutLocalService.getLayout(plid);
 
 		List<String> newValues = TransformUtil.transformToList(
 			oldValues,

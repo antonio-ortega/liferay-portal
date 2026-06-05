@@ -6,12 +6,10 @@
 package com.liferay.portal.search.elasticsearch8.internal.sort;
 
 import com.liferay.portal.kernel.search.Field;
+import com.liferay.portal.kernel.search.MatchQuery;
 import com.liferay.portal.kernel.search.Query;
-import com.liferay.portal.kernel.search.generic.MatchQuery;
 import com.liferay.portal.search.elasticsearch8.internal.indexing.LiferayElasticsearchIndexingFixtureFactory;
 import com.liferay.portal.search.geolocation.GeoLocationPoint;
-import com.liferay.portal.search.internal.geolocation.GeoLocationPointImpl;
-import com.liferay.portal.search.internal.script.ScriptsImpl;
 import com.liferay.portal.search.internal.sort.SortsImpl;
 import com.liferay.portal.search.script.Script;
 import com.liferay.portal.search.script.ScriptBuilder;
@@ -130,7 +128,7 @@ public class ElasticsearchSortFieldTranslatorTest
 			DocumentCreationHelpers.singleGeoLocation(fieldName, 90.0, 98.0));
 
 		GeoLocationPoint geoLocationPoint =
-			GeoLocationPointImpl.fromLatitudeLongitude(1.0, 2.0);
+			GeoLocationPoint.fromLatitudeLongitude(1.0, 2.0);
 
 		GeoDistanceSort geoDistanceSort = _sorts.geoDistance(fieldName);
 
@@ -175,7 +173,7 @@ public class ElasticsearchSortFieldTranslatorTest
 			},
 			new double[] {1, 2, 3});
 
-		ScriptBuilder scriptBuilder = _scripts.builder();
+		ScriptBuilder scriptBuilder = Scripts.INSTANCE.builder();
 
 		Script script = scriptBuilder.idOrCode(
 			"doc['priority'].value * 1.1"
@@ -242,7 +240,6 @@ public class ElasticsearchSortFieldTranslatorTest
 			});
 	}
 
-	private static final Scripts _scripts = new ScriptsImpl();
 	private static final Sorts _sorts = new SortsImpl();
 
 }

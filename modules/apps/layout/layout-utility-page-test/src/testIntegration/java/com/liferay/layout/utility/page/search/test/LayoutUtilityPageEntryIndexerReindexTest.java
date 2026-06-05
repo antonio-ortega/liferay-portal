@@ -71,7 +71,7 @@ public class LayoutUtilityPageEntryIndexerReindexTest {
 		layoutUtilityPageEntry =
 			_layoutUtilityPageEntryLocalService.updateLayoutUtilityPageEntry(
 				layoutUtilityPageEntry.getLayoutUtilityPageEntryId(),
-				layoutUtilityPageEntry.getName());
+				layoutUtilityPageEntry.getName(), serviceContext);
 
 		name = layoutUtilityPageEntry.getName();
 
@@ -129,8 +129,7 @@ public class LayoutUtilityPageEntryIndexerReindexTest {
 	}
 
 	private void _reindex() throws Exception {
-		indexer.reindex(
-			new String[] {String.valueOf(TestPropsValues.getCompanyId())});
+		indexer.reindexCompany(TestPropsValues.getCompanyId());
 	}
 
 	private void _reindex(LayoutUtilityPageEntry layoutUtilityPageEntry)

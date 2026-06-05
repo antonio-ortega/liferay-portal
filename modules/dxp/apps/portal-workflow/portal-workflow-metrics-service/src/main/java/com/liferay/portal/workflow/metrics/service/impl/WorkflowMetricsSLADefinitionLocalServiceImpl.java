@@ -27,14 +27,14 @@ import com.liferay.portal.search.aggregation.bucket.FilterAggregation;
 import com.liferay.portal.search.aggregation.bucket.FilterAggregationResult;
 import com.liferay.portal.search.aggregation.bucket.TermsAggregationResult;
 import com.liferay.portal.search.document.Document;
-import com.liferay.portal.search.engine.adapter.search.SearchRequestExecutor;
+import com.liferay.portal.search.engine.adapter.SearchEngineAdapter;
 import com.liferay.portal.search.engine.adapter.search.SearchSearchRequest;
 import com.liferay.portal.search.engine.adapter.search.SearchSearchResponse;
 import com.liferay.portal.search.hits.SearchHit;
 import com.liferay.portal.search.hits.SearchHits;
 import com.liferay.portal.search.index.IndexNameBuilder;
 import com.liferay.portal.search.query.BooleanQuery;
-import com.liferay.portal.search.query.Queries;
+import com.liferay.portal.search.query.QueriesUtil;
 import com.liferay.portal.search.query.TermsQuery;
 import com.liferay.portal.workflow.metrics.exception.WorkflowMetricsSLADefinitionDuplicateNameException;
 import com.liferay.portal.workflow.metrics.exception.WorkflowMetricsSLADefinitionDurationException;
@@ -375,7 +375,7 @@ public class WorkflowMetricsSLADefinitionLocalServiceImpl
 	private FilterAggregation _createNodeIdAggregation(
 		String aggregationName, Set<String> nodeIds) {
 
-		TermsQuery termsQuery = _queries.terms("nodeId");
+		TermsQuery termsQuery = QueriesUtil.terms("nodeId");
 
 		termsQuery.addValues(nodeIds.toArray());
 
@@ -395,18 +395,18 @@ public class WorkflowMetricsSLADefinitionLocalServiceImpl
 			_indexNameBuilder.getIndexName(companyId) +
 				WorkflowMetricsIndexNameConstants.SUFFIX_PROCESS);
 
-		BooleanQuery booleanQuery = _queries.booleanQuery();
+		BooleanQuery booleanQuery = QueriesUtil.booleanQuery();
 
 		booleanQuery.addMustQueryClauses(
-			_queries.term("companyId", companyId),
-			_queries.term("processId", processId));
+			QueriesUtil.term("companyId", companyId),
+			QueriesUtil.term("processId", processId));
 
 		searchSearchRequest.setQuery(booleanQuery);
 
 		searchSearchRequest.setSelectedFieldNames("version");
 
 		SearchSearchResponse searchSearchResponse =
-			_searchRequestExecutor.executeSearchRequest(searchSearchRequest);
+			_searchEngineAdapter.execute(searchSearchRequest);
 
 		SearchHits searchHits = searchSearchResponse.getSearchHits();
 
@@ -533,16 +533,16 @@ public class WorkflowMetricsSLADefinitionLocalServiceImpl
 			_indexNameBuilder.getIndexName(companyId) +
 				WorkflowMetricsIndexNameConstants.SUFFIX_NODE);
 
-		BooleanQuery booleanQuery = _queries.booleanQuery();
+		BooleanQuery booleanQuery = QueriesUtil.booleanQuery();
 
 		searchSearchRequest.setQuery(
 			booleanQuery.addMustQueryClauses(
-				_queries.term("companyId", companyId),
-				_queries.term("processId", processId),
-				_queries.term("version", processVersion)));
+				QueriesUtil.term("companyId", companyId),
+				QueriesUtil.term("processId", processId),
+				QueriesUtil.term("version", processVersion)));
 
 		SearchSearchResponse searchSearchResponse =
-			_searchRequestExecutor.executeSearchRequest(searchSearchRequest);
+			_searchEngineAdapter.execute(searchSearchRequest);
 
 		Map<String, AggregationResult> aggregationResultsMap =
 			searchSearchResponse.getAggregationResultsMap();
@@ -585,10 +585,7 @@ public class WorkflowMetricsSLADefinitionLocalServiceImpl
 	private IndexNameBuilder _indexNameBuilder;
 
 	@Reference
-	private Queries _queries;
-
-	@Reference
-	private SearchRequestExecutor _searchRequestExecutor;
+	private SearchEngineAdapter _searchEngineAdapter;
 
 	@Reference
 	private SLAInstanceResultWorkflowMetricsIndexer

@@ -148,8 +148,13 @@
 					"type": "string"
 				},
 				"pid": {
-					"const": "com.liferay.ai.hub.configuration.AIHubConfiguration",
+					"const": "com.liferay.ai.hub.cell.configuration.AIHubCellConfiguration",
 					"title": "AI Hub Configuration"
+				},
+				"secret": {
+					"default": "",
+					"title": "Secret",
+					"type": "string"
 				},
 				"serviceURL": {
 					"title": "Service URL",
@@ -163,6 +168,33 @@
 				"serviceURL"
 			],
 			"title": "AI Hub Configuration"
+		},
+		{
+			"properties": {
+				"location": {
+					"title": "Location",
+					"type": "string"
+				},
+				"modelName": {
+					"title": "Model Name",
+					"type": "string"
+				},
+				"pid": {
+					"const": "com.liferay.ai.hub.configuration.VertexAIConfiguration",
+					"title": "Vertex AI Configuration"
+				},
+				"projectId": {
+					"title": "Project ID",
+					"type": "string"
+				}
+			},
+			"required": [
+				"pid",
+				"location",
+				"modelName",
+				"projectId"
+			],
+			"title": "Vertex AI Configuration"
 		},
 		{
 			"properties": {
@@ -186,6 +218,9 @@
 					"type": "string"
 				},
 				"liferayAnalyticsConnectionType": {
+					"type": "string"
+				},
+				"liferayAnalyticsCredentialType": {
 					"type": "string"
 				},
 				"liferayAnalyticsDataSourceId": {
@@ -743,6 +778,12 @@
 		},
 		{
 			"properties": {
+				"cleanUpCTSContentData": {
+					"default": false,
+					"description": "Enable this to remove change tracking store content immediately after a publication publishes.",
+					"title": "Clean Up Change Tracking Store Content Data",
+					"type": "boolean"
+				},
 				"defaultCTCollectionTemplateId": {
 					"default": 0,
 					"title": "Default Publication Template ID",
@@ -812,6 +853,12 @@
 		},
 		{
 			"properties": {
+				"contextViewScoreThreshold": {
+					"default": 60000,
+					"description": "Set the maximum score a publication can have and still render the context view. Publications with a score above this threshold will skip the context view for better performance.",
+					"title": "Context View Score Threshold",
+					"type": "number"
+				},
 				"hiddenApplications": {
 					"description": "These applications will be hidden from the application menu when you are in a publication.",
 					"items": {
@@ -1845,13 +1892,13 @@
 				},
 				"propagateChanges": {
 					"default": false,
-					"description": "When enabled, changes will be propagated immediately after publishing a fragment entry. If staging is enabled, this setting does not affect live sites.",
+					"description": "When enabled, changes are propagated immediately after publishing a fragment entry. If staging is enabled, this setting does not affect live sites.",
 					"title": "Propagate Fragment Changes Automatically",
 					"type": "boolean"
 				},
 				"propagateContributedFragmentChanges": {
 					"default": true,
-					"description": "When enabled, changes will be propagated immediately during the deploy process. When disabled, changes can be propagated manually after deploy process.",
+					"description": "When enabled, changes are propagated immediately during the deploy process. When disabled, changes can be propagated manually after deploy process.",
 					"title": "Propagate Default Fragments Changes During Deploy Process Automatically",
 					"type": "boolean"
 				}
@@ -1944,6 +1991,24 @@
 			]
 		},
 		{
+			"properties": {
+				"handlersURL": {
+					"description": "Provide the URL of the JavaScript personalization handlers file.",
+					"title": "Handlers URL",
+					"type": "string"
+				},
+				"pid": {
+					"const": "com.liferay.frontend.js.audiences.web.internal.configuration.FrontendJSAudiencesConfiguration",
+					"title": "Audiences"
+				}
+			},
+			"required": [
+				"pid",
+				"handlersURL"
+			],
+			"title": "Audiences"
+		},
+		{
 			"description": "For changes made here to take effect, you must reload the browser page after saving.",
 			"properties": {
 				"cacheExpirationTime": {
@@ -2023,6 +2088,12 @@
 		},
 		{
 			"properties": {
+				"cachingStrategy": {
+					"default": "do-not-use-hashes",
+					"description": "Set the balance between caching span and size of the import maps (which affect the size of the page's HTML). If you decide not to use hashes, the import maps will be smaller but the caching span will be limited. On the other hand, if you use one hash per file, the import maps will be bigger but files will be infinitely cacheable.",
+					"title": "Caching Strategy",
+					"type": "string"
+				},
 				"cssStyleSheetsMaxAge": {
 					"default": 86400,
 					"description": "Set the value of the \"max-age\" directive in the \"Cache-Control\" header for mutable CSS style sheets.",
@@ -2083,7 +2154,7 @@
 				},
 				"translatedJSFilesMaxAge": {
 					"default": 3600,
-					"description": "Set the value of the \"max-age\" directive in the \"Cache-Control\" header for translated JavaScript files for translated JavaScript files (those that contain invocations to \"Liferay.Language.get()\" and do not have an associated language.json file).",
+					"description": "Set the value of the \"max-age\" directive in the \"Cache-Control\" header for translated JavaScript files (those that contain invocations to \"Liferay.Language.get()\" and do not have an associated language.json file).",
 					"title": "Translated JavaScript Files Max Age Directive Value",
 					"type": "number"
 				}
@@ -2355,7 +2426,7 @@
 			"title": "SEO"
 		},
 		{
-			"description": "Configure when automatic propagation is triggered for site templates.",
+			"description": "Site Templates Configuration",
 			"properties": {
 				"cancelPropagationImportTask": {
 					"default": true,
@@ -2365,14 +2436,8 @@
 				},
 				"pid": {
 					"const": "com.liferay.layout.set.prototype.configuration.LayoutSetPrototypeConfiguration",
-					"description": "Configure when automatic propagation is triggered for site templates.",
+					"description": "Site Templates Configuration",
 					"title": "Site Templates"
-				},
-				"triggerPropagation": {
-					"default": false,
-					"description": "If unchecked, changes are propagated to sites individually when they are first visited by a user. If checked, enabling propagation in a template also triggers propagation for all connected sites simultaneously.",
-					"title": "Trigger Propagation",
-					"type": "boolean"
 				}
 			},
 			"required": [
@@ -2501,6 +2566,25 @@
 				"pid"
 			],
 			"title": "Mail Settings"
+		},
+		{
+			"description": "The settings in this configuration let you control the MCP Server.",
+			"properties": {
+				"enabled": {
+					"default": false,
+					"title": "Enabled",
+					"type": "boolean"
+				},
+				"pid": {
+					"const": "com.liferay.mcp.server.rest.internal.configuration.MCPServerConfiguration",
+					"description": "The settings in this configuration let you control the MCP Server.",
+					"title": "MCP Server"
+				}
+			},
+			"required": [
+				"pid"
+			],
+			"title": "MCP Server"
 		},
 		{
 			"properties": {
@@ -2973,10 +3057,6 @@
 					"default": "",
 					"type": "string"
 				},
-				"patcherPubsubCredentialFilePath": {
-					"default": "",
-					"type": "string"
-				},
 				"patcherPubsubProjectId": {
 					"default": "",
 					"type": "string"
@@ -3330,12 +3410,12 @@
 			"title": "Portal Cross-Origin Resource Sharing (CORS)"
 		},
 		{
-			"description": "Configure third party providers and other settings to index and search text embeddings. Semantic Search is a beta feature: enable it in Instance Settings > Feature Flags.",
+			"description": "Configure third party providers and other settings to index and search text embeddings. You can enable additional providers for Semantic Search in Instance Settings > Feature Flags > Beta.",
 			"properties": {
 				"pid": {
 					"const": "com.liferay.portal.search.configuration.SemanticSearchConfiguration",
-					"description": "Configure third party providers and other settings to index and search text embeddings. Semantic Search is a beta feature: enable it in Instance Settings > Feature Flags.",
-					"title": "Semantic Search (Beta)"
+					"description": "Configure third party providers and other settings to index and search text embeddings. You can enable additional providers for Semantic Search in Instance Settings > Feature Flags > Beta.",
+					"title": "Semantic Search"
 				},
 				"textEmbeddingCacheTimeout": {
 					"default": 604800,
@@ -3359,31 +3439,7 @@
 			"required": [
 				"pid"
 			],
-			"title": "Semantic Search (Beta)"
-		},
-		{
-			"properties": {
-				"enableDeepPagination": {
-					"default": false,
-					"description": "Enable deep pagination to paginate through all the results of a search query.",
-					"title": "Enable Deep Pagination",
-					"type": "boolean"
-				},
-				"pid": {
-					"const": "com.liferay.portal.search.elasticsearch7.configuration.DeepPaginationConfiguration",
-					"title": "Deep Pagination Configuration"
-				},
-				"pointInTimeKeepAliveSeconds": {
-					"default": 60,
-					"description": "The amount of time in seconds the search engine will keep a point in time alive (between 1 and 60).",
-					"title": "Point in Time Keep Alive",
-					"type": "number"
-				}
-			},
-			"required": [
-				"pid"
-			],
-			"title": "Deep Pagination Configuration"
+			"title": "Semantic Search"
 		},
 		{
 			"properties": {
@@ -4123,24 +4179,6 @@
 		},
 		{
 			"properties": {
-				"enableESModulesHashing": {
-					"default": false,
-					"description": "Enable this to generate import map entries that point to hashed file names for ES modules. This makes infinite caching for ES modules possible.",
-					"title": "Enable ES Modules Hashing",
-					"type": "boolean"
-				},
-				"pid": {
-					"const": "com.liferay.portal.url.builder.configuration.PortalURLBuilderConfiguration",
-					"title": "Portal URL Builder"
-				}
-			},
-			"required": [
-				"pid"
-			],
-			"title": "Portal URL Builder"
-		},
-		{
-			"properties": {
 				"pageSizeLimit": {
 					"default": 500,
 					"description": "Set the page size limit of elements that can be recovered through REST. Enter a negative number or zero for unlimited page size.",
@@ -4194,24 +4232,6 @@
 				"path"
 			],
 			"title": "Headless API Endpoint"
-		},
-		{
-			"properties": {
-				"enableApplicationsMenu": {
-					"default": true,
-					"description": "When enabled, the control panel applications and cross-site applications will be accessible through the new applications menu which can be accessed by clicking the grid menu icon in the upper-right corner.",
-					"title": "Enable Applications Menu",
-					"type": "boolean"
-				},
-				"pid": {
-					"const": "com.liferay.product.navigation.applications.menu.configuration.ApplicationsMenuInstanceConfiguration",
-					"title": "Applications Menu"
-				}
-			},
-			"required": [
-				"pid"
-			],
-			"title": "Applications Menu"
 		},
 		{
 			"properties": {
@@ -4587,6 +4607,48 @@
 		},
 		{
 			"properties": {
+				"invitationToCollaborateEmailBody": {
+					"description": "Provide a localized template for the body of invitation to collaborate emails.",
+					"properties": {
+					},
+					"title": "Invitation to Collaborate Email Body",
+					"type": "object"
+				},
+				"invitationToCollaborateEmailSenderEmailAddress": {
+					"description": "Define a specific email address for the sender of invitation to collaborate emails. If empty, the inviter's email address is used.",
+					"title": "Invitation to Collaborate Email Sender Email Address",
+					"type": "string"
+				},
+				"invitationToCollaborateEmailSenderName": {
+					"description": "Define a specific name for the sender of invitation to collaborate emails. If empty, the inviter's name is used.",
+					"title": "Invitation to Collaborate Email Sender Name",
+					"type": "string"
+				},
+				"invitationToCollaborateEmailSubject": {
+					"description": "Provide a localized template for the subject of invitation to collaborate emails.",
+					"properties": {
+					},
+					"title": "Invitation to Collaborate Email Subject",
+					"type": "object"
+				},
+				"invitationToCollaborateTokenExpirationTime": {
+					"default": 48,
+					"description": "Define the time (in hours) before the invitation to collaborate token expires.",
+					"title": "Invitation to Collaborate Token Expiration Time",
+					"type": "number"
+				},
+				"pid": {
+					"const": "com.liferay.sharing.configuration.SharingEntryCollaborationEmailConfiguration",
+					"title": "Invitation to Collaborate"
+				}
+			},
+			"required": [
+				"pid"
+			],
+			"title": "Invitation to Collaborate"
+		},
+		{
+			"properties": {
 				"enabled": {
 					"default": true,
 					"title": "Enabled",
@@ -4620,6 +4682,28 @@
 				"pid"
 			],
 			"title": "Bulk Action Task Configuration"
+		},
+		{
+			"properties": {
+				"content": {
+					"default": "",
+					"title": "llms.txt Content",
+					"type": "string"
+				},
+				"enabled": {
+					"default": false,
+					"title": "Enable llms.txt",
+					"type": "boolean"
+				},
+				"pid": {
+					"const": "com.liferay.site.internal.configuration.LLMSCompanyConfiguration",
+					"title": "llms.txt"
+				}
+			},
+			"required": [
+				"pid"
+			],
+			"title": "llms.txt"
 		},
 		{
 			"properties": {
@@ -4662,6 +4746,11 @@
 					"default": true,
 					"title": "XML Sitemap Index Enabled",
 					"type": "boolean"
+				},
+				"xmlSitemapIndexMode": {
+					"default": "page-layout",
+					"title": "XML Sitemap Index Mode",
+					"type": "string"
 				}
 			},
 			"required": [
@@ -4693,18 +4782,6 @@
 					"const": "com.liferay.staging.configuration.StagingConfiguration",
 					"description": "The settings in this configuration let you control the staging process.",
 					"title": "Staging"
-				},
-				"publishDisplayedContent": {
-					"default": false,
-					"description": "If checked, the displayed content will be published to Live for Dynamic Data Lists Display, Form, Web Content Display and Wiki Display. These widgets will publish the displayed content to Live independently of the Publish Process settings. For example, a Web Content Display will publish the Web Content even if Web Contents were not selected on the Publish Process screen. This can be useful to make sure that Staging and Live display the same content. However, in most cases the content is already available in Live and publishing it again can slow down the process unnecessarily. Uncheck to not publish the displayed content.",
-					"title": "Publish Displayed Content by Default",
-					"type": "boolean"
-				},
-				"publishParentLayoutsByDefault": {
-					"default": true,
-					"description": "If checked, parent pages are always published to live.",
-					"title": "Publish Parent Pages by Default",
-					"type": "boolean"
 				},
 				"stagingDeleteTempLAROnFailure": {
 					"default": true,
@@ -4916,7 +4993,8 @@
 				"com.liferay.adaptive.media.image.content.transformer.backwards.compatibility.internal.configuration.AMBackwardsCompatibilityHtmlContentTransformerConfiguration",
 				"com.liferay.adaptive.media.image.internal.configuration.AMImageCompanyConfiguration",
 				"com.liferay.ai.creator.openai.configuration.AICreatorOpenAICompanyConfiguration",
-				"com.liferay.ai.hub.configuration.AIHubConfiguration",
+				"com.liferay.ai.hub.cell.configuration.AIHubCellConfiguration",
+				"com.liferay.ai.hub.configuration.VertexAIConfiguration",
 				"com.liferay.analytics.settings.configuration.AnalyticsConfiguration",
 				"com.liferay.asset.auto.tagger.google.cloud.natural.language.internal.configuration.GCloudNaturalLanguageAssetAutoTaggerCompanyConfiguration",
 				"com.liferay.asset.auto.tagger.internal.configuration.AssetAutoTaggerCompanyConfiguration",
@@ -4967,6 +5045,7 @@
 				"com.liferay.fragment.web.internal.configuration.FragmentPortletConfiguration",
 				"com.liferay.friendly.url.configuration.FriendlyURLRedirectionConfiguration",
 				"com.liferay.friendly.url.configuration.FriendlyURLSeparatorCompanyConfiguration",
+				"com.liferay.frontend.js.audiences.web.internal.configuration.FrontendJSAudiencesConfiguration",
 				"com.liferay.frontend.js.spa.web.internal.configuration.SPAConfiguration",
 				"com.liferay.frontend.js.web.internal.configuration.CustomDialogsSettingsConfiguration",
 				"com.liferay.frontend.js.web.internal.configuration.FrontendCachingConfiguration",
@@ -4979,6 +5058,7 @@
 				"com.liferay.layout.set.prototype.configuration.LayoutSetPrototypeConfiguration",
 				"com.liferay.mail.outlook.auth.connector.provider.internal.configuration.MailOutlookAuthConnectorCompanyConfiguration",
 				"com.liferay.mail.settings.configuration.MailSettingCompanyConfiguration",
+				"com.liferay.mcp.server.rest.internal.configuration.MCPServerConfiguration",
 				"com.liferay.multi.factor.authentication.email.otp.configuration.MFAEmailOTPConfiguration",
 				"com.liferay.multi.factor.authentication.fido2.web.internal.configuration.MFAFIDO2Configuration",
 				"com.liferay.multi.factor.authentication.ip.address.internal.configuration.MFAIPAddressConfiguration",
@@ -4996,7 +5076,6 @@
 				"com.liferay.portal.defaultpermissions.configuration.PortalDefaultPermissionsCompanyConfiguration",
 				"com.liferay.portal.remote.cors.configuration.PortalCORSConfiguration",
 				"com.liferay.portal.search.configuration.SemanticSearchConfiguration",
-				"com.liferay.portal.search.elasticsearch7.configuration.DeepPaginationConfiguration",
 				"com.liferay.portal.search.elasticsearch8.configuration.DeepPaginationConfiguration",
 				"com.liferay.portal.search.internal.configuration.SiteActivityAsahConfiguration",
 				"com.liferay.portal.search.internal.configuration.UserActivityAsahConfiguration",
@@ -5011,10 +5090,8 @@
 				"com.liferay.portal.security.ldap.exportimport.configuration.LDAPExportConfiguration",
 				"com.liferay.portal.security.ldap.exportimport.configuration.LDAPImportConfiguration",
 				"com.liferay.portal.security.sso.openid.connect.internal.configuration.OpenIdConnectProviderConfiguration",
-				"com.liferay.portal.url.builder.configuration.PortalURLBuilderConfiguration",
 				"com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration",
 				"com.liferay.portal.vulcan.internal.configuration.VulcanCompanyConfiguration",
-				"com.liferay.product.navigation.applications.menu.configuration.ApplicationsMenuInstanceConfiguration",
 				"com.liferay.product.navigation.personal.menu.configuration.PersonalMenuConfiguration",
 				"com.liferay.redirect.internal.configuration.RedirectURLConfiguration",
 				"com.liferay.saml.runtime.configuration.SamlProviderConfiguration",
@@ -5024,8 +5101,10 @@
 				"com.liferay.segments.configuration.SegmentsCompanyConfiguration",
 				"com.liferay.segments.context.vocabulary.internal.configuration.SegmentsContextVocabularyCompanyConfiguration",
 				"com.liferay.sharepoint.rest.repository.internal.configuration.SharepointRepositoryConfiguration",
+				"com.liferay.sharing.configuration.SharingEntryCollaborationEmailConfiguration",
 				"com.liferay.sharing.internal.configuration.SharingCompanyConfiguration",
 				"com.liferay.site.cms.site.initializer.configuration.BulkActionTaskConfiguration",
+				"com.liferay.site.internal.configuration.LLMSCompanyConfiguration",
 				"com.liferay.site.internal.configuration.SitemapCompanyConfiguration",
 				"com.liferay.social.activity.internal.configuration.SocialActivityCompanyConfiguration",
 				"com.liferay.staging.configuration.StagingConfiguration",

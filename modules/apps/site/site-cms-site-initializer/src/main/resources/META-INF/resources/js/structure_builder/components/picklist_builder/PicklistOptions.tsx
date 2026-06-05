@@ -54,7 +54,12 @@ export default function PicklistOptions() {
 			>
 				<FrontendDataSet
 					bulkActions={[
-						{icon: 'trash', label: Liferay.Language.get('delete')},
+						{
+							href: '',
+							icon: 'trash',
+							label: Liferay.Language.get('delete'),
+							target: 'modal',
+						},
 					]}
 					creationMenu={{
 						primaryItems: [
@@ -71,6 +76,7 @@ export default function PicklistOptions() {
 						image: '/states/cms_empty_state_picklist_options.svg',
 						title: Liferay.Language.get('there-are-no-options-yet'),
 					}}
+					hideManagementBarInEmptyState={true}
 					id="optionList"
 					items={items}
 					itemsActions={[

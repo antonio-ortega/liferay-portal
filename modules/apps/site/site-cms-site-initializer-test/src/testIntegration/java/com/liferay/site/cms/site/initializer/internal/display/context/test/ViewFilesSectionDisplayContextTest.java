@@ -7,36 +7,18 @@ package com.liferay.site.cms.site.initializer.internal.display.context.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.fragment.renderer.FragmentRenderer;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
+import com.liferay.frontend.data.set.model.FDSActionDropdownItem;
+import com.liferay.frontend.data.set.test.util.FrontendDataSetTestUtil;
 import com.liferay.object.constants.ObjectEntryFolderConstants;
 import com.liferay.object.constants.ObjectFolderConstants;
-import com.liferay.object.model.ObjectEntryFolder;
-import com.liferay.object.service.ObjectEntryFolderLocalService;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.model.ResourceConstants;
-import com.liferay.portal.kernel.model.Role;
-import com.liferay.portal.kernel.model.User;
-import com.liferay.portal.kernel.model.role.RoleConstants;
-import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
-import com.liferay.portal.kernel.security.permission.ActionKeys;
-import com.liferay.portal.kernel.security.permission.PermissionChecker;
-import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
-import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
-import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
-import com.liferay.portal.kernel.service.RoleLocalService;
-import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.test.TestInfo;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.Sync;
-import com.liferay.portal.kernel.test.util.RandomTestUtil;
-import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
-import com.liferay.portal.kernel.test.util.TestPropsValues;
-import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
-import com.liferay.portal.kernel.util.LocaleUtil;
-import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
@@ -44,7 +26,6 @@ import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
 import jakarta.servlet.http.HttpServletRequest;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -73,65 +54,77 @@ public class ViewFilesSectionDisplayContextTest
 			PermissionCheckerMethodTestRule.INSTANCE);
 
 	@Override
-	public HashMap<String, Object> getBaseAdditionalProps()
-		throws PortalException {
-
+	public Map<String, Object> getBaseAdditionalProps() throws Exception {
 		return new HashMapBuilder<>().putAll(
 			super.getBaseAdditionalProps()
+		).put(
+			"breadcrumbProps",
+			HashMapBuilder.<String, Object>put(
+				"breadcrumbItems",
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"active", false
+					).put(
+						"href", (String)null
+					).put(
+						"label", "test"
+					))
+			).put(
+				"hideSpace", true
+			).build()
 		).put(
 			"galleryViewEnabled", true
 		).build();
 	}
 
 	@Test
-	public void testGetCreationMenuWithAddEntryPermission() throws Exception {
-		PermissionChecker originalPermissionChecker =
-			PermissionThreadLocal.getPermissionChecker();
+	@TestInfo("LPD-87118")
+	public void testGetBulkActionDropdownItems() throws Exception {
+		List<FDSActionDropdownItem> bulkActionDropdownItems =
+			getBulkActionDropdownItems();
 
-		try {
-			ObjectEntryFolder objectEntryFolder =
-				_objectEntryFolderLocalService.addObjectEntryFolder(
-					null, group.getGroupId(), TestPropsValues.getUserId(),
-					ObjectEntryFolderConstants.
-						PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
-					RandomTestUtil.randomString(),
-					HashMapBuilder.put(
-						LocaleUtil.getDefault(), StringUtil.randomString()
-					).build(),
-					StringUtil.randomString(),
-					ServiceContextTestUtil.getServiceContext());
+		Assert.assertEquals(
+			bulkActionDropdownItems.toString(), 13,
+			bulkActionDropdownItems.size());
 
-			_setUser(UserTestUtil.addUser());
-
-			CreationMenu creationMenu = getCreationMenu(objectEntryFolder);
-
-			List<DropdownItem> primaryItems =
-				(List<DropdownItem>)creationMenu.get("primaryItems");
-
-			Assert.assertEquals(
-				primaryItems.toString(), 0, primaryItems.size());
-
-			Role role = _roleLocalService.getRole(
-				TestPropsValues.getCompanyId(), RoleConstants.USER);
-
-			_resourcePermissionLocalService.setResourcePermissions(
-				TestPropsValues.getCompanyId(),
-				ObjectEntryFolder.class.getName(),
-				ResourceConstants.SCOPE_INDIVIDUAL,
-				String.valueOf(objectEntryFolder.getObjectEntryFolderId()),
-				role.getRoleId(), new String[] {ActionKeys.ADD_ENTRY});
-
-			creationMenu = getCreationMenu(objectEntryFolder);
-
-			primaryItems = (List<DropdownItem>)creationMenu.get("primaryItems");
-
-			Assert.assertEquals(
-				primaryItems.toString(), 4, primaryItems.size());
-		}
-		finally {
-			PermissionThreadLocal.setPermissionChecker(
-				originalPermissionChecker);
-		}
+		FrontendDataSetTestUtil.assertFDSActionDropdownItem(
+			"trash", "delete", "Delete", null, bulkActionDropdownItems.get(0));
+		FrontendDataSetTestUtil.assertFDSActionDropdownItem(
+			"move-folder", "move-to", "Move To", null,
+			bulkActionDropdownItems.get(1));
+		FrontendDataSetTestUtil.assertFDSActionDropdownItem(
+			"copy", "copy-to", "Copy To", null, bulkActionDropdownItems.get(2));
+		FrontendDataSetTestUtil.assertFDSActionDropdownItem(
+			"copy", "duplicate", "Duplicate", null,
+			bulkActionDropdownItems.get(3));
+		FrontendDataSetTestUtil.assertFDSActionDropdownItem(
+			"time", "expire", "Expire", null, bulkActionDropdownItems.get(4));
+		FrontendDataSetTestUtil.assertFDSActionDropdownItem(
+			"download", "download", "Download", null,
+			bulkActionDropdownItems.get(5));
+		FrontendDataSetTestUtil.assertFDSActionDropdownItem(
+			"pencil", "edit-categories", "Edit Categories", "post",
+			bulkActionDropdownItems.get(6));
+		FrontendDataSetTestUtil.assertFDSActionDropdownItem(
+			"pencil", "edit-tags", "Edit Tags", "post",
+			bulkActionDropdownItems.get(7));
+		FrontendDataSetTestUtil.assertFDSActionDropdownItem(
+			"password-policies", "permissions", "Permissions", null,
+			bulkActionDropdownItems.get(8));
+		FrontendDataSetTestUtil.assertFDSActionDropdownItem(
+			"password-policies", "default-permissions", "Default Permissions",
+			null, bulkActionDropdownItems.get(9));
+		FrontendDataSetTestUtil.assertFDSActionDropdownItem(
+			"password-policies", "edit-default-permissions-by-role",
+			"Edit Default Permissions by Role", null,
+			bulkActionDropdownItems.get(10));
+		FrontendDataSetTestUtil.assertFDSActionDropdownItem(
+			"password-policies", "edit-permissions-by-role",
+			"Edit Permissions by Role", null, bulkActionDropdownItems.get(11));
+		FrontendDataSetTestUtil.assertFDSActionDropdownItem(
+			"password-policies", "reset-to-default-permissions",
+			"Reset to Default Permissions", null,
+			bulkActionDropdownItems.get(12));
 	}
 
 	@Override
@@ -147,6 +140,11 @@ public class ViewFilesSectionDisplayContextTest
 		).put(
 			"external-video", getRedirect("L_CMS_EXTERNAL_VIDEO")
 		).build();
+	}
+
+	@Override
+	protected String getFilterString() {
+		return "cmsRoot eq true and cmsSection eq 'files'";
 	}
 
 	@Override
@@ -176,28 +174,14 @@ public class ViewFilesSectionDisplayContextTest
 		return filesSectionDisplayContext;
 	}
 
-	private void _setUser(User user) {
-		PermissionThreadLocal.setPermissionChecker(
-			PermissionCheckerFactoryUtil.create(user));
-
-		PrincipalThreadLocal.setName(user.getUserId());
+	@Override
+	protected boolean isFolderSearchEnabled() {
+		return true;
 	}
 
 	@Inject(
 		filter = "component.name=com.liferay.site.cms.site.initializer.internal.fragment.renderer.ViewFilesJSPSectionFragmentRenderer"
 	)
 	private FragmentRenderer _fragmentRenderer;
-
-	@Inject
-	private ObjectEntryFolderLocalService _objectEntryFolderLocalService;
-
-	@Inject
-	private ResourcePermissionLocalService _resourcePermissionLocalService;
-
-	@Inject
-	private RoleLocalService _roleLocalService;
-
-	@Inject
-	private UserLocalService _userLocalService;
 
 }

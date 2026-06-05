@@ -9,12 +9,7 @@ import Filter from '../../shared/components/filter/Filter.es';
 import {useFilterName} from '../../shared/components/filter/hooks/useFilterName.es';
 import {useFilterStatic} from '../../shared/components/filter/hooks/useFilterStatic.es';
 import filterConstants from '../../shared/components/filter/util/filterConstants.es';
-
-const slaStatusConstants = {
-	onTime: 'OnTime',
-	overdue: 'Overdue',
-	untracked: 'Untracked',
-};
+import slaStatusConstants from './SLAStatusConstants.es';
 
 const slaStatuses = [
 	{
@@ -71,5 +66,3 @@ export default function SLAStatusFilter({
 		/>
 	);
 }
-
-export {slaStatusConstants};

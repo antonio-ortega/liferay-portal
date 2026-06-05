@@ -1470,3 +1470,4 @@ public class CalendarBookingWrapper
 	}
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-558335866

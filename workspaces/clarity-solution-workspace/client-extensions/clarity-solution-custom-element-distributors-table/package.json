@@ -1,8 +1,8 @@
 {
 	"dependencies": {
-		"@clayui/button": "*",
-		"@clayui/table": "*",
-		"clarity-distributors-api": "*",
+		"@clayui/button": "^3.159.0",
+		"@clayui/table": "^3.159.0",
+		"clarity-solution-js-import-maps-entry": "*",
 		"react": "18.2.0",
 		"react-dom": "18.2.0"
 	},

@@ -17,6 +17,7 @@ import {loginTest} from '../../../fixtures/loginTest';
 import {pageEditorPagesTest} from '../../../fixtures/pageEditorPagesTest';
 import {pageManagementSiteTest} from '../../../fixtures/pageManagementSiteTest';
 import {clickAndExpectToBeVisible} from '../../../utils/clickAndExpectToBeVisible';
+import createTempFile from '../../../utils/createTempFile';
 import getRandomString from '../../../utils/getRandomString';
 import {getObjectERC} from '../../setup/page-management-site/main/utils/getObjectERC';
 import chooseFileFromDocumentLibrary from '../main/utils/chooseFileFromDocumentLibrary';
@@ -30,7 +31,7 @@ const test = mergeTests(
 	displayPageTemplatesPagesTest,
 	documentLibraryPagesTest,
 	featureFlagsTest({
-		'LPD-11235': {enabled: true},
+		'LPD-11235': {enabled: false},
 		'LPD-17564': {enabled: true},
 		'LPD-60546': {enabled: true},
 		'LPS-178052': {enabled: true},
@@ -381,7 +382,10 @@ test.describe('File Upload Fragment', () => {
 			);
 
 			await expect(
-				fileUploadInput.getByRole('button', {name: 'Upload'})
+				fileUploadInput.getByRole('button', {
+					exact: true,
+					name: 'Upload',
+				})
 			).toBeVisible();
 		}
 	);
@@ -534,19 +538,18 @@ test.describe('File Upload Fragment', () => {
 
 			const fileUploadInput = page.locator('.file-upload');
 
-			await fileUploadInput
-				.getByText('Select File', {exact: true})
-				.click();
-
-			// Assert jpg files are not present
-
 			const dialogIFrame = page.frameLocator('iframe');
 
-			await expect(
-				dialogIFrame.getByText(
+			await clickAndExpectToBeVisible({
+				target: dialogIFrame.getByText(
 					'Drag & Drop Your Files or Browse to Upload'
-				)
-			).toBeVisible();
+				),
+				trigger: fileUploadInput.getByText('Select File', {
+					exact: true,
+				}),
+			});
+
+			// Assert jpg files are not present
 
 			await expect(
 				dialogIFrame.getByText('balinese.jpg')
@@ -555,43 +558,68 @@ test.describe('File Upload Fragment', () => {
 	);
 
 	test(
-		'View error messages from File Upload field',
-		{
-			tag: '@LPS-151402',
-		},
-		async ({apiHelpers, page, pageManagementSite}) => {
+		'Shows an error when the upload exceeds the configured maximum upload request size',
+		{tag: '@LPD-89640'},
+		async ({apiHelpers, page, pageEditorPage, pageManagementSite}) => {
 
-			// Create a page with a form fragment with a file upload fragment
+			// Create the object
 
 			const objectDefinitionAPIClient =
 				await apiHelpers.buildRestClient(ObjectDefinitionAPI);
 
-			const {className: objectDefinitionClassName} = (
-				await objectDefinitionAPIClient.getObjectDefinitionByExternalReferenceCode(
-					getObjectERC('All Fields')
-				)
-			).body;
+			const {body: objectDefinition} =
+				await objectDefinitionAPIClient.postObjectDefinition({
+					active: true,
+					enableLocalization: true,
+					externalReferenceCode: 'lpd89640UploadLimitERC',
+					label: {en_US: 'LPD 89640 Upload Limit'},
+					name: 'LPD89640UploadLimit',
+					objectFields: [
+						{
+							DBType: 'Long',
+							businessType: 'Attachment',
+							defaultValue: 'null',
+							externalReferenceCode: 'bigFileERC',
+							label: {en_US: 'Big File'},
+							localized: true,
+							name: 'bigFile',
+							objectFieldSettings: [
+								{
+									name: 'acceptedFileExtensions',
+									value: 'jpeg, jpg, pdf, png',
+								} as any,
+								{
+									name: 'maximumFileSize',
+									value: 200,
+								} as any,
+								{
+									name: 'fileSource',
+									value: 'userComputerToDocumentsAndMedia',
+								} as any,
+								{
+									name: 'showFilesInLibrary',
+									value: false,
+								} as any,
+							],
+							required: false,
+						},
+					],
+					pluralLabel: {en_US: 'LPD 89640 Upload Limit'},
+					portlet: true,
+					scope: 'company',
+					status: {code: 0},
+				});
 
-			const fileUploadId = getRandomString();
-
-			const fileUploadDefinition = getFragmentDefinition({
-				fragmentConfig: {
-					inputFieldId: 'ObjectField_fileUpload',
-				},
-				id: fileUploadId,
-				key: 'INPUTS-file-upload',
+			apiHelpers.data.push({
+				id: objectDefinition.id,
+				type: 'objectDefinition',
 			});
 
-			const submitFragmentDefinition = getFragmentDefinition({
-				id: getRandomString(),
-				key: 'INPUTS-submit-button',
-			});
+			// Create a page with a Form fragment mapped to the object
 
-			const formDefinition = getFormContainerDefinition({
-				id: getRandomString(),
-				objectDefinitionClassName,
-				pageElements: [fileUploadDefinition, submitFragmentDefinition],
-			});
+			const formId = getRandomString();
+
+			const formDefinition = getFormContainerDefinition({id: formId});
 
 			const layout = await apiHelpers.headlessDelivery.createSitePage({
 				pageDefinition: getPageDefinition([formDefinition]),
@@ -599,13 +627,32 @@ test.describe('File Upload Fragment', () => {
 				title: getRandomString(),
 			});
 
+			await pageEditorPage.goto(
+				layout,
+				pageManagementSite.friendlyUrlPath
+			);
+
+			await pageEditorPage.mapFormFragment(
+				formId,
+				'LPD 89640 Upload Limit',
+				'all',
+				{addLocalizationSelect: true}
+			);
+
+			await pageEditorPage.publishPage();
+
 			// Go to view mode
 
 			await page.goto(
 				`/web${pageManagementSite.friendlyUrlPath}${layout.friendlyUrlPath}`
 			);
 
-			// Select file from computer
+			// Write a 110 MB synthetic file (over the 100 MB request limit)
+
+			const oversizedFilePath = createTempFile(
+				`bigFile-${getRandomString()}.jpg`,
+				Buffer.alloc(110 * 1024 * 1024)
+			);
 
 			const fileChooserPromise = page.waitForEvent('filechooser');
 
@@ -617,28 +664,25 @@ test.describe('File Upload Fragment', () => {
 
 			const fileChooser = await fileChooserPromise;
 
-			await fileChooser.setFiles(
-				path.join(
-					__dirname,
-					'../main/dependencies/high_resolution_image.jpg'
-				)
-			);
+			await fileChooser.setFiles(oversizedFilePath);
 
-			await expect(
-				fileUploadInput.getByText('high_resolution_image')
-			).toBeVisible();
-
-			// Submit form
+			// Submit the form
 
 			await page.getByRole('button', {name: 'Submit'}).click();
 
-			// Assert error message
+			// Check the error is displayed
 
 			await expect(
 				page.getByText(
-					'File size is larger than the allowed maximum upload size (2 MB).'
+					/File size is larger than the allowed overall maximum upload request size/
 				)
 			).toBeVisible();
+
+			await expect(
+				page.getByText(
+					'Thank you. Your information was successfully received.'
+				)
+			).not.toBeVisible();
 		}
 	);
 });
@@ -688,10 +732,10 @@ test.describe('Drag and Drop Upload Fragment', () => {
 							} as any,
 							{
 								name: 'fileSource',
-								value: 'userComputer',
+								value: 'userComputerToDocumentsAndMedia',
 							} as any,
 							{
-								name: 'showFilesInDocumentsAndMedia',
+								name: 'showFilesInLibrary',
 								value: false,
 							} as any,
 						],
@@ -962,10 +1006,10 @@ test.describe('Drag and Drop Upload Fragment', () => {
 							} as any,
 							{
 								name: 'fileSource',
-								value: 'userComputer',
+								value: 'userComputerToDocumentsAndMedia',
 							} as any,
 							{
-								name: 'showFilesInDocumentsAndMedia',
+								name: 'showFilesInLibrary',
 								value: false,
 							} as any,
 						],

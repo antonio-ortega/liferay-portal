@@ -5,15 +5,15 @@
 
 package com.liferay.source.formatter.check;
 
+import com.liferay.petra.io.unsync.UnsyncBufferedReader;
+import com.liferay.petra.io.unsync.UnsyncStringReader;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.io.unsync.UnsyncBufferedReader;
-import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.tools.ToolsUtil;
-import com.liferay.source.formatter.check.util.JsonSourceUtil;
+import com.liferay.source.formatter.check.util.JSONSourceUtil;
 import com.liferay.source.formatter.check.util.SourceUtil;
 
 import java.io.IOException;
@@ -165,7 +165,7 @@ public class FTLStylingCheck extends BaseStylingCheck {
 					continue;
 				}
 
-				JSONObject jsonObject = JsonSourceUtil.getJSONObject(s);
+				JSONObject jsonObject = JSONSourceUtil.getJSONObject(s);
 
 				if (jsonObject == null) {
 					break;
@@ -177,7 +177,7 @@ public class FTLStylingCheck extends BaseStylingCheck {
 
 				sb.append("\n");
 				sb.append(
-					JsonSourceUtil.fixIndentation(jsonObject, indent + "\t"));
+					JSONSourceUtil.fixIndentation(jsonObject, indent + "\t"));
 
 				String replacement = sb.toString();
 

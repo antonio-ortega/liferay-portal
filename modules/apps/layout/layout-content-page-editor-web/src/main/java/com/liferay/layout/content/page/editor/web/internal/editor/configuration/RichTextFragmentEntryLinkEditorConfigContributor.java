@@ -71,7 +71,9 @@ public class RichTextFragmentEntryLinkEditorConfigContributor
 			"filebrowserImageBrowseUrl", imageSelectorURL.toString()
 		);
 
-		if (FeatureFlagManagerUtil.isEnabled("LPD-11235")) {
+		if (!FeatureFlagManagerUtil.isEnabled(
+				themeDisplay.getCompanyId(), "LPD-11235")) {
+
 			jsonObject.put(
 				"blockToolbar",
 				JSONUtil.put(
@@ -107,8 +109,6 @@ public class RichTextFragmentEntryLinkEditorConfigContributor
 					" a[*](*); div[*](*){text-align}; img[*](*){*}; p[*](*); ",
 					_getAllowedContentLists(), _getAllowedContentTable(),
 					" span[*](*){*}; ")
-			).put(
-				"autoParagraph", false
 			).put(
 				"extraPlugins", getExtraPluginsLists()
 			).put(

@@ -5,6 +5,7 @@
 
 package com.liferay.headless.site.internal.resource.v1_0;
 
+import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.headless.site.dto.v1_0.Site;
 import com.liferay.headless.site.resource.v1_0.SiteResource;
 import com.liferay.petra.function.UnsafeBiConsumer;
@@ -763,6 +764,15 @@ public abstract class BaseSiteResourceImpl
 				return LocaleUtil.fromLanguageId(languageId);
 			}
 
+			@Override
+			public boolean isAcceptAllLanguages() {
+				if (ExportImportThreadLocal.isExportInProcess()) {
+					return true;
+				}
+
+				return AcceptLanguage.super.isAcceptAllLanguages();
+			}
+
 		};
 	}
 
@@ -1391,3 +1401,4 @@ public abstract class BaseSiteResourceImpl
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1523226033

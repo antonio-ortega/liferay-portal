@@ -365,3 +365,4 @@ public interface LayoutPrototypeLocalService
 		throws E;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-486829276

@@ -85,6 +85,7 @@ public class BasicFragmentEntryActionDropdownItemsProviderTest
 	}
 
 	@Test
+	@TestInfo("LPD-63087")
 	public void testGetActionDropdownItemstForMarketplaceFragmentEntry()
 		throws Exception {
 
@@ -104,7 +105,7 @@ public class BasicFragmentEntryActionDropdownItemsProviderTest
 		assertDropdownItemsInCorrectOrder(
 			basicFragmentEntryActionDropdownItemsProvider.
 				getActionDropdownItems(),
-			"view-site-usages", "move", "delete");
+			"rename", "view-site-usages", "move", "delete");
 	}
 
 	@Test
@@ -147,7 +148,7 @@ public class BasicFragmentEntryActionDropdownItemsProviderTest
 		boolean draft, boolean readOnly, boolean typeReact) {
 
 		Mockito.when(
-			_fragmentEntry.getGlobalUsageCount()
+			_fragmentEntry.getUsageCount()
 		).thenReturn(
 			0
 		);

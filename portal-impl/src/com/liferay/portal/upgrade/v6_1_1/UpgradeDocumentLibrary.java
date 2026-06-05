@@ -29,8 +29,8 @@ public class UpgradeDocumentLibrary extends UpgradeProcess {
 		throws Exception {
 
 		try (PreparedStatement preparedStatement = connection.prepareStatement(
-				"select count(*) from DLFileEntry where groupId = ? and " +
-					"folderId = ? and title = ?")) {
+				"select count(*) as count from DLFileEntry where groupId = ? " +
+					"and folderId = ? and title = ?")) {
 
 			preparedStatement.setLong(1, groupId);
 			preparedStatement.setLong(2, folderId);
@@ -38,9 +38,7 @@ public class UpgradeDocumentLibrary extends UpgradeProcess {
 
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				while (resultSet.next()) {
-					int count = resultSet.getInt(1);
-
-					if (count > 0) {
+					if (resultSet.getLong("count") > 0) {
 						return true;
 					}
 				}
@@ -52,9 +50,11 @@ public class UpgradeDocumentLibrary extends UpgradeProcess {
 
 	protected void updateFileEntries() throws Exception {
 		try (LoggingTimer loggingTimer = new LoggingTimer();
+
 			PreparedStatement preparedStatement = connection.prepareStatement(
 				"select fileEntryId, groupId, folderId, title, extension, " +
 					"version from DLFileEntry");
+
 			ResultSet resultSet = preparedStatement.executeQuery()) {
 
 			while (resultSet.next()) {

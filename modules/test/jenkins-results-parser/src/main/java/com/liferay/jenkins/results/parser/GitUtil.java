@@ -388,8 +388,10 @@ public class GitUtil {
 	}
 
 	public static void main(String[] args) {
+		String command = args[0];
+
 		ExecutionResult executionResult = executeBashCommands(
-			3, 1000 * 10, 1000 * 60, new File("."), args[0]);
+			3, 1000 * 10, 1000 * 60, new File("."), command);
 
 		System.out.println(executionResult.getStandardOut());
 
@@ -399,7 +401,7 @@ public class GitUtil {
 
 		System.err.println(executionResult.getStandardError());
 
-		throw new RuntimeException("Unable to run command:\n     " + args[0]);
+		throw new RuntimeException("Unable to run command:\n     " + command);
 	}
 
 	public static String toSlaveGitHubDevNodeRemoteURL(
@@ -459,8 +461,9 @@ public class GitUtil {
 	}
 
 	protected static ExecutionResult executeBashCommands(
-		int maxRetries, long retryDelay, long timeout, File workingDirectory,
-		String... commands) {
+			int maxRetries, long retryDelay, boolean throwExceptions,
+			long timeout, File workingDirectory, String... commands)
+		throws IOException, TimeoutException {
 
 		Process process = null;
 
@@ -528,6 +531,10 @@ public class GitUtil {
 			}
 			catch (IOException | TimeoutException exception) {
 				if (retries == maxRetries) {
+					if (throwExceptions) {
+						throw exception;
+					}
+
 					throw new RuntimeException(
 						"Unable to execute bash commands: " +
 							Arrays.toString(commands),
@@ -582,6 +589,22 @@ public class GitUtil {
 
 		return new ExecutionResult(
 			process.exitValue(), standardErr.trim(), standardOut.trim());
+	}
+
+	protected static ExecutionResult executeBashCommands(
+		int maxRetries, long retryDelay, long timeout, File workingDirectory,
+		String... commands) {
+
+		try {
+			return executeBashCommands(
+				maxRetries, retryDelay, false, timeout, workingDirectory,
+				commands);
+		}
+		catch (IOException | TimeoutException exception) {
+			throw new RuntimeException(
+				"Unable to execute bash commands: " + Arrays.toString(commands),
+				exception);
+		}
 	}
 
 	private static void _debugDNS(Process process) {

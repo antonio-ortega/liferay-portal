@@ -52,8 +52,18 @@ public class SharedInternalModelBatchTestEntityResourceImpl
 		return new ExportImportDescriptor() {
 
 			@Override
+			public String getKey() {
+				return "SharedInternalModelBatchTestEntityKey";
+			}
+
+			@Override
 			public String getLabelLanguageKey() {
 				return "shared-internal-model-batch-test-entity";
+			}
+
+			@Override
+			public Class getModelClass() {
+				return null;
 			}
 
 			@Override
@@ -69,33 +79,11 @@ public class SharedInternalModelBatchTestEntityResourceImpl
 			}
 
 			@Override
-			public String getResourceClassName() {
-				return SharedInternalModelBatchTestEntityResourceImpl.class.
-					getName();
-			}
-
-			@Override
 			public ExportImportVulcanBatchEngineTaskItemDelegate.Scope
 				getScope() {
 
 				return ExportImportVulcanBatchEngineTaskItemDelegate.Scope.
 					COMPANY;
-			}
-
-			@Override
-			public boolean isApplicableExternalReferenceCode(
-				String externalReferenceCode) {
-
-				SharedInternalModelBatchTestEntity
-					sharedInternalModelBatchTestEntity =
-						_fetchSharedInternalModelBatchTestEntity(
-							externalReferenceCode);
-
-				if (sharedInternalModelBatchTestEntity != null) {
-					return true;
-				}
-
-				return false;
 			}
 
 		};

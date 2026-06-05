@@ -6,8 +6,8 @@
 package com.liferay.portal.upgrade.v6_2_0;
 
 import com.liferay.document.library.kernel.model.DLFolderConstants;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.util.LoggingTimer;
-import com.liferay.portal.kernel.util.StringBundler;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -51,8 +51,7 @@ public class UpgradeMessageBoardsAttachments
 	@Override
 	protected String getDirName(long containerModelId, long resourcePrimKey) {
 		return StringBundler.concat(
-			"messageboards/", String.valueOf(containerModelId), "/",
-			String.valueOf(resourcePrimKey));
+			"messageboards/", containerModelId, "/", resourcePrimKey);
 	}
 
 	@Override
@@ -63,10 +62,12 @@ public class UpgradeMessageBoardsAttachments
 	@Override
 	protected void updateAttachments() throws Exception {
 		try (LoggingTimer loggingTimer = new LoggingTimer();
+
 			PreparedStatement preparedStatement = connection.prepareStatement(
 				"select messageId, groupId, companyId, userId, userName, " +
 					"threadId from MBMessage where classNameId = 0 and " +
 						"classPK = 0");
+
 			ResultSet resultSet = preparedStatement.executeQuery()) {
 
 			while (resultSet.next()) {

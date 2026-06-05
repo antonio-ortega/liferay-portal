@@ -124,3 +124,4 @@ public interface CPDefinitionSpecificationOptionValueService
 		throws PortalException;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-2095003395

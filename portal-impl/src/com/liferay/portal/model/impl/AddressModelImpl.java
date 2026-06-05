@@ -125,6 +125,8 @@ public class AddressModelImpl
 
 	public static final String TABLE_SQL_DROP = "drop table Address";
 
+	public static final String ENTITY_ALIAS = "address";
+
 	public static final String ORDER_BY_JPQL =
 		" ORDER BY address.createDate ASC";
 
@@ -1741,3 +1743,4 @@ public class AddressModelImpl
 	private Address _escapedModel;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:2085931435

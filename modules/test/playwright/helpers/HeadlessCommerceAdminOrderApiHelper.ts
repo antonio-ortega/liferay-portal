@@ -140,6 +140,12 @@ export class HeadlessCommerceAdminOrderApiHelper {
 		);
 	}
 
+	async getOrderTypesPage() {
+		return this.apiHelpers.get(
+			`${this.apiHelpers.baseUrl}${this.basePath}/order-types`
+		);
+	}
+
 	async patchOrder(id: number, order: TOrder) {
 		await this.apiHelpers.patch(
 			`${this.apiHelpers.baseUrl}${this.basePath}orders/${id}?nestedFields=orderItems`,
@@ -164,6 +170,13 @@ export class HeadlessCommerceAdminOrderApiHelper {
 		}
 
 		return patchOrder;
+	}
+
+	async patchTerm(termId: number, term: Partial<TTerm>) {
+		return this.apiHelpers.patch(
+			`${this.apiHelpers.baseUrl}${this.basePath}/terms/${termId}`,
+			term
+		);
 	}
 
 	async postOrder(order: TOrder): Promise<TOrder> {
@@ -195,22 +208,13 @@ export class HeadlessCommerceAdminOrderApiHelper {
 			...(orderNote || {}),
 		};
 
-		const postOrder = await this.apiHelpers.post(
+		return await this.apiHelpers.post(
 			`${this.apiHelpers.baseUrl}${this.basePath}/orders/${orderId}/orderNotes`,
 			{
 				data: orderNote,
 				failOnStatusCode: true,
 			}
 		);
-
-		if (this.apiHelpers instanceof DataApiHelpers) {
-			this.apiHelpers.data.push({
-				id: postOrder.id,
-				type: 'order',
-			});
-		}
-
-		return postOrder;
 	}
 
 	async postOrderRule(orderRule: TOrderRule) {

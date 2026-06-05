@@ -78,3 +78,4 @@ public class Patch implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-246356941

@@ -24,6 +24,7 @@ type DateFilter = {
 export type taskStatus = 'success' | 'completedWithErrors';
 
 export class ExportImportPage {
+	readonly allRadioButton: Locator;
 	readonly cancelButton: Locator;
 	readonly clearMenuItem: Locator;
 	readonly continueButton: Locator;
@@ -47,7 +48,6 @@ export class ExportImportPage {
 	readonly newExportButton: Locator;
 	readonly newImportButton: Locator;
 	readonly page: Page;
-	readonly pagesCheckbox: Locator;
 	readonly portletListContainer: Locator;
 	readonly productMenuPage: ProductMenuPage;
 	readonly rangeDateRangeEndDate: Locator;
@@ -57,6 +57,7 @@ export class ExportImportPage {
 	readonly rangeDateRangeStartTime: Locator;
 	readonly rangeLast: Locator;
 	readonly rangeLastRadioButton: Locator;
+	readonly refreshCountsLink: Locator;
 	readonly taskActionsMenu: (taskName: string) => Locator;
 	readonly taskRow: (taskName: string) => Locator;
 	readonly taskStatusLabel: (
@@ -71,6 +72,7 @@ export class ExportImportPage {
 	readonly warningHeader: Locator;
 
 	constructor(page: Page) {
+		this.allRadioButton = page.getByTestId('range_rangeAll');
 		this.cancelButton = page.getByRole('button', {name: 'Cancel'});
 		this.clearMenuItem = page.getByRole('link', {name: 'Clear'});
 		this.continueButton = page.getByRole('button', {name: 'Continue'});
@@ -116,9 +118,6 @@ export class ExportImportPage {
 		this.newExportButton = page.getByRole('link', {name: 'Custom Export'});
 		this.newImportButton = page.getByRole('link', {name: 'Import'});
 		this.page = page;
-		this.pagesCheckbox = page.locator(
-			'[id="_com_liferay_exportimport_web_portlet_ImportPortlet_contentLink_com_liferay_layout_admin_web_portlet_GroupPagesPortlet"]'
-		);
 		this.portletListContainer = page
 			.locator(
 				'#_com_liferay_exportimport_web_portlet_ExportPortlet_selectContents .portlet-list'
@@ -129,25 +128,52 @@ export class ExportImportPage {
 				)
 			);
 		this.productMenuPage = new ProductMenuPage(page);
-		this.rangeDateRangeEndDate = page.locator(
-			'[id="_com_liferay_exportimport_web_portlet_CompanyExportPortlet_endDate"]'
-		);
-		this.rangeDateRangeEndTime = page.locator(
-			'[id="_com_liferay_exportimport_web_portlet_CompanyExportPortlet_endTime"]'
-		);
+		this.rangeDateRangeEndDate = page
+			.locator(
+				'[id="_com_liferay_exportimport_web_portlet_CompanyExportPortlet_endDate"]'
+			)
+			.or(
+				page.locator(
+					'[id="_com_liferay_exportimport_web_portlet_ExportPortlet_endDate"]'
+				)
+			);
+		this.rangeDateRangeEndTime = page
+			.locator(
+				'[id="_com_liferay_exportimport_web_portlet_CompanyExportPortlet_endTime"]'
+			)
+			.or(
+				page.locator(
+					'[id="_com_liferay_exportimport_web_portlet_ExportPortlet_endTime"]'
+				)
+			);
 		this.rangeDateRangeRadioButton = page.getByRole('radio', {
 			name: 'Date Range',
 		});
-		this.rangeDateRangeStartDate = page.locator(
-			'[id="_com_liferay_exportimport_web_portlet_CompanyExportPortlet_startDate"]'
-		);
-		this.rangeDateRangeStartTime = page.locator(
-			'[id="_com_liferay_exportimport_web_portlet_CompanyExportPortlet_startTime"]'
-		);
+		this.rangeDateRangeStartDate = page
+			.locator(
+				'[id="_com_liferay_exportimport_web_portlet_CompanyExportPortlet_startDate"]'
+			)
+			.or(
+				page.locator(
+					'[id="_com_liferay_exportimport_web_portlet_ExportPortlet_startDate"]'
+				)
+			);
+		this.rangeDateRangeStartTime = page
+			.locator(
+				'[id="_com_liferay_exportimport_web_portlet_CompanyExportPortlet_startTime"]'
+			)
+			.or(
+				page.locator(
+					'[id="_com_liferay_exportimport_web_portlet_ExportPortlet_startTime"]'
+				)
+			);
 		this.rangeLast = page.locator(
 			'[id="_com_liferay_exportimport_web_portlet_CompanyExportPortlet_last"]'
 		);
 		this.rangeLastRadioButton = page.getByRole('radio', {name: 'Last'});
+		this.refreshCountsLink = page.getByRole('link', {
+			name: 'Refresh Counts',
+		});
 		this.taskActionsMenu = (taskName) =>
 			this.taskRow(taskName).getByRole('button');
 		this.taskRow = (taskName) =>
@@ -160,9 +186,9 @@ export class ExportImportPage {
 				success: 'Successful',
 			};
 
-			return this.taskRow(taskName).getByText(
-				taskStatusTexts[taskStatus]
-			);
+			return this.taskRow(taskName)
+				.first()
+				.getByText(taskStatusTexts[taskStatus]);
 		};
 		this.title = page.getByPlaceholder('Enter the name of the process');
 		this.updateDataAlert = page.locator('[role="alert"]', {
@@ -185,8 +211,130 @@ export class ExportImportPage {
 		});
 	}
 
+	async checkAllPortlets() {
+		const portletListContainer = this.portletListContainer;
+
+		await portletListContainer.waitFor({state: 'attached'});
+
+		const checkBoxes = portletListContainer.locator(
+			'input[type="checkbox"]:visible'
+		);
+
+		for (const checkbox of await checkBoxes.all()) {
+			await checkbox.check();
+		}
+	}
+
+	async expectPortletCounts(
+		label: string | RegExp,
+		{
+			counts = {},
+			registrations,
+		}: {
+			counts?: {deletions?: number; items?: number};
+			registrations?: Array<{
+				counts: {deletions?: number; items?: number};
+				label: string | RegExp;
+			}>;
+		} = {}
+	) {
+		if (registrations) {
+			if (typeof label === 'string') {
+				await this.page
+					.locator(
+						`button.content-link[data-portlettitle="${label}"]`
+					)
+					.click();
+			}
+			else {
+				const buttons = this.page.locator(
+					'button.content-link[data-portlettitle]'
+				);
+
+				await buttons.first().waitFor();
+
+				for (const button of await buttons.all()) {
+					const title = await button.evaluate(
+						(element) => element.dataset.portlettitle
+					);
+
+					if (title && label.test(title)) {
+						await button.click();
+						break;
+					}
+				}
+			}
+		}
+
+		for (const entry of [{counts, label}, ...(registrations ?? [])]) {
+			await this._assertPortletEntryCounts(entry.label, entry.counts);
+		}
+	}
+
+	async expectPortletAbsent(label: string | RegExp) {
+		const filter =
+			typeof label === 'string'
+				? {has: this.page.locator(`:text-is("${label}")`)}
+				: {hasText: label};
+
+		await expect(this.page.locator('label').filter(filter)).toHaveCount(0);
+	}
+
+	async expectPortletDeletionsHidden(label: string | RegExp) {
+		await this._assertPortletEntryCounts(label, {deletions: 'hidden'});
+	}
+
+	private async _assertPortletEntryCounts(
+		label: string | RegExp,
+		counts: {
+			deletions?: 'absent' | 'hidden' | number;
+			items?: 'absent' | number;
+		}
+	) {
+		const filter =
+			typeof label === 'string'
+				? {has: this.page.locator(`:text-is("${label}")`)}
+				: {hasText: label};
+
+		const labelLocator = this.page.locator('label').filter(filter);
+		const {deletions, items} = counts;
+
+		if (items !== undefined) {
+			const itemsLocator = labelLocator.locator(
+				'.staging-taglib-checkbox-items'
+			);
+
+			if (items === 'absent') {
+				await expect(itemsLocator).toHaveCount(0);
+			}
+			else {
+				await expect(itemsLocator).toBeVisible();
+				await expect(itemsLocator).toHaveText(`${items} Items`);
+			}
+		}
+
+		if (deletions !== undefined) {
+			const deletionsLocator = labelLocator.locator(
+				'.staging-taglib-checkbox-deletions'
+			);
+
+			if (deletions === 'absent') {
+				await expect(deletionsLocator).toHaveCount(0);
+			}
+			else if (deletions === 'hidden') {
+				await expect(deletionsLocator).toBeHidden();
+			}
+			else {
+				await expect(deletionsLocator).toBeVisible();
+				await expect(deletionsLocator).toHaveText(
+					`${deletions} Deletions`
+				);
+			}
+		}
+	}
+
 	async uncheckPortlets() {
-		const portletListContainer = await this.portletListContainer;
+		const portletListContainer = this.portletListContainer;
 
 		await portletListContainer.waitFor({state: 'attached'});
 
@@ -201,11 +349,13 @@ export class ExportImportPage {
 
 	async export({
 		dateFilter,
+		exportAllPortlets = false,
 		includePermissions = false,
 		portletLabels,
 		taskName = `Export-${getRandomString()}`,
 	}: {
 		dateFilter?: DateFilter;
+		exportAllPortlets?: boolean;
 		includePermissions?: boolean;
 		portletLabels?: string[];
 		taskName?: string;
@@ -214,11 +364,14 @@ export class ExportImportPage {
 
 		await this.title.fill(taskName);
 
-		if (portletLabels) {
+		if (exportAllPortlets) {
+			await this.checkAllPortlets();
+		}
+		else if (portletLabels) {
 			await this.uncheckPortlets();
 
 			for (const portletLabel of portletLabels) {
-				await this.page.getByLabel(portletLabel, {exact: true}).check();
+				await this.page.getByLabel(portletLabel).check();
 			}
 		}
 
@@ -312,18 +465,6 @@ export class ExportImportPage {
 			return;
 		}
 
-		if (await this.pagesCheckbox.isVisible()) {
-			await this.pagesCheckbox.click();
-		}
-
-		const utilityPages = this.page
-			.locator('#PagesContent')
-			.getByText('Utility Pages');
-
-		if (await utilityPages.isVisible()) {
-			await utilityPages.click();
-		}
-
 		await this.page
 			.locator(
 				'[id="_com_liferay_exportimport_web_portlet_ImportPortlet_contentOptionsLink"]'
@@ -352,10 +493,20 @@ export class ExportImportPage {
 		});
 	}
 
+	async importByDefault(filePath: string) {
+		await this.selectImportFile({filePath});
+
+		await this.importButton.click();
+
+		await expect(
+			this.taskStatusLabel(path.basename(filePath), 'success')
+		).toBeVisible();
+	}
+
 	async getExportableItems() {
 		await this.newExportButton.click();
 
-		const portletListContainer = await this.portletListContainer;
+		const portletListContainer = this.portletListContainer;
 
 		await portletListContainer.waitFor({state: 'attached'});
 
@@ -367,9 +518,15 @@ export class ExportImportPage {
 
 		for (const itemLocator of await itemsLocator.all()) {
 			const title = await itemLocator.locator('strong').textContent();
-			const countText = await itemLocator
-				.locator('.staging-taglib-checkbox-items')
-				.textContent();
+			const countLocator = itemLocator.locator(
+				'.staging-taglib-checkbox-items'
+			);
+
+			if ((await countLocator.count()) === 0) {
+				continue;
+			}
+
+			const countText = await countLocator.textContent();
 
 			const countMatch = countText ? countText.match(/\d+/) : null;
 

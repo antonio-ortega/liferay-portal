@@ -81,7 +81,7 @@ test.describe('Fragment Style Configuration and Token Detachment', () => {
 			await test.step('Change the background color and type a 3 digits color reference', async () => {
 				await pageEditorPage.goToConfigurationTab('Styles');
 
-				await getBackgroundColorInputLocator(page).fill('#03C');
+				await getBackgroundColorInputLocator(page).fill('03C');
 			});
 
 			await test.step('Check if the color reference is autocompleted after trigger auto save', async () => {
@@ -90,7 +90,7 @@ test.describe('Fragment Style Configuration and Token Detachment', () => {
 				await pageEditorPage.waitForChangesSaved();
 
 				await expect(getBackgroundColorInputLocator(page)).toHaveValue(
-					'#0033CC'
+					'0033CC'
 				);
 			});
 
@@ -127,7 +127,7 @@ test.describe('Fragment Style Configuration and Token Detachment', () => {
 					.click();
 
 				await expect(getBackgroundColorInputLocator(page)).toHaveValue(
-					'#287D3C'
+					'287D3C'
 				);
 
 				await expect(
@@ -153,7 +153,7 @@ test.describe('Style Book Token Validation and Publication Workflow', () => {
 		'Check if the user could cancel publish process in style book editor if link invalid color token.',
 		{tag: '@LPS-145650'},
 		async ({page, styleBooksHelper, styleBooksPage}) => {
-			const STYLEBOOK_CATEGORY_VALUE = '#00CCBB';
+			const STYLEBOOK_CATEGORY_VALUE = '00CCBB';
 
 			await test.step('Change the Brand Color 1 to an invalid color token', async () => {
 				await styleBooksPage.updateTokenInputColor(
@@ -267,7 +267,7 @@ test.describe('Style Book Token Validation and Publication Workflow', () => {
 				await styleBooksHelper.assertTokenInputValue({
 					label: STYLEBOOK_BRAND_COLOR_1,
 					section: STYLEBOOK_BRAND_COLORS_SECTION,
-					value: '#0B5FFF',
+					value: '0B5FFF',
 				});
 			});
 		}
@@ -319,7 +319,7 @@ test.describe('Style Book Token Validation and Publication Workflow', () => {
 
 				await styleBooksPage.updateTokenInput(
 					'Success',
-					'#34f787',
+					'34f787',
 					'Theme Colors'
 				);
 

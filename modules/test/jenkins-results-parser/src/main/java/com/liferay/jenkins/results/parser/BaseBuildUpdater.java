@@ -88,9 +88,11 @@ public abstract class BaseBuildUpdater implements BuildUpdater {
 		}
 
 		if (!_hasMaximumInvocationCount()) {
-			_build.setStatus("starting");
-
 			_build.reset();
+
+			reinvoke();
+
+			_build.setStatus("queued");
 
 			return;
 		}
@@ -191,7 +193,7 @@ public abstract class BaseBuildUpdater implements BuildUpdater {
 	private boolean _isApplyReinvokeRules() {
 		Build build = getBuild();
 
-		if (build instanceof AxisBuild || build instanceof ParentBuild) {
+		if (build instanceof ParentBuild) {
 			return false;
 		}
 
@@ -216,10 +218,6 @@ public abstract class BaseBuildUpdater implements BuildUpdater {
 
 	private boolean _isApplySlaveOfflineRules() {
 		Build build = getBuild();
-
-		if (build instanceof BatchBuild) {
-			return false;
-		}
 
 		if ((isBuildCompleted() && !isBuildFailing()) || !isBuildCompleted() ||
 			build.isFromArchive()) {
@@ -258,9 +256,7 @@ public abstract class BaseBuildUpdater implements BuildUpdater {
 	private void _reinvoke(ReinvokeRule reinvokeRule) {
 		Build build = getBuild();
 
-		if (build instanceof AxisBuild || build instanceof ParentBuild ||
-			_hasMaximumInvocationCount()) {
-
+		if ((build instanceof ParentBuild) || _hasMaximumInvocationCount()) {
 			return;
 		}
 
@@ -368,7 +364,7 @@ public abstract class BaseBuildUpdater implements BuildUpdater {
 	private void _setCurrentReinvokeRule() {
 		Build build = getBuild();
 
-		if (build instanceof AxisBuild || build instanceof ParentBuild) {
+		if (build instanceof ParentBuild) {
 			return;
 		}
 

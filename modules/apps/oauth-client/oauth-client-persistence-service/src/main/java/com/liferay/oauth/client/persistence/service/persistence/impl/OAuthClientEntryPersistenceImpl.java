@@ -5,6 +5,7 @@
 
 package com.liferay.oauth.client.persistence.service.persistence.impl;
 
+import com.liferay.oauth.client.persistence.exception.DuplicateOAuthClientEntryExternalReferenceCodeException;
 import com.liferay.oauth.client.persistence.exception.NoSuchOAuthClientEntryException;
 import com.liferay.oauth.client.persistence.model.OAuthClientEntry;
 import com.liferay.oauth.client.persistence.model.OAuthClientEntryTable;
@@ -13,35 +14,40 @@ import com.liferay.oauth.client.persistence.model.impl.OAuthClientEntryModelImpl
 import com.liferay.oauth.client.persistence.service.persistence.OAuthClientEntryPersistence;
 import com.liferay.oauth.client.persistence.service.persistence.OAuthClientEntryUtil;
 import com.liferay.oauth.client.persistence.service.persistence.impl.constants.OAuthClientPersistenceConstants;
-import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.configuration.Configuration;
 import com.liferay.portal.kernel.dao.orm.EntityCache;
 import com.liferay.portal.kernel.dao.orm.FinderCache;
 import com.liferay.portal.kernel.dao.orm.FinderPath;
-import com.liferay.portal.kernel.dao.orm.Query;
-import com.liferay.portal.kernel.dao.orm.QueryPos;
-import com.liferay.portal.kernel.dao.orm.QueryUtil;
-import com.liferay.portal.kernel.dao.orm.SQLQuery;
 import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.dao.orm.SessionFactory;
+import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.sanitizer.Sanitizer;
+import com.liferay.portal.kernel.sanitizer.SanitizerException;
+import com.liferay.portal.kernel.sanitizer.SanitizerUtil;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
-import com.liferay.portal.kernel.security.permission.InlineSQLHelperUtil;
+import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
+import com.liferay.portal.kernel.service.persistence.impl.FilterCollectionPersistenceFinder;
+import com.liferay.portal.kernel.service.persistence.impl.FinderColumn;
+import com.liferay.portal.kernel.service.persistence.impl.UniquePersistenceFinder;
+import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
-import com.liferay.portal.kernel.util.PropsKeys;
-import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.SetUtil;
+import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
 
 import java.io.Serializable;
 
 import java.lang.reflect.InvocationHandler;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -66,7 +72,8 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(service = OAuthClientEntryPersistence.class)
 public class OAuthClientEntryPersistenceImpl
-	extends BasePersistenceImpl<OAuthClientEntry>
+	extends BasePersistenceImpl
+		<OAuthClientEntry, NoSuchOAuthClientEntryException>
 	implements OAuthClientEntryPersistence {
 
 	/*
@@ -83,70 +90,261 @@ public class OAuthClientEntryPersistenceImpl
 	public static final String FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION =
 		FINDER_CLASS_NAME_ENTITY + ".List2";
 
-	private FinderPath _finderPathWithPaginationFindAll;
-	private FinderPath _finderPathWithoutPaginationFindAll;
-	private FinderPath _finderPathCountAll;
-	private FinderPath _finderPathWithPaginationFindByCompanyId;
-	private FinderPath _finderPathWithoutPaginationFindByCompanyId;
-	private FinderPath _finderPathCountByCompanyId;
+	private FilterCollectionPersistenceFinder
+		<OAuthClientEntry, NoSuchOAuthClientEntryException>
+			_collectionPersistenceFinderByUuid;
 
 	/**
-	 * Returns all the o auth client entries where companyId = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @return the matching o auth client entries
-	 */
-	@Override
-	public List<OAuthClientEntry> findByCompanyId(long companyId) {
-		return findByCompanyId(
-			companyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
-	}
-
-	/**
-	 * Returns a range of all the o auth client entries where companyId = &#63;.
+	 * Returns an ordered range of all the o auth client entries where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuthClientEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuthClientEntryModelImpl</code>.
 	 * </p>
 	 *
-	 * @param companyId the company ID
+	 * @param uuid the uuid
 	 * @param start the lower bound of the range of o auth client entries
 	 * @param end the upper bound of the range of o auth client entries (not inclusive)
-	 * @return the range of matching o auth client entries
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the ordered range of matching o auth client entries
 	 */
 	@Override
-	public List<OAuthClientEntry> findByCompanyId(
-		long companyId, int start, int end) {
+	public List<OAuthClientEntry> findByUuid(
+		String uuid, int start, int end,
+		OrderByComparator<OAuthClientEntry> orderByComparator,
+		boolean useFinderCache) {
 
-		return findByCompanyId(companyId, start, end, null);
+		return _collectionPersistenceFinderByUuid.find(
+			finderCache, new Object[] {uuid}, start, end, orderByComparator,
+			useFinderCache);
 	}
 
 	/**
-	 * Returns an ordered range of all the o auth client entries where companyId = &#63;.
+	 * Returns the first o auth client entry in the ordered set where uuid = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching o auth client entry
+	 * @throws NoSuchOAuthClientEntryException if a matching o auth client entry could not be found
+	 */
+	@Override
+	public OAuthClientEntry findByUuid_First(
+			String uuid, OrderByComparator<OAuthClientEntry> orderByComparator)
+		throws NoSuchOAuthClientEntryException {
+
+		return _collectionPersistenceFinderByUuid.findFirst(
+			finderCache, new Object[] {uuid}, orderByComparator);
+	}
+
+	/**
+	 * Returns the first o auth client entry in the ordered set where uuid = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching o auth client entry, or <code>null</code> if a matching o auth client entry could not be found
+	 */
+	@Override
+	public OAuthClientEntry fetchByUuid_First(
+		String uuid, OrderByComparator<OAuthClientEntry> orderByComparator) {
+
+		return _collectionPersistenceFinderByUuid.fetchFirst(
+			finderCache, new Object[] {uuid}, orderByComparator);
+	}
+
+	/**
+	 * Returns an ordered range of all the o auth client entries that the user has permissions to view where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuthClientEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuthClientEntryModelImpl</code>.
 	 * </p>
 	 *
+	 * @param uuid the uuid
+	 * @param start the lower bound of the range of o auth client entries
+	 * @param end the upper bound of the range of o auth client entries (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching o auth client entries that the user has permission to view
+	 */
+	@Override
+	public List<OAuthClientEntry> filterFindByUuid(
+		String uuid, int start, int end,
+		OrderByComparator<OAuthClientEntry> orderByComparator) {
+
+		return _collectionPersistenceFinderByUuid.filterFind(
+			finderCache, new Object[] {uuid}, start, end, orderByComparator);
+	}
+
+	/**
+	 * Removes all the o auth client entries where uuid = &#63; from the database.
+	 *
+	 * @param uuid the uuid
+	 */
+	@Override
+	public void removeByUuid(String uuid) {
+		_collectionPersistenceFinderByUuid.remove(
+			finderCache, new Object[] {uuid});
+	}
+
+	/**
+	 * Returns the number of o auth client entries where uuid = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @return the number of matching o auth client entries
+	 */
+	@Override
+	public int countByUuid(String uuid) {
+		return _collectionPersistenceFinderByUuid.count(
+			finderCache, new Object[] {uuid});
+	}
+
+	/**
+	 * Returns the number of o auth client entries that the user has permission to view where uuid = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @return the number of matching o auth client entries that the user has permission to view
+	 */
+	@Override
+	public int filterCountByUuid(String uuid) {
+		return _collectionPersistenceFinderByUuid.filterCount(
+			finderCache, new Object[] {uuid});
+	}
+
+	private FilterCollectionPersistenceFinder
+		<OAuthClientEntry, NoSuchOAuthClientEntryException>
+			_collectionPersistenceFinderByUuid_C;
+
+	/**
+	 * Returns an ordered range of all the o auth client entries where uuid = &#63; and companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuthClientEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param uuid the uuid
 	 * @param companyId the company ID
 	 * @param start the lower bound of the range of o auth client entries
 	 * @param end the upper bound of the range of o auth client entries (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching o auth client entries
 	 */
 	@Override
-	public List<OAuthClientEntry> findByCompanyId(
-		long companyId, int start, int end,
+	public List<OAuthClientEntry> findByUuid_C(
+		String uuid, long companyId, int start, int end,
+		OrderByComparator<OAuthClientEntry> orderByComparator,
+		boolean useFinderCache) {
+
+		return _collectionPersistenceFinderByUuid_C.find(
+			finderCache, new Object[] {uuid, companyId}, start, end,
+			orderByComparator, useFinderCache);
+	}
+
+	/**
+	 * Returns the first o auth client entry in the ordered set where uuid = &#63; and companyId = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching o auth client entry
+	 * @throws NoSuchOAuthClientEntryException if a matching o auth client entry could not be found
+	 */
+	@Override
+	public OAuthClientEntry findByUuid_C_First(
+			String uuid, long companyId,
+			OrderByComparator<OAuthClientEntry> orderByComparator)
+		throws NoSuchOAuthClientEntryException {
+
+		return _collectionPersistenceFinderByUuid_C.findFirst(
+			finderCache, new Object[] {uuid, companyId}, orderByComparator);
+	}
+
+	/**
+	 * Returns the first o auth client entry in the ordered set where uuid = &#63; and companyId = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching o auth client entry, or <code>null</code> if a matching o auth client entry could not be found
+	 */
+	@Override
+	public OAuthClientEntry fetchByUuid_C_First(
+		String uuid, long companyId,
 		OrderByComparator<OAuthClientEntry> orderByComparator) {
 
-		return findByCompanyId(companyId, start, end, orderByComparator, true);
+		return _collectionPersistenceFinderByUuid_C.fetchFirst(
+			finderCache, new Object[] {uuid, companyId}, orderByComparator);
 	}
+
+	/**
+	 * Returns an ordered range of all the o auth client entries that the user has permissions to view where uuid = &#63; and companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuthClientEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of o auth client entries
+	 * @param end the upper bound of the range of o auth client entries (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching o auth client entries that the user has permission to view
+	 */
+	@Override
+	public List<OAuthClientEntry> filterFindByUuid_C(
+		String uuid, long companyId, int start, int end,
+		OrderByComparator<OAuthClientEntry> orderByComparator) {
+
+		return _collectionPersistenceFinderByUuid_C.filterFind(
+			finderCache, new Object[] {uuid, companyId}, start, end,
+			orderByComparator, companyId, 0);
+	}
+
+	/**
+	 * Removes all the o auth client entries where uuid = &#63; and companyId = &#63; from the database.
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 */
+	@Override
+	public void removeByUuid_C(String uuid, long companyId) {
+		_collectionPersistenceFinderByUuid_C.remove(
+			finderCache, new Object[] {uuid, companyId});
+	}
+
+	/**
+	 * Returns the number of o auth client entries where uuid = &#63; and companyId = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @return the number of matching o auth client entries
+	 */
+	@Override
+	public int countByUuid_C(String uuid, long companyId) {
+		return _collectionPersistenceFinderByUuid_C.count(
+			finderCache, new Object[] {uuid, companyId});
+	}
+
+	/**
+	 * Returns the number of o auth client entries that the user has permission to view where uuid = &#63; and companyId = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @return the number of matching o auth client entries that the user has permission to view
+	 */
+	@Override
+	public int filterCountByUuid_C(String uuid, long companyId) {
+		return _collectionPersistenceFinderByUuid_C.filterCount(
+			finderCache, new Object[] {uuid, companyId}, companyId, 0);
+	}
+
+	private FilterCollectionPersistenceFinder
+		<OAuthClientEntry, NoSuchOAuthClientEntryException>
+			_collectionPersistenceFinderByCompanyId;
 
 	/**
 	 * Returns an ordered range of all the o auth client entries where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuthClientEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuthClientEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -162,95 +360,9 @@ public class OAuthClientEntryPersistenceImpl
 		OrderByComparator<OAuthClientEntry> orderByComparator,
 		boolean useFinderCache) {
 
-		FinderPath finderPath = null;
-		Object[] finderArgs = null;
-
-		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-			(orderByComparator == null)) {
-
-			if (useFinderCache) {
-				finderPath = _finderPathWithoutPaginationFindByCompanyId;
-				finderArgs = new Object[] {companyId};
-			}
-		}
-		else if (useFinderCache) {
-			finderPath = _finderPathWithPaginationFindByCompanyId;
-			finderArgs = new Object[] {
-				companyId, start, end, orderByComparator
-			};
-		}
-
-		List<OAuthClientEntry> list = null;
-
-		if (useFinderCache) {
-			list = (List<OAuthClientEntry>)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if ((list != null) && !list.isEmpty()) {
-				for (OAuthClientEntry oAuthClientEntry : list) {
-					if (companyId != oAuthClientEntry.getCompanyId()) {
-						list = null;
-
-						break;
-					}
-				}
-			}
-		}
-
-		if (list == null) {
-			StringBundler sb = null;
-
-			if (orderByComparator != null) {
-				sb = new StringBundler(
-					3 + (orderByComparator.getOrderByFields().length * 2));
-			}
-			else {
-				sb = new StringBundler(3);
-			}
-
-			sb.append(_SQL_SELECT_OAUTHCLIENTENTRY_WHERE);
-
-			sb.append(_FINDER_COLUMN_COMPANYID_COMPANYID_2);
-
-			if (orderByComparator != null) {
-				appendOrderByComparator(
-					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
-			}
-			else {
-				sb.append(OAuthClientEntryModelImpl.ORDER_BY_JPQL);
-			}
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(companyId);
-
-				list = (List<OAuthClientEntry>)QueryUtil.list(
-					query, getDialect(), start, end);
-
-				cacheResult(list);
-
-				if (useFinderCache) {
-					finderCache.putResult(finderPath, finderArgs, list);
-				}
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return list;
+		return _collectionPersistenceFinderByCompanyId.find(
+			finderCache, new Object[] {companyId}, start, end,
+			orderByComparator, useFinderCache);
 	}
 
 	/**
@@ -267,23 +379,8 @@ public class OAuthClientEntryPersistenceImpl
 			OrderByComparator<OAuthClientEntry> orderByComparator)
 		throws NoSuchOAuthClientEntryException {
 
-		OAuthClientEntry oAuthClientEntry = fetchByCompanyId_First(
-			companyId, orderByComparator);
-
-		if (oAuthClientEntry != null) {
-			return oAuthClientEntry;
-		}
-
-		StringBundler sb = new StringBundler(4);
-
-		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-		sb.append("companyId=");
-		sb.append(companyId);
-
-		sb.append("}");
-
-		throw new NoSuchOAuthClientEntryException(sb.toString());
+		return _collectionPersistenceFinderByCompanyId.findFirst(
+			finderCache, new Object[] {companyId}, orderByComparator);
 	}
 
 	/**
@@ -297,265 +394,15 @@ public class OAuthClientEntryPersistenceImpl
 	public OAuthClientEntry fetchByCompanyId_First(
 		long companyId, OrderByComparator<OAuthClientEntry> orderByComparator) {
 
-		List<OAuthClientEntry> list = findByCompanyId(
-			companyId, 0, 1, orderByComparator);
-
-		if (!list.isEmpty()) {
-			return list.get(0);
-		}
-
-		return null;
-	}
-
-	/**
-	 * Returns the last o auth client entry in the ordered set where companyId = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching o auth client entry
-	 * @throws NoSuchOAuthClientEntryException if a matching o auth client entry could not be found
-	 */
-	@Override
-	public OAuthClientEntry findByCompanyId_Last(
-			long companyId,
-			OrderByComparator<OAuthClientEntry> orderByComparator)
-		throws NoSuchOAuthClientEntryException {
-
-		OAuthClientEntry oAuthClientEntry = fetchByCompanyId_Last(
-			companyId, orderByComparator);
-
-		if (oAuthClientEntry != null) {
-			return oAuthClientEntry;
-		}
-
-		StringBundler sb = new StringBundler(4);
-
-		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-		sb.append("companyId=");
-		sb.append(companyId);
-
-		sb.append("}");
-
-		throw new NoSuchOAuthClientEntryException(sb.toString());
-	}
-
-	/**
-	 * Returns the last o auth client entry in the ordered set where companyId = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching o auth client entry, or <code>null</code> if a matching o auth client entry could not be found
-	 */
-	@Override
-	public OAuthClientEntry fetchByCompanyId_Last(
-		long companyId, OrderByComparator<OAuthClientEntry> orderByComparator) {
-
-		int count = countByCompanyId(companyId);
-
-		if (count == 0) {
-			return null;
-		}
-
-		List<OAuthClientEntry> list = findByCompanyId(
-			companyId, count - 1, count, orderByComparator);
-
-		if (!list.isEmpty()) {
-			return list.get(0);
-		}
-
-		return null;
-	}
-
-	/**
-	 * Returns the o auth client entries before and after the current o auth client entry in the ordered set where companyId = &#63;.
-	 *
-	 * @param oAuthClientEntryId the primary key of the current o auth client entry
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next o auth client entry
-	 * @throws NoSuchOAuthClientEntryException if a o auth client entry with the primary key could not be found
-	 */
-	@Override
-	public OAuthClientEntry[] findByCompanyId_PrevAndNext(
-			long oAuthClientEntryId, long companyId,
-			OrderByComparator<OAuthClientEntry> orderByComparator)
-		throws NoSuchOAuthClientEntryException {
-
-		OAuthClientEntry oAuthClientEntry = findByPrimaryKey(
-			oAuthClientEntryId);
-
-		Session session = null;
-
-		try {
-			session = openSession();
-
-			OAuthClientEntry[] array = new OAuthClientEntryImpl[3];
-
-			array[0] = getByCompanyId_PrevAndNext(
-				session, oAuthClientEntry, companyId, orderByComparator, true);
-
-			array[1] = oAuthClientEntry;
-
-			array[2] = getByCompanyId_PrevAndNext(
-				session, oAuthClientEntry, companyId, orderByComparator, false);
-
-			return array;
-		}
-		catch (Exception exception) {
-			throw processException(exception);
-		}
-		finally {
-			closeSession(session);
-		}
-	}
-
-	protected OAuthClientEntry getByCompanyId_PrevAndNext(
-		Session session, OAuthClientEntry oAuthClientEntry, long companyId,
-		OrderByComparator<OAuthClientEntry> orderByComparator,
-		boolean previous) {
-
-		StringBundler sb = null;
-
-		if (orderByComparator != null) {
-			sb = new StringBundler(
-				4 + (orderByComparator.getOrderByConditionFields().length * 3) +
-					(orderByComparator.getOrderByFields().length * 3));
-		}
-		else {
-			sb = new StringBundler(3);
-		}
-
-		sb.append(_SQL_SELECT_OAUTHCLIENTENTRY_WHERE);
-
-		sb.append(_FINDER_COLUMN_COMPANYID_COMPANYID_2);
-
-		if (orderByComparator != null) {
-			String[] orderByConditionFields =
-				orderByComparator.getOrderByConditionFields();
-
-			if (orderByConditionFields.length > 0) {
-				sb.append(WHERE_AND);
-			}
-
-			for (int i = 0; i < orderByConditionFields.length; i++) {
-				sb.append(_ORDER_BY_ENTITY_ALIAS);
-				sb.append(orderByConditionFields[i]);
-
-				if ((i + 1) < orderByConditionFields.length) {
-					if (orderByComparator.isAscending() ^ previous) {
-						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
-					}
-					else {
-						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
-					}
-				}
-				else {
-					if (orderByComparator.isAscending() ^ previous) {
-						sb.append(WHERE_GREATER_THAN);
-					}
-					else {
-						sb.append(WHERE_LESSER_THAN);
-					}
-				}
-			}
-
-			sb.append(ORDER_BY_CLAUSE);
-
-			String[] orderByFields = orderByComparator.getOrderByFields();
-
-			for (int i = 0; i < orderByFields.length; i++) {
-				sb.append(_ORDER_BY_ENTITY_ALIAS);
-				sb.append(orderByFields[i]);
-
-				if ((i + 1) < orderByFields.length) {
-					if (orderByComparator.isAscending() ^ previous) {
-						sb.append(ORDER_BY_ASC_HAS_NEXT);
-					}
-					else {
-						sb.append(ORDER_BY_DESC_HAS_NEXT);
-					}
-				}
-				else {
-					if (orderByComparator.isAscending() ^ previous) {
-						sb.append(ORDER_BY_ASC);
-					}
-					else {
-						sb.append(ORDER_BY_DESC);
-					}
-				}
-			}
-		}
-		else {
-			sb.append(OAuthClientEntryModelImpl.ORDER_BY_JPQL);
-		}
-
-		String sql = sb.toString();
-
-		Query query = session.createQuery(sql);
-
-		query.setFirstResult(0);
-		query.setMaxResults(2);
-
-		QueryPos queryPos = QueryPos.getInstance(query);
-
-		queryPos.add(companyId);
-
-		if (orderByComparator != null) {
-			for (Object orderByConditionValue :
-					orderByComparator.getOrderByConditionValues(
-						oAuthClientEntry)) {
-
-				queryPos.add(orderByConditionValue);
-			}
-		}
-
-		List<OAuthClientEntry> list = query.list();
-
-		if (list.size() == 2) {
-			return list.get(1);
-		}
-		else {
-			return null;
-		}
-	}
-
-	/**
-	 * Returns all the o auth client entries that the user has permission to view where companyId = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @return the matching o auth client entries that the user has permission to view
-	 */
-	@Override
-	public List<OAuthClientEntry> filterFindByCompanyId(long companyId) {
-		return filterFindByCompanyId(
-			companyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
-	}
-
-	/**
-	 * Returns a range of all the o auth client entries that the user has permission to view where companyId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuthClientEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param start the lower bound of the range of o auth client entries
-	 * @param end the upper bound of the range of o auth client entries (not inclusive)
-	 * @return the range of matching o auth client entries that the user has permission to view
-	 */
-	@Override
-	public List<OAuthClientEntry> filterFindByCompanyId(
-		long companyId, int start, int end) {
-
-		return filterFindByCompanyId(companyId, start, end, null);
+		return _collectionPersistenceFinderByCompanyId.fetchFirst(
+			finderCache, new Object[] {companyId}, orderByComparator);
 	}
 
 	/**
 	 * Returns an ordered range of all the o auth client entries that the user has permissions to view where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuthClientEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuthClientEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -569,301 +416,9 @@ public class OAuthClientEntryPersistenceImpl
 		long companyId, int start, int end,
 		OrderByComparator<OAuthClientEntry> orderByComparator) {
 
-		if (!InlineSQLHelperUtil.isEnabled(companyId, 0)) {
-			return findByCompanyId(companyId, start, end, orderByComparator);
-		}
-
-		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-			isPermissionsInMemoryFilterEnabled()) {
-
-			return InlineSQLHelperUtil.filter(
-				findByCompanyId(
-					companyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-					orderByComparator));
-		}
-
-		StringBundler sb = null;
-
-		if (orderByComparator != null) {
-			sb = new StringBundler(
-				3 + (orderByComparator.getOrderByFields().length * 2));
-		}
-		else {
-			sb = new StringBundler(4);
-		}
-
-		if (getDB().isSupportsInlineDistinct()) {
-			sb.append(_FILTER_SQL_SELECT_OAUTHCLIENTENTRY_WHERE);
-		}
-		else {
-			sb.append(
-				_FILTER_SQL_SELECT_OAUTHCLIENTENTRY_NO_INLINE_DISTINCT_WHERE_1);
-		}
-
-		sb.append(_FINDER_COLUMN_COMPANYID_COMPANYID_2);
-
-		if (!getDB().isSupportsInlineDistinct()) {
-			sb.append(
-				_FILTER_SQL_SELECT_OAUTHCLIENTENTRY_NO_INLINE_DISTINCT_WHERE_2);
-		}
-
-		if (orderByComparator != null) {
-			if (getDB().isSupportsInlineDistinct()) {
-				appendOrderByComparator(
-					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator, true);
-			}
-			else {
-				appendOrderByComparator(
-					sb, _ORDER_BY_ENTITY_TABLE, orderByComparator, true);
-			}
-		}
-		else {
-			if (getDB().isSupportsInlineDistinct()) {
-				sb.append(
-					OAuthClientEntryModelImpl.ORDER_BY_SQL_INLINE_DISTINCT);
-			}
-			else {
-				sb.append(OAuthClientEntryModelImpl.ORDER_BY_SQL);
-			}
-		}
-
-		String sql = InlineSQLHelperUtil.replacePermissionCheck(
-			sb.toString(), OAuthClientEntry.class.getName(),
-			_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
-
-		Session session = null;
-
-		try {
-			session = openSession();
-
-			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
-
-			if (getDB().isSupportsInlineDistinct()) {
-				sqlQuery.addEntity(
-					_FILTER_ENTITY_ALIAS, OAuthClientEntryImpl.class);
-			}
-			else {
-				sqlQuery.addEntity(
-					_FILTER_ENTITY_TABLE, OAuthClientEntryImpl.class);
-			}
-
-			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
-
-			queryPos.add(companyId);
-
-			return (List<OAuthClientEntry>)QueryUtil.list(
-				sqlQuery, getDialect(), start, end);
-		}
-		catch (Exception exception) {
-			throw processException(exception);
-		}
-		finally {
-			closeSession(session);
-		}
-	}
-
-	/**
-	 * Returns the o auth client entries before and after the current o auth client entry in the ordered set of o auth client entries that the user has permission to view where companyId = &#63;.
-	 *
-	 * @param oAuthClientEntryId the primary key of the current o auth client entry
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next o auth client entry
-	 * @throws NoSuchOAuthClientEntryException if a o auth client entry with the primary key could not be found
-	 */
-	@Override
-	public OAuthClientEntry[] filterFindByCompanyId_PrevAndNext(
-			long oAuthClientEntryId, long companyId,
-			OrderByComparator<OAuthClientEntry> orderByComparator)
-		throws NoSuchOAuthClientEntryException {
-
-		if (!InlineSQLHelperUtil.isEnabled(companyId, 0)) {
-			return findByCompanyId_PrevAndNext(
-				oAuthClientEntryId, companyId, orderByComparator);
-		}
-
-		OAuthClientEntry oAuthClientEntry = findByPrimaryKey(
-			oAuthClientEntryId);
-
-		Session session = null;
-
-		try {
-			session = openSession();
-
-			OAuthClientEntry[] array = new OAuthClientEntryImpl[3];
-
-			array[0] = filterGetByCompanyId_PrevAndNext(
-				session, oAuthClientEntry, companyId, orderByComparator, true);
-
-			array[1] = oAuthClientEntry;
-
-			array[2] = filterGetByCompanyId_PrevAndNext(
-				session, oAuthClientEntry, companyId, orderByComparator, false);
-
-			return array;
-		}
-		catch (Exception exception) {
-			throw processException(exception);
-		}
-		finally {
-			closeSession(session);
-		}
-	}
-
-	protected OAuthClientEntry filterGetByCompanyId_PrevAndNext(
-		Session session, OAuthClientEntry oAuthClientEntry, long companyId,
-		OrderByComparator<OAuthClientEntry> orderByComparator,
-		boolean previous) {
-
-		StringBundler sb = null;
-
-		if (orderByComparator != null) {
-			sb = new StringBundler(
-				5 + (orderByComparator.getOrderByConditionFields().length * 3) +
-					(orderByComparator.getOrderByFields().length * 3));
-		}
-		else {
-			sb = new StringBundler(4);
-		}
-
-		if (getDB().isSupportsInlineDistinct()) {
-			sb.append(_FILTER_SQL_SELECT_OAUTHCLIENTENTRY_WHERE);
-		}
-		else {
-			sb.append(
-				_FILTER_SQL_SELECT_OAUTHCLIENTENTRY_NO_INLINE_DISTINCT_WHERE_1);
-		}
-
-		sb.append(_FINDER_COLUMN_COMPANYID_COMPANYID_2);
-
-		if (!getDB().isSupportsInlineDistinct()) {
-			sb.append(
-				_FILTER_SQL_SELECT_OAUTHCLIENTENTRY_NO_INLINE_DISTINCT_WHERE_2);
-		}
-
-		if (orderByComparator != null) {
-			String[] orderByConditionFields =
-				orderByComparator.getOrderByConditionFields();
-
-			if (orderByConditionFields.length > 0) {
-				sb.append(WHERE_AND);
-			}
-
-			for (int i = 0; i < orderByConditionFields.length; i++) {
-				if (getDB().isSupportsInlineDistinct()) {
-					sb.append(
-						getColumnName(
-							_ORDER_BY_ENTITY_ALIAS, orderByConditionFields[i],
-							true));
-				}
-				else {
-					sb.append(
-						getColumnName(
-							_ORDER_BY_ENTITY_TABLE, orderByConditionFields[i],
-							true));
-				}
-
-				if ((i + 1) < orderByConditionFields.length) {
-					if (orderByComparator.isAscending() ^ previous) {
-						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
-					}
-					else {
-						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
-					}
-				}
-				else {
-					if (orderByComparator.isAscending() ^ previous) {
-						sb.append(WHERE_GREATER_THAN);
-					}
-					else {
-						sb.append(WHERE_LESSER_THAN);
-					}
-				}
-			}
-
-			sb.append(ORDER_BY_CLAUSE);
-
-			String[] orderByFields = orderByComparator.getOrderByFields();
-
-			for (int i = 0; i < orderByFields.length; i++) {
-				if (getDB().isSupportsInlineDistinct()) {
-					sb.append(
-						getColumnName(
-							_ORDER_BY_ENTITY_ALIAS, orderByFields[i], true));
-				}
-				else {
-					sb.append(
-						getColumnName(
-							_ORDER_BY_ENTITY_TABLE, orderByFields[i], true));
-				}
-
-				if ((i + 1) < orderByFields.length) {
-					if (orderByComparator.isAscending() ^ previous) {
-						sb.append(ORDER_BY_ASC_HAS_NEXT);
-					}
-					else {
-						sb.append(ORDER_BY_DESC_HAS_NEXT);
-					}
-				}
-				else {
-					if (orderByComparator.isAscending() ^ previous) {
-						sb.append(ORDER_BY_ASC);
-					}
-					else {
-						sb.append(ORDER_BY_DESC);
-					}
-				}
-			}
-		}
-		else {
-			if (getDB().isSupportsInlineDistinct()) {
-				sb.append(
-					OAuthClientEntryModelImpl.ORDER_BY_SQL_INLINE_DISTINCT);
-			}
-			else {
-				sb.append(OAuthClientEntryModelImpl.ORDER_BY_SQL);
-			}
-		}
-
-		String sql = InlineSQLHelperUtil.replacePermissionCheck(
-			sb.toString(), OAuthClientEntry.class.getName(),
-			_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
-
-		SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
-
-		sqlQuery.setFirstResult(0);
-		sqlQuery.setMaxResults(2);
-
-		if (getDB().isSupportsInlineDistinct()) {
-			sqlQuery.addEntity(
-				_FILTER_ENTITY_ALIAS, OAuthClientEntryImpl.class);
-		}
-		else {
-			sqlQuery.addEntity(
-				_FILTER_ENTITY_TABLE, OAuthClientEntryImpl.class);
-		}
-
-		QueryPos queryPos = QueryPos.getInstance(sqlQuery);
-
-		queryPos.add(companyId);
-
-		if (orderByComparator != null) {
-			for (Object orderByConditionValue :
-					orderByComparator.getOrderByConditionValues(
-						oAuthClientEntry)) {
-
-				queryPos.add(orderByConditionValue);
-			}
-		}
-
-		List<OAuthClientEntry> list = sqlQuery.list();
-
-		if (list.size() == 2) {
-			return list.get(1);
-		}
-		else {
-			return null;
-		}
+		return _collectionPersistenceFinderByCompanyId.filterFind(
+			finderCache, new Object[] {companyId}, start, end,
+			orderByComparator, companyId, 0);
 	}
 
 	/**
@@ -873,12 +428,8 @@ public class OAuthClientEntryPersistenceImpl
 	 */
 	@Override
 	public void removeByCompanyId(long companyId) {
-		for (OAuthClientEntry oAuthClientEntry :
-				findByCompanyId(
-					companyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
-
-			remove(oAuthClientEntry);
-		}
+		_collectionPersistenceFinderByCompanyId.remove(
+			finderCache, new Object[] {companyId});
 	}
 
 	/**
@@ -889,45 +440,8 @@ public class OAuthClientEntryPersistenceImpl
 	 */
 	@Override
 	public int countByCompanyId(long companyId) {
-		FinderPath finderPath = _finderPathCountByCompanyId;
-
-		Object[] finderArgs = new Object[] {companyId};
-
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
-
-		if (count == null) {
-			StringBundler sb = new StringBundler(2);
-
-			sb.append(_SQL_COUNT_OAUTHCLIENTENTRY_WHERE);
-
-			sb.append(_FINDER_COLUMN_COMPANYID_COMPANYID_2);
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(companyId);
-
-				count = (Long)query.uniqueResult();
-
-				finderCache.putResult(finderPath, finderArgs, count);
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return count.intValue();
+		return _collectionPersistenceFinderByCompanyId.count(
+			finderCache, new Object[] {companyId});
 	}
 
 	/**
@@ -938,118 +452,19 @@ public class OAuthClientEntryPersistenceImpl
 	 */
 	@Override
 	public int filterCountByCompanyId(long companyId) {
-		if (!InlineSQLHelperUtil.isEnabled(companyId, 0)) {
-			return countByCompanyId(companyId);
-		}
-
-		if (isPermissionsInMemoryFilterEnabled()) {
-			List<OAuthClientEntry> oAuthClientEntries = findByCompanyId(
-				companyId);
-
-			oAuthClientEntries = InlineSQLHelperUtil.filter(oAuthClientEntries);
-
-			return oAuthClientEntries.size();
-		}
-
-		StringBundler sb = new StringBundler(2);
-
-		sb.append(_FILTER_SQL_COUNT_OAUTHCLIENTENTRY_WHERE);
-
-		sb.append(_FINDER_COLUMN_COMPANYID_COMPANYID_2);
-
-		String sql = InlineSQLHelperUtil.replacePermissionCheck(
-			sb.toString(), OAuthClientEntry.class.getName(),
-			_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
-
-		Session session = null;
-
-		try {
-			session = openSession();
-
-			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
-
-			sqlQuery.addScalar(
-				COUNT_COLUMN_NAME, com.liferay.portal.kernel.dao.orm.Type.LONG);
-
-			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
-
-			queryPos.add(companyId);
-
-			Long count = (Long)sqlQuery.uniqueResult();
-
-			return count.intValue();
-		}
-		catch (Exception exception) {
-			throw processException(exception);
-		}
-		finally {
-			closeSession(session);
-		}
+		return _collectionPersistenceFinderByCompanyId.filterCount(
+			finderCache, new Object[] {companyId}, companyId, 0);
 	}
 
-	private static final String _FINDER_COLUMN_COMPANYID_COMPANYID_2 =
-		"oAuthClientEntry.companyId = ?";
-
-	private FinderPath _finderPathWithPaginationFindByUserId;
-	private FinderPath _finderPathWithoutPaginationFindByUserId;
-	private FinderPath _finderPathCountByUserId;
-
-	/**
-	 * Returns all the o auth client entries where userId = &#63;.
-	 *
-	 * @param userId the user ID
-	 * @return the matching o auth client entries
-	 */
-	@Override
-	public List<OAuthClientEntry> findByUserId(long userId) {
-		return findByUserId(userId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
-	}
-
-	/**
-	 * Returns a range of all the o auth client entries where userId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuthClientEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param userId the user ID
-	 * @param start the lower bound of the range of o auth client entries
-	 * @param end the upper bound of the range of o auth client entries (not inclusive)
-	 * @return the range of matching o auth client entries
-	 */
-	@Override
-	public List<OAuthClientEntry> findByUserId(
-		long userId, int start, int end) {
-
-		return findByUserId(userId, start, end, null);
-	}
+	private FilterCollectionPersistenceFinder
+		<OAuthClientEntry, NoSuchOAuthClientEntryException>
+			_collectionPersistenceFinderByUserId;
 
 	/**
 	 * Returns an ordered range of all the o auth client entries where userId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuthClientEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param userId the user ID
-	 * @param start the lower bound of the range of o auth client entries
-	 * @param end the upper bound of the range of o auth client entries (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching o auth client entries
-	 */
-	@Override
-	public List<OAuthClientEntry> findByUserId(
-		long userId, int start, int end,
-		OrderByComparator<OAuthClientEntry> orderByComparator) {
-
-		return findByUserId(userId, start, end, orderByComparator, true);
-	}
-
-	/**
-	 * Returns an ordered range of all the o auth client entries where userId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuthClientEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuthClientEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param userId the user ID
@@ -1065,93 +480,9 @@ public class OAuthClientEntryPersistenceImpl
 		OrderByComparator<OAuthClientEntry> orderByComparator,
 		boolean useFinderCache) {
 
-		FinderPath finderPath = null;
-		Object[] finderArgs = null;
-
-		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-			(orderByComparator == null)) {
-
-			if (useFinderCache) {
-				finderPath = _finderPathWithoutPaginationFindByUserId;
-				finderArgs = new Object[] {userId};
-			}
-		}
-		else if (useFinderCache) {
-			finderPath = _finderPathWithPaginationFindByUserId;
-			finderArgs = new Object[] {userId, start, end, orderByComparator};
-		}
-
-		List<OAuthClientEntry> list = null;
-
-		if (useFinderCache) {
-			list = (List<OAuthClientEntry>)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if ((list != null) && !list.isEmpty()) {
-				for (OAuthClientEntry oAuthClientEntry : list) {
-					if (userId != oAuthClientEntry.getUserId()) {
-						list = null;
-
-						break;
-					}
-				}
-			}
-		}
-
-		if (list == null) {
-			StringBundler sb = null;
-
-			if (orderByComparator != null) {
-				sb = new StringBundler(
-					3 + (orderByComparator.getOrderByFields().length * 2));
-			}
-			else {
-				sb = new StringBundler(3);
-			}
-
-			sb.append(_SQL_SELECT_OAUTHCLIENTENTRY_WHERE);
-
-			sb.append(_FINDER_COLUMN_USERID_USERID_2);
-
-			if (orderByComparator != null) {
-				appendOrderByComparator(
-					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
-			}
-			else {
-				sb.append(OAuthClientEntryModelImpl.ORDER_BY_JPQL);
-			}
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(userId);
-
-				list = (List<OAuthClientEntry>)QueryUtil.list(
-					query, getDialect(), start, end);
-
-				cacheResult(list);
-
-				if (useFinderCache) {
-					finderCache.putResult(finderPath, finderArgs, list);
-				}
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return list;
+		return _collectionPersistenceFinderByUserId.find(
+			finderCache, new Object[] {userId}, start, end, orderByComparator,
+			useFinderCache);
 	}
 
 	/**
@@ -1167,23 +498,8 @@ public class OAuthClientEntryPersistenceImpl
 			long userId, OrderByComparator<OAuthClientEntry> orderByComparator)
 		throws NoSuchOAuthClientEntryException {
 
-		OAuthClientEntry oAuthClientEntry = fetchByUserId_First(
-			userId, orderByComparator);
-
-		if (oAuthClientEntry != null) {
-			return oAuthClientEntry;
-		}
-
-		StringBundler sb = new StringBundler(4);
-
-		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-		sb.append("userId=");
-		sb.append(userId);
-
-		sb.append("}");
-
-		throw new NoSuchOAuthClientEntryException(sb.toString());
+		return _collectionPersistenceFinderByUserId.findFirst(
+			finderCache, new Object[] {userId}, orderByComparator);
 	}
 
 	/**
@@ -1197,264 +513,15 @@ public class OAuthClientEntryPersistenceImpl
 	public OAuthClientEntry fetchByUserId_First(
 		long userId, OrderByComparator<OAuthClientEntry> orderByComparator) {
 
-		List<OAuthClientEntry> list = findByUserId(
-			userId, 0, 1, orderByComparator);
-
-		if (!list.isEmpty()) {
-			return list.get(0);
-		}
-
-		return null;
-	}
-
-	/**
-	 * Returns the last o auth client entry in the ordered set where userId = &#63;.
-	 *
-	 * @param userId the user ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching o auth client entry
-	 * @throws NoSuchOAuthClientEntryException if a matching o auth client entry could not be found
-	 */
-	@Override
-	public OAuthClientEntry findByUserId_Last(
-			long userId, OrderByComparator<OAuthClientEntry> orderByComparator)
-		throws NoSuchOAuthClientEntryException {
-
-		OAuthClientEntry oAuthClientEntry = fetchByUserId_Last(
-			userId, orderByComparator);
-
-		if (oAuthClientEntry != null) {
-			return oAuthClientEntry;
-		}
-
-		StringBundler sb = new StringBundler(4);
-
-		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-		sb.append("userId=");
-		sb.append(userId);
-
-		sb.append("}");
-
-		throw new NoSuchOAuthClientEntryException(sb.toString());
-	}
-
-	/**
-	 * Returns the last o auth client entry in the ordered set where userId = &#63;.
-	 *
-	 * @param userId the user ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching o auth client entry, or <code>null</code> if a matching o auth client entry could not be found
-	 */
-	@Override
-	public OAuthClientEntry fetchByUserId_Last(
-		long userId, OrderByComparator<OAuthClientEntry> orderByComparator) {
-
-		int count = countByUserId(userId);
-
-		if (count == 0) {
-			return null;
-		}
-
-		List<OAuthClientEntry> list = findByUserId(
-			userId, count - 1, count, orderByComparator);
-
-		if (!list.isEmpty()) {
-			return list.get(0);
-		}
-
-		return null;
-	}
-
-	/**
-	 * Returns the o auth client entries before and after the current o auth client entry in the ordered set where userId = &#63;.
-	 *
-	 * @param oAuthClientEntryId the primary key of the current o auth client entry
-	 * @param userId the user ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next o auth client entry
-	 * @throws NoSuchOAuthClientEntryException if a o auth client entry with the primary key could not be found
-	 */
-	@Override
-	public OAuthClientEntry[] findByUserId_PrevAndNext(
-			long oAuthClientEntryId, long userId,
-			OrderByComparator<OAuthClientEntry> orderByComparator)
-		throws NoSuchOAuthClientEntryException {
-
-		OAuthClientEntry oAuthClientEntry = findByPrimaryKey(
-			oAuthClientEntryId);
-
-		Session session = null;
-
-		try {
-			session = openSession();
-
-			OAuthClientEntry[] array = new OAuthClientEntryImpl[3];
-
-			array[0] = getByUserId_PrevAndNext(
-				session, oAuthClientEntry, userId, orderByComparator, true);
-
-			array[1] = oAuthClientEntry;
-
-			array[2] = getByUserId_PrevAndNext(
-				session, oAuthClientEntry, userId, orderByComparator, false);
-
-			return array;
-		}
-		catch (Exception exception) {
-			throw processException(exception);
-		}
-		finally {
-			closeSession(session);
-		}
-	}
-
-	protected OAuthClientEntry getByUserId_PrevAndNext(
-		Session session, OAuthClientEntry oAuthClientEntry, long userId,
-		OrderByComparator<OAuthClientEntry> orderByComparator,
-		boolean previous) {
-
-		StringBundler sb = null;
-
-		if (orderByComparator != null) {
-			sb = new StringBundler(
-				4 + (orderByComparator.getOrderByConditionFields().length * 3) +
-					(orderByComparator.getOrderByFields().length * 3));
-		}
-		else {
-			sb = new StringBundler(3);
-		}
-
-		sb.append(_SQL_SELECT_OAUTHCLIENTENTRY_WHERE);
-
-		sb.append(_FINDER_COLUMN_USERID_USERID_2);
-
-		if (orderByComparator != null) {
-			String[] orderByConditionFields =
-				orderByComparator.getOrderByConditionFields();
-
-			if (orderByConditionFields.length > 0) {
-				sb.append(WHERE_AND);
-			}
-
-			for (int i = 0; i < orderByConditionFields.length; i++) {
-				sb.append(_ORDER_BY_ENTITY_ALIAS);
-				sb.append(orderByConditionFields[i]);
-
-				if ((i + 1) < orderByConditionFields.length) {
-					if (orderByComparator.isAscending() ^ previous) {
-						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
-					}
-					else {
-						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
-					}
-				}
-				else {
-					if (orderByComparator.isAscending() ^ previous) {
-						sb.append(WHERE_GREATER_THAN);
-					}
-					else {
-						sb.append(WHERE_LESSER_THAN);
-					}
-				}
-			}
-
-			sb.append(ORDER_BY_CLAUSE);
-
-			String[] orderByFields = orderByComparator.getOrderByFields();
-
-			for (int i = 0; i < orderByFields.length; i++) {
-				sb.append(_ORDER_BY_ENTITY_ALIAS);
-				sb.append(orderByFields[i]);
-
-				if ((i + 1) < orderByFields.length) {
-					if (orderByComparator.isAscending() ^ previous) {
-						sb.append(ORDER_BY_ASC_HAS_NEXT);
-					}
-					else {
-						sb.append(ORDER_BY_DESC_HAS_NEXT);
-					}
-				}
-				else {
-					if (orderByComparator.isAscending() ^ previous) {
-						sb.append(ORDER_BY_ASC);
-					}
-					else {
-						sb.append(ORDER_BY_DESC);
-					}
-				}
-			}
-		}
-		else {
-			sb.append(OAuthClientEntryModelImpl.ORDER_BY_JPQL);
-		}
-
-		String sql = sb.toString();
-
-		Query query = session.createQuery(sql);
-
-		query.setFirstResult(0);
-		query.setMaxResults(2);
-
-		QueryPos queryPos = QueryPos.getInstance(query);
-
-		queryPos.add(userId);
-
-		if (orderByComparator != null) {
-			for (Object orderByConditionValue :
-					orderByComparator.getOrderByConditionValues(
-						oAuthClientEntry)) {
-
-				queryPos.add(orderByConditionValue);
-			}
-		}
-
-		List<OAuthClientEntry> list = query.list();
-
-		if (list.size() == 2) {
-			return list.get(1);
-		}
-		else {
-			return null;
-		}
-	}
-
-	/**
-	 * Returns all the o auth client entries that the user has permission to view where userId = &#63;.
-	 *
-	 * @param userId the user ID
-	 * @return the matching o auth client entries that the user has permission to view
-	 */
-	@Override
-	public List<OAuthClientEntry> filterFindByUserId(long userId) {
-		return filterFindByUserId(
-			userId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
-	}
-
-	/**
-	 * Returns a range of all the o auth client entries that the user has permission to view where userId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuthClientEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param userId the user ID
-	 * @param start the lower bound of the range of o auth client entries
-	 * @param end the upper bound of the range of o auth client entries (not inclusive)
-	 * @return the range of matching o auth client entries that the user has permission to view
-	 */
-	@Override
-	public List<OAuthClientEntry> filterFindByUserId(
-		long userId, int start, int end) {
-
-		return filterFindByUserId(userId, start, end, null);
+		return _collectionPersistenceFinderByUserId.fetchFirst(
+			finderCache, new Object[] {userId}, orderByComparator);
 	}
 
 	/**
 	 * Returns an ordered range of all the o auth client entries that the user has permissions to view where userId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuthClientEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuthClientEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param userId the user ID
@@ -1468,301 +535,8 @@ public class OAuthClientEntryPersistenceImpl
 		long userId, int start, int end,
 		OrderByComparator<OAuthClientEntry> orderByComparator) {
 
-		if (!InlineSQLHelperUtil.isEnabled()) {
-			return findByUserId(userId, start, end, orderByComparator);
-		}
-
-		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-			isPermissionsInMemoryFilterEnabled()) {
-
-			return InlineSQLHelperUtil.filter(
-				findByUserId(
-					userId, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-					orderByComparator));
-		}
-
-		StringBundler sb = null;
-
-		if (orderByComparator != null) {
-			sb = new StringBundler(
-				3 + (orderByComparator.getOrderByFields().length * 2));
-		}
-		else {
-			sb = new StringBundler(4);
-		}
-
-		if (getDB().isSupportsInlineDistinct()) {
-			sb.append(_FILTER_SQL_SELECT_OAUTHCLIENTENTRY_WHERE);
-		}
-		else {
-			sb.append(
-				_FILTER_SQL_SELECT_OAUTHCLIENTENTRY_NO_INLINE_DISTINCT_WHERE_1);
-		}
-
-		sb.append(_FINDER_COLUMN_USERID_USERID_2);
-
-		if (!getDB().isSupportsInlineDistinct()) {
-			sb.append(
-				_FILTER_SQL_SELECT_OAUTHCLIENTENTRY_NO_INLINE_DISTINCT_WHERE_2);
-		}
-
-		if (orderByComparator != null) {
-			if (getDB().isSupportsInlineDistinct()) {
-				appendOrderByComparator(
-					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator, true);
-			}
-			else {
-				appendOrderByComparator(
-					sb, _ORDER_BY_ENTITY_TABLE, orderByComparator, true);
-			}
-		}
-		else {
-			if (getDB().isSupportsInlineDistinct()) {
-				sb.append(
-					OAuthClientEntryModelImpl.ORDER_BY_SQL_INLINE_DISTINCT);
-			}
-			else {
-				sb.append(OAuthClientEntryModelImpl.ORDER_BY_SQL);
-			}
-		}
-
-		String sql = InlineSQLHelperUtil.replacePermissionCheck(
-			sb.toString(), OAuthClientEntry.class.getName(),
-			_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
-
-		Session session = null;
-
-		try {
-			session = openSession();
-
-			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
-
-			if (getDB().isSupportsInlineDistinct()) {
-				sqlQuery.addEntity(
-					_FILTER_ENTITY_ALIAS, OAuthClientEntryImpl.class);
-			}
-			else {
-				sqlQuery.addEntity(
-					_FILTER_ENTITY_TABLE, OAuthClientEntryImpl.class);
-			}
-
-			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
-
-			queryPos.add(userId);
-
-			return (List<OAuthClientEntry>)QueryUtil.list(
-				sqlQuery, getDialect(), start, end);
-		}
-		catch (Exception exception) {
-			throw processException(exception);
-		}
-		finally {
-			closeSession(session);
-		}
-	}
-
-	/**
-	 * Returns the o auth client entries before and after the current o auth client entry in the ordered set of o auth client entries that the user has permission to view where userId = &#63;.
-	 *
-	 * @param oAuthClientEntryId the primary key of the current o auth client entry
-	 * @param userId the user ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next o auth client entry
-	 * @throws NoSuchOAuthClientEntryException if a o auth client entry with the primary key could not be found
-	 */
-	@Override
-	public OAuthClientEntry[] filterFindByUserId_PrevAndNext(
-			long oAuthClientEntryId, long userId,
-			OrderByComparator<OAuthClientEntry> orderByComparator)
-		throws NoSuchOAuthClientEntryException {
-
-		if (!InlineSQLHelperUtil.isEnabled()) {
-			return findByUserId_PrevAndNext(
-				oAuthClientEntryId, userId, orderByComparator);
-		}
-
-		OAuthClientEntry oAuthClientEntry = findByPrimaryKey(
-			oAuthClientEntryId);
-
-		Session session = null;
-
-		try {
-			session = openSession();
-
-			OAuthClientEntry[] array = new OAuthClientEntryImpl[3];
-
-			array[0] = filterGetByUserId_PrevAndNext(
-				session, oAuthClientEntry, userId, orderByComparator, true);
-
-			array[1] = oAuthClientEntry;
-
-			array[2] = filterGetByUserId_PrevAndNext(
-				session, oAuthClientEntry, userId, orderByComparator, false);
-
-			return array;
-		}
-		catch (Exception exception) {
-			throw processException(exception);
-		}
-		finally {
-			closeSession(session);
-		}
-	}
-
-	protected OAuthClientEntry filterGetByUserId_PrevAndNext(
-		Session session, OAuthClientEntry oAuthClientEntry, long userId,
-		OrderByComparator<OAuthClientEntry> orderByComparator,
-		boolean previous) {
-
-		StringBundler sb = null;
-
-		if (orderByComparator != null) {
-			sb = new StringBundler(
-				5 + (orderByComparator.getOrderByConditionFields().length * 3) +
-					(orderByComparator.getOrderByFields().length * 3));
-		}
-		else {
-			sb = new StringBundler(4);
-		}
-
-		if (getDB().isSupportsInlineDistinct()) {
-			sb.append(_FILTER_SQL_SELECT_OAUTHCLIENTENTRY_WHERE);
-		}
-		else {
-			sb.append(
-				_FILTER_SQL_SELECT_OAUTHCLIENTENTRY_NO_INLINE_DISTINCT_WHERE_1);
-		}
-
-		sb.append(_FINDER_COLUMN_USERID_USERID_2);
-
-		if (!getDB().isSupportsInlineDistinct()) {
-			sb.append(
-				_FILTER_SQL_SELECT_OAUTHCLIENTENTRY_NO_INLINE_DISTINCT_WHERE_2);
-		}
-
-		if (orderByComparator != null) {
-			String[] orderByConditionFields =
-				orderByComparator.getOrderByConditionFields();
-
-			if (orderByConditionFields.length > 0) {
-				sb.append(WHERE_AND);
-			}
-
-			for (int i = 0; i < orderByConditionFields.length; i++) {
-				if (getDB().isSupportsInlineDistinct()) {
-					sb.append(
-						getColumnName(
-							_ORDER_BY_ENTITY_ALIAS, orderByConditionFields[i],
-							true));
-				}
-				else {
-					sb.append(
-						getColumnName(
-							_ORDER_BY_ENTITY_TABLE, orderByConditionFields[i],
-							true));
-				}
-
-				if ((i + 1) < orderByConditionFields.length) {
-					if (orderByComparator.isAscending() ^ previous) {
-						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
-					}
-					else {
-						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
-					}
-				}
-				else {
-					if (orderByComparator.isAscending() ^ previous) {
-						sb.append(WHERE_GREATER_THAN);
-					}
-					else {
-						sb.append(WHERE_LESSER_THAN);
-					}
-				}
-			}
-
-			sb.append(ORDER_BY_CLAUSE);
-
-			String[] orderByFields = orderByComparator.getOrderByFields();
-
-			for (int i = 0; i < orderByFields.length; i++) {
-				if (getDB().isSupportsInlineDistinct()) {
-					sb.append(
-						getColumnName(
-							_ORDER_BY_ENTITY_ALIAS, orderByFields[i], true));
-				}
-				else {
-					sb.append(
-						getColumnName(
-							_ORDER_BY_ENTITY_TABLE, orderByFields[i], true));
-				}
-
-				if ((i + 1) < orderByFields.length) {
-					if (orderByComparator.isAscending() ^ previous) {
-						sb.append(ORDER_BY_ASC_HAS_NEXT);
-					}
-					else {
-						sb.append(ORDER_BY_DESC_HAS_NEXT);
-					}
-				}
-				else {
-					if (orderByComparator.isAscending() ^ previous) {
-						sb.append(ORDER_BY_ASC);
-					}
-					else {
-						sb.append(ORDER_BY_DESC);
-					}
-				}
-			}
-		}
-		else {
-			if (getDB().isSupportsInlineDistinct()) {
-				sb.append(
-					OAuthClientEntryModelImpl.ORDER_BY_SQL_INLINE_DISTINCT);
-			}
-			else {
-				sb.append(OAuthClientEntryModelImpl.ORDER_BY_SQL);
-			}
-		}
-
-		String sql = InlineSQLHelperUtil.replacePermissionCheck(
-			sb.toString(), OAuthClientEntry.class.getName(),
-			_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
-
-		SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
-
-		sqlQuery.setFirstResult(0);
-		sqlQuery.setMaxResults(2);
-
-		if (getDB().isSupportsInlineDistinct()) {
-			sqlQuery.addEntity(
-				_FILTER_ENTITY_ALIAS, OAuthClientEntryImpl.class);
-		}
-		else {
-			sqlQuery.addEntity(
-				_FILTER_ENTITY_TABLE, OAuthClientEntryImpl.class);
-		}
-
-		QueryPos queryPos = QueryPos.getInstance(sqlQuery);
-
-		queryPos.add(userId);
-
-		if (orderByComparator != null) {
-			for (Object orderByConditionValue :
-					orderByComparator.getOrderByConditionValues(
-						oAuthClientEntry)) {
-
-				queryPos.add(orderByConditionValue);
-			}
-		}
-
-		List<OAuthClientEntry> list = sqlQuery.list();
-
-		if (list.size() == 2) {
-			return list.get(1);
-		}
-		else {
-			return null;
-		}
+		return _collectionPersistenceFinderByUserId.filterFind(
+			finderCache, new Object[] {userId}, start, end, orderByComparator);
 	}
 
 	/**
@@ -1772,12 +546,8 @@ public class OAuthClientEntryPersistenceImpl
 	 */
 	@Override
 	public void removeByUserId(long userId) {
-		for (OAuthClientEntry oAuthClientEntry :
-				findByUserId(
-					userId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
-
-			remove(oAuthClientEntry);
-		}
+		_collectionPersistenceFinderByUserId.remove(
+			finderCache, new Object[] {userId});
 	}
 
 	/**
@@ -1788,45 +558,8 @@ public class OAuthClientEntryPersistenceImpl
 	 */
 	@Override
 	public int countByUserId(long userId) {
-		FinderPath finderPath = _finderPathCountByUserId;
-
-		Object[] finderArgs = new Object[] {userId};
-
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
-
-		if (count == null) {
-			StringBundler sb = new StringBundler(2);
-
-			sb.append(_SQL_COUNT_OAUTHCLIENTENTRY_WHERE);
-
-			sb.append(_FINDER_COLUMN_USERID_USERID_2);
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(userId);
-
-				count = (Long)query.uniqueResult();
-
-				finderCache.putResult(finderPath, finderArgs, count);
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return count.intValue();
+		return _collectionPersistenceFinderByUserId.count(
+			finderCache, new Object[] {userId});
 	}
 
 	/**
@@ -1837,126 +570,19 @@ public class OAuthClientEntryPersistenceImpl
 	 */
 	@Override
 	public int filterCountByUserId(long userId) {
-		if (!InlineSQLHelperUtil.isEnabled()) {
-			return countByUserId(userId);
-		}
-
-		if (isPermissionsInMemoryFilterEnabled()) {
-			List<OAuthClientEntry> oAuthClientEntries = findByUserId(userId);
-
-			oAuthClientEntries = InlineSQLHelperUtil.filter(oAuthClientEntries);
-
-			return oAuthClientEntries.size();
-		}
-
-		StringBundler sb = new StringBundler(2);
-
-		sb.append(_FILTER_SQL_COUNT_OAUTHCLIENTENTRY_WHERE);
-
-		sb.append(_FINDER_COLUMN_USERID_USERID_2);
-
-		String sql = InlineSQLHelperUtil.replacePermissionCheck(
-			sb.toString(), OAuthClientEntry.class.getName(),
-			_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
-
-		Session session = null;
-
-		try {
-			session = openSession();
-
-			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
-
-			sqlQuery.addScalar(
-				COUNT_COLUMN_NAME, com.liferay.portal.kernel.dao.orm.Type.LONG);
-
-			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
-
-			queryPos.add(userId);
-
-			Long count = (Long)sqlQuery.uniqueResult();
-
-			return count.intValue();
-		}
-		catch (Exception exception) {
-			throw processException(exception);
-		}
-		finally {
-			closeSession(session);
-		}
+		return _collectionPersistenceFinderByUserId.filterCount(
+			finderCache, new Object[] {userId});
 	}
 
-	private static final String _FINDER_COLUMN_USERID_USERID_2 =
-		"oAuthClientEntry.userId = ?";
-
-	private FinderPath _finderPathWithPaginationFindByC_A;
-	private FinderPath _finderPathWithoutPaginationFindByC_A;
-	private FinderPath _finderPathCountByC_A;
-
-	/**
-	 * Returns all the o auth client entries where companyId = &#63; and authServerWellKnownURI = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param authServerWellKnownURI the auth server well known uri
-	 * @return the matching o auth client entries
-	 */
-	@Override
-	public List<OAuthClientEntry> findByC_A(
-		long companyId, String authServerWellKnownURI) {
-
-		return findByC_A(
-			companyId, authServerWellKnownURI, QueryUtil.ALL_POS,
-			QueryUtil.ALL_POS, null);
-	}
-
-	/**
-	 * Returns a range of all the o auth client entries where companyId = &#63; and authServerWellKnownURI = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuthClientEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param authServerWellKnownURI the auth server well known uri
-	 * @param start the lower bound of the range of o auth client entries
-	 * @param end the upper bound of the range of o auth client entries (not inclusive)
-	 * @return the range of matching o auth client entries
-	 */
-	@Override
-	public List<OAuthClientEntry> findByC_A(
-		long companyId, String authServerWellKnownURI, int start, int end) {
-
-		return findByC_A(companyId, authServerWellKnownURI, start, end, null);
-	}
+	private FilterCollectionPersistenceFinder
+		<OAuthClientEntry, NoSuchOAuthClientEntryException>
+			_collectionPersistenceFinderByC_A;
 
 	/**
 	 * Returns an ordered range of all the o auth client entries where companyId = &#63; and authServerWellKnownURI = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuthClientEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param authServerWellKnownURI the auth server well known uri
-	 * @param start the lower bound of the range of o auth client entries
-	 * @param end the upper bound of the range of o auth client entries (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching o auth client entries
-	 */
-	@Override
-	public List<OAuthClientEntry> findByC_A(
-		long companyId, String authServerWellKnownURI, int start, int end,
-		OrderByComparator<OAuthClientEntry> orderByComparator) {
-
-		return findByC_A(
-			companyId, authServerWellKnownURI, start, end, orderByComparator,
-			true);
-	}
-
-	/**
-	 * Returns an ordered range of all the o auth client entries where companyId = &#63; and authServerWellKnownURI = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuthClientEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuthClientEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -1973,115 +599,9 @@ public class OAuthClientEntryPersistenceImpl
 		OrderByComparator<OAuthClientEntry> orderByComparator,
 		boolean useFinderCache) {
 
-		authServerWellKnownURI = Objects.toString(authServerWellKnownURI, "");
-
-		FinderPath finderPath = null;
-		Object[] finderArgs = null;
-
-		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-			(orderByComparator == null)) {
-
-			if (useFinderCache) {
-				finderPath = _finderPathWithoutPaginationFindByC_A;
-				finderArgs = new Object[] {companyId, authServerWellKnownURI};
-			}
-		}
-		else if (useFinderCache) {
-			finderPath = _finderPathWithPaginationFindByC_A;
-			finderArgs = new Object[] {
-				companyId, authServerWellKnownURI, start, end, orderByComparator
-			};
-		}
-
-		List<OAuthClientEntry> list = null;
-
-		if (useFinderCache) {
-			list = (List<OAuthClientEntry>)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if ((list != null) && !list.isEmpty()) {
-				for (OAuthClientEntry oAuthClientEntry : list) {
-					if ((companyId != oAuthClientEntry.getCompanyId()) ||
-						!authServerWellKnownURI.equals(
-							oAuthClientEntry.getAuthServerWellKnownURI())) {
-
-						list = null;
-
-						break;
-					}
-				}
-			}
-		}
-
-		if (list == null) {
-			StringBundler sb = null;
-
-			if (orderByComparator != null) {
-				sb = new StringBundler(
-					4 + (orderByComparator.getOrderByFields().length * 2));
-			}
-			else {
-				sb = new StringBundler(4);
-			}
-
-			sb.append(_SQL_SELECT_OAUTHCLIENTENTRY_WHERE);
-
-			sb.append(_FINDER_COLUMN_C_A_COMPANYID_2);
-
-			boolean bindAuthServerWellKnownURI = false;
-
-			if (authServerWellKnownURI.isEmpty()) {
-				sb.append(_FINDER_COLUMN_C_A_AUTHSERVERWELLKNOWNURI_3);
-			}
-			else {
-				bindAuthServerWellKnownURI = true;
-
-				sb.append(_FINDER_COLUMN_C_A_AUTHSERVERWELLKNOWNURI_2);
-			}
-
-			if (orderByComparator != null) {
-				appendOrderByComparator(
-					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
-			}
-			else {
-				sb.append(OAuthClientEntryModelImpl.ORDER_BY_JPQL);
-			}
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(companyId);
-
-				if (bindAuthServerWellKnownURI) {
-					queryPos.add(authServerWellKnownURI);
-				}
-
-				list = (List<OAuthClientEntry>)QueryUtil.list(
-					query, getDialect(), start, end);
-
-				cacheResult(list);
-
-				if (useFinderCache) {
-					finderCache.putResult(finderPath, finderArgs, list);
-				}
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return list;
+		return _collectionPersistenceFinderByC_A.find(
+			finderCache, new Object[] {companyId, authServerWellKnownURI},
+			start, end, orderByComparator, useFinderCache);
 	}
 
 	/**
@@ -2099,26 +619,9 @@ public class OAuthClientEntryPersistenceImpl
 			OrderByComparator<OAuthClientEntry> orderByComparator)
 		throws NoSuchOAuthClientEntryException {
 
-		OAuthClientEntry oAuthClientEntry = fetchByC_A_First(
-			companyId, authServerWellKnownURI, orderByComparator);
-
-		if (oAuthClientEntry != null) {
-			return oAuthClientEntry;
-		}
-
-		StringBundler sb = new StringBundler(6);
-
-		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-		sb.append("companyId=");
-		sb.append(companyId);
-
-		sb.append(", authServerWellKnownURI=");
-		sb.append(authServerWellKnownURI);
-
-		sb.append("}");
-
-		throw new NoSuchOAuthClientEntryException(sb.toString());
+		return _collectionPersistenceFinderByC_A.findFirst(
+			finderCache, new Object[] {companyId, authServerWellKnownURI},
+			orderByComparator);
 	}
 
 	/**
@@ -2134,300 +637,16 @@ public class OAuthClientEntryPersistenceImpl
 		long companyId, String authServerWellKnownURI,
 		OrderByComparator<OAuthClientEntry> orderByComparator) {
 
-		List<OAuthClientEntry> list = findByC_A(
-			companyId, authServerWellKnownURI, 0, 1, orderByComparator);
-
-		if (!list.isEmpty()) {
-			return list.get(0);
-		}
-
-		return null;
-	}
-
-	/**
-	 * Returns the last o auth client entry in the ordered set where companyId = &#63; and authServerWellKnownURI = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param authServerWellKnownURI the auth server well known uri
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching o auth client entry
-	 * @throws NoSuchOAuthClientEntryException if a matching o auth client entry could not be found
-	 */
-	@Override
-	public OAuthClientEntry findByC_A_Last(
-			long companyId, String authServerWellKnownURI,
-			OrderByComparator<OAuthClientEntry> orderByComparator)
-		throws NoSuchOAuthClientEntryException {
-
-		OAuthClientEntry oAuthClientEntry = fetchByC_A_Last(
-			companyId, authServerWellKnownURI, orderByComparator);
-
-		if (oAuthClientEntry != null) {
-			return oAuthClientEntry;
-		}
-
-		StringBundler sb = new StringBundler(6);
-
-		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-		sb.append("companyId=");
-		sb.append(companyId);
-
-		sb.append(", authServerWellKnownURI=");
-		sb.append(authServerWellKnownURI);
-
-		sb.append("}");
-
-		throw new NoSuchOAuthClientEntryException(sb.toString());
-	}
-
-	/**
-	 * Returns the last o auth client entry in the ordered set where companyId = &#63; and authServerWellKnownURI = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param authServerWellKnownURI the auth server well known uri
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching o auth client entry, or <code>null</code> if a matching o auth client entry could not be found
-	 */
-	@Override
-	public OAuthClientEntry fetchByC_A_Last(
-		long companyId, String authServerWellKnownURI,
-		OrderByComparator<OAuthClientEntry> orderByComparator) {
-
-		int count = countByC_A(companyId, authServerWellKnownURI);
-
-		if (count == 0) {
-			return null;
-		}
-
-		List<OAuthClientEntry> list = findByC_A(
-			companyId, authServerWellKnownURI, count - 1, count,
+		return _collectionPersistenceFinderByC_A.fetchFirst(
+			finderCache, new Object[] {companyId, authServerWellKnownURI},
 			orderByComparator);
-
-		if (!list.isEmpty()) {
-			return list.get(0);
-		}
-
-		return null;
-	}
-
-	/**
-	 * Returns the o auth client entries before and after the current o auth client entry in the ordered set where companyId = &#63; and authServerWellKnownURI = &#63;.
-	 *
-	 * @param oAuthClientEntryId the primary key of the current o auth client entry
-	 * @param companyId the company ID
-	 * @param authServerWellKnownURI the auth server well known uri
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next o auth client entry
-	 * @throws NoSuchOAuthClientEntryException if a o auth client entry with the primary key could not be found
-	 */
-	@Override
-	public OAuthClientEntry[] findByC_A_PrevAndNext(
-			long oAuthClientEntryId, long companyId,
-			String authServerWellKnownURI,
-			OrderByComparator<OAuthClientEntry> orderByComparator)
-		throws NoSuchOAuthClientEntryException {
-
-		authServerWellKnownURI = Objects.toString(authServerWellKnownURI, "");
-
-		OAuthClientEntry oAuthClientEntry = findByPrimaryKey(
-			oAuthClientEntryId);
-
-		Session session = null;
-
-		try {
-			session = openSession();
-
-			OAuthClientEntry[] array = new OAuthClientEntryImpl[3];
-
-			array[0] = getByC_A_PrevAndNext(
-				session, oAuthClientEntry, companyId, authServerWellKnownURI,
-				orderByComparator, true);
-
-			array[1] = oAuthClientEntry;
-
-			array[2] = getByC_A_PrevAndNext(
-				session, oAuthClientEntry, companyId, authServerWellKnownURI,
-				orderByComparator, false);
-
-			return array;
-		}
-		catch (Exception exception) {
-			throw processException(exception);
-		}
-		finally {
-			closeSession(session);
-		}
-	}
-
-	protected OAuthClientEntry getByC_A_PrevAndNext(
-		Session session, OAuthClientEntry oAuthClientEntry, long companyId,
-		String authServerWellKnownURI,
-		OrderByComparator<OAuthClientEntry> orderByComparator,
-		boolean previous) {
-
-		StringBundler sb = null;
-
-		if (orderByComparator != null) {
-			sb = new StringBundler(
-				5 + (orderByComparator.getOrderByConditionFields().length * 3) +
-					(orderByComparator.getOrderByFields().length * 3));
-		}
-		else {
-			sb = new StringBundler(4);
-		}
-
-		sb.append(_SQL_SELECT_OAUTHCLIENTENTRY_WHERE);
-
-		sb.append(_FINDER_COLUMN_C_A_COMPANYID_2);
-
-		boolean bindAuthServerWellKnownURI = false;
-
-		if (authServerWellKnownURI.isEmpty()) {
-			sb.append(_FINDER_COLUMN_C_A_AUTHSERVERWELLKNOWNURI_3);
-		}
-		else {
-			bindAuthServerWellKnownURI = true;
-
-			sb.append(_FINDER_COLUMN_C_A_AUTHSERVERWELLKNOWNURI_2);
-		}
-
-		if (orderByComparator != null) {
-			String[] orderByConditionFields =
-				orderByComparator.getOrderByConditionFields();
-
-			if (orderByConditionFields.length > 0) {
-				sb.append(WHERE_AND);
-			}
-
-			for (int i = 0; i < orderByConditionFields.length; i++) {
-				sb.append(_ORDER_BY_ENTITY_ALIAS);
-				sb.append(orderByConditionFields[i]);
-
-				if ((i + 1) < orderByConditionFields.length) {
-					if (orderByComparator.isAscending() ^ previous) {
-						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
-					}
-					else {
-						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
-					}
-				}
-				else {
-					if (orderByComparator.isAscending() ^ previous) {
-						sb.append(WHERE_GREATER_THAN);
-					}
-					else {
-						sb.append(WHERE_LESSER_THAN);
-					}
-				}
-			}
-
-			sb.append(ORDER_BY_CLAUSE);
-
-			String[] orderByFields = orderByComparator.getOrderByFields();
-
-			for (int i = 0; i < orderByFields.length; i++) {
-				sb.append(_ORDER_BY_ENTITY_ALIAS);
-				sb.append(orderByFields[i]);
-
-				if ((i + 1) < orderByFields.length) {
-					if (orderByComparator.isAscending() ^ previous) {
-						sb.append(ORDER_BY_ASC_HAS_NEXT);
-					}
-					else {
-						sb.append(ORDER_BY_DESC_HAS_NEXT);
-					}
-				}
-				else {
-					if (orderByComparator.isAscending() ^ previous) {
-						sb.append(ORDER_BY_ASC);
-					}
-					else {
-						sb.append(ORDER_BY_DESC);
-					}
-				}
-			}
-		}
-		else {
-			sb.append(OAuthClientEntryModelImpl.ORDER_BY_JPQL);
-		}
-
-		String sql = sb.toString();
-
-		Query query = session.createQuery(sql);
-
-		query.setFirstResult(0);
-		query.setMaxResults(2);
-
-		QueryPos queryPos = QueryPos.getInstance(query);
-
-		queryPos.add(companyId);
-
-		if (bindAuthServerWellKnownURI) {
-			queryPos.add(authServerWellKnownURI);
-		}
-
-		if (orderByComparator != null) {
-			for (Object orderByConditionValue :
-					orderByComparator.getOrderByConditionValues(
-						oAuthClientEntry)) {
-
-				queryPos.add(orderByConditionValue);
-			}
-		}
-
-		List<OAuthClientEntry> list = query.list();
-
-		if (list.size() == 2) {
-			return list.get(1);
-		}
-		else {
-			return null;
-		}
-	}
-
-	/**
-	 * Returns all the o auth client entries that the user has permission to view where companyId = &#63; and authServerWellKnownURI = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param authServerWellKnownURI the auth server well known uri
-	 * @return the matching o auth client entries that the user has permission to view
-	 */
-	@Override
-	public List<OAuthClientEntry> filterFindByC_A(
-		long companyId, String authServerWellKnownURI) {
-
-		return filterFindByC_A(
-			companyId, authServerWellKnownURI, QueryUtil.ALL_POS,
-			QueryUtil.ALL_POS, null);
-	}
-
-	/**
-	 * Returns a range of all the o auth client entries that the user has permission to view where companyId = &#63; and authServerWellKnownURI = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuthClientEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param authServerWellKnownURI the auth server well known uri
-	 * @param start the lower bound of the range of o auth client entries
-	 * @param end the upper bound of the range of o auth client entries (not inclusive)
-	 * @return the range of matching o auth client entries that the user has permission to view
-	 */
-	@Override
-	public List<OAuthClientEntry> filterFindByC_A(
-		long companyId, String authServerWellKnownURI, int start, int end) {
-
-		return filterFindByC_A(
-			companyId, authServerWellKnownURI, start, end, null);
 	}
 
 	/**
 	 * Returns an ordered range of all the o auth client entries that the user has permissions to view where companyId = &#63; and authServerWellKnownURI = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuthClientEntryModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuthClientEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -2442,343 +661,9 @@ public class OAuthClientEntryPersistenceImpl
 		long companyId, String authServerWellKnownURI, int start, int end,
 		OrderByComparator<OAuthClientEntry> orderByComparator) {
 
-		if (!InlineSQLHelperUtil.isEnabled(companyId, 0)) {
-			return findByC_A(
-				companyId, authServerWellKnownURI, start, end,
-				orderByComparator);
-		}
-
-		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-			isPermissionsInMemoryFilterEnabled()) {
-
-			return InlineSQLHelperUtil.filter(
-				findByC_A(
-					companyId, authServerWellKnownURI, QueryUtil.ALL_POS,
-					QueryUtil.ALL_POS, orderByComparator));
-		}
-
-		authServerWellKnownURI = Objects.toString(authServerWellKnownURI, "");
-
-		StringBundler sb = null;
-
-		if (orderByComparator != null) {
-			sb = new StringBundler(
-				4 + (orderByComparator.getOrderByFields().length * 2));
-		}
-		else {
-			sb = new StringBundler(5);
-		}
-
-		if (getDB().isSupportsInlineDistinct()) {
-			sb.append(_FILTER_SQL_SELECT_OAUTHCLIENTENTRY_WHERE);
-		}
-		else {
-			sb.append(
-				_FILTER_SQL_SELECT_OAUTHCLIENTENTRY_NO_INLINE_DISTINCT_WHERE_1);
-		}
-
-		sb.append(_FINDER_COLUMN_C_A_COMPANYID_2);
-
-		boolean bindAuthServerWellKnownURI = false;
-
-		if (authServerWellKnownURI.isEmpty()) {
-			sb.append(_FINDER_COLUMN_C_A_AUTHSERVERWELLKNOWNURI_3);
-		}
-		else {
-			bindAuthServerWellKnownURI = true;
-
-			sb.append(_FINDER_COLUMN_C_A_AUTHSERVERWELLKNOWNURI_2);
-		}
-
-		if (!getDB().isSupportsInlineDistinct()) {
-			sb.append(
-				_FILTER_SQL_SELECT_OAUTHCLIENTENTRY_NO_INLINE_DISTINCT_WHERE_2);
-		}
-
-		if (orderByComparator != null) {
-			if (getDB().isSupportsInlineDistinct()) {
-				appendOrderByComparator(
-					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator, true);
-			}
-			else {
-				appendOrderByComparator(
-					sb, _ORDER_BY_ENTITY_TABLE, orderByComparator, true);
-			}
-		}
-		else {
-			if (getDB().isSupportsInlineDistinct()) {
-				sb.append(
-					OAuthClientEntryModelImpl.ORDER_BY_SQL_INLINE_DISTINCT);
-			}
-			else {
-				sb.append(OAuthClientEntryModelImpl.ORDER_BY_SQL);
-			}
-		}
-
-		String sql = InlineSQLHelperUtil.replacePermissionCheck(
-			sb.toString(), OAuthClientEntry.class.getName(),
-			_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
-
-		Session session = null;
-
-		try {
-			session = openSession();
-
-			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
-
-			if (getDB().isSupportsInlineDistinct()) {
-				sqlQuery.addEntity(
-					_FILTER_ENTITY_ALIAS, OAuthClientEntryImpl.class);
-			}
-			else {
-				sqlQuery.addEntity(
-					_FILTER_ENTITY_TABLE, OAuthClientEntryImpl.class);
-			}
-
-			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
-
-			queryPos.add(companyId);
-
-			if (bindAuthServerWellKnownURI) {
-				queryPos.add(authServerWellKnownURI);
-			}
-
-			return (List<OAuthClientEntry>)QueryUtil.list(
-				sqlQuery, getDialect(), start, end);
-		}
-		catch (Exception exception) {
-			throw processException(exception);
-		}
-		finally {
-			closeSession(session);
-		}
-	}
-
-	/**
-	 * Returns the o auth client entries before and after the current o auth client entry in the ordered set of o auth client entries that the user has permission to view where companyId = &#63; and authServerWellKnownURI = &#63;.
-	 *
-	 * @param oAuthClientEntryId the primary key of the current o auth client entry
-	 * @param companyId the company ID
-	 * @param authServerWellKnownURI the auth server well known uri
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next o auth client entry
-	 * @throws NoSuchOAuthClientEntryException if a o auth client entry with the primary key could not be found
-	 */
-	@Override
-	public OAuthClientEntry[] filterFindByC_A_PrevAndNext(
-			long oAuthClientEntryId, long companyId,
-			String authServerWellKnownURI,
-			OrderByComparator<OAuthClientEntry> orderByComparator)
-		throws NoSuchOAuthClientEntryException {
-
-		if (!InlineSQLHelperUtil.isEnabled(companyId, 0)) {
-			return findByC_A_PrevAndNext(
-				oAuthClientEntryId, companyId, authServerWellKnownURI,
-				orderByComparator);
-		}
-
-		authServerWellKnownURI = Objects.toString(authServerWellKnownURI, "");
-
-		OAuthClientEntry oAuthClientEntry = findByPrimaryKey(
-			oAuthClientEntryId);
-
-		Session session = null;
-
-		try {
-			session = openSession();
-
-			OAuthClientEntry[] array = new OAuthClientEntryImpl[3];
-
-			array[0] = filterGetByC_A_PrevAndNext(
-				session, oAuthClientEntry, companyId, authServerWellKnownURI,
-				orderByComparator, true);
-
-			array[1] = oAuthClientEntry;
-
-			array[2] = filterGetByC_A_PrevAndNext(
-				session, oAuthClientEntry, companyId, authServerWellKnownURI,
-				orderByComparator, false);
-
-			return array;
-		}
-		catch (Exception exception) {
-			throw processException(exception);
-		}
-		finally {
-			closeSession(session);
-		}
-	}
-
-	protected OAuthClientEntry filterGetByC_A_PrevAndNext(
-		Session session, OAuthClientEntry oAuthClientEntry, long companyId,
-		String authServerWellKnownURI,
-		OrderByComparator<OAuthClientEntry> orderByComparator,
-		boolean previous) {
-
-		StringBundler sb = null;
-
-		if (orderByComparator != null) {
-			sb = new StringBundler(
-				6 + (orderByComparator.getOrderByConditionFields().length * 3) +
-					(orderByComparator.getOrderByFields().length * 3));
-		}
-		else {
-			sb = new StringBundler(5);
-		}
-
-		if (getDB().isSupportsInlineDistinct()) {
-			sb.append(_FILTER_SQL_SELECT_OAUTHCLIENTENTRY_WHERE);
-		}
-		else {
-			sb.append(
-				_FILTER_SQL_SELECT_OAUTHCLIENTENTRY_NO_INLINE_DISTINCT_WHERE_1);
-		}
-
-		sb.append(_FINDER_COLUMN_C_A_COMPANYID_2);
-
-		boolean bindAuthServerWellKnownURI = false;
-
-		if (authServerWellKnownURI.isEmpty()) {
-			sb.append(_FINDER_COLUMN_C_A_AUTHSERVERWELLKNOWNURI_3);
-		}
-		else {
-			bindAuthServerWellKnownURI = true;
-
-			sb.append(_FINDER_COLUMN_C_A_AUTHSERVERWELLKNOWNURI_2);
-		}
-
-		if (!getDB().isSupportsInlineDistinct()) {
-			sb.append(
-				_FILTER_SQL_SELECT_OAUTHCLIENTENTRY_NO_INLINE_DISTINCT_WHERE_2);
-		}
-
-		if (orderByComparator != null) {
-			String[] orderByConditionFields =
-				orderByComparator.getOrderByConditionFields();
-
-			if (orderByConditionFields.length > 0) {
-				sb.append(WHERE_AND);
-			}
-
-			for (int i = 0; i < orderByConditionFields.length; i++) {
-				if (getDB().isSupportsInlineDistinct()) {
-					sb.append(
-						getColumnName(
-							_ORDER_BY_ENTITY_ALIAS, orderByConditionFields[i],
-							true));
-				}
-				else {
-					sb.append(
-						getColumnName(
-							_ORDER_BY_ENTITY_TABLE, orderByConditionFields[i],
-							true));
-				}
-
-				if ((i + 1) < orderByConditionFields.length) {
-					if (orderByComparator.isAscending() ^ previous) {
-						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
-					}
-					else {
-						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
-					}
-				}
-				else {
-					if (orderByComparator.isAscending() ^ previous) {
-						sb.append(WHERE_GREATER_THAN);
-					}
-					else {
-						sb.append(WHERE_LESSER_THAN);
-					}
-				}
-			}
-
-			sb.append(ORDER_BY_CLAUSE);
-
-			String[] orderByFields = orderByComparator.getOrderByFields();
-
-			for (int i = 0; i < orderByFields.length; i++) {
-				if (getDB().isSupportsInlineDistinct()) {
-					sb.append(
-						getColumnName(
-							_ORDER_BY_ENTITY_ALIAS, orderByFields[i], true));
-				}
-				else {
-					sb.append(
-						getColumnName(
-							_ORDER_BY_ENTITY_TABLE, orderByFields[i], true));
-				}
-
-				if ((i + 1) < orderByFields.length) {
-					if (orderByComparator.isAscending() ^ previous) {
-						sb.append(ORDER_BY_ASC_HAS_NEXT);
-					}
-					else {
-						sb.append(ORDER_BY_DESC_HAS_NEXT);
-					}
-				}
-				else {
-					if (orderByComparator.isAscending() ^ previous) {
-						sb.append(ORDER_BY_ASC);
-					}
-					else {
-						sb.append(ORDER_BY_DESC);
-					}
-				}
-			}
-		}
-		else {
-			if (getDB().isSupportsInlineDistinct()) {
-				sb.append(
-					OAuthClientEntryModelImpl.ORDER_BY_SQL_INLINE_DISTINCT);
-			}
-			else {
-				sb.append(OAuthClientEntryModelImpl.ORDER_BY_SQL);
-			}
-		}
-
-		String sql = InlineSQLHelperUtil.replacePermissionCheck(
-			sb.toString(), OAuthClientEntry.class.getName(),
-			_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
-
-		SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
-
-		sqlQuery.setFirstResult(0);
-		sqlQuery.setMaxResults(2);
-
-		if (getDB().isSupportsInlineDistinct()) {
-			sqlQuery.addEntity(
-				_FILTER_ENTITY_ALIAS, OAuthClientEntryImpl.class);
-		}
-		else {
-			sqlQuery.addEntity(
-				_FILTER_ENTITY_TABLE, OAuthClientEntryImpl.class);
-		}
-
-		QueryPos queryPos = QueryPos.getInstance(sqlQuery);
-
-		queryPos.add(companyId);
-
-		if (bindAuthServerWellKnownURI) {
-			queryPos.add(authServerWellKnownURI);
-		}
-
-		if (orderByComparator != null) {
-			for (Object orderByConditionValue :
-					orderByComparator.getOrderByConditionValues(
-						oAuthClientEntry)) {
-
-				queryPos.add(orderByConditionValue);
-			}
-		}
-
-		List<OAuthClientEntry> list = sqlQuery.list();
-
-		if (list.size() == 2) {
-			return list.get(1);
-		}
-		else {
-			return null;
-		}
+		return _collectionPersistenceFinderByC_A.filterFind(
+			finderCache, new Object[] {companyId, authServerWellKnownURI},
+			start, end, orderByComparator, companyId, 0);
 	}
 
 	/**
@@ -2789,13 +674,8 @@ public class OAuthClientEntryPersistenceImpl
 	 */
 	@Override
 	public void removeByC_A(long companyId, String authServerWellKnownURI) {
-		for (OAuthClientEntry oAuthClientEntry :
-				findByC_A(
-					companyId, authServerWellKnownURI, QueryUtil.ALL_POS,
-					QueryUtil.ALL_POS, null)) {
-
-			remove(oAuthClientEntry);
-		}
+		_collectionPersistenceFinderByC_A.remove(
+			finderCache, new Object[] {companyId, authServerWellKnownURI});
 	}
 
 	/**
@@ -2807,62 +687,8 @@ public class OAuthClientEntryPersistenceImpl
 	 */
 	@Override
 	public int countByC_A(long companyId, String authServerWellKnownURI) {
-		authServerWellKnownURI = Objects.toString(authServerWellKnownURI, "");
-
-		FinderPath finderPath = _finderPathCountByC_A;
-
-		Object[] finderArgs = new Object[] {companyId, authServerWellKnownURI};
-
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
-
-		if (count == null) {
-			StringBundler sb = new StringBundler(3);
-
-			sb.append(_SQL_COUNT_OAUTHCLIENTENTRY_WHERE);
-
-			sb.append(_FINDER_COLUMN_C_A_COMPANYID_2);
-
-			boolean bindAuthServerWellKnownURI = false;
-
-			if (authServerWellKnownURI.isEmpty()) {
-				sb.append(_FINDER_COLUMN_C_A_AUTHSERVERWELLKNOWNURI_3);
-			}
-			else {
-				bindAuthServerWellKnownURI = true;
-
-				sb.append(_FINDER_COLUMN_C_A_AUTHSERVERWELLKNOWNURI_2);
-			}
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(companyId);
-
-				if (bindAuthServerWellKnownURI) {
-					queryPos.add(authServerWellKnownURI);
-				}
-
-				count = (Long)query.uniqueResult();
-
-				finderCache.putResult(finderPath, finderArgs, count);
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return count.intValue();
+		return _collectionPersistenceFinderByC_A.count(
+			finderCache, new Object[] {companyId, authServerWellKnownURI});
 	}
 
 	/**
@@ -2874,82 +700,14 @@ public class OAuthClientEntryPersistenceImpl
 	 */
 	@Override
 	public int filterCountByC_A(long companyId, String authServerWellKnownURI) {
-		if (!InlineSQLHelperUtil.isEnabled(companyId, 0)) {
-			return countByC_A(companyId, authServerWellKnownURI);
-		}
-
-		if (isPermissionsInMemoryFilterEnabled()) {
-			List<OAuthClientEntry> oAuthClientEntries = findByC_A(
-				companyId, authServerWellKnownURI);
-
-			oAuthClientEntries = InlineSQLHelperUtil.filter(oAuthClientEntries);
-
-			return oAuthClientEntries.size();
-		}
-
-		authServerWellKnownURI = Objects.toString(authServerWellKnownURI, "");
-
-		StringBundler sb = new StringBundler(3);
-
-		sb.append(_FILTER_SQL_COUNT_OAUTHCLIENTENTRY_WHERE);
-
-		sb.append(_FINDER_COLUMN_C_A_COMPANYID_2);
-
-		boolean bindAuthServerWellKnownURI = false;
-
-		if (authServerWellKnownURI.isEmpty()) {
-			sb.append(_FINDER_COLUMN_C_A_AUTHSERVERWELLKNOWNURI_3);
-		}
-		else {
-			bindAuthServerWellKnownURI = true;
-
-			sb.append(_FINDER_COLUMN_C_A_AUTHSERVERWELLKNOWNURI_2);
-		}
-
-		String sql = InlineSQLHelperUtil.replacePermissionCheck(
-			sb.toString(), OAuthClientEntry.class.getName(),
-			_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
-
-		Session session = null;
-
-		try {
-			session = openSession();
-
-			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
-
-			sqlQuery.addScalar(
-				COUNT_COLUMN_NAME, com.liferay.portal.kernel.dao.orm.Type.LONG);
-
-			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
-
-			queryPos.add(companyId);
-
-			if (bindAuthServerWellKnownURI) {
-				queryPos.add(authServerWellKnownURI);
-			}
-
-			Long count = (Long)sqlQuery.uniqueResult();
-
-			return count.intValue();
-		}
-		catch (Exception exception) {
-			throw processException(exception);
-		}
-		finally {
-			closeSession(session);
-		}
+		return _collectionPersistenceFinderByC_A.filterCount(
+			finderCache, new Object[] {companyId, authServerWellKnownURI},
+			companyId, 0);
 	}
 
-	private static final String _FINDER_COLUMN_C_A_COMPANYID_2 =
-		"oAuthClientEntry.companyId = ? AND ";
-
-	private static final String _FINDER_COLUMN_C_A_AUTHSERVERWELLKNOWNURI_2 =
-		"oAuthClientEntry.authServerWellKnownURI = ?";
-
-	private static final String _FINDER_COLUMN_C_A_AUTHSERVERWELLKNOWNURI_3 =
-		"(oAuthClientEntry.authServerWellKnownURI IS NULL OR oAuthClientEntry.authServerWellKnownURI = '')";
-
-	private FinderPath _finderPathFetchByC_A_C;
+	private UniquePersistenceFinder
+		<OAuthClientEntry, NoSuchOAuthClientEntryException>
+			_uniquePersistenceFinderByC_A_C;
 
 	/**
 	 * Returns the o auth client entry where companyId = &#63; and authServerWellKnownURI = &#63; and clientId = &#63; or throws a <code>NoSuchOAuthClientEntryException</code> if it could not be found.
@@ -2965,48 +723,9 @@ public class OAuthClientEntryPersistenceImpl
 			long companyId, String authServerWellKnownURI, String clientId)
 		throws NoSuchOAuthClientEntryException {
 
-		OAuthClientEntry oAuthClientEntry = fetchByC_A_C(
-			companyId, authServerWellKnownURI, clientId);
-
-		if (oAuthClientEntry == null) {
-			StringBundler sb = new StringBundler(8);
-
-			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-			sb.append("companyId=");
-			sb.append(companyId);
-
-			sb.append(", authServerWellKnownURI=");
-			sb.append(authServerWellKnownURI);
-
-			sb.append(", clientId=");
-			sb.append(clientId);
-
-			sb.append("}");
-
-			if (_log.isDebugEnabled()) {
-				_log.debug(sb.toString());
-			}
-
-			throw new NoSuchOAuthClientEntryException(sb.toString());
-		}
-
-		return oAuthClientEntry;
-	}
-
-	/**
-	 * Returns the o auth client entry where companyId = &#63; and authServerWellKnownURI = &#63; and clientId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
-	 *
-	 * @param companyId the company ID
-	 * @param authServerWellKnownURI the auth server well known uri
-	 * @param clientId the client ID
-	 * @return the matching o auth client entry, or <code>null</code> if a matching o auth client entry could not be found
-	 */
-	@Override
-	public OAuthClientEntry fetchByC_A_C(
-		long companyId, String authServerWellKnownURI, String clientId) {
-
-		return fetchByC_A_C(companyId, authServerWellKnownURI, clientId, true);
+		return _uniquePersistenceFinderByC_A_C.find(
+			finderCache,
+			new Object[] {companyId, authServerWellKnownURI, clientId});
 	}
 
 	/**
@@ -3023,117 +742,10 @@ public class OAuthClientEntryPersistenceImpl
 		long companyId, String authServerWellKnownURI, String clientId,
 		boolean useFinderCache) {
 
-		authServerWellKnownURI = Objects.toString(authServerWellKnownURI, "");
-		clientId = Objects.toString(clientId, "");
-
-		Object[] finderArgs = null;
-
-		if (useFinderCache) {
-			finderArgs = new Object[] {
-				companyId, authServerWellKnownURI, clientId
-			};
-		}
-
-		Object result = null;
-
-		if (useFinderCache) {
-			result = finderCache.getResult(
-				_finderPathFetchByC_A_C, finderArgs, this);
-		}
-
-		if (result instanceof OAuthClientEntry) {
-			OAuthClientEntry oAuthClientEntry = (OAuthClientEntry)result;
-
-			if ((companyId != oAuthClientEntry.getCompanyId()) ||
-				!Objects.equals(
-					authServerWellKnownURI,
-					oAuthClientEntry.getAuthServerWellKnownURI()) ||
-				!Objects.equals(clientId, oAuthClientEntry.getClientId())) {
-
-				result = null;
-			}
-		}
-
-		if (result == null) {
-			StringBundler sb = new StringBundler(5);
-
-			sb.append(_SQL_SELECT_OAUTHCLIENTENTRY_WHERE);
-
-			sb.append(_FINDER_COLUMN_C_A_C_COMPANYID_2);
-
-			boolean bindAuthServerWellKnownURI = false;
-
-			if (authServerWellKnownURI.isEmpty()) {
-				sb.append(_FINDER_COLUMN_C_A_C_AUTHSERVERWELLKNOWNURI_3);
-			}
-			else {
-				bindAuthServerWellKnownURI = true;
-
-				sb.append(_FINDER_COLUMN_C_A_C_AUTHSERVERWELLKNOWNURI_2);
-			}
-
-			boolean bindClientId = false;
-
-			if (clientId.isEmpty()) {
-				sb.append(_FINDER_COLUMN_C_A_C_CLIENTID_3);
-			}
-			else {
-				bindClientId = true;
-
-				sb.append(_FINDER_COLUMN_C_A_C_CLIENTID_2);
-			}
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(companyId);
-
-				if (bindAuthServerWellKnownURI) {
-					queryPos.add(authServerWellKnownURI);
-				}
-
-				if (bindClientId) {
-					queryPos.add(clientId);
-				}
-
-				List<OAuthClientEntry> list = query.list();
-
-				if (list.isEmpty()) {
-					if (useFinderCache) {
-						finderCache.putResult(
-							_finderPathFetchByC_A_C, finderArgs, list);
-					}
-				}
-				else {
-					OAuthClientEntry oAuthClientEntry = list.get(0);
-
-					result = oAuthClientEntry;
-
-					cacheResult(oAuthClientEntry);
-				}
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		if (result instanceof List<?>) {
-			return null;
-		}
-		else {
-			return (OAuthClientEntry)result;
-		}
+		return _uniquePersistenceFinderByC_A_C.fetch(
+			finderCache,
+			new Object[] {companyId, authServerWellKnownURI, clientId},
+			useFinderCache);
 	}
 
 	/**
@@ -3167,142 +779,93 @@ public class OAuthClientEntryPersistenceImpl
 	public int countByC_A_C(
 		long companyId, String authServerWellKnownURI, String clientId) {
 
-		OAuthClientEntry oAuthClientEntry = fetchByC_A_C(
-			companyId, authServerWellKnownURI, clientId);
-
-		if (oAuthClientEntry == null) {
-			return 0;
-		}
-
-		return 1;
+		return _uniquePersistenceFinderByC_A_C.count(
+			finderCache,
+			new Object[] {companyId, authServerWellKnownURI, clientId});
 	}
 
-	private static final String _FINDER_COLUMN_C_A_C_COMPANYID_2 =
-		"oAuthClientEntry.companyId = ? AND ";
+	private UniquePersistenceFinder
+		<OAuthClientEntry, NoSuchOAuthClientEntryException>
+			_uniquePersistenceFinderByERC_C;
 
-	private static final String _FINDER_COLUMN_C_A_C_AUTHSERVERWELLKNOWNURI_2 =
-		"oAuthClientEntry.authServerWellKnownURI = ? AND ";
+	/**
+	 * Returns the o auth client entry where externalReferenceCode = &#63; and companyId = &#63; or throws a <code>NoSuchOAuthClientEntryException</code> if it could not be found.
+	 *
+	 * @param externalReferenceCode the external reference code
+	 * @param companyId the company ID
+	 * @return the matching o auth client entry
+	 * @throws NoSuchOAuthClientEntryException if a matching o auth client entry could not be found
+	 */
+	@Override
+	public OAuthClientEntry findByERC_C(
+			String externalReferenceCode, long companyId)
+		throws NoSuchOAuthClientEntryException {
 
-	private static final String _FINDER_COLUMN_C_A_C_AUTHSERVERWELLKNOWNURI_3 =
-		"(oAuthClientEntry.authServerWellKnownURI IS NULL OR oAuthClientEntry.authServerWellKnownURI = '') AND ";
+		return _uniquePersistenceFinderByERC_C.find(
+			finderCache, new Object[] {externalReferenceCode, companyId});
+	}
 
-	private static final String _FINDER_COLUMN_C_A_C_CLIENTID_2 =
-		"oAuthClientEntry.clientId = ?";
+	/**
+	 * Returns the o auth client entry where externalReferenceCode = &#63; and companyId = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
+	 *
+	 * @param externalReferenceCode the external reference code
+	 * @param companyId the company ID
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the matching o auth client entry, or <code>null</code> if a matching o auth client entry could not be found
+	 */
+	@Override
+	public OAuthClientEntry fetchByERC_C(
+		String externalReferenceCode, long companyId, boolean useFinderCache) {
 
-	private static final String _FINDER_COLUMN_C_A_C_CLIENTID_3 =
-		"(oAuthClientEntry.clientId IS NULL OR oAuthClientEntry.clientId = '')";
+		return _uniquePersistenceFinderByERC_C.fetch(
+			finderCache, new Object[] {externalReferenceCode, companyId},
+			useFinderCache);
+	}
+
+	/**
+	 * Removes the o auth client entry where externalReferenceCode = &#63; and companyId = &#63; from the database.
+	 *
+	 * @param externalReferenceCode the external reference code
+	 * @param companyId the company ID
+	 * @return the o auth client entry that was removed
+	 */
+	@Override
+	public OAuthClientEntry removeByERC_C(
+			String externalReferenceCode, long companyId)
+		throws NoSuchOAuthClientEntryException {
+
+		OAuthClientEntry oAuthClientEntry = findByERC_C(
+			externalReferenceCode, companyId);
+
+		return remove(oAuthClientEntry);
+	}
+
+	/**
+	 * Returns the number of o auth client entries where externalReferenceCode = &#63; and companyId = &#63;.
+	 *
+	 * @param externalReferenceCode the external reference code
+	 * @param companyId the company ID
+	 * @return the number of matching o auth client entries
+	 */
+	@Override
+	public int countByERC_C(String externalReferenceCode, long companyId) {
+		return _uniquePersistenceFinderByERC_C.count(
+			finderCache, new Object[] {externalReferenceCode, companyId});
+	}
 
 	public OAuthClientEntryPersistenceImpl() {
+		Map<String, String> dbColumnNames = new HashMap<String, String>();
+
+		dbColumnNames.put("uuid", "uuid_");
+
+		setDBColumnNames(dbColumnNames);
+
 		setModelClass(OAuthClientEntry.class);
 
 		setModelImplClass(OAuthClientEntryImpl.class);
 		setModelPKClass(long.class);
 
 		setTable(OAuthClientEntryTable.INSTANCE);
-	}
-
-	/**
-	 * Caches the o auth client entry in the entity cache if it is enabled.
-	 *
-	 * @param oAuthClientEntry the o auth client entry
-	 */
-	@Override
-	public void cacheResult(OAuthClientEntry oAuthClientEntry) {
-		entityCache.putResult(
-			OAuthClientEntryImpl.class, oAuthClientEntry.getPrimaryKey(),
-			oAuthClientEntry);
-
-		finderCache.putResult(
-			_finderPathFetchByC_A_C,
-			new Object[] {
-				oAuthClientEntry.getCompanyId(),
-				oAuthClientEntry.getAuthServerWellKnownURI(),
-				oAuthClientEntry.getClientId()
-			},
-			oAuthClientEntry);
-	}
-
-	private int _valueObjectFinderCacheListThreshold;
-
-	/**
-	 * Caches the o auth client entries in the entity cache if it is enabled.
-	 *
-	 * @param oAuthClientEntries the o auth client entries
-	 */
-	@Override
-	public void cacheResult(List<OAuthClientEntry> oAuthClientEntries) {
-		if ((_valueObjectFinderCacheListThreshold == 0) ||
-			((_valueObjectFinderCacheListThreshold > 0) &&
-			 (oAuthClientEntries.size() >
-				 _valueObjectFinderCacheListThreshold))) {
-
-			return;
-		}
-
-		for (OAuthClientEntry oAuthClientEntry : oAuthClientEntries) {
-			if (entityCache.getResult(
-					OAuthClientEntryImpl.class,
-					oAuthClientEntry.getPrimaryKey()) == null) {
-
-				cacheResult(oAuthClientEntry);
-			}
-		}
-	}
-
-	/**
-	 * Clears the cache for all o auth client entries.
-	 *
-	 * <p>
-	 * The <code>EntityCache</code> and <code>FinderCache</code> are both cleared by this method.
-	 * </p>
-	 */
-	@Override
-	public void clearCache() {
-		entityCache.clearCache(OAuthClientEntryImpl.class);
-
-		finderCache.clearCache(OAuthClientEntryImpl.class);
-	}
-
-	/**
-	 * Clears the cache for the o auth client entry.
-	 *
-	 * <p>
-	 * The <code>EntityCache</code> and <code>FinderCache</code> are both cleared by this method.
-	 * </p>
-	 */
-	@Override
-	public void clearCache(OAuthClientEntry oAuthClientEntry) {
-		entityCache.removeResult(OAuthClientEntryImpl.class, oAuthClientEntry);
-	}
-
-	@Override
-	public void clearCache(List<OAuthClientEntry> oAuthClientEntries) {
-		for (OAuthClientEntry oAuthClientEntry : oAuthClientEntries) {
-			entityCache.removeResult(
-				OAuthClientEntryImpl.class, oAuthClientEntry);
-		}
-	}
-
-	@Override
-	public void clearCache(Set<Serializable> primaryKeys) {
-		finderCache.clearCache(OAuthClientEntryImpl.class);
-
-		for (Serializable primaryKey : primaryKeys) {
-			entityCache.removeResult(OAuthClientEntryImpl.class, primaryKey);
-		}
-	}
-
-	protected void cacheUniqueFindersCache(
-		OAuthClientEntryModelImpl oAuthClientEntryModelImpl) {
-
-		Object[] args = new Object[] {
-			oAuthClientEntryModelImpl.getCompanyId(),
-			oAuthClientEntryModelImpl.getAuthServerWellKnownURI(),
-			oAuthClientEntryModelImpl.getClientId()
-		};
-
-		finderCache.putResult(
-			_finderPathFetchByC_A_C, args, oAuthClientEntryModelImpl);
 	}
 
 	/**
@@ -3317,6 +880,10 @@ public class OAuthClientEntryPersistenceImpl
 
 		oAuthClientEntry.setNew(true);
 		oAuthClientEntry.setPrimaryKey(oAuthClientEntryId);
+
+		String uuid = PortalUUIDUtil.generate();
+
+		oAuthClientEntry.setUuid(uuid);
 
 		oAuthClientEntry.setCompanyId(CompanyThreadLocal.getCompanyId());
 
@@ -3335,47 +902,6 @@ public class OAuthClientEntryPersistenceImpl
 		throws NoSuchOAuthClientEntryException {
 
 		return remove((Serializable)oAuthClientEntryId);
-	}
-
-	/**
-	 * Removes the o auth client entry with the primary key from the database. Also notifies the appropriate model listeners.
-	 *
-	 * @param primaryKey the primary key of the o auth client entry
-	 * @return the o auth client entry that was removed
-	 * @throws NoSuchOAuthClientEntryException if a o auth client entry with the primary key could not be found
-	 */
-	@Override
-	public OAuthClientEntry remove(Serializable primaryKey)
-		throws NoSuchOAuthClientEntryException {
-
-		Session session = null;
-
-		try {
-			session = openSession();
-
-			OAuthClientEntry oAuthClientEntry = (OAuthClientEntry)session.get(
-				OAuthClientEntryImpl.class, primaryKey);
-
-			if (oAuthClientEntry == null) {
-				if (_log.isDebugEnabled()) {
-					_log.debug(_NO_SUCH_ENTITY_WITH_PRIMARY_KEY + primaryKey);
-				}
-
-				throw new NoSuchOAuthClientEntryException(
-					_NO_SUCH_ENTITY_WITH_PRIMARY_KEY + primaryKey);
-			}
-
-			return remove(oAuthClientEntry);
-		}
-		catch (NoSuchOAuthClientEntryException noSuchEntityException) {
-			throw noSuchEntityException;
-		}
-		catch (Exception exception) {
-			throw processException(exception);
-		}
-		finally {
-			closeSession(session);
-		}
 	}
 
 	@Override
@@ -3433,6 +959,78 @@ public class OAuthClientEntryPersistenceImpl
 		OAuthClientEntryModelImpl oAuthClientEntryModelImpl =
 			(OAuthClientEntryModelImpl)oAuthClientEntry;
 
+		if (Validator.isNull(oAuthClientEntry.getUuid())) {
+			String uuid = PortalUUIDUtil.generate();
+
+			oAuthClientEntry.setUuid(uuid);
+		}
+
+		if (Validator.isNull(oAuthClientEntry.getExternalReferenceCode())) {
+			oAuthClientEntry.setExternalReferenceCode(
+				oAuthClientEntry.getUuid());
+		}
+		else {
+			if (!Objects.equals(
+					oAuthClientEntryModelImpl.getColumnOriginalValue(
+						"externalReferenceCode"),
+					oAuthClientEntry.getExternalReferenceCode())) {
+
+				long userId = GetterUtil.getLong(
+					PrincipalThreadLocal.getName());
+
+				if (userId > 0) {
+					long companyId = oAuthClientEntry.getCompanyId();
+
+					long groupId = 0;
+
+					long classPK = 0;
+
+					if (!isNew) {
+						classPK = oAuthClientEntry.getPrimaryKey();
+					}
+
+					try {
+						oAuthClientEntry.setExternalReferenceCode(
+							SanitizerUtil.sanitize(
+								companyId, groupId, userId,
+								OAuthClientEntry.class.getName(), classPK,
+								ContentTypes.TEXT_HTML, Sanitizer.MODE_ALL,
+								oAuthClientEntry.getExternalReferenceCode(),
+								null));
+					}
+					catch (SanitizerException sanitizerException) {
+						throw new SystemException(sanitizerException);
+					}
+				}
+			}
+
+			OAuthClientEntry ercOAuthClientEntry = fetchByERC_C(
+				oAuthClientEntry.getExternalReferenceCode(),
+				oAuthClientEntry.getCompanyId());
+
+			if (isNew) {
+				if (ercOAuthClientEntry != null) {
+					throw new DuplicateOAuthClientEntryExternalReferenceCodeException(
+						"Duplicate o auth client entry with external reference code " +
+							oAuthClientEntry.getExternalReferenceCode() +
+								" and company " +
+									oAuthClientEntry.getCompanyId());
+				}
+			}
+			else {
+				if ((ercOAuthClientEntry != null) &&
+					(oAuthClientEntry.getOAuthClientEntryId() !=
+						ercOAuthClientEntry.getOAuthClientEntryId())) {
+
+					throw new DuplicateOAuthClientEntryExternalReferenceCodeException(
+						"Duplicate o auth client entry with external reference code " +
+							oAuthClientEntry.getExternalReferenceCode() +
+								" and company " +
+									oAuthClientEntry.getCompanyId());
+				}
+			}
+		}
+
 		ServiceContext serviceContext =
 			ServiceContextThreadLocal.getServiceContext();
 
@@ -3478,41 +1076,13 @@ public class OAuthClientEntryPersistenceImpl
 			closeSession(session);
 		}
 
-		entityCache.putResult(
-			OAuthClientEntryImpl.class, oAuthClientEntryModelImpl, false, true);
-
-		cacheUniqueFindersCache(oAuthClientEntryModelImpl);
+		cacheUniqueFindersResult(oAuthClientEntry, false);
 
 		if (isNew) {
 			oAuthClientEntry.setNew(false);
 		}
 
 		oAuthClientEntry.resetOriginalValues();
-
-		return oAuthClientEntry;
-	}
-
-	/**
-	 * Returns the o auth client entry with the primary key or throws a <code>com.liferay.portal.kernel.exception.NoSuchModelException</code> if it could not be found.
-	 *
-	 * @param primaryKey the primary key of the o auth client entry
-	 * @return the o auth client entry
-	 * @throws NoSuchOAuthClientEntryException if a o auth client entry with the primary key could not be found
-	 */
-	@Override
-	public OAuthClientEntry findByPrimaryKey(Serializable primaryKey)
-		throws NoSuchOAuthClientEntryException {
-
-		OAuthClientEntry oAuthClientEntry = fetchByPrimaryKey(primaryKey);
-
-		if (oAuthClientEntry == null) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(_NO_SUCH_ENTITY_WITH_PRIMARY_KEY + primaryKey);
-			}
-
-			throw new NoSuchOAuthClientEntryException(
-				_NO_SUCH_ENTITY_WITH_PRIMARY_KEY + primaryKey);
-		}
 
 		return oAuthClientEntry;
 	}
@@ -3542,185 +1112,9 @@ public class OAuthClientEntryPersistenceImpl
 		return fetchByPrimaryKey((Serializable)oAuthClientEntryId);
 	}
 
-	/**
-	 * Returns all the o auth client entries.
-	 *
-	 * @return the o auth client entries
-	 */
 	@Override
-	public List<OAuthClientEntry> findAll() {
-		return findAll(QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
-	}
-
-	/**
-	 * Returns a range of all the o auth client entries.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuthClientEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param start the lower bound of the range of o auth client entries
-	 * @param end the upper bound of the range of o auth client entries (not inclusive)
-	 * @return the range of o auth client entries
-	 */
-	@Override
-	public List<OAuthClientEntry> findAll(int start, int end) {
-		return findAll(start, end, null);
-	}
-
-	/**
-	 * Returns an ordered range of all the o auth client entries.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuthClientEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param start the lower bound of the range of o auth client entries
-	 * @param end the upper bound of the range of o auth client entries (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of o auth client entries
-	 */
-	@Override
-	public List<OAuthClientEntry> findAll(
-		int start, int end,
-		OrderByComparator<OAuthClientEntry> orderByComparator) {
-
-		return findAll(start, end, orderByComparator, true);
-	}
-
-	/**
-	 * Returns an ordered range of all the o auth client entries.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuthClientEntryModelImpl</code>.
-	 * </p>
-	 *
-	 * @param start the lower bound of the range of o auth client entries
-	 * @param end the upper bound of the range of o auth client entries (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param useFinderCache whether to use the finder cache
-	 * @return the ordered range of o auth client entries
-	 */
-	@Override
-	public List<OAuthClientEntry> findAll(
-		int start, int end,
-		OrderByComparator<OAuthClientEntry> orderByComparator,
-		boolean useFinderCache) {
-
-		FinderPath finderPath = null;
-		Object[] finderArgs = null;
-
-		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-			(orderByComparator == null)) {
-
-			if (useFinderCache) {
-				finderPath = _finderPathWithoutPaginationFindAll;
-				finderArgs = FINDER_ARGS_EMPTY;
-			}
-		}
-		else if (useFinderCache) {
-			finderPath = _finderPathWithPaginationFindAll;
-			finderArgs = new Object[] {start, end, orderByComparator};
-		}
-
-		List<OAuthClientEntry> list = null;
-
-		if (useFinderCache) {
-			list = (List<OAuthClientEntry>)finderCache.getResult(
-				finderPath, finderArgs, this);
-		}
-
-		if (list == null) {
-			StringBundler sb = null;
-			String sql = null;
-
-			if (orderByComparator != null) {
-				sb = new StringBundler(
-					2 + (orderByComparator.getOrderByFields().length * 2));
-
-				sb.append(_SQL_SELECT_OAUTHCLIENTENTRY);
-
-				appendOrderByComparator(
-					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
-
-				sql = sb.toString();
-			}
-			else {
-				sql = _SQL_SELECT_OAUTHCLIENTENTRY;
-
-				sql = sql.concat(OAuthClientEntryModelImpl.ORDER_BY_JPQL);
-			}
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				list = (List<OAuthClientEntry>)QueryUtil.list(
-					query, getDialect(), start, end);
-
-				cacheResult(list);
-
-				if (useFinderCache) {
-					finderCache.putResult(finderPath, finderArgs, list);
-				}
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return list;
-	}
-
-	/**
-	 * Removes all the o auth client entries from the database.
-	 *
-	 */
-	@Override
-	public void removeAll() {
-		for (OAuthClientEntry oAuthClientEntry : findAll()) {
-			remove(oAuthClientEntry);
-		}
-	}
-
-	/**
-	 * Returns the number of o auth client entries.
-	 *
-	 * @return the number of o auth client entries
-	 */
-	@Override
-	public int countAll() {
-		Long count = (Long)finderCache.getResult(
-			_finderPathCountAll, FINDER_ARGS_EMPTY, this);
-
-		if (count == null) {
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(_SQL_COUNT_OAUTHCLIENTENTRY);
-
-				count = (Long)query.uniqueResult();
-
-				finderCache.putResult(
-					_finderPathCountAll, FINDER_ARGS_EMPTY, count);
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return count.intValue();
+	public Set<String> getBadColumnNames() {
+		return _badColumnNames;
 	}
 
 	@Override
@@ -3748,83 +1142,194 @@ public class OAuthClientEntryPersistenceImpl
 	 */
 	@Activate
 	public void activate() {
-		_valueObjectFinderCacheListThreshold = GetterUtil.getInteger(
-			PropsUtil.get(PropsKeys.VALUE_OBJECT_FINDER_CACHE_LIST_THRESHOLD));
+		_collectionPersistenceFinderByUuid =
+			new FilterCollectionPersistenceFinder<>(
+				this,
+				new FinderPath(
+					FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid",
+					new String[] {
+						String.class.getName(), Integer.class.getName(),
+						Integer.class.getName(),
+						OrderByComparator.class.getName()
+					},
+					new String[] {"uuid_"}, true),
+				new FinderPath(
+					FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUuid",
+					new String[] {String.class.getName()},
+					new String[] {"uuid_"}, 0, 1, true, null),
+				new FinderPath(
+					FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUuid",
+					new String[] {String.class.getName()},
+					new String[] {"uuid_"}, 0, 1, false, null),
+				_SQL_SELECT_OAUTHCLIENTENTRY_WHERE,
+				_SQL_COUNT_OAUTHCLIENTENTRY_WHERE,
+				OAuthClientEntryModelImpl.ORDER_BY_JPQL, _ENTITY_ALIAS_PREFIX,
+				"",
+				new FinderColumn<>(
+					"oAuthClientEntry.", "uuid", FinderColumn.Type.STRING, "=",
+					true, true, OAuthClientEntry::getUuid));
 
-		_finderPathWithPaginationFindAll = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0],
-			new String[0], true);
+		_collectionPersistenceFinderByUuid_C =
+			new FilterCollectionPersistenceFinder<>(
+				this,
+				new FinderPath(
+					FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid_C",
+					new String[] {
+						String.class.getName(), Long.class.getName(),
+						Integer.class.getName(), Integer.class.getName(),
+						OrderByComparator.class.getName()
+					},
+					new String[] {"uuid_", "companyId"}, true),
+				new FinderPath(
+					FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUuid_C",
+					new String[] {String.class.getName(), Long.class.getName()},
+					new String[] {"uuid_", "companyId"}, 0, 1, true, null),
+				new FinderPath(
+					FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUuid_C",
+					new String[] {String.class.getName(), Long.class.getName()},
+					new String[] {"uuid_", "companyId"}, 0, 1, false, null),
+				_SQL_SELECT_OAUTHCLIENTENTRY_WHERE,
+				_SQL_COUNT_OAUTHCLIENTENTRY_WHERE,
+				OAuthClientEntryModelImpl.ORDER_BY_JPQL, _ENTITY_ALIAS_PREFIX,
+				"",
+				new FinderColumn<>(
+					"oAuthClientEntry.", "uuid", FinderColumn.Type.STRING, "=",
+					true, true, OAuthClientEntry::getUuid),
+				new FinderColumn<>(
+					"oAuthClientEntry.", "companyId", FinderColumn.Type.LONG,
+					"=", true, true, OAuthClientEntry::getCompanyId));
 
-		_finderPathWithoutPaginationFindAll = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0],
-			new String[0], true);
+		_collectionPersistenceFinderByCompanyId =
+			new FilterCollectionPersistenceFinder<>(
+				this,
+				new FinderPath(
+					FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByCompanyId",
+					new String[] {
+						Long.class.getName(), Integer.class.getName(),
+						Integer.class.getName(),
+						OrderByComparator.class.getName()
+					},
+					new String[] {"companyId"}, true),
+				new FinderPath(
+					FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
+					"findByCompanyId", new String[] {Long.class.getName()},
+					new String[] {"companyId"}, true),
+				new FinderPath(
+					FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
+					"countByCompanyId", new String[] {Long.class.getName()},
+					new String[] {"companyId"}, false),
+				_SQL_SELECT_OAUTHCLIENTENTRY_WHERE,
+				_SQL_COUNT_OAUTHCLIENTENTRY_WHERE,
+				OAuthClientEntryModelImpl.ORDER_BY_JPQL, _ENTITY_ALIAS_PREFIX,
+				"",
+				new FinderColumn<>(
+					"oAuthClientEntry.", "companyId", FinderColumn.Type.LONG,
+					"=", true, true, OAuthClientEntry::getCompanyId));
 
-		_finderPathCountAll = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
-			new String[0], new String[0], false);
+		_collectionPersistenceFinderByUserId =
+			new FilterCollectionPersistenceFinder<>(
+				this,
+				new FinderPath(
+					FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUserId",
+					new String[] {
+						Long.class.getName(), Integer.class.getName(),
+						Integer.class.getName(),
+						OrderByComparator.class.getName()
+					},
+					new String[] {"userId"}, true),
+				new FinderPath(
+					FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUserId",
+					new String[] {Long.class.getName()},
+					new String[] {"userId"}, true),
+				new FinderPath(
+					FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUserId",
+					new String[] {Long.class.getName()},
+					new String[] {"userId"}, false),
+				_SQL_SELECT_OAUTHCLIENTENTRY_WHERE,
+				_SQL_COUNT_OAUTHCLIENTENTRY_WHERE,
+				OAuthClientEntryModelImpl.ORDER_BY_JPQL, _ENTITY_ALIAS_PREFIX,
+				"",
+				new FinderColumn<>(
+					"oAuthClientEntry.", "userId", FinderColumn.Type.LONG, "=",
+					true, true, OAuthClientEntry::getUserId));
 
-		_finderPathWithPaginationFindByCompanyId = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByCompanyId",
-			new String[] {
-				Long.class.getName(), Integer.class.getName(),
-				Integer.class.getName(), OrderByComparator.class.getName()
-			},
-			new String[] {"companyId"}, true);
+		_collectionPersistenceFinderByC_A =
+			new FilterCollectionPersistenceFinder<>(
+				this,
+				new FinderPath(
+					FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_A",
+					new String[] {
+						Long.class.getName(), String.class.getName(),
+						Integer.class.getName(), Integer.class.getName(),
+						OrderByComparator.class.getName()
+					},
+					new String[] {"companyId", "authServerWellKnownURI"}, true),
+				new FinderPath(
+					FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByC_A",
+					new String[] {Long.class.getName(), String.class.getName()},
+					new String[] {"companyId", "authServerWellKnownURI"}, 0, 2,
+					true, null),
+				new FinderPath(
+					FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_A",
+					new String[] {Long.class.getName(), String.class.getName()},
+					new String[] {"companyId", "authServerWellKnownURI"}, 0, 2,
+					false, null),
+				_SQL_SELECT_OAUTHCLIENTENTRY_WHERE,
+				_SQL_COUNT_OAUTHCLIENTENTRY_WHERE,
+				OAuthClientEntryModelImpl.ORDER_BY_JPQL, _ENTITY_ALIAS_PREFIX,
+				"",
+				new FinderColumn<>(
+					"oAuthClientEntry.", "companyId", FinderColumn.Type.LONG,
+					"=", true, true, OAuthClientEntry::getCompanyId),
+				new FinderColumn<>(
+					"oAuthClientEntry.", "authServerWellKnownURI",
+					FinderColumn.Type.STRING, "=", true, true,
+					OAuthClientEntry::getAuthServerWellKnownURI));
 
-		_finderPathWithoutPaginationFindByCompanyId = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByCompanyId",
-			new String[] {Long.class.getName()}, new String[] {"companyId"},
-			true);
+		_uniquePersistenceFinderByC_A_C = new UniquePersistenceFinder<>(
+			this,
+			createUniqueFinderPath(
+				FINDER_CLASS_NAME_ENTITY, "fetchByC_A_C",
+				new String[] {
+					Long.class.getName(), String.class.getName(),
+					String.class.getName()
+				},
+				new String[] {
+					"companyId", "authServerWellKnownURI", "clientId"
+				},
+				0, 6, false, OAuthClientEntry::getCompanyId,
+				convertNullFunction(
+					OAuthClientEntry::getAuthServerWellKnownURI),
+				convertNullFunction(OAuthClientEntry::getClientId)),
+			_SQL_SELECT_OAUTHCLIENTENTRY_WHERE, "",
+			new FinderColumn<>(
+				"oAuthClientEntry.", "companyId", FinderColumn.Type.LONG, "=",
+				true, true, OAuthClientEntry::getCompanyId),
+			new FinderColumn<>(
+				"oAuthClientEntry.", "authServerWellKnownURI",
+				FinderColumn.Type.STRING, "=", true, true,
+				OAuthClientEntry::getAuthServerWellKnownURI),
+			new FinderColumn<>(
+				"oAuthClientEntry.", "clientId", FinderColumn.Type.STRING, "=",
+				true, true, OAuthClientEntry::getClientId));
 
-		_finderPathCountByCompanyId = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByCompanyId",
-			new String[] {Long.class.getName()}, new String[] {"companyId"},
-			false);
-
-		_finderPathWithPaginationFindByUserId = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUserId",
-			new String[] {
-				Long.class.getName(), Integer.class.getName(),
-				Integer.class.getName(), OrderByComparator.class.getName()
-			},
-			new String[] {"userId"}, true);
-
-		_finderPathWithoutPaginationFindByUserId = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUserId",
-			new String[] {Long.class.getName()}, new String[] {"userId"}, true);
-
-		_finderPathCountByUserId = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUserId",
-			new String[] {Long.class.getName()}, new String[] {"userId"},
-			false);
-
-		_finderPathWithPaginationFindByC_A = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_A",
-			new String[] {
-				Long.class.getName(), String.class.getName(),
-				Integer.class.getName(), Integer.class.getName(),
-				OrderByComparator.class.getName()
-			},
-			new String[] {"companyId", "authServerWellKnownURI"}, true);
-
-		_finderPathWithoutPaginationFindByC_A = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByC_A",
-			new String[] {Long.class.getName(), String.class.getName()},
-			new String[] {"companyId", "authServerWellKnownURI"}, true);
-
-		_finderPathCountByC_A = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_A",
-			new String[] {Long.class.getName(), String.class.getName()},
-			new String[] {"companyId", "authServerWellKnownURI"}, false);
-
-		_finderPathFetchByC_A_C = new FinderPath(
-			FINDER_CLASS_NAME_ENTITY, "fetchByC_A_C",
-			new String[] {
-				Long.class.getName(), String.class.getName(),
-				String.class.getName()
-			},
-			new String[] {"companyId", "authServerWellKnownURI", "clientId"},
-			true);
+		_uniquePersistenceFinderByERC_C = new UniquePersistenceFinder<>(
+			this,
+			createUniqueFinderPath(
+				FINDER_CLASS_NAME_ENTITY, "fetchByERC_C",
+				new String[] {String.class.getName(), Long.class.getName()},
+				new String[] {"externalReferenceCode", "companyId"}, 0, 1,
+				false,
+				convertNullFunction(OAuthClientEntry::getExternalReferenceCode),
+				OAuthClientEntry::getCompanyId),
+			_SQL_SELECT_OAUTHCLIENTENTRY_WHERE, "",
+			new FinderColumn<>(
+				"oAuthClientEntry.", "externalReferenceCode",
+				FinderColumn.Type.STRING, "=", true, true,
+				OAuthClientEntry::getExternalReferenceCode),
+			new FinderColumn<>(
+				"oAuthClientEntry.", "companyId", FinderColumn.Type.LONG, "=",
+				true, true, OAuthClientEntry::getCompanyId));
 
 		OAuthClientEntryUtil.setPersistence(this);
 	}
@@ -3868,45 +1373,17 @@ public class OAuthClientEntryPersistenceImpl
 	@Reference
 	protected FinderCache finderCache;
 
+	private static final String _ENTITY_ALIAS_PREFIX =
+		OAuthClientEntryModelImpl.ENTITY_ALIAS + ".";
+
 	private static final String _SQL_SELECT_OAUTHCLIENTENTRY =
 		"SELECT oAuthClientEntry FROM OAuthClientEntry oAuthClientEntry";
 
 	private static final String _SQL_SELECT_OAUTHCLIENTENTRY_WHERE =
 		"SELECT oAuthClientEntry FROM OAuthClientEntry oAuthClientEntry WHERE ";
 
-	private static final String _SQL_COUNT_OAUTHCLIENTENTRY =
-		"SELECT COUNT(oAuthClientEntry) FROM OAuthClientEntry oAuthClientEntry";
-
 	private static final String _SQL_COUNT_OAUTHCLIENTENTRY_WHERE =
 		"SELECT COUNT(oAuthClientEntry) FROM OAuthClientEntry oAuthClientEntry WHERE ";
-
-	private static final String _FILTER_ENTITY_TABLE_FILTER_PK_COLUMN =
-		"oAuthClientEntry.oAuthClientEntryId";
-
-	private static final String _FILTER_SQL_SELECT_OAUTHCLIENTENTRY_WHERE =
-		"SELECT DISTINCT {oAuthClientEntry.*} FROM OAuthClientEntry oAuthClientEntry WHERE ";
-
-	private static final String
-		_FILTER_SQL_SELECT_OAUTHCLIENTENTRY_NO_INLINE_DISTINCT_WHERE_1 =
-			"SELECT {OAuthClientEntry.*} FROM (SELECT DISTINCT oAuthClientEntry.oAuthClientEntryId FROM OAuthClientEntry oAuthClientEntry WHERE ";
-
-	private static final String
-		_FILTER_SQL_SELECT_OAUTHCLIENTENTRY_NO_INLINE_DISTINCT_WHERE_2 =
-			") TEMP_TABLE INNER JOIN OAuthClientEntry ON TEMP_TABLE.oAuthClientEntryId = OAuthClientEntry.oAuthClientEntryId";
-
-	private static final String _FILTER_SQL_COUNT_OAUTHCLIENTENTRY_WHERE =
-		"SELECT COUNT(DISTINCT oAuthClientEntry.oAuthClientEntryId) AS COUNT_VALUE FROM OAuthClientEntry oAuthClientEntry WHERE ";
-
-	private static final String _FILTER_ENTITY_ALIAS = "oAuthClientEntry";
-
-	private static final String _FILTER_ENTITY_TABLE = "OAuthClientEntry";
-
-	private static final String _ORDER_BY_ENTITY_ALIAS = "oAuthClientEntry.";
-
-	private static final String _ORDER_BY_ENTITY_TABLE = "OAuthClientEntry.";
-
-	private static final String _NO_SUCH_ENTITY_WITH_PRIMARY_KEY =
-		"No OAuthClientEntry exists with the primary key ";
 
 	private static final String _NO_SUCH_ENTITY_WITH_KEY =
 		"No OAuthClientEntry exists with the key {";
@@ -3914,9 +1391,13 @@ public class OAuthClientEntryPersistenceImpl
 	private static final Log _log = LogFactoryUtil.getLog(
 		OAuthClientEntryPersistenceImpl.class);
 
+	private static final Set<String> _badColumnNames = SetUtil.fromArray(
+		new String[] {"uuid"});
+
 	@Override
 	protected FinderCache getFinderCache() {
 		return finderCache;
 	}
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-1013817041

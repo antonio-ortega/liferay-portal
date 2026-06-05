@@ -12,7 +12,12 @@ import i18n from '../../i18n';
 
 import './CustomerDashboard.scss';
 
-export const dashboardNavigationItems = [
+const navigationItems = [
+	{
+		itemTitle: i18n.translate('my-products'),
+		path: '/products',
+		symbol: 'display-content',
+	},
 	{
 		itemTitle: i18n.translate('my-apps'),
 		path: '/',
@@ -37,7 +42,7 @@ const CustomerDashboardOutlet = () => {
 		<PageRenderer error={error} isLoading={isLoading}>
 			<div className="purchased-apps-dashboard-page-container">
 				<DashboardNavigation
-					dashboardNavigationItems={dashboardNavigationItems}
+					dashboardNavigationItems={navigationItems}
 				/>
 
 				<Outlet

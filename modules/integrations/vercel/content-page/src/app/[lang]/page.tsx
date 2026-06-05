@@ -9,6 +9,7 @@ import {PropsWithChildren} from 'react';
 import {Button} from '../../components/button';
 import {CTA} from '../../components/cta';
 import {LocationDetails} from '../../components/location-details';
+import {SetupGuide} from '../../components/setup-guide';
 import {LocalizedField} from '../../liferay/index';
 import {liferay} from '../../liferay/server';
 import {getReadingTime} from '../../utils';
@@ -31,6 +32,18 @@ export default async function Home({
 }: Readonly<{
 	params: Promise<{lang: string}>;
 }>) {
+	const missingEnvVars = liferay.getMissingEnvVars();
+
+	if (missingEnvVars.length) {
+		return (
+			<PageTemplate>
+				<div className="container mx-auto px-4 py-12">
+					<SetupGuide envVars={missingEnvVars} />
+				</div>
+			</PageTemplate>
+		);
+	}
+
 	const {lang} = await params;
 	const {data: eventsPage, error} = await getEventsData({
 		lang,
@@ -85,13 +98,12 @@ export default async function Home({
 								src={liferay.getDocument(
 									mainEvent.image.link.href
 								)}
-								unoptimized={true}
 								width={500}
 							/>
 						</div>
 
 						<div className="md:order-2 order-1 space-y-6">
-							<h1 className="font-bold leading-tight lg:text-6xl md:text-5xl text-4xl">
+							<h1 className="font-bold leading-tight lg:text-4xl md:text-5xl text-4xl">
 								{getLocalizedFieldValue({
 									lang,
 									value: mainEvent.title,
@@ -186,11 +198,10 @@ export default async function Home({
 										src={liferay.getDocument(
 											upcomingEvent.image.link.href
 										)}
-										unoptimized={true}
 										width={400}
 									/>
 
-									<span className="event-type-badge">
+									<span className="badge-product news-category-badge">
 										{upcomingEvent.virtual
 											? 'Virtual'
 											: 'In Person'}
@@ -198,12 +209,12 @@ export default async function Home({
 								</div>
 
 								<div className="p-6">
-									<a
+									<Button
 										className="font-bold group-hover:text-blue-600 mb-2 text-xl transition-colors"
 										href={`/article/${upcomingEvent.id}`}
 									>
 										{upcomingEvent.title}
-									</a>
+									</Button>
 
 									<p className="flex gap-2 items-center mb-4 text-gray-600 text-sm">
 										<span>🌐</span>{' '}
@@ -270,7 +281,6 @@ export default async function Home({
 										src={liferay.getDocument(
 											event.image.link.href
 										)}
-										unoptimized={true}
 										width={400}
 									/>
 
@@ -306,7 +316,7 @@ export default async function Home({
 										{event.summary}
 									</p>
 
-									<a
+									<Button
 										className="font-semibold gap-2 group/link inline-flex items-center text-sm"
 										href={`/${lang}/article/${event.id}`}
 									>
@@ -314,7 +324,7 @@ export default async function Home({
 										<span className="group-hover/link:translate-x-1 transition-transform">
 											→
 										</span>
-									</a>
+									</Button>
 								</div>
 							</article>
 						))}

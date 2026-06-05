@@ -12,6 +12,7 @@ import com.google.auth.oauth2.IdTokenProvider;
 
 import com.liferay.client.extension.util.spring.boot3.service.BaseService;
 import com.liferay.marketplace.model.SalesforceOpportunity;
+import com.liferay.petra.string.StringBundler;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -21,8 +22,11 @@ import java.util.Date;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import org.json.JSONObject;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import org.springframework.web.util.UriComponentsBuilder;
 
 /**
@@ -31,23 +35,35 @@ import org.springframework.web.util.UriComponentsBuilder;
 @Component
 public class SalesforceService extends BaseService {
 
-	public void postSalesforceOpportunity(
+	public JSONObject postSalesforceOpportunity(
 			SalesforceOpportunity salesforceOpportunity)
 		throws Exception {
 
-		post(
-			_getAuthorization(), salesforceOpportunity.toString(),
-			UriComponentsBuilder.fromUriString(
-				_gcfBaseUrl
-			).path(
-				"/marketplace-api/opportunity"
-			).build(
-			).toUri());
+		try {
+			String response = post(
+				_getAuthorization(), salesforceOpportunity.toString(),
+				UriComponentsBuilder.fromUriString(
+					_gcfBaseUrl
+				).path(
+					"/marketplace-api/v1/opportunities"
+				).build(
+				).toUri());
 
-		if (_log.isInfoEnabled()) {
-			_log.info(
-				"Created Salesforce opportunity " +
-					salesforceOpportunity.toString());
+			if (_log.isInfoEnabled()) {
+				_log.info(
+					"Created Salesforce opportunity " + salesforceOpportunity);
+			}
+
+			return new JSONObject(response);
+		}
+		catch (WebClientResponseException webClientResponseException) {
+			_log.error(
+				StringBundler.concat(
+					"Unable to create Salesforce opportunity ",
+					salesforceOpportunity, ":\n",
+					webClientResponseException.getResponseBodyAsString()));
+
+			return null;
 		}
 	}
 

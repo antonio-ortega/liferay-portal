@@ -13,7 +13,7 @@ import {headlessBuilderPagesTest} from './fixtures/headlessBuilderPagesTest';
 
 export const test = mergeTests(
 	dataApiHelpersTest,
-	headlessBuilderPagesTest(),
+	headlessBuilderPagesTest({}),
 	headlessDiscoveryPagesTest,
 	loginTest(),
 	uiElementsPageTest

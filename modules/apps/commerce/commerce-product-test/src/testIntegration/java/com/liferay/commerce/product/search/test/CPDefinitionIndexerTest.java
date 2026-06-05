@@ -114,7 +114,7 @@ public class CPDefinitionIndexerTest {
 		CPDefinition cpDefinition = cpInstance.getCPDefinition();
 
 		_cpDefinitionLocalService.updateCPDefinitionLocalization(
-			cpDefinition, "en_US", null, null, "<p>test</p>", null, null, null);
+			cpDefinition, "en_US", "<p>test</p>", null, null, null, null, null);
 
 		_indexer.reindex(cpDefinition);
 
@@ -234,11 +234,6 @@ public class CPDefinitionIndexerTest {
 	private static final String _EXPANDO_COLUMN_NAME =
 		RandomTestUtil.randomString();
 
-	private static Indexer<CPDefinition> _indexer;
-
-	@Inject
-	private static IndexerRegistry _indexerRegistry;
-
 	@Inject
 	private CommerceCatalogLocalService _commerceCatalogLocalService;
 
@@ -256,5 +251,10 @@ public class CPDefinitionIndexerTest {
 
 	@DeleteAfterTestRun
 	private Group _group;
+
+	private Indexer<CPDefinition> _indexer;
+
+	@Inject
+	private IndexerRegistry _indexerRegistry;
 
 }

@@ -11,6 +11,8 @@ import com.liferay.frontend.data.set.sample.web.internal.display.context.FDSSamp
 import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.constants.ObjectEntryFolderConstants;
 import com.liferay.object.constants.ObjectFieldConstants;
+import com.liferay.object.constants.ObjectFieldSettingConstants;
+import com.liferay.object.field.setting.builder.ObjectFieldSettingBuilder;
 import com.liferay.object.field.util.ObjectFieldUtil;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.service.ObjectDefinitionLocalService;
@@ -108,7 +110,7 @@ public class FDSSamplePortlet extends MVCPortlet {
 
 		objectDefinition =
 			_objectDefinitionLocalService.addCustomObjectDefinition(
-				null, user.getUserId(), 0, null, false, true, false, true,
+				null, user.getUserId(), 0, null, true, false, true, false, true,
 				false, false, false, false, null,
 				LocalizedMapUtil.getLocalizedMap("Frontend Data Set Sample"),
 				"FDSSample", "100", null,
@@ -129,6 +131,18 @@ public class FDSSamplePortlet extends MVCPortlet {
 						ObjectFieldConstants.BUSINESS_TYPE_DATE,
 						ObjectFieldConstants.DB_TYPE_DATE, true, false, null,
 						"Date", "date", false),
+					ObjectFieldUtil.createObjectField(
+						ObjectFieldConstants.BUSINESS_TYPE_DATE_TIME,
+						ObjectFieldConstants.DB_TYPE_DATE_TIME, true, false,
+						null, "Date Time", "dateTime",
+						Collections.singletonList(
+							new ObjectFieldSettingBuilder(
+							).name(
+								ObjectFieldSettingConstants.NAME_TIME_STORAGE
+							).value(
+								ObjectFieldSettingConstants.VALUE_CONVERT_TO_UTC
+							).build()),
+						false),
 					ObjectFieldUtil.createObjectField(
 						ObjectFieldConstants.BUSINESS_TYPE_TEXT,
 						ObjectFieldConstants.DB_TYPE_STRING, true, false, null,
@@ -167,6 +181,8 @@ public class FDSSamplePortlet extends MVCPortlet {
 					"color", colors[i % 4]
 				).put(
 					"date", calendar.getTime()
+				).put(
+					"dateTime", calendar.getTime()
 				).put(
 					"description", "This is a description for sample " + i + "."
 				).put(

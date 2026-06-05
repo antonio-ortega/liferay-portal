@@ -16,11 +16,9 @@ import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
-import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
-import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
@@ -28,6 +26,7 @@ import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -51,62 +50,126 @@ public class AccountEntryUserRelServiceTest {
 	public void setUp() throws Exception {
 		_accountEntry = AccountEntryTestUtil.addAccountEntry();
 
-		_user = UserTestUtil.addUser();
-
-		UserTestUtil.setUser(_user);
-	}
-
-	@Test
-	public void testInviteUserWithInviteUserPermissions() throws Exception {
-		_assertInviteUserWithPermissions(AccountActionKeys.INVITE_USER);
-	}
-
-	@Test
-	public void testInviteUserWithManageUsersPermissions() throws Exception {
-		_assertInviteUserWithPermissions(ActionKeys.MANAGE_USERS);
-	}
-
-	@Test(expected = PrincipalException.class)
-	public void testInviteUserWithNoPermissions() throws Exception {
-		_accountEntryUserRelService.inviteUser(
-			_accountEntry.getAccountEntryId(), null,
-			RandomTestUtil.randomString() + "@liferay.com", _user,
-			ServiceContextTestUtil.getServiceContext());
-	}
-
-	private void _assertInviteUserWithPermissions(String actionId)
-		throws Exception {
-
-		AccountRole accountRole = _accountRoleLocalService.addAccountRole(
+		_accountRole = _accountRoleLocalService.addAccountRole(
 			RandomTestUtil.randomString(), TestPropsValues.getUserId(),
 			_accountEntry.getAccountEntryId(), RandomTestUtil.randomString(),
 			null, null);
+
+		_user = UserTestUtil.addUser();
 
 		_accountEntryUserRelLocalService.addAccountEntryUserRel(
 			_accountEntry.getAccountEntryId(), _user.getUserId());
 
 		_accountRoleLocalService.associateUser(
-			_accountEntry.getAccountEntryId(), accountRole.getAccountRoleId(),
+			_accountEntry.getAccountEntryId(), _accountRole.getAccountRoleId(),
 			_user.getUserId());
 
+		_serviceContext = ServiceContextTestUtil.getServiceContext();
+
+		_serviceContext.setRequest(new MockHttpServletRequest());
+
+		UserTestUtil.setUser(_user);
+	}
+
+	@Test
+	public void testAddAccountEntryUserRelByEmailAddress() throws Exception {
+		try {
+			_accountEntryUserRelService.addAccountEntryUserRelByEmailAddress(
+				_accountEntry.getAccountEntryId(), _user.getEmailAddress(),
+				new long[0], _user.getExternalReferenceCode(), _serviceContext);
+
+			Assert.fail();
+		}
+		catch (PrincipalException principalException) {
+			Assert.assertNotNull(principalException);
+		}
+
+		try {
+			_accountEntryUserRelService.addAccountEntryUserRelByEmailAddress(
+				_accountEntry.getAccountEntryId(),
+				"A" + RandomTestUtil.randomString() + "@liferay.com",
+				new long[0], RandomTestUtil.randomString(), _serviceContext);
+
+			Assert.fail();
+		}
+		catch (PrincipalException principalException) {
+			Assert.assertNotNull(principalException);
+		}
+
+		_addResourcePermission(AccountActionKeys.ASSIGN_USERS);
+
+		try {
+			_accountEntryUserRelService.addAccountEntryUserRelByEmailAddress(
+				_accountEntry.getAccountEntryId(),
+				"A" + RandomTestUtil.randomString() + "@liferay.com",
+				new long[0], RandomTestUtil.randomString(), _serviceContext);
+
+			Assert.fail();
+		}
+		catch (PrincipalException principalException) {
+			Assert.assertNotNull(principalException);
+		}
+
+		_addResourcePermission(AccountActionKeys.ADD_USER);
+
+		_accountEntryUserRelService.addAccountEntryUserRelByEmailAddress(
+			_accountEntry.getAccountEntryId(),
+			"A" + RandomTestUtil.randomString() + "@liferay.com", new long[0],
+			RandomTestUtil.randomString(), _serviceContext);
+	}
+
+	@Test
+	public void testAddUserInvitationTicket() throws Exception {
+		try {
+			_accountEntryUserRelService.addUserInvitationTicket(
+				_accountEntry.getAccountEntryId(), null,
+				"A" + RandomTestUtil.randomString() + "@liferay.com", _user,
+				_serviceContext);
+
+			Assert.fail();
+		}
+		catch (PrincipalException principalException) {
+			Assert.assertNotNull(principalException);
+		}
+
+		_addResourcePermission(AccountActionKeys.INVITE_USER);
+
+		_accountEntryUserRelService.addUserInvitationTicket(
+			_accountEntry.getAccountEntryId(), null,
+			"A" + RandomTestUtil.randomString() + "@liferay.com", _user,
+			_serviceContext);
+	}
+
+	@Test
+	public void testInviteUser() throws Exception {
+		try {
+			_accountEntryUserRelService.inviteUser(
+				_accountEntry.getAccountEntryId(), null,
+				"A" + RandomTestUtil.randomString() + "@liferay.com", _user,
+				_serviceContext);
+
+			Assert.fail();
+		}
+		catch (PrincipalException principalException) {
+			Assert.assertNotNull(principalException);
+		}
+
+		_addResourcePermission(AccountActionKeys.INVITE_USER);
+
+		_accountEntryUserRelService.inviteUser(
+			_accountEntry.getAccountEntryId(), null,
+			"A" + RandomTestUtil.randomString() + "@liferay.com", _user,
+			_serviceContext);
+	}
+
+	private void _addResourcePermission(String actionId) throws Exception {
 		_resourcePermissionLocalService.addResourcePermission(
 			TestPropsValues.getCompanyId(), AccountEntry.class.getName(),
 			ResourceConstants.SCOPE_COMPANY,
 			String.valueOf(TestPropsValues.getCompanyId()),
-			accountRole.getRoleId(), actionId);
-
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext();
-
-		serviceContext.setRequest(new MockHttpServletRequest());
-
-		_accountEntryUserRelService.inviteUser(
-			_accountEntry.getAccountEntryId(), null,
-			RandomTestUtil.randomString() + "@liferay.com", _user,
-			serviceContext);
+			_accountRole.getRoleId(), actionId);
 	}
 
-	@DeleteAfterTestRun
 	private AccountEntry _accountEntry;
 
 	@Inject
@@ -115,13 +178,15 @@ public class AccountEntryUserRelServiceTest {
 	@Inject
 	private AccountEntryUserRelService _accountEntryUserRelService;
 
+	private AccountRole _accountRole;
+
 	@Inject
 	private AccountRoleLocalService _accountRoleLocalService;
 
 	@Inject
 	private ResourcePermissionLocalService _resourcePermissionLocalService;
 
-	@DeleteAfterTestRun
+	private ServiceContext _serviceContext;
 	private User _user;
 
 }

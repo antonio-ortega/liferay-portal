@@ -24,7 +24,6 @@ import com.liferay.portal.search.engine.adapter.search.SearchSearchRequest;
 import com.liferay.portal.search.engine.adapter.search.SearchSearchResponse;
 import com.liferay.portal.search.groupby.GroupByRequest;
 import com.liferay.portal.search.groupby.GroupByResponse;
-import com.liferay.portal.search.groupby.GroupByResponseFactory;
 import com.liferay.portal.search.legacy.stats.StatsRequestBuilderFactory;
 import com.liferay.portal.search.legacy.stats.StatsResultsTranslator;
 import com.liferay.portal.search.opensearch2.internal.facet.FacetCollectorFactory;
@@ -58,18 +57,6 @@ import org.opensearch.client.opensearch.core.search.TotalHits;
  */
 public class SearchResponseTranslator {
 
-	public SearchResponseTranslator(
-		GroupByResponseFactory groupByResponseFactory,
-		HitDocumentTranslator hitDocumentTranslator,
-		StatsRequestBuilderFactory statsRequestBuilderFactory,
-		StatsResultsTranslator statsResultsTranslator) {
-
-		_groupByResponseFactory = groupByResponseFactory;
-		_hitDocumentTranslator = hitDocumentTranslator;
-		_statsRequestBuilderFactory = statsRequestBuilderFactory;
-		_statsResultsTranslator = statsResultsTranslator;
-	}
-
 	public void populate(
 		SearchResponse<JsonData> searchResponse,
 		SearchSearchRequest searchSearchRequest,
@@ -102,7 +89,7 @@ public class SearchResponseTranslator {
 	protected StatsResults getStatsResults(
 		Map<String, Aggregate> aggregates, Stats stats) {
 
-		return _statsResultsTranslator.translate(
+		return StatsResultsTranslator.INSTANCE.translate(
 			_statsTranslator.translateResponse(aggregates, _translate(stats)));
 	}
 
@@ -173,7 +160,7 @@ public class SearchResponseTranslator {
 	private Document _processHit(
 		String alternateUidFieldName, Hit<JsonData> hit) {
 
-		Document document = _hitDocumentTranslator.translate(hit);
+		Document document = HitDocumentTranslator.INSTANCE.translate(hit);
 
 		_populateUID(alternateUidFieldName, document);
 
@@ -211,7 +198,7 @@ public class SearchResponseTranslator {
 
 	private StatsRequest _translate(Stats stats) {
 		StatsRequestBuilder statsRequestBuilder =
-			_statsRequestBuilderFactory.getStatsRequestBuilder(stats);
+			StatsRequestBuilderFactory.getStatsRequestBuilder(stats);
 
 		return statsRequestBuilder.build();
 	}
@@ -275,8 +262,7 @@ public class SearchResponseTranslator {
 
 		List<StringTermsBucket> stringTermsBuckets = buckets.array();
 
-		GroupByResponse groupByResponse =
-			_groupByResponseFactory.getGroupByResponse(field);
+		GroupByResponse groupByResponse = new GroupByResponse(field);
 
 		searchSearchResponse.addGroupByResponse(groupByResponse);
 
@@ -319,10 +305,6 @@ public class SearchResponseTranslator {
 		}
 	}
 
-	private final GroupByResponseFactory _groupByResponseFactory;
-	private final HitDocumentTranslator _hitDocumentTranslator;
-	private final StatsRequestBuilderFactory _statsRequestBuilderFactory;
-	private final StatsResultsTranslator _statsResultsTranslator;
 	private final StatsTranslator _statsTranslator = new StatsTranslator();
 
 }

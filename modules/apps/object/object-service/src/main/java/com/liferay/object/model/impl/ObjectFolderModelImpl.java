@@ -76,7 +76,8 @@ public class ObjectFolderModelImpl
 		{"objectFolderId", Types.BIGINT}, {"companyId", Types.BIGINT},
 		{"userId", Types.BIGINT}, {"userName", Types.VARCHAR},
 		{"createDate", Types.TIMESTAMP}, {"modifiedDate", Types.TIMESTAMP},
-		{"label", Types.VARCHAR}, {"name", Types.VARCHAR}
+		{"label", Types.VARCHAR}, {"name", Types.VARCHAR},
+		{"status", Types.INTEGER}
 	};
 
 	public static final Map<String, Integer> TABLE_COLUMNS_MAP =
@@ -94,12 +95,17 @@ public class ObjectFolderModelImpl
 		TABLE_COLUMNS_MAP.put("modifiedDate", Types.TIMESTAMP);
 		TABLE_COLUMNS_MAP.put("label", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("name", Types.VARCHAR);
+		TABLE_COLUMNS_MAP.put("status", Types.INTEGER);
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table ObjectFolder (mvccVersion LONG default 0 not null,uuid_ VARCHAR(75) null,externalReferenceCode VARCHAR(75) null,objectFolderId LONG not null primary key,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,label STRING null,name VARCHAR(75) null)";
+		"create table ObjectFolder (mvccVersion LONG default 0 not null,uuid_ VARCHAR(75) null,externalReferenceCode VARCHAR(75) null,objectFolderId LONG not null primary key,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,label STRING null,name VARCHAR(75) null,status INTEGER)";
 
 	public static final String TABLE_SQL_DROP = "drop table ObjectFolder";
+
+	public static final String ENTITY_ALIAS = "objectFolder";
+
+	public static final String FILTER_PK_COLUMN_NAME = "objectFolderId";
 
 	public static final String ORDER_BY_JPQL =
 		" ORDER BY objectFolder.objectFolderId ASC";
@@ -274,6 +280,7 @@ public class ObjectFolderModelImpl
 				"modifiedDate", ObjectFolder::getModifiedDate);
 			attributeGetterFunctions.put("label", ObjectFolder::getLabel);
 			attributeGetterFunctions.put("name", ObjectFolder::getName);
+			attributeGetterFunctions.put("status", ObjectFolder::getStatus);
 
 			_attributeGetterFunctions = Collections.unmodifiableMap(
 				attributeGetterFunctions);
@@ -326,6 +333,9 @@ public class ObjectFolderModelImpl
 			attributeSetterBiConsumers.put(
 				"name",
 				(BiConsumer<ObjectFolder, String>)ObjectFolder::setName);
+			attributeSetterBiConsumers.put(
+				"status",
+				(BiConsumer<ObjectFolder, Integer>)ObjectFolder::setStatus);
 
 			_attributeSetterBiConsumers = Collections.unmodifiableMap(
 				(Map)attributeSetterBiConsumers);
@@ -671,6 +681,21 @@ public class ObjectFolderModelImpl
 		return getColumnOriginalValue("name");
 	}
 
+	@JSON
+	@Override
+	public int getStatus() {
+		return _status;
+	}
+
+	@Override
+	public void setStatus(int status) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_status = status;
+	}
+
 	@Override
 	public StagedModelType getStagedModelType() {
 		return new StagedModelType(
@@ -810,6 +835,7 @@ public class ObjectFolderModelImpl
 		objectFolderImpl.setModifiedDate(getModifiedDate());
 		objectFolderImpl.setLabel(getLabel());
 		objectFolderImpl.setName(getName());
+		objectFolderImpl.setStatus(getStatus());
 
 		objectFolderImpl.resetOriginalValues();
 
@@ -838,6 +864,8 @@ public class ObjectFolderModelImpl
 			this.<Date>getColumnOriginalValue("modifiedDate"));
 		objectFolderImpl.setLabel(this.<String>getColumnOriginalValue("label"));
 		objectFolderImpl.setName(this.<String>getColumnOriginalValue("name"));
+		objectFolderImpl.setStatus(
+			this.<Integer>getColumnOriginalValue("status"));
 
 		return objectFolderImpl;
 	}
@@ -986,6 +1014,8 @@ public class ObjectFolderModelImpl
 			objectFolderCacheModel.name = null;
 		}
 
+		objectFolderCacheModel.status = getStatus();
+
 		return objectFolderCacheModel;
 	}
 
@@ -1060,6 +1090,7 @@ public class ObjectFolderModelImpl
 	private String _label;
 	private String _labelCurrentLanguageId;
 	private String _name;
+	private int _status;
 
 	public <T> T getColumnValue(String columnName) {
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
@@ -1103,6 +1134,7 @@ public class ObjectFolderModelImpl
 		_columnOriginalValues.put("modifiedDate", _modifiedDate);
 		_columnOriginalValues.put("label", _label);
 		_columnOriginalValues.put("name", _name);
+		_columnOriginalValues.put("status", _status);
 	}
 
 	private static final Map<String, String> _attributeNames;
@@ -1148,6 +1180,8 @@ public class ObjectFolderModelImpl
 
 		columnBitmasks.put("name", 1024L);
 
+		columnBitmasks.put("status", 2048L);
+
 		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
 	}
 
@@ -1155,3 +1189,4 @@ public class ObjectFolderModelImpl
 	private ObjectFolder _escapedModel;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:1829293429

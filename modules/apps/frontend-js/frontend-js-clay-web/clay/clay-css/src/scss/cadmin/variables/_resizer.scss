@@ -2,19 +2,45 @@ $cadmin-c-horizontal-resizer: () !default;
 $cadmin-c-horizontal-resizer: map-merge(
 	(
 		background-color: transparent,
-		bottom: 0,
+		bottom: 0px,
 		cursor: ew-resize,
 		margin-right: -0.25rem,
 		position: absolute,
-		right: 0,
-		top: 0,
-		width: 0.5rem,
+		right: 0px,
+		top: 0px,
+		width: 0.75rem,
 		z-index: 10,
-		hover: (
-			background-color: $cadmin-primary-l0,
+
+		before: (
+			bottom: 0px,
+			content: '',
+			left: 0.25rem,
+			position: absolute,
+			right: 0.25rem,
+			top: 0px,
 		),
+
+		hover: (
+			before: (
+				background-color: $cadmin-primary,
+			),
+		),
+
+		active: (
+			before: (
+				background-color: $cadmin-primary-d2,
+			),
+		),
+
 		focus: (
-			background-color: $cadmin-primary-l0,
+			box-shadow: $cadmin-component-focus-inset-box-shadow,
+			outline: 0,
+
+			before: (
+				background-color: $cadmin-primary,
+				bottom: 0.25rem,
+				top: 0.25rem,
+			),
 		),
 	),
 	$cadmin-c-horizontal-resizer

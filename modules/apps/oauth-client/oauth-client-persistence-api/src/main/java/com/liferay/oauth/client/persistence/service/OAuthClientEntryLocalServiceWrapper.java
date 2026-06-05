@@ -29,22 +29,6 @@ public class OAuthClientEntryLocalServiceWrapper
 		_oAuthClientEntryLocalService = oAuthClientEntryLocalService;
 	}
 
-	@Override
-	public com.liferay.oauth.client.persistence.model.OAuthClientEntry
-			addOAuthClientEntry(
-				long userId, String authRequestParametersJSON,
-				String authServerWellKnownURI, String customClaimsJSON,
-				String infoJSON, long metadataCacheTime,
-				String oidcUserInfoMapperJSON,
-				String tokenRequestParametersJSON)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		return _oAuthClientEntryLocalService.addOAuthClientEntry(
-			userId, authRequestParametersJSON, authServerWellKnownURI,
-			customClaimsJSON, infoJSON, metadataCacheTime,
-			oidcUserInfoMapperJSON, tokenRequestParametersJSON);
-	}
-
 	/**
 	 * Adds the o auth client entry to the database. Also notifies the appropriate model listeners.
 	 *
@@ -63,6 +47,23 @@ public class OAuthClientEntryLocalServiceWrapper
 
 		return _oAuthClientEntryLocalService.addOAuthClientEntry(
 			oAuthClientEntry);
+	}
+
+	@Override
+	public com.liferay.oauth.client.persistence.model.OAuthClientEntry
+			addOAuthClientEntry(
+				String externalReferenceCode, long userId,
+				String authRequestParametersJSON, String authServerWellKnownURI,
+				String customClaimsJSON, String infoJSON, String matcherField,
+				long metadataCacheTime, String oidcUserInfoMapperJSON,
+				String tokenRequestParametersJSON)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _oAuthClientEntryLocalService.addOAuthClientEntry(
+			externalReferenceCode, userId, authRequestParametersJSON,
+			authServerWellKnownURI, customClaimsJSON, infoJSON, matcherField,
+			metadataCacheTime, oidcUserInfoMapperJSON,
+			tokenRequestParametersJSON);
 	}
 
 	/**
@@ -276,6 +277,31 @@ public class OAuthClientEntryLocalServiceWrapper
 	}
 
 	@Override
+	public com.liferay.oauth.client.persistence.model.OAuthClientEntry
+		fetchOAuthClientEntryByExternalReferenceCode(
+			String externalReferenceCode, long companyId) {
+
+		return _oAuthClientEntryLocalService.
+			fetchOAuthClientEntryByExternalReferenceCode(
+				externalReferenceCode, companyId);
+	}
+
+	/**
+	 * Returns the o auth client entry with the matching UUID and company.
+	 *
+	 * @param uuid the o auth client entry's UUID
+	 * @param companyId the primary key of the company
+	 * @return the matching o auth client entry, or <code>null</code> if a matching o auth client entry could not be found
+	 */
+	@Override
+	public com.liferay.oauth.client.persistence.model.OAuthClientEntry
+		fetchOAuthClientEntryByUuidAndCompanyId(String uuid, long companyId) {
+
+		return _oAuthClientEntryLocalService.
+			fetchOAuthClientEntryByUuidAndCompanyId(uuid, companyId);
+	}
+
+	@Override
 	public com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery
 		getActionableDynamicQuery() {
 
@@ -300,6 +326,16 @@ public class OAuthClientEntryLocalServiceWrapper
 
 		return _oAuthClientEntryLocalService.getCompanyOAuthClientEntries(
 			companyId);
+	}
+
+	@Override
+	public com.liferay.portal.kernel.dao.orm.ExportActionableDynamicQuery
+		getExportActionableDynamicQuery(
+			com.liferay.exportimport.kernel.lar.PortletDataContext
+				portletDataContext) {
+
+		return _oAuthClientEntryLocalService.getExportActionableDynamicQuery(
+			portletDataContext);
 	}
 
 	@Override
@@ -365,6 +401,34 @@ public class OAuthClientEntryLocalServiceWrapper
 			companyId, authServerWellKnownURI, clientId);
 	}
 
+	@Override
+	public com.liferay.oauth.client.persistence.model.OAuthClientEntry
+			getOAuthClientEntryByExternalReferenceCode(
+				String externalReferenceCode, long companyId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _oAuthClientEntryLocalService.
+			getOAuthClientEntryByExternalReferenceCode(
+				externalReferenceCode, companyId);
+	}
+
+	/**
+	 * Returns the o auth client entry with the matching UUID and company.
+	 *
+	 * @param uuid the o auth client entry's UUID
+	 * @param companyId the primary key of the company
+	 * @return the matching o auth client entry
+	 * @throws PortalException if a matching o auth client entry could not be found
+	 */
+	@Override
+	public com.liferay.oauth.client.persistence.model.OAuthClientEntry
+			getOAuthClientEntryByUuidAndCompanyId(String uuid, long companyId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _oAuthClientEntryLocalService.
+			getOAuthClientEntryByUuidAndCompanyId(uuid, companyId);
+	}
+
 	/**
 	 * Returns the OSGi service identifier.
 	 *
@@ -399,14 +463,14 @@ public class OAuthClientEntryLocalServiceWrapper
 			updateOAuthClientEntry(
 				long oAuthClientEntryId, String authRequestParametersJSON,
 				String authServerWellKnownURI, String customClaimsJSON,
-				String infoJSON, long metadataCacheTime,
+				String infoJSON, String matcherField, long metadataCacheTime,
 				String oidcUserInfoMapperJSON,
 				String tokenRequestParametersJSON)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _oAuthClientEntryLocalService.updateOAuthClientEntry(
 			oAuthClientEntryId, authRequestParametersJSON,
-			authServerWellKnownURI, customClaimsJSON, infoJSON,
+			authServerWellKnownURI, customClaimsJSON, infoJSON, matcherField,
 			metadataCacheTime, oidcUserInfoMapperJSON,
 			tokenRequestParametersJSON);
 	}
@@ -451,3 +515,4 @@ public class OAuthClientEntryLocalServiceWrapper
 	private OAuthClientEntryLocalService _oAuthClientEntryLocalService;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:1217783188

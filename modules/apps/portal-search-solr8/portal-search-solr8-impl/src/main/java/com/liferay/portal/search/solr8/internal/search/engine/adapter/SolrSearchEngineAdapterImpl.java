@@ -5,6 +5,7 @@
 
 package com.liferay.portal.search.solr8.internal.search.engine.adapter;
 
+import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.search.Query;
 import com.liferay.portal.search.engine.adapter.SearchEngineAdapter;
 import com.liferay.portal.search.engine.adapter.ccr.CCRRequest;
@@ -24,15 +25,27 @@ import com.liferay.portal.search.engine.adapter.search.SearchResponse;
 import com.liferay.portal.search.engine.adapter.snapshot.SnapshotRequest;
 import com.liferay.portal.search.engine.adapter.snapshot.SnapshotRequestExecutor;
 import com.liferay.portal.search.engine.adapter.snapshot.SnapshotResponse;
+import com.liferay.portal.search.solr8.configuration.SolrConfiguration;
+import com.liferay.portal.search.solr8.internal.connection.SolrClientManager;
 import com.liferay.portal.search.solr8.internal.query.SolrQueryVisitor;
+import com.liferay.portal.search.solr8.internal.search.engine.adapter.cluster.SolrClusterRequestExecutor;
+import com.liferay.portal.search.solr8.internal.search.engine.adapter.document.SolrDocumentRequestExecutor;
+import com.liferay.portal.search.solr8.internal.search.engine.adapter.index.SolrIndexRequestExecutor;
+import com.liferay.portal.search.solr8.internal.search.engine.adapter.search.SolrSearchRequestExecutor;
+import com.liferay.portal.search.solr8.internal.search.engine.adapter.snapshot.SolrSnapshotRequestExecutor;
 
+import java.util.Map;
+
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Bryan Engler
  */
 @Component(
+	configurationPid = "com.liferay.portal.search.solr8.configuration.SolrConfiguration",
 	property = "search.engine.impl=Solr", service = SearchEngineAdapter.class
 )
 public class SolrSearchEngineAdapterImpl implements SearchEngineAdapter {
@@ -110,6 +123,26 @@ public class SolrSearchEngineAdapterImpl implements SearchEngineAdapter {
 		}
 	}
 
+	@Activate
+	protected void activate(Map<String, Object> properties) {
+		modified(properties);
+
+		_indexRequestExecutor = new SolrIndexRequestExecutor(
+			_solrClientManager);
+		_searchRequestExecutor = new SolrSearchRequestExecutor(
+			_solrClientManager);
+	}
+
+	@Modified
+	protected void modified(Map<String, Object> properties) {
+		SolrConfiguration solrConfiguration =
+			ConfigurableUtil.createConfigurable(
+				SolrConfiguration.class, properties);
+
+		_documentRequestExecutor = new SolrDocumentRequestExecutor(
+			solrConfiguration.defaultCollection(), _solrClientManager);
+	}
+
 	protected void setThrowOriginalExceptions(boolean throwOriginalExceptions) {
 		_throwOriginalExceptions = throwOriginalExceptions;
 	}
@@ -137,20 +170,16 @@ public class SolrSearchEngineAdapterImpl implements SearchEngineAdapter {
 		return runtimeException1;
 	}
 
-	@Reference(target = "(search.engine.impl=Solr)")
-	private ClusterRequestExecutor _clusterRequestExecutor;
-
-	@Reference(target = "(search.engine.impl=Solr)")
-	private DocumentRequestExecutor _documentRequestExecutor;
-
-	@Reference(target = "(search.engine.impl=Solr)")
+	private final ClusterRequestExecutor _clusterRequestExecutor =
+		new SolrClusterRequestExecutor();
+	private volatile DocumentRequestExecutor _documentRequestExecutor;
 	private IndexRequestExecutor _indexRequestExecutor;
-
-	@Reference(target = "(search.engine.impl=Solr)")
 	private SearchRequestExecutor _searchRequestExecutor;
+	private final SnapshotRequestExecutor _snapshotRequestExecutor =
+		new SolrSnapshotRequestExecutor();
 
-	@Reference(target = "(search.engine.impl=Solr)")
-	private SnapshotRequestExecutor _snapshotRequestExecutor;
+	@Reference
+	private SolrClientManager _solrClientManager;
 
 	private boolean _throwOriginalExceptions;
 

@@ -107,3 +107,4 @@ public class LayoutPrototypeServiceWrapper
 	private LayoutPrototypeService _layoutPrototypeService;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:46927347

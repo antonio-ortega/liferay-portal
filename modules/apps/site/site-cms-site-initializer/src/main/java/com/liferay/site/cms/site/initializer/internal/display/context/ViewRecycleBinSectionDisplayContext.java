@@ -7,13 +7,13 @@ package com.liferay.site.cms.site.initializer.internal.display.context;
 
 import com.liferay.depot.constants.DepotConstants;
 import com.liferay.depot.service.DepotEntryLocalService;
+import com.liferay.depot.service.DepotEntryServiceUtil;
 import com.liferay.frontend.data.set.model.FDSActionDropdownItem;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.headless.asset.library.resource.v1_0.AssetLibraryResource;
 import com.liferay.object.model.ObjectEntryFolder;
 import com.liferay.object.service.ObjectDefinitionService;
-import com.liferay.object.service.ObjectDefinitionSettingLocalService;
 import com.liferay.object.service.ObjectEntryFolderLocalService;
-import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringUtil;
@@ -24,10 +24,8 @@ import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
-import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
@@ -35,6 +33,10 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.search.rest.dto.v1_0.SearchResult;
+import com.liferay.portal.search.rest.resource.v1_0.SearchResultResource;
+import com.liferay.portal.vulcan.pagination.Page;
+import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.site.cms.site.initializer.internal.util.ActionUtil;
 import com.liferay.translation.exporter.TranslationInfoItemFieldValuesExporterRegistry;
 import com.liferay.trash.TrashHelper;
@@ -56,25 +58,21 @@ public class ViewRecycleBinSectionDisplayContext
 		GroupLocalService groupLocalService,
 		HttpServletRequest httpServletRequest, Language language,
 		ObjectDefinitionService objectDefinitionService,
-		ObjectDefinitionSettingLocalService objectDefinitionSettingLocalService,
 		ObjectEntryFolderLocalService objectEntryFolderLocalService,
-		ModelResourcePermission<ObjectEntryFolder>
-			objectEntryFolderModelResourcePermission,
-		Portal portal,
+		Portal portal, SearchResultResource.Factory searchResultResourceFactory,
 		TranslationInfoItemFieldValuesExporterRegistry
 			translationInfoItemFieldValuesExporterRegistry,
 		TrashHelper trashHelper) {
 
 		super(
 			depotEntryLocalService, null, groupLocalService, httpServletRequest,
-			language, objectDefinitionService,
-			objectDefinitionSettingLocalService,
-			objectEntryFolderModelResourcePermission, portal,
+			language, objectDefinitionService, portal,
 			translationInfoItemFieldValuesExporterRegistry);
 
 		_assetLibraryResourceFactory = assetLibraryResourceFactory;
 		_groupId = groupId;
 		_objectEntryFolderLocalService = objectEntryFolderLocalService;
+		_searchResultResourceFactory = searchResultResourceFactory;
 		_trashHelper = trashHelper;
 
 		_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
@@ -93,6 +91,8 @@ public class ViewRecycleBinSectionDisplayContext
 				"breadcrumbItems", jsonArray
 			).put(
 				"hideSpace", true
+			).put(
+				"showEmptyRecycleBinAction", _isShowEmptyRecycleBinAction()
 			).build();
 		}
 
@@ -150,6 +150,20 @@ public class ViewRecycleBinSectionDisplayContext
 		).build();
 	}
 
+	@Override
+	public List<DropdownItem> getBulkActionDropdownItems() {
+		List<DropdownItem> bulkActionDropdownItems =
+			super.getBulkActionDropdownItems();
+
+		bulkActionDropdownItems.add(
+			new FDSActionDropdownItem(
+				"#", "restore", "restore",
+				LanguageUtil.get(httpServletRequest, "restore"), null, null,
+				null));
+
+		return bulkActionDropdownItems;
+	}
+
 	public Map<String, Object> getEmptyState() {
 		return HashMapBuilder.<String, Object>put(
 			"description",
@@ -169,7 +183,7 @@ public class ViewRecycleBinSectionDisplayContext
 					"{embedded.id}",
 				"view", "actionLinkFolder",
 				LanguageUtil.get(httpServletRequest, "view-folder"), "get",
-				"update", null,
+				"get", null,
 				HashMapBuilder.<String, Object>put(
 					"entryClassName", ObjectEntryFolder.class.getName()
 				).build()),
@@ -187,48 +201,69 @@ public class ViewRecycleBinSectionDisplayContext
 	protected String getCMSSectionFilterString() {
 		String filterString =
 			"cmsRoot eq true and (cmsSection eq 'contents' or cmsSection eq " +
-				"'files') and status eq ";
+				"'files')";
 
-		Long[] groupIds;
+		List<Long> groupIds = _getTrashEnabledDepotEntryGroupIds();
 
-		try {
-			groupIds = _getDepotGroupIds(_themeDisplay.getCompanyId());
-		}
-		catch (Exception exception) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(
-					"Unable to get depot group IDs for group " + _groupId,
-					exception);
-			}
-
-			return filterString + WorkflowConstants.STATUS_ANY;
-		}
-
-		if (ArrayUtil.isEmpty(groupIds)) {
-			return filterString + WorkflowConstants.STATUS_ANY;
+		if (ListUtil.isEmpty(groupIds)) {
+			return filterString + " and status eq " +
+				WorkflowConstants.STATUS_ANY;
 		}
 
 		return StringBundler.concat(
-			filterString, WorkflowConstants.STATUS_IN_TRASH,
-			" and groupIds/any(g:g in (", StringUtil.merge(groupIds, ","),
-			"))");
+			filterString, " and groupIds/any(g:g in (",
+			StringUtil.merge(groupIds, ","), ")) and status eq ",
+			WorkflowConstants.STATUS_IN_TRASH);
 	}
 
-	private Long[] _getDepotGroupIds(long companyId) throws Exception {
-		return TransformUtil.transformToArray(
-			depotEntryLocalService.getDepotEntries(
-				companyId, DepotConstants.TYPE_SPACE),
-			depotEntry -> {
-				Group group = groupLocalService.fetchGroup(
-					depotEntry.getGroupId());
+	private List<Long> _getTrashEnabledDepotEntryGroupIds() {
+		return ListUtil.filter(
+			DepotEntryServiceUtil.getDepotEntryGroupIds(
+				themeDisplay.getCompanyId(), themeDisplay.getUserId(),
+				DepotConstants.TYPE_SPACE),
+			groupId -> {
+				Group group = groupLocalService.fetchGroup(groupId);
 
-				if ((group == null) || !_trashHelper.isTrashEnabled(group)) {
-					return null;
+				if ((group != null) && _trashHelper.isTrashEnabled(group)) {
+					return true;
 				}
 
-				return group.getGroupId();
-			},
-			Long.class);
+				return false;
+			});
+	}
+
+	private boolean _isShowEmptyRecycleBinAction() {
+		if (ListUtil.isEmpty(_getTrashEnabledDepotEntryGroupIds())) {
+			return false;
+		}
+
+		try {
+			SearchResultResource searchResultResource =
+				_searchResultResourceFactory.create(
+				).httpServletRequest(
+					httpServletRequest
+				).preferredLocale(
+					themeDisplay.getLocale()
+				).user(
+					themeDisplay.getUser()
+				).build();
+
+			Page<SearchResult> page = searchResultResource.getSearchPage(
+				null, true, null, null, null,
+				searchResultResource.toFilter(getCMSSectionFilterString()),
+				Pagination.of(1, 0), null);
+
+			if (page.getTotalCount() > 0) {
+				return true;
+			}
+
+			return false;
+		}
+		catch (Exception exception) {
+			_log.error(exception);
+
+			return false;
+		}
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
@@ -237,6 +272,7 @@ public class ViewRecycleBinSectionDisplayContext
 	private final AssetLibraryResource.Factory _assetLibraryResourceFactory;
 	private final long _groupId;
 	private final ObjectEntryFolderLocalService _objectEntryFolderLocalService;
+	private final SearchResultResource.Factory _searchResultResourceFactory;
 	private final ThemeDisplay _themeDisplay;
 	private final TrashHelper _trashHelper;
 

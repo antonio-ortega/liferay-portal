@@ -28,7 +28,6 @@ import java.util.Set;
 
 import org.junit.Assert;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -45,7 +44,7 @@ public class GroupByTest extends BaseGroupByTestCase {
 
 	@Test
 	public void testGroupByDocsSizeDefault() throws Exception {
-		indexDuplicates("five", 5);
+		indexDuplicates(5, "five");
 
 		assertSearch(
 			indexingTestHelper -> {
@@ -63,7 +62,7 @@ public class GroupByTest extends BaseGroupByTestCase {
 
 	@Test
 	public void testGroupByDocsSizeZero() throws Exception {
-		indexDuplicates("five", 5);
+		indexDuplicates(5, "five");
 
 		assertSearch(
 			indexingTestHelper -> {
@@ -82,12 +81,6 @@ public class GroupByTest extends BaseGroupByTestCase {
 					hits -> assertGroups(
 						toMap("five", "5|3"), hits, indexingTestHelper));
 			});
-	}
-
-	@Ignore
-	@Override
-	@Test
-	public void testGroupByDocsSortsScoreFieldDesc() throws Exception {
 	}
 
 	@Test
@@ -164,8 +157,8 @@ public class GroupByTest extends BaseGroupByTestCase {
 
 	@Test
 	public void testMultipleGroupByRequests() throws Exception {
-		indexDuplicates("three", 3);
-		indexDuplicates("two", 2);
+		indexDuplicates(3, "three");
+		indexDuplicates(2, "two");
 
 		Map<String, List<String>> orderedResultsMap =
 			HashMapBuilder.<String, List<String>>put(
@@ -178,11 +171,10 @@ public class GroupByTest extends BaseGroupByTestCase {
 			indexingTestHelper -> {
 				indexingTestHelper.defineRequest(
 					searchRequestBuilder -> {
-						GroupByRequest groupByRequest1 =
-							groupByRequestFactory.getGroupByRequest(
-								GROUP_FIELD);
-						GroupByRequest groupByRequest2 =
-							groupByRequestFactory.getGroupByRequest(SORT_FIELD);
+						GroupByRequest groupByRequest1 = new GroupByRequest(
+							GROUP_FIELD);
+						GroupByRequest groupByRequest2 = new GroupByRequest(
+							SORT_FIELD);
 
 						searchRequestBuilder.groupByRequests(
 							groupByRequest1, groupByRequest2);
@@ -248,9 +240,8 @@ public class GroupByTest extends BaseGroupByTestCase {
 						sorts[0] = new Sort("_count", countDesc);
 						sorts[1] = new Sort("_key", keyDesc);
 
-						GroupByRequest groupByRequest =
-							groupByRequestFactory.getGroupByRequest(
-								GROUP_FIELD);
+						GroupByRequest groupByRequest = new GroupByRequest(
+							GROUP_FIELD);
 
 						groupByRequest.setTermsSorts(sorts);
 
@@ -284,9 +275,9 @@ public class GroupByTest extends BaseGroupByTestCase {
 	}
 
 	private void _indexTermsSortsDuplicates() {
-		indexDuplicates("one", 2);
-		indexDuplicates("two", 2);
-		indexDuplicates("three", 3);
+		indexDuplicates(2, "one");
+		indexDuplicates(2, "two");
+		indexDuplicates(3, "three");
 	}
 
 }

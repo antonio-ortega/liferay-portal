@@ -545,3 +545,4 @@ public class ContentDocumentSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-614376320

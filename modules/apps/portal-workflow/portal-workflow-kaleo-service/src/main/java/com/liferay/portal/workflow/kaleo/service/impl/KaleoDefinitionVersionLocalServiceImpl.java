@@ -7,6 +7,7 @@ package com.liferay.portal.workflow.kaleo.service.impl;
 
 import com.liferay.exportimport.kernel.staging.Staging;
 import com.liferay.petra.function.transform.TransformUtil;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
@@ -24,6 +25,7 @@ import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.Validator;
@@ -36,7 +38,7 @@ import com.liferay.portal.search.aggregation.bucket.TermsAggregationResult;
 import com.liferay.portal.search.aggregation.metrics.TopHitsAggregation;
 import com.liferay.portal.search.aggregation.metrics.TopHitsAggregationResult;
 import com.liferay.portal.search.document.Document;
-import com.liferay.portal.search.engine.adapter.search.SearchRequestExecutor;
+import com.liferay.portal.search.engine.adapter.SearchEngineAdapter;
 import com.liferay.portal.search.engine.adapter.search.SearchSearchRequest;
 import com.liferay.portal.search.engine.adapter.search.SearchSearchResponse;
 import com.liferay.portal.search.hits.SearchHit;
@@ -44,7 +46,7 @@ import com.liferay.portal.search.hits.SearchHits;
 import com.liferay.portal.search.index.IndexNameBuilder;
 import com.liferay.portal.search.localization.SearchLocalizationHelper;
 import com.liferay.portal.search.query.BooleanQuery;
-import com.liferay.portal.search.query.Queries;
+import com.liferay.portal.search.query.QueriesUtil;
 import com.liferay.portal.search.query.StringQuery;
 import com.liferay.portal.search.query.TermsQuery;
 import com.liferay.portal.search.searcher.SearchRequestBuilder;
@@ -55,6 +57,7 @@ import com.liferay.portal.search.sort.SortOrder;
 import com.liferay.portal.search.sort.Sorts;
 import com.liferay.portal.workflow.constants.WorkflowDefinitionConstants;
 import com.liferay.portal.workflow.exception.IncompleteWorkflowInstancesException;
+import com.liferay.portal.workflow.kaleo.exception.NoSuchDefinitionVersionException;
 import com.liferay.portal.workflow.kaleo.model.KaleoDefinition;
 import com.liferay.portal.workflow.kaleo.model.KaleoDefinitionVersion;
 import com.liferay.portal.workflow.kaleo.service.KaleoConditionLocalService;
@@ -258,16 +261,6 @@ public class KaleoDefinitionVersionLocalServiceImpl
 	}
 
 	@Override
-	public KaleoDefinitionVersion fetchLatestKaleoDefinitionVersion(
-			long companyId, String name,
-			OrderByComparator<KaleoDefinitionVersion> orderByComparator)
-		throws PortalException {
-
-		return kaleoDefinitionVersionPersistence.fetchByC_N_Last(
-			companyId, name, orderByComparator);
-	}
-
-	@Override
 	public KaleoDefinitionVersion getFirstKaleoDefinitionVersion(
 			long companyId, String name)
 		throws PortalException {
@@ -327,13 +320,23 @@ public class KaleoDefinitionVersionLocalServiceImpl
 			long companyId, String name, String version)
 		throws PortalException {
 
-		KaleoDefinitionVersion kaleoDefinitionVersion =
-			kaleoDefinitionVersionPersistence.findByC_N_V(
-				companyId, name, version);
+		KaleoDefinitionVersion[] kaleoDefinitionVersions =
+			ListUtil.getPreviousAndNext(
+				kaleoDefinitionVersionPersistence.findByC_N(
+					companyId, name, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+					KaleoDefinitionVersionIdComparator.getInstance(true)),
+				kaleoDefinitionVersion -> Objects.equals(
+					version, kaleoDefinitionVersion.getVersion()),
+				KaleoDefinitionVersion[]::new);
 
-		return kaleoDefinitionVersionPersistence.findByC_N_PrevAndNext(
-			kaleoDefinitionVersion.getKaleoDefinitionVersionId(), companyId,
-			name, KaleoDefinitionVersionIdComparator.getInstance(true));
+		if (kaleoDefinitionVersions[1] != null) {
+			return kaleoDefinitionVersions;
+		}
+
+		throw new NoSuchDefinitionVersionException(
+			StringBundler.concat(
+				"{companyId=", companyId, ", name=", name, ", version=",
+				version, "}"));
 	}
 
 	@Override
@@ -382,16 +385,16 @@ public class KaleoDefinitionVersionLocalServiceImpl
 		searchSearchRequest.setIndexNames(
 			_indexNameBuilder.getIndexName(companyId));
 
-		BooleanQuery booleanQuery = _queries.booleanQuery();
+		BooleanQuery booleanQuery = QueriesUtil.booleanQuery();
 
-		TermsQuery termsQuery = _queries.terms(Field.ENTRY_CLASS_PK);
+		TermsQuery termsQuery = QueriesUtil.terms(Field.ENTRY_CLASS_PK);
 
 		termsQuery.addValues(
 			ArrayUtil.toStringArray(kaleoDefinitionVersionIds));
 
 		booleanQuery.addMustQueryClauses(
-			_queries.term(Field.COMPANY_ID, companyId),
-			_queries.term(
+			QueriesUtil.term(Field.COMPANY_ID, companyId),
+			QueriesUtil.term(
 				Field.ENTRY_CLASS_NAME, KaleoDefinitionVersion.class.getName()),
 			termsQuery);
 
@@ -403,7 +406,7 @@ public class KaleoDefinitionVersionLocalServiceImpl
 		}
 
 		SearchSearchResponse searchSearchResponse =
-			_searchRequestExecutor.executeSearchRequest(searchSearchRequest);
+			_searchEngineAdapter.execute(searchSearchRequest);
 
 		SearchHits searchHits = searchSearchResponse.getSearchHits();
 
@@ -449,40 +452,41 @@ public class KaleoDefinitionVersionLocalServiceImpl
 
 		termsAggregation.addChildrenAggregations(topHitsAggregation);
 
-		BooleanQuery booleanQuery = _queries.booleanQuery();
+		BooleanQuery booleanQuery = QueriesUtil.booleanQuery();
 
 		booleanQuery.addMustQueryClauses(
-			_queries.term("scope", WorkflowDefinitionConstants.SCOPE_ALL));
+			QueriesUtil.term("scope", WorkflowDefinitionConstants.SCOPE_ALL));
 
 		if (Validator.isNotNull(keywords)) {
-			BooleanQuery keywordsBooleanQuery = _queries.booleanQuery();
+			BooleanQuery keywordsBooleanQuery = QueriesUtil.booleanQuery();
 
 			keywordsBooleanQuery.addShouldQueryClauses(
-				_queries.match(Field.DESCRIPTION, keywords),
-				_queries.match(Field.NAME, keywords));
+				QueriesUtil.match(Field.DESCRIPTION, keywords),
+				QueriesUtil.match(Field.NAME, keywords));
 
 			String[] localizedFieldNames =
 				_searchLocalizationHelper.getLocalizedFieldNames(
 					new String[] {Field.TITLE}, new SearchContext());
 
 			for (String localizedFieldName : localizedFieldNames) {
-				StringQuery stringQuery = _queries.string(
+				StringQuery stringQuery = QueriesUtil.string(
 					keywords + StringPool.STAR);
 
 				stringQuery.setDefaultField(localizedFieldName);
 
 				keywordsBooleanQuery.addShouldQueryClauses(
-					stringQuery, _queries.match(localizedFieldName, keywords));
+					stringQuery,
+					QueriesUtil.match(localizedFieldName, keywords));
 			}
 
 			booleanQuery.addMustQueryClauses(keywordsBooleanQuery);
 		}
 
 		if (status == WorkflowConstants.STATUS_APPROVED) {
-			booleanQuery.addMustQueryClauses(_queries.term("active", 1));
+			booleanQuery.addMustQueryClauses(QueriesUtil.term("active", 1));
 		}
 		else if (status == WorkflowConstants.STATUS_DRAFT) {
-			booleanQuery.addMustQueryClauses(_queries.term("active", 0));
+			booleanQuery.addMustQueryClauses(QueriesUtil.term("active", 0));
 		}
 
 		SearchRequestBuilder searchRequestBuilder =
@@ -562,10 +566,10 @@ public class KaleoDefinitionVersionLocalServiceImpl
 	private KaleoTransitionLocalService _kaleoTransitionLocalService;
 
 	@Reference
-	private Queries _queries;
+	private ResourceLocalService _resourceLocalService;
 
 	@Reference
-	private ResourceLocalService _resourceLocalService;
+	private SearchEngineAdapter _searchEngineAdapter;
 
 	@Reference
 	private Searcher _searcher;
@@ -575,9 +579,6 @@ public class KaleoDefinitionVersionLocalServiceImpl
 
 	@Reference
 	private SearchRequestBuilderFactory _searchRequestBuilderFactory;
-
-	@Reference
-	private SearchRequestExecutor _searchRequestExecutor;
 
 	@Reference
 	private Sorts _sorts;

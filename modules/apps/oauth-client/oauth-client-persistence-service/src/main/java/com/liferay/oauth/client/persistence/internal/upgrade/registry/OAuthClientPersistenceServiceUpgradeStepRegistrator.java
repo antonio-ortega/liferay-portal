@@ -6,10 +6,16 @@
 package com.liferay.oauth.client.persistence.internal.upgrade.registry;
 
 import com.liferay.oauth.client.persistence.internal.upgrade.v1_4_0.OAuthClientASLocalMetadataUpgradeProcess;
+import com.liferay.oauth.client.persistence.internal.upgrade.v1_4_1.OAuthClientEntryUpgradeProcess;
+import com.liferay.oauth.client.persistence.internal.upgrade.v1_5_2.OAuthClientASLocalMetadataIssuerUpgradeProcess;
+import com.liferay.portal.kernel.upgrade.BaseExternalReferenceCodeUpgradeProcess;
+import com.liferay.portal.kernel.upgrade.BaseUuidUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.UpgradeProcessFactory;
 import com.liferay.portal.upgrade.registry.UpgradeStepRegistrator;
 
+import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Arthur Chan
@@ -39,6 +45,43 @@ public class OAuthClientPersistenceServiceUpgradeStepRegistrator
 
 		registry.register(
 			"1.3.0", "1.4.0", new OAuthClientASLocalMetadataUpgradeProcess());
+
+		registry.register(
+			"1.4.0", "1.4.1",
+			new OAuthClientEntryUpgradeProcess(_configurationAdmin));
+
+		registry.register(
+			"1.4.1", "1.5.0",
+			new BaseUuidUpgradeProcess() {
+
+				@Override
+				protected String[] getTableNames() {
+					return new String[] {
+						"OAuthClientEntry", "OAuthClientASLocalMetadata"
+					};
+				}
+
+			});
+
+		registry.register(
+			"1.5.0", "1.5.1",
+			new BaseExternalReferenceCodeUpgradeProcess() {
+
+				@Override
+				protected String[] getTableNames() {
+					return new String[] {
+						"OAuthClientEntry", "OAuthClientASLocalMetadata"
+					};
+				}
+
+			});
+
+		registry.register(
+			"1.5.1", "1.5.2",
+			new OAuthClientASLocalMetadataIssuerUpgradeProcess());
 	}
+
+	@Reference
+	private ConfigurationAdmin _configurationAdmin;
 
 }

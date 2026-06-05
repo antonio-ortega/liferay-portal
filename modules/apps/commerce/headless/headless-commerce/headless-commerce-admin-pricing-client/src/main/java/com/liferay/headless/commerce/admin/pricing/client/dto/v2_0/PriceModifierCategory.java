@@ -217,3 +217,4 @@ public class PriceModifierCategory implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:1196827208

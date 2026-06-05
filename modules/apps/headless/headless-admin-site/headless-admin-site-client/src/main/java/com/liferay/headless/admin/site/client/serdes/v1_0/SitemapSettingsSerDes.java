@@ -289,3 +289,4 @@ public class SitemapSettingsSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1920037399

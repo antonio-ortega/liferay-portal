@@ -288,3 +288,4 @@ public class PageRuleConditionSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1563099028

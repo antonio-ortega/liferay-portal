@@ -322,3 +322,4 @@ public interface AppLocalService
 		throws PortalException;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:123133156

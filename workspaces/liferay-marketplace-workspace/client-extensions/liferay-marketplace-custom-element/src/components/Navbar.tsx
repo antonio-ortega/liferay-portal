@@ -4,7 +4,7 @@
  */
 
 import classNames from 'classnames';
-import {NavLink, useLocation} from 'react-router-dom';
+import {NavLink} from 'react-router-dom';
 
 export type NavbarProps = {
 	routes: {
@@ -15,32 +15,29 @@ export type NavbarProps = {
 };
 
 const Navbar: React.FC<NavbarProps> = ({routes}) => {
-	const location = useLocation();
+	const navItems = routes.filter(({visible = true}) => visible);
 
-	const routeParams = location.pathname.split('/').filter(Boolean);
+	if (!navItems.length) {
+		return null;
+	}
 
 	return (
 		<div className="navbar navbar-expand-md navbar-underline navigation-bar navigation-bar-light">
 			<ul className="navbar-nav">
-				{routes
-					.filter(({visible = true}) => visible)
-					.map((route, index) => (
-						<NavLink
-							className={({isActive}) =>
-								classNames('nav-link', {
-									active:
-										index === 0
-											? isActive &&
-												routeParams.length === 2
-											: isActive,
-								})
-							}
-							key={index}
-							to={route.path}
-						>
-							{route.name}
-						</NavLink>
-					))}
+				{navItems.map((route, index) => (
+					<NavLink
+						className={({isActive}) =>
+							classNames('nav-link', {
+								active: isActive,
+							})
+						}
+						end={route.path === ''}
+						key={index}
+						to={route.path}
+					>
+						{route.name}
+					</NavLink>
+				))}
 			</ul>
 		</div>
 	);

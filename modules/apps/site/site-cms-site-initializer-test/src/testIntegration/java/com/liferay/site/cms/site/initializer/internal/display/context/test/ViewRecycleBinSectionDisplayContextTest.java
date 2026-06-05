@@ -6,24 +6,31 @@
 package com.liferay.site.cms.site.initializer.internal.display.context.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
-import com.liferay.depot.constants.DepotConstants;
 import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.service.DepotEntryLocalService;
 import com.liferay.fragment.renderer.FragmentRenderer;
 import com.liferay.frontend.data.set.model.FDSActionDropdownItem;
+import com.liferay.frontend.data.set.test.util.FrontendDataSetTestUtil;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
 import com.liferay.object.constants.ObjectFolderConstants;
 import com.liferay.object.model.ObjectEntryFolder;
 import com.liferay.petra.string.StringBundler;
-import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.petra.string.StringPool;
+import com.liferay.petra.string.StringUtil;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.test.AssertUtils;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
+import com.liferay.portal.kernel.test.TestInfo;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.Sync;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
@@ -37,7 +44,6 @@ import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -47,7 +53,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 /**
@@ -65,6 +70,16 @@ public class ViewRecycleBinSectionDisplayContextTest
 		new AggregateTestRule(
 			new LiferayIntegrationTestRule(),
 			PermissionCheckerMethodTestRule.INSTANCE);
+
+	@Override
+	public Map<String, Object> getBaseAdditionalProps() throws Exception {
+		Map<String, Object> baseAdditionalProps =
+			super.getBaseAdditionalProps();
+
+		baseAdditionalProps.remove("additionalAPIURLParameters");
+
+		return baseAdditionalProps;
+	}
 
 	@Test
 	public void testGetBreadcrumbProps() throws Exception {
@@ -86,44 +101,108 @@ public class ViewRecycleBinSectionDisplayContextTest
 					))
 			).put(
 				"hideSpace", true
+			).put(
+				"showEmptyRecycleBinAction", false
 			).build(),
 			_getBreadcrumbProps(displayContext));
 	}
 
 	@Test
-	public void testGetCMSSectionFilterString() throws Exception {
-		Object displayContext = getSectionDisplayContext(
-			getMockHttpServletRequest());
+	@TestInfo("LPD-87118")
+	public void testGetBulkActionDropdownItems() throws Exception {
+		List<FDSActionDropdownItem> bulkActionDropdownItems =
+			getBulkActionDropdownItems();
 
-		String filterString = _getCMSSectionFilterString(displayContext);
+		Assert.assertEquals(
+			bulkActionDropdownItems.toString(), 2,
+			bulkActionDropdownItems.size());
+
+		FrontendDataSetTestUtil.assertFDSActionDropdownItem(
+			"trash", "delete", "Delete", null, bulkActionDropdownItems.get(0));
+		FrontendDataSetTestUtil.assertFDSActionDropdownItem(
+			"restore", "restore", "Restore", null,
+			bulkActionDropdownItems.get(1));
+	}
+
+	@Override
+	@Test
+	public void testGetCMSSectionFilterString() throws Exception {
+		DepotEntry depotEntry1 = _addDepotEntry(
+			false, TestPropsValues.getUserId());
+
+		_assertTrashEnabled(depotEntry1, false);
+
+		DepotEntry depotEntry2 = _addDepotEntry(
+			true, TestPropsValues.getUserId());
+
+		_assertTrashEnabled(depotEntry2, true);
+
+		DepotEntry depotEntry3 = _addDepotEntry(
+			true, TestPropsValues.getUserId());
+
+		_assertTrashEnabled(depotEntry3, true);
+
+		User cmsAdministratorUser = UserTestUtil.addCompanyUser(
+			companyLocalService.getCompany(TestPropsValues.getCompanyId()),
+			RoleConstants.CMS_ADMINISTRATOR);
+
+		setUser(cmsAdministratorUser);
+
+		String filterString = getCMSSectionFilterString(
+			getSectionDisplayContext(
+				getMockHttpServletRequest(cmsAdministratorUser)));
 
 		Assert.assertTrue(
+			filterString,
+			filterString.contains("groupIds/any") &&
+			filterString.contains(String.valueOf(depotEntry2.getGroupId())) &&
+			filterString.contains(String.valueOf(depotEntry3.getGroupId())) &&
+			filterString.contains(
+				"status eq " + WorkflowConstants.STATUS_IN_TRASH));
+
+		User regularUser = UserTestUtil.addUser();
+
+		setUser(regularUser);
+
+		Object displayContext = getSectionDisplayContext(
+			getMockHttpServletRequest(regularUser));
+
+		filterString = getCMSSectionFilterString(displayContext);
+
+		Assert.assertTrue(
+			filterString,
 			filterString.contains("status eq " + WorkflowConstants.STATUS_ANY));
 
-		DepotEntry depotEntry = addDepotEntry(
-			RandomTestUtil.randomString(), DepotConstants.TYPE_SPACE);
+		groupLocalService.addUserGroup(
+			regularUser.getUserId(), depotEntry1.getGroupId());
+		groupLocalService.addUserGroup(
+			regularUser.getUserId(), depotEntry2.getGroupId());
 
-		try {
-			Group depotGroup = depotEntry.getGroup();
+		setUser(regularUser);
 
-			_setTrashEnabledGroupProperty(depotGroup, Boolean.TRUE.toString());
+		filterString = getCMSSectionFilterString(
+			getSectionDisplayContext(getMockHttpServletRequest(regularUser)));
 
-			Assert.assertTrue(
-				GetterUtil.getBoolean(
-					depotGroup.getTypeSettingsProperty("trashEnabled")));
+		Assert.assertTrue(
+			filterString,
+			filterString.contains(
+				_getExpectedFilterString(depotEntry2.getGroupId())));
+		Assert.assertFalse(
+			filterString,
+			filterString.contains(
+				_getExpectedFilterString(depotEntry3.getGroupId())));
 
-			filterString = _getCMSSectionFilterString(displayContext);
+		_depotEntryLocalService.deleteDepotEntry(depotEntry1);
+		_depotEntryLocalService.deleteDepotEntry(depotEntry2);
+		_depotEntryLocalService.deleteDepotEntry(depotEntry3);
 
-			Assert.assertTrue(
-				filterString.contains(
-					StringBundler.concat(
-						"status eq ", WorkflowConstants.STATUS_IN_TRASH,
-						" and groupIds/any(g:g in (", depotGroup.getGroupId(),
-						"))")));
-		}
-		finally {
-			_depotEntryLocalService.deleteDepotEntry(depotEntry);
-		}
+		_userLocalService.deleteUser(cmsAdministratorUser);
+		_userLocalService.deleteUser(regularUser);
+	}
+
+	@Override
+	@Test
+	public void testGetCreationMenu() {
 	}
 
 	@Test
@@ -135,35 +214,41 @@ public class ViewRecycleBinSectionDisplayContextTest
 			fdsActionDropdownItems.toString(), 3,
 			fdsActionDropdownItems.size());
 
-		assertFDSActionDropdownItem(
-			fdsActionDropdownItems.get(0), "view", "actionLinkFolder",
-			"view-folder", "get", "item");
-		assertFDSActionDropdownItem(
-			fdsActionDropdownItems.get(1), "trash", "delete", "delete",
-			"delete", "item");
-		assertFDSActionDropdownItem(
-			fdsActionDropdownItems.get(2), "restore", "restore", "restore",
-			"restore", "item");
+		FrontendDataSetTestUtil.assertFDSActionDropdownItem(
+			"view", "actionLinkFolder", "View Folder", "get",
+			HashMapBuilder.<String, Object>put(
+				"entryClassName", ObjectEntryFolder.class.getName()
+			).build(),
+			fdsActionDropdownItems.get(0));
+		FrontendDataSetTestUtil.assertFDSActionDropdownItem(
+			"trash", "delete", "Delete", "delete",
+			fdsActionDropdownItems.get(1));
+		FrontendDataSetTestUtil.assertFDSActionDropdownItem(
+			"restore", "restore", "Restore", "restore",
+			fdsActionDropdownItems.get(2));
 	}
 
 	@Override
-	protected CreationMenu getCreationMenu(ObjectEntryFolder objectEntryFolder)
-		throws Exception {
+	protected String appendStatus(String filterString) {
+		return filterString + " and status eq 8";
+	}
+
+	@Override
+	protected CreationMenu getCreationMenu(
+		ObjectEntryFolder objectEntryFolder) {
 
 		return null;
 	}
 
 	@Override
-	protected Map<String, String> getExpectedCreationMenuItems()
-		throws PortalException {
-
+	protected Map<String, String> getExpectedCreationMenuItems() {
 		return Collections.emptyMap();
 	}
 
-	protected MockHttpServletRequest getMockHttpServletRequest()
-		throws Exception {
-
-		return getMockHttpServletRequest(null);
+	@Override
+	protected String getFilterString() {
+		return "cmsRoot eq true and (cmsSection eq 'contents' or cmsSection " +
+			"eq 'files')";
 	}
 
 	@Override
@@ -202,15 +287,40 @@ public class ViewRecycleBinSectionDisplayContextTest
 		return viewRecycleBinSectionDisplayContext;
 	}
 
-	private HashMap<String, Object> _getBreadcrumbProps(Object displayContext) {
+	private DepotEntry _addDepotEntry(boolean trashEnabled, long userId)
+		throws Exception {
+
+		DepotEntry depotEntry = addDepotEntry(
+			RandomTestUtil.randomString(), userId);
+
+		_setTrashEnabledGroupProperty(
+			depotEntry.getGroup(), String.valueOf(trashEnabled));
+
+		return depotEntry;
+	}
+
+	private void _assertTrashEnabled(
+			DepotEntry depotEntry, boolean expectedTrashEnabled)
+		throws Exception {
+
+		Group depotGroup = depotEntry.getGroup();
+
+		Assert.assertEquals(
+			expectedTrashEnabled,
+			GetterUtil.getBoolean(
+				depotGroup.getTypeSettingsProperty("trashEnabled")));
+	}
+
+	private Map<String, Object> _getBreadcrumbProps(Object displayContext) {
 		return ReflectionTestUtil.invoke(
 			displayContext, "getBreadcrumbProps", new Class<?>[0]);
 	}
 
-	private String _getCMSSectionFilterString(Object displayContext) {
-		return ReflectionTestUtil.invoke(
-			displayContext, "getCMSSectionFilterString", new Class<?>[0],
-			new Object[0]);
+	private String _getExpectedFilterString(long... groupIds) {
+		return StringBundler.concat(
+			"groupIds/any(g:g in (",
+			StringUtil.merge(groupIds, StringPool.COMMA), ")) and status eq ",
+			WorkflowConstants.STATUS_IN_TRASH);
 	}
 
 	private void _setTrashEnabledGroupProperty(Group group, String value)
@@ -239,5 +349,8 @@ public class ViewRecycleBinSectionDisplayContextTest
 
 	@Inject
 	private GroupLocalService _groupLocalService;
+
+	@Inject
+	private UserLocalService _userLocalService;
 
 }

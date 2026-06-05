@@ -5,6 +5,7 @@
 
 package com.liferay.headless.commerce.admin.catalog.internal.resource.v1_0;
 
+import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.LowStockAction;
 import com.liferay.headless.commerce.admin.catalog.resource.v1_0.LowStockActionResource;
 import com.liferay.petra.function.UnsafeBiConsumer;
@@ -72,7 +73,7 @@ public abstract class BaseLowStockActionResourceImpl
 	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/low-stock-actions'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
-		description = "Retrive low stock actions for products."
+		description = "Lists the registered low stock activity handlers. Calls CommerceLowStockActivityRegistry.getCommerceLowStockActivities."
 	)
 	@io.swagger.v3.oas.annotations.tags.Tags(
 		value = {
@@ -223,6 +224,15 @@ public abstract class BaseLowStockActionResourceImpl
 			@Override
 			public Locale getPreferredLocale() {
 				return LocaleUtil.fromLanguageId(languageId);
+			}
+
+			@Override
+			public boolean isAcceptAllLanguages() {
+				if (ExportImportThreadLocal.isExportInProcess()) {
+					return true;
+				}
+
+				return AcceptLanguage.super.isAcceptAllLanguages();
 			}
 
 		};
@@ -800,3 +810,4 @@ public abstract class BaseLowStockActionResourceImpl
 		LogFactoryUtil.getLog(BaseLowStockActionResourceImpl.class);
 
 }
+// LIFERAY-REST-BUILDER-HASH:-871612401

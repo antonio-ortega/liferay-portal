@@ -13,7 +13,7 @@ import com.liferay.portal.kernel.json.JSONException;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.source.formatter.check.comparator.PropertyValueComparator;
-import com.liferay.source.formatter.check.util.JsonSourceUtil;
+import com.liferay.source.formatter.check.util.JSONSourceUtil;
 import com.liferay.source.formatter.util.FileUtil;
 
 import java.util.Comparator;
@@ -71,6 +71,7 @@ public class JSONPackageJSONCheck extends BaseFileCheck {
 		if (absolutePath.endsWith("commerce-theme-minium/package.json") ||
 			absolutePath.endsWith("commerce-theme-speedwell/package.json") ||
 			absolutePath.endsWith("frontend-theme-admin/package.json") ||
+			absolutePath.endsWith("frontend-theme-ai-hub/package.json") ||
 			absolutePath.endsWith("frontend-theme-classic/package.json") ||
 			absolutePath.endsWith("frontend-theme-cms/package.json") ||
 			absolutePath.endsWith("frontend-theme-dialect/package.json") ||
@@ -118,7 +119,7 @@ public class JSONPackageJSONCheck extends BaseFileCheck {
 		if (testMatchJSONArray != null) {
 			jestJSONObject.put(
 				"testMatch",
-				JsonSourceUtil.sortJSONArray(
+				JSONSourceUtil.sortJSONArray(
 					testMatchJSONArray, new TestMatchComparator()));
 		}
 

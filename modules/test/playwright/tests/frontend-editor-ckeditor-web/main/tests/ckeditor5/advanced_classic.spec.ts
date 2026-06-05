@@ -7,12 +7,13 @@ import {expect, mergeTests} from '@playwright/test';
 
 import {featureFlagsTest} from '../../../../../fixtures/featureFlagsTest';
 import {loginTest} from '../../../../../fixtures/loginTest';
+import getRandomString from '../../../../../utils/getRandomString';
 import {advancedClassicPageTest} from '../../../../frontend-editor-ckeditor-sample-web/fixtures/ckeditor5/classicPageTest';
 
 export const test = mergeTests(
 	advancedClassicPageTest,
 	featureFlagsTest({
-		'LPD-11235': {enabled: true},
+		'LPD-11235': {enabled: false},
 		'LPS-178052': {enabled: true},
 	}),
 	loginTest()
@@ -148,6 +149,36 @@ test(
 );
 
 test(
+	'Can add a hyperlink to existing text',
+	{tag: '@LPS-110663'},
+	async ({classicPage, page}) => {
+		await test.step('Type some text in the editor', async () => {
+			await classicPage.editable.fill(getRandomString());
+		});
+
+		await test.step('Select text and add hyperlink', async () => {
+			await classicPage.editable.selectText();
+
+			await classicPage.toolbar.container
+				.getByRole('button', {name: 'Link'})
+				.click();
+
+			const urlInput = page.getByLabel('Link URL');
+
+			await expect(urlInput).toBeVisible({timeout: 3000});
+
+			await urlInput.fill('https://www.liferay.com');
+
+			await page.getByLabel('Insert', {exact: true}).click();
+		});
+
+		await expect(
+			classicPage.editable.locator('a[href*="https://www.liferay.com"]')
+		).toBeVisible();
+	}
+);
+
+test(
 	'Select image by modal URL input',
 	{tag: '@LPD-11235'},
 	async ({classicPage}) => {
@@ -261,6 +292,30 @@ test(
 		await expect(AICreatorButton).toBeEnabled();
 		await expect(imageButton).toBeEnabled();
 		await expect(videoButton).toBeEnabled();
+	}
+);
+
+test(
+	'Can view HTML in source mode formatted in wysiwyg view',
+	{tag: '@LRQA-67229'},
+	async ({classicPage}) => {
+		const sourceButton = classicPage.toolbar.container.getByRole('button', {
+			name: 'Source',
+		});
+
+		await sourceButton.click();
+
+		await classicPage.sourceEditable.fill(
+			'<h2>Heading Two</h2><p>Paragraph with <i>italic</i> text.</p>'
+		);
+
+		await sourceButton.click();
+
+		await expect(classicPage.editable.locator('h2')).toContainText(
+			'Heading Two'
+		);
+
+		await expect(classicPage.editable.locator('i')).toContainText('italic');
 	}
 );
 

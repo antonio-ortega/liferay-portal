@@ -1,6 +1,6 @@
 resource "kubernetes_manifest" "git_repo_credentials_external_secret" {
 	depends_on=[
-		kubernetes_manifest.git_repo_credentials_secret_store,
+		kubernetes_manifest.secret_store,
 	]
 	field_manager {
 		force_conflicts=true
@@ -21,15 +21,15 @@ resource "kubernetes_manifest" "git_repo_credentials_external_secret" {
 					each.value.method == "https" ? [
 						{
 							remoteRef={
-								key=each.value.vault_secret_name
-								property=each.value.username_vault_secret_property
+								key=each.value.credentials_secret_name
+								property=each.value.username_property
 							}
 							secretKey="username"
 						},
 						{
 							remoteRef={
-								key=each.value.vault_secret_name
-								property=each.value.token_vault_secret_property
+								key=each.value.credentials_secret_name
+								property=each.value.token_property
 							}
 							secretKey="password"
 						},
@@ -37,8 +37,9 @@ resource "kubernetes_manifest" "git_repo_credentials_external_secret" {
 					each.value.method == "ssh" ? [
 						{
 							remoteRef={
-								key=each.value.vault_secret_name
-								property=each.value.ssh_private_key_vault_secret_property
+								decodingStrategy="Auto"
+								key=each.value.credentials_secret_name
+								property=each.value.ssh_private_key_property
 							}
 							secretKey="ssh_private_key"
 						},
@@ -46,8 +47,8 @@ resource "kubernetes_manifest" "git_repo_credentials_external_secret" {
 				])
 			refreshInterval="1h0m0s"
 			secretStoreRef={
-				kind="SecretStore"
-				name=each.value.secret_store_name
+				kind="ClusterSecretStore"
+				name=local.secret_store_name
 			}
 			target={
 				creationPolicy="Owner"
@@ -78,72 +79,5 @@ resource "kubernetes_manifest" "git_repo_credentials_external_secret" {
 				}
 			}
 		}
-	}
-}
-resource "kubernetes_manifest" "git_repo_credentials_secret_store" {
-	field_manager {
-		force_conflicts=true
-		name=local.terraform_manager_name
-	}
-	for_each=local.git_repo_auth_configs
-	manifest={
-		apiVersion="external-secrets.io/v1"
-		kind="SecretStore"
-		metadata={
-			labels=merge(
-				local.common_labels,
-				{
-					"app.kubernetes.io/name"=each.value.secret_store_name
-				})
-			name=each.value.secret_store_name
-			namespace=var.argocd_namespace
-		}
-		spec={
-			provider=yamldecode(
-				jsonencode(each.value.secret_store_provider_hcl))
-		}
-	}
-}
-resource "kubernetes_role" "eso_secret_writer" {
-	metadata {
-		labels=merge(
-			local.common_labels,
-			{
-				"app.kubernetes.io/name"="eso-secret-writer"
-			})
-		name="eso-argocd-git-repo-auth-writer"
-		namespace=var.argocd_namespace
-	}
-	rule {
-		api_groups=[""]
-		resources=["secrets"]
-		verbs=[
-			"create",
-			"delete",
-			"get",
-			"update",
-			"watch",
-		] 
-	}
-}
-resource "kubernetes_role_binding" "eso_secret_writer_binding" {
-	metadata {
-		labels=merge(
-			local.common_labels,
-			{
-				"app.kubernetes.io/name"="eso-secret-writer-binding"
-			})
-		name="eso-argocd-git-repo-auth-binding"
-		namespace=var.argocd_namespace
-	}
-	role_ref {
-		api_group="rbac.authorization.k8s.io"
-		kind="Role"
-		name=kubernetes_role.eso_secret_writer.metadata[0].name
-	}
-	subject {
-		kind="ServiceAccount"
-		name="external-secrets"
-		namespace=var.external_secrets_namespace
 	}
 }

@@ -95,7 +95,7 @@ public class CommerceInventoryWarehouseServiceUtil {
 			getCommerceInventoryWarehouses(
 				long companyId, boolean active, int start, int end,
 				OrderByComparator<CommerceInventoryWarehouse> orderByComparator)
-		throws com.liferay.portal.kernel.security.auth.PrincipalException {
+		throws PortalException {
 
 		return getService().getCommerceInventoryWarehouses(
 			companyId, active, start, end, orderByComparator);
@@ -219,3 +219,4 @@ public class CommerceInventoryWarehouseServiceUtil {
 			CommerceInventoryWarehouseService.class);
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-686729253

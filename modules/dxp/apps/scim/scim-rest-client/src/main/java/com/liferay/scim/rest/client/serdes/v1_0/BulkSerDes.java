@@ -246,3 +246,4 @@ public class BulkSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:736468197

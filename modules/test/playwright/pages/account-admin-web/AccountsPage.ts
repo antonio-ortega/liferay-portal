@@ -7,7 +7,7 @@ import {Locator, Page, expect} from '@playwright/test';
 
 import {clickAndExpectToBeVisible} from '../../utils/clickAndExpectToBeVisible';
 import {PORTLET_URLS} from '../../utils/portletUrls';
-import {ApplicationsMenuPage} from '../product-navigation-applications-menu/ApplicationsMenuPage';
+import {GlobalMenuPage} from '../product-navigation-applications-menu/GlobalMenuPage';
 import {DataTablePage} from './DataTablePage';
 
 export const searchTableRowByValue = async function (
@@ -43,7 +43,7 @@ export class AccountsPage {
 	readonly accountRolesTab: Locator;
 	readonly accountsTable: DataTablePage;
 	readonly activateButton: Locator;
-	readonly applicationsMenuPage: ApplicationsMenuPage;
+	readonly globalMenuPage: GlobalMenuPage;
 	readonly channelDefaultsTab: Locator;
 	readonly deactivateButton: Locator;
 	readonly deleteButton: Locator;
@@ -77,7 +77,7 @@ export class AccountsPage {
 		this.activateButton = page
 			.getByRole('button', {name: 'Activate'})
 			.or(page.getByRole('link', {name: 'Activate'}));
-		this.applicationsMenuPage = new ApplicationsMenuPage(page);
+		this.globalMenuPage = new GlobalMenuPage(page);
 		this.channelDefaultsTab = page.getByRole('link', {
 			name: 'Channel Defaults',
 		});
@@ -93,9 +93,15 @@ export class AccountsPage {
 		this.filterStatus = (status: string) => {
 			return page.getByText('Status: ' + status);
 		};
-		this.manageUsersButton = page.getByRole('menuitem', {
-			name: 'Manage Users',
-		});
+		this.manageUsersButton = page
+			.getByRole('menuitem', {
+				name: 'Manage Users',
+			})
+			.or(
+				page.getByRole('menuitem', {
+					name: 'View Users',
+				})
+			);
 		this.noAccountsMessage = page.getByText('No accounts were found.');
 		this.organizationsTab = page.getByRole('link', {
 			name: 'Organizations',
@@ -124,11 +130,21 @@ export class AccountsPage {
 	}
 
 	async goto(forceReload = true) {
-		await this.applicationsMenuPage.goToAccounts(forceReload);
+		if (forceReload) {
+			this.globalMenuPage.goToHome();
+		}
+
+		await this.globalMenuPage.goToControlPanel('Accounts');
 	}
 
 	async gotoAccountAdmin() {
 		await this.page.goto(`${PORTLET_URLS.accountAdmin}`);
+	}
+
+	async gotoAccountChannelDefaults(accountName: string) {
+		await this.gotoAccountAdmin();
+		await this.accountNameLink(accountName).click();
+		await this.channelDefaultsTab.click();
 	}
 
 	async organizationName(name: string): Promise<Locator> {

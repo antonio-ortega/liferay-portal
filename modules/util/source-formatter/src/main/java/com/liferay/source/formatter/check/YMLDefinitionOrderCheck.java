@@ -89,6 +89,16 @@ public class YMLDefinitionOrderCheck extends BaseFileCheck {
 		return ymlDefinitions;
 	}
 
+	private boolean _containsDigit(String s) {
+		for (int i = 0; i < s.length(); i++) {
+			if (Character.isDigit(s.charAt(i))) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	private String _sortDefinitions(String s) {
 		List<String> definitions = _splitDefinitions(s);
 
@@ -392,7 +402,9 @@ public class YMLDefinitionOrderCheck extends BaseFileCheck {
 			String trimmedContent2 = StringUtil.trimLeading(content2);
 
 			if (trimmedContent1.startsWith("{{") ||
-				trimmedContent2.startsWith("{{")) {
+				trimmedContent2.startsWith("{{") ||
+				(trimmedContent1.startsWith("-\n") ^
+				 trimmedContent2.startsWith("-\n"))) {
 
 				return 0;
 			}
@@ -438,6 +450,13 @@ public class YMLDefinitionOrderCheck extends BaseFileCheck {
 			}
 
 			String name2 = trimmedContent2.substring(0, x);
+
+			if (_containsDigit(name1) && _containsDigit(name2)) {
+				NaturalOrderStringComparator comparator =
+					new NaturalOrderStringComparator();
+
+				return comparator.compare(name1, name2);
+			}
 
 			return name1.compareTo(name2);
 		}

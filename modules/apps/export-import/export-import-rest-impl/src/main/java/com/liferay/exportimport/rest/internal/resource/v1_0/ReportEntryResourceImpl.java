@@ -21,7 +21,6 @@ import com.liferay.headless.delivery.dto.v1_0.util.CreatorUtil;
 import com.liferay.portal.background.task.model.BackgroundTask;
 import com.liferay.portal.background.task.service.BackgroundTaskLocalService;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.search.BooleanClauseOccur;
 import com.liferay.portal.kernel.search.Field;
@@ -40,7 +39,6 @@ import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.scope.Scope;
 import com.liferay.portal.vulcan.util.SearchUtil;
 
-import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.core.MultivaluedMap;
 
 import java.io.Serializable;
@@ -72,16 +70,10 @@ public class ReportEntryResourceImpl extends BaseReportEntryResourceImpl {
 			Pagination pagination, Sort[] sorts)
 		throws Exception {
 
-		if (!FeatureFlagManagerUtil.isEnabled(
-				contextCompany.getCompanyId(), "LPD-35914")) {
-
-			throw new NotFoundException();
-		}
-
 		BackgroundTask backgroundTask =
 			_backgroundTaskLocalService.getBackgroundTask(importProcessId);
 
-		PermissionUtil.checkPermission(
+		PermissionUtil.checkImportPermission(
 			contextCompany.getCompanyId(), backgroundTask.getGroupId());
 
 		Map<String, Serializable> taskContextMap =
@@ -116,17 +108,11 @@ public class ReportEntryResourceImpl extends BaseReportEntryResourceImpl {
 
 	@Override
 	public ReportEntry getReportEntry(Long reportEntryId) throws Exception {
-		if (!FeatureFlagManagerUtil.isEnabled(
-				contextCompany.getCompanyId(), "LPD-35914")) {
-
-			throw new NotFoundException();
-		}
-
 		ExportImportReportEntry exportImportReportEntry =
 			_exportImportReportEntryLocalService.getExportImportReportEntry(
 				reportEntryId);
 
-		PermissionUtil.checkPermission(
+		PermissionUtil.checkImportPermission(
 			contextCompany.getCompanyId(),
 			exportImportReportEntry.getGroupId());
 
@@ -167,6 +153,13 @@ public class ReportEntryResourceImpl extends BaseReportEntryResourceImpl {
 		else if (type == ExportImportReportEntryConstants.TYPE_ERROR) {
 			return _language.get(
 				contextAcceptLanguage.getPreferredLocale(), "error");
+		}
+		else if (type ==
+					ExportImportReportEntryConstants.TYPE_MISSING_REFERENCE) {
+
+			return _language.get(
+				contextAcceptLanguage.getPreferredLocale(),
+				"missing-reference");
 		}
 
 		return null;

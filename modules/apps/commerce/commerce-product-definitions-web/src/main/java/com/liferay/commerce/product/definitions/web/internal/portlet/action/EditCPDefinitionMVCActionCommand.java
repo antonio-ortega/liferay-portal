@@ -6,7 +6,7 @@
 package com.liferay.commerce.product.definitions.web.internal.portlet.action;
 
 import com.liferay.account.model.AccountGroupRel;
-import com.liferay.account.service.AccountGroupRelLocalService;
+import com.liferay.account.service.AccountGroupRelService;
 import com.liferay.asset.kernel.exception.AssetCategoryException;
 import com.liferay.asset.kernel.exception.AssetTagException;
 import com.liferay.asset.kernel.service.AssetCategoryLocalService;
@@ -330,7 +330,7 @@ public class EditCPDefinitionMVCActionCommand extends BaseMVCActionCommand {
 		long accountGroupRelId = ParamUtil.getLong(
 			actionRequest, "commerceAccountGroupRelId");
 
-		_accountGroupRelLocalService.deleteAccountGroupRel(accountGroupRelId);
+		_accountGroupRelService.deleteAccountGroupRel(accountGroupRelId);
 
 		_reindexCPDefinition(cpDefinitionId);
 	}
@@ -583,34 +583,47 @@ public class EditCPDefinitionMVCActionCommand extends BaseMVCActionCommand {
 				actionRequest, "productTypeName");
 
 			cpDefinition = _cpDefinitionService.addCPDefinition(
-				null, commerceCatalogGroupId, nameMap, shortDescriptionMap,
-				descriptionMap, urlTitleMap, metaTitleMap, metaDescriptionMap,
-				metaKeywordsMap, productTypeName, true, true, false, false, 0D,
-				0D, 0D, 0D, 0D, 0L, false, false, null, published,
-				displayDateMonth, displayDateDay, displayDateYear,
-				displayDateHour, displayDateMinute, expirationDateMonth,
-				expirationDateDay, expirationDateYear, expirationDateHour,
-				expirationDateMinute, neverExpire,
-				CPInstanceConstants.DEFAULT_SKU, false, 1, null, null, 0L,
-				WorkflowConstants.STATUS_DRAFT, serviceContext);
+				null, commerceCatalogGroupId, 0L, false, false, null,
+				CPInstanceConstants.DEFAULT_SKU, 0, false, 1, null, null, 0D,
+				descriptionMap, displayDateDay, displayDateHour,
+				displayDateMinute, displayDateMonth, displayDateYear,
+				expirationDateDay, expirationDateHour, expirationDateMinute,
+				expirationDateMonth, expirationDateYear, false, 0D, true, 0L,
+				metaDescriptionMap, metaKeywordsMap, metaTitleMap, nameMap,
+				neverExpire, productTypeName, published, false, true, 0D,
+				shortDescriptionMap, false, 1, null, null, false, false,
+				urlTitleMap, 0D, 0D, WorkflowConstants.STATUS_DRAFT,
+				serviceContext);
 		}
 		else {
 			cpDefinition = _cpDefinitionService.updateCPDefinition(
-				cpDefinition.getCPDefinitionId(), nameMap, shortDescriptionMap,
-				descriptionMap, urlTitleMap, metaTitleMap, metaDescriptionMap,
-				metaKeywordsMap, cpDefinition.isIgnoreSKUCombinations(), null,
-				published, displayDateMonth, displayDateDay, displayDateYear,
-				displayDateHour, displayDateMinute, expirationDateMonth,
-				expirationDateDay, expirationDateYear, expirationDateHour,
-				expirationDateMinute, neverExpire, serviceContext);
+				cpDefinition.getCPDefinitionId(),
+				cpDefinition.getCPTaxCategoryId(),
+				cpDefinition.isAccountGroupFilterEnabled(),
+				cpDefinition.isChannelFilterEnabled(), null,
+				cpDefinition.getDepth(), descriptionMap, displayDateDay,
+				displayDateHour, displayDateMinute, displayDateMonth,
+				displayDateYear, expirationDateDay, expirationDateHour,
+				expirationDateMinute, expirationDateMonth, expirationDateYear,
+				cpDefinition.isFreeShipping(), cpDefinition.getHeight(),
+				cpDefinition.isIgnoreSKUCombinations(), metaDescriptionMap,
+				metaKeywordsMap, metaTitleMap, nameMap, neverExpire, published,
+				cpDefinition.isShipSeparately(), cpDefinition.isShippable(),
+				cpDefinition.getShippingExtraPrice(), shortDescriptionMap,
+				cpDefinition.isTaxExempt(), cpDefinition.isTelcoOrElectronics(),
+				urlTitleMap, cpDefinition.getWeight(), cpDefinition.getWidth(),
+				serviceContext);
 		}
 
 		return cpDefinition;
 	}
 
 	private CPDefinition _updateCPDefinition(
-			CPDefinition cpDefinition, ServiceContext serviceContext)
+			long cpDefinitionId, ServiceContext serviceContext)
 		throws Exception {
+
+		CPDefinition cpDefinition = _cpDefinitionService.getCPDefinition(
+			cpDefinitionId);
 
 		Date displayDate = cpDefinition.getDisplayDate();
 
@@ -657,20 +670,26 @@ public class EditCPDefinitionMVCActionCommand extends BaseMVCActionCommand {
 		}
 
 		return _cpDefinitionService.updateCPDefinition(
-			cpDefinition.getCPDefinitionId(), cpDefinition.getNameMap(),
-			cpDefinition.getShortDescriptionMap(),
-			cpDefinition.getDescriptionMap(), cpDefinition.getUrlTitleMap(),
-			cpDefinition.getMetaTitleMap(),
-			cpDefinition.getMetaDescriptionMap(),
-			cpDefinition.getMetaKeywordsMap(),
-			cpDefinition.isIgnoreSKUCombinations(),
-			cpDefinition.getDDMStructureKey(), cpDefinition.isPublished(),
+			cpDefinition.getCPDefinitionId(), cpDefinition.getCPTaxCategoryId(),
+			cpDefinition.isAccountGroupFilterEnabled(),
+			cpDefinition.isChannelFilterEnabled(),
+			cpDefinition.getDDMStructureKey(), cpDefinition.getDepth(),
+			cpDefinition.getDescriptionMap(),
+			displayCalendar.get(Calendar.DAY_OF_MONTH), displayDateHour,
+			displayCalendar.get(Calendar.MINUTE),
 			displayCalendar.get(Calendar.MONTH),
-			displayCalendar.get(Calendar.DAY_OF_MONTH),
-			displayCalendar.get(Calendar.YEAR), displayDateHour,
-			displayCalendar.get(Calendar.MINUTE), expirationDateMonth,
-			expirationDateDay, expirationDateYear, expirationDateHour,
-			expirationDateMinute, neverExpire, serviceContext);
+			displayCalendar.get(Calendar.YEAR), expirationDateDay,
+			expirationDateHour, expirationDateMinute, expirationDateMonth,
+			expirationDateYear, cpDefinition.isFreeShipping(),
+			cpDefinition.getHeight(), cpDefinition.isIgnoreSKUCombinations(),
+			cpDefinition.getMetaDescriptionMap(),
+			cpDefinition.getMetaKeywordsMap(), cpDefinition.getMetaTitleMap(),
+			cpDefinition.getNameMap(), neverExpire, cpDefinition.isPublished(),
+			cpDefinition.isShipSeparately(), cpDefinition.isShippable(),
+			cpDefinition.getShippingExtraPrice(),
+			cpDefinition.getShortDescriptionMap(), cpDefinition.isTaxExempt(),
+			cpDefinition.isTelcoOrElectronics(), cpDefinition.getUrlTitleMap(),
+			cpDefinition.getWeight(), cpDefinition.getWidth(), serviceContext);
 	}
 
 	private void _updateCPDefinitionInventory(
@@ -929,7 +948,7 @@ public class EditCPDefinitionMVCActionCommand extends BaseMVCActionCommand {
 				continue;
 			}
 
-			_accountGroupRelLocalService.addAccountGroupRel(
+			_accountGroupRelService.addAccountGroupRel(
 				accountGroupId, CPDefinition.class.getName(), cpDefinitionId);
 		}
 
@@ -969,7 +988,7 @@ public class EditCPDefinitionMVCActionCommand extends BaseMVCActionCommand {
 			Propagation.REQUIRED, new Class<?>[] {Exception.class});
 
 	@Reference
-	private AccountGroupRelLocalService _accountGroupRelLocalService;
+	private AccountGroupRelService _accountGroupRelService;
 
 	@Reference
 	private AssetCategoryLocalService _assetCategoryLocalService;
@@ -1047,7 +1066,7 @@ public class EditCPDefinitionMVCActionCommand extends BaseMVCActionCommand {
 			_updateTaxCategoryInfo(_actionRequest, cpDefinitionId);
 
 			_updateCPDefinition(
-				_cpDefinition,
+				_cpDefinition.getCPDefinitionId(),
 				_getServiceContext(_actionRequest, _cpDefinition));
 
 			return null;
@@ -1077,7 +1096,7 @@ public class EditCPDefinitionMVCActionCommand extends BaseMVCActionCommand {
 			_updateSubscriptionInfo(_actionRequest, _cpDefinition);
 
 			_updateCPDefinition(
-				_cpDefinition,
+				_cpDefinition.getCPDefinitionId(),
 				_getServiceContext(_actionRequest, _cpDefinition));
 
 			return null;
@@ -1100,7 +1119,7 @@ public class EditCPDefinitionMVCActionCommand extends BaseMVCActionCommand {
 		@Override
 		public CPDefinition call() throws Exception {
 			return _updateCPDefinition(
-				_cpDefinition,
+				_cpDefinition.getCPDefinitionId(),
 				_getServiceContext(_actionRequest, _cpDefinition));
 		}
 
@@ -1128,7 +1147,7 @@ public class EditCPDefinitionMVCActionCommand extends BaseMVCActionCommand {
 				_actionRequest, _cpDefinition.getCPDefinitionId());
 
 			_updateCPDefinition(
-				_cpDefinition,
+				_cpDefinition.getCPDefinitionId(),
 				_getServiceContext(_actionRequest, _cpDefinition));
 
 			return null;

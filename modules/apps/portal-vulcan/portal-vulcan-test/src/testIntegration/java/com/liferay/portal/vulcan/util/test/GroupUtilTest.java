@@ -9,7 +9,6 @@ import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.depot.constants.DepotConstants;
 import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.service.DepotEntryLocalService;
-import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupConstants;
@@ -143,41 +142,15 @@ public class GroupUtilTest {
 				HashMapBuilder.put(
 					LocaleUtil.getDefault(), RandomTestUtil.randomString()
 				).build(),
-				null, true, true, false,
-				ServiceContextTestUtil.getServiceContext());
+				null, true, true, ServiceContextTestUtil.getServiceContext());
 
 		Group group = layoutSetPrototype.getGroup();
 
-		Assert.assertNull(
+		Assert.assertEquals(
+			Long.valueOf(group.getGroupId()),
 			GroupUtil.getGroupId(
 				TestPropsValues.getCompanyId(),
 				String.valueOf(group.getGroupId()), _groupLocalService));
-
-		try {
-			ExportImportThreadLocal.setPortletExportInProcess(true);
-
-			Assert.assertEquals(
-				Long.valueOf(group.getGroupId()),
-				GroupUtil.getGroupId(
-					TestPropsValues.getCompanyId(),
-					String.valueOf(group.getGroupId()), _groupLocalService));
-		}
-		finally {
-			ExportImportThreadLocal.setPortletExportInProcess(false);
-		}
-
-		try {
-			ExportImportThreadLocal.setPortletImportInProcess(true);
-
-			Assert.assertEquals(
-				Long.valueOf(group.getGroupId()),
-				GroupUtil.getGroupId(
-					TestPropsValues.getCompanyId(),
-					String.valueOf(group.getGroupId()), _groupLocalService));
-		}
-		finally {
-			ExportImportThreadLocal.setPortletImportInProcess(false);
-		}
 	}
 
 	@Test

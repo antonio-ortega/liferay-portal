@@ -43,40 +43,6 @@ public class BuildFactory {
 				"Invalid Jenkins build URL: " + buildURL);
 		}
 
-		String axisVariable = matcher.group("axisVariable");
-
-		if (jobVariant == null) {
-			if (cachedDownstreamBuildReport != null) {
-				jobVariant = cachedDownstreamBuildReport.getJobVariant();
-			}
-			else {
-				jobVariant = "";
-			}
-		}
-
-		if (axisVariable != null) {
-			if (JenkinsResultsParserUtil.isNullOrEmpty(jobVariant) &&
-				(parentBuild != null)) {
-
-				jobVariant = parentBuild.getJobVariant();
-			}
-
-			if (JenkinsResultsParserUtil.isNullOrEmpty(jobVariant)) {
-				jobVariant = JenkinsResultsParserUtil.getBuildParameter(
-					buildURL, "JOB_VARIANT", parentBuild);
-			}
-
-			if ((jobVariant != null) &&
-				(jobVariant.contains("functional") ||
-				 jobVariant.contains("test-portal-environment") ||
-				 jobVariant.contains("test-portal-fixpack-environment"))) {
-
-				return new PoshiAxisBuild(buildURL, (BatchBuild)parentBuild);
-			}
-
-			return new AxisBuild(buildURL, (BatchBuild)parentBuild);
-		}
-
 		String jobName = matcher.group("jobName");
 
 		if (jobName.contains("-controller")) {
@@ -88,6 +54,15 @@ public class BuildFactory {
 			return new AppServerBundleDownstreamBuild(
 				buildURL, cachedDownstreamBuildReport,
 				(TopLevelBuild)parentBuild);
+		}
+
+		if (jobVariant == null) {
+			if (cachedDownstreamBuildReport != null) {
+				jobVariant = cachedDownstreamBuildReport.getJobVariant();
+			}
+			else {
+				jobVariant = "";
+			}
 		}
 
 		if (jobName.contains("-downstream")) {
@@ -118,6 +93,8 @@ public class BuildFactory {
 						 jobVariant.startsWith("modules-semantic-versioning") ||
 						 jobVariant.startsWith("playwright-js") ||
 						 jobVariant.startsWith("rest-builder") ||
+						 jobVariant.startsWith(
+							 "rest-builder-and-service-builder") ||
 						 jobVariant.startsWith("semantic-versioning") ||
 						 jobVariant.startsWith("service-builder")) {
 
@@ -152,17 +129,6 @@ public class BuildFactory {
 				buildURL, (TopLevelBuild)parentBuild);
 		}
 
-		for (String batchToken : _TOKENS_BATCH) {
-			if (jobName.contains(batchToken)) {
-				if (jobName.contains("qa-websites")) {
-					return new QAWebsitesBatchBuild(
-						buildURL, (TopLevelBuild)parentBuild);
-				}
-
-				return new BatchBuild(buildURL, (TopLevelBuild)parentBuild);
-			}
-		}
-
 		if (jobName.contains("legacy")) {
 			return new LegacyTopLevelBuild(
 				buildURL, (TopLevelBuild)parentBuild);
@@ -170,6 +136,16 @@ public class BuildFactory {
 
 		if (jobName.equals("root-cause-analysis-tool")) {
 			return new RootCauseAnalysisToolBuild(
+				buildURL, (TopLevelBuild)parentBuild);
+		}
+
+		if (jobName.equals("sanitize-language")) {
+			return new SanitizeLanguageTopLevelBuild(
+				buildURL, (TopLevelBuild)parentBuild);
+		}
+
+		if (jobName.equals("test-docker-release-pullrequest")) {
+			return new DockerReleaseTopLevelBuild(
 				buildURL, (TopLevelBuild)parentBuild);
 		}
 
@@ -319,10 +295,6 @@ public class BuildFactory {
 			"((?<axisVariable>AXIS_VARIABLE=[^,/]+(,[^/]+)?)|)/?",
 			"((?<buildNumber>\\d+)|buildWithParameters\\?" +
 				"(?<queryString>.*))/?");
-
-	private static final String[] _TOKENS_BATCH = {
-		"-batch", "-chrome", "-dist", "-edge", "-firefox", "-ie11", "-safari"
-	};
 
 	private static final MultiPattern _buildURLMultiPattern = new MultiPattern(
 		JenkinsResultsParserUtil.combine(

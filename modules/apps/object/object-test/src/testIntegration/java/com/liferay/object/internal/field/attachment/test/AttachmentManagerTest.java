@@ -11,6 +11,8 @@ import com.liferay.document.library.configuration.DLFileEntryMimeTypeConfigurati
 import com.liferay.document.library.kernel.exception.FileExtensionException;
 import com.liferay.document.library.kernel.exception.FileMimeTypeException;
 import com.liferay.document.library.kernel.exception.FileSizeException;
+import com.liferay.document.library.kernel.model.DLFolder;
+import com.liferay.document.library.test.util.DLTestUtil;
 import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.constants.ObjectFieldSettingConstants;
 import com.liferay.object.field.attachment.AttachmentManager;
@@ -24,12 +26,23 @@ import com.liferay.object.test.util.ObjectDefinitionTestUtil;
 import com.liferay.petra.io.StreamUtil;
 import com.liferay.portal.configuration.test.util.CompanyConfigurationTemporarySwapper;
 import com.liferay.portal.configuration.test.util.ConfigurationTemporarySwapper;
+import com.liferay.portal.kernel.model.Company;
+import com.liferay.portal.kernel.model.ResourceConstants;
+import com.liferay.portal.kernel.model.Role;
+import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.Folder;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.service.CompanyLocalService;
+import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
+import com.liferay.portal.kernel.service.RoleLocalService;
+import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
@@ -73,9 +86,31 @@ public class AttachmentManagerTest {
 	}
 
 	@Test
+	public void testGetDLFolder() throws Exception {
+		Company company = _companyLocalService.getCompanyById(
+			TestPropsValues.getCompanyId());
+		User user = UserTestUtil.addUser();
+
+		DLFolder dlFolder = _attachmentManager.getDLFolder(
+			TestPropsValues.getCompanyId(), company.getGroupId(),
+			_objectDefinition.getPortletId(), new ServiceContext(),
+			user.getUserId());
+
+		Role role = _roleLocalService.getRole(
+			TestPropsValues.getCompanyId(), RoleConstants.GUEST);
+
+		Assert.assertTrue(
+			_resourcePermissionLocalService.hasResourcePermission(
+				TestPropsValues.getCompanyId(), DLFolder.class.getName(),
+				ResourceConstants.SCOPE_INDIVIDUAL,
+				String.valueOf(dlFolder.getFolderId()), role.getRoleId(),
+				ActionKeys.VIEW));
+	}
+
+	@Test
 	public void testGetOrAddFileEntry() throws Exception {
 		FileEntry tempFileEntry = _addTempFileEntry(
-			RandomTestUtil.randomString(), ".txt",
+			DLTestUtil.randomTextFileBytes(), ".txt",
 			RandomTestUtil.randomString(), ContentTypes.TEXT_PLAIN,
 			_objectDefinition);
 
@@ -107,7 +142,7 @@ public class AttachmentManagerTest {
 
 		try {
 			tempFileEntry = _addTempFileEntry(
-				RandomTestUtil.randomString(), ".bmp",
+				RandomTestUtil.randomBytes(), ".bmp",
 				RandomTestUtil.randomString(), ContentTypes.IMAGE_BMP,
 				_objectDefinition);
 
@@ -129,9 +164,8 @@ public class AttachmentManagerTest {
 		ObjectDefinition objectDefinition = _addObjectDefinition("*");
 
 		tempFileEntry = _addTempFileEntry(
-			RandomTestUtil.randomString(), ".bmp",
-			RandomTestUtil.randomString(), ContentTypes.IMAGE_BMP,
-			objectDefinition);
+			RandomTestUtil.randomBytes(), ".bmp", RandomTestUtil.randomString(),
+			ContentTypes.IMAGE_BMP, objectDefinition);
 
 		folder = tempFileEntry.getFolder();
 
@@ -158,7 +192,7 @@ public class AttachmentManagerTest {
 					).build())) {
 
 			tempFileEntry = _addTempFileEntry(
-				RandomTestUtil.randomString(), ".txt",
+				DLTestUtil.randomTextFileBytes(), ".txt",
 				RandomTestUtil.randomString(), ContentTypes.TEXT_PLAIN,
 				_objectDefinition);
 
@@ -187,7 +221,7 @@ public class AttachmentManagerTest {
 						).build())) {
 
 			tempFileEntry = _addTempFileEntry(
-				RandomTestUtil.randomString(), ".txt",
+				DLTestUtil.randomTextFileBytes(), ".txt",
 				RandomTestUtil.randomString(), ContentTypes.TEXT_PLAIN,
 				_objectDefinition);
 
@@ -215,7 +249,7 @@ public class AttachmentManagerTest {
 					).build())) {
 
 			tempFileEntry = _addTempFileEntry(
-				RandomTestUtil.randomString(1000), ".txt",
+				DLTestUtil.randomTextFileBytes(1000), ".txt",
 				RandomTestUtil.randomString(), ContentTypes.TEXT_PLAIN,
 				_objectDefinition);
 
@@ -256,7 +290,8 @@ public class AttachmentManagerTest {
 						).name(
 							ObjectFieldSettingConstants.NAME_FILE_SOURCE
 						).value(
-							ObjectFieldSettingConstants.VALUE_USER_COMPUTER
+							ObjectFieldSettingConstants.
+								VALUE_USER_COMPUTER_TO_DOCS_AND_MEDIA
 						).build(),
 						new ObjectFieldSettingBuilder(
 						).name(
@@ -272,7 +307,7 @@ public class AttachmentManagerTest {
 	}
 
 	private FileEntry _addTempFileEntry(
-			String content, String extension, String fileName, String mimeType,
+			byte[] content, String extension, String fileName, String mimeType,
 			ObjectDefinition objectDefinition)
 		throws Exception {
 
@@ -280,11 +315,14 @@ public class AttachmentManagerTest {
 			TestPropsValues.getGroupId(), TestPropsValues.getUserId(),
 			objectDefinition.getPortletId(),
 			TempFileEntryUtil.getTempFileName(fileName + extension),
-			FileUtil.createTempFile(content.getBytes()), mimeType);
+			FileUtil.createTempFile(content), mimeType);
 	}
 
 	@Inject
 	private AttachmentManager _attachmentManager;
+
+	@Inject
+	private CompanyLocalService _companyLocalService;
 
 	private ObjectDefinition _objectDefinition;
 
@@ -295,5 +333,11 @@ public class AttachmentManagerTest {
 
 	@Inject
 	private ObjectFieldLocalService _objectFieldLocalService;
+
+	@Inject
+	private ResourcePermissionLocalService _resourcePermissionLocalService;
+
+	@Inject
+	private RoleLocalService _roleLocalService;
 
 }

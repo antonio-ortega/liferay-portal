@@ -6,6 +6,8 @@
 import {Liferay} from '../liferay/liferay';
 
 export default {
+	'a-license-key-for-the-entered-domain-already-exists':
+		'A license key for the entered domain already exists.',
 	'a-request-will-be-sent-to-deactivate-the-selected-activation-key-from-now-on-it-will-be-hidden-and-no-longer-visible':
 		'A request will be sent to deactivate the selected activation key. From now on, it will be hidden and no longer visible.',
 	'a-sleek-and-intuitive-admin-dashboard-for-monitoring-key-metrics':
@@ -18,20 +20,33 @@ export default {
 	'account-selection': 'Account Selection',
 	'account-type': 'Account Type',
 	'accounts': 'Accounts',
+	'activation-key': 'Activation Key',
+	'activation-key-creation': 'Activation Key Creation',
+	'activation-key-server-details': 'Activation Key Server Details',
+	'activation-keys': 'Activation Keys',
 	'activation-status': 'Activation Status',
 	'active': 'Active',
 	'add-currency': 'Add Currency',
 	'add-developer-licenses': 'Add Developer Licenses',
 	'add-new-trial': 'Add New Trial',
 	'add-new-version': 'Add New Version',
+	'add-one-ip-address-per-line-ipv-six-addresses-are-not-supported':
+		'Add one IP address per line. IPv6 addresses are not supported.',
+	'add-one-mac-address-per-line': 'Add one MAC address per line.',
 	'add-packages': 'Add Package(s)',
 	'add-up-to-x-images': 'Add up to {0} images',
 	'additional-admin': 'Additional Admin',
 	'additional-apps-requested': 'Additional Apps Requested',
 	'address': 'Address',
 	'address-name': 'Address Name',
+	'administration-email': 'Administration Email',
 	'administrator-dashboard': 'Administrator Dashboard',
 	'agreements': 'Agreements',
+	'ai-administration-email': 'AI Administration Email',
+	'ai-hub': 'AI Hub',
+	'ai-hub-account-details': 'AI Hub Account Details',
+	'ai-hub-account-name': 'AI Hub Account Name',
+	'ai-hub-information': 'AI Hub Information',
 	'all-orders': 'All Orders',
 	'all-progress-and-information-related-to-the-creation-of-the-app-will-be-lost-do-you-still-want-to-exit':
 		'All progress and information related to the creation of the app will be lost. Do you still want to exit?',
@@ -44,6 +59,7 @@ export default {
 	'all-progress-and-information-related-to-the-creation-of-the-solution-will-be-lost-unless-you-save-the-solution-as-a-draft-do-you-still-want-to-exit':
 		'All progress and information related to the creation of the solution will be lost unless you save the solution as a draft. Do you still want to exit?',
 	'all-published-apps': 'All Published Apps',
+	'allowed-email-domains': 'Allowed Email Domains',
 	'amount': 'Amount',
 	'an-administrator-of-the-marketplace-will-review-your-request-shortly-if-you-have-questions-regarding-your-submission-please-email':
 		'An administrator of the Marketplace will review your request shortly. If you have questions regarding your submission, please email.',
@@ -90,22 +106,25 @@ export default {
 	'back-to-apps': 'Back to Apps',
 	'back-to-last-transaction': 'Back to Last Transaction',
 	'back-to-my-apps': 'Back to My Apps',
+	'back-to-my-products': 'Back to My Products',
 	'back-to-my-solutions': 'Back to My Solutions',
 	'back-to-solutions': 'Back to Solutions',
 	'back-to-the-list': 'Back to the list',
-	'backend-client-extensions-delivered-as-deployed-services-only-available-to-saas-and-paas-clients':
-		'Backend client extensions delivered as deployed services (only available to SaaS and PaaS clients).',
 	'batch': 'Batch',
 	'becoming-a-liferay-marketplace-publisher':
 		'Becoming a Liferay Marketplace publisher',
+	'beta-product-feedback-form': 'Beta Product Feedback Form',
 	'billing-address': 'Billing Address',
 	'billing-email': 'Billing Email',
-	'blank-site': 'Blank Site',
 	'browse-catalog': 'Browse Catalog',
+	'browse-products': 'Browse Products',
 	'build': 'Build',
+	'bundle-name': 'Bundle Name',
+	'bundles': 'Bundles',
 	'business': 'Business',
 	'business-account': 'Business Account',
 	'business-address': 'Business Address',
+	'business-email-address': 'Business Email Address',
 	'by-requesting-a-publisher-account-you-agree-to-the':
 		'By requesting a Publisher account, you agree to the',
 	'cancel': 'Cancel',
@@ -133,6 +152,7 @@ export default {
 	'cloud-upload': 'Cloud Upload',
 	'columns': 'Columns',
 	'comments': 'Comments',
+	'company-name': 'Company Name',
 	'company-profile': 'Company Profile',
 	'compatible-offering': 'Compatible Offering',
 	'compatible-versions': 'Compatible Versions',
@@ -147,6 +167,7 @@ export default {
 	'confirm-uninstall-terms': 'Confirm Uninstall Terms',
 	'congratulations': 'Congratulations',
 	'connect-anyway': 'Connect Anyway',
+	'connect-your-liferay-dsr': 'Connect Your Liferay DSR',
 	'contact': 'Contact',
 	'contact-publisher': 'Contact Publisher',
 	'contact-sales': 'Contact Sales',
@@ -161,9 +182,15 @@ export default {
 	'continue-to-download': 'Continue to Download',
 	'continue-to-install': 'Continue to Install',
 	'copied-x-to-the-clipboard': 'Copied {0} to the clipboard.',
+	'copy': 'Copy',
+	'copy-this-token-to-your-liferay-dxp-instance':
+		'Copy this token to your Liferay DXP Instance',
 	'could-not-find-ssa-account': 'Could not find SSA account',
 	'could-not-upload-the-file-a-package-with-this-filename-already-exists':
 		'Could not upload the file. A package with this filename already exists.',
+	'could-you-elaborate-on-the-reasons-for-your-degree-of-satisfaction':
+		'Could you elaborate on the reasons for your degree of satisfaction?',
+	'country': 'Country',
 	'coupon-code': 'Coupon Code',
 	'create': 'Create',
 	'create-a-cloud-app-to-be-delivered-as-a-live-service':
@@ -178,6 +205,7 @@ export default {
 	'create-template': 'Create Template',
 	'created-at': 'Created At',
 	'created-by': 'Created By',
+	'currency-code': 'Currency Code',
 	'customer-account': 'Customer Account',
 	'customer-dashboard': 'Customer Dashboard',
 	'customer-project': 'Customer Project',
@@ -196,8 +224,6 @@ export default {
 		'Define company profile information for your solution. This will inform users about this version’s updates on the storefront.',
 	'define-contact-information-for-your-solution-this-will-inform-users-about-this-versions-updates-on-the-storefront':
 		'Define contact information for your solution. This will inform users about this version’s updates on the storefront.',
-	'define-the-licensing-approach-for-your-app-this-will-impact-the-license-renewal-experience':
-		'Define the licensing approach for your app. This will impact the license renewal experience.',
 	'define-the-solution-profile': 'Define the solution profile',
 	'define-the-support-and-help-references-users-can-access-these-resources-pre-and-post-purchase-to-find-out-more-information-about-your-app-or-solution':
 		'Define the support and help references. Users can access these resources pre and post purchase to find out more information about your app or solution.',
@@ -219,10 +245,14 @@ export default {
 	'developer-licenses-are-limited-to-5-unique-addresses-and-should-not-be-used-for-full-scale-production-deployments':
 		'Developer licenses are limited to 5 unique addresses and should not be used for full-scale production deployments.',
 	'do-not-close-this-window': 'DO NOT CLOSE THIS WINDOW',
+	'documentation': 'Documentation',
+	'domain': 'Domain',
 	'done': 'Done',
 	'download': 'Download',
 	'download-app': 'Download App',
 	'download-key': 'Download Key',
+	'download-your-activation-key-file-below-and-upload-it-to-the-dedicated-portal-within-your-dxp-environment-to-get-started':
+		'Download your activation key file below and upload it to the dedicated portal within your DXP environment to get started.',
 	'draft': 'Draft',
 	'drag-and-drop-to-upload-or': 'Drag and drop to upload or',
 	'duration-days': 'Duration (days)',
@@ -238,7 +268,9 @@ export default {
 	'email': 'Email',
 	'email-address': 'Email Address',
 	'end-user-license-agreement': 'End User License Agreement',
+	'enter-administration-email-address': 'Enter administration email address',
 	'enter-app-description': 'Enter app description',
+	'enter-domain-here': 'Enter domain here',
 	'enter-email-address': 'Enter email address',
 	'enter-first-name': 'Enter first name',
 	'enter-last-name': 'Enter last name',
@@ -250,12 +282,18 @@ export default {
 	'enter-the-required-ram': 'Enter the required RAM',
 	'enter-the-required-ram-0-is-valid': 'Enter the required RAM (0 is valid)',
 	'enter-title-header': 'Enter title header',
+	'enter-your-company-name': 'Enter your company name',
 	'enter-your-contact-details-in-the-fields-below-in-the-request-description-enter-the-name-and-a-brief-description-of-the-app-you-would-like-to-submit-we-will-be-in-contact-regarding-your-request':
 		'Enter your contact details in the fields below. In the Request Description, enter the name and a brief description of the app you would like to submit. We will be in contact regarding your request.',
+	'enter-your-country': 'Enter your country',
+	'enter-your-full-name': 'Enter your full name',
+	'enter-your-job-title': 'Enter your job title',
 	'enter-your-solution-details-this-information-will-be-used-for-submission-presentation-customer-support-and-search-capabilities':
 		'Enter your solution details. This information will be used for submission, presentation, customer support, and search capabilities.',
+	'enter-your-vat-id': 'Enter your VAT ID',
 	'entity-type': 'Entity Type',
 	'environment': 'Environment',
+	'environment-details': 'Environment Details',
 	'environment-selection': 'Environment Selection',
 	'environment-type': 'Environment Type',
 	'environments': 'Environments',
@@ -272,7 +310,10 @@ export default {
 	'explore-over-800-apps-available-in-the-liferay-marketplace-from-a-variety-of-publishers-apps-allow-you-to-accelerate-your-liferay-development-get-to-market-faster':
 		'Explore over 800 apps available in the Liferay Marketplace from a variety of publishers. Apps allow you to accelerate your Liferay development get to market faster.',
 	'export': 'Export',
+	'export-complete': 'Export complete.',
 	'export-csv': 'Export CSV',
+	'exporting-orders-this-may-take-a-while':
+		'Exporting orders. This may take a while...',
 	'extend-trial': 'Extend Trial',
 	'extension': 'Extension',
 	'extension-optional': 'Extension (optional)',
@@ -299,7 +340,9 @@ export default {
 	'fragment-collection-of-fragments': 'Fragment/Collection of Fragments',
 	'free': 'Free',
 	'fulfillment-date': 'Fulfillment Date',
+	'full-name': 'Full Name',
 	'general-info': 'General Info',
+	'get-activation-key': 'Get Activation Key',
 	'get-app': 'Get App',
 	'get-started': 'Get Started',
 	'github-username': 'Github Username',
@@ -310,6 +353,7 @@ export default {
 	'go-to-dashboard': 'Go to Dashboard',
 	'go-to-download': 'Go to Download',
 	'go-to-dxp': 'Go to DXP',
+	'go-to-liferay-data-platform': 'Go to Liferay Data Platform',
 	'go-to-marketplace': 'Go to Marketplace',
 	'go-to-my-apps': 'Go to My Apps',
 	'go-to-ssa-trial-listing': 'Go to SSA Trial Listing',
@@ -317,14 +361,30 @@ export default {
 	'go-to-trial': 'Go to Trial',
 	'got-it': 'Got it',
 	'header': 'Header',
+	'hold-tight-we-re-preparing-your-environment-so-you-can-start-using-your-liferay-data-platform-this-will-only-take-a-moment':
+		'Hold tight. We’re preparing your environment so you can start using your Liferay Data Platform. This will only take a moment!',
 	'host-name': 'Host Name',
+	'how-easy-to-use-is-the-product': 'How easy to use is the product?',
+	'how-satisfied-are-you-with-the-product':
+		'How satisfied are you with the product?',
+	'how-useful-is-the-product-for-your-workflow':
+		'How useful is the product for your workflow?',
+	'i-agree-to-the-processing-of-my-personal-data-for-the-purpose-of-evaluating-my-beta-access-request-in-accordance-with':
+		'I agree to the processing of my personal data for the purpose of evaluating my beta access request in accordance with',
 	'i-certify-that-the-instances-activated-with-the-selected-activation-keys-have-been-shut-down-and-that-there-is-no-liferay-software-installed-deployed-used-or-executed-that-is-activated-with-the-selected-activation-key':
 		'I certify that the instances activated with the selected activation keys have been shut down and that there is no Liferay software installed, deployed, used or executed that is activated with the selected activation key.',
+	'i-have-read-and-agree-to-the': 'I have read and agree to the',
+	'i-have-read-and-agree-to-the-liferay-end-user-agreement':
+		'I have read and agree to the Liferay End User Agreement',
+	'i-have-read-and-agree-to-the-terms-and-conditions-above':
+		'I have read and agree to the terms and conditions above',
 	'id': 'ID',
 	'if-the-app-is-compatible-with-different-updates-of-74-please-upload-multiple-packages-for-each-update-or-update-the-compatibility-range':
 		'If the app is compatible with different updates of 7.4, please upload multiple packages for each update or update the compatibility range.',
 	'if-you-are-requesting-the-account-on-behalf-of-a-business-,-please-note-the-business-name':
 		'If you are requesting the account on behalf of a business, please note the business name.',
+	'if-you-could-choose-3-top-priorities-for-improvements-what-would-they-be':
+		'If you could choose 3 top priorities for improvements, what would they be?',
 	'important-images-will-be-displayed-following-the-numerical-order-above':
 		'Important: Images will be displayed following the numerical order above.',
 	'in-progress': 'In Progress',
@@ -334,6 +394,9 @@ export default {
 		'In the future, you will be able to submit your app source code for additional support and partnership opportunities with Liferay.',
 	'incident-report-contacts': 'Incident Report Contacts',
 	'income': 'Income',
+	'information': 'Information',
+	'input-one-domain-name-per-instance': 'Input one domain name per instance',
+	'input-one-host-name-per-instance': 'Input one Host name per instance.',
 	'insert-text-here': 'Insert text here',
 	'install': 'Install',
 	'installation': 'Installation',
@@ -345,6 +408,7 @@ export default {
 	'insufficient-resource-requirements': 'Insufficient Resource Requirements',
 	'intl-code': 'Intl. Code',
 	'ip-addresses': 'IP Addresses',
+	'job-title': 'Job Title',
 	'join-an-existing-business-account-e-g-your-company-and-gain-full-access':
 		'Join an existing business account (e.g., your company) and gain full access.',
 	'join-existing-business-account': 'Join Existing Business Account',
@@ -369,11 +433,21 @@ export default {
 	'license-type': 'License Type',
 	'licenses': 'Licenses',
 	'licensing': 'Licensing',
+	'liferay-dsr-eula-disclaimer-prefix':
+		'This release of the Digital Sales Room (DSR) is a Beta. You acknowledge that Liferay is not obligated to provide support services while in Beta. For clarity, the Subscription benefits of any active Subscriptions you may have for Liferay Software shall not extend to cover the Beta release of the DSR and participation in the Beta does not grant access to any future GA version of the product. Use of DSR is subject to the Liferay Enterprise Services Agreement (ESA), applicable Appendix, and the Liferay Data Processing Addendum, each as available at',
+	'liferay-dsr-eula-disclaimer-suffix':
+		'provided that in the event the parties hereto have previously executed or otherwise entered into separate written agreements governing the subject matter thereof, respectively, the terms of such executed documents shall apply.',
+	'liferay-dxp-eula-disclaimer-prefix':
+		'Your use of Liferay DXP is subject to these terms and the Liferay End User License Agreement set forth at',
+	'liferay-dxp-eula-disclaimer-suffix':
+		'(these terms and the eula together form the "agreement"). Please read these terms and the Liferay End User License Agreement carefully before accessing, downloading, installing or in any way using the software. By clicking your agreement to any of these or accessing, downloading, installing or in any way using the software, you signify your assent to and acceptance of the agreement and acknowledge that you have read and you understand terms of the agreement. If you are an individual acting on behalf of an entity, you represent that you have the authority to enter into this agreement on behalf of that entity. If you do not accept the terms of this agreement, then you must not access, download, install or in any way use the software. I have read and agree to all the terms and conditions below (check all boxes).',
+	'liferay-end-user-agreement': 'Liferay End User Agreement',
 	'liferay-learn': 'Liferay Learn',
 	'liferay-paas': 'Liferay PaaS',
 	'liferay-publisher-license-agreement':
 		'Liferay Publisher License Agreement',
 	'liferay-s': 'Liferay’s',
+	'liferay-s-privacy-policy': 'Liferay’s Privacy Policy',
 	'liferay-saas': 'Liferay SaaS',
 	'liferay-self-hosted': 'Liferay Self-Hosted',
 	'liferay-version': 'Liferay Version',
@@ -401,6 +475,8 @@ export default {
 	'manage-user-roles': 'Manage User Roles',
 	'manage-users': 'Manage Users',
 	'manage-your-current-trials': 'Manage your current trials',
+	'manage-your-products-purchased-from-the-marketplace':
+		'Manage your products purchased from the Marketplace.',
 	'manage-your-teams-trial': "Manage your team's trial",
 	'mark-as-paid': 'Mark as Paid',
 	'marked-as-paid': 'Marked as paid.',
@@ -415,18 +491,24 @@ export default {
 	'monthly-increase': 'Monthly Increase',
 	'more-actions': 'More Actions',
 	'more-info': 'More Info',
+	'most-purchased-apps': 'Most Purchased Apps',
+	'most-purchased-products': 'Most Purchased Products',
 	'move-down': 'Move Down',
 	'move-to-bottom': 'Move to Bottom',
 	'move-to-top': 'Move to Top',
 	'move-up': 'Move Up',
 	'mp-commission': 'MP Commission',
 	'my-apps': 'My Apps',
+	'my-products': 'My Products',
 	'my-saas-demos': 'My SaaS Demos',
 	'my-solutions': 'My Solutions',
 	'name': 'Name',
+	'need-help-activating-this-product-check-the':
+		'Need help activating this product? Check the',
+	'need-help-getting-started?': 'Need help getting started?',
 	'net-price': 'Net Price',
-	'never-expires': 'Never Expires',
 	'new-account': 'New Account',
+	'new-activation-key': 'New Activation Key',
 	'new-address': 'New Address',
 	'new-app': 'New App',
 	'new-potential-expiration-date': 'New Potential Expiration Date',
@@ -436,6 +518,7 @@ export default {
 	'no-cloud-projects-available': 'No Cloud Projects Available',
 	'no-licenses-yet': 'No Licenses Yet',
 	'no-orders-yet': 'No Orders Yet',
+	'no-projects-available-for-x': 'No projects available for {0}',
 	'no-results-found': 'No Results Found',
 	'no-trials-yet': 'No Trials Yet',
 	'no-x': 'No {0}',
@@ -444,7 +527,10 @@ export default {
 	'notes': 'Notes',
 	'notes-pertaining-to-the-release-of-the-project-these-will-be-displayed-when-the-customer-goes-to-purchase-and-or-update-the-app':
 		'Notes pertaining to the release of the project. These will be displayed when the customer goes to purchase and/or update the app.',
+	'notify-me-about-products-services-and-events':
+		'Notify me about products, services and events.',
 	'number-of-cpus': 'Number of CPUs',
+	'number-of-purchases': 'Number of purchases',
 	'object-action': 'Object Action',
 	'objective': 'Objective',
 	'of-target': 'of target',
@@ -454,6 +540,8 @@ export default {
 		'Only GIF, JPG, JPEG, and PNG are allowed. Max file size is 5MB.',
 	'only-jar-war-files-are-allowed-max-file-size-is-500mb':
 		'Only JAR and WAR files are allowed. Max file size is 500MB.',
+	'only-jar-zip-files-are-allowed-max-file-size-is-500mb':
+		'Only JAR and ZIP files are allowed. Max file size is 500MB.',
 	'only-zip-files-are-allowed-max-file-size-is-500mb':
 		'Only ZIP files are allowed. Max file size is 500MB.',
 	'oops-something-went-wrong': 'Oops! Something went wrong.',
@@ -463,15 +551,18 @@ export default {
 	'order-info': 'Order Info',
 	'order-marked-as-paid': 'Order marked as paid.',
 	'order-received': 'Order Received',
+	'order-received-awaiting-signature': 'Order Received: Awaiting Signature',
 	'order-status': 'Order Status',
 	'orders': 'Orders',
 	'other': 'Other',
+	'overall-experience': 'Overall Experience',
 	'package': 'Package',
 	'paid': 'Paid',
 	'paid-by': 'Paid By',
 	'paid-date': 'Paid Date',
 	'pay-with-bank-transfer': 'Pay with Bank Transfer',
 	'pay-with-card': 'Pay with Card',
+	'pay-with-invoice': 'Pay with Invoice',
 	'payment': 'Payment',
 	'payment-method': 'Payment Method',
 	'payment-status': 'Payment Status',
@@ -481,12 +572,16 @@ export default {
 	'pending': 'Pending',
 	'personal': 'Personal',
 	'personal-account': 'Personal Account',
+	'personal-information': 'Personal Information',
+	'personal-information-purpose': 'Personal Information & Purpose',
 	'phone': 'Phone',
 	'phone-number': 'Phone Number',
 	'please-be-aware-that-since-you-are-adding-a-new-version-of-the-app-the-only-section-visible-is-the-build':
 		'Please be aware that since you are adding a new version of the app, the only section visible is the "Build".',
 	'please-be-sure-to-specify-liferay-compatibility-through-the-appropriate-properties-or-xml-files-in-your-plugin':
 		'Please be sure to specify Liferay compatibility through the appropriate properties or XML files in your plugin.',
+	'please-complete-at-least-one-of-the-following-fields-to-proceed':
+		'Please complete at least one of the following fields to proceed',
 	'please-fill-in-a-valid-email': 'Please fill in a valid email.',
 	'please-fill-in-a-valid-phone-number':
 		'Please fill in a valid phone number.',
@@ -495,6 +590,8 @@ export default {
 		'Please note that since there is no cloud project associated with your instance, you will not be able to install Cloud Apps.',
 	'please-review-before-submitting-once-sent-you-will-not-be-able-to-edit-any-information-until-this-submission-is-completely-reviewed-by-liferay':
 		'Please review before submitting. Once sent, you will not be able to edit any information until this submission is fully reviewed by Liferay.',
+	'please-review-the-order-summary-below-and-flag-the-checkbox-to-complete-your-purchase':
+		'Please review the order summary below and flag the checkbox to complete your purchase',
 	'please-select-the-account-you-wish-to-link-to-your-liferay-dxp-below':
 		'Please select the account you wish to link to your Liferay DXP below.',
 	'price': 'Price',
@@ -503,6 +600,7 @@ export default {
 	'processing': 'Processing',
 	'product': 'Product',
 	'product-unavailable': 'Product Unavailable',
+	'products': 'Products',
 	'profile': 'Profile',
 	'project': 'Project',
 	'project-id': 'Project ID',
@@ -542,25 +640,31 @@ export default {
 	'purchase-completed': 'Purchase Completed',
 	'purchase-date': 'Purchase Date',
 	'purchase-failed': 'Purchase Failed',
+	'purchase-number': 'Purchase Number',
 	'purchase-order-number': 'Purchase Order Number',
 	'purchased-by': 'Purchased by',
+	'purpose': 'Purpose',
 	'qty': 'Qty',
 	'quantity': 'Quantity',
 	'quarter': 'Quarter',
 	'ram': 'RAM',
 	'ram-in-gbs': 'RAM in GBs',
+	'rate-from-1-poor-to-5-excellent': 'Rate from 1 (poor) to 5 (excellent)',
 	'reason': 'Reason',
 	'recent-orders': 'Recent Orders',
 	'recent-published-apps': 'Recent Published Apps',
 	'recent-trials': 'Recent Trials',
 	'reject-request': 'Reject Request',
 	'remove': 'Remove',
-	'remove-a-version': 'Remove a Version',
 	'remove-all-roles': 'Remove all roles',
 	'remove-user': 'Remove User',
-	'removed-user-from-account': 'Removed user from account',
+	'renew': 'Renew',
+	'renewal-will-be-available-3-months-before-your-activation-key-expires':
+		'Renewal will be available 3 months before your activation key expires.',
 	'request-a-marketplace-publisher-account':
 		'Request a Marketplace Publisher Account',
+	'request-access-to-ai-hub-private-beta':
+		'Request Access to AI Hub Private Beta',
 	'request-account': 'Request Account',
 	'request-description': 'Request Description',
 	'request-details': 'Request Details',
@@ -587,16 +691,19 @@ export default {
 	'scroll-to-top': 'Scroll to Top',
 	'search': 'Search',
 	'section-that-shows-the-latest-sales-made':
-		'Section that shows the latest sales made',
+		'Section that shows the latest sales made.',
 	'section-that-shows-the-payments': 'Section that shows the payments.',
 	'select-a-file': 'Select a File',
 	'select-a-local-file-to-upload': 'Select a Local File to Upload',
+	'select-a-server-to-store-your-data-this-could-have-implications-to-your-organizations-policy-on-user-data-storage':
+		"Select a server to store your data. This could have implications to your organization's policy on user data storage.",
 	'select-an-option': 'Select an Option',
 	'select-areas': 'Select Areas',
 	'select-categories': 'Select Categories',
 	'select-category': 'Select Category',
 	'select-compatible-versions': 'Select Compatible Versions',
 	'select-licensing-terms': 'Select Licensing Terms',
+	'select-purpose': 'Select Purpose',
 	'select-tags': 'Select Tags',
 	'select-the-offering-of-liferay-your-app-is-compatible-with-the-compatibility-selections-will-determine-on-what-platforms-your-app-is-tested':
 		'Select the offering of Liferay your app is compatible with. The compatibility selections will determine on what platforms your app is tested.',
@@ -607,6 +714,9 @@ export default {
 	'send-request': 'Send Request',
 	'set-the-users-role-ssa-users-can-create-trials-while-ssa-admins-can-manage-users-roles-and-trials':
 		'Set the user’s role: SSA Users can create trials, while SSA Admins can manage users, roles, and trials.',
+	'setting-up-your-free-version-ldp': 'Setting up your Free Version LDP 🚀',
+	'share-beta-feedback': 'Share Beta Feedback',
+	'share-your-feedback': 'Share Your Feedback',
 	'showing-x-to-x-of-x': 'Showing {0} to {1} of {2}',
 	'sign-in-with-a-different-account': 'Sign in with a Different Account',
 	'site-initializer': 'Site Initializer',
@@ -618,6 +728,7 @@ export default {
 	'solution-x-submitted': 'Solution <b>{0}</b> submitted.',
 	'solutions': 'Solutions',
 	'solutions-info': 'Solutions Info',
+	'something-went-wrong': 'Something went wrong.',
 	'sorry-there-are-no-results-found': 'Sorry, there are no results found.',
 	'specify-your-apps-version-this-will-help-the-user-understand-the-latest-version-of-your-app-offered-on-the-marketplace':
 		'Specify your app’s version. This will help the user understand the latest version of your app offered on the Marketplace.',
@@ -635,11 +746,14 @@ export default {
 	'storefront': 'Storefront',
 	'submit': 'Submit',
 	'submit-solution': 'Submit Solution',
+	'submit-your-request-to-join-the-beta-program-all-submissions-will-be-reviewed-and-youll-receive-an-email-with-the-outcome':
+		'Submit your request to join the beta program. All submissions will be reviewed, and you’ll receive an email with the outcome.',
 	'subscription-type': 'Subscription Type',
 	'subtotal': 'Subtotal',
 	'subtotal-discount': 'Subtotal Discount',
 	'success': 'Success',
 	'successfully-removed-roles': 'Successfully removed roles',
+	'suggestions-and-priorities': 'Suggestions & Priorities',
 	'summary': 'Summary',
 	'support': 'Support',
 	'support-and-help': 'Support & Help',
@@ -652,7 +766,7 @@ export default {
 	'tags-help-to-describe-your-solution-in-the-marketplace-select-the-tags-most-relevant-to-your-solution-they-can-be-changed-if-needed':
 		'Tags help to describe your solution in the Marketplace. Select the tags most relevant to your solution. They can be changed if needed.',
 	'tax-id': 'Tax ID',
-	'tax-vat': 'Tax/VAT',
+	'tax-vat-id': 'Tax/VAT ID',
 	'tax-vat-number': 'Tax/VAT Number',
 	'terms-of-service': 'Terms of Service',
 	'terms-privacy-returns-or-contact-support-all-costs-are-in-us-dollars':
@@ -660,7 +774,10 @@ export default {
 	'text-block': 'Text Block',
 	'text-images-block': 'Text Images Block',
 	'text-video-block': 'Text Video Block',
+	'thank-you-for-trying-the-beta-version-of-this-product-your-feedback-is-essential-to-improve-the-final-release-this-survey-takes-3–5-minutes':
+		'Thank you for trying the beta version of this product! Your feedback is essential to improve the final release. This survey takes ~3–5 minutes.',
 	'thank-you-for-your': 'Thank you for your',
+	'thank-you-for-your-request': 'Thank You for Your Request!',
 	'the-app-and-all-its-client-extensions-services-will-be-deleted-and-uninstalled-from-liferay-dxp':
 		'The app and all its client extensions (services) will be deleted and uninstalled from Liferay DXP.',
 	'the-app-submission-is-compatible-with-liferay-experience-cloud-and':
@@ -696,6 +813,8 @@ export default {
 	'this-app-is-already-installed-in-this-environment':
 		'This app is already installed in this environment.',
 	'this-field-is-required': 'This field is required.',
+	'this-is-the-email-address-that-will-receive-the-ai-hub-account-management-invite':
+		'This is the email address that will receive the AI Hub account management invite.',
 	'this-is-the-first-version-of-the-app-to-be-published':
 		'This is the first version of the app to be published.',
 	'this-key-is-expired-and-cannot-be-downloaded':
@@ -706,13 +825,22 @@ export default {
 		'This order must be completed before downloading this app.',
 	'this-product-is-no-longer-available':
 		'This product is no longer available.',
+	'this-purchase-will-be-billed-under-your-existing-payment-agreement-the-payment-method-cannot-be-changed-and-no-online-payment-is-required':
+		'This purchase will be billed under your existing payment agreement. The payment method cannot be changed, and no online payment is required.',
 	'this-submission-is-currently-under-review-by-liferay-once-the-process-is-complete-it-will-be-published-on-the-marketplace-in-the-meantime-no-information-or-data-from-this-app-submission-can-be-updated':
 		'This submission is currently under review by Liferay. Once the process is complete, it will be published on the Marketplace. In the meantime, no information or data from this app submission can be updated.',
 	'times-already-extended': 'Times Already Extended',
 	'timezone': 'Timezone',
 	'title': 'Title',
+	'to-be-renewed': 'To be Renewed',
+	'to-generate-your-unique-activation-key-file-and-access-the-download-please-complete-your-profile-details-below-tell-us-a-bit-about-your-intended-use-to-help-us-support-your-experience':
+		'To generate your unique activation key file and access the download, please complete your profile details below. Tell us a bit about your intended use to help us support your experience',
+	'to-generate-your-unique-activation-key-file-please-provide-the-technical-specifications-required-below-these-details-are-used-exclusively-to-configure-the-software-for-your-environment-and-ensure-hardware-compatibility':
+		'To generate your unique activation key file, please provide the technical specifications required below. These details are used exclusively to configure the software for your environment and ensure hardware compatibility.',
 	'to-join-an-existing-business-account-pleasecontact-your-administrator-who-can-add-you-once-added-you-will-automatically-become-part-of-that-account-and-will-be-able-to-manage-it-and-make-purchases-on-markeplace':
 		'To join an existing business account, please contact your administrator, who can add you. Once added, you will automatically become part of that account and will be able to manage it and make purchases on Markeplace.',
+	'token-unavailable': 'Token Unavailable',
+	'tokens': 'Tokens',
 	'total': 'Total',
 	'transaction-details': 'Transaction Details',
 	'transaction-id': 'Transaction ID',
@@ -732,6 +860,7 @@ export default {
 	'trial-status': 'Trial Status',
 	'trial-url': 'Trial URL',
 	'trials': 'Trials',
+	'try-beta': 'Try Beta',
 	'type': 'Type',
 	'unable-to-assign-roles': 'Unable to assign roles',
 	'unable-to-download-your-license-file-please-try-again-and-or-contact-support-via-the-manage-menu-on-the-dashboard':
@@ -758,6 +887,7 @@ export default {
 	'user-account': 'User Account',
 	'user-doesnt-exist': 'User doesn’t exist',
 	'user-email': 'User Email',
+	'user-information': 'User Information',
 	'user-roles-successfully-updated': 'User roles successfully updated',
 	'users-requests-to-become-a-publisher':
 		'Users requests to become a publisher',
@@ -774,19 +904,28 @@ export default {
 	'video-url': 'Video URL',
 	'view': 'View',
 	'view-all': 'View All',
-	'view-details': 'View details',
+	'view-details': 'View Details',
 	'view-request': 'View Request',
+	'view-the-documentation': 'View the documentation',
+	'visit': 'Visit',
 	'we-are-happy-to-have-you-interested-in-the-liferay-marketplace-at-the-moment-we-are-working-on-enhancing-the-experience-for-our-customers-in-the-marketplace-and-access-is-invite-only-if-you-are-an-existing-liferay-customer-please-keep-an-eye-out-for-an-announcement-related-to-the-new-marketplace-in-the-coming-months':
 		'We are happy to have you interested in the Liferay Marketplace. At the moment, we are working on enhancing the experience for our customers in the Marketplace and access is invite only. If you are an existing Liferay customer, please keep an eye out for an announcement related to the new Marketplace in the coming months!',
 	'we-are-happy-to-have-you-interested-in-the-liferay-marketplace-at-the-moment-we-are-working-on-enhancing-the-experience-for-our-publishers-in-the-marketplace-if-you-are-an-existing-liferay-developer-or-partner-you-can-choose-to-join-our-pilot-group-of-publishers-to-submit-apps-to-the-marketplace-continue-to-request-a-publisher-account':
 		'We are happy to have you interested in the Liferay Marketplace. At the moment, we are working on enhancing the experience for our publishers in the Marketplace.  If you are an existing Liferay developer or partner, you can choose to join our pilot group of publishers to submit apps to the Marketplace.  Continue to request a publisher account.',
+	'we-couldnt-set-up-your-environment-please-contact-support':
+		'We couldn’t set up your environment. Please contact support.',
 	'website': 'Website',
+	'what-features-would-you-like-in-the-final-release':
+		'What features would you like in the final release?',
 	'when-adding-app-versions-you-can-use-your-own-numbering-system-but-be-sure-it-is-consistent-and-understandable-by-the-customer':
 		'When adding app versions, you can use your own numbering system, but be sure it is consistent and understandable by the customer.',
 	'workflow-action': 'Workflow Action',
+	'workspace': 'Workspace',
+	'workspace-friendly-url': 'Workspace Friendly URL',
 	'workspace-info': 'Workspace Info',
 	'workspace-name': 'Workspace Name',
 	'workspace-owner-email': 'Workspace Owner Email',
+	'workspace-timezone': 'Workspace Timezone',
 	'x-available-for-you': `{0} available for <b>${Liferay.ThemeDisplay.getUserEmailAddress()}</b> (you)`,
 	'x-is-required': '{0} is required',
 	'x-items': '{0} Items',
@@ -821,6 +960,8 @@ export default {
 		"You'll be redirected to PayPal to complete your purchase securely. After your payment you are able to activate the license on customer dashboard right away",
 	'you-will-receive-an-invoice-via-email-with-all-the-details-needed-to-complete-your-payment-after-you-complete-the-payment-you-can-activate-your-license-from-the-customer-dashboard':
 		'You will receive an invoice via email with all the details needed to complete your payment. After you complete the payment, you can activate your license from the customer dashboard.',
+	'your-free-activation-key-has-been-generated':
+		'Your free activation key has been generated!',
 	'your-request-completed-successfully':
 		'Your request completed successfully',
 	'zip-files-must-be-in-universal-file-format-archive-luffa-the-specially-structured-zip-encoded-archive-used-to-package-client-extension-project-outputs-this-format-must-support-the-following-use-cases-deliver-batch-engine-data-files-compatible-with-all-deployment-targets-deliver-dxp-configuration-resource-compatible-with-all-deployment-targets-deliver-static-resources-compatible-with-all-deployment-targets-deliver-the-infrastructure-metadata-necessary-to-deploy-to-lxc-sm-for-more-information-see':

@@ -67,6 +67,12 @@ public class DepotEntryServiceUtil {
 		return getService().getDepotEntry(depotEntryId);
 	}
 
+	public static List<Long> getDepotEntryGroupIds(
+		long companyId, long userId, int type) {
+
+		return getService().getDepotEntryGroupIds(companyId, userId, type);
+	}
+
 	public static List<DepotEntry> getGroupConnectedDepotEntries(
 			long groupId, boolean ddmStructuresAvailable, int start, int end)
 		throws PortalException {
@@ -126,3 +132,4 @@ public class DepotEntryServiceUtil {
 		new Snapshot<>(DepotEntryServiceUtil.class, DepotEntryService.class);
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:1376930221

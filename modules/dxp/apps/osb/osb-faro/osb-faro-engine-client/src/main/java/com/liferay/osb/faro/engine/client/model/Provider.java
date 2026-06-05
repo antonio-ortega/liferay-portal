@@ -9,7 +9,10 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import com.liferay.osb.faro.engine.client.model.provider.CSVProvider;
+import com.liferay.osb.faro.engine.client.model.provider.DemandbaseProvider;
+import com.liferay.osb.faro.engine.client.model.provider.HubSpotProvider;
 import com.liferay.osb.faro.engine.client.model.provider.LiferayProvider;
+import com.liferay.osb.faro.engine.client.model.provider.MarketoProvider;
 import com.liferay.osb.faro.engine.client.model.provider.SalesforceProvider;
 
 /**
@@ -19,7 +22,16 @@ import com.liferay.osb.faro.engine.client.model.provider.SalesforceProvider;
 	{
 		@JsonSubTypes.Type(name = CSVProvider.TYPE, value = CSVProvider.class),
 		@JsonSubTypes.Type(
+			name = DemandbaseProvider.TYPE, value = DemandbaseProvider.class
+		),
+		@JsonSubTypes.Type(
+			name = HubSpotProvider.TYPE, value = HubSpotProvider.class
+		),
+		@JsonSubTypes.Type(
 			name = LiferayProvider.TYPE, value = LiferayProvider.class
+		),
+		@JsonSubTypes.Type(
+			name = MarketoProvider.TYPE, value = MarketoProvider.class
 		),
 		@JsonSubTypes.Type(
 			name = SalesforceProvider.TYPE, value = SalesforceProvider.class

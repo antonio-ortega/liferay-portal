@@ -11,6 +11,7 @@ import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.constants.ObjectFieldSettingConstants;
 import com.liferay.object.constants.ObjectRelationshipConstants;
 import com.liferay.object.definition.tree.util.ObjectDefinitionTreeUtil;
+import com.liferay.object.definition.util.ObjectDefinitionThreadLocal;
 import com.liferay.object.definition.util.ObjectDefinitionUtil;
 import com.liferay.object.exception.DuplicateObjectRelationshipException;
 import com.liferay.object.exception.DuplicateObjectRelationshipExternalReferenceCodeException;
@@ -396,21 +397,12 @@ public class ObjectRelationshipLocalServiceImpl
 		_deleteObjectFields(
 			objectRelationship.getObjectDefinitionId2(), objectRelationship);
 
-		ObjectDefinition objectDefinition1 =
-			_objectDefinitionPersistence.findByPrimaryKey(
-				objectRelationship.getObjectDefinitionId1());
-
-		_objectFolderItemLocalService.deleteObjectFolderItem(
-			objectRelationship.getObjectDefinitionId2(),
-			objectDefinition1.getObjectFolderId());
-
-		ObjectDefinition objectDefinition2 =
-			_objectDefinitionPersistence.findByPrimaryKey(
-				objectRelationship.getObjectDefinitionId2());
-
-		_objectFolderItemLocalService.deleteObjectFolderItem(
+		_deleteObjectFolderItem(
 			objectRelationship.getObjectDefinitionId1(),
-			objectDefinition2.getObjectFolderId());
+			objectRelationship.getObjectDefinitionId2());
+		_deleteObjectFolderItem(
+			objectRelationship.getObjectDefinitionId2(),
+			objectRelationship.getObjectDefinitionId1());
 
 		_objectLayoutTabLocalService.deleteObjectRelationshipObjectLayoutTabs(
 			objectRelationship.getObjectRelationshipId());
@@ -1431,6 +1423,24 @@ public class ObjectRelationshipLocalServiceImpl
 		}
 	}
 
+	private void _deleteObjectFolderItem(
+			long objectDefinitionId, long relatedObjectDefinitionId)
+		throws PortalException {
+
+		if (ObjectDefinitionThreadLocal.isDeleteObjectDefinitionId(
+				objectDefinitionId)) {
+
+			return;
+		}
+
+		ObjectDefinition relatedObjectDefinition =
+			_objectDefinitionPersistence.findByPrimaryKey(
+				relatedObjectDefinitionId);
+
+		_objectFolderItemLocalService.deleteObjectFolderItem(
+			objectDefinitionId, relatedObjectDefinition.getObjectFolderId());
+	}
+
 	private int _getIncompleteWorkflowInstancesCount(
 			ObjectDefinition objectDefinition)
 		throws PortalException {
@@ -1687,6 +1697,34 @@ public class ObjectRelationshipLocalServiceImpl
 					"these-ongoing-workflow-instances-must-be-completed-to-" +
 						"disable-inheritance-x-(x-object-entries)");
 			}
+
+			if (FeatureFlagManagerUtil.isEnabled(
+					objectDefinition2.getCompanyId(), "LPD-69877") &&
+				!objectDefinition2.isAllowStandaloneObjectEntry() &&
+				objectDefinition2.isApproved() &&
+				objectDefinition2.isRootDescendantNode()) {
+
+				long objectRelationshipsCount =
+					objectRelationshipPersistence.countByODI2_E(
+						objectDefinition2.getObjectDefinitionId(), true);
+
+				int relatedRootDescendantNodeObjectEntriesCount =
+					_getRelatedRootDescendantNodeObjectEntriesCount(
+						objectDefinition2,
+						objectRelationship.getObjectFieldId2());
+
+				if ((objectRelationshipsCount > 1) &&
+					(relatedRootDescendantNodeObjectEntriesCount > 0)) {
+
+					throw new ObjectRelationshipEdgeException(
+						StringBundler.concat(
+							"This object requires all entries to have a ",
+							"parent. To disable inheritance, you must first ",
+							"delete linked entries or enable standalone ",
+							"entries for this object."),
+						"this-object-requires-all-entries-to-have-a-parent");
+				}
+			}
 		}
 
 		if (!edge ||
@@ -1715,19 +1753,8 @@ public class ObjectRelationshipLocalServiceImpl
 					"an-edge-of-a-root-context");
 		}
 
-		if ((objectDefinition1.isModifiableAndSystem() &&
-			 !objectDefinition2.isSystem()) ||
-			(objectDefinition2.isModifiableAndSystem() &&
-			 !objectDefinition1.isSystem())) {
-
-			throw new ObjectRelationshipEdgeException(
-				"Inheritance between modifiable system and custom object " +
-					"definitions is not allowed",
-				"inheritance-between-modifiable-system-and-custom-object-" +
-					"definitions-is-not-allowed");
-		}
-		else if (objectDefinition1.isUnmodifiableSystemObject() ||
-				 objectDefinition2.isUnmodifiableSystemObject()) {
+		if (objectDefinition1.isUnmodifiableSystemObject() ||
+			objectDefinition2.isUnmodifiableSystemObject()) {
 
 			throw new ObjectRelationshipEdgeException(
 				"System object definitions cannot inherit configurations",

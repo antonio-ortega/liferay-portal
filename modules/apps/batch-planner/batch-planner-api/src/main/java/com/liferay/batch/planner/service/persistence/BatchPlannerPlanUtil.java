@@ -36,6 +36,20 @@ public class BatchPlannerPlanUtil {
 	 */
 
 	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(List)
+	 */
+	public static void cacheResult(List<BatchPlannerPlan> batchPlannerPlans) {
+		getPersistence().cacheResult(batchPlannerPlans);
+	}
+
+	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(com.liferay.portal.kernel.model.BaseModel)
+	 */
+	public static void cacheResult(BatchPlannerPlan batchPlannerPlan) {
+		getPersistence().cacheResult(batchPlannerPlan);
+	}
+
+	/**
 	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#clearCache()
 	 */
 	public static void clearCache() {
@@ -111,59 +125,10 @@ public class BatchPlannerPlanUtil {
 	}
 
 	/**
-	 * Returns all the batch planner plans where companyId = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @return the matching batch planner plans
-	 */
-	public static List<BatchPlannerPlan> findByCompanyId(long companyId) {
-		return getPersistence().findByCompanyId(companyId);
-	}
-
-	/**
-	 * Returns a range of all the batch planner plans where companyId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>BatchPlannerPlanModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param start the lower bound of the range of batch planner plans
-	 * @param end the upper bound of the range of batch planner plans (not inclusive)
-	 * @return the range of matching batch planner plans
-	 */
-	public static List<BatchPlannerPlan> findByCompanyId(
-		long companyId, int start, int end) {
-
-		return getPersistence().findByCompanyId(companyId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the batch planner plans where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>BatchPlannerPlanModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param start the lower bound of the range of batch planner plans
-	 * @param end the upper bound of the range of batch planner plans (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching batch planner plans
-	 */
-	public static List<BatchPlannerPlan> findByCompanyId(
-		long companyId, int start, int end,
-		OrderByComparator<BatchPlannerPlan> orderByComparator) {
-
-		return getPersistence().findByCompanyId(
-			companyId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the batch planner plans where companyId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>BatchPlannerPlanModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.batch.planner.model.impl.BatchPlannerPlanModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -214,87 +179,10 @@ public class BatchPlannerPlanUtil {
 	}
 
 	/**
-	 * Returns the last batch planner plan in the ordered set where companyId = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching batch planner plan
-	 * @throws NoSuchPlanException if a matching batch planner plan could not be found
-	 */
-	public static BatchPlannerPlan findByCompanyId_Last(
-			long companyId,
-			OrderByComparator<BatchPlannerPlan> orderByComparator)
-		throws com.liferay.batch.planner.exception.NoSuchPlanException {
-
-		return getPersistence().findByCompanyId_Last(
-			companyId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last batch planner plan in the ordered set where companyId = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching batch planner plan, or <code>null</code> if a matching batch planner plan could not be found
-	 */
-	public static BatchPlannerPlan fetchByCompanyId_Last(
-		long companyId, OrderByComparator<BatchPlannerPlan> orderByComparator) {
-
-		return getPersistence().fetchByCompanyId_Last(
-			companyId, orderByComparator);
-	}
-
-	/**
-	 * Returns the batch planner plans before and after the current batch planner plan in the ordered set where companyId = &#63;.
-	 *
-	 * @param batchPlannerPlanId the primary key of the current batch planner plan
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next batch planner plan
-	 * @throws NoSuchPlanException if a batch planner plan with the primary key could not be found
-	 */
-	public static BatchPlannerPlan[] findByCompanyId_PrevAndNext(
-			long batchPlannerPlanId, long companyId,
-			OrderByComparator<BatchPlannerPlan> orderByComparator)
-		throws com.liferay.batch.planner.exception.NoSuchPlanException {
-
-		return getPersistence().findByCompanyId_PrevAndNext(
-			batchPlannerPlanId, companyId, orderByComparator);
-	}
-
-	/**
-	 * Returns all the batch planner plans that the user has permission to view where companyId = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @return the matching batch planner plans that the user has permission to view
-	 */
-	public static List<BatchPlannerPlan> filterFindByCompanyId(long companyId) {
-		return getPersistence().filterFindByCompanyId(companyId);
-	}
-
-	/**
-	 * Returns a range of all the batch planner plans that the user has permission to view where companyId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>BatchPlannerPlanModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param start the lower bound of the range of batch planner plans
-	 * @param end the upper bound of the range of batch planner plans (not inclusive)
-	 * @return the range of matching batch planner plans that the user has permission to view
-	 */
-	public static List<BatchPlannerPlan> filterFindByCompanyId(
-		long companyId, int start, int end) {
-
-		return getPersistence().filterFindByCompanyId(companyId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the batch planner plans that the user has permissions to view where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>BatchPlannerPlanModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.batch.planner.model.impl.BatchPlannerPlanModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -309,24 +197,6 @@ public class BatchPlannerPlanUtil {
 
 		return getPersistence().filterFindByCompanyId(
 			companyId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns the batch planner plans before and after the current batch planner plan in the ordered set of batch planner plans that the user has permission to view where companyId = &#63;.
-	 *
-	 * @param batchPlannerPlanId the primary key of the current batch planner plan
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next batch planner plan
-	 * @throws NoSuchPlanException if a batch planner plan with the primary key could not be found
-	 */
-	public static BatchPlannerPlan[] filterFindByCompanyId_PrevAndNext(
-			long batchPlannerPlanId, long companyId,
-			OrderByComparator<BatchPlannerPlan> orderByComparator)
-		throws com.liferay.batch.planner.exception.NoSuchPlanException {
-
-		return getPersistence().filterFindByCompanyId_PrevAndNext(
-			batchPlannerPlanId, companyId, orderByComparator);
 	}
 
 	/**
@@ -359,64 +229,10 @@ public class BatchPlannerPlanUtil {
 	}
 
 	/**
-	 * Returns all the batch planner plans where companyId = &#63; and userId = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param userId the user ID
-	 * @return the matching batch planner plans
-	 */
-	public static List<BatchPlannerPlan> findByC_U(
-		long companyId, long userId) {
-
-		return getPersistence().findByC_U(companyId, userId);
-	}
-
-	/**
-	 * Returns a range of all the batch planner plans where companyId = &#63; and userId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>BatchPlannerPlanModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param userId the user ID
-	 * @param start the lower bound of the range of batch planner plans
-	 * @param end the upper bound of the range of batch planner plans (not inclusive)
-	 * @return the range of matching batch planner plans
-	 */
-	public static List<BatchPlannerPlan> findByC_U(
-		long companyId, long userId, int start, int end) {
-
-		return getPersistence().findByC_U(companyId, userId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the batch planner plans where companyId = &#63; and userId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>BatchPlannerPlanModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param userId the user ID
-	 * @param start the lower bound of the range of batch planner plans
-	 * @param end the upper bound of the range of batch planner plans (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching batch planner plans
-	 */
-	public static List<BatchPlannerPlan> findByC_U(
-		long companyId, long userId, int start, int end,
-		OrderByComparator<BatchPlannerPlan> orderByComparator) {
-
-		return getPersistence().findByC_U(
-			companyId, userId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the batch planner plans where companyId = &#63; and userId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>BatchPlannerPlanModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.batch.planner.model.impl.BatchPlannerPlanModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -471,95 +287,10 @@ public class BatchPlannerPlanUtil {
 	}
 
 	/**
-	 * Returns the last batch planner plan in the ordered set where companyId = &#63; and userId = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param userId the user ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching batch planner plan
-	 * @throws NoSuchPlanException if a matching batch planner plan could not be found
-	 */
-	public static BatchPlannerPlan findByC_U_Last(
-			long companyId, long userId,
-			OrderByComparator<BatchPlannerPlan> orderByComparator)
-		throws com.liferay.batch.planner.exception.NoSuchPlanException {
-
-		return getPersistence().findByC_U_Last(
-			companyId, userId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last batch planner plan in the ordered set where companyId = &#63; and userId = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param userId the user ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching batch planner plan, or <code>null</code> if a matching batch planner plan could not be found
-	 */
-	public static BatchPlannerPlan fetchByC_U_Last(
-		long companyId, long userId,
-		OrderByComparator<BatchPlannerPlan> orderByComparator) {
-
-		return getPersistence().fetchByC_U_Last(
-			companyId, userId, orderByComparator);
-	}
-
-	/**
-	 * Returns the batch planner plans before and after the current batch planner plan in the ordered set where companyId = &#63; and userId = &#63;.
-	 *
-	 * @param batchPlannerPlanId the primary key of the current batch planner plan
-	 * @param companyId the company ID
-	 * @param userId the user ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next batch planner plan
-	 * @throws NoSuchPlanException if a batch planner plan with the primary key could not be found
-	 */
-	public static BatchPlannerPlan[] findByC_U_PrevAndNext(
-			long batchPlannerPlanId, long companyId, long userId,
-			OrderByComparator<BatchPlannerPlan> orderByComparator)
-		throws com.liferay.batch.planner.exception.NoSuchPlanException {
-
-		return getPersistence().findByC_U_PrevAndNext(
-			batchPlannerPlanId, companyId, userId, orderByComparator);
-	}
-
-	/**
-	 * Returns all the batch planner plans that the user has permission to view where companyId = &#63; and userId = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param userId the user ID
-	 * @return the matching batch planner plans that the user has permission to view
-	 */
-	public static List<BatchPlannerPlan> filterFindByC_U(
-		long companyId, long userId) {
-
-		return getPersistence().filterFindByC_U(companyId, userId);
-	}
-
-	/**
-	 * Returns a range of all the batch planner plans that the user has permission to view where companyId = &#63; and userId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>BatchPlannerPlanModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param userId the user ID
-	 * @param start the lower bound of the range of batch planner plans
-	 * @param end the upper bound of the range of batch planner plans (not inclusive)
-	 * @return the range of matching batch planner plans that the user has permission to view
-	 */
-	public static List<BatchPlannerPlan> filterFindByC_U(
-		long companyId, long userId, int start, int end) {
-
-		return getPersistence().filterFindByC_U(companyId, userId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the batch planner plans that the user has permissions to view where companyId = &#63; and userId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>BatchPlannerPlanModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.batch.planner.model.impl.BatchPlannerPlanModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -575,25 +306,6 @@ public class BatchPlannerPlanUtil {
 
 		return getPersistence().filterFindByC_U(
 			companyId, userId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns the batch planner plans before and after the current batch planner plan in the ordered set of batch planner plans that the user has permission to view where companyId = &#63; and userId = &#63;.
-	 *
-	 * @param batchPlannerPlanId the primary key of the current batch planner plan
-	 * @param companyId the company ID
-	 * @param userId the user ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next batch planner plan
-	 * @throws NoSuchPlanException if a batch planner plan with the primary key could not be found
-	 */
-	public static BatchPlannerPlan[] filterFindByC_U_PrevAndNext(
-			long batchPlannerPlanId, long companyId, long userId,
-			OrderByComparator<BatchPlannerPlan> orderByComparator)
-		throws com.liferay.batch.planner.exception.NoSuchPlanException {
-
-		return getPersistence().filterFindByC_U_PrevAndNext(
-			batchPlannerPlanId, companyId, userId, orderByComparator);
 	}
 
 	/**
@@ -629,64 +341,10 @@ public class BatchPlannerPlanUtil {
 	}
 
 	/**
-	 * Returns all the batch planner plans where companyId = &#63; and export = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param export the export
-	 * @return the matching batch planner plans
-	 */
-	public static List<BatchPlannerPlan> findByC_E(
-		long companyId, boolean export) {
-
-		return getPersistence().findByC_E(companyId, export);
-	}
-
-	/**
-	 * Returns a range of all the batch planner plans where companyId = &#63; and export = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>BatchPlannerPlanModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param export the export
-	 * @param start the lower bound of the range of batch planner plans
-	 * @param end the upper bound of the range of batch planner plans (not inclusive)
-	 * @return the range of matching batch planner plans
-	 */
-	public static List<BatchPlannerPlan> findByC_E(
-		long companyId, boolean export, int start, int end) {
-
-		return getPersistence().findByC_E(companyId, export, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the batch planner plans where companyId = &#63; and export = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>BatchPlannerPlanModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param export the export
-	 * @param start the lower bound of the range of batch planner plans
-	 * @param end the upper bound of the range of batch planner plans (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching batch planner plans
-	 */
-	public static List<BatchPlannerPlan> findByC_E(
-		long companyId, boolean export, int start, int end,
-		OrderByComparator<BatchPlannerPlan> orderByComparator) {
-
-		return getPersistence().findByC_E(
-			companyId, export, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the batch planner plans where companyId = &#63; and export = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>BatchPlannerPlanModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.batch.planner.model.impl.BatchPlannerPlanModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -741,95 +399,10 @@ public class BatchPlannerPlanUtil {
 	}
 
 	/**
-	 * Returns the last batch planner plan in the ordered set where companyId = &#63; and export = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param export the export
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching batch planner plan
-	 * @throws NoSuchPlanException if a matching batch planner plan could not be found
-	 */
-	public static BatchPlannerPlan findByC_E_Last(
-			long companyId, boolean export,
-			OrderByComparator<BatchPlannerPlan> orderByComparator)
-		throws com.liferay.batch.planner.exception.NoSuchPlanException {
-
-		return getPersistence().findByC_E_Last(
-			companyId, export, orderByComparator);
-	}
-
-	/**
-	 * Returns the last batch planner plan in the ordered set where companyId = &#63; and export = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param export the export
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching batch planner plan, or <code>null</code> if a matching batch planner plan could not be found
-	 */
-	public static BatchPlannerPlan fetchByC_E_Last(
-		long companyId, boolean export,
-		OrderByComparator<BatchPlannerPlan> orderByComparator) {
-
-		return getPersistence().fetchByC_E_Last(
-			companyId, export, orderByComparator);
-	}
-
-	/**
-	 * Returns the batch planner plans before and after the current batch planner plan in the ordered set where companyId = &#63; and export = &#63;.
-	 *
-	 * @param batchPlannerPlanId the primary key of the current batch planner plan
-	 * @param companyId the company ID
-	 * @param export the export
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next batch planner plan
-	 * @throws NoSuchPlanException if a batch planner plan with the primary key could not be found
-	 */
-	public static BatchPlannerPlan[] findByC_E_PrevAndNext(
-			long batchPlannerPlanId, long companyId, boolean export,
-			OrderByComparator<BatchPlannerPlan> orderByComparator)
-		throws com.liferay.batch.planner.exception.NoSuchPlanException {
-
-		return getPersistence().findByC_E_PrevAndNext(
-			batchPlannerPlanId, companyId, export, orderByComparator);
-	}
-
-	/**
-	 * Returns all the batch planner plans that the user has permission to view where companyId = &#63; and export = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param export the export
-	 * @return the matching batch planner plans that the user has permission to view
-	 */
-	public static List<BatchPlannerPlan> filterFindByC_E(
-		long companyId, boolean export) {
-
-		return getPersistence().filterFindByC_E(companyId, export);
-	}
-
-	/**
-	 * Returns a range of all the batch planner plans that the user has permission to view where companyId = &#63; and export = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>BatchPlannerPlanModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param export the export
-	 * @param start the lower bound of the range of batch planner plans
-	 * @param end the upper bound of the range of batch planner plans (not inclusive)
-	 * @return the range of matching batch planner plans that the user has permission to view
-	 */
-	public static List<BatchPlannerPlan> filterFindByC_E(
-		long companyId, boolean export, int start, int end) {
-
-		return getPersistence().filterFindByC_E(companyId, export, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the batch planner plans that the user has permissions to view where companyId = &#63; and export = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>BatchPlannerPlanModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.batch.planner.model.impl.BatchPlannerPlanModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -845,25 +418,6 @@ public class BatchPlannerPlanUtil {
 
 		return getPersistence().filterFindByC_E(
 			companyId, export, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns the batch planner plans before and after the current batch planner plan in the ordered set of batch planner plans that the user has permission to view where companyId = &#63; and export = &#63;.
-	 *
-	 * @param batchPlannerPlanId the primary key of the current batch planner plan
-	 * @param companyId the company ID
-	 * @param export the export
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next batch planner plan
-	 * @throws NoSuchPlanException if a batch planner plan with the primary key could not be found
-	 */
-	public static BatchPlannerPlan[] filterFindByC_E_PrevAndNext(
-			long batchPlannerPlanId, long companyId, boolean export,
-			OrderByComparator<BatchPlannerPlan> orderByComparator)
-		throws com.liferay.batch.planner.exception.NoSuchPlanException {
-
-		return getPersistence().filterFindByC_E_PrevAndNext(
-			batchPlannerPlanId, companyId, export, orderByComparator);
 	}
 
 	/**
@@ -899,64 +453,10 @@ public class BatchPlannerPlanUtil {
 	}
 
 	/**
-	 * Returns all the batch planner plans where companyId = &#63; and name = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param name the name
-	 * @return the matching batch planner plans
-	 */
-	public static List<BatchPlannerPlan> findByC_N(
-		long companyId, String name) {
-
-		return getPersistence().findByC_N(companyId, name);
-	}
-
-	/**
-	 * Returns a range of all the batch planner plans where companyId = &#63; and name = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>BatchPlannerPlanModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param name the name
-	 * @param start the lower bound of the range of batch planner plans
-	 * @param end the upper bound of the range of batch planner plans (not inclusive)
-	 * @return the range of matching batch planner plans
-	 */
-	public static List<BatchPlannerPlan> findByC_N(
-		long companyId, String name, int start, int end) {
-
-		return getPersistence().findByC_N(companyId, name, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the batch planner plans where companyId = &#63; and name = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>BatchPlannerPlanModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param name the name
-	 * @param start the lower bound of the range of batch planner plans
-	 * @param end the upper bound of the range of batch planner plans (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching batch planner plans
-	 */
-	public static List<BatchPlannerPlan> findByC_N(
-		long companyId, String name, int start, int end,
-		OrderByComparator<BatchPlannerPlan> orderByComparator) {
-
-		return getPersistence().findByC_N(
-			companyId, name, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the batch planner plans where companyId = &#63; and name = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>BatchPlannerPlanModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.batch.planner.model.impl.BatchPlannerPlanModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -1011,95 +511,10 @@ public class BatchPlannerPlanUtil {
 	}
 
 	/**
-	 * Returns the last batch planner plan in the ordered set where companyId = &#63; and name = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param name the name
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching batch planner plan
-	 * @throws NoSuchPlanException if a matching batch planner plan could not be found
-	 */
-	public static BatchPlannerPlan findByC_N_Last(
-			long companyId, String name,
-			OrderByComparator<BatchPlannerPlan> orderByComparator)
-		throws com.liferay.batch.planner.exception.NoSuchPlanException {
-
-		return getPersistence().findByC_N_Last(
-			companyId, name, orderByComparator);
-	}
-
-	/**
-	 * Returns the last batch planner plan in the ordered set where companyId = &#63; and name = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param name the name
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching batch planner plan, or <code>null</code> if a matching batch planner plan could not be found
-	 */
-	public static BatchPlannerPlan fetchByC_N_Last(
-		long companyId, String name,
-		OrderByComparator<BatchPlannerPlan> orderByComparator) {
-
-		return getPersistence().fetchByC_N_Last(
-			companyId, name, orderByComparator);
-	}
-
-	/**
-	 * Returns the batch planner plans before and after the current batch planner plan in the ordered set where companyId = &#63; and name = &#63;.
-	 *
-	 * @param batchPlannerPlanId the primary key of the current batch planner plan
-	 * @param companyId the company ID
-	 * @param name the name
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next batch planner plan
-	 * @throws NoSuchPlanException if a batch planner plan with the primary key could not be found
-	 */
-	public static BatchPlannerPlan[] findByC_N_PrevAndNext(
-			long batchPlannerPlanId, long companyId, String name,
-			OrderByComparator<BatchPlannerPlan> orderByComparator)
-		throws com.liferay.batch.planner.exception.NoSuchPlanException {
-
-		return getPersistence().findByC_N_PrevAndNext(
-			batchPlannerPlanId, companyId, name, orderByComparator);
-	}
-
-	/**
-	 * Returns all the batch planner plans that the user has permission to view where companyId = &#63; and name = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param name the name
-	 * @return the matching batch planner plans that the user has permission to view
-	 */
-	public static List<BatchPlannerPlan> filterFindByC_N(
-		long companyId, String name) {
-
-		return getPersistence().filterFindByC_N(companyId, name);
-	}
-
-	/**
-	 * Returns a range of all the batch planner plans that the user has permission to view where companyId = &#63; and name = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>BatchPlannerPlanModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param name the name
-	 * @param start the lower bound of the range of batch planner plans
-	 * @param end the upper bound of the range of batch planner plans (not inclusive)
-	 * @return the range of matching batch planner plans that the user has permission to view
-	 */
-	public static List<BatchPlannerPlan> filterFindByC_N(
-		long companyId, String name, int start, int end) {
-
-		return getPersistence().filterFindByC_N(companyId, name, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the batch planner plans that the user has permissions to view where companyId = &#63; and name = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>BatchPlannerPlanModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.batch.planner.model.impl.BatchPlannerPlanModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -1115,25 +530,6 @@ public class BatchPlannerPlanUtil {
 
 		return getPersistence().filterFindByC_N(
 			companyId, name, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns the batch planner plans before and after the current batch planner plan in the ordered set of batch planner plans that the user has permission to view where companyId = &#63; and name = &#63;.
-	 *
-	 * @param batchPlannerPlanId the primary key of the current batch planner plan
-	 * @param companyId the company ID
-	 * @param name the name
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next batch planner plan
-	 * @throws NoSuchPlanException if a batch planner plan with the primary key could not be found
-	 */
-	public static BatchPlannerPlan[] filterFindByC_N_PrevAndNext(
-			long batchPlannerPlanId, long companyId, String name,
-			OrderByComparator<BatchPlannerPlan> orderByComparator)
-		throws com.liferay.batch.planner.exception.NoSuchPlanException {
-
-		return getPersistence().filterFindByC_N_PrevAndNext(
-			batchPlannerPlanId, companyId, name, orderByComparator);
 	}
 
 	/**
@@ -1169,64 +565,10 @@ public class BatchPlannerPlanUtil {
 	}
 
 	/**
-	 * Returns all the batch planner plans where companyId = &#63; and template = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param template the template
-	 * @return the matching batch planner plans
-	 */
-	public static List<BatchPlannerPlan> findByC_T(
-		long companyId, boolean template) {
-
-		return getPersistence().findByC_T(companyId, template);
-	}
-
-	/**
-	 * Returns a range of all the batch planner plans where companyId = &#63; and template = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>BatchPlannerPlanModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param template the template
-	 * @param start the lower bound of the range of batch planner plans
-	 * @param end the upper bound of the range of batch planner plans (not inclusive)
-	 * @return the range of matching batch planner plans
-	 */
-	public static List<BatchPlannerPlan> findByC_T(
-		long companyId, boolean template, int start, int end) {
-
-		return getPersistence().findByC_T(companyId, template, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the batch planner plans where companyId = &#63; and template = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>BatchPlannerPlanModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param template the template
-	 * @param start the lower bound of the range of batch planner plans
-	 * @param end the upper bound of the range of batch planner plans (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching batch planner plans
-	 */
-	public static List<BatchPlannerPlan> findByC_T(
-		long companyId, boolean template, int start, int end,
-		OrderByComparator<BatchPlannerPlan> orderByComparator) {
-
-		return getPersistence().findByC_T(
-			companyId, template, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the batch planner plans where companyId = &#63; and template = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>BatchPlannerPlanModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.batch.planner.model.impl.BatchPlannerPlanModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -1281,96 +623,10 @@ public class BatchPlannerPlanUtil {
 	}
 
 	/**
-	 * Returns the last batch planner plan in the ordered set where companyId = &#63; and template = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param template the template
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching batch planner plan
-	 * @throws NoSuchPlanException if a matching batch planner plan could not be found
-	 */
-	public static BatchPlannerPlan findByC_T_Last(
-			long companyId, boolean template,
-			OrderByComparator<BatchPlannerPlan> orderByComparator)
-		throws com.liferay.batch.planner.exception.NoSuchPlanException {
-
-		return getPersistence().findByC_T_Last(
-			companyId, template, orderByComparator);
-	}
-
-	/**
-	 * Returns the last batch planner plan in the ordered set where companyId = &#63; and template = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param template the template
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching batch planner plan, or <code>null</code> if a matching batch planner plan could not be found
-	 */
-	public static BatchPlannerPlan fetchByC_T_Last(
-		long companyId, boolean template,
-		OrderByComparator<BatchPlannerPlan> orderByComparator) {
-
-		return getPersistence().fetchByC_T_Last(
-			companyId, template, orderByComparator);
-	}
-
-	/**
-	 * Returns the batch planner plans before and after the current batch planner plan in the ordered set where companyId = &#63; and template = &#63;.
-	 *
-	 * @param batchPlannerPlanId the primary key of the current batch planner plan
-	 * @param companyId the company ID
-	 * @param template the template
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next batch planner plan
-	 * @throws NoSuchPlanException if a batch planner plan with the primary key could not be found
-	 */
-	public static BatchPlannerPlan[] findByC_T_PrevAndNext(
-			long batchPlannerPlanId, long companyId, boolean template,
-			OrderByComparator<BatchPlannerPlan> orderByComparator)
-		throws com.liferay.batch.planner.exception.NoSuchPlanException {
-
-		return getPersistence().findByC_T_PrevAndNext(
-			batchPlannerPlanId, companyId, template, orderByComparator);
-	}
-
-	/**
-	 * Returns all the batch planner plans that the user has permission to view where companyId = &#63; and template = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param template the template
-	 * @return the matching batch planner plans that the user has permission to view
-	 */
-	public static List<BatchPlannerPlan> filterFindByC_T(
-		long companyId, boolean template) {
-
-		return getPersistence().filterFindByC_T(companyId, template);
-	}
-
-	/**
-	 * Returns a range of all the batch planner plans that the user has permission to view where companyId = &#63; and template = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>BatchPlannerPlanModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param template the template
-	 * @param start the lower bound of the range of batch planner plans
-	 * @param end the upper bound of the range of batch planner plans (not inclusive)
-	 * @return the range of matching batch planner plans that the user has permission to view
-	 */
-	public static List<BatchPlannerPlan> filterFindByC_T(
-		long companyId, boolean template, int start, int end) {
-
-		return getPersistence().filterFindByC_T(
-			companyId, template, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the batch planner plans that the user has permissions to view where companyId = &#63; and template = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>BatchPlannerPlanModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.batch.planner.model.impl.BatchPlannerPlanModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -1386,25 +642,6 @@ public class BatchPlannerPlanUtil {
 
 		return getPersistence().filterFindByC_T(
 			companyId, template, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns the batch planner plans before and after the current batch planner plan in the ordered set of batch planner plans that the user has permission to view where companyId = &#63; and template = &#63;.
-	 *
-	 * @param batchPlannerPlanId the primary key of the current batch planner plan
-	 * @param companyId the company ID
-	 * @param template the template
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next batch planner plan
-	 * @throws NoSuchPlanException if a batch planner plan with the primary key could not be found
-	 */
-	public static BatchPlannerPlan[] filterFindByC_T_PrevAndNext(
-			long batchPlannerPlanId, long companyId, boolean template,
-			OrderByComparator<BatchPlannerPlan> orderByComparator)
-		throws com.liferay.batch.planner.exception.NoSuchPlanException {
-
-		return getPersistence().filterFindByC_T_PrevAndNext(
-			batchPlannerPlanId, companyId, template, orderByComparator);
 	}
 
 	/**
@@ -1440,68 +677,10 @@ public class BatchPlannerPlanUtil {
 	}
 
 	/**
-	 * Returns all the batch planner plans where companyId = &#63; and export = &#63; and template = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param export the export
-	 * @param template the template
-	 * @return the matching batch planner plans
-	 */
-	public static List<BatchPlannerPlan> findByC_E_T(
-		long companyId, boolean export, boolean template) {
-
-		return getPersistence().findByC_E_T(companyId, export, template);
-	}
-
-	/**
-	 * Returns a range of all the batch planner plans where companyId = &#63; and export = &#63; and template = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>BatchPlannerPlanModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param export the export
-	 * @param template the template
-	 * @param start the lower bound of the range of batch planner plans
-	 * @param end the upper bound of the range of batch planner plans (not inclusive)
-	 * @return the range of matching batch planner plans
-	 */
-	public static List<BatchPlannerPlan> findByC_E_T(
-		long companyId, boolean export, boolean template, int start, int end) {
-
-		return getPersistence().findByC_E_T(
-			companyId, export, template, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the batch planner plans where companyId = &#63; and export = &#63; and template = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>BatchPlannerPlanModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param export the export
-	 * @param template the template
-	 * @param start the lower bound of the range of batch planner plans
-	 * @param end the upper bound of the range of batch planner plans (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching batch planner plans
-	 */
-	public static List<BatchPlannerPlan> findByC_E_T(
-		long companyId, boolean export, boolean template, int start, int end,
-		OrderByComparator<BatchPlannerPlan> orderByComparator) {
-
-		return getPersistence().findByC_E_T(
-			companyId, export, template, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the batch planner plans where companyId = &#63; and export = &#63; and template = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>BatchPlannerPlanModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.batch.planner.model.impl.BatchPlannerPlanModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -1560,102 +739,10 @@ public class BatchPlannerPlanUtil {
 	}
 
 	/**
-	 * Returns the last batch planner plan in the ordered set where companyId = &#63; and export = &#63; and template = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param export the export
-	 * @param template the template
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching batch planner plan
-	 * @throws NoSuchPlanException if a matching batch planner plan could not be found
-	 */
-	public static BatchPlannerPlan findByC_E_T_Last(
-			long companyId, boolean export, boolean template,
-			OrderByComparator<BatchPlannerPlan> orderByComparator)
-		throws com.liferay.batch.planner.exception.NoSuchPlanException {
-
-		return getPersistence().findByC_E_T_Last(
-			companyId, export, template, orderByComparator);
-	}
-
-	/**
-	 * Returns the last batch planner plan in the ordered set where companyId = &#63; and export = &#63; and template = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param export the export
-	 * @param template the template
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching batch planner plan, or <code>null</code> if a matching batch planner plan could not be found
-	 */
-	public static BatchPlannerPlan fetchByC_E_T_Last(
-		long companyId, boolean export, boolean template,
-		OrderByComparator<BatchPlannerPlan> orderByComparator) {
-
-		return getPersistence().fetchByC_E_T_Last(
-			companyId, export, template, orderByComparator);
-	}
-
-	/**
-	 * Returns the batch planner plans before and after the current batch planner plan in the ordered set where companyId = &#63; and export = &#63; and template = &#63;.
-	 *
-	 * @param batchPlannerPlanId the primary key of the current batch planner plan
-	 * @param companyId the company ID
-	 * @param export the export
-	 * @param template the template
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next batch planner plan
-	 * @throws NoSuchPlanException if a batch planner plan with the primary key could not be found
-	 */
-	public static BatchPlannerPlan[] findByC_E_T_PrevAndNext(
-			long batchPlannerPlanId, long companyId, boolean export,
-			boolean template,
-			OrderByComparator<BatchPlannerPlan> orderByComparator)
-		throws com.liferay.batch.planner.exception.NoSuchPlanException {
-
-		return getPersistence().findByC_E_T_PrevAndNext(
-			batchPlannerPlanId, companyId, export, template, orderByComparator);
-	}
-
-	/**
-	 * Returns all the batch planner plans that the user has permission to view where companyId = &#63; and export = &#63; and template = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param export the export
-	 * @param template the template
-	 * @return the matching batch planner plans that the user has permission to view
-	 */
-	public static List<BatchPlannerPlan> filterFindByC_E_T(
-		long companyId, boolean export, boolean template) {
-
-		return getPersistence().filterFindByC_E_T(companyId, export, template);
-	}
-
-	/**
-	 * Returns a range of all the batch planner plans that the user has permission to view where companyId = &#63; and export = &#63; and template = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>BatchPlannerPlanModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param export the export
-	 * @param template the template
-	 * @param start the lower bound of the range of batch planner plans
-	 * @param end the upper bound of the range of batch planner plans (not inclusive)
-	 * @return the range of matching batch planner plans that the user has permission to view
-	 */
-	public static List<BatchPlannerPlan> filterFindByC_E_T(
-		long companyId, boolean export, boolean template, int start, int end) {
-
-		return getPersistence().filterFindByC_E_T(
-			companyId, export, template, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the batch planner plans that the user has permissions to view where companyId = &#63; and export = &#63; and template = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>BatchPlannerPlanModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.batch.planner.model.impl.BatchPlannerPlanModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -1672,27 +759,6 @@ public class BatchPlannerPlanUtil {
 
 		return getPersistence().filterFindByC_E_T(
 			companyId, export, template, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns the batch planner plans before and after the current batch planner plan in the ordered set of batch planner plans that the user has permission to view where companyId = &#63; and export = &#63; and template = &#63;.
-	 *
-	 * @param batchPlannerPlanId the primary key of the current batch planner plan
-	 * @param companyId the company ID
-	 * @param export the export
-	 * @param template the template
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next batch planner plan
-	 * @throws NoSuchPlanException if a batch planner plan with the primary key could not be found
-	 */
-	public static BatchPlannerPlan[] filterFindByC_E_T_PrevAndNext(
-			long batchPlannerPlanId, long companyId, boolean export,
-			boolean template,
-			OrderByComparator<BatchPlannerPlan> orderByComparator)
-		throws com.liferay.batch.planner.exception.NoSuchPlanException {
-
-		return getPersistence().filterFindByC_E_T_PrevAndNext(
-			batchPlannerPlanId, companyId, export, template, orderByComparator);
 	}
 
 	/**
@@ -1734,24 +800,6 @@ public class BatchPlannerPlanUtil {
 		long companyId, boolean export, boolean template) {
 
 		return getPersistence().filterCountByC_E_T(companyId, export, template);
-	}
-
-	/**
-	 * Caches the batch planner plan in the entity cache if it is enabled.
-	 *
-	 * @param batchPlannerPlan the batch planner plan
-	 */
-	public static void cacheResult(BatchPlannerPlan batchPlannerPlan) {
-		getPersistence().cacheResult(batchPlannerPlan);
-	}
-
-	/**
-	 * Caches the batch planner plans in the entity cache if it is enabled.
-	 *
-	 * @param batchPlannerPlans the batch planner plans
-	 */
-	public static void cacheResult(List<BatchPlannerPlan> batchPlannerPlans) {
-		getPersistence().cacheResult(batchPlannerPlans);
 	}
 
 	/**
@@ -1807,84 +855,518 @@ public class BatchPlannerPlanUtil {
 	}
 
 	/**
-	 * Returns all the batch planner plans.
+	 * Returns all the batch planner plans where companyId = &#63;.
 	 *
-	 * @return the batch planner plans
+	 * @param companyId the company ID
+	 * @return the matching batch planner plans
 	 */
-	public static List<BatchPlannerPlan> findAll() {
-		return getPersistence().findAll();
+	public static List<BatchPlannerPlan> findByCompanyId(long companyId) {
+		return getPersistence().findByCompanyId(companyId);
 	}
 
 	/**
-	 * Returns a range of all the batch planner plans.
+	 * Returns a range of all the batch planner plans where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>BatchPlannerPlanModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.batch.planner.model.impl.BatchPlannerPlanModelImpl</code>.
 	 * </p>
 	 *
+	 * @param companyId the company ID
 	 * @param start the lower bound of the range of batch planner plans
 	 * @param end the upper bound of the range of batch planner plans (not inclusive)
-	 * @return the range of batch planner plans
+	 * @return the range of matching batch planner plans
 	 */
-	public static List<BatchPlannerPlan> findAll(int start, int end) {
-		return getPersistence().findAll(start, end);
+	public static List<BatchPlannerPlan> findByCompanyId(
+		long companyId, int start, int end) {
+
+		return getPersistence().findByCompanyId(companyId, start, end);
 	}
 
 	/**
-	 * Returns an ordered range of all the batch planner plans.
+	 * Returns an ordered range of all the batch planner plans where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>BatchPlannerPlanModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.batch.planner.model.impl.BatchPlannerPlanModelImpl</code>.
 	 * </p>
 	 *
+	 * @param companyId the company ID
 	 * @param start the lower bound of the range of batch planner plans
 	 * @param end the upper bound of the range of batch planner plans (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of batch planner plans
+	 * @return the ordered range of matching batch planner plans
 	 */
-	public static List<BatchPlannerPlan> findAll(
-		int start, int end,
+	public static List<BatchPlannerPlan> findByCompanyId(
+		long companyId, int start, int end,
 		OrderByComparator<BatchPlannerPlan> orderByComparator) {
 
-		return getPersistence().findAll(start, end, orderByComparator);
+		return getPersistence().findByCompanyId(
+			companyId, start, end, orderByComparator);
 	}
 
 	/**
-	 * Returns an ordered range of all the batch planner plans.
+	 * Returns all the batch planner plans that the user has permission to view where companyId = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @return the matching batch planner plans that the user has permission to view
+	 */
+	public static List<BatchPlannerPlan> filterFindByCompanyId(long companyId) {
+		return getPersistence().filterFindByCompanyId(companyId);
+	}
+
+	/**
+	 * Returns a range of all the batch planner plans that the user has permission to view where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>BatchPlannerPlanModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.batch.planner.model.impl.BatchPlannerPlanModelImpl</code>.
 	 * </p>
 	 *
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of batch planner plans
+	 * @param end the upper bound of the range of batch planner plans (not inclusive)
+	 * @return the range of matching batch planner plans that the user has permission to view
+	 */
+	public static List<BatchPlannerPlan> filterFindByCompanyId(
+		long companyId, int start, int end) {
+
+		return getPersistence().filterFindByCompanyId(companyId, start, end);
+	}
+
+	/**
+	 * Returns all the batch planner plans where companyId = &#63; and userId = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param userId the user ID
+	 * @return the matching batch planner plans
+	 */
+	public static List<BatchPlannerPlan> findByC_U(
+		long companyId, long userId) {
+
+		return getPersistence().findByC_U(companyId, userId);
+	}
+
+	/**
+	 * Returns a range of all the batch planner plans where companyId = &#63; and userId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.batch.planner.model.impl.BatchPlannerPlanModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param userId the user ID
+	 * @param start the lower bound of the range of batch planner plans
+	 * @param end the upper bound of the range of batch planner plans (not inclusive)
+	 * @return the range of matching batch planner plans
+	 */
+	public static List<BatchPlannerPlan> findByC_U(
+		long companyId, long userId, int start, int end) {
+
+		return getPersistence().findByC_U(companyId, userId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the batch planner plans where companyId = &#63; and userId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.batch.planner.model.impl.BatchPlannerPlanModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param userId the user ID
 	 * @param start the lower bound of the range of batch planner plans
 	 * @param end the upper bound of the range of batch planner plans (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param useFinderCache whether to use the finder cache
-	 * @return the ordered range of batch planner plans
+	 * @return the ordered range of matching batch planner plans
 	 */
-	public static List<BatchPlannerPlan> findAll(
-		int start, int end,
-		OrderByComparator<BatchPlannerPlan> orderByComparator,
-		boolean useFinderCache) {
+	public static List<BatchPlannerPlan> findByC_U(
+		long companyId, long userId, int start, int end,
+		OrderByComparator<BatchPlannerPlan> orderByComparator) {
 
-		return getPersistence().findAll(
-			start, end, orderByComparator, useFinderCache);
+		return getPersistence().findByC_U(
+			companyId, userId, start, end, orderByComparator);
 	}
 
 	/**
-	 * Removes all the batch planner plans from the database.
-	 */
-	public static void removeAll() {
-		getPersistence().removeAll();
-	}
-
-	/**
-	 * Returns the number of batch planner plans.
+	 * Returns all the batch planner plans that the user has permission to view where companyId = &#63; and userId = &#63;.
 	 *
-	 * @return the number of batch planner plans
+	 * @param companyId the company ID
+	 * @param userId the user ID
+	 * @return the matching batch planner plans that the user has permission to view
 	 */
-	public static int countAll() {
-		return getPersistence().countAll();
+	public static List<BatchPlannerPlan> filterFindByC_U(
+		long companyId, long userId) {
+
+		return getPersistence().filterFindByC_U(companyId, userId);
+	}
+
+	/**
+	 * Returns a range of all the batch planner plans that the user has permission to view where companyId = &#63; and userId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.batch.planner.model.impl.BatchPlannerPlanModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param userId the user ID
+	 * @param start the lower bound of the range of batch planner plans
+	 * @param end the upper bound of the range of batch planner plans (not inclusive)
+	 * @return the range of matching batch planner plans that the user has permission to view
+	 */
+	public static List<BatchPlannerPlan> filterFindByC_U(
+		long companyId, long userId, int start, int end) {
+
+		return getPersistence().filterFindByC_U(companyId, userId, start, end);
+	}
+
+	/**
+	 * Returns all the batch planner plans where companyId = &#63; and export = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param export the export
+	 * @return the matching batch planner plans
+	 */
+	public static List<BatchPlannerPlan> findByC_E(
+		long companyId, boolean export) {
+
+		return getPersistence().findByC_E(companyId, export);
+	}
+
+	/**
+	 * Returns a range of all the batch planner plans where companyId = &#63; and export = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.batch.planner.model.impl.BatchPlannerPlanModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param export the export
+	 * @param start the lower bound of the range of batch planner plans
+	 * @param end the upper bound of the range of batch planner plans (not inclusive)
+	 * @return the range of matching batch planner plans
+	 */
+	public static List<BatchPlannerPlan> findByC_E(
+		long companyId, boolean export, int start, int end) {
+
+		return getPersistence().findByC_E(companyId, export, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the batch planner plans where companyId = &#63; and export = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.batch.planner.model.impl.BatchPlannerPlanModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param export the export
+	 * @param start the lower bound of the range of batch planner plans
+	 * @param end the upper bound of the range of batch planner plans (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching batch planner plans
+	 */
+	public static List<BatchPlannerPlan> findByC_E(
+		long companyId, boolean export, int start, int end,
+		OrderByComparator<BatchPlannerPlan> orderByComparator) {
+
+		return getPersistence().findByC_E(
+			companyId, export, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns all the batch planner plans that the user has permission to view where companyId = &#63; and export = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param export the export
+	 * @return the matching batch planner plans that the user has permission to view
+	 */
+	public static List<BatchPlannerPlan> filterFindByC_E(
+		long companyId, boolean export) {
+
+		return getPersistence().filterFindByC_E(companyId, export);
+	}
+
+	/**
+	 * Returns a range of all the batch planner plans that the user has permission to view where companyId = &#63; and export = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.batch.planner.model.impl.BatchPlannerPlanModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param export the export
+	 * @param start the lower bound of the range of batch planner plans
+	 * @param end the upper bound of the range of batch planner plans (not inclusive)
+	 * @return the range of matching batch planner plans that the user has permission to view
+	 */
+	public static List<BatchPlannerPlan> filterFindByC_E(
+		long companyId, boolean export, int start, int end) {
+
+		return getPersistence().filterFindByC_E(companyId, export, start, end);
+	}
+
+	/**
+	 * Returns all the batch planner plans where companyId = &#63; and name = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param name the name
+	 * @return the matching batch planner plans
+	 */
+	public static List<BatchPlannerPlan> findByC_N(
+		long companyId, String name) {
+
+		return getPersistence().findByC_N(companyId, name);
+	}
+
+	/**
+	 * Returns a range of all the batch planner plans where companyId = &#63; and name = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.batch.planner.model.impl.BatchPlannerPlanModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param name the name
+	 * @param start the lower bound of the range of batch planner plans
+	 * @param end the upper bound of the range of batch planner plans (not inclusive)
+	 * @return the range of matching batch planner plans
+	 */
+	public static List<BatchPlannerPlan> findByC_N(
+		long companyId, String name, int start, int end) {
+
+		return getPersistence().findByC_N(companyId, name, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the batch planner plans where companyId = &#63; and name = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.batch.planner.model.impl.BatchPlannerPlanModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param name the name
+	 * @param start the lower bound of the range of batch planner plans
+	 * @param end the upper bound of the range of batch planner plans (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching batch planner plans
+	 */
+	public static List<BatchPlannerPlan> findByC_N(
+		long companyId, String name, int start, int end,
+		OrderByComparator<BatchPlannerPlan> orderByComparator) {
+
+		return getPersistence().findByC_N(
+			companyId, name, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns all the batch planner plans that the user has permission to view where companyId = &#63; and name = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param name the name
+	 * @return the matching batch planner plans that the user has permission to view
+	 */
+	public static List<BatchPlannerPlan> filterFindByC_N(
+		long companyId, String name) {
+
+		return getPersistence().filterFindByC_N(companyId, name);
+	}
+
+	/**
+	 * Returns a range of all the batch planner plans that the user has permission to view where companyId = &#63; and name = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.batch.planner.model.impl.BatchPlannerPlanModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param name the name
+	 * @param start the lower bound of the range of batch planner plans
+	 * @param end the upper bound of the range of batch planner plans (not inclusive)
+	 * @return the range of matching batch planner plans that the user has permission to view
+	 */
+	public static List<BatchPlannerPlan> filterFindByC_N(
+		long companyId, String name, int start, int end) {
+
+		return getPersistence().filterFindByC_N(companyId, name, start, end);
+	}
+
+	/**
+	 * Returns all the batch planner plans where companyId = &#63; and template = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param template the template
+	 * @return the matching batch planner plans
+	 */
+	public static List<BatchPlannerPlan> findByC_T(
+		long companyId, boolean template) {
+
+		return getPersistence().findByC_T(companyId, template);
+	}
+
+	/**
+	 * Returns a range of all the batch planner plans where companyId = &#63; and template = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.batch.planner.model.impl.BatchPlannerPlanModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param template the template
+	 * @param start the lower bound of the range of batch planner plans
+	 * @param end the upper bound of the range of batch planner plans (not inclusive)
+	 * @return the range of matching batch planner plans
+	 */
+	public static List<BatchPlannerPlan> findByC_T(
+		long companyId, boolean template, int start, int end) {
+
+		return getPersistence().findByC_T(companyId, template, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the batch planner plans where companyId = &#63; and template = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.batch.planner.model.impl.BatchPlannerPlanModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param template the template
+	 * @param start the lower bound of the range of batch planner plans
+	 * @param end the upper bound of the range of batch planner plans (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching batch planner plans
+	 */
+	public static List<BatchPlannerPlan> findByC_T(
+		long companyId, boolean template, int start, int end,
+		OrderByComparator<BatchPlannerPlan> orderByComparator) {
+
+		return getPersistence().findByC_T(
+			companyId, template, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns all the batch planner plans that the user has permission to view where companyId = &#63; and template = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param template the template
+	 * @return the matching batch planner plans that the user has permission to view
+	 */
+	public static List<BatchPlannerPlan> filterFindByC_T(
+		long companyId, boolean template) {
+
+		return getPersistence().filterFindByC_T(companyId, template);
+	}
+
+	/**
+	 * Returns a range of all the batch planner plans that the user has permission to view where companyId = &#63; and template = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.batch.planner.model.impl.BatchPlannerPlanModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param template the template
+	 * @param start the lower bound of the range of batch planner plans
+	 * @param end the upper bound of the range of batch planner plans (not inclusive)
+	 * @return the range of matching batch planner plans that the user has permission to view
+	 */
+	public static List<BatchPlannerPlan> filterFindByC_T(
+		long companyId, boolean template, int start, int end) {
+
+		return getPersistence().filterFindByC_T(
+			companyId, template, start, end);
+	}
+
+	/**
+	 * Returns all the batch planner plans where companyId = &#63; and export = &#63; and template = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param export the export
+	 * @param template the template
+	 * @return the matching batch planner plans
+	 */
+	public static List<BatchPlannerPlan> findByC_E_T(
+		long companyId, boolean export, boolean template) {
+
+		return getPersistence().findByC_E_T(companyId, export, template);
+	}
+
+	/**
+	 * Returns a range of all the batch planner plans where companyId = &#63; and export = &#63; and template = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.batch.planner.model.impl.BatchPlannerPlanModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param export the export
+	 * @param template the template
+	 * @param start the lower bound of the range of batch planner plans
+	 * @param end the upper bound of the range of batch planner plans (not inclusive)
+	 * @return the range of matching batch planner plans
+	 */
+	public static List<BatchPlannerPlan> findByC_E_T(
+		long companyId, boolean export, boolean template, int start, int end) {
+
+		return getPersistence().findByC_E_T(
+			companyId, export, template, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the batch planner plans where companyId = &#63; and export = &#63; and template = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.batch.planner.model.impl.BatchPlannerPlanModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param export the export
+	 * @param template the template
+	 * @param start the lower bound of the range of batch planner plans
+	 * @param end the upper bound of the range of batch planner plans (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching batch planner plans
+	 */
+	public static List<BatchPlannerPlan> findByC_E_T(
+		long companyId, boolean export, boolean template, int start, int end,
+		OrderByComparator<BatchPlannerPlan> orderByComparator) {
+
+		return getPersistence().findByC_E_T(
+			companyId, export, template, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns all the batch planner plans that the user has permission to view where companyId = &#63; and export = &#63; and template = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param export the export
+	 * @param template the template
+	 * @return the matching batch planner plans that the user has permission to view
+	 */
+	public static List<BatchPlannerPlan> filterFindByC_E_T(
+		long companyId, boolean export, boolean template) {
+
+		return getPersistence().filterFindByC_E_T(companyId, export, template);
+	}
+
+	/**
+	 * Returns a range of all the batch planner plans that the user has permission to view where companyId = &#63; and export = &#63; and template = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.batch.planner.model.impl.BatchPlannerPlanModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param export the export
+	 * @param template the template
+	 * @param start the lower bound of the range of batch planner plans
+	 * @param end the upper bound of the range of batch planner plans (not inclusive)
+	 * @return the range of matching batch planner plans that the user has permission to view
+	 */
+	public static List<BatchPlannerPlan> filterFindByC_E_T(
+		long companyId, boolean export, boolean template, int start, int end) {
+
+		return getPersistence().filterFindByC_E_T(
+			companyId, export, template, start, end);
 	}
 
 	public static BatchPlannerPlanPersistence getPersistence() {
@@ -1898,3 +1380,4 @@ public class BatchPlannerPlanUtil {
 	private static volatile BatchPlannerPlanPersistence _persistence;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-807341157

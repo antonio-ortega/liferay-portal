@@ -165,8 +165,8 @@ public class ObjectEntryExtensionProviderTest {
 
 		ObjectDefinition objectDefinition =
 			_objectDefinitionLocalService.addCustomObjectDefinition(
-				null, TestPropsValues.getUserId(), 0, null, false, true, false,
-				true, false, false, false, false, null,
+				null, TestPropsValues.getUserId(), 0, null, true, false, true,
+				false, true, false, false, false, false, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				ObjectDefinitionTestUtil.getRandomName(), null, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
@@ -277,14 +277,14 @@ public class ObjectEntryExtensionProviderTest {
 	@Inject
 	private static ObjectDefinitionLocalService _objectDefinitionLocalService;
 
-	@Inject
-	private static ObjectFieldLocalService _objectFieldLocalService;
-
 	private static User _user;
 
 	@Inject(
 		filter = "component.name=com.liferay.object.rest.internal.vulcan.extension.v1_0.ObjectEntryExtensionProvider"
 	)
 	private ExtensionProvider _extensionProvider;
+
+	@Inject
+	private ObjectFieldLocalService _objectFieldLocalService;
 
 }

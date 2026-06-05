@@ -27,14 +27,14 @@ type Cart = {
 	customFields: any;
 	id: number;
 	orderStatusInfo: {
-		[key: string]: string
+		[key: string]: string;
 	};
 	orderTypeExternalReferenceCode: string;
 	orderTypeId: number;
 	paymentMethod?: string;
 	paymentMethodLabel?: string;
 	paymentStatusInfo: {
-		[key: string]: string
+		[key: string]: string;
 	};
 	paymentStatusLabel?: string;
 	purchaseOrderNumber?: string;
@@ -86,7 +86,7 @@ type Order = {
 	creatorEmailAddress?: string;
 	currencyCode: string;
 	customFields?: {
-		[key: string]: string
+		[key: string]: string;
 	};
 	externalReferenceCode?: string;
 	id: number;
@@ -135,7 +135,7 @@ type OrderItem = {
 type OrderType = {
 	externalReferenceCode: string;
 	id: number;
-	name: { [key: string]: string };
+	name: {[key: string]: string};
 };
 
 type PaymentMethodSelector = 'order' | 'pay' | 'trial' | 'free';
@@ -151,8 +151,9 @@ type PlacedOrder = {
 	accountId: number;
 	author: string;
 	createDate: string;
-	customFields: { [key: string]: string };
+	customFields: {[key: string]: string};
 	id: number;
+	orderStatus: any;
 	orderStatusInfo: {
 		code: number;
 		label: string;
@@ -160,6 +161,7 @@ type PlacedOrder = {
 	};
 	orderType: String;
 	orderTypeExternalReferenceCode: string;
+	paymentMethod: string;
 	paymentStatus: number;
 	placedOrderBillingAddress: any;
 	placedOrderBillingAddressId: number;

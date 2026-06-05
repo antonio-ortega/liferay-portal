@@ -514,3 +514,4 @@ public class CommerceVirtualOrderItemFileEntryWrapper
 	}
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-1825273822

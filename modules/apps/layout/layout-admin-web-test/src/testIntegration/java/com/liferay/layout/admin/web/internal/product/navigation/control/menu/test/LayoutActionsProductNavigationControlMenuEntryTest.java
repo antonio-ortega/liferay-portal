@@ -66,7 +66,7 @@ public class LayoutActionsProductNavigationControlMenuEntryTest {
 
 	@Test
 	@TestInfo("LPS-137155")
-	public void testGetDropdownItems() throws Exception {
+	public void testGetDropdownItems1() throws Exception {
 		HttpServletRequest httpServletRequest = _getHttpServletRequest();
 
 		_productNavigationControlMenuEntry.includeIcon(
@@ -91,6 +91,41 @@ public class LayoutActionsProductNavigationControlMenuEntryTest {
 
 			Assert.assertEquals(actions[i], dropdownItem.get("label"));
 		}
+	}
+
+	@Test
+	@TestInfo("LPD-80135")
+	public void testGetDropdownItems2() throws Exception {
+		HttpServletRequest httpServletRequest = _getHttpServletRequest();
+
+		_productNavigationControlMenuEntry.includeIcon(
+			httpServletRequest, new MockHttpServletResponse());
+
+		Object object = httpServletRequest.getAttribute(
+			"LAYOUT_ACTIONS_DISPLAY_CONTEXT");
+
+		List<DropdownItem> dropdownItems = _getActionDropdownItems(
+			ReflectionTestUtil.invoke(
+				object, "getDropdownItems", new Class<?>[0]));
+
+		DropdownItem previewDropdownItem = null;
+
+		for (DropdownItem dropdownItem : dropdownItems) {
+			if (StringUtil.equals(
+					(String)dropdownItem.get("label"),
+					"Preview in a New Tab")) {
+
+				previewDropdownItem = dropdownItem;
+
+				break;
+			}
+		}
+
+		Assert.assertNotNull(previewDropdownItem);
+
+		String url = (String)previewDropdownItem.get("href");
+
+		Assert.assertTrue(url, url.contains("p_l_id="));
 	}
 
 	private List<DropdownItem> _getActionDropdownItems(

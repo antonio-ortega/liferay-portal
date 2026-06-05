@@ -10,8 +10,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.liferay.osb.faro.model.FaroProject;
 import com.liferay.osb.faro.model.FaroUser;
 import com.liferay.osb.faro.provisioning.client.model.OSBAccountEntry;
+import com.liferay.osb.faro.provisioning.client.model.display.main.FaroSubscriptionDisplay;
 import com.liferay.osb.faro.service.FaroUserLocalServiceUtil;
-import com.liferay.osb.faro.web.internal.model.display.main.FaroSubscriptionDisplay;
 import com.liferay.osb.faro.web.internal.util.JSONUtil;
 import com.liferay.osb.faro.web.internal.util.TimeZoneUtil;
 import com.liferay.portal.kernel.log.Log;
@@ -90,12 +90,20 @@ public class ProjectDisplay {
 		return _corpProjectUuid;
 	}
 
+	public String getDataSourceAccessToken() {
+		return _dataSourceAccessToken;
+	}
+
 	public FaroSubscriptionDisplay getFaroSubscriptionDisplay() {
 		return _faroSubscriptionDisplay;
 	}
 
 	public String getState() {
 		return _state;
+	}
+
+	public void setDataSourceAccessToken(String dataSourceAccessToken) {
+		_dataSourceAccessToken = dataSourceAccessToken;
 	}
 
 	public void setFriendlyURL(String friendlyURL) {
@@ -124,6 +132,7 @@ public class ProjectDisplay {
 	private String _accountName;
 	private String _corpProjectName;
 	private String _corpProjectUuid;
+	private String _dataSourceAccessToken;
 	private FaroSubscriptionDisplay _faroSubscriptionDisplay;
 	private String _friendlyURL;
 	private long _groupId;

@@ -7,6 +7,8 @@ package com.liferay.portal.dao.db;
 
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.transform.TransformUtil;
+import com.liferay.petra.io.unsync.UnsyncBufferedReader;
+import com.liferay.petra.io.unsync.UnsyncStringReader;
 import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
@@ -23,8 +25,6 @@ import com.liferay.portal.kernel.dao.db.IndexMetadata;
 import com.liferay.portal.kernel.dao.db.IndexMetadataFactoryUtil;
 import com.liferay.portal.kernel.dao.jdbc.DataAccess;
 import com.liferay.portal.kernel.instance.PortalInstancePool;
-import com.liferay.portal.kernel.io.unsync.UnsyncBufferedReader;
-import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.framework.ThrowableCollector;
@@ -46,6 +46,7 @@ import java.io.InputStream;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -542,6 +543,24 @@ public abstract class BaseDB implements DB {
 		return databaseMetaData.getIndexInfo(
 			dbInspector.getCatalog(), dbInspector.getSchema(), tableName,
 			onlyUnique, false);
+	}
+
+	@Override
+	public List<QueryInfo> getLockedQueryInfos(Connection connection)
+		throws SQLException {
+
+		return getQueryInfos(
+			connection, getLockedQueryInfosSQL(),
+			PropsValues.UPGRADE_QUERY_MONITOR_LOCK_THRESHOLD);
+	}
+
+	@Override
+	public List<QueryInfo> getLongRunningQueryInfos(Connection connection)
+		throws SQLException {
+
+		return getQueryInfos(
+			connection, getLongRunningQueryInfosSQL(),
+			PropsValues.UPGRADE_QUERY_MONITOR_LONG_RUNNING_THRESHOLD);
 	}
 
 	@Override
@@ -1505,6 +1524,51 @@ public abstract class BaseDB implements DB {
 
 	protected String getIndexColumnName(String indexColumnName) {
 		return indexColumnName;
+	}
+
+	protected String getLockedQueryInfosSQL() {
+		return null;
+	}
+
+	protected String getLongRunningQueryInfosSQL() {
+		return null;
+	}
+
+	protected List<QueryInfo> getQueryInfos(
+			Connection connection, String sql, long threshold)
+		throws SQLException {
+
+		if (sql == null) {
+			return Collections.emptyList();
+		}
+
+		List<QueryInfo> queryInfos = new ArrayList<>();
+
+		try (PreparedStatement preparedStatement = connection.prepareStatement(
+				sql)) {
+
+			preparedStatement.setLong(1, threshold);
+
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				while (resultSet.next()) {
+					String query = resultSet.getString("query");
+
+					if (query == null) {
+						continue;
+					}
+
+					long duration = resultSet.getLong("duration");
+					String id = resultSet.getString("id");
+					String schema = resultSet.getString("schema_");
+					String state = resultSet.getString("state");
+
+					queryInfos.add(
+						new QueryInfo(duration, id, query, schema, state));
+				}
+			}
+		}
+
+		return queryInfos;
 	}
 
 	protected String getRenameTableSQL(

@@ -7,6 +7,7 @@ package com.liferay.commerce.product.service.impl;
 
 import com.liferay.commerce.product.constants.CPOptionCategoryConstants;
 import com.liferay.commerce.product.exception.CPOptionCategoryKeyException;
+import com.liferay.commerce.product.exception.CPOptionCategoryTitleException;
 import com.liferay.commerce.product.internal.search.CPOptionCategoryIndexer;
 import com.liferay.commerce.product.model.CPDefinitionSpecificationOptionValue;
 import com.liferay.commerce.product.model.CPOptionCategory;
@@ -42,6 +43,7 @@ import com.liferay.portal.kernel.util.FriendlyURLNormalizer;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
+import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.io.Serializable;
@@ -76,7 +78,7 @@ public class CPOptionCategoryLocalServiceImpl
 
 		key = _friendlyURLNormalizer.normalize(key);
 
-		_validate(0, user.getCompanyId(), key);
+		_validate(0, user.getCompanyId(), key, titleMap);
 
 		long cpOptionCategoryId = counterLocalService.increment();
 
@@ -255,7 +257,7 @@ public class CPOptionCategoryLocalServiceImpl
 
 		_validate(
 			cpOptionCategory.getCPOptionCategoryId(),
-			cpOptionCategory.getCompanyId(), key);
+			cpOptionCategory.getCompanyId(), key, titleMap);
 
 		cpOptionCategory.setExternalReferenceCode(externalReferenceCode);
 		cpOptionCategory.setTitleMap(titleMap);
@@ -355,8 +357,14 @@ public class CPOptionCategoryLocalServiceImpl
 			"Unable to fix the search index after 10 attempts");
 	}
 
-	private void _validate(long cpOptionCategoryId, long companyId, String key)
+	private void _validate(
+			long cpOptionCategoryId, long companyId, String key,
+			Map<Locale, String> titleMap)
 		throws PortalException {
+
+		if (Validator.isNull(key)) {
+			throw new CPOptionCategoryKeyException("Key is null");
+		}
 
 		CPOptionCategory cpOptionCategory =
 			cpOptionCategoryPersistence.fetchByC_K(companyId, key);
@@ -365,6 +373,10 @@ public class CPOptionCategoryLocalServiceImpl
 			(cpOptionCategory.getCPOptionCategoryId() != cpOptionCategoryId)) {
 
 			throw new CPOptionCategoryKeyException();
+		}
+
+		if (MapUtil.isEmpty(titleMap)) {
+			throw new CPOptionCategoryTitleException("Title is empty");
 		}
 	}
 

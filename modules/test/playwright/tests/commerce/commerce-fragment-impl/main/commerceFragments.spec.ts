@@ -6,10 +6,10 @@
 import {expect, mergeTests} from '@playwright/test';
 
 import {apiHelpersTest} from '../../../../fixtures/apiHelpersTest';
-import {applicationsMenuPageTest} from '../../../../fixtures/applicationsMenuPageTest';
 import {dataApiHelpersTest} from '../../../../fixtures/dataApiHelpersTest';
 import {displayPageTemplatesPagesTest} from '../../../../fixtures/displayPageTemplatesPagesTest';
 import {featureFlagsTest} from '../../../../fixtures/featureFlagsTest';
+import {globalMenuPagesTest} from '../../../../fixtures/globalMenuPagesTest';
 import {isolatedSiteTest} from '../../../../fixtures/isolatedSiteTest';
 import {loginTest} from '../../../../fixtures/loginTest';
 import {pageEditorPagesTest} from '../../../../fixtures/pageEditorPagesTest';
@@ -19,12 +19,12 @@ import getPageDefinition from '../../../layout-content-page-editor-web/main/util
 
 export const test = mergeTests(
 	apiHelpersTest,
-	applicationsMenuPageTest,
 	dataApiHelpersTest,
 	displayPageTemplatesPagesTest,
 	featureFlagsTest({
 		'LPS-178052': {enabled: true},
 	}),
+	globalMenuPagesTest,
 	pageEditorPagesTest,
 	isolatedSiteTest,
 	loginTest()
@@ -43,7 +43,7 @@ test(
 			'@LPD-63175',
 		],
 	},
-	async ({apiHelpers, applicationsMenuPage, page, site}) => {
+	async ({apiHelpers, globalMenuPage, page, site}) => {
 		await apiHelpers.headlessDelivery.createSitePage({
 			pageDefinition: getPageDefinition([
 				getFragmentDefinition({
@@ -79,7 +79,7 @@ test(
 			title: getRandomString(),
 		});
 
-		await applicationsMenuPage.goToSite(site.name);
+		await globalMenuPage.goToSite(site.name);
 
 		await expect(page.locator('.account-selector-container')).toHaveCount(
 			1

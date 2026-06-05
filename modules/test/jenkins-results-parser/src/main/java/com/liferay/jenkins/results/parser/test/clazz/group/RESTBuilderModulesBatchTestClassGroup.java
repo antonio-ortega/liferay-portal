@@ -8,6 +8,7 @@ package com.liferay.jenkins.results.parser.test.clazz.group;
 import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil;
 import com.liferay.jenkins.results.parser.PortalGitWorkingDirectory;
 import com.liferay.jenkins.results.parser.PortalTestClassJob;
+import com.liferay.jenkins.results.parser.test.clazz.TestClassFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -30,7 +31,7 @@ public class RESTBuilderModulesBatchTestClassGroup
 			return 0;
 		}
 
-		if ((_buildType == BuildType.FULL) || !containsTestClasses()) {
+		if (!containsTestClasses() && (_buildType == BuildType.CORE)) {
 			return 1;
 		}
 
@@ -56,7 +57,7 @@ public class RESTBuilderModulesBatchTestClassGroup
 
 	public static enum BuildType {
 
-		FULL
+		CORE, FULL
 
 	}
 
@@ -94,6 +95,17 @@ public class RESTBuilderModulesBatchTestClassGroup
 		PortalGitWorkingDirectory portalGitWorkingDirectory =
 			getPortalGitWorkingDirectory();
 
+		File portalImplBuildFile = new File(
+			portalGitWorkingDirectory.getWorkingDirectory(),
+			"portal-impl/build.xml");
+
+		if (isUnifiedBuilderSupported()) {
+			addTestClass(
+				TestClassFactory.newTestClass(this, portalImplBuildFile));
+
+			return;
+		}
+
 		File portalModulesBaseDir = new File(
 			portalGitWorkingDirectory.getWorkingDirectory(), "modules");
 
@@ -101,9 +113,7 @@ public class RESTBuilderModulesBatchTestClassGroup
 			getExcludesJobProperties());
 		List<PathMatcher> includesPathMatchers = getIncludesPathMatchers();
 
-		if (testRelevantChanges &&
-			!(includeStableTestSuite && isStableTestSuiteBatch())) {
-
+		if (testRelevantChanges) {
 			List<File> modifiedFiles =
 				portalGitWorkingDirectory.getModifiedFilesList();
 

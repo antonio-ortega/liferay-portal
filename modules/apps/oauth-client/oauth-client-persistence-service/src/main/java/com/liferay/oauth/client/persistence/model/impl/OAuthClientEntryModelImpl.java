@@ -7,6 +7,7 @@ package com.liferay.oauth.client.persistence.model.impl;
 
 import com.liferay.expando.kernel.model.ExpandoBridge;
 import com.liferay.expando.kernel.util.ExpandoBridgeFactoryUtil;
+import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.oauth.client.persistence.model.OAuthClientEntry;
 import com.liferay.oauth.client.persistence.model.OAuthClientEntryModel;
 import com.liferay.petra.string.StringBundler;
@@ -20,6 +21,7 @@ import com.liferay.portal.kernel.model.impl.BaseModelImpl;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 
@@ -62,14 +64,15 @@ public class OAuthClientEntryModelImpl
 	public static final String TABLE_NAME = "OAuthClientEntry";
 
 	public static final Object[][] TABLE_COLUMNS = {
-		{"mvccVersion", Types.BIGINT}, {"oAuthClientEntryId", Types.BIGINT},
-		{"companyId", Types.BIGINT}, {"userId", Types.BIGINT},
-		{"userName", Types.VARCHAR}, {"createDate", Types.TIMESTAMP},
-		{"modifiedDate", Types.TIMESTAMP},
+		{"mvccVersion", Types.BIGINT}, {"uuid_", Types.VARCHAR},
+		{"externalReferenceCode", Types.VARCHAR},
+		{"oAuthClientEntryId", Types.BIGINT}, {"companyId", Types.BIGINT},
+		{"userId", Types.BIGINT}, {"userName", Types.VARCHAR},
+		{"createDate", Types.TIMESTAMP}, {"modifiedDate", Types.TIMESTAMP},
 		{"authRequestParametersJSON", Types.VARCHAR},
 		{"authServerWellKnownURI", Types.VARCHAR}, {"clientId", Types.VARCHAR},
 		{"customClaimsJSON", Types.CLOB}, {"infoJSON", Types.CLOB},
-		{"metadataCacheTime", Types.BIGINT},
+		{"matcherField", Types.VARCHAR}, {"metadataCacheTime", Types.BIGINT},
 		{"oidcUserInfoMapperJSON", Types.VARCHAR},
 		{"tokenRequestParametersJSON", Types.VARCHAR}
 	};
@@ -79,6 +82,8 @@ public class OAuthClientEntryModelImpl
 
 	static {
 		TABLE_COLUMNS_MAP.put("mvccVersion", Types.BIGINT);
+		TABLE_COLUMNS_MAP.put("uuid_", Types.VARCHAR);
+		TABLE_COLUMNS_MAP.put("externalReferenceCode", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("oAuthClientEntryId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("companyId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("userId", Types.BIGINT);
@@ -90,15 +95,20 @@ public class OAuthClientEntryModelImpl
 		TABLE_COLUMNS_MAP.put("clientId", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("customClaimsJSON", Types.CLOB);
 		TABLE_COLUMNS_MAP.put("infoJSON", Types.CLOB);
+		TABLE_COLUMNS_MAP.put("matcherField", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("metadataCacheTime", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("oidcUserInfoMapperJSON", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("tokenRequestParametersJSON", Types.VARCHAR);
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table OAuthClientEntry (mvccVersion LONG default 0 not null,oAuthClientEntryId LONG not null primary key,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,authRequestParametersJSON VARCHAR(3999) null,authServerWellKnownURI VARCHAR(256) null,clientId VARCHAR(256) null,customClaimsJSON TEXT null,infoJSON TEXT null,metadataCacheTime LONG,oidcUserInfoMapperJSON VARCHAR(3999) null,tokenRequestParametersJSON VARCHAR(3999) null)";
+		"create table OAuthClientEntry (mvccVersion LONG default 0 not null,uuid_ VARCHAR(75) null,externalReferenceCode VARCHAR(75) null,oAuthClientEntryId LONG not null primary key,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,authRequestParametersJSON VARCHAR(3999) null,authServerWellKnownURI VARCHAR(256) null,clientId VARCHAR(256) null,customClaimsJSON TEXT null,infoJSON TEXT null,matcherField VARCHAR(75) null,metadataCacheTime LONG,oidcUserInfoMapperJSON VARCHAR(3999) null,tokenRequestParametersJSON VARCHAR(3999) null)";
 
 	public static final String TABLE_SQL_DROP = "drop table OAuthClientEntry";
+
+	public static final String ENTITY_ALIAS = "oAuthClientEntry";
+
+	public static final String FILTER_PK_COLUMN_NAME = "oAuthClientEntryId";
 
 	public static final String ORDER_BY_JPQL =
 		" ORDER BY oAuthClientEntry.oAuthClientEntryId ASC";
@@ -137,14 +147,26 @@ public class OAuthClientEntryModelImpl
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long USERID_COLUMN_BITMASK = 8L;
+	public static final long EXTERNALREFERENCECODE_COLUMN_BITMASK = 8L;
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
+	public static final long USERID_COLUMN_BITMASK = 16L;
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
+	public static final long UUID_COLUMN_BITMASK = 32L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
 	 *		#getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long OAUTHCLIENTENTRYID_COLUMN_BITMASK = 16L;
+	public static final long OAUTHCLIENTENTRYID_COLUMN_BITMASK = 64L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
@@ -258,6 +280,10 @@ public class OAuthClientEntryModelImpl
 
 			attributeGetterFunctions.put(
 				"mvccVersion", OAuthClientEntry::getMvccVersion);
+			attributeGetterFunctions.put("uuid", OAuthClientEntry::getUuid);
+			attributeGetterFunctions.put(
+				"externalReferenceCode",
+				OAuthClientEntry::getExternalReferenceCode);
 			attributeGetterFunctions.put(
 				"oAuthClientEntryId", OAuthClientEntry::getOAuthClientEntryId);
 			attributeGetterFunctions.put(
@@ -281,6 +307,8 @@ public class OAuthClientEntryModelImpl
 				"customClaimsJSON", OAuthClientEntry::getCustomClaimsJSON);
 			attributeGetterFunctions.put(
 				"infoJSON", OAuthClientEntry::getInfoJSON);
+			attributeGetterFunctions.put(
+				"matcherField", OAuthClientEntry::getMatcherField);
 			attributeGetterFunctions.put(
 				"metadataCacheTime", OAuthClientEntry::getMetadataCacheTime);
 			attributeGetterFunctions.put(
@@ -311,6 +339,14 @@ public class OAuthClientEntryModelImpl
 				"mvccVersion",
 				(BiConsumer<OAuthClientEntry, Long>)
 					OAuthClientEntry::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"uuid",
+				(BiConsumer<OAuthClientEntry, String>)
+					OAuthClientEntry::setUuid);
+			attributeSetterBiConsumers.put(
+				"externalReferenceCode",
+				(BiConsumer<OAuthClientEntry, String>)
+					OAuthClientEntry::setExternalReferenceCode);
 			attributeSetterBiConsumers.put(
 				"oAuthClientEntryId",
 				(BiConsumer<OAuthClientEntry, Long>)
@@ -356,6 +392,10 @@ public class OAuthClientEntryModelImpl
 				(BiConsumer<OAuthClientEntry, String>)
 					OAuthClientEntry::setInfoJSON);
 			attributeSetterBiConsumers.put(
+				"matcherField",
+				(BiConsumer<OAuthClientEntry, String>)
+					OAuthClientEntry::setMatcherField);
+			attributeSetterBiConsumers.put(
 				"metadataCacheTime",
 				(BiConsumer<OAuthClientEntry, Long>)
 					OAuthClientEntry::setMetadataCacheTime);
@@ -387,6 +427,64 @@ public class OAuthClientEntryModelImpl
 		}
 
 		_mvccVersion = mvccVersion;
+	}
+
+	@JSON
+	@Override
+	public String getUuid() {
+		if (_uuid == null) {
+			return "";
+		}
+		else {
+			return _uuid;
+		}
+	}
+
+	@Override
+	public void setUuid(String uuid) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_uuid = uuid;
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
+	public String getOriginalUuid() {
+		return getColumnOriginalValue("uuid_");
+	}
+
+	@JSON
+	@Override
+	public String getExternalReferenceCode() {
+		if (_externalReferenceCode == null) {
+			return "";
+		}
+		else {
+			return _externalReferenceCode;
+		}
+	}
+
+	@Override
+	public void setExternalReferenceCode(String externalReferenceCode) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_externalReferenceCode = externalReferenceCode;
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
+	public String getOriginalExternalReferenceCode() {
+		return getColumnOriginalValue("externalReferenceCode");
 	}
 
 	@JSON
@@ -645,6 +743,26 @@ public class OAuthClientEntryModelImpl
 
 	@JSON
 	@Override
+	public String getMatcherField() {
+		if (_matcherField == null) {
+			return "";
+		}
+		else {
+			return _matcherField;
+		}
+	}
+
+	@Override
+	public void setMatcherField(String matcherField) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_matcherField = matcherField;
+	}
+
+	@JSON
+	@Override
 	public long getMetadataCacheTime() {
 		return _metadataCacheTime;
 	}
@@ -698,6 +816,12 @@ public class OAuthClientEntryModelImpl
 		}
 
 		_tokenRequestParametersJSON = tokenRequestParametersJSON;
+	}
+
+	@Override
+	public StagedModelType getStagedModelType() {
+		return new StagedModelType(
+			PortalUtil.getClassNameId(OAuthClientEntry.class.getName()));
 	}
 
 	public long getColumnBitmask() {
@@ -757,6 +881,9 @@ public class OAuthClientEntryModelImpl
 		OAuthClientEntryImpl oAuthClientEntryImpl = new OAuthClientEntryImpl();
 
 		oAuthClientEntryImpl.setMvccVersion(getMvccVersion());
+		oAuthClientEntryImpl.setUuid(getUuid());
+		oAuthClientEntryImpl.setExternalReferenceCode(
+			getExternalReferenceCode());
 		oAuthClientEntryImpl.setOAuthClientEntryId(getOAuthClientEntryId());
 		oAuthClientEntryImpl.setCompanyId(getCompanyId());
 		oAuthClientEntryImpl.setUserId(getUserId());
@@ -770,6 +897,7 @@ public class OAuthClientEntryModelImpl
 		oAuthClientEntryImpl.setClientId(getClientId());
 		oAuthClientEntryImpl.setCustomClaimsJSON(getCustomClaimsJSON());
 		oAuthClientEntryImpl.setInfoJSON(getInfoJSON());
+		oAuthClientEntryImpl.setMatcherField(getMatcherField());
 		oAuthClientEntryImpl.setMetadataCacheTime(getMetadataCacheTime());
 		oAuthClientEntryImpl.setOIDCUserInfoMapperJSON(
 			getOIDCUserInfoMapperJSON());
@@ -787,6 +915,10 @@ public class OAuthClientEntryModelImpl
 
 		oAuthClientEntryImpl.setMvccVersion(
 			this.<Long>getColumnOriginalValue("mvccVersion"));
+		oAuthClientEntryImpl.setUuid(
+			this.<String>getColumnOriginalValue("uuid_"));
+		oAuthClientEntryImpl.setExternalReferenceCode(
+			this.<String>getColumnOriginalValue("externalReferenceCode"));
 		oAuthClientEntryImpl.setOAuthClientEntryId(
 			this.<Long>getColumnOriginalValue("oAuthClientEntryId"));
 		oAuthClientEntryImpl.setCompanyId(
@@ -809,6 +941,8 @@ public class OAuthClientEntryModelImpl
 			this.<String>getColumnOriginalValue("customClaimsJSON"));
 		oAuthClientEntryImpl.setInfoJSON(
 			this.<String>getColumnOriginalValue("infoJSON"));
+		oAuthClientEntryImpl.setMatcherField(
+			this.<String>getColumnOriginalValue("matcherField"));
 		oAuthClientEntryImpl.setMetadataCacheTime(
 			this.<Long>getColumnOriginalValue("metadataCacheTime"));
 		oAuthClientEntryImpl.setOIDCUserInfoMapperJSON(
@@ -895,6 +1029,26 @@ public class OAuthClientEntryModelImpl
 
 		oAuthClientEntryCacheModel.mvccVersion = getMvccVersion();
 
+		oAuthClientEntryCacheModel.uuid = getUuid();
+
+		String uuid = oAuthClientEntryCacheModel.uuid;
+
+		if ((uuid != null) && (uuid.length() == 0)) {
+			oAuthClientEntryCacheModel.uuid = null;
+		}
+
+		oAuthClientEntryCacheModel.externalReferenceCode =
+			getExternalReferenceCode();
+
+		String externalReferenceCode =
+			oAuthClientEntryCacheModel.externalReferenceCode;
+
+		if ((externalReferenceCode != null) &&
+			(externalReferenceCode.length() == 0)) {
+
+			oAuthClientEntryCacheModel.externalReferenceCode = null;
+		}
+
 		oAuthClientEntryCacheModel.oAuthClientEntryId = getOAuthClientEntryId();
 
 		oAuthClientEntryCacheModel.companyId = getCompanyId();
@@ -973,6 +1127,14 @@ public class OAuthClientEntryModelImpl
 
 		if ((infoJSON != null) && (infoJSON.length() == 0)) {
 			oAuthClientEntryCacheModel.infoJSON = null;
+		}
+
+		oAuthClientEntryCacheModel.matcherField = getMatcherField();
+
+		String matcherField = oAuthClientEntryCacheModel.matcherField;
+
+		if ((matcherField != null) && (matcherField.length() == 0)) {
+			oAuthClientEntryCacheModel.matcherField = null;
 		}
 
 		oAuthClientEntryCacheModel.metadataCacheTime = getMetadataCacheTime();
@@ -1064,6 +1226,8 @@ public class OAuthClientEntryModelImpl
 	}
 
 	private long _mvccVersion;
+	private String _uuid;
+	private String _externalReferenceCode;
 	private long _oAuthClientEntryId;
 	private long _companyId;
 	private long _userId;
@@ -1076,11 +1240,14 @@ public class OAuthClientEntryModelImpl
 	private String _clientId;
 	private String _customClaimsJSON;
 	private String _infoJSON;
+	private String _matcherField;
 	private long _metadataCacheTime;
 	private String _oidcUserInfoMapperJSON;
 	private String _tokenRequestParametersJSON;
 
 	public <T> T getColumnValue(String columnName) {
+		columnName = _attributeNames.getOrDefault(columnName, columnName);
+
 		Function<OAuthClientEntry, Object> function =
 			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
 				columnName);
@@ -1109,6 +1276,9 @@ public class OAuthClientEntryModelImpl
 		_columnOriginalValues = new HashMap<String, Object>();
 
 		_columnOriginalValues.put("mvccVersion", _mvccVersion);
+		_columnOriginalValues.put("uuid_", _uuid);
+		_columnOriginalValues.put(
+			"externalReferenceCode", _externalReferenceCode);
 		_columnOriginalValues.put("oAuthClientEntryId", _oAuthClientEntryId);
 		_columnOriginalValues.put("companyId", _companyId);
 		_columnOriginalValues.put("userId", _userId);
@@ -1122,11 +1292,22 @@ public class OAuthClientEntryModelImpl
 		_columnOriginalValues.put("clientId", _clientId);
 		_columnOriginalValues.put("customClaimsJSON", _customClaimsJSON);
 		_columnOriginalValues.put("infoJSON", _infoJSON);
+		_columnOriginalValues.put("matcherField", _matcherField);
 		_columnOriginalValues.put("metadataCacheTime", _metadataCacheTime);
 		_columnOriginalValues.put(
 			"oidcUserInfoMapperJSON", _oidcUserInfoMapperJSON);
 		_columnOriginalValues.put(
 			"tokenRequestParametersJSON", _tokenRequestParametersJSON);
+	}
+
+	private static final Map<String, String> _attributeNames;
+
+	static {
+		Map<String, String> attributeNames = new HashMap<>();
+
+		attributeNames.put("uuid_", "uuid");
+
+		_attributeNames = Collections.unmodifiableMap(attributeNames);
 	}
 
 	private transient Map<String, Object> _columnOriginalValues;
@@ -1142,33 +1323,39 @@ public class OAuthClientEntryModelImpl
 
 		columnBitmasks.put("mvccVersion", 1L);
 
-		columnBitmasks.put("oAuthClientEntryId", 2L);
+		columnBitmasks.put("uuid_", 2L);
 
-		columnBitmasks.put("companyId", 4L);
+		columnBitmasks.put("externalReferenceCode", 4L);
 
-		columnBitmasks.put("userId", 8L);
+		columnBitmasks.put("oAuthClientEntryId", 8L);
 
-		columnBitmasks.put("userName", 16L);
+		columnBitmasks.put("companyId", 16L);
 
-		columnBitmasks.put("createDate", 32L);
+		columnBitmasks.put("userId", 32L);
 
-		columnBitmasks.put("modifiedDate", 64L);
+		columnBitmasks.put("userName", 64L);
 
-		columnBitmasks.put("authRequestParametersJSON", 128L);
+		columnBitmasks.put("createDate", 128L);
 
-		columnBitmasks.put("authServerWellKnownURI", 256L);
+		columnBitmasks.put("modifiedDate", 256L);
 
-		columnBitmasks.put("clientId", 512L);
+		columnBitmasks.put("authRequestParametersJSON", 512L);
 
-		columnBitmasks.put("customClaimsJSON", 1024L);
+		columnBitmasks.put("authServerWellKnownURI", 1024L);
 
-		columnBitmasks.put("infoJSON", 2048L);
+		columnBitmasks.put("clientId", 2048L);
 
-		columnBitmasks.put("metadataCacheTime", 4096L);
+		columnBitmasks.put("customClaimsJSON", 4096L);
 
-		columnBitmasks.put("oidcUserInfoMapperJSON", 8192L);
+		columnBitmasks.put("infoJSON", 8192L);
 
-		columnBitmasks.put("tokenRequestParametersJSON", 16384L);
+		columnBitmasks.put("matcherField", 16384L);
+
+		columnBitmasks.put("metadataCacheTime", 32768L);
+
+		columnBitmasks.put("oidcUserInfoMapperJSON", 65536L);
+
+		columnBitmasks.put("tokenRequestParametersJSON", 131072L);
 
 		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
 	}
@@ -1177,3 +1364,4 @@ public class OAuthClientEntryModelImpl
 	private OAuthClientEntry _escapedModel;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:1372120665

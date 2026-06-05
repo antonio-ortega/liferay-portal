@@ -1,6 +1,6 @@
 $breadcrumb-bg: transparent !default;
 $breadcrumb-font-size: 0.875rem !default; // 14px
-$breadcrumb-margin-bottom: 0 !default;
+$breadcrumb-margin-bottom: 0rem !default;
 $breadcrumb-padding-x: 0.125rem !default; // 2px
 $breadcrumb-padding-y: 0.59375rem !default;
 
@@ -12,6 +12,7 @@ $breadcrumb-link: map-deep-merge(
 	(
 		border-radius: 1px,
 		transition: box-shadow 0.15s ease-in-out,
+
 		focus: (
 			box-shadow: $component-focus-box-shadow,
 			outline: 0,

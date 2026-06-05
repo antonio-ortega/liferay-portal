@@ -1114,7 +1114,7 @@ public class LayoutServiceImpl extends LayoutServiceBaseImpl {
 
 	@Override
 	public Layout getOrAddEmptyLayout(
-			String externalReferenceCode, long groupId,
+			String externalReferenceCode, long groupId, boolean privateLayout,
 			ServiceContext serviceContext)
 		throws Exception {
 
@@ -1129,7 +1129,8 @@ public class LayoutServiceImpl extends LayoutServiceBaseImpl {
 			getPermissionChecker(), groupId, ActionKeys.ADD_LAYOUT);
 
 		return layoutLocalService.getOrAddEmptyLayout(
-			externalReferenceCode, getUserId(), groupId, serviceContext);
+			externalReferenceCode, getUserId(), groupId, privateLayout,
+			serviceContext);
 	}
 
 	@Override
@@ -1431,6 +1432,16 @@ public class LayoutServiceImpl extends LayoutServiceBaseImpl {
 		return layoutLocalService.updateIconImage(plid, bytes);
 	}
 
+	@Override
+	public Layout updateIconImageId(long plid, long iconImageId)
+		throws PortalException {
+
+		LayoutPermissionUtil.checkLayoutUpdatePermission(
+			getPermissionChecker(), plid);
+
+		return layoutLocalService.updateIconImageId(plid, iconImageId);
+	}
+
 	/**
 	 * Updates the layout with additional parameters.
 	 *
@@ -1521,13 +1532,15 @@ public class LayoutServiceImpl extends LayoutServiceBaseImpl {
 			String colorSchemeId, String css)
 		throws PortalException {
 
+		PermissionChecker permissionChecker = getPermissionChecker();
+
 		LayoutPermissionUtil.checkLayoutUpdatePermission(
-			getPermissionChecker(),
+			permissionChecker,
 			layoutLocalService.getLayout(groupId, privateLayout, layoutId));
 
 		if (Validator.isNotNull(themeId)) {
 			_pluginSettingLocalService.checkPermission(
-				getUserId(), themeId, Plugin.TYPE_THEME);
+				permissionChecker.getUserId(), themeId, Plugin.TYPE_THEME);
 		}
 
 		return layoutLocalService.updateLookAndFeel(

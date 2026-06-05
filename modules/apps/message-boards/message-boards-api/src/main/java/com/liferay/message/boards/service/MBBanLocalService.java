@@ -360,3 +360,4 @@ public interface MBBanLocalService
 		throws E;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:384417636

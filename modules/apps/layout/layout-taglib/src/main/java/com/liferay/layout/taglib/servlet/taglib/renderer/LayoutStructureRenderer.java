@@ -61,10 +61,10 @@ import com.liferay.layout.util.structure.LayoutStructureItem;
 import com.liferay.layout.util.structure.LayoutStructureItemUtil;
 import com.liferay.layout.util.structure.RowStyledLayoutStructureItem;
 import com.liferay.layout.util.structure.collection.EmptyCollectionOptions;
+import com.liferay.petra.io.unsync.UnsyncStringWriter;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.petra.string.StringUtil;
-import com.liferay.portal.kernel.io.unsync.UnsyncStringWriter;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
@@ -1044,14 +1044,12 @@ public class LayoutStructureRenderer {
 							LAYOUT_PARENT_ITEM_EXTERNAL_REFERENCE_CODE +
 								itemId),
 					currentRelatedItemExternalReferenceCode),
-				LayoutStructureRendererConstants.
-					LAYOUT_DEFAULT_EXTERNAL_REFERENCE_CODE + 0);
+				PortalUUIDUtil.generate());
 			String relatedItemExternalReferenceCode = GetterUtil.getString(
 				_httpServletRequest.getAttribute(
 					LayoutStructureRendererConstants.
 						LAYOUT_RELATED_ITEM_EXTERNAL_REFERENCE_CODE + itemId),
-				LayoutStructureRendererConstants.
-					LAYOUT_DEFAULT_EXTERNAL_REFERENCE_CODE + 0);
+				_INITIAL_UUID_PREFIX + PortalUUIDUtil.generate());
 
 			_httpServletRequest.setAttribute(
 				LayoutStructureRendererConstants.
@@ -1143,21 +1141,32 @@ public class LayoutStructureRenderer {
 							getButtonLabelJSONObject()
 					).put(
 						"renderURL",
-						HttpComponentsUtil.addParameters(
-							StringBundler.concat(
-								_themeDisplay.getPortalURL(),
-								_themeDisplay.getPathMain(), "/portal",
-								"/render_form_relationship_layout_structure_",
-								"item"),
-							"formRelationshipLayoutStructureItemId",
-							formRelationshipStyledLayoutStructureItem.
-								getItemId(),
-							"p_l_id", _themeDisplay.getPlid(),
-							"parentItemExternalReferenceCode",
-							parentItemExternalReferenceCode,
-							"segmentsExperienceId",
-							SegmentsExperienceUtil.getSegmentsExperienceId(
-								_httpServletRequest))
+						() -> {
+							long groupId = _themeDisplay.getScopeGroupId();
+
+							if (layoutDisplayPageObjectProvider != null) {
+								groupId =
+									layoutDisplayPageObjectProvider.
+										getGroupId();
+							}
+
+							return HttpComponentsUtil.addParameters(
+								StringBundler.concat(
+									_themeDisplay.getPortalURL(),
+									_themeDisplay.getPathMain(), "/portal",
+									"/render_form_relationship_layout_",
+									"structure_item"),
+								"doAsGroupId", groupId, "p_l_id",
+								_themeDisplay.getPlid(),
+								"formRelationshipLayoutStructureItemId",
+								formRelationshipStyledLayoutStructureItem.
+									getItemId(),
+								"parentItemExternalReferenceCode",
+								parentItemExternalReferenceCode,
+								"segmentsExperienceId",
+								SegmentsExperienceUtil.getSegmentsExperienceId(
+									_httpServletRequest));
+						}
 					).build());
 			}
 		}
@@ -1339,8 +1348,22 @@ public class LayoutStructureRenderer {
 		JspWriter jspWriter = _pageContext.getOut();
 
 		jspWriter.write("<form action=\"");
-		jspWriter.write(
-			_renderLayoutStructureDisplayContext.getEditInfoItemActionURL());
+
+		String editInfoItemActionURL =
+			_renderLayoutStructureDisplayContext.getEditInfoItemActionURL();
+
+		editInfoItemActionURL = HttpComponentsUtil.addParameter(
+			editInfoItemActionURL, "formItemId",
+			formStyledLayoutStructureItem.getItemId());
+		editInfoItemActionURL = HttpComponentsUtil.addParameter(
+			editInfoItemActionURL, "p_l_id", _themeDisplay.getPlid());
+		editInfoItemActionURL = HttpComponentsUtil.addParameter(
+			editInfoItemActionURL, "segmentsExperienceId",
+			SegmentsExperienceUtil.getSegmentsExperienceId(
+				_httpServletRequest));
+
+		jspWriter.write(editInfoItemActionURL);
+
 		jspWriter.write("\" class=\"");
 		jspWriter.write(formStyledLayoutStructureItem.getUniqueCssClass());
 		jspWriter.write(StringPool.SPACE);
@@ -1416,12 +1439,12 @@ public class LayoutStructureRenderer {
 		if (Validator.isNotNull(redirect)) {
 			jspWriter.write(
 				"<input name=\"redirect\" type=\"hidden\" value=\"");
-			jspWriter.write(redirect);
+			jspWriter.write(HtmlUtil.escape(redirect));
 			jspWriter.write("\">");
 		}
 
 		jspWriter.write("<input name=\"backURL\" type=\"hidden\" value=\"");
-		jspWriter.write(_themeDisplay.getURLCurrent());
+		jspWriter.write(HtmlUtil.escape(_themeDisplay.getURLCurrent()));
 		jspWriter.write(
 			"\"><input name=\"classNameId\" type=\"hidden\" value=\"");
 		jspWriter.write(
@@ -1447,7 +1470,7 @@ public class LayoutStructureRenderer {
 				jspWriter.write(
 					"\"><input name=\"externalReferenceCode\" type=\"hidden\"");
 				jspWriter.write(" value=\"");
-				jspWriter.write(externalReferenceCode);
+				jspWriter.write(HtmlUtil.escape(externalReferenceCode));
 			}
 
 			String scopeExternalReferenceCode =
@@ -1458,7 +1481,7 @@ public class LayoutStructureRenderer {
 				jspWriter.write(
 					"\"><input name=\"scopeExternalReferenceCode\"");
 				jspWriter.write(" type=\"hidden\" value=\"");
-				jspWriter.write(scopeExternalReferenceCode);
+				jspWriter.write(HtmlUtil.escape(scopeExternalReferenceCode));
 			}
 		}
 
@@ -1483,9 +1506,10 @@ public class LayoutStructureRenderer {
 		jspWriter.write(String.valueOf(_themeDisplay.getPlid()));
 		jspWriter.write("\"><input name=\"p_l_mode\" type=\"hidden\" value=\"");
 		jspWriter.write(
-			ParamUtil.getString(
-				PortalUtil.getOriginalServletRequest(_httpServletRequest),
-				"p_l_mode", Constants.VIEW));
+			HtmlUtil.escape(
+				ParamUtil.getString(
+					PortalUtil.getOriginalServletRequest(_httpServletRequest),
+					"p_l_mode", Constants.VIEW)));
 		jspWriter.write("\"><input name=\"plid\" type=\"hidden\" value=\"");
 		jspWriter.write(String.valueOf(_themeDisplay.getPlid()));
 		jspWriter.write(
@@ -2004,6 +2028,8 @@ public class LayoutStructureRenderer {
 
 		jspWriter.write(StringPool.GREATER_THAN);
 	}
+
+	private static final String _INITIAL_UUID_PREFIX = "0000";
 
 	private final HttpServletRequest _httpServletRequest;
 	private final LayoutStructure _layoutStructure;

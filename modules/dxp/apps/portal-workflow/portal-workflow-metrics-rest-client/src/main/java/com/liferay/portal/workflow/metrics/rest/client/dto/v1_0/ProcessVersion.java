@@ -76,3 +76,4 @@ public class ProcessVersion implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-991709179

@@ -273,3 +273,4 @@ public interface FinderWhereClauseEntryLocalService
 		FinderWhereClauseEntry finderWhereClauseEntry);
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-1012695212

@@ -27,6 +27,7 @@ import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
+import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
@@ -137,18 +138,9 @@ public class LayoutLayoutSetPrototypeLayoutERCUpgradeProcessTest
 	protected CTModel<?> updateCTModel(CTModel<?> ctModel) throws Exception {
 		Layout layout = (Layout)ctModel;
 
-		Layout layoutSetPrototypeLayout = layout.getLayoutSetPrototypeLayout();
+		layout.setPriority(RandomTestUtil.randomInt());
 
-		layoutSetPrototypeLayout.setPriority(RandomTestUtil.randomInt());
-
-		layoutSetPrototypeLayout = _layoutLocalService.updateLayout(
-			layoutSetPrototypeLayout);
-
-		_propagateChanges();
-
-		return _layoutLocalService.getLayoutByFriendlyURL(
-			_group.getGroupId(), false,
-			layoutSetPrototypeLayout.getFriendlyURL());
+		return _layoutLocalService.updateLayout(layout);
 	}
 
 	private Layout _addLayout() throws Exception {
@@ -176,6 +168,14 @@ public class LayoutLayoutSetPrototypeLayoutERCUpgradeProcessTest
 
 		LayoutSet layoutSet = _layoutSetLocalService.getLayoutSet(
 			_group.getGroupId(), false);
+
+		UnicodeProperties settingsUnicodeProperties =
+			layoutSet.getSettingsProperties();
+
+		settingsUnicodeProperties.remove(Sites.LAST_MERGE_TIME);
+		settingsUnicodeProperties.remove(Sites.LAST_MERGE_VERSION);
+
+		layoutSet = _layoutSetLocalService.updateLayoutSet(layoutSet);
 
 		_sites.mergeLayoutSetPrototypeLayouts(_group, layoutSet);
 	}

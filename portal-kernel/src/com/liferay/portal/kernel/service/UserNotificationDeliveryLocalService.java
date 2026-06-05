@@ -295,3 +295,4 @@ public interface UserNotificationDeliveryLocalService
 		UserNotificationDelivery userNotificationDelivery);
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:360536499

@@ -284,3 +284,4 @@ public interface ExpiredAssetResource {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1754250015

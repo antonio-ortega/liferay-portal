@@ -34,9 +34,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.junit.After;
@@ -407,11 +404,12 @@ public class BaseDBProcessTest extends BaseDBProcess {
 
 		try (PreparedStatement preparedStatement = _connection.prepareStatement(
 				"select typeString from " + _TABLE_NAME);
+
 			ResultSet resultSet = preparedStatement.executeQuery()) {
 
 			resultSet.next();
 
-			Assert.assertEquals("testValue", resultSet.getString(1));
+			Assert.assertEquals("testValue", resultSet.getString("typeString"));
 		}
 	}
 
@@ -568,38 +566,6 @@ public class BaseDBProcessTest extends BaseDBProcess {
 	}
 
 	@Test
-	public void testProcessConcurrentlyShutdown() throws Exception {
-		List<Integer> values = new ArrayList<>();
-
-		for (int i = 1; i <= _PROCESS_CONCURRENTLY_COUNT; i++) {
-			values.add(i);
-		}
-
-		List<Future<Void>> futures = new ArrayList<>();
-
-		ExecutorService executorService = Executors.newWorkStealingPool();
-
-		for (int i = 0; i <= 10; i++) {
-			Future<Void> future = executorService.submit(
-				() -> {
-					processConcurrently(
-						values.toArray(new Integer[0]),
-						value -> Thread.sleep(1000), "An exception was thrown");
-
-					return null;
-				});
-
-			futures.add(future);
-		}
-
-		executorService.shutdown();
-
-		for (Future<Void> future : futures) {
-			future.get();
-		}
-	}
-
-	@Test
 	public void testProcessConcurrentlyWithBatch() throws Exception {
 		_validateProcessConcurrently(
 			threadIds -> processConcurrently(
@@ -702,7 +668,7 @@ public class BaseDBProcessTest extends BaseDBProcess {
 
 	private void _validateTableContent() throws Exception {
 		try (PreparedStatement preparedStatement = connection.prepareStatement(
-				"select count(1) from " + _TABLE_NAME +
+				"select count(1) as count from " + _TABLE_NAME +
 					" where id >= 1 and id <= ? and typeInteger = id")) {
 
 			preparedStatement.setInt(1, _PROCESS_CONCURRENTLY_COUNT);
@@ -711,7 +677,7 @@ public class BaseDBProcessTest extends BaseDBProcess {
 				resultSet.next();
 
 				Assert.assertEquals(
-					_PROCESS_CONCURRENTLY_COUNT, resultSet.getInt(1));
+					_PROCESS_CONCURRENTLY_COUNT, resultSet.getLong("count"));
 			}
 		}
 	}

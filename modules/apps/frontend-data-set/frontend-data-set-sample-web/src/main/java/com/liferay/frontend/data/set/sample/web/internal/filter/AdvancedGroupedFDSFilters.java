@@ -30,10 +30,12 @@ public class AdvancedGroupedFDSFilters implements GroupedFDSFilters {
 
 		return JSONUtil.putAll(
 			JSONUtil.put("Empty Group", JSONUtil.putAll()),
-			JSONUtil.put("Group 1", JSONUtil.putAll("date", "color")),
+			JSONUtil.put(
+				"Group 1", JSONUtil.putAll("date", "dateTime", "color")),
 			JSONUtil.put(
 				"Group 2", JSONUtil.putAll("clientExtension", null, "size")),
-			JSONUtil.put("Group 3", JSONUtil.putAll("status", "title")),
+			JSONUtil.put(
+				"Group 3", JSONUtil.putAll("status", "title", "creator.name")),
 			JSONUtil.put(
 				"Group With Unregistered Filter",
 				JSONUtil.putAll(StringUtil.randomString())));

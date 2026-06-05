@@ -134,6 +134,7 @@ public interface CPConfigurationEntryLocalService
 			CPConfigurationEntry cpConfigurationEntry)
 		throws PortalException;
 
+	@Indexable(type = IndexableType.DELETE)
 	@SystemEvent(type = SystemEventConstants.TYPE_DELETE)
 	public CPConfigurationEntry deleteCPConfigurationEntry(
 			CPConfigurationEntry cpConfigurationEntry, boolean force)
@@ -426,3 +427,4 @@ public interface CPConfigurationEntryLocalService
 		throws E;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-1981912022

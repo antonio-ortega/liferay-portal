@@ -89,11 +89,9 @@ public class SearchResultSummaryDisplayContextBuilder {
 
 	public SearchResultSummaryDisplayContext build() throws Exception {
 		try {
-			if (_documentBuilderFactory != null) {
-				_document = _documentBuilderFactory.builder(
-					_legacyDocument
-				).build();
-			}
+			_document = DocumentBuilderFactory.builder(
+				_legacyDocument
+			).build();
 
 			String entryClassName = _getFieldValueString(
 				Field.ENTRY_CLASS_NAME);
@@ -160,26 +158,10 @@ public class SearchResultSummaryDisplayContextBuilder {
 		return this;
 	}
 
-	public SearchResultSummaryDisplayContextBuilder setCurrentURL(
-		String currentURL) {
-
-		_currentURL = currentURL;
-
-		return this;
-	}
-
 	public SearchResultSummaryDisplayContextBuilder setDocument(
 		com.liferay.portal.kernel.search.Document document) {
 
 		_legacyDocument = document;
-
-		return this;
-	}
-
-	public SearchResultSummaryDisplayContextBuilder setDocumentBuilderFactory(
-		DocumentBuilderFactory documentBuilderFactory) {
-
-		_documentBuilderFactory = documentBuilderFactory;
 
 		return this;
 	}
@@ -470,7 +452,7 @@ public class SearchResultSummaryDisplayContextBuilder {
 
 		return SearchUtil.getSearchResultViewURL(
 			_renderRequest, _renderResponse, className, classPK,
-			_searchResultPreferences.isViewInContext(), _currentURL);
+			_searchResultPreferences.isViewInContext());
 	}
 
 	protected Summary getSummary(
@@ -1144,9 +1126,7 @@ public class SearchResultSummaryDisplayContextBuilder {
 	private AssetEntryLocalService _assetEntryLocalService;
 	private AssetRendererFactoryLookup _assetRendererFactoryLookup;
 	private ClassNameLocalService _classNameLocalService;
-	private String _currentURL;
 	private Document _document;
-	private DocumentBuilderFactory _documentBuilderFactory;
 	private FastDateFormatFactory _fastDateFormatFactory;
 	private GroupLocalService _groupLocalService;
 	private boolean _highlightEnabled;

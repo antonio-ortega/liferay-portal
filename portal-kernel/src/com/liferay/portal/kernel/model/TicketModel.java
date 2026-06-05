@@ -178,6 +178,21 @@ public interface TicketModel
 	public void setType(int type);
 
 	/**
+	 * Returns the email address of this ticket.
+	 *
+	 * @return the email address of this ticket
+	 */
+	@AutoEscape
+	public String getEmailAddress();
+
+	/**
+	 * Sets the email address of this ticket.
+	 *
+	 * @param emailAddress the email address of this ticket
+	 */
+	public void setEmailAddress(String emailAddress);
+
+	/**
 	 * Returns the extra info of this ticket.
 	 *
 	 * @return the extra info of this ticket
@@ -214,3 +229,4 @@ public interface TicketModel
 	}
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:1971965592

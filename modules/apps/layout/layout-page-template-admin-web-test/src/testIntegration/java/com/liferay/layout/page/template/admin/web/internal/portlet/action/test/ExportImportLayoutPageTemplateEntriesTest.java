@@ -1412,7 +1412,7 @@ public class ExportImportLayoutPageTemplateEntriesTest {
 			DisplayPageTemplateTestUtil.addDisplayPageTemplate(
 				_group1.getGroupId(),
 				_portal.getClassNameId(JournalArticle.class.getName()),
-				journalArticle.getDDMStructureId(), true,
+				journalArticle.getDDMStructureKey(), true,
 				WorkflowConstants.STATUS_APPROVED);
 
 		_assetDisplayPageEntryLocalService.addAssetDisplayPageEntry(
@@ -1493,8 +1493,8 @@ public class ExportImportLayoutPageTemplateEntriesTest {
 	private ObjectEntry _addObjectEntry() throws Exception {
 		ObjectDefinition objectDefinition =
 			_objectDefinitionLocalService.addCustomObjectDefinition(
-				null, TestPropsValues.getUserId(), 0, null, false, true, false,
-				true, false, false, false, false, null,
+				null, TestPropsValues.getUserId(), 0, null, true, false, true,
+				false, true, false, false, false, false, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				ObjectDefinitionTestUtil.getRandomName(), null,
 				"control_panel.sites",
@@ -1697,11 +1697,19 @@ public class ExportImportLayoutPageTemplateEntriesTest {
 			_getImportLayoutPageTemplateEntry(
 				file, groupId, status, layoutsImportStrategy);
 
-		return ReflectionTestUtil.invoke(
-			_mvcResourceCommand, "getFile", new Class<?>[] {long[].class},
-			new long[] {
-				layoutPageTemplateEntry.getLayoutPageTemplateEntryId()
-			});
+		ServiceContextThreadLocal.pushServiceContext(
+			_getServiceContext(_group1, TestPropsValues.getUserId()));
+
+		try {
+			return ReflectionTestUtil.invoke(
+				_mvcResourceCommand, "getFile", new Class<?>[] {long[].class},
+				new long[] {
+					layoutPageTemplateEntry.getLayoutPageTemplateEntryId()
+				});
+		}
+		finally {
+			ServiceContextThreadLocal.popServiceContext();
+		}
 	}
 
 	private void _populateZipWriter(

@@ -5,10 +5,12 @@
 
 package com.liferay.oauth.client.persistence.service;
 
+import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.oauth.client.persistence.model.OAuthClientASLocalMetadata;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
+import com.liferay.portal.kernel.dao.orm.ExportActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -56,14 +58,6 @@ public interface OAuthClientASLocalMetadataLocalService
 			long userId, String metadataJSON, String wellKnownURISuffix)
 		throws PortalException;
 
-	public OAuthClientASLocalMetadata addOAuthClientASLocalMetadata(
-			long userId, String authorizationEndpoint, String issuer,
-			String jwksURI, boolean localWellKnownEnabled,
-			String[] supportedGrantTypes, String[] supportedScopes,
-			String[] supportedSubjectTypes, String tokenEndpoint,
-			String userInfoEndpoint)
-		throws PortalException;
-
 	/**
 	 * Adds the o auth client as local metadata to the database. Also notifies the appropriate model listeners.
 	 *
@@ -77,6 +71,15 @@ public interface OAuthClientASLocalMetadataLocalService
 	@Indexable(type = IndexableType.REINDEX)
 	public OAuthClientASLocalMetadata addOAuthClientASLocalMetadata(
 		OAuthClientASLocalMetadata oAuthClientASLocalMetadata);
+
+	public OAuthClientASLocalMetadata addOAuthClientASLocalMetadata(
+			String externalReferenceCode, long userId,
+			String authorizationEndpoint, String issuer, String jwksURI,
+			boolean localWellKnownEnabled, String registrationEndpoint,
+			String[] supportedGrantTypes, String[] supportedScopes,
+			String[] supportedSubjectTypes, String tokenEndpoint,
+			String userInfoEndpoint)
+		throws PortalException;
 
 	/**
 	 * Creates a new o auth client as local metadata with the primary key. Does not add the o auth client as local metadata to the database.
@@ -110,6 +113,10 @@ public interface OAuthClientASLocalMetadataLocalService
 			long oAuthClientASLocalMetadataId)
 		throws PortalException;
 
+	public OAuthClientASLocalMetadata deleteOAuthClientASLocalMetadata(
+			long companyId, String localWellKnownURI)
+		throws PortalException;
+
 	/**
 	 * Deletes the o auth client as local metadata from the database. Also notifies the appropriate model listeners.
 	 *
@@ -124,10 +131,6 @@ public interface OAuthClientASLocalMetadataLocalService
 	@Indexable(type = IndexableType.DELETE)
 	public OAuthClientASLocalMetadata deleteOAuthClientASLocalMetadata(
 			OAuthClientASLocalMetadata oAuthClientASLocalMetadata)
-		throws PortalException;
-
-	public OAuthClientASLocalMetadata deleteOAuthClientASLocalMetadata(
-			String localWellKnownURI)
 		throws PortalException;
 
 	/**
@@ -223,8 +226,26 @@ public interface OAuthClientASLocalMetadataLocalService
 		long companyId, String issuer);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public OAuthClientASLocalMetadata fetchOAuthClientASLocalMetadata(
-		String localWellKnownURI);
+	public OAuthClientASLocalMetadata
+		fetchOAuthClientASLocalMetadataByExternalReferenceCode(
+			String externalReferenceCode, long companyId);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public OAuthClientASLocalMetadata
+		fetchOAuthClientASLocalMetadataByLocalWellKnownURI(
+			long companyId, String localWellKnownURI);
+
+	/**
+	 * Returns the o auth client as local metadata with the matching UUID and company.
+	 *
+	 * @param uuid the o auth client as local metadata's UUID
+	 * @param companyId the primary key of the company
+	 * @return the matching o auth client as local metadata, or <code>null</code> if a matching o auth client as local metadata could not be found
+	 */
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public OAuthClientASLocalMetadata
+		fetchOAuthClientASLocalMetadataByUuidAndCompanyId(
+			String uuid, long companyId);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public ActionableDynamicQuery getActionableDynamicQuery();
@@ -237,6 +258,10 @@ public interface OAuthClientASLocalMetadataLocalService
 	public List<OAuthClientASLocalMetadata>
 		getCompanyOAuthClientASLocalMetadata(
 			long companyId, int start, int end);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public ExportActionableDynamicQuery getExportActionableDynamicQuery(
+		PortletDataContext portletDataContext);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public IndexableActionableDynamicQuery getIndexableActionableDynamicQuery();
@@ -255,7 +280,27 @@ public interface OAuthClientASLocalMetadataLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public OAuthClientASLocalMetadata getOAuthClientASLocalMetadata(
-			String localWellKnownURI)
+			long companyId, String localWellKnownURI)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public OAuthClientASLocalMetadata
+			getOAuthClientASLocalMetadataByExternalReferenceCode(
+				String externalReferenceCode, long companyId)
+		throws PortalException;
+
+	/**
+	 * Returns the o auth client as local metadata with the matching UUID and company.
+	 *
+	 * @param uuid the o auth client as local metadata's UUID
+	 * @param companyId the primary key of the company
+	 * @return the matching o auth client as local metadata
+	 * @throws PortalException if a matching o auth client as local metadata could not be found
+	 */
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public OAuthClientASLocalMetadata
+			getOAuthClientASLocalMetadataByUuidAndCompanyId(
+				String uuid, long companyId)
 		throws PortalException;
 
 	/**
@@ -315,9 +360,9 @@ public interface OAuthClientASLocalMetadataLocalService
 	public OAuthClientASLocalMetadata updateOAuthClientASLocalMetadata(
 			long oAuthClientASLocalMetadataId, String authorizationEndpoint,
 			String issuer, String jwksURI, boolean localWellKnownEnabled,
-			String[] supportedGrantTypes, String[] supportedScopes,
-			String[] supportedSubjectTypes, String tokenEndpoint,
-			String userInfoEndpoint)
+			String registrationEndpoint, String[] supportedGrantTypes,
+			String[] supportedScopes, String[] supportedSubjectTypes,
+			String tokenEndpoint, String userInfoEndpoint)
 		throws PortalException;
 
 	/**
@@ -335,3 +380,4 @@ public interface OAuthClientASLocalMetadataLocalService
 		OAuthClientASLocalMetadata oAuthClientASLocalMetadata);
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:1975237174

@@ -11,6 +11,7 @@ import {featureFlagsTest} from '../../../fixtures/featureFlagsTest';
 import {isolatedSiteTest} from '../../../fixtures/isolatedSiteTest';
 import {loginTest} from '../../../fixtures/loginTest';
 import {pageEditorPagesTest} from '../../../fixtures/pageEditorPagesTest';
+import {checkAccessibility} from '../../../utils/checkAccessibility';
 import {getRandomInt} from '../../../utils/getRandomInt';
 import getRandomString from '../../../utils/getRandomString';
 import getPageDefinition from '../../layout-content-page-editor-web/main/utils/getPageDefinition';
@@ -21,6 +22,7 @@ export const test = mergeTests(
 	apiHelpersTest,
 	calendarPagesTest,
 	featureFlagsTest({
+		'LPD-11235': {enabled: true},
 		'LPS-178052': {enabled: true},
 	}),
 	isolatedSiteTest,
@@ -115,6 +117,7 @@ test.describe('Event creation pop-up', () => {
 
 		await expect(eventTitle).toHaveAttribute('aria-haspopup', 'dialog');
 		await expect(eventTitle).toHaveAttribute('aria-expanded', 'false');
+		await expect(eventTitle).toHaveAttribute('role', 'button');
 
 		await eventTitle.click();
 
@@ -124,6 +127,37 @@ test.describe('Event creation pop-up', () => {
 		);
 		await expect(eventTitle).toHaveAttribute('aria-haspopup', 'dialog');
 		await expect(eventTitle).toHaveAttribute('aria-expanded', 'true');
+		await expect(eventTitle).toHaveAttribute('role', 'button');
+	});
+
+	test('returns focus to event popover when it is closed through tab navigation', async ({
+		calendarWidgetPage,
+		page,
+	}) => {
+		await calendarWidgetPage.addEventOnGrid();
+
+		await page.getByRole('button', {name: 'Save'}).click();
+
+		const eventTitle = page.getByTitle('e.g. Meeting');
+
+		await eventTitle.click();
+
+		for (let i = 0; i < 6; i++) {
+			await page.keyboard.press('Tab');
+		}
+
+		await page.keyboard.press('Enter');
+
+		await expect(eventTitle).toBeFocused();
+	});
+
+	test('title input in the recorder popover has an accessible label', async ({
+		calendarWidgetPage,
+		page,
+	}) => {
+		await calendarWidgetPage.addEventOnGrid();
+
+		await expect(page.getByLabel('Title')).toBeVisible();
 	});
 });
 
@@ -165,4 +199,28 @@ test('assert that the screen reader reads the event date', async ({
 	);
 
 	await expect(screenReaderElement).toHaveCSS('display', 'block');
+});
+
+test.describe('Accessibility check', () => {
+	test('Check accessibility of calendar list', async ({
+		calendarWidgetPage,
+		page,
+	}) => {
+		await calendarWidgetPage.unhideSidebar();
+
+		await checkAccessibility({
+			bestPractices: true,
+			page,
+			selectors: ['.calendar-portlet-calendar-list-container'],
+		});
+	});
+
+	test('Check accessibility of calendar widget', async ({page}) => {
+		await checkAccessibility({
+			bestPractices: true,
+			page,
+			selectors: ['.calendar-portlet-wrapper'],
+			selectorsToExclude: ['.scheduler-event'],
+		});
+	});
 });

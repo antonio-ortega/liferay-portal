@@ -74,8 +74,13 @@ public class FragmentEntryLinkCTDisplayRender
 			}
 		}
 
-		return Validator.isNotNull(
+		return Validator.isNull(
 			fragmentEntryLink.getOriginalFragmentEntryLinkERC());
+	}
+
+	@Override
+	public boolean isShowPreviewDiff() {
+		return true;
 	}
 
 	@Override

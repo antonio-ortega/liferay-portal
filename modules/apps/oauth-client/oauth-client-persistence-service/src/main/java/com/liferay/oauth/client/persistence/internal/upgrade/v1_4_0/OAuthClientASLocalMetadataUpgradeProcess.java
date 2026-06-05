@@ -5,6 +5,7 @@
 
 package com.liferay.oauth.client.persistence.internal.upgrade.v1_4_0;
 
+import com.liferay.portal.kernel.dao.jdbc.AutoBatchPreparedStatementUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
@@ -29,10 +30,14 @@ public class OAuthClientASLocalMetadataUpgradeProcess extends UpgradeProcess {
 			"update OAuthClientASLocalMetadata set localWellKnownEnabled = " +
 				"[$FALSE$]");
 
-		try (PreparedStatement preparedStatement = connection.prepareStatement(
-				"update OAuthClientASLocalMetadata set issuer = ? where " +
-					"oAuthClientASLocalMetadataId = ?");
+		try (PreparedStatement preparedStatement =
+				AutoBatchPreparedStatementUtil.autoBatch(
+					connection,
+					"update OAuthClientASLocalMetadata set issuer = ? where " +
+						"oAuthClientASLocalMetadataId = ?");
+
 			Statement statement = connection.createStatement();
+
 			ResultSet resultSet = statement.executeQuery(
 				"select oAuthClientASLocalMetadataId, metadataJSON from " +
 					"OAuthClientASLocalMetadata")) {
@@ -85,7 +90,7 @@ public class OAuthClientASLocalMetadataUpgradeProcess extends UpgradeProcess {
 	protected UpgradeStep[] getPreUpgradeSteps() {
 		return new UpgradeStep[] {
 			UpgradeProcessFactory.addColumns(
-				"OAuthClientASLocalMetadata", "issuer VARCHAR(75) null",
+				"OAuthClientASLocalMetadata", "issuer VARCHAR(256) null",
 				"localWellKnownEnabled BOOLEAN",
 				"oAuthASLocalWellKnownURI VARCHAR(256) null",
 				"oAuthASMetadataJSON TEXT null")

@@ -355,3 +355,4 @@ public class AuthenticationSchemeSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:525806141

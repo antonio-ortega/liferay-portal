@@ -5,12 +5,13 @@
 
 import {FrameLocator, Locator, Page} from '@playwright/test';
 
-import {ApplicationsMenuPage} from '../../product-navigation-applications-menu/ApplicationsMenuPage';
+import {PORTLET_URLS} from '../../../utils/portletUrls';
+import {GlobalMenuPage} from '../../product-navigation-applications-menu/GlobalMenuPage';
 
 export class ListTypeDefinitionsPage {
 	readonly addPicklistButton: Locator;
 	readonly addPicklistItemButton: Locator;
-	readonly applicationsMenuPage: ApplicationsMenuPage;
+	readonly globalMenuPage: GlobalMenuPage;
 	readonly basicInfoHeading: Locator;
 	readonly deleteActionMenuOption: Locator;
 	readonly deleteButton: Locator;
@@ -34,7 +35,6 @@ export class ListTypeDefinitionsPage {
 		this.addPicklistItemButton = page
 			.frameLocator('iframe')
 			.getByLabel('Add Item');
-		this.applicationsMenuPage = new ApplicationsMenuPage(page);
 		this.basicInfoHeading = page
 			.frameLocator('iframe')
 			.getByRole('heading', {name: 'Basic Info'});
@@ -43,6 +43,7 @@ export class ListTypeDefinitionsPage {
 			.getByRole('menuitem', {name: 'Delete'});
 		this.deleteButton = page.getByRole('button', {name: 'Delete'});
 		this.frameLocator = page.frameLocator('iframe');
+		this.globalMenuPage = new GlobalMenuPage(page);
 		this.modalNameInput = page.getByLabel('Name');
 		this.modalSaveButton = page.getByRole('button', {
 			name: 'Save',
@@ -92,7 +93,9 @@ export class ListTypeDefinitionsPage {
 	}
 
 	async goto() {
-		await this.applicationsMenuPage.goToPicklists();
+		await this.page.goto(`/group/guest${PORTLET_URLS.picklists}`, {
+			waitUntil: 'load',
+		});
 	}
 
 	async translatePicklist(

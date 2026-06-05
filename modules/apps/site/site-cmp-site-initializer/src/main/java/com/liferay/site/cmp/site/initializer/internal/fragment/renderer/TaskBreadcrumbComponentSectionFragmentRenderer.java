@@ -12,7 +12,6 @@ import com.liferay.layout.display.page.constants.LayoutDisplayPageWebKeys;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntry;
 import com.liferay.object.service.ObjectDefinitionLocalService;
-import com.liferay.object.service.ObjectEntryService;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -99,7 +98,7 @@ public class TaskBreadcrumbComponentSectionFragmentRenderer
 			() -> {
 				JSONArray jsonArray = _jsonFactory.createJSONArray();
 
-				if (_objectEntryService.hasModelResourcePermission(
+				if (objectEntryService.hasModelResourcePermission(
 						objectEntry, ActionKeys.UPDATE)) {
 
 					jsonArray.put(
@@ -118,11 +117,22 @@ public class TaskBreadcrumbComponentSectionFragmentRenderer
 						));
 				}
 
-				if (_objectEntryService.hasModelResourcePermission(
+				String viewTaskURL = ActionUtil.getBaseViewTaskURL(
+					objectDefinition, themeDisplay);
+
+				addSubscribeActionItem(
+					httpServletRequest, jsonArray, "watch-task",
+					"stop-watching-task", objectDefinition, objectEntry,
+					viewTaskURL + objectEntry.getObjectEntryId(), themeDisplay,
+					title);
+
+				if (objectEntryService.hasModelResourcePermission(
 						objectEntry, ActionKeys.DELETE)) {
 
 					jsonArray.put(
 						JSONUtil.put(
+							"className", "text-danger"
+						).put(
 							"confirmationMessage",
 							LanguageUtil.format(
 								httpServletRequest,
@@ -192,7 +202,7 @@ public class TaskBreadcrumbComponentSectionFragmentRenderer
 					"label",
 					() -> {
 						ObjectEntry parentObjectEntry =
-							_objectEntryService.getObjectEntry(
+							objectEntryService.getObjectEntry(
 								parentObjectEntryId);
 
 						return MapUtil.getString(
@@ -218,8 +228,5 @@ public class TaskBreadcrumbComponentSectionFragmentRenderer
 
 	@Reference
 	private ObjectDefinitionLocalService _objectDefinitionLocalService;
-
-	@Reference
-	private ObjectEntryService _objectEntryService;
 
 }

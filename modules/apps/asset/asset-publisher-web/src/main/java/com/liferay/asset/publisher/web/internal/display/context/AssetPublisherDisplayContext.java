@@ -21,6 +21,7 @@ import com.liferay.asset.kernel.service.AssetEntryServiceUtil;
 import com.liferay.asset.kernel.service.AssetVocabularyServiceUtil;
 import com.liferay.asset.kernel.service.persistence.AssetEntryQuery;
 import com.liferay.asset.list.asset.entry.provider.AssetListAssetEntryProvider;
+import com.liferay.asset.list.constants.AssetListPortletKeys;
 import com.liferay.asset.list.model.AssetListEntry;
 import com.liferay.asset.list.service.AssetListEntrySegmentsEntryRelLocalService;
 import com.liferay.asset.publisher.action.AssetEntryAction;
@@ -35,7 +36,6 @@ import com.liferay.asset.publisher.web.internal.constants.AssetPublisherSelectio
 import com.liferay.asset.publisher.web.internal.helper.AssetPublisherWebHelper;
 import com.liferay.asset.publisher.web.internal.util.AssetPublisherCustomizer;
 import com.liferay.asset.publisher.web.internal.util.AssetPublisherUtil;
-import com.liferay.asset.publisher.web.internal.util.FF_LPD_39304_CompanyTemporarySwapper;
 import com.liferay.asset.tags.item.selector.AssetTagsItemSelectorCriterion;
 import com.liferay.asset.tags.item.selector.AssetTagsItemSelectorReturnType;
 import com.liferay.asset.util.AssetHelper;
@@ -70,7 +70,6 @@ import com.liferay.osgi.service.tracker.collections.map.PropertyServiceReference
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
 import com.liferay.petra.function.transform.TransformUtil;
-import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProviderUtil;
@@ -90,6 +89,7 @@ import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
+import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.PortletIdCodec;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactory;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
@@ -113,6 +113,7 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PrefsParamUtil;
 import com.liferay.portal.kernel.util.StringComparator;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -120,6 +121,7 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.rss.util.RSSUtil;
 import com.liferay.segments.SegmentsEntryRetriever;
+import com.liferay.segments.constants.SegmentsEntryConstants;
 import com.liferay.segments.constants.SegmentsWebKeys;
 import com.liferay.segments.context.RequestContextMapper;
 
@@ -699,14 +701,8 @@ public class AssetPublisherDisplayContext {
 			_classNameIds = assetEntryQuery.getClassNameIds();
 		}
 		else {
-			try (SafeCloseable safeCloseable =
-					FF_LPD_39304_CompanyTemporarySwapper.
-						setCompanyIdWithSafeCloseable(
-							_themeDisplay.getCompanyId())) {
-
-				_classNameIds = _assetPublisherHelper.getClassNameIds(
-					_portletPreferences, getAvailableClassNameIds());
-			}
+			_classNameIds = _assetPublisherHelper.getClassNameIds(
+				_portletPreferences, getAvailableClassNameIds());
 		}
 
 		return _classNameIds;
@@ -1220,12 +1216,11 @@ public class AssetPublisherDisplayContext {
 
 		AssetListEntry assetListEntry = fetchAssetListEntry();
 
-		if ((assetListEntry != null) &&
-			(GetterUtil.getLong(assetListEntry.getAssetEntrySubtype()) != 0)) {
+		if (assetListEntry != null) {
+			long[] subtypeIds = GetterUtil.getLongValues(
+				StringUtil.split(assetListEntry.getAssetEntrySubtype()));
 
-			classTypeIds = ArrayUtil.append(
-				classTypeIds,
-				GetterUtil.getLong(assetListEntry.getAssetEntrySubtype()));
+			classTypeIds = ArrayUtil.append(classTypeIds, subtypeIds);
 		}
 
 		for (long groupId : groupIds) {
@@ -1373,6 +1368,8 @@ public class AssetPublisherDisplayContext {
 		AssetListEntry assetListEntry = fetchAssetListEntry();
 
 		return HashMapBuilder.<String, Object>put(
+			"addAssetListEntryURL", _getAddAssetListEntryURL()
+		).put(
 			"assetListEntryId",
 			() -> {
 				if (assetListEntry != null) {
@@ -1430,16 +1427,10 @@ public class AssetPublisherDisplayContext {
 			return _selectionStyle;
 		}
 
-		try (SafeCloseable safeCloseable =
-				FF_LPD_39304_CompanyTemporarySwapper.
-					setCompanyIdWithSafeCloseable(
-						_themeDisplay.getCompanyId())) {
-
-			_selectionStyle = GetterUtil.getString(
-				_portletPreferences.getValue("selectionStyle", null),
-				AssetPublisherSelectionStyleConfigurationUtil.
-					defaultSelectionStyle());
-		}
+		_selectionStyle = GetterUtil.getString(
+			_portletPreferences.getValue("selectionStyle", null),
+			AssetPublisherSelectionStyleConfigurationUtil.
+				defaultSelectionStyle());
 
 		return _selectionStyle;
 	}
@@ -2274,6 +2265,17 @@ public class AssetPublisherDisplayContext {
 		return filteredAssetEntries;
 	}
 
+	private String _getAddAssetListEntryURL() {
+		return PortletURLBuilder.create(
+			PortalUtil.getControlPanelPortletURL(
+				_httpServletRequest, _themeDisplay.getScopeGroup(),
+				AssetListPortletKeys.ASSET_LIST, 0, 0,
+				PortletRequest.RENDER_PHASE)
+		).setWindowState(
+			LiferayWindowState.POP_UP
+		).buildString();
+	}
+
 	private String _getAssetEntryItemSelectorPortletURL(
 		AssetRendererFactory<?> assetRendererFactory, Group scopeGroup,
 		long subtypeSelectionId) {
@@ -2437,19 +2439,29 @@ public class AssetPublisherDisplayContext {
 	}
 
 	private long[] _getSegmentsEntryIds(AssetListEntry assetListEntry) {
-		return _segmentsEntryRetriever.getSegmentsEntryIds(
+		long[] segmentsEntryIds = _segmentsEntryRetriever.getSegmentsEntryIds(
 			_themeDisplay.getScopeGroupId(), _themeDisplay.getUserId(),
 			_requestContextMapper.map(
 				_portal.getOriginalServletRequest(
-					_portal.getHttpServletRequest(_portletRequest))),
-			ArrayUtil.toLongArray(
-				TransformUtil.transform(
-					_assetListEntrySegmentsEntryRelLocalService.
-						getAssetListEntrySegmentsEntryRels(
-							assetListEntry.getAssetListEntryId(),
-							QueryUtil.ALL_POS, QueryUtil.ALL_POS),
-					assetListEntrySegmentsEntryRel ->
-						assetListEntrySegmentsEntryRel.getSegmentsEntryId())));
+					_portal.getHttpServletRequest(_portletRequest))));
+
+		return TransformUtil.transformToLongArray(
+			_assetListEntrySegmentsEntryRelLocalService.
+				getAssetListEntrySegmentsEntryRels(
+					assetListEntry.getAssetListEntryId(), QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS),
+			assetListEntrySegmentsEntryRel -> {
+				long segmentsEntryId =
+					assetListEntrySegmentsEntryRel.getSegmentsEntryId();
+
+				if ((segmentsEntryId == SegmentsEntryConstants.ID_DEFAULT) ||
+					ArrayUtil.contains(segmentsEntryIds, segmentsEntryId)) {
+
+					return segmentsEntryId;
+				}
+
+				return null;
+			});
 	}
 
 	private boolean _isShowRelatedAssets() {

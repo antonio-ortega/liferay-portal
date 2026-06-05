@@ -19,12 +19,14 @@ page import="com.liferay.portal.kernel.util.Validator" %>
 
 <%@ page import="java.util.Map" %>
 
+<liferay-frontend:defineObjects />
+
 <liferay-theme:defineObjects />
 
 <%
 Map<String, Object> actionContext = (Map<String, Object>)request.getAttribute("liferay-commerce:info-box:actionContext");
 String actionLabel = (String)request.getAttribute("liferay-commerce:info-box:actionLabel");
-String actionUrl = (String)request.getAttribute("liferay-commerce:info-box:actionUrl");
+String actionURL = (String)request.getAttribute("liferay-commerce:info-box:actionURL");
 String elementClasses = (String)request.getAttribute("liferay-commerce:info-box:elementClasses");
 String title = (String)request.getAttribute("liferay-commerce:info-box:title");
 %>

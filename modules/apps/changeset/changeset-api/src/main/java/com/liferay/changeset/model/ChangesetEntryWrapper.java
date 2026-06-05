@@ -41,6 +41,8 @@ public class ChangesetEntryWrapper
 		attributes.put("createDate", getCreateDate());
 		attributes.put("modifiedDate", getModifiedDate());
 		attributes.put("changesetCollectionId", getChangesetCollectionId());
+		attributes.put(
+			"classExternalReferenceCode", getClassExternalReferenceCode());
 		attributes.put("classNameId", getClassNameId());
 		attributes.put("classPK", getClassPK());
 
@@ -98,6 +100,13 @@ public class ChangesetEntryWrapper
 			setChangesetCollectionId(changesetCollectionId);
 		}
 
+		String classExternalReferenceCode = (String)attributes.get(
+			"classExternalReferenceCode");
+
+		if (classExternalReferenceCode != null) {
+			setClassExternalReferenceCode(classExternalReferenceCode);
+		}
+
 		Long classNameId = (Long)attributes.get("classNameId");
 
 		if (classNameId != null) {
@@ -134,6 +143,16 @@ public class ChangesetEntryWrapper
 	@Override
 	public long getChangesetEntryId() {
 		return model.getChangesetEntryId();
+	}
+
+	/**
+	 * Returns the class external reference code of this changeset entry.
+	 *
+	 * @return the class external reference code of this changeset entry
+	 */
+	@Override
+	public String getClassExternalReferenceCode() {
+		return model.getClassExternalReferenceCode();
 	}
 
 	/**
@@ -271,6 +290,18 @@ public class ChangesetEntryWrapper
 		model.setChangesetEntryId(changesetEntryId);
 	}
 
+	/**
+	 * Sets the class external reference code of this changeset entry.
+	 *
+	 * @param classExternalReferenceCode the class external reference code of this changeset entry
+	 */
+	@Override
+	public void setClassExternalReferenceCode(
+		String classExternalReferenceCode) {
+
+		model.setClassExternalReferenceCode(classExternalReferenceCode);
+	}
+
 	@Override
 	public void setClassName(String className) {
 		model.setClassName(className);
@@ -387,3 +418,4 @@ public class ChangesetEntryWrapper
 	}
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:1873129206

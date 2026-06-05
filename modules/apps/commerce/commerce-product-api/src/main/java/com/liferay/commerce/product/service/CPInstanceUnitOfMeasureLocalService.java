@@ -386,3 +386,4 @@ public interface CPInstanceUnitOfMeasureLocalService
 		throws E;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-1588487031

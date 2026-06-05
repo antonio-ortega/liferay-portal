@@ -107,6 +107,8 @@ public class ListTypeEntryModelImpl
 
 	public static final String TABLE_SQL_DROP = "drop table ListTypeEntry";
 
+	public static final String ENTITY_ALIAS = "listTypeEntry";
+
 	public static final String ORDER_BY_JPQL =
 		" ORDER BY listTypeEntry.listTypeEntryId ASC";
 
@@ -1335,3 +1337,4 @@ public class ListTypeEntryModelImpl
 	private ListTypeEntry _escapedModel;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-796252283

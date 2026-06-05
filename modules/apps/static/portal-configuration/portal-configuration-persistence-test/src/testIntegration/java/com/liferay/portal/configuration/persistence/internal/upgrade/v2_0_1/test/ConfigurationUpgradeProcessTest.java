@@ -6,14 +6,14 @@
 package com.liferay.portal.configuration.persistence.internal.upgrade.v2_0_1.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.petra.io.unsync.UnsyncByteArrayInputStream;
+import com.liferay.petra.io.unsync.UnsyncByteArrayOutputStream;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClassDefinition;
 import com.liferay.portal.db.partition.util.DBPartitionUtil;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.jdbc.DataAccess;
-import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayInputStream;
-import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayOutputStream;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupConstants;
@@ -117,18 +117,20 @@ public class ConfigurationUpgradeProcessTest {
 		long count = 0;
 
 		try (Connection connection = DataAccess.getConnection();
+
 			PreparedStatement preparedStatement = connection.prepareStatement(
 				StringBundler.concat(
 					"select dictionary from Configuration_ where ",
 					"configurationId like '", _CONFIGURATION_ID, "%' and ",
 					"dictionary like '%companyId=%", companyId, "%'"));
+
 			ResultSet resultSet = preparedStatement.executeQuery()) {
 
 			while (resultSet.next()) {
 				count += 1;
 
 				Dictionary<String, Object> dictionary = _toDictionary(
-					resultSet.getString(1));
+					resultSet.getString("dictionary"));
 
 				Assert.assertEquals(
 					companyId,
@@ -146,6 +148,7 @@ public class ConfigurationUpgradeProcessTest {
 			CompanyThreadLocal.getCompanyId(), GroupConstants.GUEST);
 
 		try (Connection connection = DataAccess.getConnection();
+
 			PreparedStatement preparedStatement = connection.prepareStatement(
 				"insert into Configuration_ (configurationId, dictionary) " +
 					"values(?, ?)")) {

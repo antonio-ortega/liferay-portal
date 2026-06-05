@@ -66,7 +66,7 @@ export default function CreateTagsModalContent({
 				name: values.tagName,
 			};
 
-			ApiHelper.post(url, body).then(({error, status}) => {
+			return ApiHelper.post(url, body).then(({error, status}) => {
 				if (error) {
 					if (status === 'CONFLICT') {
 						setNameInputError(
@@ -198,8 +198,10 @@ export default function CreateTagsModalContent({
 					last={
 						<ClayButton.Group spaced>
 							<ClayButton
+								borderless
 								displayType="secondary"
 								onClick={closeModal}
+								outline
 								type="button"
 							>
 								{Liferay.Language.get('cancel')}

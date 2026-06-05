@@ -32,10 +32,8 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.kernel.version.Version;
-import com.liferay.portal.search.engine.ConnectionInformation;
-import com.liferay.portal.search.engine.NodeInformation;
 import com.liferay.portal.search.engine.SearchEngineInformation;
 import com.liferay.portal.search.searcher.SearchRequestBuilder;
 import com.liferay.portal.search.searcher.SearchRequestBuilderFactory;
@@ -61,6 +59,7 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.function.Consumer;
 
 import org.junit.Assert;
@@ -176,7 +175,7 @@ public class UserIndexerTest {
 		addUserWithNameFields(firstName, middleName, lastName);
 
 		assertFirstNameFieldValue(
-			firstName, byAttribute("firstName", "\"Mary Jane\""));
+			firstName, byAttribute("firstName_en_US", "\"Mary Jane\""));
 	}
 
 	@Test
@@ -195,11 +194,11 @@ public class UserIndexerTest {
 				lastName
 			));
 
-		assertNoHits(byAttribute("firstName", "\"Mary Watson\""));
-		assertNoHits(byAttribute("firstName", "\"Mary Jane\" Missingword"));
-
 		assertFirstNameFieldValue(
-			firstName, byAttribute("firstName", "Mary \"Jane Watson\""));
+			firstName, byAttribute("firstName_en_US", "Mary \"Jane Watson\""));
+		assertNoHits(byAttribute("firstName_en_US", "\"Mary Watson\""));
+		assertNoHits(
+			byAttribute("firstName_en_US", "\"Mary Jane\" Missingword"));
 	}
 
 	@Test
@@ -233,8 +232,11 @@ public class UserIndexerTest {
 		User user = addUserWithNameFields(firstName, null, lastName);
 
 		assertFieldValue(
-			"firstName", firstName, byAttribute("firstName", "姓氏"));
-		assertFieldValue("lastName", lastName, byAttribute("lastName", "名字"));
+			"firstName_zh_CN", firstName, LocaleUtil.CHINA,
+			byAttribute("firstName_zh_CN", "姓氏"));
+		assertFieldValue(
+			"lastName_zh_CN", lastName, LocaleUtil.CHINA,
+			byAttribute("lastName_zh_CN", "名字"));
 
 		assertUserId(user.getUserId(), byQueryString("名字"));
 		assertUserId(user.getUserId(), byQueryString("名字姓氏"));
@@ -249,8 +251,11 @@ public class UserIndexerTest {
 		User user = addUserWithNameFields(firstName, null, lastName);
 
 		assertFieldValue(
-			"firstName", firstName, byAttribute("firstName", "宮崎"));
-		assertFieldValue("lastName", lastName, byAttribute("lastName", "駿"));
+			"firstName_ja_JP", firstName, LocaleUtil.JAPAN,
+			byAttribute("firstName_ja_JP", "宮崎"));
+		assertFieldValue(
+			"lastName_ja_JP", lastName, LocaleUtil.JAPAN,
+			byAttribute("lastName_ja_JP", "駿"));
 
 		assertUserId(user.getUserId(), byQueryString("宮崎"));
 		assertUserId(user.getUserId(), byQueryString("駿 宮崎"));
@@ -296,12 +301,14 @@ public class UserIndexerTest {
 		User user = addUserWithNameFields(firstName, middleName, lastName);
 
 		assertFieldValue(
-			"firstName", firstName, byAttribute("firstName", "José"));
+			"firstName_es_ES", firstName, LocaleUtil.SPAIN,
+			byAttribute("firstName_es_ES", "José"));
 		assertFieldValue(
-			"lastName", lastName, byAttribute("lastName", "Sánchez"));
+			"lastName_es_ES", lastName, LocaleUtil.SPAIN,
+			byAttribute("lastName_es_ES", "Sánchez"));
 		assertFieldValue(
-			"middleName", middleName, byAttribute("middleName", "Pedro"));
-
+			"middleName_es_ES", middleName, LocaleUtil.SPAIN,
+			byAttribute("middleName_es_ES", "Pedro"));
 		assertUserId(user.getUserId(), byQueryString("Pedro"));
 		assertUserId(user.getUserId(), byQueryString("José Sánchez"));
 		assertUserId(user.getUserId(), byQueryString("Sánchez José"));
@@ -429,8 +436,10 @@ public class UserIndexerTest {
 				StringPool.SPACE, lastName),
 			user.getUserId());
 
-		String expectedFullNameHighlight = _getExpectedFullNameHighlight(
-			firstName, middleName, lastName);
+		String expectedFullNameHighlight = StringBundler.concat(
+			HighlightUtil.HIGHLIGHT_TAG_OPEN, firstName, StringPool.SPACE,
+			middleName, StringPool.SPACE, lastName,
+			HighlightUtil.HIGHLIGHT_TAG_CLOSE);
 
 		assertSummary(
 			StringUtil.toLowerCase(firstName + " " + lastName),
@@ -655,7 +664,15 @@ public class UserIndexerTest {
 		Consumer<SearchRequestBuilder>... consumers) {
 
 		FieldValuesAssert.assertFieldValue(
-			fieldName, fieldValue, search(consumers));
+			fieldName, fieldValue, search(LocaleUtil.US, consumers));
+	}
+
+	protected void assertFieldValue(
+		String fieldName, Object fieldValue, Locale locale,
+		Consumer<SearchRequestBuilder>... consumers) {
+
+		FieldValuesAssert.assertFieldValue(
+			fieldName, fieldValue, search(locale, consumers));
 	}
 
 	protected void assertFindUserByGroup(String queryString, long groupId) {
@@ -676,7 +693,7 @@ public class UserIndexerTest {
 	protected void assertFirstNameFieldValue(
 		String firstName, Consumer<SearchRequestBuilder> consumer) {
 
-		assertFieldValue("firstName", firstName, consumer);
+		assertFieldValue("firstName_en_US", firstName, consumer);
 	}
 
 	protected void assertNoHits(Consumer<SearchRequestBuilder> consumer) {
@@ -806,17 +823,42 @@ public class UserIndexerTest {
 			).build());
 	}
 
+	protected SearchResponse search(
+		Locale locale, Consumer<SearchRequestBuilder>... consumers) {
+
+		return searcher.search(
+			searchRequestBuilderFactory.builder(
+			).companyId(
+				_group.getCompanyId()
+			).emptySearchEnabled(
+				true
+			).fields(
+				StringPool.STAR
+			).groupIds(
+				_group.getGroupId()
+			).locale(
+				locale
+			).modelIndexerClasses(
+				User.class
+			).withSearchRequestBuilder(
+				consumers
+			).build());
+	}
+
 	protected void testNameFields(
 		String firstName, String lastName, String middleName) {
 
 		addUserWithNameFields(firstName, middleName, lastName);
 
 		assertFieldValue(
-			"firstName", firstName, byAttribute("firstName", firstName));
+			"firstName_en_US", firstName,
+			byAttribute("firstName_en_US", firstName));
 		assertFieldValue(
-			"lastName", lastName, byAttribute("lastName", lastName));
+			"lastName_en_US", lastName,
+			byAttribute("lastName_en_US", lastName));
 		assertFieldValue(
-			"middleName", middleName, byAttribute("middleName", middleName));
+			"middleName_en_US", middleName,
+			byAttribute("middleName_en_US", middleName));
 	}
 
 	protected void toggleCreateSite(Organization organization, boolean site)
@@ -853,42 +895,6 @@ public class UserIndexerTest {
 
 	@Inject
 	protected UserLocalService userLocalService;
-
-	private Version _getElasticsearchVersion() {
-		List<ConnectionInformation> connectionInformationList =
-			_searchEngineInformation.getConnectionInformationList();
-
-		ConnectionInformation connectionInformation =
-			connectionInformationList.get(0);
-
-		List<NodeInformation> nodeInformationList =
-			connectionInformation.getNodeInformationList();
-
-		NodeInformation nodeInformation = nodeInformationList.get(0);
-
-		return Version.parseVersion(nodeInformation.getVersion());
-	}
-
-	private String _getExpectedFullNameHighlight(
-		String firstName, String middleName, String lastName) {
-
-		if (StringUtil.startsWith(
-				_searchEngineInformation.getVendorString(), "Elasticsearch") &&
-			(_getElasticsearchVersion().compareTo(
-				Version.parseVersion("8.10.2")) >= 0)) {
-
-			return StringBundler.concat(
-				HighlightUtil.HIGHLIGHT_TAG_OPEN, firstName, StringPool.SPACE,
-				middleName, StringPool.SPACE, lastName,
-				HighlightUtil.HIGHLIGHT_TAG_CLOSE);
-		}
-
-		return StringBundler.concat(
-			HighlightUtil.HIGHLIGHT_TAG_OPEN, firstName,
-			HighlightUtil.HIGHLIGHT_TAG_CLOSE, StringPool.SPACE, middleName,
-			StringPool.SPACE, HighlightUtil.HIGHLIGHT_TAG_OPEN, lastName,
-			HighlightUtil.HIGHLIGHT_TAG_CLOSE);
-	}
 
 	private Long[] _toArrayOfLong(List<Long> list) {
 		return list.toArray(new Long[0]);

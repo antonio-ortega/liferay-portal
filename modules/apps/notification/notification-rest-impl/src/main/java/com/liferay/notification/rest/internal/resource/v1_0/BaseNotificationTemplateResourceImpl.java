@@ -5,6 +5,7 @@
 
 package com.liferay.notification.rest.internal.resource.v1_0;
 
+import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.notification.rest.dto.v1_0.NotificationTemplate;
 import com.liferay.notification.rest.resource.v1_0.NotificationTemplateResource;
 import com.liferay.petra.function.UnsafeBiConsumer;
@@ -890,6 +891,15 @@ public abstract class BaseNotificationTemplateResourceImpl
 				return LocaleUtil.fromLanguageId(languageId);
 			}
 
+			@Override
+			public boolean isAcceptAllLanguages() {
+				if (ExportImportThreadLocal.isExportInProcess()) {
+					return true;
+				}
+
+				return AcceptLanguage.super.isAcceptAllLanguages();
+			}
+
 		};
 	}
 
@@ -1515,3 +1525,4 @@ public abstract class BaseNotificationTemplateResourceImpl
 		LogFactoryUtil.getLog(BaseNotificationTemplateResourceImpl.class);
 
 }
+// LIFERAY-REST-BUILDER-HASH:1776382939

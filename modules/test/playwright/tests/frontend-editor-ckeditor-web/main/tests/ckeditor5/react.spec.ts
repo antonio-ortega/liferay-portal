@@ -13,7 +13,7 @@ import {reactClassicPageTest} from '../../../../frontend-editor-ckeditor-sample-
 export const test = mergeTests(
 	reactClassicPageTest,
 	featureFlagsTest({
-		'LPD-11235': {enabled: true},
+		'LPD-11235': {enabled: false},
 		'LPS-178052': {enabled: true},
 	}),
 	loginTest()
@@ -104,6 +104,62 @@ test(
 			await cancelButton.click();
 
 			await expect(page.getByText('Select Video')).not.toBeAttached();
+		});
+	}
+);
+
+test(
+	'Editor can be disabled/enabled',
+	{tag: '@LPD-80293'},
+	async ({classicPage, page}) => {
+		const editorContainer = page.locator('.lfr-ck');
+		const externalDisableButton = page.getByRole('button', {
+			name: 'Toggle disabled prop',
+		});
+		const imageToolbarButton = classicPage.toolbar.container.getByRole(
+			'button',
+			{
+				name: 'Image',
+			}
+		);
+		const internalDisableButton = page.getByRole('button', {
+			name: 'Toggle internal read-only mode',
+		});
+
+		async function assertEditorDisabled() {
+			await expect(imageToolbarButton).not.toBeEnabled();
+
+			await expect(editorContainer).toHaveClass(/lfr-ck-disabled/);
+		}
+
+		async function assertEditorEnabled() {
+			await expect(imageToolbarButton).toBeEnabled();
+
+			await expect(editorContainer).not.toHaveClass(/lfr-ck-disabled/);
+		}
+
+		await test.step('Initially, editor is enabled', async () => {
+			await assertEditorEnabled();
+		});
+
+		await test.step('Disable editor through prop', async () => {
+			await externalDisableButton.click();
+
+			await assertEditorDisabled();
+
+			await externalDisableButton.click();
+
+			await assertEditorEnabled();
+		});
+
+		await test.step('Disable editor by changing internal read-only mode', async () => {
+			await internalDisableButton.click();
+
+			await assertEditorDisabled();
+
+			await internalDisableButton.click();
+
+			await assertEditorEnabled();
 		});
 	}
 );

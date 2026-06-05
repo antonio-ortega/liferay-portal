@@ -1,7 +1,7 @@
 {
 	"active": true,
-	"description": "This writing agent takes your text and rewrites it to be briefer and easier to read.",
 	"externalReferenceCode": "L_MAKE_SHORTER",
+	"groupExternalReferenceCode": "[$ACCOUNT_ENTRY_GROUP_ERC:L_AI_HUB$]",
 	"name": "Make Shorter",
 	"scope": "ai",
 	"title": "Make Shorter",

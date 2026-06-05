@@ -6,9 +6,9 @@
 package com.liferay.portal.search.solr8.internal.groupby;
 
 import com.liferay.portal.kernel.search.BooleanClauseOccur;
+import com.liferay.portal.kernel.search.BooleanQuery;
 import com.liferay.portal.kernel.search.GroupBy;
 import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.generic.BooleanQueryImpl;
 import com.liferay.portal.search.groupby.GroupByRequest;
 import com.liferay.portal.search.groupby.GroupByResponse;
 import com.liferay.portal.search.solr8.internal.indexing.SolrIndexingFixture;
@@ -40,7 +40,7 @@ public class GroupByTest extends BaseGroupByTestCase {
 	@Override
 	@Test
 	public void testFieldNamesDefault() throws Exception {
-		indexDuplicates("one", 1);
+		indexDuplicates(1, "one");
 
 		assertSearch(
 			indexingTestHelper -> {
@@ -52,17 +52,16 @@ public class GroupByTest extends BaseGroupByTestCase {
 
 				indexingTestHelper.verify(
 					hits -> assertGroupedHitsFieldNames(
-						"one",
 						Arrays.asList(
 							"companyId", "entryClassName", "entryClassPK",
 							"groupId", SORT_FIELD, "uid", "userName"),
-						hits, indexingTestHelper));
+						hits, indexingTestHelper, "one"));
 			});
 	}
 
 	@Test
 	public void testGroupByDocsSizeDefault() throws Exception {
-		indexDuplicates("five", 5);
+		indexDuplicates(5, "five");
 
 		assertSearch(
 			indexingTestHelper -> {
@@ -80,7 +79,7 @@ public class GroupByTest extends BaseGroupByTestCase {
 
 	@Test
 	public void testGroupByDocsSizeZero() throws Exception {
-		indexDuplicates("five", 5);
+		indexDuplicates(5, "five");
 
 		assertSearch(
 			indexingTestHelper -> {
@@ -148,9 +147,8 @@ public class GroupByTest extends BaseGroupByTestCase {
 			indexingTestHelper -> {
 				indexingTestHelper.defineRequest(
 					searchRequestBuilder -> {
-						GroupByRequest groupByRequest =
-							groupByRequestFactory.getGroupByRequest(
-								GROUP_FIELD);
+						GroupByRequest groupByRequest = new GroupByRequest(
+							GROUP_FIELD);
 
 						groupByRequest.setTermsSorts(
 							new Sort("scoreField", Sort.SCORE_TYPE, desc));
@@ -158,15 +156,14 @@ public class GroupByTest extends BaseGroupByTestCase {
 						searchRequestBuilder.groupByRequests(groupByRequest);
 					});
 
-				BooleanQueryImpl booleanQueryImpl = new BooleanQueryImpl();
+				BooleanQuery booleanQuery = new BooleanQuery();
 
-				booleanQueryImpl.addExactTerm(SORT_FIELD, "3");
-				booleanQueryImpl.addExactTerm(SORT_FIELD, "2");
+				booleanQuery.addExactTerm(SORT_FIELD, "3");
+				booleanQuery.addExactTerm(SORT_FIELD, "2");
 
-				booleanQueryImpl.add(
-					getDefaultQuery(), BooleanClauseOccur.MUST);
+				booleanQuery.add(getDefaultQuery(), BooleanClauseOccur.MUST);
 
-				indexingTestHelper.setQuery(booleanQueryImpl);
+				indexingTestHelper.setQuery(booleanQuery);
 
 				indexingTestHelper.search();
 
@@ -204,9 +201,8 @@ public class GroupByTest extends BaseGroupByTestCase {
 			indexingTestHelper -> {
 				indexingTestHelper.defineRequest(
 					searchRequestBuilder -> {
-						GroupByRequest groupByRequest =
-							groupByRequestFactory.getGroupByRequest(
-								GROUP_FIELD);
+						GroupByRequest groupByRequest = new GroupByRequest(
+							GROUP_FIELD);
 
 						groupByRequest.setTermsSorts(
 							new Sort(SORT_FIELD, Sort.STRING_TYPE, desc));
@@ -246,9 +242,9 @@ public class GroupByTest extends BaseGroupByTestCase {
 	}
 
 	protected void indexTermsSortsDuplicates() {
-		indexDuplicates("one", 1);
-		indexDuplicates("two", 2);
-		indexDuplicates("three", 3);
+		indexDuplicates(1, "one");
+		indexDuplicates(2, "two");
+		indexDuplicates(3, "three");
 	}
 
 }

@@ -14,6 +14,7 @@ import com.liferay.frontend.data.set.model.FDSSortItemListBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntry;
+import com.liferay.object.service.ObjectEntryVersionLocalServiceUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -23,6 +24,7 @@ import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -55,7 +57,8 @@ public class ViewVersionHistoryDisplayContext {
 			"/o", _objectDefinition.getRESTContextPath(), "/scopes/",
 			_objectEntry.getGroupId(), "/by-external-reference-code/",
 			_objectEntry.getExternalReferenceCode(),
-			"/versions?nestedFields=file.thumbnailURL");
+			"/versions?nestedFields=file.metadata,file.previewURL,",
+			"file.thumbnailURL");
 	}
 
 	public List<DropdownItem> getBulkActionDropdownItems() {
@@ -70,6 +73,17 @@ public class ViewVersionHistoryDisplayContext {
 				LanguageUtil.get(_httpServletRequest, "expire")
 			).build(
 				"expire"
+			),
+			FDSActionDropdownItemBuilder.setHighlighted(
+				true
+			).setHref(
+				"#"
+			).setIcon(
+				"trash"
+			).setLabel(
+				LanguageUtil.get(_httpServletRequest, "delete")
+			).build(
+				"delete"
 			));
 	}
 
@@ -125,8 +139,21 @@ public class ViewVersionHistoryDisplayContext {
 		return HashMapBuilder.<String, Object>put(
 			"backURL", ParamUtil.getString(_httpServletRequest, "backURL")
 		).put(
+			"className", ObjectEntry.class.getName()
+		).put(
+			"classPK", _objectEntry.getObjectEntryId()
+		).put(
+			"entryClassName", _objectDefinition.getClassName()
+		).put(
+			"objectEntryCurrentVersion", _objectEntry.getVersion()
+		).put(
 			"objectEntryTitle",
-			_objectEntry.getTitleValue(_themeDisplay.getLanguageId())
+			HtmlUtil.escape(
+				_objectEntry.getTitleValue(_themeDisplay.getLanguageId()))
+		).put(
+			"objectEntryVersionsCount",
+			ObjectEntryVersionLocalServiceUtil.getObjectEntryVersionsCount(
+				_objectEntry.getObjectEntryId())
 		).put(
 			"title",
 			StringBundler.concat(

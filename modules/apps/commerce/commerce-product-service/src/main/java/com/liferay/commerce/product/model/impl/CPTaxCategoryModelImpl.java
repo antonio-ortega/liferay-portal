@@ -103,11 +103,18 @@ public class CPTaxCategoryModelImpl
 
 	public static final String TABLE_SQL_DROP = "drop table CPTaxCategory";
 
+	public static final String ENTITY_ALIAS = "cpTaxCategory";
+
+	public static final String FILTER_PK_COLUMN_NAME = "CPTaxCategoryId";
+
 	public static final String ORDER_BY_JPQL =
 		" ORDER BY cpTaxCategory.createDate DESC";
 
 	public static final String ORDER_BY_SQL =
 		" ORDER BY CPTaxCategory.createDate DESC";
+
+	public static final String ORDER_BY_SQL_INLINE_DISTINCT =
+		" ORDER BY cpTaxCategory.createDate DESC";
 
 	public static final String DATA_SOURCE = "liferayDataSource";
 
@@ -1290,3 +1297,4 @@ public class CPTaxCategoryModelImpl
 	private CPTaxCategory _escapedModel;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-1582134986

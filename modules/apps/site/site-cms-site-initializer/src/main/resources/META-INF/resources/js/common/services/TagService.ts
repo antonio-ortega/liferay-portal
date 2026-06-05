@@ -39,7 +39,7 @@ async function createTag({
 		throw new Error(error);
 	}
 
-	const tag = data?.items[0];
+	const tag = data?.items.find((item) => item.name === name);
 
 	if (tag) {
 		if (assetLibraryId) {
@@ -55,7 +55,11 @@ async function createTag({
 async function getCommonTags(selectedData: IBulkActionFDSData) {
 	return await ApiHelper.post<any>(
 		`/o/bulk/v1.0/keywords/common`,
-		composeCreateTaskDTO('KeywordBulkAction', {}, selectedData)
+		composeCreateTaskDTO(
+			'EditObjectTagsBulkSelectionAction',
+			{},
+			selectedData
+		)
 	);
 }
 

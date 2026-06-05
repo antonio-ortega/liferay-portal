@@ -121,6 +121,51 @@ describe('Forms Plugin', () => {
 			document.body.removeChild(formElement);
 		});
 
+		it('includes assetCategories, assetVocabularies, mimeType and assetTags in the payload', async () => {
+			const formElement = document.createElement('form');
+
+			formElement.dataset.analyticsAssetId = 'assetId';
+			formElement.dataset.analyticsAssetTitle = 'Form Title';
+			formElement.dataset.analyticsAssetType = 'form';
+			formElement.dataset.analyticsAssetCategories =
+				'[{"id":"cat1","name":"Category 1","vocabularyId":"voc1"},{"id":"cat2","name":"Category 2","vocabularyId":"voc1"}]';
+			formElement.dataset.analyticsAssetMimeType = 'text/html';
+			formElement.dataset.analyticsAssetTags =
+				'[{"id":"tag1","name":"Tag 1"},{"id":"tag2","name":"Tag 2"}]';
+			formElement.dataset.analyticsAssetVocabularies =
+				'[{"id":"voc1","name":"Vocabulary 1"}]';
+
+			document.body.appendChild(formElement);
+
+			const domContentLoaded = new Event('DOMContentLoaded');
+
+			await document.dispatchEvent(domContentLoaded);
+
+			const events = Analytics.getEvents().filter(
+				({eventId}) => eventId === 'formViewed'
+			);
+
+			expect(events).toEqual([
+				expect.objectContaining({
+					applicationId,
+					eventId: 'formViewed',
+					properties: expect.objectContaining({
+						assetCategories:
+							'[{"id":"cat1","name":"Category 1","vocabularyId":"voc1"},{"id":"cat2","name":"Category 2","vocabularyId":"voc1"}]',
+						assetTags:
+							'[{"id":"tag1","name":"Tag 1"},{"id":"tag2","name":"Tag 2"}]',
+						assetVocabularies:
+							'[{"id":"voc1","name":"Vocabulary 1"}]',
+						formId: 'assetId',
+						mimeType: 'text/html',
+						title: 'Form Title',
+					}),
+				}),
+			]);
+
+			document.body.removeChild(formElement);
+		});
+
 		it('remove spaces between assetTitle and assetId', async () => {
 			const formElement = document.createElement('form');
 

@@ -402,3 +402,4 @@ public interface TransitionResource {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:1158026325

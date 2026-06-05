@@ -8,6 +8,7 @@ import {expect, mergeTests} from '@playwright/test';
 import {formsPagesTest} from '../../../fixtures/formsPagesTest';
 import {loginTest} from '../../../fixtures/loginTest';
 import {virtualInstancesPagesTest} from '../../../fixtures/virtualInstancesPagesTest';
+import {liferayConfig} from '../../../liferay.config';
 import {DataProviderPage} from '../../../pages/dynamic-data-mapping-form-web/DataProviderPage';
 import {FormBuilderFieldSettingsSidePanelPage} from '../../../pages/dynamic-data-mapping-form-web/FormBuilderFieldSettingsSidePanelPage';
 import {FormBuilderPage} from '../../../pages/dynamic-data-mapping-form-web/FormBuilderPage';
@@ -65,7 +66,7 @@ test.describe('Manage forms through submission page', () => {
 		deleteAfterTestVirtualInstances.add(DEFAULT_VIRTUAL_INSTANCE_NAME);
 
 		const virtualInstancePage = await browser.newPage({
-			baseURL: `http://${DEFAULT_VIRTUAL_INSTANCE_NAME}:8080`,
+			baseURL: `http://${DEFAULT_VIRTUAL_INSTANCE_NAME}:${liferayConfig.environment.port}`,
 		});
 
 		await performLogin(
@@ -358,7 +359,9 @@ test.describe('Manage forms through submission page', () => {
 
 			await page.goto(formSubmissionURL, {waitUntil: 'networkidle'});
 
-			await page.getByLabel('Text').fill('Text field value');
+			await page
+				.getByLabel('Text', {exact: true})
+				.fill('Text field value');
 
 			const submitButton = page.getByRole('button', {name: 'Submit'});
 

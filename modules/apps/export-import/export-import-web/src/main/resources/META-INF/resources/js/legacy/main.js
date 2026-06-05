@@ -33,6 +33,7 @@ AUI.add(
 				archivedSetupsNode: defaultConfig,
 				commentsNode: defaultConfig,
 				deletionsNode: defaultConfig,
+				disableInputs: [],
 				exportLAR: defaultConfig,
 				form: defaultConfig,
 				incompleteProcessMessageNode: defaultConfig,
@@ -291,6 +292,11 @@ AUI.add(
 					if (deletionsNode) {
 						deletionsNode.on('change', () => {
 							instance._refreshDeletions();
+							instance.all('.content-link').each((item) => {
+								instance._setContentLabels(
+									item.attr('data-portletid')
+								);
+							});
 						});
 					}
 
@@ -719,6 +725,19 @@ AUI.add(
 
 						cmdNode.val(STR_EMPTY);
 
+						const disableInputs =
+							instance.get('disableInputs') || [];
+
+						for (const field of form
+							.getDOMNode()
+							.getElementsByTagName('input')) {
+							const fieldName = field.name.split('_').pop();
+
+							if (disableInputs.includes(fieldName)) {
+								field.disabled = true;
+							}
+						}
+
 						submitForm(form);
 					}
 				},
@@ -885,6 +904,11 @@ AUI.add(
 					const instance = this;
 
 					const contentNode = instance.byId('content_' + portletId);
+
+					if (!contentNode) {
+						return;
+					}
+
 					const portletDataNode = instance.byId(
 						'PORTLET_DATA_' + portletId
 					);
@@ -894,7 +918,11 @@ AUI.add(
 					const selectedContent = [];
 
 					inputs.each((item) => {
-						if (item.attr('checked')) {
+						if (
+							item.attr('checked') &&
+							(!item.ancestor('.deletions') ||
+								instance._isChecked('deletionsNode'))
+						) {
 							selectedContent.push(item.attr('data-name'));
 						}
 					});

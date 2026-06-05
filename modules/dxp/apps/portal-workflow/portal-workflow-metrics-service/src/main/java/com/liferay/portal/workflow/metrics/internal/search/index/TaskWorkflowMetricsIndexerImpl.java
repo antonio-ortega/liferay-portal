@@ -14,12 +14,15 @@ import com.liferay.portal.kernel.util.PortalRunMode;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.search.document.Document;
 import com.liferay.portal.search.document.DocumentBuilder;
+import com.liferay.portal.search.document.DocumentBuilderFactory;
 import com.liferay.portal.search.engine.adapter.document.UpdateByQueryDocumentRequest;
 import com.liferay.portal.search.engine.adapter.document.UpdateDocumentRequest;
 import com.liferay.portal.search.index.IndexNameBuilder;
 import com.liferay.portal.search.query.BooleanQuery;
+import com.liferay.portal.search.query.QueriesUtil;
 import com.liferay.portal.search.script.ScriptBuilder;
 import com.liferay.portal.search.script.ScriptType;
+import com.liferay.portal.search.script.Scripts;
 import com.liferay.portal.workflow.metrics.internal.search.constants.WorkflowMetricsIndexTypeConstants;
 import com.liferay.portal.workflow.metrics.internal.search.index.util.WorkflowMetricsIndexerUtil;
 import com.liferay.portal.workflow.metrics.model.AddTaskRequest;
@@ -51,7 +54,7 @@ public class TaskWorkflowMetricsIndexerImpl
 
 	@Override
 	public Document addTask(AddTaskRequest addTaskRequest) {
-		DocumentBuilder documentBuilder = documentBuilderFactory.builder();
+		DocumentBuilder documentBuilder = DocumentBuilderFactory.builder();
 
 		if (!searchCapabilities.isWorkflowMetricsSupported()) {
 			return documentBuilder.build();
@@ -153,7 +156,7 @@ public class TaskWorkflowMetricsIndexerImpl
 					return;
 				}
 
-				ScriptBuilder scriptBuilder = scripts.builder();
+				ScriptBuilder scriptBuilder = Scripts.INSTANCE.builder();
 
 				UpdateDocumentRequest updateDocumentRequest =
 					new UpdateDocumentRequest(
@@ -207,7 +210,7 @@ public class TaskWorkflowMetricsIndexerImpl
 
 	@Override
 	public Document completeTask(CompleteTaskRequest completeTaskRequest) {
-		DocumentBuilder documentBuilder = documentBuilderFactory.builder();
+		DocumentBuilder documentBuilder = DocumentBuilderFactory.builder();
 
 		documentBuilder.setLong(
 			"companyId", completeTaskRequest.getCompanyId()
@@ -242,12 +245,13 @@ public class TaskWorkflowMetricsIndexerImpl
 					completeTaskRequest.getCompanyId(),
 					completeTaskRequest.getTaskId());
 
-				BooleanQuery booleanQuery = queries.booleanQuery();
+				BooleanQuery booleanQuery = QueriesUtil.booleanQuery();
 
 				booleanQuery.addMustQueryClauses(
-					queries.term(
+					QueriesUtil.term(
 						"companyId", completeTaskRequest.getCompanyId()),
-					queries.term("taskId", completeTaskRequest.getTaskId()));
+					QueriesUtil.term(
+						"taskId", completeTaskRequest.getTaskId()));
 
 				_slaTaskResultWorkflowMetricsIndexer.updateDocuments(
 					completeTaskRequest.getCompanyId(),
@@ -264,7 +268,7 @@ public class TaskWorkflowMetricsIndexerImpl
 
 	@Override
 	public void deleteTask(DeleteTaskRequest deleteTaskRequest) {
-		DocumentBuilder documentBuilder = documentBuilderFactory.builder();
+		DocumentBuilder documentBuilder = DocumentBuilderFactory.builder();
 
 		documentBuilder.setLong(
 			"companyId", deleteTaskRequest.getCompanyId()
@@ -300,7 +304,7 @@ public class TaskWorkflowMetricsIndexerImpl
 
 	@Override
 	public Document updateTask(UpdateTaskRequest updateTaskRequest) {
-		DocumentBuilder documentBuilder = documentBuilderFactory.builder();
+		DocumentBuilder documentBuilder = DocumentBuilderFactory.builder();
 
 		if (!searchCapabilities.isWorkflowMetricsSupported()) {
 			return documentBuilder.build();
@@ -352,11 +356,12 @@ public class TaskWorkflowMetricsIndexerImpl
 					return;
 				}
 
-				BooleanQuery booleanQuery = queries.booleanQuery();
+				BooleanQuery booleanQuery = QueriesUtil.booleanQuery();
 
 				booleanQuery.addMustQueryClauses(
-					queries.term("companyId", document.getLong("companyId")),
-					queries.term("taskId", document.getLong("taskId")));
+					QueriesUtil.term(
+						"companyId", document.getLong("companyId")),
+					QueriesUtil.term("taskId", document.getLong("taskId")));
 
 				_slaTaskResultWorkflowMetricsIndexer.updateDocuments(
 					updateTaskRequest.getCompanyId(),
@@ -367,7 +372,7 @@ public class TaskWorkflowMetricsIndexerImpl
 					).build(),
 					booleanQuery);
 
-				ScriptBuilder scriptBuilder = scripts.builder();
+				ScriptBuilder scriptBuilder = Scripts.INSTANCE.builder();
 
 				scriptBuilder.idOrCode(
 					StringUtil.read(
@@ -396,9 +401,9 @@ public class TaskWorkflowMetricsIndexerImpl
 
 				UpdateByQueryDocumentRequest updateByQueryDocumentRequest =
 					new UpdateByQueryDocumentRequest(
-						queries.nested(
+						QueriesUtil.nested(
 							"tasks",
-							queries.term(
+							QueriesUtil.term(
 								"tasks.taskId", updateTaskRequest.getTaskId())),
 						scriptBuilder.build(),
 						WorkflowMetricsIndex.getIndexName(
@@ -419,11 +424,12 @@ public class TaskWorkflowMetricsIndexerImpl
 			return;
 		}
 
-		ScriptBuilder scriptBuilder = scripts.builder();
+		ScriptBuilder scriptBuilder = Scripts.INSTANCE.builder();
 
 		searchEngineAdapter.execute(
 			new UpdateByQueryDocumentRequest(
-				queries.nested("tasks", queries.term("tasks.taskId", taskId)),
+				QueriesUtil.nested(
+					"tasks", QueriesUtil.term("tasks.taskId", taskId)),
 				scriptBuilder.idOrCode(
 					StringUtil.read(
 						getClass(),

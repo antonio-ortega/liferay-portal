@@ -5,10 +5,10 @@
 
 package com.liferay.source.formatter.check;
 
+import com.liferay.petra.io.unsync.UnsyncBufferedReader;
+import com.liferay.petra.io.unsync.UnsyncStringReader;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.io.unsync.UnsyncBufferedReader;
-import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.source.formatter.check.util.SourceUtil;
@@ -46,6 +46,14 @@ public class YMLStylingCheck extends BaseFileCheck {
 		return _formatQuotes(content);
 	}
 
+	private boolean _containsLogicalOperator(String s) {
+		if (s.contains("!") || s.contains("&&") || s.contains("||")) {
+			return true;
+		}
+
+		return false;
+	}
+
 	private String _fixBooleanValue(String s) {
 		if (_isBooleanFalse(s)) {
 			return "false";
@@ -53,6 +61,14 @@ public class YMLStylingCheck extends BaseFileCheck {
 
 		if (_isBooleanTrue(s)) {
 			return "true";
+		}
+
+		return s;
+	}
+
+	private String _fixNullValue(String s) {
+		if (_isNullValue(s)) {
+			return "null";
 		}
 
 		return s;
@@ -87,15 +103,17 @@ public class YMLStylingCheck extends BaseFileCheck {
 
 			String unquotedValue = s.substring(1, s.length() - 1);
 
-			if (unquotedValue.contains("\\") ||
+			if (unquotedValue.contains(": ") || unquotedValue.contains("\\") ||
+				unquotedValue.endsWith(":") ||
 				unquotedValue.matches("-?\\d+(\\.\\d*)?") ||
-				unquotedValue.startsWith("!") ||
 				unquotedValue.startsWith("#") ||
+				unquotedValue.startsWith("%") ||
 				unquotedValue.startsWith("&") ||
 				unquotedValue.startsWith("*") ||
 				unquotedValue.startsWith("[") ||
 				unquotedValue.startsWith("{") ||
-				_isBooleanValue(unquotedValue)) {
+				_containsLogicalOperator(unquotedValue) ||
+				_isBooleanValue(unquotedValue) || _isNullValue(unquotedValue)) {
 
 				return s;
 			}
@@ -159,6 +177,7 @@ public class YMLStylingCheck extends BaseFileCheck {
 				String newValue = _fixQuotes(value);
 
 				newValue = _fixBooleanValue(newValue);
+				newValue = _fixNullValue(newValue);
 
 				if (value.equals(newValue)) {
 					continue;
@@ -197,6 +216,16 @@ public class YMLStylingCheck extends BaseFileCheck {
 
 	private boolean _isBooleanValue(String s) {
 		if (_isBooleanFalse(s) || _isBooleanTrue(s)) {
+			return true;
+		}
+
+		return false;
+	}
+
+	private boolean _isNullValue(String s) {
+		if (s.equals("NULL") || s.equals("Null") || s.equals("null") ||
+			s.equals("~")) {
+
 			return true;
 		}
 

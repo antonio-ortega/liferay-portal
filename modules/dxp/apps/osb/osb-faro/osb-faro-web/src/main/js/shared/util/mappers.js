@@ -1,4 +1,5 @@
 import {getFilters} from 'shared/util/filter';
+import {getSafeDecodedURIComponent} from 'shared/util/util';
 import {getSafeRangeSelectors, getSafeTouchpoint} from 'shared/util/util';
 import {isNil, reduce} from 'lodash';
 
@@ -97,6 +98,7 @@ export function safeResultToProps(mapper) {
  */
 export function getVariables({
 	assetId: assetIdFromProps,
+	experienceId,
 	filters,
 	interval,
 	params,
@@ -111,7 +113,7 @@ export function getVariables({
 	const assetId = assetIdFromProps || assetIdFromParams;
 
 	let variables = {
-		title: decodeURIComponent(title),
+		title: getSafeDecodedURIComponent(title),
 		touchpoint: getSafeTouchpoint(touchpoint),
 		...getSafeRangeSelectors(rangeSelectors)
 	};
@@ -119,7 +121,7 @@ export function getVariables({
 	if (assetId) {
 		variables = {
 			...variables,
-			assetId: decodeURIComponent(assetId)
+			assetId: getSafeDecodedURIComponent(assetId)
 		};
 	}
 
@@ -141,6 +143,13 @@ export function getVariables({
 		variables = {
 			...variables,
 			channelId
+		};
+	}
+
+	if (experienceId) {
+		variables = {
+			...variables,
+			experienceId
 		};
 	}
 

@@ -7,11 +7,12 @@ import {FrameLocator, Locator, Page} from '@playwright/test';
 
 import {PageEditorPage} from '../../../../pages/layout-content-page-editor-web/PageEditorPage';
 import {DisplayPageTemplatesPage} from '../../../../pages/layout-page-template-admin-web/DisplayPageTemplatesPage';
-import {ApplicationsMenuPage} from '../../../../pages/product-navigation-applications-menu/ApplicationsMenuPage';
+import {GlobalMenuPage} from '../../../../pages/product-navigation-applications-menu/GlobalMenuPage';
 import {ProductMenuPage} from '../../../../pages/product-navigation-control-menu-web/ProductMenuPage';
 import {clickAndExpectToBeVisible} from '../../../../utils/clickAndExpectToBeVisible';
 import getRandomString from '../../../../utils/getRandomString';
 import {PORTLET_URLS} from '../../../../utils/portletUrls';
+import {openProductMenu} from '../../../../utils/productMenu';
 import {waitForAlert} from '../../../../utils/waitForAlert';
 
 export class NavigationMenusPage {
@@ -46,9 +47,9 @@ export class NavigationMenusPage {
 	readonly sidebarBody: Locator;
 	readonly sidebarSaveButton: Locator;
 	readonly urlModal: FrameLocator;
-	readonly vocabulariesModal: FrameLocator;
+	readonly vocabulariesModal: Locator;
 
-	readonly applicationsMenuPage: ApplicationsMenuPage;
+	readonly globalMenuPage: GlobalMenuPage;
 	readonly productMenuPage: ProductMenuPage;
 
 	constructor(page: Page) {
@@ -135,11 +136,13 @@ export class NavigationMenusPage {
 			name: 'Save',
 		});
 		this.urlModal = page.frameLocator('iframe[title="Add URL"]');
-		this.vocabulariesModal = page.frameLocator(
-			'iframe[title="Select Vocabularies"]'
-		);
+		this.vocabulariesModal = page
+			.getByRole('dialog', {
+				name: 'Select Vocabulary',
+			})
+			.or(page.getByRole('dialog', {name: 'Select Vocabularies'}));
 
-		this.applicationsMenuPage = new ApplicationsMenuPage(this.page);
+		this.globalMenuPage = new GlobalMenuPage(this.page);
 		this.productMenuPage = new ProductMenuPage(this.page);
 	}
 
@@ -194,7 +197,7 @@ export class NavigationMenusPage {
 			.click();
 
 		await this.documentsModal
-			.getByRole('link', {name: 'Liferay DXP'})
+			.getByRole('link', {name: 'Liferay DXP Site'})
 			.click();
 
 		await this.documentsModal
@@ -413,7 +416,7 @@ export class NavigationMenusPage {
 			.click();
 
 		await this.documentsModal
-			.getByRole('link', {name: 'Liferay DXP'})
+			.getByRole('link', {name: 'Liferay DXP Site'})
 			.click();
 
 		await this.documentsModal
@@ -481,11 +484,11 @@ export class NavigationMenusPage {
 	}
 
 	async gotoGlobalSiteNavigationMenuPortlet() {
-		await this.applicationsMenuPage.goToApplicationsMenu();
+		await this.globalMenuPage.goToSite('Global');
 
-		await this.applicationsMenuPage.goToGlobalSite();
+		await openProductMenu(this.page);
 
-		await this.productMenuPage.openProductMenuIfClosed();
+		await this.productMenuPage.siteBuilderButton.waitFor();
 
 		await this.productMenuPage.siteBuilderButton.click();
 
@@ -521,7 +524,7 @@ export class NavigationMenusPage {
 			trigger: this.addMenuItemButton,
 		});
 
-		await this.vocabulariesModal.getByPlaceholder('Search').waitFor();
+		await this.vocabulariesModal.waitFor();
 	}
 
 	async translateName(itemName: string, useCustomName = false) {

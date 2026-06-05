@@ -5,6 +5,8 @@
 
 package com.liferay.portal.dao.db;
 
+import com.liferay.petra.io.unsync.UnsyncBufferedReader;
+import com.liferay.petra.io.unsync.UnsyncStringReader;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.db.DBInspector;
@@ -12,8 +14,6 @@ import com.liferay.portal.kernel.dao.db.DBType;
 import com.liferay.portal.kernel.dao.db.Index;
 import com.liferay.portal.kernel.dao.db.IndexMetadata;
 import com.liferay.portal.kernel.dao.jdbc.DataAccess;
-import com.liferay.portal.kernel.io.unsync.UnsyncBufferedReader;
-import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
@@ -143,7 +143,7 @@ public class OracleDB extends BaseDB {
 
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				if (resultSet.next()) {
-					return resultSet.getString(1);
+					return resultSet.getString("value");
 				}
 			}
 		}
@@ -160,6 +160,7 @@ public class OracleDB extends BaseDB {
 					"select index_name, table_name, uniqueness from ",
 					"user_indexes where index_name like 'LIFERAY_%' or ",
 					"index_name like 'IX_%'"));
+
 			ResultSet resultSet = preparedStatement.executeQuery()) {
 
 			while (resultSet.next()) {
@@ -376,6 +377,59 @@ public class OracleDB extends BaseDB {
 	}
 
 	@Override
+	protected String getLockedQueryInfosSQL() {
+		return StringBundler.concat(
+			"select v$session.last_call_et * 1000 as duration, v$session.sid ",
+			"as id, dbms_lob.substr(v$sql.sql_fulltext, 4000, 1) as query, ",
+			"v$session.schemaname as schema_, v$session.event as state from ",
+			"v$session left join v$sql on v$session.sql_id = v$sql.sql_id and ",
+			"v$session.sql_child_number = v$sql.child_number where ",
+			"v$session.audsid != sys_context('USERENV', 'SESSIONID') and ",
+			"v$session.last_call_et * 1000 >= ? and v$session.status = ",
+			"'ACTIVE' and v$session.type = 'USER' and (v$session.event like ",
+			"'enq:%' or v$session.event like '%library cache%')");
+	}
+
+	@Override
+	protected String getLongRunningQueryInfosSQL() {
+		return StringBundler.concat(
+			"select v$session.last_call_et * 1000 as duration, v$session.sid ",
+			"as id, dbms_lob.substr(v$sql.sql_fulltext, 4000, 1) as query, ",
+			"v$session.schemaname as schema_, v$session.event as state from ",
+			"v$session left join v$sql on v$session.sql_id = v$sql.sql_id and ",
+			"v$session.sql_child_number = v$sql.child_number where ",
+			"v$session.audsid != sys_context('USERENV', 'SESSIONID') and ",
+			"v$session.last_call_et * 1000 >= ? and v$session.status = ",
+			"'ACTIVE' and v$session.type = 'USER' and (v$session.event is ",
+			"null or (v$session.event not like 'enq:%' and v$session.event ",
+			"not like '%library cache%'))");
+	}
+
+	@Override
+	protected List<QueryInfo> getQueryInfos(
+			Connection connection, String sql, long threshold)
+		throws SQLException {
+
+		try {
+			return super.getQueryInfos(connection, sql, threshold);
+		}
+		catch (SQLException sqlException) {
+			if (sqlException.getErrorCode() == _ERROR_CODE_ORA_942) {
+				throw new SQLException(
+					StringBundler.concat(
+						"Grant select privileges on \"sys.v_$session\" and ",
+						"\"sys.v_$sql\", or assign \"SELECT_CATALOG_ROLE\" or ",
+						"\"DBA\", because the database user lacks the ",
+						"required select privileges"),
+					sqlException.getSQLState(), sqlException.getErrorCode(),
+					sqlException);
+			}
+
+			throw sqlException;
+		}
+	}
+
+	@Override
 	protected String getRenameTableSQL(
 		String oldTableName, String newTableName) {
 
@@ -534,6 +588,8 @@ public class OracleDB extends BaseDB {
 			return sb.toString();
 		}
 	}
+
+	private static final int _ERROR_CODE_ORA_942 = 942;
 
 	private static final String[] _ORACLE = {
 		"--", "1", "0",

@@ -4,10 +4,10 @@ $cadmin-input-border-color: $cadmin-gray-300 !default;
 $cadmin-input-border-style: solid !default;
 $cadmin-input-border-width: 1px !default;
 
-$cadmin-input-border-top-width: $cadmin-input-border-width !default;
-$cadmin-input-border-right-width: $cadmin-input-border-width !default;
 $cadmin-input-border-bottom-width: $cadmin-input-border-width !default;
 $cadmin-input-border-left-width: $cadmin-input-border-width !default;
+$cadmin-input-border-right-width: $cadmin-input-border-width !default;
+$cadmin-input-border-top-width: $cadmin-input-border-width !default;
 
 $cadmin-input-border-radius: $cadmin-border-radius !default;
 $cadmin-input-box-shadow: null !default;
@@ -36,9 +36,9 @@ $cadmin-input-focus-border-color: clay-lighten(
 	$cadmin-component-active-bg,
 	22.94
 ) !default;
+$cadmin-input-focus-box-shadow: $cadmin-component-focus-box-shadow !default;
 $cadmin-input-focus-color: $cadmin-input-color !default;
 $cadmin-input-focus-width: $cadmin-input-btn-focus-width !default;
-$cadmin-input-focus-box-shadow: $cadmin-component-focus-box-shadow !default;
 
 // Input Disabled
 
@@ -51,7 +51,9 @@ $cadmin-input-disabled-opacity: 1 !default;
 // Input Placeholder
 
 $cadmin-input-placeholder-color: $cadmin-gray-600 !default;
+
 $cadmin-input-placeholder-focus-color: null !default;
+
 $cadmin-input-placeholder-disabled-color: $cadmin-input-disabled-color !default;
 
 $cadmin-input: () !default;
@@ -75,43 +77,50 @@ $cadmin-input: map-deep-merge(
 		height: $cadmin-input-height,
 		letter-spacing: inherit,
 		line-height: $cadmin-input-line-height,
-		min-width: 0,
+		min-width: 0px,
 		padding-bottom: $cadmin-input-padding-y,
 		padding-left: $cadmin-input-padding-x,
 		padding-right: $cadmin-input-padding-x,
 		padding-top: $cadmin-input-padding-y,
 		transition: $cadmin-input-transition,
 		width: 100%,
+
 		mobile: (
 			font-size: $cadmin-input-font-size-mobile,
 			height: $cadmin-input-height-mobile,
 		),
+
 		placeholder: (
 			color: $cadmin-input-placeholder-color,
 			opacity: 1,
 		),
+
 		focus: (
 			background-color: $cadmin-input-focus-bg,
 			border-color: $cadmin-input-focus-border-color,
 			box-shadow: $cadmin-input-focus-box-shadow,
 			color: $cadmin-input-focus-color,
 			outline: 0,
+
 			placeholder: (
 				color: $cadmin-input-placeholder-focus-color,
 			),
 		),
+
 		focus-within: (
 			background-color: $cadmin-input-focus-bg,
 			border-color: $cadmin-input-focus-border-color,
 			box-shadow: $cadmin-input-focus-box-shadow,
 			color: $cadmin-input-focus-color,
 		),
+
 		disabled: (
 			background-color: $cadmin-input-disabled-bg,
 			border-color: $cadmin-input-disabled-border-color,
 			color: $cadmin-input-disabled-color,
 			cursor: $cadmin-input-disabled-cursor,
 			opacity: $cadmin-input-disabled-opacity,
+
 			placeholder: (
 				color: $cadmin-input-placeholder-disabled-color,
 			),
@@ -156,11 +165,11 @@ $cadmin-input-plaintext: map-deep-merge(
 		letter-spacing: inherit,
 		line-height: $cadmin-input-line-height,
 		// match inputs if this class comes on inputs with default margins
-		margin-bottom: 0,
-		min-width: 0,
+		margin-bottom: 0px,
+		min-width: 0px,
 		padding-bottom: $cadmin-input-padding-y,
-		padding-left: 0,
-		padding-right: 0,
+		padding-left: 0px,
+		padding-right: 0px,
 		padding-top: $cadmin-input-padding-y,
 		text-overflow: ellipsis,
 		width: 100%,
@@ -251,35 +260,43 @@ $cadmin-input-label: map-deep-merge(
 		max-width: 100%,
 		position: static,
 		word-wrap: break-word,
+
 		mobile: (
 			font-size: $cadmin-input-label-font-size-mobile,
 		),
+
 		focus: (
 			color: $cadmin-input-label-focus-color,
 		),
+
 		disabled: (
 			color: $cadmin-input-label-disabled-color,
 			cursor: $cadmin-input-label-disabled-cursor,
 			opacity: $cadmin-input-disabled-opacity,
 		),
+
 		for: (
 			cursor: $cadmin-input-label-for-cursor,
 		),
+
 		'+ .form-feedback-group': (
 			margin-bottom: 12px,
 		),
+
 		form-text: (
 			margin-bottom: $cadmin-input-label-margin-bottom,
-			margin-top: 0,
+			margin-top: 0px,
 		),
+
 		form-help-text: (
 			color: $cadmin-secondary-l0,
 			display: inline,
 			font-size: 14px,
 			font-weight: $cadmin-font-weight-normal,
 			margin-left: 8px,
-			margin-top: 0,
+			margin-top: 0px,
 		),
+
 		reference-mark: (
 			color: $cadmin-input-label-reference-mark-color,
 			font-size: $cadmin-input-label-reference-mark-font-size,
@@ -297,7 +314,7 @@ $cadmin-form-control-label: () !default;
 $cadmin-form-control-label: map-merge(
 	(
 		display: inline,
-		margin-bottom: 0,
+		margin-bottom: 0px,
 	),
 	$cadmin-form-control-label
 );
@@ -352,6 +369,7 @@ $cadmin-input-readonly: map-deep-merge(
 		color: $cadmin-input-readonly-color,
 		cursor: $cadmin-input-readonly-cursor,
 		opacity: 1,
+
 		focus: (
 			background-color: $cadmin-input-readonly-focus-bg,
 			border-color: $cadmin-input-readonly-focus-border-color,
@@ -368,6 +386,7 @@ $cadmin-input-plaintext-readonly: map-deep-merge(
 		border-radius: $cadmin-input-border-radius,
 		outline: 0,
 		transition: $cadmin-input-transition,
+
 		focus: (
 			border-color: $cadmin-input-focus-border-color,
 			box-shadow: none,
@@ -396,6 +415,7 @@ $cadmin-form-control-label-size: map-deep-merge(
 		padding-right: 8px,
 		padding-top: 5px,
 		text-transform: none,
+
 		label-item: (
 			margin-bottom: -1px,
 			margin-top: -1px,
@@ -406,40 +426,45 @@ $cadmin-form-control-label-size: map-deep-merge(
 
 // Form Control Tag Group
 
-$cadmin-form-control-tag-group-padding-y: (
-		$cadmin-input-height - $cadmin-input-border-bottom-width -
-			$cadmin-input-border-top-width - map-get(
-				$cadmin-form-control-label-size,
-				min-height
-			) - (map-get($cadmin-form-control-label-size, margin-bottom)) -
-			(map-get($cadmin-form-control-label-size, margin-top))
-	) * 0.5 !default;
+$cadmin-form-control-tag-group-padding-y: calc(
+	(
+			#{$cadmin-input-height} - #{$cadmin-input-border-bottom-width} - #{$cadmin-input-border-top-width} -
+				#{map-get($cadmin-form-control-label-size, min-height)} - #{map-get(
+					$cadmin-form-control-label-size,
+					margin-bottom
+				)} - #{map-get($cadmin-form-control-label-size, margin-top)}
+		) * 0.5
+) !default;
 
-$cadmin-form-control-inset-min-height: $cadmin-input-font-size *
-	$cadmin-input-line-height !default;
-$cadmin-form-control-inset-margin-y: (
-		$cadmin-input-height - $cadmin-input-border-bottom-width -
-			$cadmin-input-border-top-width -
-			($cadmin-form-control-tag-group-padding-y * 2) -
-			$cadmin-form-control-inset-min-height
-	) * 0.5 !default;
+$cadmin-form-control-inset-min-height: calc(
+	#{$cadmin-input-font-size} * #{$cadmin-input-line-height}
+) !default;
+
+$cadmin-form-control-inset-margin-y: calc(
+	(
+			#{$cadmin-input-height} - #{$cadmin-input-border-bottom-width} - #{$cadmin-input-border-top-width} -
+				(#{$cadmin-form-control-tag-group-padding-y} * 2) - #{$cadmin-form-control-inset-min-height}
+		) * 0.5
+) !default;
 
 $cadmin-form-control-inset: () !default;
 $cadmin-form-control-inset: map-deep-merge(
 	(
 		background-color: transparent,
-		border-width: 0,
+		border-width: 0px,
 		color: $cadmin-input-color,
 		flex-grow: 1,
 		margin-bottom: $cadmin-form-control-inset-margin-y,
 		margin-left: 8px,
 		margin-top: $cadmin-form-control-inset-margin-y,
 		min-height: $cadmin-form-control-inset-min-height,
-		padding: 0,
+		padding: 0px,
 		width: 50px,
+
 		focus: (
 			outline: 0,
 		),
+
 		disabled: (
 			background-color: $cadmin-input-disabled-bg,
 			border-color: $cadmin-input-disabled-border-color,
@@ -513,10 +538,10 @@ $cadmin-form-control-tag-group-btn: map-deep-merge(
 		line-height: 1,
 		margin-bottom: $cadmin-form-control-inset-margin-y,
 		margin-top: $cadmin-form-control-inset-margin-y,
-		padding-bottom: 0,
+		padding-bottom: 0px,
 		padding-left: $cadmin-btn-padding-x-sm,
 		padding-right: $cadmin-btn-padding-x-sm,
-		padding-top: 0,
+		padding-top: 0px,
 	),
 	$cadmin-form-control-tag-group-btn
 );
@@ -528,8 +553,8 @@ $cadmin-form-control-tag-group-btn-monospaced: map-deep-merge(
 		line-height: 1,
 		margin-bottom: $cadmin-form-control-inset-margin-y,
 		margin-top: $cadmin-form-control-inset-margin-y,
-		padding-left: 0,
-		padding-right: 0,
+		padding-left: 0px,
+		padding-right: 0px,
 		width: $cadmin-form-control-inset-min-height,
 	),
 	$cadmin-form-control-tag-group-btn-monospaced
@@ -539,8 +564,8 @@ $cadmin-form-control-tag-group-component-action: () !default;
 $cadmin-form-control-tag-group-component-action: map-deep-merge(
 	(
 		height: 100%,
-		margin-bottom: 0,
-		margin-top: 0,
+		margin-bottom: 0px,
+		margin-top: 0px,
 		width: 32px,
 	),
 	$cadmin-form-control-tag-group-component-action
@@ -556,19 +581,22 @@ $cadmin-form-control-tag-group-sm: map-deep-merge(
 		height: auto,
 		line-height: $cadmin-input-line-height-sm,
 		min-height: $cadmin-input-height-sm,
-		padding-bottom: 0,
+		padding-bottom: 0px,
 		padding-left: 4px,
 		padding-right: 4px,
-		padding-top: 0,
+		padding-top: 0px,
+
 		inline-item: (
-			margin-bottom: 0,
-			margin-top: 0,
+			margin-bottom: 0px,
+			margin-top: 0px,
 		),
+
 		label: (
 			margin-bottom: 3px,
 			margin-right: 4px,
 			margin-top: 3px,
 		),
+
 		form-control-inset: (
 			margin-bottom: 2px,
 			margin-left: 8px,
@@ -585,8 +613,13 @@ $cadmin-form-group-margin-bottom: 24px !default; // 24px
 $cadmin-form-group-margin-bottom-mobile: 16px !default; // 16px
 
 $cadmin-form-group-sm-margin-bottom: 16px !default; // 16px
+
 $cadmin-form-group-sm-margin-bottom-mobile: null !default;
-$cadmin-form-group-sm-input-label-margin-bottom: 3px !default; // 3px
+
+$cadmin-form-group-sm-input-label-font-size: 12px !default; // 12px
+$cadmin-form-group-sm-input-label-line-height: 1.5 !default; // 150%
+$cadmin-form-group-sm-input-label-margin-bottom: 2px !default; // 2px
+
 $cadmin-form-group-sm-item-label-spacer: 25px !default; // 25px
 
 // Form Group Autofit
@@ -600,8 +633,8 @@ $cadmin-input-file-cursor: $cadmin-link-cursor !default;
 // Form Check
 
 $cadmin-form-check-input-cursor: $cadmin-link-cursor !default;
-$cadmin-form-check-input-gutter: 0 !default;
-$cadmin-form-check-input-margin-y: 0 !default;
+$cadmin-form-check-input-gutter: 0px !default;
+$cadmin-form-check-input-margin-y: 0px !default;
 
 $cadmin-form-check-label-cursor: $cadmin-input-label-for-cursor !default;
 
@@ -609,6 +642,7 @@ $cadmin-form-check-label-text-margin-left: -3px !default;
 $cadmin-form-check-label-text-padding-left: 8px !default;
 
 $cadmin-form-check-input-disabled-cursor: $cadmin-disabled-cursor !default;
+
 $cadmin-form-check-label-text-disabled-cursor: $cadmin-disabled-cursor !default;
 
 // Form Check Inline
@@ -644,21 +678,23 @@ $cadmin-form-text: map-merge(
 		font-weight: $cadmin-form-text-font-weight,
 		margin-top: $cadmin-form-text-margin-top,
 		word-wrap: break-word,
+
 		blockquote: (
 			font-style: italic,
 			font-weight: $cadmin-font-weight-normal,
-			margin-bottom: 0,
+			margin-bottom: 0px,
 			margin-top: 12px,
 			padding-left: 12px,
 			position: relative,
+
 			before: (
 				background-color: $cadmin-secondary-l1,
-				bottom: 0,
+				bottom: 0px,
 				content: '',
 				display: block,
-				left: 0,
+				left: 0px,
 				position: absolute,
-				top: 0,
+				top: 0px,
 				width: 2px,
 			),
 		),
@@ -696,15 +732,16 @@ $cadmin-form-feedback-item: map-merge(
 
 // .form-feedback-indicator
 
-$cadmin-form-feedback-indicator-margin-x: 0 !default;
+$cadmin-form-feedback-indicator-margin-x: 0px !default;
 
 $cadmin-form-feedback-indicator: () !default;
 $cadmin-form-feedback-indicator: map-deep-merge(
 	(
 		margin-left: $cadmin-form-feedback-indicator-margin-x,
 		margin-right: $cadmin-form-feedback-indicator-margin-x,
+
 		first-child: (
-			margin-left: 0,
+			margin-left: 0px,
 		),
 	),
 	$cadmin-form-feedback-indicator
@@ -735,12 +772,14 @@ $cadmin-input-danger: map-deep-merge(
 		border-color: $cadmin-input-danger-border-color,
 		box-shadow: $cadmin-input-danger-box-shadow,
 		color: $cadmin-input-danger-color,
+
 		focus: (
 			background-color: $cadmin-input-danger-focus-bg,
 			border-color: $cadmin-input-danger-focus-border-color,
 			box-shadow: $cadmin-input-danger-focus-box-shadow,
 			color: $cadmin-input-danger-focus-color,
 		),
+
 		focus-within: (
 			background-color: $cadmin-input-danger-bg,
 			border-color: $cadmin-input-danger-border-color,
@@ -766,11 +805,13 @@ $cadmin-input-danger-readonly: map-deep-merge(
 );
 
 $cadmin-input-danger-checkbox-label-color: $cadmin-danger !default;
+
 $cadmin-input-danger-label-color: null !default;
 
 // .has-error select.form-control
 
 $cadmin-input-danger-select-icon-color: $cadmin-input-danger-border-color !default;
+
 $cadmin-input-danger-select-icon: clay-icon(
 	caret-double-l,
 	$cadmin-input-danger-select-icon-color
@@ -810,9 +851,11 @@ $cadmin-has-error: map-deep-merge(
 		label: (
 			color: $cadmin-input-danger-label-color,
 		),
+
 		custom-control-label: (
 			color: $cadmin-input-danger-checkbox-label-color,
 		),
+
 		form-control:
 			map-deep-merge(
 				(
@@ -823,6 +866,7 @@ $cadmin-has-error: map-deep-merge(
 		form-feedback-item: (
 			color: $cadmin-form-feedback-invalid-color,
 		),
+
 		select: (
 			form-control:
 				map-deep-merge(
@@ -833,6 +877,7 @@ $cadmin-has-error: map-deep-merge(
 					$cadmin-input-danger-select
 				),
 		),
+
 		input-group-item: (
 			focus: (
 				box-shadow:
@@ -865,14 +910,17 @@ $cadmin-has-error: map-deep-merge(
 					),
 				),
 			),
+
 			input-group-inset: (
 				input-group-inset-item: (
 					background-color: $cadmin-input-danger-bg,
 					border-color: $cadmin-input-danger-border-color,
 					box-shadow: $cadmin-input-danger-box-shadow,
 				),
+
 				focus: (
 					box-shadow: none,
+
 					input-group-inset-item: (
 						background-color:
 							setter(
@@ -911,12 +959,14 @@ $cadmin-input-warning: map-deep-merge(
 		border-color: $cadmin-input-warning-border-color,
 		box-shadow: $cadmin-input-warning-box-shadow,
 		color: $cadmin-input-warning-color,
+
 		focus: (
 			background-color: $cadmin-input-warning-focus-bg,
 			border-color: $cadmin-input-warning-focus-border-color,
 			box-shadow: $cadmin-input-warning-focus-box-shadow,
 			color: $cadmin-input-warning-focus-color,
 		),
+
 		focus-within: (
 			background-color: $cadmin-input-warning-bg,
 			border-color: $cadmin-input-warning-border-color,
@@ -942,11 +992,13 @@ $cadmin-input-warning-readonly: map-deep-merge(
 );
 
 $cadmin-input-warning-checkbox-label-color: $cadmin-warning !default;
+
 $cadmin-input-warning-label-color: null !default;
 
 // .has-warning select.form-control
 
 $cadmin-input-warning-select-icon-color: $cadmin-input-warning-border-color !default;
+
 $cadmin-input-warning-select-icon: clay-icon(
 	caret-double-l,
 	$cadmin-input-warning-select-icon-color
@@ -986,9 +1038,11 @@ $cadmin-has-warning: map-deep-merge(
 		label: (
 			color: $cadmin-input-warning-label-color,
 		),
+
 		custom-control-label: (
 			color: $cadmin-input-warning-checkbox-label-color,
 		),
+
 		form-control:
 			map-deep-merge(
 				(
@@ -999,6 +1053,7 @@ $cadmin-has-warning: map-deep-merge(
 		form-feedback-item: (
 			color: $cadmin-form-feedback-warning-color,
 		),
+
 		select: (
 			form-control:
 				map-deep-merge(
@@ -1009,6 +1064,7 @@ $cadmin-has-warning: map-deep-merge(
 					$cadmin-input-warning-select
 				),
 		),
+
 		input-group-item: (
 			focus: (
 				box-shadow:
@@ -1041,14 +1097,17 @@ $cadmin-has-warning: map-deep-merge(
 					),
 				),
 			),
+
 			input-group-inset: (
 				input-group-inset-item: (
 					background-color: $cadmin-input-warning-bg,
 					border-color: $cadmin-input-warning-border-color,
 					box-shadow: $cadmin-input-warning-box-shadow,
 				),
+
 				focus: (
 					box-shadow: none,
+
 					input-group-inset-item: (
 						background-color:
 							setter(
@@ -1087,12 +1146,14 @@ $cadmin-input-success: map-deep-merge(
 		border-color: $cadmin-input-success-border-color,
 		box-shadow: $cadmin-input-success-box-shadow,
 		color: $cadmin-input-success-color,
+
 		focus: (
 			background-color: $cadmin-input-success-focus-bg,
 			border-color: $cadmin-input-success-focus-border-color,
 			box-shadow: $cadmin-input-success-focus-box-shadow,
 			color: $cadmin-input-success-focus-color,
 		),
+
 		focus-within: (
 			background-color: $cadmin-input-success-bg,
 			border-color: $cadmin-input-success-border-color,
@@ -1118,11 +1179,13 @@ $cadmin-input-success-readonly: map-deep-merge(
 );
 
 $cadmin-input-success-checkbox-label-color: $cadmin-success !default;
+
 $cadmin-input-success-label-color: null !default;
 
 // .has-success select.form-control
 
 $cadmin-input-success-select-icon-color: $cadmin-input-success-border-color !default;
+
 $cadmin-input-success-select-icon: clay-icon(
 	caret-double-l,
 	$cadmin-input-success-select-icon-color
@@ -1162,9 +1225,11 @@ $cadmin-has-success: map-deep-merge(
 		label: (
 			color: $cadmin-input-success-label-color,
 		),
+
 		custom-control-label: (
 			color: $cadmin-input-success-checkbox-label-color,
 		),
+
 		form-control:
 			map-deep-merge(
 				(
@@ -1175,6 +1240,7 @@ $cadmin-has-success: map-deep-merge(
 		form-feedback-item: (
 			color: $cadmin-form-feedback-valid-color,
 		),
+
 		select: (
 			form-control:
 				map-deep-merge(
@@ -1185,6 +1251,7 @@ $cadmin-has-success: map-deep-merge(
 					$cadmin-input-success-select
 				),
 		),
+
 		input-group-item: (
 			focus: (
 				box-shadow:
@@ -1217,6 +1284,7 @@ $cadmin-has-success: map-deep-merge(
 					),
 				),
 			),
+
 			input-group-inset: (
 				input-group-inset-item: (
 					background-color: $cadmin-input-success-bg,
@@ -1225,6 +1293,7 @@ $cadmin-has-success: map-deep-merge(
 				),
 				focus: (
 					box-shadow: none,
+
 					input-group-inset-item: (
 						background-color:
 							setter(
@@ -1247,8 +1316,6 @@ $cadmin-has-success: map-deep-merge(
 // Select Element
 
 $cadmin-input-select-bg: null !default;
-$cadmin-input-select-focus-bg: null !default;
-
 $cadmin-input-select-bg-position: right 0.5em center !default;
 $cadmin-input-select-bg-size: 1.5em 1.5em !default;
 $cadmin-input-select-cursor: $cadmin-link-cursor !default;
@@ -1257,19 +1324,24 @@ $cadmin-input-select-padding-left: null !default;
 $cadmin-input-select-padding-right: 2em !default;
 $cadmin-input-select-padding-top: null !default;
 
+$cadmin-input-select-focus-bg: null !default;
+
 $cadmin-input-select-icon-color: $cadmin-gray-600 !default;
+
 $cadmin-input-select-icon: clay-icon(
 	caret-double-l,
 	$cadmin-input-select-icon-color
 ) !default;
 
 $cadmin-input-select-icon-focus-color: $cadmin-input-select-icon-color !default;
+
 $cadmin-input-select-icon-focus: clay-icon(
 	caret-double-l,
 	$cadmin-input-select-icon-focus-color
 ) !default;
 
 $cadmin-input-select-icon-disabled-color: $cadmin-gray-500 !default;
+
 $cadmin-input-select-icon-disabled: clay-icon(
 	caret-double-l,
 	$cadmin-input-select-icon-disabled-color
@@ -1288,16 +1360,20 @@ $cadmin-input-select: map-deep-merge(
 		padding-left: $cadmin-input-select-padding-left,
 		padding-right: $cadmin-input-select-padding-right,
 		padding-top: $cadmin-input-select-padding-top,
+
 		focus: (
 			background-color: $cadmin-input-select-focus-bg,
 			background-image: $cadmin-input-select-icon-focus,
 		),
+
 		disabled: (
 			background-image: $cadmin-input-select-icon-disabled,
+
 			option: (
 				cursor: $cadmin-disabled-cursor,
 			),
 		),
+
 		option: (
 			cursor: $cadmin-input-select-cursor,
 		),
@@ -1319,6 +1395,7 @@ $cadmin-form-control-select: map-deep-merge(
 				text-align: left,
 				text-overflow: ellipsis,
 				white-space: nowrap,
+
 				hover: (
 					color: inherit,
 					text-decoration: none,
@@ -1338,24 +1415,29 @@ $cadmin-form-control-select-palette: map-deep-merge(
 			background-color: $cadmin-white,
 			border-color: $cadmin-secondary-l0,
 			color: $cadmin-gray-600,
+
 			hover: (
 				color: $cadmin-gray-600,
 			),
+
 			focus: (
 				background-image: clay-icon(caret-double-l, $cadmin-gray-900),
 				color: $cadmin-gray-900,
 			),
+
 			disabled: (
 				background-color: $cadmin-white,
 				color: $cadmin-gray-600,
 				opacity: $cadmin-component-disabled-opacity,
 			),
+
 			show: (
 				background-color: $cadmin-gray-200,
 				background-image: clay-icon(caret-double-l, $cadmin-gray-900),
 				color: $cadmin-gray-900,
 			),
 		),
+
 		'.form-control-select-shrink': (
 			max-width: 100%,
 			width: min-content,
@@ -1369,6 +1451,7 @@ $cadmin-form-control-select-sm: map-deep-merge(
 	(
 		height: $cadmin-input-height-sm,
 		padding-right: 2em,
+
 		mobile: (
 			height: $cadmin-input-height-sm-mobile,
 		),
@@ -1392,8 +1475,10 @@ $cadmin-input-select-size: map-deep-merge(
 		padding-left: 8px,
 		padding-right: 8px,
 		scrollbar-width: thin,
+
 		focus: (
 			background-image: none,
+
 			option: (
 				checked: (
 					background-image: linear-gradient(#ffa700, #ffa700),
@@ -1401,6 +1486,7 @@ $cadmin-input-select-size: map-deep-merge(
 				),
 			),
 		),
+
 		disabled: (
 			option: (
 				hover: (
@@ -1408,13 +1494,16 @@ $cadmin-input-select-size: map-deep-merge(
 				),
 			),
 		),
+
 		option: (
 			padding: 7px 8px,
+
 			checked: (
 				background-image:
 					linear-gradient(#{$cadmin-gray-300}, #{$cadmin-gray-300}),
 			),
 		),
+
 		firefox-only: (
 			focus: (
 				option: (
@@ -1428,6 +1517,7 @@ $cadmin-input-select-size: map-deep-merge(
 					),
 				),
 			),
+
 			option: (
 				padding: 6.5px 8px,
 			),
@@ -1447,9 +1537,9 @@ $cadmin-input-select-multiple: map-deep-merge(
 // Form Group Autofit
 
 $cadmin-form-group-item-label-max-width: 200px !default; // 200px
-$cadmin-form-group-item-label-spacer: (
-		$cadmin-input-label-font-size * $cadmin-line-height-base
-	) + $cadmin-input-label-margin-bottom !default;
+$cadmin-form-group-item-label-spacer: calc(
+	#{$cadmin-input-label-font-size} * #{$cadmin-line-height-base} + #{$cadmin-input-label-margin-bottom}
+) !default;
 
 // .input-group
 
@@ -1461,6 +1551,7 @@ $cadmin-input-group: map-deep-merge(
 		flex-wrap: wrap,
 		position: relative,
 		width: 100%,
+
 		btn-unstyled: (
 			color: inherit,
 		),
@@ -1497,7 +1588,7 @@ $cadmin-input-group-text: map-deep-merge(
 		height: $cadmin-input-height,
 		justify-content: center,
 		line-height: $cadmin-input-line-height,
-		margin-bottom: 0,
+		margin-bottom: 0px,
 		min-width: $cadmin-input-group-addon-min-width,
 		padding-bottom: $cadmin-input-group-addon-padding-y,
 		padding-left: $cadmin-input-group-addon-padding-x,
@@ -1505,21 +1596,27 @@ $cadmin-input-group-text: map-deep-merge(
 		padding-top: $cadmin-input-group-addon-padding-y,
 		text-align: center,
 		white-space: nowrap,
+
 		label: (
 			color: $cadmin-input-group-addon-color,
 		),
+
 		custom-control: (
-			margin-bottom: 0,
+			margin-bottom: 0px,
 		),
+
 		form-check: (
-			margin-bottom: 0,
+			margin-bottom: 0px,
+
 			input: (
-				margin-top: 0,
+				margin-top: 0px,
 			),
 		),
+
 		lexicon-icon: (
-			margin-top: 0,
+			margin-top: 0px,
 		),
+
 		media-breakpoint-down: (
 			sm: (
 				height: $cadmin-input-height-mobile,
@@ -1544,6 +1641,7 @@ $cadmin-input-group-text-secondary: map-deep-merge(
 		border-width: $cadmin-input-group-secondary-addon-border-width,
 		color: $cadmin-input-group-secondary-addon-color,
 		z-index: 2,
+
 		label: (
 			color: $cadmin-input-group-secondary-addon-color,
 		),
@@ -1564,33 +1662,41 @@ $cadmin-input-group-item: map-deep-merge(
 		margin-left: $cadmin-input-group-item-margin-left,
 		width: 1%,
 		word-wrap: break-word,
+
 		focus: (
 			border-radius: clay-enable-rounded($cadmin-input-border-radius),
 			box-shadow: $cadmin-input-focus-box-shadow,
+
 			input-group-prepend: (
 				border-bottom-right-radius: clay-enable-rounded(0),
 				border-top-right-radius: clay-enable-rounded(0),
 				z-index: 1,
 			),
+
 			input-group-append: (
 				border-bottom-left-radius: clay-enable-rounded(0),
 				border-top-left-radius: clay-enable-rounded(0),
 			),
+
 			form-control: (
 				background-color: $cadmin-input-focus-bg,
 				border-color: $cadmin-input-focus-border-color,
 			),
+
 			input-group-inset-item: (
 				background-color: $cadmin-input-focus-bg,
 				border-color: $cadmin-input-focus-border-color,
 			),
 		),
+
 		first-child: (
-			margin-left: 0,
+			margin-left: 0px,
 		),
+
 		btn: (
 			align-self: flex-start,
 		),
+
 		dropdown: (
 			display: flex,
 			flex-wrap: wrap,
@@ -1645,18 +1751,20 @@ $cadmin-input-group-inset-item-btn: map-deep-merge(
 		line-height: 1,
 		margin-left: 4px,
 		margin-right: 4px,
-		padding-bottom: 0,
+		padding-bottom: 0px,
 		padding-left: 8px,
 		padding-right: 8px,
-		padding-top: 0,
+		padding-top: 0px,
+
 		c-inner: (
 			align-items: center,
 			display: flex,
 			height: 100%,
 			justify-content: center,
 		),
+
 		lexicon-icon: (
-			margin-top: 0,
+			margin-top: 0px,
 		),
 	),
 	$cadmin-input-group-inset-item-btn
@@ -1667,9 +1775,9 @@ $cadmin-input-group-inset-item-btn-monospaced: map-deep-merge(
 	(
 		font-size: 16px,
 		height: 32px,
-		margin-bottom: math-sign($cadmin-input-border-bottom-width),
-		margin-top: math-sign($cadmin-input-border-bottom-width),
-		padding: 0,
+		margin-bottom: calc(#{$cadmin-input-border-bottom-width} * -1),
+		margin-top: calc(#{$cadmin-input-border-bottom-width} * -1),
+		padding: 0px,
 		width: 32px,
 	),
 	$cadmin-input-group-inset-item-btn-monospaced
@@ -1696,8 +1804,11 @@ $cadmin-input-group-lg-item-btn: map-deep-merge(
 	(
 		breakpoint-down: null,
 		font-size: $cadmin-btn-font-size-lg,
+
 		inline-item-font-size: $cadmin-btn-inline-item-font-size-lg,
+
 		section-font-size: $cadmin-btn-section-font-size-lg,
+
 		font-size-mobile: $cadmin-btn-font-size-lg-mobile,
 		padding-bottom-mobile: $cadmin-btn-padding-y-lg-mobile,
 		padding-left-mobile: $cadmin-btn-padding-x-lg-mobile,
@@ -1718,6 +1829,7 @@ $cadmin-input-group-lg-item-btn-monospaced: map-deep-merge(
 		padding-right: $cadmin-btn-monospaced-padding-x-lg,
 		padding-top: $cadmin-btn-monospaced-padding-y-lg,
 		width: $cadmin-btn-monospaced-size-lg,
+
 		height-mobile: $cadmin-btn-monospaced-size-lg-mobile,
 		width-mobile: $cadmin-btn-monospaced-size-lg-mobile,
 	),
@@ -1734,10 +1846,10 @@ $cadmin-input-group-lg-inset-item-form-file-btn: map-deep-merge(
 		breakpoint-down: null,
 		height: 100%,
 		line-height: 1,
-		padding-bottom: 0,
+		padding-bottom: 0px,
 		padding-left: 12px,
 		padding-right: 12px,
-		padding-top: 0,
+		padding-top: 0px,
 	),
 	$cadmin-input-group-lg-inset-item-form-file-btn
 );
@@ -1747,7 +1859,9 @@ $cadmin-input-group-lg: map-deep-merge(
 	(
 		input-group-item: (
 			btn: $cadmin-input-group-lg-item-btn,
+
 			btn-monospaced: $cadmin-input-group-lg-item-btn-monospaced,
+
 			form-control: (
 				border-radius:
 					clay-enable-rounded($cadmin-input-border-radius-lg),
@@ -1759,10 +1873,12 @@ $cadmin-input-group-lg: map-deep-merge(
 				padding-right: $cadmin-input-padding-x-lg,
 				padding-top: $cadmin-input-padding-y-lg,
 			),
+
 			form-control-inset: (
-				margin-bottom: 0,
-				margin-top: 0,
+				margin-bottom: 0px,
+				margin-top: 0px,
 			),
+
 			form-file: (
 				btn: (
 					border-radius:
@@ -1776,9 +1892,11 @@ $cadmin-input-group-lg: map-deep-merge(
 					padding-top: $cadmin-input-padding-y-lg,
 				),
 			),
+
 			textarea: (
 				height: $cadmin-input-textarea-height-lg,
 			),
+
 			form-control-plaintext: (
 				font-size: $cadmin-input-font-size-lg,
 				height: $cadmin-input-height-lg,
@@ -1786,6 +1904,7 @@ $cadmin-input-group-lg: map-deep-merge(
 				padding-bottom: $cadmin-input-padding-y-lg,
 				padding-top: $cadmin-input-padding-y-lg,
 			),
+
 			input-group-text: (
 				border-radius:
 					clay-enable-rounded($cadmin-input-border-radius-lg),
@@ -1797,26 +1916,33 @@ $cadmin-input-group-lg: map-deep-merge(
 				padding-right: $cadmin-input-group-addon-padding-x-lg,
 				padding-top: $cadmin-input-group-addon-padding-y-lg,
 			),
+
 			input-group-inset-item: (
 				btn: $cadmin-input-group-lg-inset-item-btn,
+
 				btn-monospaced: $cadmin-input-group-lg-inset-item-btn-monospaced,
+
 				form-file: (
 					height: 75%,
+
 					btn: $cadmin-input-group-lg-inset-item-form-file-btn,
 				),
 			),
 		),
+
 		media-breakpoint-down: (
 			sm: (
 				input-group-item: (
 					form-control: (
 						height: $cadmin-input-height-lg-mobile,
 					),
+
 					form-file: (
 						btn: (
 							height: $cadmin-input-height-lg-mobile,
 						),
 					),
+
 					form-control-plaintext: (
 						height: $cadmin-input-height-lg-mobile,
 					),
@@ -1837,8 +1963,11 @@ $cadmin-input-group-sm-item-btn: () !default;
 $cadmin-input-group-sm-item-btn: map-deep-merge(
 	(
 		font-size: $cadmin-btn-font-size-sm,
+
 		inline-item-font-size: $cadmin-btn-inline-item-font-size-sm,
+
 		section-font-size: $cadmin-btn-section-font-size-sm,
+
 		font-size-mobile: $cadmin-btn-font-size-sm-mobile,
 		padding-bottom-mobile: $cadmin-btn-padding-y-sm-mobile,
 		padding-left-mobile: $cadmin-btn-padding-x-sm-mobile,
@@ -1858,6 +1987,7 @@ $cadmin-input-group-sm-item-btn-monospaced: map-deep-merge(
 		padding-right: $cadmin-btn-monospaced-padding-x-sm,
 		padding-top: $cadmin-btn-monospaced-padding-y-sm,
 		width: $cadmin-btn-monospaced-size-sm,
+
 		height-mobile: $cadmin-btn-monospaced-size-sm-mobile,
 		width-mobile: $cadmin-btn-monospaced-size-sm-mobile,
 	),
@@ -1868,10 +1998,10 @@ $cadmin-input-group-sm-inset-item-btn: () !default;
 $cadmin-input-group-sm-inset-item-btn: map-deep-merge(
 	(
 		line-height: 1,
-		padding-bottom: 0,
+		padding-bottom: 0px,
 		padding-left: 8px,
 		padding-right: 8px,
-		padding-top: 0,
+		padding-top: 0px,
 	),
 	$cadmin-input-group-sm-inset-item-btn
 );
@@ -1892,10 +2022,10 @@ $cadmin-input-group-sm-inset-item-form-file-btn: map-deep-merge(
 	(
 		height: 100%,
 		line-height: 1,
-		padding-bottom: 0,
+		padding-bottom: 0px,
 		padding-left: 8px,
 		padding-right: 8px,
-		padding-top: 0,
+		padding-top: 0px,
 	),
 	$cadmin-input-group-sm-inset-item-form-file-btn
 );
@@ -1905,7 +2035,9 @@ $cadmin-input-group-sm: map-deep-merge(
 	(
 		input-group-item: (
 			btn: $cadmin-input-group-sm-item-btn,
+
 			btn-monospaced: $cadmin-input-group-sm-item-btn-monospaced,
+
 			form-file: (
 				btn: (
 					border-radius:
@@ -1919,6 +2051,7 @@ $cadmin-input-group-sm: map-deep-merge(
 					padding-top: $cadmin-input-padding-y-sm,
 				),
 			),
+
 			form-control-plaintext: (
 				font-size: $cadmin-input-font-size-sm,
 				height: $cadmin-input-height-sm,
@@ -1926,9 +2059,11 @@ $cadmin-input-group-sm: map-deep-merge(
 				padding-bottom: $cadmin-input-padding-y-sm,
 				padding-top: $cadmin-input-padding-y-sm,
 			),
+
 			textarea: (
 				height: $cadmin-input-textarea-height-sm,
 			),
+
 			input-group-text: (
 				border-radius:
 					clay-enable-rounded($cadmin-input-border-radius-sm),
@@ -1940,26 +2075,33 @@ $cadmin-input-group-sm: map-deep-merge(
 				padding-right: $cadmin-input-group-addon-padding-x-sm,
 				padding-top: $cadmin-input-group-addon-padding-y-sm,
 			),
+
 			input-group-inset-item: (
 				btn: $cadmin-input-group-sm-inset-item-btn,
+
 				btn-monospaced: $cadmin-input-group-sm-inset-item-btn-monospaced,
+
 				form-file: (
 					height: 75%,
+
 					btn: $cadmin-input-group-sm-inset-item-form-file-btn,
 				),
 			),
 		),
+
 		media-breakpoint-down: (
 			sm: (
 				input-group-item: (
 					form-control: (
 						height: $cadmin-input-height-sm-mobile,
 					),
+
 					form-file: (
 						btn: (
 							height: $cadmin-input-height-sm-mobile,
 						),
 					),
+
 					form-control-plaintext: (
 						height: $cadmin-input-height-sm-mobile,
 					),
@@ -1978,13 +2120,16 @@ $cadmin-input-group-inset: map-deep-merge(
 		flex-grow: 1,
 		order: 5,
 		width: 1%,
+
 		focus: (
 			box-shadow: none,
+
 			input-group-inset-item: (
 				background-color: $cadmin-input-focus-bg,
 				border-color: $cadmin-input-focus-border-color,
 			),
 		),
+
 		disabled: (
 			input-group-inset-item: (
 				background-color: $cadmin-input-disabled-bg,
@@ -2006,6 +2151,7 @@ $cadmin-input-group-inset-readonly: map-deep-merge(
 			color: $cadmin-input-readonly-color,
 			cursor: $cadmin-input-readonly-cursor,
 		),
+
 		focus: (
 			input-group-inset-item: (
 				background-color: $cadmin-input-readonly-focus-bg,
@@ -2024,7 +2170,7 @@ $cadmin-input-group-stacked-sm-down: map-deep-merge(
 	(
 		breakpoint: sm,
 		item-margin-bottom: 8px,
-		item-margin-left: 0,
+		item-margin-left: 0px,
 		shrink-margin-right: 8px,
 	),
 	$cadmin-input-group-stacked-sm-down

@@ -23,8 +23,8 @@ $clay-color-input-group-text: map-merge(
 		background-color:
 			setter(map-get($clay-color-input-group-text, bg), $white),
 		border-color: $clay-color-border-color,
-		padding-left: 0,
-		padding-right: 0,
+		padding-left: 0rem,
+		padding-right: 0rem,
 	),
 	$clay-color-input-group-text
 );
@@ -53,7 +53,7 @@ $clay-color-dropdown-menu: map-deep-merge(
 	(
 		max-height: 500px,
 		max-width: none,
-		padding-bottom: 0,
+		padding-bottom: 0rem,
 		padding-left: 1rem,
 		padding-right: 1rem,
 		padding-top: 1rem,
@@ -113,6 +113,7 @@ $clay-color-dropdown-menu-component-action: map-deep-merge(
 			background-color: transparent,
 			color: $black,
 		),
+
 		focus: (
 			box-shadow: $component-focus-box-shadow,
 			color: $black,
@@ -154,11 +155,12 @@ $clay-color-btn: map-deep-merge(
 	(
 		border-radius: 2px,
 		height: 1.5rem,
-		padding-bottom: 0,
-		padding-left: 0,
-		padding-right: 0,
-		padding-top: 0,
+		padding-bottom: 0rem,
+		padding-left: 0rem,
+		padding-right: 0rem,
+		padding-top: 0rem,
 		width: 1.5rem,
+
 		active: (
 			box-shadow: $component-focus-box-shadow,
 		),
@@ -185,13 +187,14 @@ $clay-color-pointer: map-deep-merge(
 		border-style: solid,
 		border-width: 2px,
 		height: 0.875rem,
-		padding-bottom: 0,
-		padding-left: 0,
-		padding-right: 0,
-		padding-top: 0,
+		padding-bottom: 0rem,
+		padding-left: 0rem,
+		padding-right: 0rem,
+		padding-top: 0rem,
 		position: absolute,
 		transition: box-shadow 0.15s ease-in-out,
 		width: 0.875rem,
+
 		focus: (
 			box-shadow: $component-focus-box-shadow,
 			outline: 0,
@@ -295,7 +298,7 @@ $clay-color-map-values-form-group: () !default;
 $clay-color-map-values-input: () !default;
 $clay-color-map-values-input: map-deep-merge(
 	(
-		padding-left: 0,
+		padding-left: 0rem,
 		padding-right: 10%,
 		text-align: right,
 	),
@@ -309,7 +312,7 @@ $clay-color-map-values-input-group-inset-item-before: map-merge(
 	(
 		font-weight: $font-weight-semi-bold,
 		padding-left: 10%,
-		padding-right: 0,
+		padding-right: 0rem,
 		min-width: 1.125rem,
 	),
 	$clay-color-map-values-input-group-inset-item-before
@@ -349,22 +352,25 @@ $clay-color-form-group: map-deep-merge(
 		align-items: center,
 		margin-top: 0.25rem,
 		margin-bottom: 1rem,
+
 		clay-range: (
 			flex-grow: 1,
 			flex-shrink: 0,
 			margin-right: 1rem,
 			width: 144px,
 		),
+
 		form-control: (
-			padding-left: 0,
+			padding-left: 0rem,
 			padding-right: 10%,
 			text-align: right,
 		),
+
 		input-group: (
 			input-group-inset-item-before: (
 				font-weight: $font-weight-semi-bold,
 				padding-left: 10%,
-				padding-right: 0,
+				padding-right: 0rem,
 				min-width: 1.125rem,
 			),
 		),
@@ -379,11 +385,13 @@ $clay-color-slider: map-deep-merge(
 	(
 		clay-range-input: (
 			border-radius: 100px,
+
 			clay-range-track: (
 				border-radius: inherit,
 				height: 0.5rem,
 				margin-top: -0.25rem,
 			),
+
 			clay-range-progress: (
 				background-color: transparent,
 				border-radius: inherit,
@@ -391,20 +399,24 @@ $clay-color-slider: map-deep-merge(
 				margin-top: -0.25rem,
 				width: 100%,
 			),
+
 			ms-thumb: (
 				visibility: visible,
 			),
+
 			moz-range-thumb: (
 				height: 0.625rem,
 				visibility: visible,
 				width: 0.625rem,
 			),
+
 			webkit-slider-thumb: (
 				visibility: visible,
 			),
+
 			clay-range-thumb: (
 				background-color: currentColor,
-				border-width: 0,
+				border-width: 0rem,
 				box-shadow: 0 0 0 0.125rem $white,
 				height: 0.625rem,
 				margin-top: -0.3125rem,
@@ -413,16 +425,19 @@ $clay-color-slider: map-deep-merge(
 				visibility: hidden,
 				width: 0.625rem,
 			),
+
 			form-control-range: (
 				background-color: inherit,
 				border-radius: inherit,
 				color: inherit,
 				height: 0.5rem,
+
 				webkit-slider-runnable-track: (
 					-webkit-appearance: none,
 					appearance: none,
 				),
 			),
+
 			focus: (
 				clay-range-thumb: (
 					box-shadow: #{0 0 0 0.125rem $white,
@@ -439,6 +454,7 @@ $clay-color-slider-hue: map-deep-merge(
 	(
 		clay-range-input: (
 			color: #26affd,
+
 			clay-range-track: (
 				background-image:
 					linear-gradient(
@@ -462,6 +478,7 @@ $clay-color-slider-alpha: map-deep-merge(
 	(
 		clay-range-input: (
 			color: $black,
+
 			clay-range-track: (
 				background-color: $white,
 				background-image: #{linear-gradient(
@@ -486,6 +503,7 @@ $clay-color-slider-alpha: map-deep-merge(
 				-4px 0px},
 				background-size: 8px 8px,
 			),
+
 			form-control-range: (
 				background-image:
 					linear-gradient(90deg, transparent 0%, currentcolor 100%),
@@ -509,7 +527,7 @@ $clay-color-sm-input-group-inset-item-before: map-merge(
 $clay-color-sm-input-group-text: () !default;
 $clay-color-sm-input-group-text: map-merge(
 	(
-		padding: 0,
+		padding: 0rem,
 	),
 	$clay-color-sm-input-group-text
 );
@@ -519,7 +537,7 @@ $clay-color-sm-clay-color-btn: map-deep-merge(
 	(
 		border-radius: 2px,
 		height: 1.25rem,
-		padding: 0,
+		padding: 0rem,
 		width: 1.25rem,
 	),
 	$clay-color-sm-clay-color-btn

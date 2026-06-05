@@ -248,3 +248,4 @@ public class EmbeddingProviderValidationResultSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:1328170825

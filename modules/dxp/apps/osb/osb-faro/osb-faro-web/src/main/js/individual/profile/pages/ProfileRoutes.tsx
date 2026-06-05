@@ -1,3 +1,4 @@
+import * as API from 'shared/api';
 import * as breadcrumbs from 'shared/util/breadcrumbs';
 import BasePage from 'shared/components/base-page';
 import BundleRouter from 'route-middleware/BundleRouter';
@@ -6,13 +7,15 @@ import getCN from 'classnames';
 import Loading from 'shared/components/Loading';
 import React, {lazy, Suspense, useContext} from 'react';
 import RouteNotFound from 'shared/components/RouteNotFound';
+import {buildHeaderSubtitle} from './utils/utils';
 import {ChannelContext} from 'shared/context/channel';
 import {compose, withIndividual} from 'shared/hoc';
 import {CSVType} from 'shared/components/download-report/utils';
-import {ENABLE_CDP} from 'shared/util/constants';
 import {getMatchedRoute, Routes} from 'shared/util/router';
 import {Switch, withRouter} from 'react-router-dom';
-import {useDataSource} from 'shared/hooks/useDataSource';
+import {useDataSources} from 'shared/context/dataSources';
+import {useLDPEnabled} from 'shared/hooks/useLDPEnabled';
+import {useRequest} from 'shared/hooks/useRequest';
 
 const AssociatedSegments = lazy(
 	() =>
@@ -34,9 +37,6 @@ const Interests = lazy(
 );
 const Overview = lazy(
 	() => import(/* webpackChunkName: "IndividualOverview" */ './Overview')
-);
-const OverviewCDP = lazy(
-	() => import(/* webpackChunkName: "IndividualOverview" */ './OverviewCDP')
 );
 
 const NAV_ITEMS = [
@@ -62,14 +62,32 @@ const NAV_ITEMS = [
 	}
 ];
 
+interface IIndividualProfileRoutesProps {
+	channelId: string;
+	className?: string;
+	groupId: string;
+	id: string;
+	individual: {
+		id: string;
+		name?: string;
+		toJS: () => {
+			accountName: string;
+			lastSessionCountry: string;
+			properties: {email: string};
+		};
+	};
+}
+
 export const IndividualProfileRoutes = ({
 	channelId,
 	className,
 	groupId,
 	id,
 	individual
-}) => {
-	const dataSourceStates = useDataSource();
+}: IIndividualProfileRoutesProps) => {
+	const dataSourceStates = useDataSources();
+
+	const LDPEnabled = useLDPEnabled({groupId});
 
 	const {selectedChannel} = useContext(ChannelContext);
 
@@ -78,6 +96,14 @@ export const IndividualProfileRoutes = ({
 	const componentProps = {individual};
 
 	const entityName = individual.name || Liferay.Language.get('unknown');
+
+	const {data: dataSourceData} = useRequest({
+		dataSourceFn: API.dataSource.search,
+		variables: {
+			delta: 1,
+			groupId
+		}
+	});
 
 	return (
 		<BasePage
@@ -97,12 +123,19 @@ export const IndividualProfileRoutes = ({
 						groupId,
 						label: selectedChannel && selectedChannel.name
 					}),
-					breadcrumbs.getKnownIndividuals({channelId, groupId}),
+					breadcrumbs.getIndividuals({
+						channelId,
+						groupId,
+						LDPEnabled
+					}),
 					breadcrumbs.getEntityName({label: entityName})
 				]}
 				groupId={groupId}
 			>
-				<BasePage.Header.TitleSection title={entityName} />
+				<BasePage.Header.TitleSection
+					subtitle={buildHeaderSubtitle(individual.toJS())}
+					title={entityName}
+				/>
 
 				<BasePage.Header.NavBar
 					items={NAV_ITEMS}
@@ -110,18 +143,19 @@ export const IndividualProfileRoutes = ({
 				/>
 			</BasePage.Header>
 
-			{getMatchedRoute(NAV_ITEMS) === Routes.CONTACTS_INDIVIDUAL && (
-				<BasePage.SubHeader>
-					<div className='d-flex justify-content-end w-100'>
-						<DownloadCSVReport
-							disabled={dataSourceStates.empty}
-							individualId={individual.id}
-							type={CSVType.Event}
-							typeLang={Liferay.Language.get('events')}
-						/>
-					</div>
-				</BasePage.SubHeader>
-			)}
+			{getMatchedRoute(NAV_ITEMS) === Routes.CONTACTS_INDIVIDUAL &&
+				dataSourceData?.total > 0 && (
+					<BasePage.SubHeader>
+						<div className='d-flex justify-content-end w-100'>
+							<DownloadCSVReport
+								disabled={!!dataSourceStates.empty}
+								individualId={individual.id}
+								type={CSVType.Event}
+								typeLang={Liferay.Language.get('events')}
+							/>
+						</div>
+					</BasePage.SubHeader>
+				)}
 
 			<BasePage.Body>
 				<Suspense fallback={<Loading />}>
@@ -156,7 +190,7 @@ export const IndividualProfileRoutes = ({
 
 						<BundleRouter
 							componentProps={componentProps}
-							data={ENABLE_CDP ? OverviewCDP : Overview}
+							data={Overview}
 							exact
 							path={Routes.CONTACTS_INDIVIDUAL}
 						/>

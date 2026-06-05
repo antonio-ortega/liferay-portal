@@ -5,6 +5,7 @@
 
 package com.liferay.portal.kernel.search;
 
+import com.liferay.petra.concurrent.NoticeableFuture;
 import com.liferay.petra.lang.CentralizedThreadLocal;
 import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.reflect.ReflectionUtil;
@@ -82,9 +83,9 @@ public class SearchContext implements Serializable {
 				Map.Entry<Set<Future<?>>, List<Callable<Void>>> entry =
 					_batchModeSyncFuturesAndCallables.get();
 
-				for (Future<?> future : entry.getKey()) {
+				for (Callable<?> callable : entry.getValue()) {
 					try {
-						future.get();
+						callable.call();
 					}
 					catch (Exception exception2) {
 						if (exception1 != null) {
@@ -95,9 +96,9 @@ public class SearchContext implements Serializable {
 					}
 				}
 
-				for (Callable<?> callable : entry.getValue()) {
+				for (Future<?> future : entry.getKey()) {
 					try {
-						callable.call();
+						future.get();
 					}
 					catch (Exception exception2) {
 						if (exception1 != null) {
@@ -144,7 +145,9 @@ public class SearchContext implements Serializable {
 		batchModeSyncCallables.add(callable);
 	}
 
-	public static void registerBatchModeSyncFuture(Future<?> future) {
+	public static void registerBatchModeSyncFuture(
+		NoticeableFuture<?> noticeableFuture) {
+
 		Map.Entry<Set<Future<?>>, List<Callable<Void>>> entry =
 			_batchModeSyncFuturesAndCallables.get();
 
@@ -154,18 +157,10 @@ public class SearchContext implements Serializable {
 
 		Set<Future<?>> batchModeSyncFutures = entry.getKey();
 
-		batchModeSyncFutures.add(future);
-	}
+		batchModeSyncFutures.add(noticeableFuture);
 
-	public static void unregisterBatchModeSyncFuture(Future<?> future) {
-		Map.Entry<Set<Future<?>>, List<Callable<Void>>> entry =
-			_batchModeSyncFuturesAndCallables.get();
-
-		if (entry != null) {
-			Set<Future<?>> batchModeSyncFutures = entry.getKey();
-
-			batchModeSyncFutures.remove(future);
-		}
+		noticeableFuture.addFutureListener(
+			future -> batchModeSyncFutures.remove(future));
 	}
 
 	public void addFacet(Facet facet) {

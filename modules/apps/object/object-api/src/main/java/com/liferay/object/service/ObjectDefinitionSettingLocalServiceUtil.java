@@ -120,6 +120,14 @@ public class ObjectDefinitionSettingLocalServiceUtil {
 			objectDefinitionSetting);
 	}
 
+	public static void deleteObjectDefinitionSettingByObjectDefinitionId(
+			long objectDefinitionId)
+		throws PortalException {
+
+		getService().deleteObjectDefinitionSettingByObjectDefinitionId(
+			objectDefinitionId);
+	}
+
 	/**
 	 * @throws PortalException
 	 */
@@ -395,3 +403,4 @@ public class ObjectDefinitionSettingLocalServiceUtil {
 			ObjectDefinitionSettingLocalService.class);
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-597159586

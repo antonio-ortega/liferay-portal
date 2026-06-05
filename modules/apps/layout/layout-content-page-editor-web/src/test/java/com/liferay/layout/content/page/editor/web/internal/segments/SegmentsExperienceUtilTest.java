@@ -164,7 +164,7 @@ public class SegmentsExperienceUtilTest {
 				"segmentsEntryERC", segmentsExperience.getSegmentsEntryERC()
 			).put(
 				"segmentsEntryGroupId",
-				segmentsExperience.getSegmentsEntryGroupId()
+				Long.valueOf(segmentsExperience.getGroupId())
 			).put(
 				"segmentsEntryId", segmentsExperience.getSegmentsEntryId()
 			).put(

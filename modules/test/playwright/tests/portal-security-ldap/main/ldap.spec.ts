@@ -20,7 +20,7 @@ import {InstanceSettingsPage} from '../../../pages/configuration-admin-web/Insta
 import {SystemSettingsPage} from '../../../pages/configuration-admin-web/SystemSettingsPage';
 import {LdapConfigurationPage} from '../../../pages/portal-security-ldap/LdapConfigurationPage';
 import {LdapServerPage} from '../../../pages/portal-security-ldap/LdapServerPage';
-import {ApplicationsMenuPage} from '../../../pages/product-navigation-applications-menu/ApplicationsMenuPage';
+import {GlobalMenuPage} from '../../../pages/product-navigation-applications-menu/GlobalMenuPage';
 import {ServerAdministrationPage} from '../../../pages/server-admin-web/ServerAdministrationPage';
 import {clickAndExpectToBeVisible} from '../../../utils/clickAndExpectToBeVisible';
 import getRandomString from '../../../utils/getRandomString';
@@ -1084,9 +1084,9 @@ async function invokeLdapImport(page: Page, ldapServer?: TLdapServer) {
 	}
 
 	await test.step('Manually trigger bulk import', async () => {
-		const applicationsMenuPage = new ApplicationsMenuPage(page);
+		const globalMenuPage = new GlobalMenuPage(page);
 
-		await applicationsMenuPage.goToServerAdministration();
+		await globalMenuPage.goToControlPanel('Server Administration');
 
 		const script = `
 			import com.liferay.portal.kernel.module.util.SystemBundleUtil;

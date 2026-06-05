@@ -18,6 +18,7 @@ import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.service.JournalArticleLocalService;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
@@ -70,9 +71,6 @@ public class PreviewImageJournalArticleContentDashboardItemActionProviderTest {
 
 	@Test
 	public void testGetContentDashboardItemAction() throws Exception {
-		ServiceContext originalServiceContext =
-			ServiceContextThreadLocal.getServiceContext();
-
 		ThemeDisplay themeDisplay = _getThemeDisplay();
 
 		ServiceContextThreadLocal.pushServiceContext(
@@ -124,8 +122,7 @@ public class PreviewImageJournalArticleContentDashboardItemActionProviderTest {
 				contentDashboardItemAction.getURL());
 		}
 		finally {
-			ServiceContextThreadLocal.pushServiceContext(
-				originalServiceContext);
+			ServiceContextThreadLocal.popServiceContext();
 		}
 	}
 
@@ -144,9 +141,6 @@ public class PreviewImageJournalArticleContentDashboardItemActionProviderTest {
 
 	@Test
 	public void testIsShow() throws Exception {
-		ServiceContext originalServiceContext =
-			ServiceContextThreadLocal.getServiceContext();
-
 		ServiceContextThreadLocal.pushServiceContext(
 			_getServiceContext(_getThemeDisplay()));
 
@@ -191,8 +185,7 @@ public class PreviewImageJournalArticleContentDashboardItemActionProviderTest {
 					journalArticle, new MockHttpServletRequest()));
 		}
 		finally {
-			ServiceContextThreadLocal.pushServiceContext(
-				originalServiceContext);
+			ServiceContextThreadLocal.popServiceContext();
 		}
 	}
 
@@ -265,8 +258,11 @@ public class PreviewImageJournalArticleContentDashboardItemActionProviderTest {
 		return tempFile;
 	}
 
-	private ThemeDisplay _getThemeDisplay() {
+	private ThemeDisplay _getThemeDisplay() throws Exception {
 		ThemeDisplay themeDisplay = new ThemeDisplay();
+
+		themeDisplay.setCompany(
+			_companyLocalService.getCompany(_group.getCompanyId()));
 
 		MockHttpServletRequest mockHttpServletRequest =
 			new MockHttpServletRequest();
@@ -278,10 +274,15 @@ public class PreviewImageJournalArticleContentDashboardItemActionProviderTest {
 
 		themeDisplay.setScopeGroupId(_group.getGroupId());
 		themeDisplay.setSiteGroupId(_group.getGroupId());
-		themeDisplay.setURLCurrent("http://localhost:8080/currentURL");
+		themeDisplay.setURLCurrent(
+			"http://localhost:" + PortalUtil.getPortalServerPort(false) +
+				"/currentURL");
 
 		return themeDisplay;
 	}
+
+	@Inject
+	private CompanyLocalService _companyLocalService;
 
 	@Inject(
 		filter = "component.name=com.liferay.content.dashboard.journal.internal.item.action.provider.PreviewImageJournalArticleContentDashboardItemActionProvider"

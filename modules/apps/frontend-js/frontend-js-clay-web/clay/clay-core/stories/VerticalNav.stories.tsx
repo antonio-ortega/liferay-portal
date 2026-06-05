@@ -653,6 +653,7 @@ export function Primary() {
 			aria-label="vertical navbar"
 			displayType="primary"
 			items={items_cms_product_menu}
+			stacked
 		>
 			{(item) => (
 				<VerticalNav.Item
@@ -686,5 +687,49 @@ export function Primary() {
 				</VerticalNav.Item>
 			)}
 		</VerticalNav>
+	);
+}
+export function KeyboardArrowsIndicator() {
+	const navItems = [
+		{
+			href: '#home',
+			id: 'home',
+			label: 'Home',
+		},
+		{
+			id: 'about',
+			items: [
+				{href: '#team', id: 'team', label: 'Team'},
+				{href: '#history', id: 'history', label: 'History'},
+			],
+			label: 'About',
+		},
+		{
+			href: '#contact',
+			id: 'contact',
+			label: 'Contact',
+		},
+	];
+
+	return (
+		<div style={{maxWidth: '320px'}}>
+			<VerticalNav
+				active="home"
+				aria-label="Site navigation"
+				defaultExpandedKeys={new Set(['about'])}
+				displayKeyboardArrowsIndicator
+				items={navItems}
+			>
+				{(item: Item) => (
+					<VerticalNav.Item
+						href={item.href}
+						items={item.items}
+						key={item.id}
+					>
+						{item.label}
+					</VerticalNav.Item>
+				)}
+			</VerticalNav>
+		</div>
 	);
 }

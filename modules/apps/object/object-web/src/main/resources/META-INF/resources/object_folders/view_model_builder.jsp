@@ -43,6 +43,8 @@ renderResponse.setTitle(LanguageUtil.get(request, "object-model-builder"));
 			).put(
 				"companies", objectDefinitionsDetailsDisplayContext.getScopeJSONArray("company")
 			).put(
+				"countries", objectDefinitionsFieldsDisplayContext.getCountries()
+			).put(
 				"decimalSeparator", String.valueOf(decimalFormatSymbols.getDecimalSeparator())
 			).put(
 				"editObjectDefinitionURL", objectDefinitionsDetailsDisplayContext.getEditObjectDefinitionURL()
@@ -54,6 +56,8 @@ renderResponse.setTitle(LanguageUtil.get(request, "object-model-builder"));
 				"forbiddenLastChars", objectDefinitionsFieldsDisplayContext.getForbiddenLastCharacters()
 			).put(
 				"forbiddenNames", PropsUtil.getArray(PropsKeys.DL_NAME_BLACKLIST)
+			).put(
+				"hasDepotEntry", objectDefinitionsFieldsDisplayContext.hasDepotEntry()
 			).put(
 				"learnResourceContext", LearnMessageUtil.getReactDataJSONObject(new String[] {"frontend-js-components-web", "object-web"})
 			).put(

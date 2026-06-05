@@ -1,0 +1,42 @@
+@import 'atlas-variables';
+
+.multiple-file-uploader {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+
+	.modal-body.inline-scroller {
+		max-height: min(600px, calc(100vh - 14rem));
+	}
+
+	.modal-footer {
+		margin-top: auto;
+	}
+
+	.dropzone {
+		background-color: $light;
+		border-radius: 4px;
+		height: 160px;
+		outline: 2px dashed $secondary-l2;
+		padding: 0.75rem;
+
+		transition-duration: 0.2s;
+		transition-property: background-color, outline;
+		transition-timing-function: ease-in-out;
+
+		&-drag-active {
+			background-color: $primary-l3;
+			outline-color: $primary;
+		}
+	}
+
+	.loading-message {
+		inset: 0;
+		top: 0;
+		z-index: 10;
+	}
+
+	.sticker-border-secondary {
+		border: 1px solid $secondary-l3;
+	}
+}

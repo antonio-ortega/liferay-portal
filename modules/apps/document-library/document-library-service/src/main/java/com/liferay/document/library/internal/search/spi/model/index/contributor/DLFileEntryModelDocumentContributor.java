@@ -227,9 +227,15 @@ public class DLFileEntryModelDocumentContributor
 						StringPool.SPACE, text));
 			}
 		}
-		catch (IOException | PortalException exception) {
+		catch (Throwable throwable) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(
+					"Unable to extract text from file version " +
+						dlFileVersion.getFileVersionId());
+			}
+
 			if (_log.isDebugEnabled()) {
-				_log.debug(exception);
+				_log.debug(throwable);
 			}
 		}
 	}
@@ -303,6 +309,12 @@ public class DLFileEntryModelDocumentContributor
 				DLStoreRequest.builder(
 					dlFileEntry.getCompanyId(),
 					dlFileEntry.getDataRepositoryId(), dlFileEntry.getName()
+				).className(
+					dlFileEntry.getModelClassName()
+				).classPK(
+					dlFileEntry.getFileEntryId()
+				).sourceFileName(
+					dlFileEntry.getFileName()
 				).versionLabel(
 					indexVersionLabel
 				).build(),
@@ -341,8 +353,6 @@ public class DLFileEntryModelDocumentContributor
 					);
 
 					Map<Long, DDMStructure> ddmStructureMap = new HashMap<>();
-					Map<DDMStructure, DDMFormValues> ddmFormValuesMap =
-						new HashMap<>();
 
 					for (Object[] values :
 							_dlFileEntryMetadataLocalService.
@@ -363,18 +373,10 @@ public class DLFileEntryModelDocumentContributor
 									ddmStructureId, ddmStructure);
 							}
 
-							DDMFormValues ddmFormValues = ddmFormValuesMap.get(
-								ddmStructure);
-
-							if (ddmFormValues == null) {
-								ddmFormValues =
-									_ddmStorageEngineManager.getDDMFormValues(
-										(Long)values[1],
-										ddmStructure.getDDMForm(false));
-
-								ddmFormValuesMap.put(
-									ddmStructure, ddmFormValues);
-							}
+							DDMFormValues ddmFormValues =
+								_ddmStorageEngineManager.getDDMFormValues(
+									(Long)values[1],
+									ddmStructure.getDDMForm(false));
 
 							Map<DDMStructure, DDMFormValues>
 								localDDMFormValues =

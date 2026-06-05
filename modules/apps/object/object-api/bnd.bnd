@@ -1,6 +1,6 @@
 Bundle-Name: Liferay Object API
 Bundle-SymbolicName: com.liferay.object.api
-Bundle-Version: 119.0.0
+Bundle-Version: 123.1.0
 Export-Package:\
 	com.liferay.object.action.engine,\
 	com.liferay.object.action.executor,\
@@ -11,6 +11,7 @@ Export-Package:\
 	com.liferay.object.constants,\
 	com.liferay.object.definition.groovy.script.use,\
 	com.liferay.object.definition.notification.term.util,\
+	com.liferay.object.definition.processor,\
 	com.liferay.object.definition.security.permission.resource,\
 	com.liferay.object.definition.security.permission.resource.util,\
 	com.liferay.object.definition.setting.builder,\
@@ -25,6 +26,7 @@ Export-Package:\
 	com.liferay.object.entry.contributor,\
 	com.liferay.object.entry.folder.subscription.util,\
 	com.liferay.object.entry.folder.util,\
+	com.liferay.object.entry.scope.provider,\
 	com.liferay.object.entry.util,\
 	com.liferay.object.exception,\
 	com.liferay.object.field.attachment,\
@@ -42,6 +44,7 @@ Export-Package:\
 	com.liferay.object.model,\
 	com.liferay.object.model.bag,\
 	com.liferay.object.model.listener,\
+	com.liferay.object.modifiable.system,\
 	com.liferay.object.odata.filter.expression.field.predicate.provider,\
 	com.liferay.object.petra.sql.dsl,\
 	com.liferay.object.related.models,\

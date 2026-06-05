@@ -507,3 +507,4 @@ public interface CPDefinitionOptionRelLocalService
 		throws E;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:515245476

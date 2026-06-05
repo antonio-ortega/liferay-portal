@@ -379,3 +379,4 @@ public interface CPSpecificationOptionLocalService
 		throws E;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-1514021608

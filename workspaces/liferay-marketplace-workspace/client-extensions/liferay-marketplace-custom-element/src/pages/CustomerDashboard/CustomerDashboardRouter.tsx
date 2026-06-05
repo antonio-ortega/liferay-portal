@@ -6,9 +6,9 @@
 import {Route, Routes} from 'react-router-dom';
 
 import withProviders from '../../hoc/withProviders';
+import CustomerDashboardApp from '../CustomerDashboard/pages/Apps/App/App';
 import CustomerDashboardOutlet from './CustomerDashboardOutlet';
 import Apps from './pages/Apps';
-import App from './pages/Apps/App/App';
 import AppOutlet from './pages/Apps/App/AppOutlet';
 import Provisioning from './pages/Apps/App/CloudProvisioning';
 import CloudProvisioningOutlet from './pages/Apps/App/CloudProvisioning/pages/CloudProvisioningOutlet';
@@ -20,6 +20,11 @@ import CreateLicense from './pages/Apps/App/Licenses/CreateLicense';
 import Licenses from './pages/Apps/App/Licenses/Licenses';
 import Support from './pages/Apps/App/Support/Support';
 import Connections from './pages/Connections';
+import LiferayProductsBundles from './pages/LiferayProducts/Bundles/Bundles';
+import LiferayProduct from './pages/LiferayProducts/LiferayProduct';
+import LiferayProductsOutlet from './pages/LiferayProducts/LiferayProductsOutlet';
+import DSRWorkspace from './pages/LiferayProducts/Workspace/DSRWorkspace';
+import LiferayProductsListView from './pages/LiferayProducts/index';
 import Solutions from './pages/Solutions';
 import Solution from './pages/Solutions/Solution';
 import SolutionOutlet from './pages/Solutions/SolutionOutlet';
@@ -33,7 +38,7 @@ const CustomerDashboardRouter = () => {
 				<Route element={<Connections />} path="connections" />
 
 				<Route element={<AppOutlet />} path="order/:orderId">
-					<Route element={<App />} index />
+					<Route element={<CustomerDashboardApp />} index />
 
 					<Route element={<Download />} path="download" />
 
@@ -46,6 +51,23 @@ const CustomerDashboardRouter = () => {
 
 					<Route element={<Support />} path="support" />
 				</Route>
+
+				<Route element={<LiferayProductsListView />} path="products" />
+
+				<Route
+					element={<LiferayProductsOutlet />}
+					path="products/:orderId"
+				>
+					<Route element={<LiferayProduct />} index />
+
+					<Route
+						element={<LiferayProductsBundles />}
+						path="bundles"
+					/>
+
+					<Route element={<DSRWorkspace />} path="workspace" />
+				</Route>
+
 				<Route element={<Solutions />} path="solutions" />
 
 				<Route element={<SolutionOutlet />} path="solutions/:orderId">

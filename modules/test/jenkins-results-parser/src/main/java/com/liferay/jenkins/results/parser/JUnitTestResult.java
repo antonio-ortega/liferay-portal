@@ -12,6 +12,7 @@ import java.io.IOException;
 
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
+import java.net.URL;
 
 import java.util.Date;
 import java.util.Objects;
@@ -19,7 +20,7 @@ import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import org.dom4j.Element;
 
@@ -75,12 +76,21 @@ public class JUnitTestResult extends BaseTestResult {
 		TestClassHistory testClassHistory = getTestClassHistory();
 
 		if (testClassHistory != null) {
-			downstreamBuildListItemElement.addText(
-				JenkinsResultsParserUtil.combine(
-					" - Failed ",
-					String.valueOf(testClassHistory.getFailureCount()),
-					" of last ",
-					String.valueOf(testClassHistory.getTestCount())));
+			URL testrayCaseURL = testClassHistory.getTestrayCaseURL();
+
+			String summaryContent = JenkinsResultsParserUtil.combine(
+				"Failed ", String.valueOf(testClassHistory.getFailureCount()),
+				" of last ", String.valueOf(testClassHistory.getTestCount()));
+
+			if (testrayCaseURL != null) {
+				Dom4JUtil.addToElement(
+					downstreamBuildListItemElement, " - ",
+					Dom4JUtil.getNewAnchorElement(
+						String.valueOf(testrayCaseURL), summaryContent));
+			}
+			else {
+				downstreamBuildListItemElement.addText(" - " + summaryContent);
+			}
 		}
 
 		String errorStackTrace = getErrorStackTrace();

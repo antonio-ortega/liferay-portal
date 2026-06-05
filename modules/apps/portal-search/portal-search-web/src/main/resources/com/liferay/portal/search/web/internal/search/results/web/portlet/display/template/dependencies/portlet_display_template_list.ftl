@@ -16,7 +16,7 @@
 							<span class="sticker">
 								<span class="sticker-overlay">
 									<img
-										alt="${entry.getContent()!entry.getTitle() + ' ' + languageUtil.get(locale, 'thumbnail')}"
+										alt="${htmlUtil.escape(entry.getTitle()) + ' ' + languageUtil.get(locale, 'thumbnail')}"
 										class="sticker-img"
 										src="${entry.getThumbnailURLString()}"
 									/>
@@ -163,7 +163,7 @@
 						<div class="autofit-col">
 							<span
 								class="c-mt-2 lfr-portal-tooltip"
-								title="${languageUtil.format(locale, 'download-x', ['(' + languageUtil.formatStorageSize(entry.getAssetRendererDownloadSize(), locale) + ')'])}"
+								title="${(entry.getAssetRendererDownloadSize() > 0)?then(languageUtil.format(locale, 'download-x', ['(' + languageUtil.formatStorageSize(entry.getAssetRendererDownloadSize(), locale) + ')']), languageUtil.get(locale, 'download'))}"
 							>
 								<@clay.link
 									aria\-label="${languageUtil.format(locale, 'download-x', [entry.getTitle()])}"

@@ -359,3 +359,4 @@ public class UserGroupSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1333927601

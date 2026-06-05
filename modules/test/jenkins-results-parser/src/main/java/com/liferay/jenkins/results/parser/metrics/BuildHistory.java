@@ -7,6 +7,9 @@ package com.liferay.jenkins.results.parser.metrics;
 
 import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -493,9 +496,15 @@ public class BuildHistory {
 		String dateString = buildJSONObject.getStartDateString();
 
 		_addData(_dailyInvokedBuilds, dateString, 1L);
+
+		long dayMillis = TimeUnit.DAYS.toMillis(1);
+
+		long startTimeMillis =
+			dayMillis - (buildJSONObject.getStartTime() % dayMillis);
+
 		_addData(
 			_dailyTotalBuildDurations, dateString,
-			buildJSONObject.getDuration());
+			Math.min(buildJSONObject.getDuration(), startTimeMillis));
 
 		if (buildJSONObject.isTopLevelBuild()) {
 			_topLevelBuildURLs.add(buildJSONObject.getURL());
@@ -509,10 +518,32 @@ public class BuildHistory {
 			_addData(_dailyInvokedTopLevelBuilds, dateString, 1L);
 			_addData(
 				_dailyTotalTopLevelBuildDurations, dateString,
-				buildJSONObject.getDuration());
+				Math.min(buildJSONObject.getDuration(), startTimeMillis));
 			_addData(
 				_dailyTotalTopLevelQueueTime, dateString,
 				buildJSONObject.getQueueDuration());
+		}
+
+		if (buildJSONObject.getDuration() > startTimeMillis) {
+			LocalDate localDate = JenkinsResultsParserUtil.getLocalDate(
+				getStartTime());
+
+			localDate = localDate.plusDays(1);
+
+			String nextDateString = localDate.format(
+				DateTimeFormatter.ofPattern("yyyyMMdd"));
+
+			long nextDateDuration =
+				buildJSONObject.getDuration() - startTimeMillis;
+
+			_addData(
+				_dailyTotalBuildDurations, nextDateString, nextDateDuration);
+
+			if (buildJSONObject.isTopLevelBuild()) {
+				_addData(
+					_dailyTotalTopLevelBuildDurations, nextDateString,
+					nextDateDuration);
+			}
 		}
 	}
 
@@ -578,6 +609,10 @@ public class BuildHistory {
 	private Long _getQuotient(Long value1, Long value2) {
 		if (value1 == 0L) {
 			return value1;
+		}
+
+		if (value2 == 0L) {
+			return 0L;
 		}
 
 		return value1 / value2;

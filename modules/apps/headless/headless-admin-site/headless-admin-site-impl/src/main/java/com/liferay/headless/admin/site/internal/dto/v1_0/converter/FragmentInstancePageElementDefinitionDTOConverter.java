@@ -5,10 +5,12 @@
 
 package com.liferay.headless.admin.site.internal.dto.v1_0.converter;
 
+import com.liferay.fragment.collection.filter.FragmentCollectionFilterRegistry;
 import com.liferay.fragment.entry.processor.constants.FragmentEntryProcessorConstants;
 import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.processor.FragmentEntryProcessorRegistry;
 import com.liferay.fragment.processor.PortletRegistry;
+import com.liferay.fragment.renderer.constants.FragmentRendererConstants;
 import com.liferay.fragment.service.FragmentEntryLinkLocalService;
 import com.liferay.fragment.util.configuration.FragmentConfigurationField;
 import com.liferay.fragment.util.configuration.FragmentEntryConfigurationParser;
@@ -20,14 +22,18 @@ import com.liferay.headless.admin.site.dto.v1_0.FragmentInstance;
 import com.liferay.headless.admin.site.dto.v1_0.FragmentItemExternalReference;
 import com.liferay.headless.admin.site.dto.v1_0.PageElementDefinition;
 import com.liferay.headless.admin.site.dto.v1_0.WidgetInstance;
+import com.liferay.headless.admin.site.internal.dto.v1_0.util.CollectionFilterConfigurationUtil;
 import com.liferay.headless.admin.site.internal.dto.v1_0.util.FragmentEditableElementUtil;
 import com.liferay.headless.admin.site.internal.dto.v1_0.util.FragmentViewportUtil;
+import com.liferay.headless.admin.site.internal.dto.v1_0.util.ImageValueUtil;
 import com.liferay.headless.admin.site.internal.dto.v1_0.util.ItemScopeUtil;
 import com.liferay.headless.admin.site.internal.dto.v1_0.util.LocalizedValueUtil;
 import com.liferay.headless.admin.site.internal.dto.v1_0.util.WidgetInstanceUtil;
 import com.liferay.info.item.InfoItemServiceRegistry;
 import com.liferay.layout.util.structure.FragmentStyledLayoutStructureItem;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portlet.PortletIdCodec;
 import com.liferay.portal.kernel.util.ArrayUtil;
@@ -45,6 +51,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import org.osgi.service.component.annotations.Component;
@@ -80,12 +87,21 @@ public class FragmentInstancePageElementDefinitionDTOConverter
 			throw new UnsupportedOperationException();
 		}
 
+		long fragmentEntryLinkId =
+			fragmentStyledLayoutStructureItem.getFragmentEntryLinkId();
+
 		FragmentEntryLink fragmentEntryLink =
 			_fragmentEntryLinkLocalService.fetchFragmentEntryLink(
-				fragmentStyledLayoutStructureItem.getFragmentEntryLinkId());
+				fragmentEntryLinkId);
 
 		if (fragmentEntryLink == null) {
-			throw new UnsupportedOperationException();
+			if (_log.isWarnEnabled()) {
+				_log.warn(
+					"No fragment entry link exists with ID " +
+						fragmentEntryLinkId);
+			}
+
+			return null;
 		}
 
 		JSONObject editableValuesJSONObject =
@@ -101,7 +117,7 @@ public class FragmentInstancePageElementDefinitionDTOConverter
 				{
 					setFragmentInstance(
 						() -> _getFragmentInstance(
-							companyId, fragmentEntryLink,
+							companyId, dtoConverterContext, fragmentEntryLink,
 							fragmentStyledLayoutStructureItem,
 							freeMarkerJSONObject, scopeGroupId,
 							dtoConverterContext.getUser()));
@@ -118,7 +134,7 @@ public class FragmentInstancePageElementDefinitionDTOConverter
 						null));
 				setFragmentInstance(
 					() -> _getFragmentInstance(
-						companyId, fragmentEntryLink,
+						companyId, dtoConverterContext, fragmentEntryLink,
 						fragmentStyledLayoutStructureItem, freeMarkerJSONObject,
 						scopeGroupId, dtoConverterContext.getUser()));
 				setHelpText_i18n(
@@ -198,6 +214,19 @@ public class FragmentInstancePageElementDefinitionDTOConverter
 		JSONObject configurationJSONObject =
 			fragmentEntryLink.getConfigurationJSONObject();
 
+		if (Objects.equals(
+				fragmentEntryLink.getRendererKey(),
+				FragmentRendererConstants.
+					FRAGMENT_RENDERER_CLASS_NAME_COLLECTION_FILTER)) {
+
+			String filterKey = GetterUtil.getString(
+				freeMarkerJSONObject.getString("filterKey"));
+
+			configurationJSONObject =
+				CollectionFilterConfigurationUtil.getConfigurationJSONObject(
+					_fragmentCollectionFilterRegistry, filterKey);
+		}
+
 		if (configurationJSONObject == null) {
 			return Collections.emptyMap();
 		}
@@ -209,8 +238,7 @@ public class FragmentInstancePageElementDefinitionDTOConverter
 
 		for (FragmentConfigurationField fragmentConfigurationField :
 				_fragmentEntryConfigurationParser.
-					getFragmentConfigurationFields(
-						fragmentEntryLink.getConfigurationJSONObject())) {
+					getFragmentConfigurationFields(configurationJSONObject)) {
 
 			if (!freeMarkerJSONObject.has(
 					fragmentConfigurationField.getName())) {
@@ -232,12 +260,20 @@ public class FragmentInstancePageElementDefinitionDTOConverter
 	}
 
 	private FragmentInstance _getFragmentInstance(
-		long companyId, FragmentEntryLink fragmentEntryLink,
+		long companyId, DTOConverterContext dtoConverterContext,
+		FragmentEntryLink fragmentEntryLink,
 		FragmentStyledLayoutStructureItem fragmentStyledLayoutStructureItem,
 		JSONObject freeMarkerJSONObject, long scopeGroupId, User user) {
 
 		return new FragmentInstance() {
 			{
+				setBackgroundImageValue(
+					() -> ImageValueUtil.toBackgroundImageValue(
+						companyId, dtoConverterContext,
+						_infoItemServiceRegistry,
+						fragmentStyledLayoutStructureItem.
+							getBackgroundImageJSONObject(),
+						scopeGroupId));
 				setConfiguration(fragmentEntryLink::getConfiguration);
 				setCss(fragmentEntryLink::getCss);
 				setCssClasses(
@@ -261,7 +297,7 @@ public class FragmentInstancePageElementDefinitionDTOConverter
 				setFragmentEditableElements(
 					() ->
 						FragmentEditableElementUtil.getFragmentEditableElements(
-							companyId, fragmentEntryLink,
+							companyId, dtoConverterContext, fragmentEntryLink,
 							_fragmentEntryProcessorRegistry,
 							_infoItemServiceRegistry, scopeGroupId, user));
 				setFragmentInstanceExternalReferenceCode(
@@ -378,12 +414,18 @@ public class FragmentInstancePageElementDefinitionDTOConverter
 		return widgetInstances.toArray(new WidgetInstance[0]);
 	}
 
+	private static final Log _log = LogFactoryUtil.getLog(
+		FragmentInstancePageElementDefinitionDTOConverter.class);
+
 	@Reference(
 		target = "(component.name=com.liferay.headless.admin.site.internal.dto.v1_0.converter.FragmentConfigurationFieldValueDTOConverter)"
 	)
 	private DTOConverter
 		<FragmentConfigurationField, FragmentConfigurationFieldValue>
 			_configurationFieldValueDTOConverter;
+
+	@Reference
+	private FragmentCollectionFilterRegistry _fragmentCollectionFilterRegistry;
 
 	@Reference
 	private FragmentEntryConfigurationParser _fragmentEntryConfigurationParser;

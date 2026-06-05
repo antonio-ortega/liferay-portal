@@ -11,7 +11,6 @@ import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.search.capabilities.SearchCapabilities;
 import com.liferay.portal.search.engine.adapter.SearchEngineAdapter;
 import com.liferay.portal.search.index.IndexNameBuilder;
-import com.liferay.portal.search.query.Queries;
 import com.liferay.portal.search.spi.index.creation.instance.lifecycle.BaseIndexPortalInstanceLifecycleListener;
 import com.liferay.portal.search.tuning.rankings.index.RankingIndexReader;
 import com.liferay.portal.search.tuning.rankings.index.name.RankingIndexName;
@@ -30,7 +29,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Petteri Karttunen
  */
 @Component(
-	configurationPid = "com.liferay.portal.search.elasticsearch7.configuration.ElasticsearchConfiguration",
+	configurationPid = "com.liferay.portal.search.elasticsearch8.configuration.ElasticsearchConfiguration",
 	service = PortalInstanceLifecycleListener.class
 )
 public class RankingIndexPortalInstanceLifecycleListener
@@ -83,15 +82,11 @@ public class RankingIndexPortalInstanceLifecycleListener
 
 		_singleIndexToMultipleIndexImporter =
 			new SingleIndexToMultipleIndexImporter(
-				_indexNameBuilder, _queries, _rankingIndexReader,
-				_searchEngineAdapter);
+				_indexNameBuilder, _rankingIndexReader, _searchEngineAdapter);
 	}
 
 	@Reference
 	private IndexNameBuilder _indexNameBuilder;
-
-	@Reference
-	private Queries _queries;
 
 	@Reference
 	private RankingIndexNameBuilder _rankingIndexNameBuilder;

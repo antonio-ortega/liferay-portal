@@ -105,6 +105,8 @@ public class LayoutSEOSiteModelImpl
 
 	public static final String TABLE_SQL_DROP = "drop table LayoutSEOSite";
 
+	public static final String ENTITY_ALIAS = "layoutSEOSite";
+
 	public static final String ORDER_BY_JPQL =
 		" ORDER BY layoutSEOSite.layoutSEOSiteId ASC";
 
@@ -1204,3 +1206,4 @@ public class LayoutSEOSiteModelImpl
 	private LayoutSEOSite _escapedModel;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-1639721633

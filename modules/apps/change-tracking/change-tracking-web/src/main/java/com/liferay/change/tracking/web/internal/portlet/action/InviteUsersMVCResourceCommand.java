@@ -21,6 +21,8 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.ResourceConstants;
@@ -36,6 +38,8 @@ import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseTransactionalMVCResourceCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCResourceCommand;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
+import com.liferay.portal.kernel.security.auth.AuthTokenUtil;
+import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
@@ -105,44 +109,71 @@ public class InviteUsersMVCResourceCommand
 		HttpServletRequest httpServletRequest = _portal.getHttpServletRequest(
 			resourceRequest);
 
+		ThemeDisplay themeDisplay = (ThemeDisplay)resourceRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
+
 		long ctCollectionId = ParamUtil.getLong(
 			resourceRequest, "ctCollectionId");
 
 		CTCollection ctCollection = _ctCollectionLocalService.fetchCTCollection(
 			ctCollectionId);
 
-		if ((ctCollection == null) &&
-			(ctCollectionId != CTConstants.CT_COLLECTION_ID_PRODUCTION)) {
+		try {
+			AuthTokenUtil.checkCSRFToken(
+				httpServletRequest,
+				InviteUsersMVCResourceCommand.class.getName());
 
-			JSONPortletResponseUtil.writeJSON(
-				resourceRequest, resourceResponse,
-				JSONUtil.put(
-					"errorMessage",
-					_language.get(
-						httpServletRequest,
-						"this-publication-no-longer-exists")));
+			if ((ctCollection == null) &&
+				(ctCollectionId != CTConstants.CT_COLLECTION_ID_PRODUCTION)) {
 
-			return;
+				throw new PrincipalException(
+					"No CTCollection exists with the primary key " +
+						ctCollectionId);
+			}
+
+			CTCollectionPermission.check(
+				themeDisplay.getPermissionChecker(), ctCollection,
+				CTActionKeys.INVITE_USERS);
+		}
+		catch (Exception exception) {
+			if (exception instanceof PrincipalException) {
+				JSONPortletResponseUtil.writeJSON(
+					resourceRequest, resourceResponse,
+					JSONUtil.put(
+						"errorMessage",
+						_language.get(
+							httpServletRequest,
+							"you-do-not-have-permission-to-perform-this-" +
+								"action")));
+
+				return;
+			}
+
+			throw exception;
 		}
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)resourceRequest.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		long[] userIds = ParamUtil.getLongValues(resourceRequest, "userIds");
 
-		if ((ctCollection != null) &&
-			!CTCollectionPermission.contains(
-				themeDisplay.getPermissionChecker(), ctCollection,
-				CTActionKeys.INVITE_USERS)) {
+		for (long userId : userIds) {
+			try {
+				_userLocalService.getUserById(
+					themeDisplay.getCompanyId(), userId);
+			}
+			catch (Exception exception) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(exception);
+				}
 
-			JSONPortletResponseUtil.writeJSON(
-				resourceRequest, resourceResponse,
-				JSONUtil.put(
-					"errorMessage",
-					_language.get(
-						httpServletRequest,
-						"you-do-not-have-permission-to-invite-users-to-this-" +
-							"publication")));
+				JSONPortletResponseUtil.writeJSON(
+					resourceRequest, resourceResponse,
+					JSONUtil.put(
+						"errorMessage",
+						_language.get(
+							httpServletRequest,
+							"your-request-failed-to-complete")));
 
-			return;
+				return;
+			}
 		}
 
 		Group group = null;
@@ -201,8 +232,6 @@ public class InviteUsersMVCResourceCommand
 
 		int[] roleValues = ParamUtil.getIntegerValues(
 			resourceRequest, "roleValues");
-
-		long[] userIds = ParamUtil.getLongValues(resourceRequest, "userIds");
 
 		for (int i = 0; i < userIds.length; i++) {
 			List<UserGroupRole> userGroupRoles =
@@ -419,6 +448,9 @@ public class InviteUsersMVCResourceCommand
 		_userNotificationEventLocalService.addUserNotificationEvent(
 			receiverUserId, notificationEvent);
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		InviteUsersMVCResourceCommand.class);
 
 	@Reference
 	private ConfigurationProvider _configurationProvider;

@@ -380,3 +380,4 @@ public class ContentStructureField implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1802488210

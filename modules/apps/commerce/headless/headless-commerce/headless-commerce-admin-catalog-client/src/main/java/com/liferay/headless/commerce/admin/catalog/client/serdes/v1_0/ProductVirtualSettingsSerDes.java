@@ -704,3 +704,4 @@ public class ProductVirtualSettingsSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:28530446

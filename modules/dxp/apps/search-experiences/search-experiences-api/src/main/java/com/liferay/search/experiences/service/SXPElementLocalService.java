@@ -330,3 +330,4 @@ public interface SXPElementLocalService
 	public SXPElement updateSXPElement(SXPElement sxpElement);
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:232704931

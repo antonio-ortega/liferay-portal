@@ -5,6 +5,7 @@
 
 package com.liferay.headless.commerce.machine.learning.internal.resource.v1_0;
 
+import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.headless.commerce.machine.learning.dto.v1_0.AccountCategoryForecast;
 import com.liferay.headless.commerce.machine.learning.resource.v1_0.AccountCategoryForecastResource;
 import com.liferay.petra.function.UnsafeBiConsumer;
@@ -72,7 +73,7 @@ public abstract class BaseAccountCategoryForecastResourceImpl
 	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-machine-learning/v1.0/accountCategoryForecasts/by-monthlyRevenue'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
-		description = "Get the forecast points"
+		description = "Returns a page of monthly revenue forecast points broken down by AccountEntry and AssetCategory. Calls AssetCategoryCommerceMLForecastManager.getMonthlyRevenueAssetCategoryCommerceMLForecasts in AccountCategoryForecastResourceImpl. Validation -- None (defaults to 3 forecast months and 8 history months from CommerceMLForecastConstants when omitted; forecastStartDate defaults to the current server date; account identifiers the caller cannot view are silently dropped through CommerceAccountPermissionHelper, and an empty intersection returns an empty page). List query support -- None (no filter, search, or sort exposed). Side effects -- None (read-only)."
 	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
@@ -214,6 +215,15 @@ public abstract class BaseAccountCategoryForecastResourceImpl
 			@Override
 			public Locale getPreferredLocale() {
 				return LocaleUtil.fromLanguageId(languageId);
+			}
+
+			@Override
+			public boolean isAcceptAllLanguages() {
+				if (ExportImportThreadLocal.isExportInProcess()) {
+					return true;
+				}
+
+				return AcceptLanguage.super.isAcceptAllLanguages();
 			}
 
 		};
@@ -794,3 +804,4 @@ public abstract class BaseAccountCategoryForecastResourceImpl
 		LogFactoryUtil.getLog(BaseAccountCategoryForecastResourceImpl.class);
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1869700969

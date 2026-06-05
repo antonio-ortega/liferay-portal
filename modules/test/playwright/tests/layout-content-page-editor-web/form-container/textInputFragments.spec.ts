@@ -28,7 +28,7 @@ const test = mergeTests(
 	dataApiHelpersTest,
 	displayPageTemplatesPagesTest,
 	featureFlagsTest({
-		'LPD-11235': {enabled: true},
+		'LPD-11235': {enabled: false},
 		'LPD-17564': {enabled: true},
 		'LPD-60546': {enabled: true},
 		'LPS-178052': {enabled: true},
@@ -41,7 +41,7 @@ const test = mergeTests(
 const testWithCKEditor4 = mergeTests(
 	test,
 	featureFlagsTest({
-		'LPD-11235': {enabled: false},
+		'LPD-11235': {enabled: true},
 		'LPS-178052': {enabled: true},
 	})
 );
@@ -161,7 +161,7 @@ test.describe('Text input field', () => {
 
 			const characterText = page.getByText('0 / 280');
 
-			await expect(characterText).toHaveClass(/d-none/);
+			await expect(characterText).not.toBeAttached();
 
 			await pageEditorPage.changeFragmentConfiguration({
 				fieldLabel: 'Show Characters Count',
@@ -170,7 +170,7 @@ test.describe('Text input field', () => {
 				value: true,
 			});
 
-			await expect(characterText).not.toHaveClass(/d-none/);
+			await expect(characterText).toBeAttached();
 		}
 	);
 
@@ -443,7 +443,7 @@ test.describe('Inline Text input field', () => {
 
 			const characterText = page.getByText('0 / 280');
 
-			await expect(characterText).toHaveClass(/d-none/);
+			await expect(characterText).not.toBeAttached();
 
 			await pageEditorPage.changeFragmentConfiguration({
 				fieldLabel: 'Show Characters Count',
@@ -452,7 +452,7 @@ test.describe('Inline Text input field', () => {
 				value: true,
 			});
 
-			await expect(characterText).not.toHaveClass(/d-none/);
+			await expect(characterText).toBeAttached();
 		}
 	);
 
@@ -773,7 +773,7 @@ test.describe('Textarea input field', () => {
 
 			const characterText = page.getByText('0 / 300');
 
-			await expect(characterText).toHaveClass(/d-none/);
+			await expect(characterText).not.toBeAttached();
 
 			await pageEditorPage.changeFragmentConfiguration({
 				fieldLabel: 'Show Characters Count',
@@ -782,7 +782,7 @@ test.describe('Textarea input field', () => {
 				value: true,
 			});
 
-			await expect(characterText).not.toHaveClass(/d-none/);
+			await expect(characterText).toBeAttached();
 		}
 	);
 

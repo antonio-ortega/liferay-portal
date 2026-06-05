@@ -5,11 +5,9 @@
 
 package com.liferay.list.type.internal.search;
 
-import com.liferay.list.type.internal.search.spi.model.index.contributor.ListTypeEntryModelIndexerWriterContributor;
 import com.liferay.list.type.model.ListTypeEntry;
 import com.liferay.list.type.service.ListTypeEntryLocalService;
 import com.liferay.portal.kernel.search.Field;
-import com.liferay.portal.search.batch.DynamicQueryBatchIndexingActionableFactory;
 import com.liferay.portal.search.spi.model.index.contributor.ModelIndexerWriterContributor;
 import com.liferay.portal.search.spi.model.registrar.ModelSearchConfigurator;
 
@@ -51,15 +49,9 @@ public class ListTypeEntryModelSearchConfigurator
 
 	@Activate
 	protected void activate() {
-		_modelIndexWriterContributor =
-			new ListTypeEntryModelIndexerWriterContributor(
-				_dynamicQueryBatchIndexingActionableFactory,
-				_listTypeEntryLocalService);
+		_modelIndexWriterContributor = new ModelIndexerWriterContributor<>(
+			_listTypeEntryLocalService::getIndexableActionableDynamicQuery);
 	}
-
-	@Reference
-	private DynamicQueryBatchIndexingActionableFactory
-		_dynamicQueryBatchIndexingActionableFactory;
 
 	@Reference
 	private ListTypeEntryLocalService _listTypeEntryLocalService;

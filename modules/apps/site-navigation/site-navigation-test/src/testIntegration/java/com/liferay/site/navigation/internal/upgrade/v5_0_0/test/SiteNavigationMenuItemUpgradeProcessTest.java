@@ -243,8 +243,9 @@ public class SiteNavigationMenuItemUpgradeProcessTest {
 	public void testUpgradeWithCompanyScopedObjectEntry() throws Exception {
 		ObjectDefinition companyScopedObjectDefinition =
 			_objectDefinitionLocalService.addCustomObjectDefinition(
-				null, TestPropsValues.getUserId(), 0, null, false, true, false,
-				true, false, false, false, false, RandomTestUtil.randomString(),
+				null, TestPropsValues.getUserId(), 0, null, true, false, true,
+				false, true, false, false, false, false,
+				RandomTestUtil.randomString(),
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				"TestObject", null, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
@@ -553,11 +554,35 @@ public class SiteNavigationMenuItemUpgradeProcessTest {
 	}
 
 	@Test
+	public void testUpgradeWithNonexistentJournalArticle() throws Exception {
+		SiteNavigationMenuItem siteNavigationMenuItem =
+			_addSiteNavigationMenuItem(
+				JournalArticle.class.getName(),
+				UnicodePropertiesBuilder.create(
+					true
+				).put(
+					"className", JournalArticle.class.getName()
+				).put(
+					"classPK", RandomTestUtil.randomLong()
+				).put(
+					"externalReferenceCode", RandomTestUtil.randomString()
+				).put(
+					"type", JournalArticle.class.getName()
+				).buildString());
+
+		_runUpgrade();
+
+		_assertNavigationMenuItemFromSameGroup(
+			siteNavigationMenuItem.getSiteNavigationMenuItemId());
+	}
+
+	@Test
 	public void testUpgradeWithSiteScopedObjectEntry() throws Exception {
 		ObjectDefinition siteScopedObjectDefinition =
 			_objectDefinitionLocalService.addCustomObjectDefinition(
-				null, TestPropsValues.getUserId(), 0, null, false, true, false,
-				true, false, false, false, false, RandomTestUtil.randomString(),
+				null, TestPropsValues.getUserId(), 0, null, true, false, true,
+				false, true, false, false, false, false,
+				RandomTestUtil.randomString(),
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				"Test", null, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
@@ -733,11 +758,6 @@ public class SiteNavigationMenuItemUpgradeProcessTest {
 		"com.liferay.site.navigation.internal.upgrade.v5_0_0." +
 			"SiteNavigationMenuItemUpgradeProcess";
 
-	@Inject(
-		filter = "(&(component.name=com.liferay.site.navigation.internal.upgrade.registry.SiteNavigationServiceUpgradeStepRegistrator))"
-	)
-	private static UpgradeStepRegistrator _upgradeStepRegistrator;
-
 	@Inject
 	private AssetCategoryLocalService _assetCategoryLocalService;
 
@@ -767,5 +787,10 @@ public class SiteNavigationMenuItemUpgradeProcessTest {
 	@Inject
 	private SiteNavigationMenuItemLocalService
 		_siteNavigationMenuItemLocalService;
+
+	@Inject(
+		filter = "(&(component.name=com.liferay.site.navigation.internal.upgrade.registry.SiteNavigationServiceUpgradeStepRegistrator))"
+	)
+	private UpgradeStepRegistrator _upgradeStepRegistrator;
 
 }

@@ -119,3 +119,4 @@ public class ObjectState implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:2090191151

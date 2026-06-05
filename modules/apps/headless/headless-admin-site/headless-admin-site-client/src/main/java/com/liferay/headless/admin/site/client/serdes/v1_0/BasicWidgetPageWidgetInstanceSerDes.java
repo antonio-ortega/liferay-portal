@@ -555,3 +555,4 @@ public class BasicWidgetPageWidgetInstanceSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:559715846

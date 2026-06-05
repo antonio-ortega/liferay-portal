@@ -312,3 +312,4 @@ public interface ObjectStateLocalService
 	public ObjectState updateObjectState(ObjectState objectState);
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:678989513

@@ -667,6 +667,11 @@ public class KaleoInstanceTokenWrapper
 	}
 
 	@Override
+	public boolean shouldIndex() {
+		return model.shouldIndex();
+	}
+
+	@Override
 	public String toXmlString() {
 		return model.toXmlString();
 	}
@@ -693,3 +698,4 @@ public class KaleoInstanceTokenWrapper
 	}
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-1656070098

@@ -8,11 +8,13 @@ package com.liferay.headless.admin.site.internal.dto.v1_0.converter;
 import com.liferay.client.extension.constants.ClientExtensionEntryConstants;
 import com.liferay.client.extension.model.ClientExtensionEntryRel;
 import com.liferay.client.extension.service.ClientExtensionEntryRelLocalService;
+import com.liferay.exportimport.attachment.ExportImportAttachmentManager;
 import com.liferay.headless.admin.site.dto.v1_0.ClientExtension;
 import com.liferay.headless.admin.site.dto.v1_0.ContentPageSpecification;
 import com.liferay.headless.admin.site.dto.v1_0.EmbeddedPageSpecification;
 import com.liferay.headless.admin.site.dto.v1_0.FavIconClientExtension;
 import com.liferay.headless.admin.site.dto.v1_0.FavIconItemExternalReference;
+import com.liferay.headless.admin.site.dto.v1_0.IconImageURL;
 import com.liferay.headless.admin.site.dto.v1_0.ItemExternalReference;
 import com.liferay.headless.admin.site.dto.v1_0.LinkToPagePageSpecification;
 import com.liferay.headless.admin.site.dto.v1_0.LinkToURLPageSpecification;
@@ -36,10 +38,12 @@ import com.liferay.layout.page.template.service.LayoutPageTemplateStructureRelLo
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringUtil;
+import com.liferay.portal.kernel.model.Image;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.model.LayoutTypePortlet;
 import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.service.ImageLocalService;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -282,6 +286,7 @@ public class PageSpecificationDTOConverter
 					() -> _getClientExtensions(
 						classNameId, layout.getPlid(),
 						ClientExtensionEntryConstants.TYPE_GLOBAL_JS));
+				setIconImageURL(() -> _getIconImageURL(layout));
 				setJavascript(
 					() -> unicodeProperties.getProperty("javascript", null));
 				setMasterPageItemExternalReference(
@@ -349,7 +354,39 @@ public class PageSpecificationDTOConverter
 						classNameId, layout.getPlid(),
 						ClientExtensionEntryConstants.TYPE_THEME_SPRITEMAP));
 			}
+
+			private IconImageURL _getIconImageURL(Layout layout) {
+				if (layout.getIconImageId() <= 0) {
+					return null;
+				}
+
+				Image image = _imageLocalService.fetchImage(
+					layout.getIconImageId());
+
+				if (image == null) {
+					return null;
+				}
+
+				return new IconImageURL() {
+					{
+						setUrl(
+							() -> _exportImportAttachmentManager.getImageURL(
+								image));
+					}
+				};
+			}
+
 		};
+	}
+
+	private String _getSiteTemplatePageSpecificationERC(Layout layout) {
+		Layout layoutSetPrototypeLayout = layout.getLayoutSetPrototypeLayout();
+
+		if (layoutSetPrototypeLayout == null) {
+			return null;
+		}
+
+		return layoutSetPrototypeLayout.getExternalReferenceCode();
 	}
 
 	private WidgetPageSection[] _getWidgetPageSections(
@@ -427,17 +464,7 @@ public class PageSpecificationDTOConverter
 					() -> _getPageExperiences(dtoConverterContext, layout));
 				setSettings(() -> _getSettings(layout));
 				setSiteTemplatePageSpecificationExternalReferenceCode(
-					() -> {
-						Layout layoutSetPrototypeLayout =
-							layout.getLayoutSetPrototypeLayout();
-
-						if (layoutSetPrototypeLayout == null) {
-							return null;
-						}
-
-						return layoutSetPrototypeLayout.
-							getExternalReferenceCode();
-					});
+					() -> _getSiteTemplatePageSpecificationERC(layout));
 				setStatus(
 					() -> {
 						if (layout.isDraftLayout()) {
@@ -475,6 +502,8 @@ public class PageSpecificationDTOConverter
 				layout.getCompanyId(), null));
 		pageSpecification.setExternalReferenceCode(
 			layout::getExternalReferenceCode);
+		pageSpecification.setSiteTemplatePageSpecificationExternalReferenceCode(
+			() -> _getSiteTemplatePageSpecificationERC(layout));
 		pageSpecification.setStatus(() -> PageSpecification.Status.APPROVED);
 		pageSpecification.setType(() -> type);
 
@@ -510,17 +539,7 @@ public class PageSpecificationDTOConverter
 					});
 				setSettings(() -> _getSettings(layout));
 				setSiteTemplatePageSpecificationExternalReferenceCode(
-					() -> {
-						Layout layoutSetPrototypeLayout =
-							layout.getLayoutSetPrototypeLayout();
-
-						if (layoutSetPrototypeLayout == null) {
-							return null;
-						}
-
-						return layoutSetPrototypeLayout.
-							getExternalReferenceCode();
-					});
+					() -> _getSiteTemplatePageSpecificationERC(layout));
 				setStatus(() -> Status.APPROVED);
 				setType(() -> Type.WIDGET_PAGE_SPECIFICATION);
 				setWidgetPageSections(
@@ -532,6 +551,12 @@ public class PageSpecificationDTOConverter
 	@Reference
 	private ClientExtensionEntryRelLocalService
 		_clientExtensionEntryRelLocalService;
+
+	@Reference
+	private ExportImportAttachmentManager _exportImportAttachmentManager;
+
+	@Reference
+	private ImageLocalService _imageLocalService;
 
 	@Reference
 	private LayoutPageTemplateEntryLocalService

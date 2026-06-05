@@ -23,10 +23,14 @@ import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleManager;
 import com.liferay.exportimport.kernel.lifecycle.constants.ExportImportLifecycleConstants;
 import com.liferay.exportimport.lar.PermissionImporter;
+import com.liferay.exportimport.portlet.data.handler.provider.PortletDataHandlerProvider;
+import com.liferay.exportimport.portlet.element.handler.PortletElementHandler;
+import com.liferay.exportimport.portlet.element.handler.PortletElementHandlerFactory;
 import com.liferay.exportimport.staged.model.repository.StagedModelRepository;
 import com.liferay.layout.set.model.adapter.StagedLayoutSet;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskThreadLocal;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
@@ -34,14 +38,18 @@ import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.model.LayoutTypePortlet;
 import com.liferay.portal.kernel.model.Portlet;
+import com.liferay.portal.kernel.model.PortletPreferences;
 import com.liferay.portal.kernel.model.StagedModel;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.PortletLocalService;
+import com.liferay.portal.kernel.service.PortletPreferencesLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MapUtil;
+import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.xml.Document;
 import com.liferay.portal.kernel.xml.Element;
 import com.liferay.portal.kernel.xml.SAXReaderUtil;
@@ -234,16 +242,19 @@ public class StagedGroupStagedModelDataHandler
 			List<String> portletIds = new ArrayList<>();
 
 			for (Element portletElement : sitePortletElements) {
-				String portletId = portletElement.attributeValue("portlet-id");
+				PortletElementHandler portletElementHandler =
+					_portletElementHandlerFactory.create(portletElement);
 
-				Portlet portlet = _portletLocalService.getPortletById(
-					portletDataContext.getCompanyId(), portletId);
+				Portlet portlet = portletElementHandler.getPortlet(
+					portletDataContext.getCompanyId());
 
-				if (!portlet.isActive() || portlet.isUndeployedPortlet()) {
+				if ((portlet == null) &&
+					!portletElementHandler.isMissingPortletSupported()) {
+
 					continue;
 				}
 
-				portletIds.add(portletId);
+				portletIds.add(portletElementHandler.getSourcePortletId());
 			}
 
 			_portletDataHandlerStatusMessageSender.sendStatusMessage(
@@ -257,7 +268,8 @@ public class StagedGroupStagedModelDataHandler
 			_log.debug("Importing portlets");
 		}
 
-		_importSitePortlets(portletDataContext, sitePortletElements);
+		_importSitePortlets(
+			portletDataContext, sitePortletElements, stagedGroup);
 
 		// Import services
 
@@ -342,6 +354,16 @@ public class StagedGroupStagedModelDataHandler
 			// Add portlet ID to exportable portlets list
 
 			portletIds.add(portletId);
+		}
+
+		List<PortletPreferences> portletPreferencesList =
+			_portletPreferencesLocalService.getPortletPreferences(
+				portletDataContext.getScopeGroupId(),
+				PortletKeys.PREFS_OWNER_TYPE_LAYOUT,
+				PortletKeys.PREFS_PLID_SHARED);
+
+		for (PortletPreferences portletPreferences : portletPreferencesList) {
+			portletIds.add(portletPreferences.getPortletId());
 		}
 
 		return portletIds;
@@ -476,7 +498,7 @@ public class StagedGroupStagedModelDataHandler
 
 	private void _importSitePortlets(
 			PortletDataContext portletDataContext,
-			List<Element> sitePortletElements)
+			List<Element> sitePortletElements, StagedGroup stagedGroup)
 		throws Exception {
 
 		Map<Long, Layout> layouts =
@@ -492,48 +514,73 @@ public class StagedGroupStagedModelDataHandler
 
 		_permissionImporter.clearCache();
 
-		List<Element> nonbatchPortletElements = new ArrayList<>();
-		Map<Integer, List<Element>> rankedBatchPortletElements =
+		List<PortletElementHandler> nonbatchPortletElementHandlers =
+			new ArrayList<>();
+		Map<Integer, List<PortletElementHandler>> rankedBatchPortletElements =
 			new TreeMap<>();
 
 		for (Element portletElement : sitePortletElements) {
-			String portletId = portletElement.attributeValue("portlet-id");
-
-			Portlet portlet = _portletLocalService.getPortletById(
-				portletDataContext.getCompanyId(), portletId);
-
-			if (!portlet.isActive() || portlet.isUndeployedPortlet()) {
-				continue;
-			}
+			PortletElementHandler portletElementHandler =
+				_portletElementHandlerFactory.create(portletElement);
 
 			PortletDataHandler portletDataHandler =
-				portlet.getPortletDataHandlerInstance();
+				_portletDataHandlerProvider.provide(
+					portletDataContext.getCompanyId(),
+					portletElementHandler.getSourcePortletId());
+
+			if (portletDataHandler == null) {
+				String targetPortletId =
+					portletElementHandler.getTargetPortletId(
+						portletDataContext.getCompanyId());
+
+				if (targetPortletId == null) {
+					if (portletElementHandler.isMissingPortletSupported()) {
+						rankedBatchPortletElements.computeIfAbsent(
+							portletElementHandler.getRank(),
+							__ -> new ArrayList<>()
+						).add(
+							portletElementHandler
+						);
+					}
+
+					continue;
+				}
+
+				portletDataHandler = _portletDataHandlerProvider.provide(
+					portletDataContext.getCompanyId(), targetPortletId);
+
+				if (portletDataHandler == null) {
+					continue;
+				}
+			}
 
 			if (portletDataHandler.isBatch()) {
 				rankedBatchPortletElements.computeIfAbsent(
 					portletDataHandler.getRank(), __ -> new ArrayList<>()
 				).add(
-					portletElement
+					portletElementHandler
 				);
 			}
 			else {
-				nonbatchPortletElements.add(portletElement);
+				nonbatchPortletElementHandlers.add(portletElementHandler);
 			}
 		}
 
-		List<Element> orderedPortletElements = new ArrayList<>();
+		List<PortletElementHandler> orderedPortletElementHandlers =
+			new ArrayList<>();
 
-		for (List<Element> elements : rankedBatchPortletElements.values()) {
-			orderedPortletElements.addAll(elements);
+		for (List<PortletElementHandler> portletElementHandler :
+				rankedBatchPortletElements.values()) {
+
+			orderedPortletElementHandlers.addAll(portletElementHandler);
 		}
 
-		orderedPortletElements.addAll(nonbatchPortletElements);
+		orderedPortletElementHandlers.addAll(nonbatchPortletElementHandlers);
 
-		for (Element portletElement : orderedPortletElements) {
-			long layoutId = GetterUtil.getLong(
-				portletElement.attributeValue("layout-id"));
+		for (PortletElementHandler portletElementHandler :
+				orderedPortletElementHandlers) {
 
-			Layout layout = layouts.get(layoutId);
+			Layout layout = layouts.get(portletElementHandler.getLayoutId());
 
 			long plid = LayoutConstants.DEFAULT_PLID;
 
@@ -547,22 +594,39 @@ public class StagedGroupStagedModelDataHandler
 
 			portletDataContext.setPlid(plid);
 
-			String portletId = portletElement.attributeValue("portlet-id");
+			String targetPortletId = portletElementHandler.getTargetPortletId(
+				portletDataContext.getCompanyId());
 
-			portletDataContext.setPortletId(portletId);
+			if (targetPortletId == null) {
+				StagedModelDataHandlerUtil.handleException(
+					portletDataContext,
+					new PortletDataException(
+						_language.format(
+							LocaleUtil.US,
+							"the-data-handler-for-the-x-portlet-is-missing-" +
+								"from-the-system",
+							portletElementHandler.getDisplayName())),
+					stagedGroup);
+
+				continue;
+			}
+
+			portletDataContext.setPortletId(targetPortletId);
+
+			String sourcePortletId = portletElementHandler.getSourcePortletId();
 
 			if (BackgroundTaskThreadLocal.hasBackgroundTask()) {
 				_portletDataHandlerStatusMessageSender.sendStatusMessage(
-					"portlet", portletId,
+					"portlet", sourcePortletId,
 					portletDataContext.getManifestSummary());
 			}
 
-			String portletPath = portletElement.attributeValue("path");
+			String portletPath = portletElementHandler.getPath();
 
 			Document portletDocument = SAXReaderUtil.read(
 				portletDataContext.getZipEntryAsString(portletPath));
 
-			portletElement = portletDocument.getRootElement();
+			Element portletElement = portletDocument.getRootElement();
 
 			// The order of the import is important. You must always import the
 			// portlet preferences first, then the portlet data, then the
@@ -578,8 +642,9 @@ public class StagedGroupStagedModelDataHandler
 
 			Map<String, Boolean> importPortletControlsMap =
 				_exportImportHelper.getImportPortletControlsMap(
-					portletDataContext.getCompanyId(), portletId,
-					portletDataContext.getParameterMap(), portletDataElement,
+					portletDataContext.getCompanyId(), sourcePortletId,
+					targetPortletId, portletDataContext.getParameterMap(),
+					portletDataElement,
 					portletDataContext.getManifestSummary());
 
 			if (layout != null) {
@@ -611,7 +676,9 @@ public class StagedGroupStagedModelDataHandler
 				// Portlet data
 
 				if (importPortletControlsMap.get(
-						PortletDataHandlerKeys.PORTLET_DATA)) {
+						PortletDataHandlerKeys.PORTLET_DATA) ||
+					_isHidden(
+						portletDataContext.getCompanyId(), targetPortletId)) {
 
 					_portletImportController.importPortletData(
 						portletDataContext, portletDataElement);
@@ -647,7 +714,7 @@ public class StagedGroupStagedModelDataHandler
 				_permissionImporter.importPortletPermissions(
 					portletDataContext.getCompanyId(),
 					portletDataContext.getGroupId(), serviceContext.getUserId(),
-					layout, portletElement, portletId);
+					layout, portletElement, targetPortletId);
 			}
 
 			// Archived setups
@@ -684,6 +751,20 @@ public class StagedGroupStagedModelDataHandler
 		}
 	}
 
+	private boolean _isHidden(long companyId, String portletId) {
+		Portlet portlet = _portletLocalService.getPortletById(
+			companyId, portletId);
+
+		PortletDataHandler portletDataHandler =
+			portlet.getPortletDataHandlerInstance();
+
+		if (portletDataHandler == null) {
+			return false;
+		}
+
+		return portletDataHandler.isHidden();
+	}
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		StagedGroupStagedModelDataHandler.class);
 
@@ -692,6 +773,9 @@ public class StagedGroupStagedModelDataHandler
 
 	@Reference
 	private ExportImportLifecycleManager _exportImportLifecycleManager;
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private LayoutLocalService _layoutLocalService;
@@ -703,8 +787,14 @@ public class StagedGroupStagedModelDataHandler
 	private PortletDataContextFactory _portletDataContextFactory;
 
 	@Reference
+	private PortletDataHandlerProvider _portletDataHandlerProvider;
+
+	@Reference
 	private PortletDataHandlerStatusMessageSender
 		_portletDataHandlerStatusMessageSender;
+
+	@Reference
+	private PortletElementHandlerFactory _portletElementHandlerFactory;
 
 	@Reference
 	private PortletExportController _portletExportController;
@@ -714,6 +804,9 @@ public class StagedGroupStagedModelDataHandler
 
 	@Reference
 	private PortletLocalService _portletLocalService;
+
+	@Reference
+	private PortletPreferencesLocalService _portletPreferencesLocalService;
 
 	@Reference
 	private Sites _sites;

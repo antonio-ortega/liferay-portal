@@ -61,7 +61,9 @@ describe('SpaceSummaryHeader', () => {
 
 		expect(link).toBeInTheDocument();
 		expect(link).toHaveAttribute('href', '/some-url');
-		expect(screen.queryByRole('button')).not.toBeInTheDocument();
+		expect(
+			screen.queryByRole('button', {name: defaultProps.label})
+		).not.toBeInTheDocument();
 	});
 
 	it('renders a button instead of a link when modal props are provided and url is null', async () => {

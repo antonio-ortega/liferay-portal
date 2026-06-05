@@ -166,7 +166,7 @@ public class DummyIndexer implements Indexer<Object> {
 	}
 
 	@Override
-	public void reindex(String[] ids) {
+	public void reindexCompany(long companyId) {
 	}
 
 	@Override

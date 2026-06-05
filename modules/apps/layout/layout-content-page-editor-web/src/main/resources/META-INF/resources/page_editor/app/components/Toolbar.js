@@ -10,7 +10,11 @@ import ClayLayout from '@clayui/layout';
 import ClayLink from '@clayui/link';
 import {ReactPortal, useIsMounted} from '@liferay/frontend-js-react-web';
 import classNames from 'classnames';
-import {openConfirmModal, openToast} from 'frontend-js-components-web';
+import {
+	FeatureIndicator,
+	openConfirmModal,
+	openToast,
+} from 'frontend-js-components-web';
 import {fetch} from 'frontend-js-web';
 import React, {useEffect, useState} from 'react';
 
@@ -83,6 +87,8 @@ function ToolbarBody({className}) {
 		}
 	};
 
+	const isCMSFreeTier = config.isCMS && config.freeTier;
+
 	let publishButtonLabel = Liferay.Language.get('publish');
 
 	if (config.layoutType === LAYOUT_TYPES.master) {
@@ -94,6 +100,12 @@ function ToolbarBody({className}) {
 	else if (config.workflowEnabled) {
 		publishButtonLabel = Liferay.Language.get('submit-for-workflow');
 	}
+
+	const ariaLabel = isCMSFreeTier
+		? Liferay.Language.get('publish-locked')
+		: publishButtonLabel;
+
+	const icon = isCMSFreeTier ? 'lock' : null;
 
 	useEffect(() => {
 		if (
@@ -137,6 +149,10 @@ function ToolbarBody({className}) {
 						</ClayLink>
 					</li>
 				) : null}
+
+				{isCMSFreeTier && (
+					<FeatureIndicator interactive type="enterprise" />
+				)}
 
 				<li className="nav-item">
 					<ExperienceToolbarSection />
@@ -216,8 +232,11 @@ function ToolbarBody({className}) {
 
 				<li className="nav-item">
 					<PublishButton
+						ariaLabel={ariaLabel}
 						canPublish={canPublish}
+						disabled={isCMSFreeTier}
 						formRef={formRef}
+						icon={icon}
 						label={publishButtonLabel}
 						onPublish={onPublish}
 					/>

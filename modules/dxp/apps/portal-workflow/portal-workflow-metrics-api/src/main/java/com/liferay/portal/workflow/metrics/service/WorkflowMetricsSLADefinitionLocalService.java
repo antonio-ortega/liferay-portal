@@ -376,3 +376,4 @@ public interface WorkflowMetricsSLADefinitionLocalService
 		WorkflowMetricsSLADefinition workflowMetricsSLADefinition);
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:1091666949

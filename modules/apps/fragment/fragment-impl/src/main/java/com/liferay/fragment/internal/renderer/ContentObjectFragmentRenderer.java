@@ -5,6 +5,7 @@
 
 package com.liferay.fragment.internal.renderer;
 
+import com.liferay.analytics.settings.rest.manager.AnalyticsSettingsManager;
 import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.renderer.FragmentRenderer;
 import com.liferay.fragment.renderer.FragmentRendererContext;
@@ -30,7 +31,6 @@ import com.liferay.layout.display.page.LayoutDisplayPageProvider;
 import com.liferay.layout.display.page.constants.LayoutDisplayPageWebKeys;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.Language;
@@ -231,13 +231,9 @@ public class ContentObjectFragmentRenderer implements FragmentRenderer {
 		}
 
 		long classPK = _getClassPK(infoItemReference, jsonObject);
-		ThemeDisplay themeDisplay =
-			(ThemeDisplay)httpServletRequest.getAttribute(
-				WebKeys.THEME_DISPLAY);
 
-		if (!FeatureFlagManagerUtil.isEnabled(
-				themeDisplay.getCompanyId(), "LPD-39437") ||
-			!fragmentRendererContext.isViewMode() || (classPK <= 0)) {
+		if (!fragmentRendererContext.isViewMode() || (classPK <= 0) ||
+			!_isAnalyticsEnabled(httpServletRequest)) {
 
 			_render(
 				displayObject, httpServletRequest, httpServletResponse,
@@ -552,6 +548,24 @@ public class ContentObjectFragmentRenderer implements FragmentRenderer {
 		return true;
 	}
 
+	private boolean _isAnalyticsEnabled(HttpServletRequest httpServletRequest) {
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
+
+		try {
+			return _analyticsSettingsManager.isAnalyticsEnabled(
+				themeDisplay.getCompanyId());
+		}
+		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
+			return false;
+		}
+	}
+
 	private void _render(
 		Object displayObject, HttpServletRequest httpServletRequest,
 		HttpServletResponse httpServletResponse,
@@ -579,6 +593,9 @@ public class ContentObjectFragmentRenderer implements FragmentRenderer {
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		ContentObjectFragmentRenderer.class);
+
+	@Reference
+	private AnalyticsSettingsManager _analyticsSettingsManager;
 
 	@Reference
 	private FragmentEntryConfigurationParser _fragmentEntryConfigurationParser;

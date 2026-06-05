@@ -5,17 +5,16 @@
 
 package com.liferay.site.cmp.site.initializer.internal.display.context;
 
+import com.liferay.asset.kernel.service.AssetTagLocalService;
+import com.liferay.depot.service.DepotEntryLocalService;
 import com.liferay.frontend.data.set.filter.FDSFilter;
 import com.liferay.frontend.data.set.model.FDSActionDropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenuBuilder;
 import com.liferay.object.model.ObjectDefinition;
+import com.liferay.object.service.ObjectEntryService;
 import com.liferay.petra.string.StringBundler;
-import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
-import com.liferay.portal.kernel.model.Layout;
-import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.site.cmp.site.initializer.internal.constants.CMPActionConstants;
@@ -23,7 +22,9 @@ import com.liferay.site.cmp.site.initializer.internal.frontend.data.set.filter.D
 import com.liferay.site.cmp.site.initializer.internal.frontend.data.set.filter.ProjectManagerSelectionFDSFilter;
 import com.liferay.site.cmp.site.initializer.internal.frontend.data.set.filter.ProjectSponsorSelectionFDSFilter;
 import com.liferay.site.cmp.site.initializer.internal.frontend.data.set.filter.StateSelectionFDSFilter;
+import com.liferay.site.cmp.site.initializer.internal.frontend.data.set.filter.TagSelectionFDSFilter;
 import com.liferay.site.cmp.site.initializer.internal.util.ActionUtil;
+import com.liferay.site.cmp.site.initializer.internal.util.ObjectEntryUtil;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -37,49 +38,35 @@ public class ViewProjectsSectionDisplayContext
 	extends BaseSectionDisplayContext {
 
 	public ViewProjectsSectionDisplayContext(
+		AssetTagLocalService assetTagLocalService,
+		DepotEntryLocalService depotEntryLocalService,
 		HttpServletRequest httpServletRequest,
-		ObjectDefinition objectDefinition, UserLocalService userLocalService) {
+		ObjectDefinition objectDefinition,
+		ObjectEntryService objectEntryService) {
 
-		super(httpServletRequest, objectDefinition);
+		super(httpServletRequest, objectDefinition, objectEntryService);
 
-		_userLocalService = userLocalService;
+		_assetTagLocalService = assetTagLocalService;
+		_depotEntryLocalService = depotEntryLocalService;
 	}
 
 	public String getAPIURL() {
-		StringBundler sb = new StringBundler(4);
+		StringBundler sb = new StringBundler(5);
 
 		sb.append("/o/search/v1.0/search?emptySearch=true&");
 		sb.append("filter=objectDefinitionId eq ");
 		sb.append(objectDefinition.getObjectDefinitionId());
-		sb.append("&nestedFields=embedded");
+		sb.append("&nestedFields=embedded,r_userToCMPProjectManager_user");
+		sb.append(",r_userToCMPProjectSponsor_user");
 
 		return sb.toString();
 	}
 
-	public Map<String, Object> getBreadcrumbProps() throws PortalException {
-		return HashMapBuilder.<String, Object>put(
-			"breadcrumbItems",
-			JSONUtil.putAll(
-				JSONUtil.put(
-					"active", false
-				).put(
-					"label",
-					() -> {
-						Layout layout = themeDisplay.getLayout();
+	public CreationMenu getCreationMenu() throws Exception {
+		if (!hasAddObjectEntryPortletResourcePermission()) {
+			return null;
+		}
 
-						if (layout == null) {
-							return null;
-						}
-
-						return layout.getName(themeDisplay.getLocale(), true);
-					}
-				))
-		).put(
-			"hideSpace", true
-		).build();
-	}
-
-	public CreationMenu getCreationMenu() {
 		return CreationMenuBuilder.addPrimaryDropdownItem(
 			dropdownItem -> {
 				dropdownItem.putData(
@@ -157,12 +144,16 @@ public class ViewProjectsSectionDisplayContext
 
 	public List<FDSFilter> getFDSFilters() {
 		return ListUtil.fromArray(
-			new DueDateRangeFDSFilter(),
-			new ProjectManagerSelectionFDSFilter(_userLocalService),
-			new ProjectSponsorSelectionFDSFilter(_userLocalService),
-			new StateSelectionFDSFilter());
+			new DueDateRangeFDSFilter(), new ProjectManagerSelectionFDSFilter(),
+			new ProjectSponsorSelectionFDSFilter(),
+			new StateSelectionFDSFilter(),
+			new TagSelectionFDSFilter(
+				_assetTagLocalService, _depotEntryLocalService,
+				ObjectEntryUtil.getObjectEntry(httpServletRequest),
+				objectDefinition));
 	}
 
-	private final UserLocalService _userLocalService;
+	private final AssetTagLocalService _assetTagLocalService;
+	private final DepotEntryLocalService _depotEntryLocalService;
 
 }

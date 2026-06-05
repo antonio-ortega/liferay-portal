@@ -447,3 +447,4 @@ public interface AssetLinkLocalService
 		throws E;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:453264660

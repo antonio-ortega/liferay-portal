@@ -4,6 +4,7 @@ import BundleRouter from 'route-middleware/BundleRouter';
 import ClayLink from '@clayui/link';
 import DownloadCSVReport from 'shared/components/download-report/DownloadCSVReport';
 import DownloadPDFReport from 'shared/components/download-report/DownloadPDFReport';
+import ExperienceDropdown from '../components/ExperienceDropdown';
 import FilterBySegment from '../components/FilterBySegment';
 import getCN from 'classnames';
 import Loading from 'shared/components/Loading';
@@ -13,11 +14,13 @@ import TextTruncate from 'shared/components/TextTruncate';
 import {CSVType} from 'shared/components/download-report/utils';
 import {DropdownRangeKey} from 'shared/components/dropdown-range-key/DropdownRangeKey';
 import {getMatchedRoute, Routes} from 'shared/util/router';
+import {getSafeDecodedURIComponent, getSafeTouchpoint} from 'shared/util/util';
 import {pickBy} from 'lodash';
 import {PropTypes} from 'prop-types';
-import {Switch} from 'react-router-dom';
+import {removeUriQueryParam, setUriQueryValues} from 'shared/util/router';
+import {Switch, useHistory} from 'react-router-dom';
 import {useChannelContext} from 'shared/context/channel';
-import {useDataSource} from 'shared/hooks/useDataSource';
+import {useDataSources} from 'shared/context/dataSources';
 import {useQueryRangeSelectors} from 'shared/hooks/useQueryRangeSelectors';
 
 const KnownIndividuals = lazy(() =>
@@ -53,17 +56,24 @@ const NAV_ITEMS = [
 ];
 
 function TouchpointRoutes({className, router}) {
-	const dataSourceStates = useDataSource();
+	const dataSourceStates = useDataSources();
 	const rangeSelectors = useQueryRangeSelectors();
-	const {channelId, groupId, title, touchpoint} = router.params;
-	const [pathRangeSelectors, setPathRangeSelectors] = useState(
-		rangeSelectors
-	);
+	const {
+		channelId,
+		experienceId: experienceIdfromURL,
+		groupId,
+		title,
+		touchpoint
+	} = router.params;
+	const [pathRangeSelectors, setPathRangeSelectors] =
+		useState(rangeSelectors);
 	const {selectedChannel} = useChannelContext();
 	const matchedRoute = getMatchedRoute(NAV_ITEMS);
-	const decodedTitle = decodeURIComponent(title);
-	const decodedTouchpoint = decodeURIComponent(touchpoint);
+	const decodedTitle = getSafeDecodedURIComponent(title);
+	const decodedTouchpoint = getSafeDecodedURIComponent(touchpoint);
 	const [selectedSegment, setSelectedSegment] = useState({});
+	const [experienceId, setExperienceId] = useState(experienceIdfromURL);
+	const history = useHistory();
 
 	useEffect(() => {
 		setPathRangeSelectors(rangeSelectors);
@@ -93,7 +103,7 @@ function TouchpointRoutes({className, router}) {
 							<ClayLink href={decodedTouchpoint} target='_blank'>
 								{/* It should have double decode for cases when there are special characters */}
 
-								{decodeURIComponent(decodedTouchpoint)}
+								{getSafeDecodedURIComponent(decodedTouchpoint)}
 							</ClayLink>
 						</TextTruncate>
 					}
@@ -114,7 +124,37 @@ function TouchpointRoutes({className, router}) {
 
 			{matchedRoute === Routes.SITES_TOUCHPOINTS_OVERVIEW && (
 				<BasePage.SubHeader>
+					<ExperienceDropdown
+						groupId={groupId}
+						onChange={experienceId => {
+							history.push(setUriQueryValues({experienceId}));
+
+							setExperienceId(experienceId);
+						}}
+					/>
+
 					<div className='d-flex justify-content-end w-100'>
+						<DropdownRangeKey
+							legacy={false}
+							onRangeSelectorChange={rangeSelectors => {
+								history.push(
+									setUriQueryValues(
+										pickBy({
+											...rangeSelectors
+										}),
+										removeUriQueryParam(
+											window.location.href,
+											'rangeEnd',
+											'rangeStart'
+										)
+									)
+								);
+
+								setPathRangeSelectors(rangeSelectors);
+							}}
+							rangeSelectors={pathRangeSelectors}
+						/>
+
 						<DownloadPDFReport
 							disabled={dataSourceStates.empty}
 							subtitle={`${
@@ -131,7 +171,7 @@ function TouchpointRoutes({className, router}) {
 				<BasePage.SubHeader>
 					<div className='d-flex justify-content-end w-100'>
 						<DownloadCSVReport
-							assetId={decodedTouchpoint}
+							assetId={getSafeTouchpoint(touchpoint)}
 							assetType='page'
 							disabled={dataSourceStates.empty}
 							type={CSVType.Individual}
@@ -143,7 +183,9 @@ function TouchpointRoutes({className, router}) {
 
 			<BasePage.Context.Provider
 				value={{
+					experienceId,
 					filters: {},
+					rangeSelectors: pathRangeSelectors,
 					router
 				}}
 			>

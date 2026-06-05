@@ -6,12 +6,13 @@
 import {FrameLocator, Locator, Page, expect} from '@playwright/test';
 
 import {waitForAlert} from '../../../utils/waitForAlert';
-import {ApplicationsMenuPage} from '../../product-navigation-applications-menu/ApplicationsMenuPage';
+import {GlobalMenuPage} from '../../product-navigation-applications-menu/GlobalMenuPage';
 import {searchTableRowByValue} from '../commerceDNDTablePage';
+import {CommerceAdminChannelDetailsPage} from './commerceAdminChannelDetailsPage';
 
 export class CommerceAdminChannelsPage {
 	readonly addButton: Locator;
-	readonly applicationsMenuPage: ApplicationsMenuPage;
+	readonly globalMenuPage: GlobalMenuPage;
 	readonly buyerOrderApprovalWorkflow: Locator;
 	readonly channelsTable: Locator;
 	readonly channelsTableRow: (
@@ -19,6 +20,8 @@ export class CommerceAdminChannelsPage {
 		value: number | string,
 		strictEqual?: boolean
 	) => Promise<{column: Locator; row: Locator}>;
+	readonly channelActionsButton: (channelName: string) => Locator;
+	readonly channelLink: (name: string) => Locator;
 	readonly channelsTableRowLink: (channelName: string) => Promise<Locator>;
 	readonly modalAddButton: Locator;
 	readonly modalFieldName: Locator;
@@ -46,7 +49,7 @@ export class CommerceAdminChannelsPage {
 		this.addButton = page
 			.getByTestId('managementToolbar')
 			.locator('[data-testid="fdsCreationActionButton"]');
-		this.applicationsMenuPage = new ApplicationsMenuPage(page);
+		this.globalMenuPage = new GlobalMenuPage(page);
 		this.buyerOrderApprovalWorkflow = page.getByLabel(
 			'Buyer Order Approval Workflow'
 		);
@@ -65,6 +68,13 @@ export class CommerceAdminChannelsPage {
 				strictEqual
 			);
 		};
+		this.channelActionsButton = (channelName: string) =>
+			page.getByRole('button', {
+				exact: true,
+				name: `${channelName} Actions`,
+			});
+		this.channelLink = (name: string) =>
+			page.getByRole('link', {exact: true, name});
 		this.channelsTableRowLink = async (channelName: string) => {
 			const channelsTableRow = await this.channelsTableRow(
 				0,
@@ -135,8 +145,46 @@ export class CommerceAdminChannelsPage {
 		);
 	}
 
-	async goto() {
-		await this.applicationsMenuPage.goToCommerceChannels();
+	async addFlatRateDeliveryTermEligibility(
+		commerceAdminChannelDetailsPage: CommerceAdminChannelDetailsPage,
+		channelName: string,
+		termLabel: string
+	) {
+		await this.goto();
+
+		await (await this.channelsTableRowLink(channelName)).click();
+		await (
+			await commerceAdminChannelDetailsPage.generalCommerceAdminChannelTableLink(
+				'Flat Rate'
+			)
+		).click();
+		await commerceAdminChannelDetailsPage.setEntryEligibility(
+			'Specific Delivery Terms',
+			termLabel,
+			'Shipping Methods',
+			'Standard Delivery'
+		);
+	}
+
+	async addMoneyOrderPaymentTermEligibility(
+		commerceAdminChannelDetailsPage: CommerceAdminChannelDetailsPage,
+		channelName: string,
+		termLabel: string
+	) {
+		await this.goto();
+
+		await (await this.channelsTableRowLink(channelName)).click();
+		await (
+			await commerceAdminChannelDetailsPage.generalCommerceAdminChannelTableLink(
+				'Money Order'
+			)
+		).click();
+		await commerceAdminChannelDetailsPage.setEntryEligibility(
+			'Specific Payment Terms',
+			termLabel,
+			'Payment Methods',
+			'Money Order'
+		);
 	}
 
 	async changeCommerceChannelBuyerOrderApprovalWorkflow(
@@ -213,6 +261,10 @@ export class CommerceAdminChannelsPage {
 		);
 	}
 
+	async goto() {
+		await this.globalMenuPage.goToCommerce('Channels');
+	}
+
 	async setupCommerceChannelShippingMethod(
 		channelName: string,
 		shippingMethodName: string,
@@ -249,7 +301,9 @@ export class CommerceAdminChannelsPage {
 			await waitForAlert(this.shippingOptionsPanel);
 
 			await expect(
-				this.sidePanelFrameLocator.getByText(shippingOption)
+				this.sidePanelFrameLocator.getByText(shippingOption, {
+					exact: true,
+				})
 			).toBeVisible();
 		}
 	}

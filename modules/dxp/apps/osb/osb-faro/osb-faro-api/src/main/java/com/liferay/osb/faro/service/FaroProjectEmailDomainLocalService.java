@@ -282,3 +282,4 @@ public interface FaroProjectEmailDomainLocalService
 		FaroProjectEmailDomain faroProjectEmailDomain);
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:33614836

@@ -10,17 +10,16 @@ import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 
 import java.util.AbstractMap;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
-import java.util.Set;
 
 /**
  * @author Preston Crary
@@ -31,37 +30,96 @@ public class CTClosureImpl implements CTClosure {
 		long ctCollectionId, Map<Node, Collection<Node>> closureMap) {
 
 		_ctCollectionId = ctCollectionId;
-		_closureMap = closureMap;
+
+		for (Map.Entry<Node, Collection<Node>> entry : closureMap.entrySet()) {
+			Node node = entry.getKey();
+
+			_nodeMap.putIfAbsent(node, node);
+
+			for (Node childNode : entry.getValue()) {
+				_nodeMap.putIfAbsent(childNode, childNode);
+			}
+		}
+
+		int index = 0;
+
+		for (Node node : _nodeMap.values()) {
+			node.setIndex(index++);
+		}
+
+		int nodeCount = _nodeMap.size();
+
+		ArrayDeque<Node> queue = new ArrayDeque<>(nodeCount);
+		BitSet bitSet = new BitSet(nodeCount);
+
+		for (Map.Entry<Node, Collection<Node>> entry : closureMap.entrySet()) {
+			Node node = _nodeMap.get(entry.getKey());
+
+			if (node.equals(Node.ROOT_NODE)) {
+				for (Node childNode : entry.getValue()) {
+					_rootNodes.add(_nodeMap.get(childNode));
+				}
+
+				continue;
+			}
+
+			Collection<Node> childNodes = entry.getValue();
+
+			bitSet.clear();
+
+			queue.addAll(childNodes);
+
+			while (!queue.isEmpty()) {
+				Collection<Node> grandchildNodes = closureMap.get(queue.poll());
+
+				if (grandchildNodes != null) {
+					for (Node grandchildNode : grandchildNodes) {
+						grandchildNode = _nodeMap.get(grandchildNode);
+
+						int grandchildIndex = grandchildNode.getIndex();
+
+						if (!bitSet.get(grandchildIndex)) {
+							bitSet.set(grandchildIndex);
+
+							queue.add(grandchildNode);
+						}
+					}
+				}
+			}
+
+			for (Node childNode : childNodes) {
+				childNode = _nodeMap.get(childNode);
+
+				if (bitSet.get(childNode.getIndex())) {
+					continue;
+				}
+
+				childNode.addParentNode(node);
+
+				node.addChildNode(childNode);
+			}
+		}
+
+		_nodeMap.remove(Node.ROOT_NODE);
 	}
 
 	@Override
 	public Map<Long, List<Long>> getChildPKsMap(
 		long classNameId, long classPK) {
 
-		Collection<Node> nodes = _closureMap.get(
-			new Node(classNameId, classPK));
+		Node node = _nodeMap.get(new Node(classNameId, classPK));
 
-		if (nodes == null) {
+		if (node == null) {
 			return Collections.emptyMap();
 		}
 
-		Set<Node> excludedNodes = new HashSet<>();
+		List<Node> childNodes = node.getChildNodes();
 
-		Queue<Node> queue = new LinkedList<>(nodes);
-
-		while (queue.size() > 0) {
-			Collection<Node> childNodes = _closureMap.get(queue.poll());
-
-			if (childNodes != null) {
-				for (Node childNode : childNodes) {
-					if (excludedNodes.add(childNode)) {
-						queue.add(childNode);
-					}
-				}
-			}
+		if (childNodes.isEmpty()) {
+			return Collections.emptyMap();
 		}
 
-		return _getPrimaryKeysMap(nodes, excludedNodes);
+		return _toMap(childNodes);
 	}
 
 	@Override
@@ -70,9 +128,31 @@ public class CTClosureImpl implements CTClosure {
 	}
 
 	@Override
+	public Map<Long, List<Long>> getParentPKsMap(
+		long classNameId, long classPK) {
+
+		Node node = _nodeMap.get(new Node(classNameId, classPK));
+
+		if (node == null) {
+			return Collections.emptyMap();
+		}
+
+		List<Node> parentNodes = node.getParentNodes();
+
+		if (parentNodes.isEmpty()) {
+			return Collections.emptyMap();
+		}
+
+		return _toMap(parentNodes);
+	}
+
+	@Override
 	public Map<Long, List<Long>> getRootPKsMap() {
-		return _getPrimaryKeysMap(
-			_closureMap.get(Node.ROOT_NODE), Collections.emptySet());
+		if (_rootNodes.isEmpty()) {
+			return Collections.emptyMap();
+		}
+
+		return _toMap(_rootNodes);
 	}
 
 	@Override
@@ -137,26 +217,21 @@ public class CTClosureImpl implements CTClosure {
 		return sb1.toString();
 	}
 
-	private Map<Long, List<Long>> _getPrimaryKeysMap(
-		Collection<Node> nodes, Set<Node> excludedNodes) {
-
-		Map<Long, List<Long>> primaryKeysMap = new HashMap<>();
+	private Map<Long, List<Long>> _toMap(List<Node> nodes) {
+		Map<Long, List<Long>> map = new HashMap<>();
 
 		for (Node node : nodes) {
-			if (excludedNodes.contains(node)) {
-				continue;
-			}
-
-			List<Long> primaryKeys = primaryKeysMap.computeIfAbsent(
+			List<Long> primaryKeys = map.computeIfAbsent(
 				node.getClassNameId(), key -> new ArrayList<>());
 
 			primaryKeys.add(node.getPrimaryKey());
 		}
 
-		return primaryKeysMap;
+		return map;
 	}
 
-	private final Map<Node, Collection<Node>> _closureMap;
 	private final long _ctCollectionId;
+	private final Map<Node, Node> _nodeMap = new HashMap<>();
+	private final List<Node> _rootNodes = new ArrayList<>();
 
 }

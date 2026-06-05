@@ -8,6 +8,7 @@ package com.liferay.portal.license.util;
 import com.liferay.portal.json.JSONObjectImpl;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.license.LicenseInfo;
+import com.liferay.portal.kernel.license.util.App;
 import com.liferay.portal.kernel.license.util.LicenseManager;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -146,6 +147,16 @@ public class DefaultLicenseManagerImpl implements LicenseManager {
 	@Override
 	public Set<String> getMacAddresses() {
 		return LicenseUtil.getMacAddresses();
+	}
+
+	@Override
+	public boolean isAppEnabled(App app) {
+		return true;
+	}
+
+	@Override
+	public boolean isFreeTier() {
+		return false;
 	}
 
 	@Override

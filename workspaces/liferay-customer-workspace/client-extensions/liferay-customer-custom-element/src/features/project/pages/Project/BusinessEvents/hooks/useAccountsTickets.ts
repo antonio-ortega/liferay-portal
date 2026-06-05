@@ -4,8 +4,10 @@
  */
 
 import {useCallback, useEffect, useState} from 'react';
-import {Liferay} from '~/services/liferay';
+import {getAccountTickets} from '~/services/liferay/rest/jira/Jira';
 import {IBusinessEvent, ITicket} from '~/utils/types';
+
+import parseAssociatedTickets from '../utils/parseAssociatedTickets';
 
 const useAccountsTickets = (
 	businessEvent?: IBusinessEvent,
@@ -23,24 +25,14 @@ const useAccountsTickets = (
 		}
 
 		try {
-			let ticketsParam = '';
+			const ticketIds = businessEvent
+				? parseAssociatedTickets(businessEvent.associatedTickets)
+				: undefined;
 
-			if (businessEvent) {
-				const associatedTickets = JSON.parse(
-					businessEvent.associatedTickets!
-				);
-
-				ticketsParam = `?ticketIds=${associatedTickets.join(',')}`;
-			}
-
-			const response: ITicket[] =
-				await Liferay.OAuth2Client.FromUserAgentApplication(
-					'liferay-customer-etc-spring-boot-oaua'
-				)
-					.fetch(
-						`/accounts/${externalReferenceCode}/tickets${ticketsParam}`
-					)
-					.then((response: {json: () => any}) => response.json());
+			const response: ITicket[] = await getAccountTickets(
+				externalReferenceCode,
+				ticketIds
+			);
 
 			setTickets(response);
 

@@ -9,19 +9,18 @@ import ClayLayout from '@clayui/layout';
 import ClayModal from '@clayui/modal';
 import {InternalDispatch} from '@clayui/shared';
 import {
-	ACTION_ITEM_TARGETS,
 	FrontendDataSet,
+	IFileDropSettings,
 	IFrontendDataSetProps,
 } from '@liferay/frontend-data-set-web';
 import classNames from 'classnames';
+import {FileData} from 'frontend-js-components-web';
 import {getObjectValueFromPath, sub} from 'frontend-js-web';
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useMemo, useState} from 'react';
 
 type IItemSelectorModalFDSProps = Omit<
 	IFrontendDataSetProps,
 	| 'apiURL'
-	| 'selectedItems'
-	| 'selectedItemsKey'
 	| 'onSelectedItemsChange'
 	| 'selectedItems'
 	| 'selectedItemsKey'
@@ -30,7 +29,38 @@ type IItemSelectorModalFDSProps = Omit<
 	| 'style'
 >;
 
+export type FilesUploaderComponent<T extends object = {}> = React.ComponentType<
+	{
+		allowedExtensions?: string;
+
+		/**
+		 * List of files that will represent the initial state of files to upload.
+		 */
+		files: FileData[];
+
+		/**
+		 * Site/Space where to upload items
+		 */
+		groupId?: number;
+
+		maxFileSize?: number;
+
+		/**
+		 * Callback for when upload is done in both cases: by success, or user cancelation.
+		 */
+		onCloseUploadView: () => void;
+	} & T
+>;
+
 export interface IItemSelectorModalProps<T> {
+
+	/**
+	 * When true, the Select button remains enabled even when no items are
+	 * selected. Clicking it calls onItemsChange with an empty array.
+	 */
+	allowEmptySelection?: boolean;
+
+	allowedExtensions?: string;
 
 	/**
 	 * The URL that will be fetched to return the items.
@@ -48,14 +78,30 @@ export interface IItemSelectorModalProps<T> {
 	breadcrumbsLabel?: boolean;
 
 	/**
-	 * URL for item creation used to open a new tab.
+	 * Label for the footer confirmation button. Defaults to "Select".
 	 */
-	createItemURL?: string;
+	confirmButtonLabel?: string;
+
+	/**
+	 * Label shown in the footer as "{label} Selected" when
+	 * 'allowEmptySelection' is true and no items are selected.
+	 */
+	emptySelectionLabel?: string;
 
 	/**
 	 * Configuration properties of the Frontend Data Set used to display data.
 	 */
 	fdsProps: IItemSelectorModalFDSProps;
+
+	/**
+	 * Component to be used as a file uploader manager.
+	 */
+	filesUploaderComponent?: FilesUploaderComponent;
+
+	/**
+	 * Site/Space id where to upload items
+	 */
+	groupId?: number;
 
 	/**
 	 * The displayed label for the type of item being selected. Used in the
@@ -77,6 +123,8 @@ export interface IItemSelectorModalProps<T> {
 		label: string;
 		value: string;
 	};
+
+	maxFileSize?: number;
 
 	/**
 	 * Represents a customizable message that can be rendered as a React node.
@@ -110,24 +158,28 @@ export interface IItemSelectorModalProps<T> {
 	open: boolean;
 
 	/**
+	 * Modal size. Defaults to "full-screen" to preserve the file-picker
+	 * layout; pass a smaller value (e.g. "lg") for compact list pickers.
+	 */
+	size?: React.ComponentProps<typeof ClayModal>['size'];
+
+	/**
 	 * Represents the title of a modal. takes precedence over itemTypeLabel.
 	 */
 	title?: string;
 }
 
-const EMPTY_STATE_PROPS = {
-	description: Liferay.Language.get(
-		'fortunately-it-is-very-easy-to-add-new-ones'
-	),
-	title: Liferay.Language.get('no-items-were-found'),
-};
-
 function ItemSelectorModal<T extends Record<string, any>>({
+	allowEmptySelection = false,
+	allowedExtensions,
 	apiURL,
 	breadcrumbs,
 	breadcrumbsLabel = true,
-	createItemURL,
+	confirmButtonLabel,
+	emptySelectionLabel,
 	fdsProps,
+	filesUploaderComponent: FilesUploaderComponent,
+	groupId,
 	itemTypeLabel,
 	items: externalItems,
 	locator = {
@@ -135,15 +187,20 @@ function ItemSelectorModal<T extends Record<string, any>>({
 		label: 'title',
 		value: 'id',
 	},
+	maxFileSize,
 	message,
 	multiSelect = false,
 	observer,
 	onItemsChange,
 	onOpenChange,
 	open,
+	size = 'full-screen',
 	title,
 }: IItemSelectorModalProps<T>) {
 	const [selectedItems, setSelectedItems] = useState(externalItems);
+	const [view, setViewType] = useState<'fds' | 'upload'>('fds');
+	const [filesToUpload, setFilesToUpload] = useState<FileData[]>([]);
+	const [fdsRefreshKey, setFdsRefreshKey] = useState(0);
 
 	useEffect(() => {
 		if (!open) {
@@ -160,8 +217,35 @@ function ItemSelectorModal<T extends Record<string, any>>({
 
 	const hasSelectedItems = !!selectedItems.length;
 
-	return open ? (
-		<ClayModal observer={observer} size="full-screen">
+	const isSelectEnabled = hasSelectedItems || allowEmptySelection;
+
+	const fileDropSettings = useMemo<IFileDropSettings>(() => {
+		return {
+			enabled: Boolean(FilesUploaderComponent),
+			isDropTarget: () => {
+				return false;
+			},
+			onFileDrop: (files) => {
+				setFilesToUpload(
+					files.map((file) => ({
+						errorMessage: '',
+						failed: false,
+						file,
+						name: file.name,
+						size: file.size,
+					}))
+				);
+				setViewType('upload');
+			},
+		};
+	}, [FilesUploaderComponent]);
+
+	if (!open) {
+		return <></>;
+	}
+
+	return (
+		<ClayModal observer={observer} size={size}>
 			<ClayModal.Header
 				closeButtonAriaLabel={Liferay.Language.get('close')}
 			>
@@ -172,118 +256,155 @@ function ItemSelectorModal<T extends Record<string, any>>({
 
 			{message}
 
-			<ClayModal.Body className="p-0">
-				{breadcrumbs && (
-					<ClayLayout.Container fluid>
-						{breadcrumbsLabel && (
-							<h2 className="mb-0 mt-2">
-								{breadcrumbs[breadcrumbs.length - 1].label}
-							</h2>
-						)}
+			<ClayModal.Body className="d-flex flex-column p-0">
+				<ClayLayout.Container
+					className={classNames({'d-none': view !== 'fds'})}
+					fluid
+				>
+					{breadcrumbs && (
+						<ClayLayout.Container
+							className="item-selector-modal-breadcrumb-wrapper"
+							fluid
+						>
+							{breadcrumbsLabel && (
+								<h2 className="mb-0 mt-2">
+									{breadcrumbs[breadcrumbs.length - 1].label}
+								</h2>
+							)}
 
-						<ClayBreadcrumb
-							items={breadcrumbs.map((breadcrumb, index) => ({
-								...breadcrumb,
-								active: index === breadcrumbs.length - 1,
-							}))}
-						/>
-					</ClayLayout.Container>
+							<ClayBreadcrumb
+								items={breadcrumbs.map((breadcrumb, index) => ({
+									...breadcrumb,
+									active: index === breadcrumbs.length - 1,
+								}))}
+							/>
+						</ClayLayout.Container>
+					)}
+
+					<FrontendDataSet
+						{...fdsProps}
+						apiURL={apiURL}
+						creationMenu={
+							FilesUploaderComponent
+								? {
+										primaryItems: [
+											{
+												label: Liferay.Language.get(
+													'upload-files'
+												),
+												onClick: () =>
+													setViewType('upload'),
+											},
+										],
+									}
+								: undefined
+						}
+						emptyState={fdsProps.emptyState}
+						fileDropSettings={fileDropSettings}
+						key={fdsRefreshKey}
+						onSelectedItemsChange={setSelectedItems}
+						selectedItems={selectedItems}
+						selectedItemsKey={locator.id}
+						selectionType={multiSelect ? 'multiple' : 'single'}
+						showNavBarWhenSelected={true}
+						style="fluid"
+					/>
+				</ClayLayout.Container>
+
+				{view === 'upload' && FilesUploaderComponent && (
+					<FilesUploaderComponent
+						allowedExtensions={allowedExtensions}
+						files={filesToUpload}
+						groupId={groupId}
+						maxFileSize={maxFileSize}
+						onCloseUploadView={() => {
+							setViewType('fds');
+							setFilesToUpload([]);
+							setFdsRefreshKey(fdsRefreshKey + 1);
+						}}
+					/>
 				)}
-
-				<FrontendDataSet
-					{...fdsProps}
-					apiURL={apiURL}
-					creationMenu={
-						createItemURL
-							? {
-									primaryItems: [
-										{
-											href: createItemURL,
-											label: Liferay.Language.get(
-												'add-new-item'
-											),
-											target: ACTION_ITEM_TARGETS.BLANK,
-										},
-									],
-								}
-							: undefined
-					}
-					emptyState={createItemURL ? EMPTY_STATE_PROPS : undefined}
-					onSelectedItemsChange={setSelectedItems}
-					selectedItems={selectedItems}
-					selectedItemsKey={locator.id}
-					selectionType={multiSelect ? 'multiple' : 'single'}
-					showNavBarWhenSelected={true}
-					style="fluid"
-				/>
 			</ClayModal.Body>
 
-			<ClayModal.Footer
-				className={classNames({
-					'bg-primary-l3 border-primary border-top': hasSelectedItems,
-				})}
-				first={
-					hasSelectedItems ? (
-						<div className="align-items-center d-flex">
-							{selectedItems.length > 1
-								? sub(
-										Liferay.Language.get(
-											'x-items-selected'
-										),
-										selectedItems.length
-									)
-								: sub(
-										Liferay.Language.get('x-selected'),
-										getSelectedItemLabel(selectedItems[0])
-									)}
+			{view === 'fds' && (
+				<ClayModal.Footer
+					className={classNames({
+						'bg-primary-l3 border-primary border-top':
+							isSelectEnabled,
+					})}
+					first={
+						hasSelectedItems ? (
+							<div className="align-items-center d-flex">
+								{selectedItems.length > 1
+									? sub(
+											Liferay.Language.get(
+												'x-items-selected'
+											),
+											selectedItems.length
+										)
+									: sub(
+											Liferay.Language.get('x-selected'),
+											getSelectedItemLabel(
+												selectedItems[0]
+											)
+										)}
 
+								<ClayButton
+									className="ml-3 text-secondary"
+									displayType="link"
+									onClick={() => {
+										setSelectedItems([]);
+									}}
+								>
+									<strong>
+										{Liferay.Language.get('clear')}
+									</strong>
+								</ClayButton>
+							</div>
+						) : allowEmptySelection && emptySelectionLabel ? (
+							<div className="align-items-center d-flex">
+								{sub(
+									Liferay.Language.get('x-selected'),
+									emptySelectionLabel
+								)}
+							</div>
+						) : undefined
+					}
+					last={
+						<ClayButton.Group spaced>
 							<ClayButton
-								className="ml-3 text-secondary"
-								displayType="link"
+								className="btn-cancel"
+								displayType="secondary"
 								onClick={() => {
 									setSelectedItems([]);
+
+									onOpenChange(false);
 								}}
 							>
-								<strong>{Liferay.Language.get('clear')}</strong>
+								{Liferay.Language.get('cancel')}
 							</ClayButton>
-						</div>
-					) : undefined
-				}
-				last={
-					<ClayButton.Group spaced>
-						<ClayButton
-							className="btn-cancel"
-							displayType="secondary"
-							onClick={() => {
-								setSelectedItems([]);
 
-								onOpenChange(false);
-							}}
-						>
-							{Liferay.Language.get('cancel')}
-						</ClayButton>
+							<ClayButton
+								className="item-preview selector-button"
+								disabled={!isSelectEnabled}
+								onClick={() => {
+									onItemsChange(
+										multiSelect
+											? selectedItems
+											: selectedItems.slice(0, 1)
+									);
 
-						<ClayButton
-							className="item-preview selector-button"
-							disabled={!hasSelectedItems}
-							onClick={() => {
-								onItemsChange(
-									multiSelect
-										? selectedItems
-										: selectedItems.slice(0, 1)
-								);
-
-								onOpenChange(false);
-							}}
-						>
-							{Liferay.Language.get('select')}
-						</ClayButton>
-					</ClayButton.Group>
-				}
-			/>
+									onOpenChange(false);
+								}}
+							>
+								{confirmButtonLabel ??
+									Liferay.Language.get('select')}
+							</ClayButton>
+						</ClayButton.Group>
+					}
+				/>
+			)}
 		</ClayModal>
-	) : (
-		<></>
 	);
 }
 

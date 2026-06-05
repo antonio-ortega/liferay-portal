@@ -243,3 +243,4 @@ public class AdvancedStylingConfigSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:70572602

@@ -11,8 +11,6 @@ import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.search.elasticsearch8.configuration.ElasticsearchConfiguration;
-import com.liferay.portal.search.elasticsearch8.configuration.OperationMode;
-import com.liferay.portal.search.elasticsearch8.configuration.RESTClientLoggerLevel;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -25,6 +23,7 @@ import java.util.concurrent.ConcurrentSkipListSet;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Modified;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Bryan Engler
@@ -80,12 +79,8 @@ public class ElasticsearchConfigurationWrapper
 		return -1;
 	}
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x)
-	 */
-	@Deprecated
-	public int embeddedHttpPort() {
-		return _elasticsearchConfiguration.embeddedHttpPort();
+	public boolean compressionEnabled() {
+		return _elasticsearchConfiguration.compressionEnabled();
 	}
 
 	public String httpCORSAllowOrigin() {
@@ -118,24 +113,6 @@ public class ElasticsearchConfigurationWrapper
 
 	public String indexNumberOfShards() {
 		return _elasticsearchConfiguration.indexNumberOfShards();
-	}
-
-	public boolean isDevelopmentModeEnabled() {
-		return !isProductionModeEnabled();
-	}
-
-	public boolean isProductionModeEnabled() {
-		if (productionModeEnabled()) {
-			return true;
-		}
-
-		OperationMode operationMode = operationMode();
-
-		if (operationMode == OperationMode.REMOTE) {
-			return true;
-		}
-
-		return false;
 	}
 
 	public boolean logExceptionsOnly() {
@@ -172,14 +149,6 @@ public class ElasticsearchConfigurationWrapper
 
 	public String nodeName() {
 		return _elasticsearchConfiguration.nodeName();
-	}
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x)
-	 */
-	@Deprecated
-	public OperationMode operationMode() {
-		return _elasticsearchConfiguration.operationMode();
 	}
 
 	public String overrideTypeMappings() {
@@ -221,10 +190,6 @@ public class ElasticsearchConfigurationWrapper
 		return _elasticsearchConfiguration.remoteClusterConnectionId();
 	}
 
-	public RESTClientLoggerLevel restClientLoggerLevel() {
-		return _elasticsearchConfiguration.restClientLoggerLevel();
-	}
-
 	public boolean sidecarDebug() {
 		return _elasticsearchConfiguration.sidecarDebug();
 	}
@@ -259,10 +224,6 @@ public class ElasticsearchConfigurationWrapper
 
 	public long sidecarShutdownTimeout() {
 		return _elasticsearchConfiguration.sidecarShutdownTimeout();
-	}
-
-	public boolean trackTotalHits() {
-		return _elasticsearchConfiguration.trackTotalHits();
 	}
 
 	public int trackTotalHitsLimit() {
@@ -346,6 +307,10 @@ public class ElasticsearchConfigurationWrapper
 	private volatile ElasticsearchConfiguration _elasticsearchConfiguration;
 	private final Set<ElasticsearchConfigurationObserver>
 		_elasticsearchConfigurationObservers = new ConcurrentSkipListSet<>();
+
+	@Reference(target = "(elasticsearch.configuration.ready=true)")
+	private Object _elasticsearchConfigurationReady;
+
 	private volatile ElasticsearchConfiguration
 		_propsElasticsearchConfiguration;
 	private volatile Map<String, Object> _propsMap = Collections.emptyMap();

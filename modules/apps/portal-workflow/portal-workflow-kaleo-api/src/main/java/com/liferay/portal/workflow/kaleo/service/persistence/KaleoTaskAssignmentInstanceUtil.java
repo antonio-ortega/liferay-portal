@@ -36,6 +36,24 @@ public class KaleoTaskAssignmentInstanceUtil {
 	 */
 
 	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(List)
+	 */
+	public static void cacheResult(
+		List<KaleoTaskAssignmentInstance> kaleoTaskAssignmentInstances) {
+
+		getPersistence().cacheResult(kaleoTaskAssignmentInstances);
+	}
+
+	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(com.liferay.portal.kernel.model.BaseModel)
+	 */
+	public static void cacheResult(
+		KaleoTaskAssignmentInstance kaleoTaskAssignmentInstance) {
+
+		getPersistence().cacheResult(kaleoTaskAssignmentInstance);
+	}
+
+	/**
 	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#clearCache()
 	 */
 	public static void clearCache() {
@@ -117,61 +135,10 @@ public class KaleoTaskAssignmentInstanceUtil {
 	}
 
 	/**
-	 * Returns all the kaleo task assignment instances where companyId = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @return the matching kaleo task assignment instances
-	 */
-	public static List<KaleoTaskAssignmentInstance> findByCompanyId(
-		long companyId) {
-
-		return getPersistence().findByCompanyId(companyId);
-	}
-
-	/**
-	 * Returns a range of all the kaleo task assignment instances where companyId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>KaleoTaskAssignmentInstanceModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param start the lower bound of the range of kaleo task assignment instances
-	 * @param end the upper bound of the range of kaleo task assignment instances (not inclusive)
-	 * @return the range of matching kaleo task assignment instances
-	 */
-	public static List<KaleoTaskAssignmentInstance> findByCompanyId(
-		long companyId, int start, int end) {
-
-		return getPersistence().findByCompanyId(companyId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the kaleo task assignment instances where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>KaleoTaskAssignmentInstanceModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param start the lower bound of the range of kaleo task assignment instances
-	 * @param end the upper bound of the range of kaleo task assignment instances (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching kaleo task assignment instances
-	 */
-	public static List<KaleoTaskAssignmentInstance> findByCompanyId(
-		long companyId, int start, int end,
-		OrderByComparator<KaleoTaskAssignmentInstance> orderByComparator) {
-
-		return getPersistence().findByCompanyId(
-			companyId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the kaleo task assignment instances where companyId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>KaleoTaskAssignmentInstanceModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.workflow.kaleo.model.impl.KaleoTaskAssignmentInstanceModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -224,58 +191,6 @@ public class KaleoTaskAssignmentInstanceUtil {
 	}
 
 	/**
-	 * Returns the last kaleo task assignment instance in the ordered set where companyId = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching kaleo task assignment instance
-	 * @throws NoSuchTaskAssignmentInstanceException if a matching kaleo task assignment instance could not be found
-	 */
-	public static KaleoTaskAssignmentInstance findByCompanyId_Last(
-			long companyId,
-			OrderByComparator<KaleoTaskAssignmentInstance> orderByComparator)
-		throws com.liferay.portal.workflow.kaleo.exception.
-			NoSuchTaskAssignmentInstanceException {
-
-		return getPersistence().findByCompanyId_Last(
-			companyId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last kaleo task assignment instance in the ordered set where companyId = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching kaleo task assignment instance, or <code>null</code> if a matching kaleo task assignment instance could not be found
-	 */
-	public static KaleoTaskAssignmentInstance fetchByCompanyId_Last(
-		long companyId,
-		OrderByComparator<KaleoTaskAssignmentInstance> orderByComparator) {
-
-		return getPersistence().fetchByCompanyId_Last(
-			companyId, orderByComparator);
-	}
-
-	/**
-	 * Returns the kaleo task assignment instances before and after the current kaleo task assignment instance in the ordered set where companyId = &#63;.
-	 *
-	 * @param kaleoTaskAssignmentInstanceId the primary key of the current kaleo task assignment instance
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next kaleo task assignment instance
-	 * @throws NoSuchTaskAssignmentInstanceException if a kaleo task assignment instance with the primary key could not be found
-	 */
-	public static KaleoTaskAssignmentInstance[] findByCompanyId_PrevAndNext(
-			long kaleoTaskAssignmentInstanceId, long companyId,
-			OrderByComparator<KaleoTaskAssignmentInstance> orderByComparator)
-		throws com.liferay.portal.workflow.kaleo.exception.
-			NoSuchTaskAssignmentInstanceException {
-
-		return getPersistence().findByCompanyId_PrevAndNext(
-			kaleoTaskAssignmentInstanceId, companyId, orderByComparator);
-	}
-
-	/**
 	 * Removes all the kaleo task assignment instances where companyId = &#63; from the database.
 	 *
 	 * @param companyId the company ID
@@ -295,65 +210,10 @@ public class KaleoTaskAssignmentInstanceUtil {
 	}
 
 	/**
-	 * Returns all the kaleo task assignment instances where kaleoDefinitionVersionId = &#63;.
-	 *
-	 * @param kaleoDefinitionVersionId the kaleo definition version ID
-	 * @return the matching kaleo task assignment instances
-	 */
-	public static List<KaleoTaskAssignmentInstance>
-		findByKaleoDefinitionVersionId(long kaleoDefinitionVersionId) {
-
-		return getPersistence().findByKaleoDefinitionVersionId(
-			kaleoDefinitionVersionId);
-	}
-
-	/**
-	 * Returns a range of all the kaleo task assignment instances where kaleoDefinitionVersionId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>KaleoTaskAssignmentInstanceModelImpl</code>.
-	 * </p>
-	 *
-	 * @param kaleoDefinitionVersionId the kaleo definition version ID
-	 * @param start the lower bound of the range of kaleo task assignment instances
-	 * @param end the upper bound of the range of kaleo task assignment instances (not inclusive)
-	 * @return the range of matching kaleo task assignment instances
-	 */
-	public static List<KaleoTaskAssignmentInstance>
-		findByKaleoDefinitionVersionId(
-			long kaleoDefinitionVersionId, int start, int end) {
-
-		return getPersistence().findByKaleoDefinitionVersionId(
-			kaleoDefinitionVersionId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the kaleo task assignment instances where kaleoDefinitionVersionId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>KaleoTaskAssignmentInstanceModelImpl</code>.
-	 * </p>
-	 *
-	 * @param kaleoDefinitionVersionId the kaleo definition version ID
-	 * @param start the lower bound of the range of kaleo task assignment instances
-	 * @param end the upper bound of the range of kaleo task assignment instances (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching kaleo task assignment instances
-	 */
-	public static List<KaleoTaskAssignmentInstance>
-		findByKaleoDefinitionVersionId(
-			long kaleoDefinitionVersionId, int start, int end,
-			OrderByComparator<KaleoTaskAssignmentInstance> orderByComparator) {
-
-		return getPersistence().findByKaleoDefinitionVersionId(
-			kaleoDefinitionVersionId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the kaleo task assignment instances where kaleoDefinitionVersionId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>KaleoTaskAssignmentInstanceModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.workflow.kaleo.model.impl.KaleoTaskAssignmentInstanceModelImpl</code>.
 	 * </p>
 	 *
 	 * @param kaleoDefinitionVersionId the kaleo definition version ID
@@ -411,65 +271,6 @@ public class KaleoTaskAssignmentInstanceUtil {
 	}
 
 	/**
-	 * Returns the last kaleo task assignment instance in the ordered set where kaleoDefinitionVersionId = &#63;.
-	 *
-	 * @param kaleoDefinitionVersionId the kaleo definition version ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching kaleo task assignment instance
-	 * @throws NoSuchTaskAssignmentInstanceException if a matching kaleo task assignment instance could not be found
-	 */
-	public static KaleoTaskAssignmentInstance
-			findByKaleoDefinitionVersionId_Last(
-				long kaleoDefinitionVersionId,
-				OrderByComparator<KaleoTaskAssignmentInstance>
-					orderByComparator)
-		throws com.liferay.portal.workflow.kaleo.exception.
-			NoSuchTaskAssignmentInstanceException {
-
-		return getPersistence().findByKaleoDefinitionVersionId_Last(
-			kaleoDefinitionVersionId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last kaleo task assignment instance in the ordered set where kaleoDefinitionVersionId = &#63;.
-	 *
-	 * @param kaleoDefinitionVersionId the kaleo definition version ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching kaleo task assignment instance, or <code>null</code> if a matching kaleo task assignment instance could not be found
-	 */
-	public static KaleoTaskAssignmentInstance
-		fetchByKaleoDefinitionVersionId_Last(
-			long kaleoDefinitionVersionId,
-			OrderByComparator<KaleoTaskAssignmentInstance> orderByComparator) {
-
-		return getPersistence().fetchByKaleoDefinitionVersionId_Last(
-			kaleoDefinitionVersionId, orderByComparator);
-	}
-
-	/**
-	 * Returns the kaleo task assignment instances before and after the current kaleo task assignment instance in the ordered set where kaleoDefinitionVersionId = &#63;.
-	 *
-	 * @param kaleoTaskAssignmentInstanceId the primary key of the current kaleo task assignment instance
-	 * @param kaleoDefinitionVersionId the kaleo definition version ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next kaleo task assignment instance
-	 * @throws NoSuchTaskAssignmentInstanceException if a kaleo task assignment instance with the primary key could not be found
-	 */
-	public static KaleoTaskAssignmentInstance[]
-			findByKaleoDefinitionVersionId_PrevAndNext(
-				long kaleoTaskAssignmentInstanceId,
-				long kaleoDefinitionVersionId,
-				OrderByComparator<KaleoTaskAssignmentInstance>
-					orderByComparator)
-		throws com.liferay.portal.workflow.kaleo.exception.
-			NoSuchTaskAssignmentInstanceException {
-
-		return getPersistence().findByKaleoDefinitionVersionId_PrevAndNext(
-			kaleoTaskAssignmentInstanceId, kaleoDefinitionVersionId,
-			orderByComparator);
-	}
-
-	/**
 	 * Removes all the kaleo task assignment instances where kaleoDefinitionVersionId = &#63; from the database.
 	 *
 	 * @param kaleoDefinitionVersionId the kaleo definition version ID
@@ -495,62 +296,10 @@ public class KaleoTaskAssignmentInstanceUtil {
 	}
 
 	/**
-	 * Returns all the kaleo task assignment instances where kaleoInstanceId = &#63;.
-	 *
-	 * @param kaleoInstanceId the kaleo instance ID
-	 * @return the matching kaleo task assignment instances
-	 */
-	public static List<KaleoTaskAssignmentInstance> findByKaleoInstanceId(
-		long kaleoInstanceId) {
-
-		return getPersistence().findByKaleoInstanceId(kaleoInstanceId);
-	}
-
-	/**
-	 * Returns a range of all the kaleo task assignment instances where kaleoInstanceId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>KaleoTaskAssignmentInstanceModelImpl</code>.
-	 * </p>
-	 *
-	 * @param kaleoInstanceId the kaleo instance ID
-	 * @param start the lower bound of the range of kaleo task assignment instances
-	 * @param end the upper bound of the range of kaleo task assignment instances (not inclusive)
-	 * @return the range of matching kaleo task assignment instances
-	 */
-	public static List<KaleoTaskAssignmentInstance> findByKaleoInstanceId(
-		long kaleoInstanceId, int start, int end) {
-
-		return getPersistence().findByKaleoInstanceId(
-			kaleoInstanceId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the kaleo task assignment instances where kaleoInstanceId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>KaleoTaskAssignmentInstanceModelImpl</code>.
-	 * </p>
-	 *
-	 * @param kaleoInstanceId the kaleo instance ID
-	 * @param start the lower bound of the range of kaleo task assignment instances
-	 * @param end the upper bound of the range of kaleo task assignment instances (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching kaleo task assignment instances
-	 */
-	public static List<KaleoTaskAssignmentInstance> findByKaleoInstanceId(
-		long kaleoInstanceId, int start, int end,
-		OrderByComparator<KaleoTaskAssignmentInstance> orderByComparator) {
-
-		return getPersistence().findByKaleoInstanceId(
-			kaleoInstanceId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the kaleo task assignment instances where kaleoInstanceId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>KaleoTaskAssignmentInstanceModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.workflow.kaleo.model.impl.KaleoTaskAssignmentInstanceModelImpl</code>.
 	 * </p>
 	 *
 	 * @param kaleoInstanceId the kaleo instance ID
@@ -603,60 +352,6 @@ public class KaleoTaskAssignmentInstanceUtil {
 	}
 
 	/**
-	 * Returns the last kaleo task assignment instance in the ordered set where kaleoInstanceId = &#63;.
-	 *
-	 * @param kaleoInstanceId the kaleo instance ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching kaleo task assignment instance
-	 * @throws NoSuchTaskAssignmentInstanceException if a matching kaleo task assignment instance could not be found
-	 */
-	public static KaleoTaskAssignmentInstance findByKaleoInstanceId_Last(
-			long kaleoInstanceId,
-			OrderByComparator<KaleoTaskAssignmentInstance> orderByComparator)
-		throws com.liferay.portal.workflow.kaleo.exception.
-			NoSuchTaskAssignmentInstanceException {
-
-		return getPersistence().findByKaleoInstanceId_Last(
-			kaleoInstanceId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last kaleo task assignment instance in the ordered set where kaleoInstanceId = &#63;.
-	 *
-	 * @param kaleoInstanceId the kaleo instance ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching kaleo task assignment instance, or <code>null</code> if a matching kaleo task assignment instance could not be found
-	 */
-	public static KaleoTaskAssignmentInstance fetchByKaleoInstanceId_Last(
-		long kaleoInstanceId,
-		OrderByComparator<KaleoTaskAssignmentInstance> orderByComparator) {
-
-		return getPersistence().fetchByKaleoInstanceId_Last(
-			kaleoInstanceId, orderByComparator);
-	}
-
-	/**
-	 * Returns the kaleo task assignment instances before and after the current kaleo task assignment instance in the ordered set where kaleoInstanceId = &#63;.
-	 *
-	 * @param kaleoTaskAssignmentInstanceId the primary key of the current kaleo task assignment instance
-	 * @param kaleoInstanceId the kaleo instance ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next kaleo task assignment instance
-	 * @throws NoSuchTaskAssignmentInstanceException if a kaleo task assignment instance with the primary key could not be found
-	 */
-	public static KaleoTaskAssignmentInstance[]
-			findByKaleoInstanceId_PrevAndNext(
-				long kaleoTaskAssignmentInstanceId, long kaleoInstanceId,
-				OrderByComparator<KaleoTaskAssignmentInstance>
-					orderByComparator)
-		throws com.liferay.portal.workflow.kaleo.exception.
-			NoSuchTaskAssignmentInstanceException {
-
-		return getPersistence().findByKaleoInstanceId_PrevAndNext(
-			kaleoTaskAssignmentInstanceId, kaleoInstanceId, orderByComparator);
-	}
-
-	/**
 	 * Removes all the kaleo task assignment instances where kaleoInstanceId = &#63; from the database.
 	 *
 	 * @param kaleoInstanceId the kaleo instance ID
@@ -676,65 +371,10 @@ public class KaleoTaskAssignmentInstanceUtil {
 	}
 
 	/**
-	 * Returns all the kaleo task assignment instances where kaleoTaskInstanceTokenId = &#63;.
-	 *
-	 * @param kaleoTaskInstanceTokenId the kaleo task instance token ID
-	 * @return the matching kaleo task assignment instances
-	 */
-	public static List<KaleoTaskAssignmentInstance>
-		findByKaleoTaskInstanceTokenId(long kaleoTaskInstanceTokenId) {
-
-		return getPersistence().findByKaleoTaskInstanceTokenId(
-			kaleoTaskInstanceTokenId);
-	}
-
-	/**
-	 * Returns a range of all the kaleo task assignment instances where kaleoTaskInstanceTokenId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>KaleoTaskAssignmentInstanceModelImpl</code>.
-	 * </p>
-	 *
-	 * @param kaleoTaskInstanceTokenId the kaleo task instance token ID
-	 * @param start the lower bound of the range of kaleo task assignment instances
-	 * @param end the upper bound of the range of kaleo task assignment instances (not inclusive)
-	 * @return the range of matching kaleo task assignment instances
-	 */
-	public static List<KaleoTaskAssignmentInstance>
-		findByKaleoTaskInstanceTokenId(
-			long kaleoTaskInstanceTokenId, int start, int end) {
-
-		return getPersistence().findByKaleoTaskInstanceTokenId(
-			kaleoTaskInstanceTokenId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the kaleo task assignment instances where kaleoTaskInstanceTokenId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>KaleoTaskAssignmentInstanceModelImpl</code>.
-	 * </p>
-	 *
-	 * @param kaleoTaskInstanceTokenId the kaleo task instance token ID
-	 * @param start the lower bound of the range of kaleo task assignment instances
-	 * @param end the upper bound of the range of kaleo task assignment instances (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching kaleo task assignment instances
-	 */
-	public static List<KaleoTaskAssignmentInstance>
-		findByKaleoTaskInstanceTokenId(
-			long kaleoTaskInstanceTokenId, int start, int end,
-			OrderByComparator<KaleoTaskAssignmentInstance> orderByComparator) {
-
-		return getPersistence().findByKaleoTaskInstanceTokenId(
-			kaleoTaskInstanceTokenId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the kaleo task assignment instances where kaleoTaskInstanceTokenId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>KaleoTaskAssignmentInstanceModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.workflow.kaleo.model.impl.KaleoTaskAssignmentInstanceModelImpl</code>.
 	 * </p>
 	 *
 	 * @param kaleoTaskInstanceTokenId the kaleo task instance token ID
@@ -792,65 +432,6 @@ public class KaleoTaskAssignmentInstanceUtil {
 	}
 
 	/**
-	 * Returns the last kaleo task assignment instance in the ordered set where kaleoTaskInstanceTokenId = &#63;.
-	 *
-	 * @param kaleoTaskInstanceTokenId the kaleo task instance token ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching kaleo task assignment instance
-	 * @throws NoSuchTaskAssignmentInstanceException if a matching kaleo task assignment instance could not be found
-	 */
-	public static KaleoTaskAssignmentInstance
-			findByKaleoTaskInstanceTokenId_Last(
-				long kaleoTaskInstanceTokenId,
-				OrderByComparator<KaleoTaskAssignmentInstance>
-					orderByComparator)
-		throws com.liferay.portal.workflow.kaleo.exception.
-			NoSuchTaskAssignmentInstanceException {
-
-		return getPersistence().findByKaleoTaskInstanceTokenId_Last(
-			kaleoTaskInstanceTokenId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last kaleo task assignment instance in the ordered set where kaleoTaskInstanceTokenId = &#63;.
-	 *
-	 * @param kaleoTaskInstanceTokenId the kaleo task instance token ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching kaleo task assignment instance, or <code>null</code> if a matching kaleo task assignment instance could not be found
-	 */
-	public static KaleoTaskAssignmentInstance
-		fetchByKaleoTaskInstanceTokenId_Last(
-			long kaleoTaskInstanceTokenId,
-			OrderByComparator<KaleoTaskAssignmentInstance> orderByComparator) {
-
-		return getPersistence().fetchByKaleoTaskInstanceTokenId_Last(
-			kaleoTaskInstanceTokenId, orderByComparator);
-	}
-
-	/**
-	 * Returns the kaleo task assignment instances before and after the current kaleo task assignment instance in the ordered set where kaleoTaskInstanceTokenId = &#63;.
-	 *
-	 * @param kaleoTaskAssignmentInstanceId the primary key of the current kaleo task assignment instance
-	 * @param kaleoTaskInstanceTokenId the kaleo task instance token ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next kaleo task assignment instance
-	 * @throws NoSuchTaskAssignmentInstanceException if a kaleo task assignment instance with the primary key could not be found
-	 */
-	public static KaleoTaskAssignmentInstance[]
-			findByKaleoTaskInstanceTokenId_PrevAndNext(
-				long kaleoTaskAssignmentInstanceId,
-				long kaleoTaskInstanceTokenId,
-				OrderByComparator<KaleoTaskAssignmentInstance>
-					orderByComparator)
-		throws com.liferay.portal.workflow.kaleo.exception.
-			NoSuchTaskAssignmentInstanceException {
-
-		return getPersistence().findByKaleoTaskInstanceTokenId_PrevAndNext(
-			kaleoTaskAssignmentInstanceId, kaleoTaskInstanceTokenId,
-			orderByComparator);
-	}
-
-	/**
 	 * Removes all the kaleo task assignment instances where kaleoTaskInstanceTokenId = &#63; from the database.
 	 *
 	 * @param kaleoTaskInstanceTokenId the kaleo task instance token ID
@@ -876,62 +457,10 @@ public class KaleoTaskAssignmentInstanceUtil {
 	}
 
 	/**
-	 * Returns all the kaleo task assignment instances where assigneeClassName = &#63;.
-	 *
-	 * @param assigneeClassName the assignee class name
-	 * @return the matching kaleo task assignment instances
-	 */
-	public static List<KaleoTaskAssignmentInstance> findByAssigneeClassName(
-		String assigneeClassName) {
-
-		return getPersistence().findByAssigneeClassName(assigneeClassName);
-	}
-
-	/**
-	 * Returns a range of all the kaleo task assignment instances where assigneeClassName = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>KaleoTaskAssignmentInstanceModelImpl</code>.
-	 * </p>
-	 *
-	 * @param assigneeClassName the assignee class name
-	 * @param start the lower bound of the range of kaleo task assignment instances
-	 * @param end the upper bound of the range of kaleo task assignment instances (not inclusive)
-	 * @return the range of matching kaleo task assignment instances
-	 */
-	public static List<KaleoTaskAssignmentInstance> findByAssigneeClassName(
-		String assigneeClassName, int start, int end) {
-
-		return getPersistence().findByAssigneeClassName(
-			assigneeClassName, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the kaleo task assignment instances where assigneeClassName = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>KaleoTaskAssignmentInstanceModelImpl</code>.
-	 * </p>
-	 *
-	 * @param assigneeClassName the assignee class name
-	 * @param start the lower bound of the range of kaleo task assignment instances
-	 * @param end the upper bound of the range of kaleo task assignment instances (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching kaleo task assignment instances
-	 */
-	public static List<KaleoTaskAssignmentInstance> findByAssigneeClassName(
-		String assigneeClassName, int start, int end,
-		OrderByComparator<KaleoTaskAssignmentInstance> orderByComparator) {
-
-		return getPersistence().findByAssigneeClassName(
-			assigneeClassName, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the kaleo task assignment instances where assigneeClassName = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>KaleoTaskAssignmentInstanceModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.workflow.kaleo.model.impl.KaleoTaskAssignmentInstanceModelImpl</code>.
 	 * </p>
 	 *
 	 * @param assigneeClassName the assignee class name
@@ -984,61 +513,6 @@ public class KaleoTaskAssignmentInstanceUtil {
 	}
 
 	/**
-	 * Returns the last kaleo task assignment instance in the ordered set where assigneeClassName = &#63;.
-	 *
-	 * @param assigneeClassName the assignee class name
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching kaleo task assignment instance
-	 * @throws NoSuchTaskAssignmentInstanceException if a matching kaleo task assignment instance could not be found
-	 */
-	public static KaleoTaskAssignmentInstance findByAssigneeClassName_Last(
-			String assigneeClassName,
-			OrderByComparator<KaleoTaskAssignmentInstance> orderByComparator)
-		throws com.liferay.portal.workflow.kaleo.exception.
-			NoSuchTaskAssignmentInstanceException {
-
-		return getPersistence().findByAssigneeClassName_Last(
-			assigneeClassName, orderByComparator);
-	}
-
-	/**
-	 * Returns the last kaleo task assignment instance in the ordered set where assigneeClassName = &#63;.
-	 *
-	 * @param assigneeClassName the assignee class name
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching kaleo task assignment instance, or <code>null</code> if a matching kaleo task assignment instance could not be found
-	 */
-	public static KaleoTaskAssignmentInstance fetchByAssigneeClassName_Last(
-		String assigneeClassName,
-		OrderByComparator<KaleoTaskAssignmentInstance> orderByComparator) {
-
-		return getPersistence().fetchByAssigneeClassName_Last(
-			assigneeClassName, orderByComparator);
-	}
-
-	/**
-	 * Returns the kaleo task assignment instances before and after the current kaleo task assignment instance in the ordered set where assigneeClassName = &#63;.
-	 *
-	 * @param kaleoTaskAssignmentInstanceId the primary key of the current kaleo task assignment instance
-	 * @param assigneeClassName the assignee class name
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next kaleo task assignment instance
-	 * @throws NoSuchTaskAssignmentInstanceException if a kaleo task assignment instance with the primary key could not be found
-	 */
-	public static KaleoTaskAssignmentInstance[]
-			findByAssigneeClassName_PrevAndNext(
-				long kaleoTaskAssignmentInstanceId, String assigneeClassName,
-				OrderByComparator<KaleoTaskAssignmentInstance>
-					orderByComparator)
-		throws com.liferay.portal.workflow.kaleo.exception.
-			NoSuchTaskAssignmentInstanceException {
-
-		return getPersistence().findByAssigneeClassName_PrevAndNext(
-			kaleoTaskAssignmentInstanceId, assigneeClassName,
-			orderByComparator);
-	}
-
-	/**
 	 * Removes all the kaleo task assignment instances where assigneeClassName = &#63; from the database.
 	 *
 	 * @param assigneeClassName the assignee class name
@@ -1058,65 +532,10 @@ public class KaleoTaskAssignmentInstanceUtil {
 	}
 
 	/**
-	 * Returns all the kaleo task assignment instances where groupId = &#63; and assigneeClassPK = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param assigneeClassPK the assignee class pk
-	 * @return the matching kaleo task assignment instances
-	 */
-	public static List<KaleoTaskAssignmentInstance> findByG_ACPK(
-		long groupId, long assigneeClassPK) {
-
-		return getPersistence().findByG_ACPK(groupId, assigneeClassPK);
-	}
-
-	/**
-	 * Returns a range of all the kaleo task assignment instances where groupId = &#63; and assigneeClassPK = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>KaleoTaskAssignmentInstanceModelImpl</code>.
-	 * </p>
-	 *
-	 * @param groupId the group ID
-	 * @param assigneeClassPK the assignee class pk
-	 * @param start the lower bound of the range of kaleo task assignment instances
-	 * @param end the upper bound of the range of kaleo task assignment instances (not inclusive)
-	 * @return the range of matching kaleo task assignment instances
-	 */
-	public static List<KaleoTaskAssignmentInstance> findByG_ACPK(
-		long groupId, long assigneeClassPK, int start, int end) {
-
-		return getPersistence().findByG_ACPK(
-			groupId, assigneeClassPK, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the kaleo task assignment instances where groupId = &#63; and assigneeClassPK = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>KaleoTaskAssignmentInstanceModelImpl</code>.
-	 * </p>
-	 *
-	 * @param groupId the group ID
-	 * @param assigneeClassPK the assignee class pk
-	 * @param start the lower bound of the range of kaleo task assignment instances
-	 * @param end the upper bound of the range of kaleo task assignment instances (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching kaleo task assignment instances
-	 */
-	public static List<KaleoTaskAssignmentInstance> findByG_ACPK(
-		long groupId, long assigneeClassPK, int start, int end,
-		OrderByComparator<KaleoTaskAssignmentInstance> orderByComparator) {
-
-		return getPersistence().findByG_ACPK(
-			groupId, assigneeClassPK, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the kaleo task assignment instances where groupId = &#63; and assigneeClassPK = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>KaleoTaskAssignmentInstanceModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.workflow.kaleo.model.impl.KaleoTaskAssignmentInstanceModelImpl</code>.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -1173,63 +592,6 @@ public class KaleoTaskAssignmentInstanceUtil {
 	}
 
 	/**
-	 * Returns the last kaleo task assignment instance in the ordered set where groupId = &#63; and assigneeClassPK = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param assigneeClassPK the assignee class pk
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching kaleo task assignment instance
-	 * @throws NoSuchTaskAssignmentInstanceException if a matching kaleo task assignment instance could not be found
-	 */
-	public static KaleoTaskAssignmentInstance findByG_ACPK_Last(
-			long groupId, long assigneeClassPK,
-			OrderByComparator<KaleoTaskAssignmentInstance> orderByComparator)
-		throws com.liferay.portal.workflow.kaleo.exception.
-			NoSuchTaskAssignmentInstanceException {
-
-		return getPersistence().findByG_ACPK_Last(
-			groupId, assigneeClassPK, orderByComparator);
-	}
-
-	/**
-	 * Returns the last kaleo task assignment instance in the ordered set where groupId = &#63; and assigneeClassPK = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param assigneeClassPK the assignee class pk
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching kaleo task assignment instance, or <code>null</code> if a matching kaleo task assignment instance could not be found
-	 */
-	public static KaleoTaskAssignmentInstance fetchByG_ACPK_Last(
-		long groupId, long assigneeClassPK,
-		OrderByComparator<KaleoTaskAssignmentInstance> orderByComparator) {
-
-		return getPersistence().fetchByG_ACPK_Last(
-			groupId, assigneeClassPK, orderByComparator);
-	}
-
-	/**
-	 * Returns the kaleo task assignment instances before and after the current kaleo task assignment instance in the ordered set where groupId = &#63; and assigneeClassPK = &#63;.
-	 *
-	 * @param kaleoTaskAssignmentInstanceId the primary key of the current kaleo task assignment instance
-	 * @param groupId the group ID
-	 * @param assigneeClassPK the assignee class pk
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next kaleo task assignment instance
-	 * @throws NoSuchTaskAssignmentInstanceException if a kaleo task assignment instance with the primary key could not be found
-	 */
-	public static KaleoTaskAssignmentInstance[] findByG_ACPK_PrevAndNext(
-			long kaleoTaskAssignmentInstanceId, long groupId,
-			long assigneeClassPK,
-			OrderByComparator<KaleoTaskAssignmentInstance> orderByComparator)
-		throws com.liferay.portal.workflow.kaleo.exception.
-			NoSuchTaskAssignmentInstanceException {
-
-		return getPersistence().findByG_ACPK_PrevAndNext(
-			kaleoTaskAssignmentInstanceId, groupId, assigneeClassPK,
-			orderByComparator);
-	}
-
-	/**
 	 * Removes all the kaleo task assignment instances where groupId = &#63; and assigneeClassPK = &#63; from the database.
 	 *
 	 * @param groupId the group ID
@@ -1251,69 +613,10 @@ public class KaleoTaskAssignmentInstanceUtil {
 	}
 
 	/**
-	 * Returns all the kaleo task assignment instances where kaleoTaskInstanceTokenId = &#63; and assigneeClassName = &#63;.
-	 *
-	 * @param kaleoTaskInstanceTokenId the kaleo task instance token ID
-	 * @param assigneeClassName the assignee class name
-	 * @return the matching kaleo task assignment instances
-	 */
-	public static List<KaleoTaskAssignmentInstance> findByKTITI_ACN(
-		long kaleoTaskInstanceTokenId, String assigneeClassName) {
-
-		return getPersistence().findByKTITI_ACN(
-			kaleoTaskInstanceTokenId, assigneeClassName);
-	}
-
-	/**
-	 * Returns a range of all the kaleo task assignment instances where kaleoTaskInstanceTokenId = &#63; and assigneeClassName = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>KaleoTaskAssignmentInstanceModelImpl</code>.
-	 * </p>
-	 *
-	 * @param kaleoTaskInstanceTokenId the kaleo task instance token ID
-	 * @param assigneeClassName the assignee class name
-	 * @param start the lower bound of the range of kaleo task assignment instances
-	 * @param end the upper bound of the range of kaleo task assignment instances (not inclusive)
-	 * @return the range of matching kaleo task assignment instances
-	 */
-	public static List<KaleoTaskAssignmentInstance> findByKTITI_ACN(
-		long kaleoTaskInstanceTokenId, String assigneeClassName, int start,
-		int end) {
-
-		return getPersistence().findByKTITI_ACN(
-			kaleoTaskInstanceTokenId, assigneeClassName, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the kaleo task assignment instances where kaleoTaskInstanceTokenId = &#63; and assigneeClassName = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>KaleoTaskAssignmentInstanceModelImpl</code>.
-	 * </p>
-	 *
-	 * @param kaleoTaskInstanceTokenId the kaleo task instance token ID
-	 * @param assigneeClassName the assignee class name
-	 * @param start the lower bound of the range of kaleo task assignment instances
-	 * @param end the upper bound of the range of kaleo task assignment instances (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching kaleo task assignment instances
-	 */
-	public static List<KaleoTaskAssignmentInstance> findByKTITI_ACN(
-		long kaleoTaskInstanceTokenId, String assigneeClassName, int start,
-		int end,
-		OrderByComparator<KaleoTaskAssignmentInstance> orderByComparator) {
-
-		return getPersistence().findByKTITI_ACN(
-			kaleoTaskInstanceTokenId, assigneeClassName, start, end,
-			orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the kaleo task assignment instances where kaleoTaskInstanceTokenId = &#63; and assigneeClassName = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>KaleoTaskAssignmentInstanceModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.workflow.kaleo.model.impl.KaleoTaskAssignmentInstanceModelImpl</code>.
 	 * </p>
 	 *
 	 * @param kaleoTaskInstanceTokenId the kaleo task instance token ID
@@ -1371,63 +674,6 @@ public class KaleoTaskAssignmentInstanceUtil {
 	}
 
 	/**
-	 * Returns the last kaleo task assignment instance in the ordered set where kaleoTaskInstanceTokenId = &#63; and assigneeClassName = &#63;.
-	 *
-	 * @param kaleoTaskInstanceTokenId the kaleo task instance token ID
-	 * @param assigneeClassName the assignee class name
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching kaleo task assignment instance
-	 * @throws NoSuchTaskAssignmentInstanceException if a matching kaleo task assignment instance could not be found
-	 */
-	public static KaleoTaskAssignmentInstance findByKTITI_ACN_Last(
-			long kaleoTaskInstanceTokenId, String assigneeClassName,
-			OrderByComparator<KaleoTaskAssignmentInstance> orderByComparator)
-		throws com.liferay.portal.workflow.kaleo.exception.
-			NoSuchTaskAssignmentInstanceException {
-
-		return getPersistence().findByKTITI_ACN_Last(
-			kaleoTaskInstanceTokenId, assigneeClassName, orderByComparator);
-	}
-
-	/**
-	 * Returns the last kaleo task assignment instance in the ordered set where kaleoTaskInstanceTokenId = &#63; and assigneeClassName = &#63;.
-	 *
-	 * @param kaleoTaskInstanceTokenId the kaleo task instance token ID
-	 * @param assigneeClassName the assignee class name
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching kaleo task assignment instance, or <code>null</code> if a matching kaleo task assignment instance could not be found
-	 */
-	public static KaleoTaskAssignmentInstance fetchByKTITI_ACN_Last(
-		long kaleoTaskInstanceTokenId, String assigneeClassName,
-		OrderByComparator<KaleoTaskAssignmentInstance> orderByComparator) {
-
-		return getPersistence().fetchByKTITI_ACN_Last(
-			kaleoTaskInstanceTokenId, assigneeClassName, orderByComparator);
-	}
-
-	/**
-	 * Returns the kaleo task assignment instances before and after the current kaleo task assignment instance in the ordered set where kaleoTaskInstanceTokenId = &#63; and assigneeClassName = &#63;.
-	 *
-	 * @param kaleoTaskAssignmentInstanceId the primary key of the current kaleo task assignment instance
-	 * @param kaleoTaskInstanceTokenId the kaleo task instance token ID
-	 * @param assigneeClassName the assignee class name
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next kaleo task assignment instance
-	 * @throws NoSuchTaskAssignmentInstanceException if a kaleo task assignment instance with the primary key could not be found
-	 */
-	public static KaleoTaskAssignmentInstance[] findByKTITI_ACN_PrevAndNext(
-			long kaleoTaskAssignmentInstanceId, long kaleoTaskInstanceTokenId,
-			String assigneeClassName,
-			OrderByComparator<KaleoTaskAssignmentInstance> orderByComparator)
-		throws com.liferay.portal.workflow.kaleo.exception.
-			NoSuchTaskAssignmentInstanceException {
-
-		return getPersistence().findByKTITI_ACN_PrevAndNext(
-			kaleoTaskAssignmentInstanceId, kaleoTaskInstanceTokenId,
-			assigneeClassName, orderByComparator);
-	}
-
-	/**
 	 * Removes all the kaleo task assignment instances where kaleoTaskInstanceTokenId = &#63; and assigneeClassName = &#63; from the database.
 	 *
 	 * @param kaleoTaskInstanceTokenId the kaleo task instance token ID
@@ -1455,66 +701,10 @@ public class KaleoTaskAssignmentInstanceUtil {
 	}
 
 	/**
-	 * Returns all the kaleo task assignment instances where assigneeClassName = &#63; and assigneeClassPK = &#63;.
-	 *
-	 * @param assigneeClassName the assignee class name
-	 * @param assigneeClassPK the assignee class pk
-	 * @return the matching kaleo task assignment instances
-	 */
-	public static List<KaleoTaskAssignmentInstance> findByACN_ACPK(
-		String assigneeClassName, long assigneeClassPK) {
-
-		return getPersistence().findByACN_ACPK(
-			assigneeClassName, assigneeClassPK);
-	}
-
-	/**
-	 * Returns a range of all the kaleo task assignment instances where assigneeClassName = &#63; and assigneeClassPK = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>KaleoTaskAssignmentInstanceModelImpl</code>.
-	 * </p>
-	 *
-	 * @param assigneeClassName the assignee class name
-	 * @param assigneeClassPK the assignee class pk
-	 * @param start the lower bound of the range of kaleo task assignment instances
-	 * @param end the upper bound of the range of kaleo task assignment instances (not inclusive)
-	 * @return the range of matching kaleo task assignment instances
-	 */
-	public static List<KaleoTaskAssignmentInstance> findByACN_ACPK(
-		String assigneeClassName, long assigneeClassPK, int start, int end) {
-
-		return getPersistence().findByACN_ACPK(
-			assigneeClassName, assigneeClassPK, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the kaleo task assignment instances where assigneeClassName = &#63; and assigneeClassPK = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>KaleoTaskAssignmentInstanceModelImpl</code>.
-	 * </p>
-	 *
-	 * @param assigneeClassName the assignee class name
-	 * @param assigneeClassPK the assignee class pk
-	 * @param start the lower bound of the range of kaleo task assignment instances
-	 * @param end the upper bound of the range of kaleo task assignment instances (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching kaleo task assignment instances
-	 */
-	public static List<KaleoTaskAssignmentInstance> findByACN_ACPK(
-		String assigneeClassName, long assigneeClassPK, int start, int end,
-		OrderByComparator<KaleoTaskAssignmentInstance> orderByComparator) {
-
-		return getPersistence().findByACN_ACPK(
-			assigneeClassName, assigneeClassPK, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the kaleo task assignment instances where assigneeClassName = &#63; and assigneeClassPK = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>KaleoTaskAssignmentInstanceModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.workflow.kaleo.model.impl.KaleoTaskAssignmentInstanceModelImpl</code>.
 	 * </p>
 	 *
 	 * @param assigneeClassName the assignee class name
@@ -1571,63 +761,6 @@ public class KaleoTaskAssignmentInstanceUtil {
 	}
 
 	/**
-	 * Returns the last kaleo task assignment instance in the ordered set where assigneeClassName = &#63; and assigneeClassPK = &#63;.
-	 *
-	 * @param assigneeClassName the assignee class name
-	 * @param assigneeClassPK the assignee class pk
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching kaleo task assignment instance
-	 * @throws NoSuchTaskAssignmentInstanceException if a matching kaleo task assignment instance could not be found
-	 */
-	public static KaleoTaskAssignmentInstance findByACN_ACPK_Last(
-			String assigneeClassName, long assigneeClassPK,
-			OrderByComparator<KaleoTaskAssignmentInstance> orderByComparator)
-		throws com.liferay.portal.workflow.kaleo.exception.
-			NoSuchTaskAssignmentInstanceException {
-
-		return getPersistence().findByACN_ACPK_Last(
-			assigneeClassName, assigneeClassPK, orderByComparator);
-	}
-
-	/**
-	 * Returns the last kaleo task assignment instance in the ordered set where assigneeClassName = &#63; and assigneeClassPK = &#63;.
-	 *
-	 * @param assigneeClassName the assignee class name
-	 * @param assigneeClassPK the assignee class pk
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching kaleo task assignment instance, or <code>null</code> if a matching kaleo task assignment instance could not be found
-	 */
-	public static KaleoTaskAssignmentInstance fetchByACN_ACPK_Last(
-		String assigneeClassName, long assigneeClassPK,
-		OrderByComparator<KaleoTaskAssignmentInstance> orderByComparator) {
-
-		return getPersistence().fetchByACN_ACPK_Last(
-			assigneeClassName, assigneeClassPK, orderByComparator);
-	}
-
-	/**
-	 * Returns the kaleo task assignment instances before and after the current kaleo task assignment instance in the ordered set where assigneeClassName = &#63; and assigneeClassPK = &#63;.
-	 *
-	 * @param kaleoTaskAssignmentInstanceId the primary key of the current kaleo task assignment instance
-	 * @param assigneeClassName the assignee class name
-	 * @param assigneeClassPK the assignee class pk
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next kaleo task assignment instance
-	 * @throws NoSuchTaskAssignmentInstanceException if a kaleo task assignment instance with the primary key could not be found
-	 */
-	public static KaleoTaskAssignmentInstance[] findByACN_ACPK_PrevAndNext(
-			long kaleoTaskAssignmentInstanceId, String assigneeClassName,
-			long assigneeClassPK,
-			OrderByComparator<KaleoTaskAssignmentInstance> orderByComparator)
-		throws com.liferay.portal.workflow.kaleo.exception.
-			NoSuchTaskAssignmentInstanceException {
-
-		return getPersistence().findByACN_ACPK_PrevAndNext(
-			kaleoTaskAssignmentInstanceId, assigneeClassName, assigneeClassPK,
-			orderByComparator);
-	}
-
-	/**
 	 * Removes all the kaleo task assignment instances where assigneeClassName = &#63; and assigneeClassPK = &#63; from the database.
 	 *
 	 * @param assigneeClassName the assignee class name
@@ -1651,28 +784,6 @@ public class KaleoTaskAssignmentInstanceUtil {
 
 		return getPersistence().countByACN_ACPK(
 			assigneeClassName, assigneeClassPK);
-	}
-
-	/**
-	 * Caches the kaleo task assignment instance in the entity cache if it is enabled.
-	 *
-	 * @param kaleoTaskAssignmentInstance the kaleo task assignment instance
-	 */
-	public static void cacheResult(
-		KaleoTaskAssignmentInstance kaleoTaskAssignmentInstance) {
-
-		getPersistence().cacheResult(kaleoTaskAssignmentInstance);
-	}
-
-	/**
-	 * Caches the kaleo task assignment instances in the entity cache if it is enabled.
-	 *
-	 * @param kaleoTaskAssignmentInstances the kaleo task assignment instances
-	 */
-	public static void cacheResult(
-		List<KaleoTaskAssignmentInstance> kaleoTaskAssignmentInstances) {
-
-		getPersistence().cacheResult(kaleoTaskAssignmentInstances);
 	}
 
 	/**
@@ -1737,86 +848,438 @@ public class KaleoTaskAssignmentInstanceUtil {
 	}
 
 	/**
-	 * Returns all the kaleo task assignment instances.
+	 * Returns all the kaleo task assignment instances where companyId = &#63;.
 	 *
-	 * @return the kaleo task assignment instances
+	 * @param companyId the company ID
+	 * @return the matching kaleo task assignment instances
 	 */
-	public static List<KaleoTaskAssignmentInstance> findAll() {
-		return getPersistence().findAll();
+	public static List<KaleoTaskAssignmentInstance> findByCompanyId(
+		long companyId) {
+
+		return getPersistence().findByCompanyId(companyId);
 	}
 
 	/**
-	 * Returns a range of all the kaleo task assignment instances.
+	 * Returns a range of all the kaleo task assignment instances where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>KaleoTaskAssignmentInstanceModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.workflow.kaleo.model.impl.KaleoTaskAssignmentInstanceModelImpl</code>.
 	 * </p>
 	 *
+	 * @param companyId the company ID
 	 * @param start the lower bound of the range of kaleo task assignment instances
 	 * @param end the upper bound of the range of kaleo task assignment instances (not inclusive)
-	 * @return the range of kaleo task assignment instances
+	 * @return the range of matching kaleo task assignment instances
 	 */
-	public static List<KaleoTaskAssignmentInstance> findAll(
-		int start, int end) {
+	public static List<KaleoTaskAssignmentInstance> findByCompanyId(
+		long companyId, int start, int end) {
 
-		return getPersistence().findAll(start, end);
+		return getPersistence().findByCompanyId(companyId, start, end);
 	}
 
 	/**
-	 * Returns an ordered range of all the kaleo task assignment instances.
+	 * Returns an ordered range of all the kaleo task assignment instances where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>KaleoTaskAssignmentInstanceModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.workflow.kaleo.model.impl.KaleoTaskAssignmentInstanceModelImpl</code>.
 	 * </p>
 	 *
+	 * @param companyId the company ID
 	 * @param start the lower bound of the range of kaleo task assignment instances
 	 * @param end the upper bound of the range of kaleo task assignment instances (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of kaleo task assignment instances
+	 * @return the ordered range of matching kaleo task assignment instances
 	 */
-	public static List<KaleoTaskAssignmentInstance> findAll(
-		int start, int end,
+	public static List<KaleoTaskAssignmentInstance> findByCompanyId(
+		long companyId, int start, int end,
 		OrderByComparator<KaleoTaskAssignmentInstance> orderByComparator) {
 
-		return getPersistence().findAll(start, end, orderByComparator);
+		return getPersistence().findByCompanyId(
+			companyId, start, end, orderByComparator);
 	}
 
 	/**
-	 * Returns an ordered range of all the kaleo task assignment instances.
+	 * Returns all the kaleo task assignment instances where kaleoDefinitionVersionId = &#63;.
+	 *
+	 * @param kaleoDefinitionVersionId the kaleo definition version ID
+	 * @return the matching kaleo task assignment instances
+	 */
+	public static List<KaleoTaskAssignmentInstance>
+		findByKaleoDefinitionVersionId(long kaleoDefinitionVersionId) {
+
+		return getPersistence().findByKaleoDefinitionVersionId(
+			kaleoDefinitionVersionId);
+	}
+
+	/**
+	 * Returns a range of all the kaleo task assignment instances where kaleoDefinitionVersionId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>KaleoTaskAssignmentInstanceModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.workflow.kaleo.model.impl.KaleoTaskAssignmentInstanceModelImpl</code>.
 	 * </p>
 	 *
+	 * @param kaleoDefinitionVersionId the kaleo definition version ID
+	 * @param start the lower bound of the range of kaleo task assignment instances
+	 * @param end the upper bound of the range of kaleo task assignment instances (not inclusive)
+	 * @return the range of matching kaleo task assignment instances
+	 */
+	public static List<KaleoTaskAssignmentInstance>
+		findByKaleoDefinitionVersionId(
+			long kaleoDefinitionVersionId, int start, int end) {
+
+		return getPersistence().findByKaleoDefinitionVersionId(
+			kaleoDefinitionVersionId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the kaleo task assignment instances where kaleoDefinitionVersionId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.workflow.kaleo.model.impl.KaleoTaskAssignmentInstanceModelImpl</code>.
+	 * </p>
+	 *
+	 * @param kaleoDefinitionVersionId the kaleo definition version ID
 	 * @param start the lower bound of the range of kaleo task assignment instances
 	 * @param end the upper bound of the range of kaleo task assignment instances (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param useFinderCache whether to use the finder cache
-	 * @return the ordered range of kaleo task assignment instances
+	 * @return the ordered range of matching kaleo task assignment instances
 	 */
-	public static List<KaleoTaskAssignmentInstance> findAll(
-		int start, int end,
-		OrderByComparator<KaleoTaskAssignmentInstance> orderByComparator,
-		boolean useFinderCache) {
+	public static List<KaleoTaskAssignmentInstance>
+		findByKaleoDefinitionVersionId(
+			long kaleoDefinitionVersionId, int start, int end,
+			OrderByComparator<KaleoTaskAssignmentInstance> orderByComparator) {
 
-		return getPersistence().findAll(
-			start, end, orderByComparator, useFinderCache);
+		return getPersistence().findByKaleoDefinitionVersionId(
+			kaleoDefinitionVersionId, start, end, orderByComparator);
 	}
 
 	/**
-	 * Removes all the kaleo task assignment instances from the database.
-	 */
-	public static void removeAll() {
-		getPersistence().removeAll();
-	}
-
-	/**
-	 * Returns the number of kaleo task assignment instances.
+	 * Returns all the kaleo task assignment instances where kaleoInstanceId = &#63;.
 	 *
-	 * @return the number of kaleo task assignment instances
+	 * @param kaleoInstanceId the kaleo instance ID
+	 * @return the matching kaleo task assignment instances
 	 */
-	public static int countAll() {
-		return getPersistence().countAll();
+	public static List<KaleoTaskAssignmentInstance> findByKaleoInstanceId(
+		long kaleoInstanceId) {
+
+		return getPersistence().findByKaleoInstanceId(kaleoInstanceId);
+	}
+
+	/**
+	 * Returns a range of all the kaleo task assignment instances where kaleoInstanceId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.workflow.kaleo.model.impl.KaleoTaskAssignmentInstanceModelImpl</code>.
+	 * </p>
+	 *
+	 * @param kaleoInstanceId the kaleo instance ID
+	 * @param start the lower bound of the range of kaleo task assignment instances
+	 * @param end the upper bound of the range of kaleo task assignment instances (not inclusive)
+	 * @return the range of matching kaleo task assignment instances
+	 */
+	public static List<KaleoTaskAssignmentInstance> findByKaleoInstanceId(
+		long kaleoInstanceId, int start, int end) {
+
+		return getPersistence().findByKaleoInstanceId(
+			kaleoInstanceId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the kaleo task assignment instances where kaleoInstanceId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.workflow.kaleo.model.impl.KaleoTaskAssignmentInstanceModelImpl</code>.
+	 * </p>
+	 *
+	 * @param kaleoInstanceId the kaleo instance ID
+	 * @param start the lower bound of the range of kaleo task assignment instances
+	 * @param end the upper bound of the range of kaleo task assignment instances (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching kaleo task assignment instances
+	 */
+	public static List<KaleoTaskAssignmentInstance> findByKaleoInstanceId(
+		long kaleoInstanceId, int start, int end,
+		OrderByComparator<KaleoTaskAssignmentInstance> orderByComparator) {
+
+		return getPersistence().findByKaleoInstanceId(
+			kaleoInstanceId, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns all the kaleo task assignment instances where kaleoTaskInstanceTokenId = &#63;.
+	 *
+	 * @param kaleoTaskInstanceTokenId the kaleo task instance token ID
+	 * @return the matching kaleo task assignment instances
+	 */
+	public static List<KaleoTaskAssignmentInstance>
+		findByKaleoTaskInstanceTokenId(long kaleoTaskInstanceTokenId) {
+
+		return getPersistence().findByKaleoTaskInstanceTokenId(
+			kaleoTaskInstanceTokenId);
+	}
+
+	/**
+	 * Returns a range of all the kaleo task assignment instances where kaleoTaskInstanceTokenId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.workflow.kaleo.model.impl.KaleoTaskAssignmentInstanceModelImpl</code>.
+	 * </p>
+	 *
+	 * @param kaleoTaskInstanceTokenId the kaleo task instance token ID
+	 * @param start the lower bound of the range of kaleo task assignment instances
+	 * @param end the upper bound of the range of kaleo task assignment instances (not inclusive)
+	 * @return the range of matching kaleo task assignment instances
+	 */
+	public static List<KaleoTaskAssignmentInstance>
+		findByKaleoTaskInstanceTokenId(
+			long kaleoTaskInstanceTokenId, int start, int end) {
+
+		return getPersistence().findByKaleoTaskInstanceTokenId(
+			kaleoTaskInstanceTokenId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the kaleo task assignment instances where kaleoTaskInstanceTokenId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.workflow.kaleo.model.impl.KaleoTaskAssignmentInstanceModelImpl</code>.
+	 * </p>
+	 *
+	 * @param kaleoTaskInstanceTokenId the kaleo task instance token ID
+	 * @param start the lower bound of the range of kaleo task assignment instances
+	 * @param end the upper bound of the range of kaleo task assignment instances (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching kaleo task assignment instances
+	 */
+	public static List<KaleoTaskAssignmentInstance>
+		findByKaleoTaskInstanceTokenId(
+			long kaleoTaskInstanceTokenId, int start, int end,
+			OrderByComparator<KaleoTaskAssignmentInstance> orderByComparator) {
+
+		return getPersistence().findByKaleoTaskInstanceTokenId(
+			kaleoTaskInstanceTokenId, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns all the kaleo task assignment instances where assigneeClassName = &#63;.
+	 *
+	 * @param assigneeClassName the assignee class name
+	 * @return the matching kaleo task assignment instances
+	 */
+	public static List<KaleoTaskAssignmentInstance> findByAssigneeClassName(
+		String assigneeClassName) {
+
+		return getPersistence().findByAssigneeClassName(assigneeClassName);
+	}
+
+	/**
+	 * Returns a range of all the kaleo task assignment instances where assigneeClassName = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.workflow.kaleo.model.impl.KaleoTaskAssignmentInstanceModelImpl</code>.
+	 * </p>
+	 *
+	 * @param assigneeClassName the assignee class name
+	 * @param start the lower bound of the range of kaleo task assignment instances
+	 * @param end the upper bound of the range of kaleo task assignment instances (not inclusive)
+	 * @return the range of matching kaleo task assignment instances
+	 */
+	public static List<KaleoTaskAssignmentInstance> findByAssigneeClassName(
+		String assigneeClassName, int start, int end) {
+
+		return getPersistence().findByAssigneeClassName(
+			assigneeClassName, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the kaleo task assignment instances where assigneeClassName = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.workflow.kaleo.model.impl.KaleoTaskAssignmentInstanceModelImpl</code>.
+	 * </p>
+	 *
+	 * @param assigneeClassName the assignee class name
+	 * @param start the lower bound of the range of kaleo task assignment instances
+	 * @param end the upper bound of the range of kaleo task assignment instances (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching kaleo task assignment instances
+	 */
+	public static List<KaleoTaskAssignmentInstance> findByAssigneeClassName(
+		String assigneeClassName, int start, int end,
+		OrderByComparator<KaleoTaskAssignmentInstance> orderByComparator) {
+
+		return getPersistence().findByAssigneeClassName(
+			assigneeClassName, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns all the kaleo task assignment instances where groupId = &#63; and assigneeClassPK = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param assigneeClassPK the assignee class pk
+	 * @return the matching kaleo task assignment instances
+	 */
+	public static List<KaleoTaskAssignmentInstance> findByG_ACPK(
+		long groupId, long assigneeClassPK) {
+
+		return getPersistence().findByG_ACPK(groupId, assigneeClassPK);
+	}
+
+	/**
+	 * Returns a range of all the kaleo task assignment instances where groupId = &#63; and assigneeClassPK = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.workflow.kaleo.model.impl.KaleoTaskAssignmentInstanceModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param assigneeClassPK the assignee class pk
+	 * @param start the lower bound of the range of kaleo task assignment instances
+	 * @param end the upper bound of the range of kaleo task assignment instances (not inclusive)
+	 * @return the range of matching kaleo task assignment instances
+	 */
+	public static List<KaleoTaskAssignmentInstance> findByG_ACPK(
+		long groupId, long assigneeClassPK, int start, int end) {
+
+		return getPersistence().findByG_ACPK(
+			groupId, assigneeClassPK, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the kaleo task assignment instances where groupId = &#63; and assigneeClassPK = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.workflow.kaleo.model.impl.KaleoTaskAssignmentInstanceModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param assigneeClassPK the assignee class pk
+	 * @param start the lower bound of the range of kaleo task assignment instances
+	 * @param end the upper bound of the range of kaleo task assignment instances (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching kaleo task assignment instances
+	 */
+	public static List<KaleoTaskAssignmentInstance> findByG_ACPK(
+		long groupId, long assigneeClassPK, int start, int end,
+		OrderByComparator<KaleoTaskAssignmentInstance> orderByComparator) {
+
+		return getPersistence().findByG_ACPK(
+			groupId, assigneeClassPK, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns all the kaleo task assignment instances where kaleoTaskInstanceTokenId = &#63; and assigneeClassName = &#63;.
+	 *
+	 * @param kaleoTaskInstanceTokenId the kaleo task instance token ID
+	 * @param assigneeClassName the assignee class name
+	 * @return the matching kaleo task assignment instances
+	 */
+	public static List<KaleoTaskAssignmentInstance> findByKTITI_ACN(
+		long kaleoTaskInstanceTokenId, String assigneeClassName) {
+
+		return getPersistence().findByKTITI_ACN(
+			kaleoTaskInstanceTokenId, assigneeClassName);
+	}
+
+	/**
+	 * Returns a range of all the kaleo task assignment instances where kaleoTaskInstanceTokenId = &#63; and assigneeClassName = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.workflow.kaleo.model.impl.KaleoTaskAssignmentInstanceModelImpl</code>.
+	 * </p>
+	 *
+	 * @param kaleoTaskInstanceTokenId the kaleo task instance token ID
+	 * @param assigneeClassName the assignee class name
+	 * @param start the lower bound of the range of kaleo task assignment instances
+	 * @param end the upper bound of the range of kaleo task assignment instances (not inclusive)
+	 * @return the range of matching kaleo task assignment instances
+	 */
+	public static List<KaleoTaskAssignmentInstance> findByKTITI_ACN(
+		long kaleoTaskInstanceTokenId, String assigneeClassName, int start,
+		int end) {
+
+		return getPersistence().findByKTITI_ACN(
+			kaleoTaskInstanceTokenId, assigneeClassName, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the kaleo task assignment instances where kaleoTaskInstanceTokenId = &#63; and assigneeClassName = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.workflow.kaleo.model.impl.KaleoTaskAssignmentInstanceModelImpl</code>.
+	 * </p>
+	 *
+	 * @param kaleoTaskInstanceTokenId the kaleo task instance token ID
+	 * @param assigneeClassName the assignee class name
+	 * @param start the lower bound of the range of kaleo task assignment instances
+	 * @param end the upper bound of the range of kaleo task assignment instances (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching kaleo task assignment instances
+	 */
+	public static List<KaleoTaskAssignmentInstance> findByKTITI_ACN(
+		long kaleoTaskInstanceTokenId, String assigneeClassName, int start,
+		int end,
+		OrderByComparator<KaleoTaskAssignmentInstance> orderByComparator) {
+
+		return getPersistence().findByKTITI_ACN(
+			kaleoTaskInstanceTokenId, assigneeClassName, start, end,
+			orderByComparator);
+	}
+
+	/**
+	 * Returns all the kaleo task assignment instances where assigneeClassName = &#63; and assigneeClassPK = &#63;.
+	 *
+	 * @param assigneeClassName the assignee class name
+	 * @param assigneeClassPK the assignee class pk
+	 * @return the matching kaleo task assignment instances
+	 */
+	public static List<KaleoTaskAssignmentInstance> findByACN_ACPK(
+		String assigneeClassName, long assigneeClassPK) {
+
+		return getPersistence().findByACN_ACPK(
+			assigneeClassName, assigneeClassPK);
+	}
+
+	/**
+	 * Returns a range of all the kaleo task assignment instances where assigneeClassName = &#63; and assigneeClassPK = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.workflow.kaleo.model.impl.KaleoTaskAssignmentInstanceModelImpl</code>.
+	 * </p>
+	 *
+	 * @param assigneeClassName the assignee class name
+	 * @param assigneeClassPK the assignee class pk
+	 * @param start the lower bound of the range of kaleo task assignment instances
+	 * @param end the upper bound of the range of kaleo task assignment instances (not inclusive)
+	 * @return the range of matching kaleo task assignment instances
+	 */
+	public static List<KaleoTaskAssignmentInstance> findByACN_ACPK(
+		String assigneeClassName, long assigneeClassPK, int start, int end) {
+
+		return getPersistence().findByACN_ACPK(
+			assigneeClassName, assigneeClassPK, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the kaleo task assignment instances where assigneeClassName = &#63; and assigneeClassPK = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.workflow.kaleo.model.impl.KaleoTaskAssignmentInstanceModelImpl</code>.
+	 * </p>
+	 *
+	 * @param assigneeClassName the assignee class name
+	 * @param assigneeClassPK the assignee class pk
+	 * @param start the lower bound of the range of kaleo task assignment instances
+	 * @param end the upper bound of the range of kaleo task assignment instances (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching kaleo task assignment instances
+	 */
+	public static List<KaleoTaskAssignmentInstance> findByACN_ACPK(
+		String assigneeClassName, long assigneeClassPK, int start, int end,
+		OrderByComparator<KaleoTaskAssignmentInstance> orderByComparator) {
+
+		return getPersistence().findByACN_ACPK(
+			assigneeClassName, assigneeClassPK, start, end, orderByComparator);
 	}
 
 	public static KaleoTaskAssignmentInstancePersistence getPersistence() {
@@ -1832,3 +1295,4 @@ public class KaleoTaskAssignmentInstanceUtil {
 	private static volatile KaleoTaskAssignmentInstancePersistence _persistence;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:196063290

@@ -6,6 +6,7 @@
 package com.liferay.frontend.js.web.internal.resource.handler;
 
 import com.liferay.frontend.js.web.internal.configuration.FrontendCachingConfiguration;
+import com.liferay.frontend.js.web.internal.util.FrontendJSWebUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.frontend.hashed.files.HashedFilesRegistry;
@@ -34,7 +35,30 @@ import org.springframework.mock.web.MockHttpServletRequest;
  */
 public abstract class BaseFrontendResourceRequestHandlerTestCase {
 
-	public void mockDeployedFile(
+	protected ConfigurationProvider mockConfigurationProvider(
+			Map<String, ?> configurationProperties)
+		throws Exception {
+
+		ConfigurationProvider configurationProvider = Mockito.mock(
+			ConfigurationProvider.class);
+
+		Class<?> aClass = getClass();
+
+		Mockito.when(
+			configurationProvider.getCompanyConfiguration(
+				FrontendCachingConfiguration.class, COMPANY_ID)
+		).thenReturn(
+			(FrontendCachingConfiguration)ProxyUtil.newProxyInstance(
+				aClass.getClassLoader(),
+				new Class<?>[] {FrontendCachingConfiguration.class},
+				(proxy, method, args) -> configurationProperties.get(
+					method.getName()))
+		);
+
+		return configurationProvider;
+	}
+
+	protected void mockDeployedFile(
 			HashedFilesRegistry hashedFilesRegistry, String uri, String content)
 		throws Exception {
 
@@ -42,13 +66,13 @@ public abstract class BaseFrontendResourceRequestHandlerTestCase {
 
 		if (HashedFilesUtil.containsHash(uri)) {
 			unhashedURI = HashedFilesUtil.removeHash(uri);
-		}
 
-		Mockito.when(
-			hashedFilesRegistry.getHashedFileURI(Mockito.eq(unhashedURI))
-		).thenReturn(
-			uri
-		);
+			Mockito.when(
+				hashedFilesRegistry.getHashedFileURI(Mockito.eq(unhashedURI))
+			).thenReturn(
+				uri
+			);
+		}
 
 		URL url = Mockito.mock(URL.class);
 
@@ -76,29 +100,6 @@ public abstract class BaseFrontendResourceRequestHandlerTestCase {
 		).thenReturn(
 			url
 		);
-	}
-
-	protected ConfigurationProvider mockConfigurationProvider(
-			Map<String, ?> configurationProperties)
-		throws Exception {
-
-		ConfigurationProvider configurationProvider = Mockito.mock(
-			ConfigurationProvider.class);
-
-		Class<?> aClass = getClass();
-
-		Mockito.when(
-			configurationProvider.getCompanyConfiguration(
-				FrontendCachingConfiguration.class, COMPANY_ID)
-		).thenReturn(
-			(FrontendCachingConfiguration)ProxyUtil.newProxyInstance(
-				aClass.getClassLoader(),
-				new Class<?>[] {FrontendCachingConfiguration.class},
-				(proxy, method, args) -> configurationProperties.get(
-					method.getName()))
-		);
-
-		return configurationProvider;
 	}
 
 	protected HttpServletRequest mockHttpServletRequest(
@@ -153,6 +154,10 @@ public abstract class BaseFrontendResourceRequestHandlerTestCase {
 		);
 
 		return portal;
+	}
+
+	protected void setUp() {
+		FrontendJSWebUtil.clearCache();
 	}
 
 	protected static final long COMPANY_ID = 100;

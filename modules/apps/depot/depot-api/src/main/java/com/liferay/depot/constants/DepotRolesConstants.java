@@ -23,4 +23,26 @@ public class DepotRolesConstants {
 
 	public static final String ASSET_LIBRARY_OWNER = "Asset Library Owner";
 
+	public static final String[] DEPOT_ROLE_NAMES = {
+		ASSET_LIBRARY_ADMINISTRATOR, ASSET_LIBRARY_CONNECTED_SITE_MEMBER,
+		ASSET_LIBRARY_CONTENT_REVIEWER, ASSET_LIBRARY_MEMBER,
+		ASSET_LIBRARY_OWNER
+	};
+
+	public static final String SUBTYPE_PROJECT = "project";
+
+	public static final String SUBTYPE_SPACE = "space";
+
+	public static String getSubtype(int depotType) {
+		if (depotType == DepotConstants.TYPE_PROJECT) {
+			return SUBTYPE_PROJECT;
+		}
+
+		if (depotType == DepotConstants.TYPE_SPACE) {
+			return SUBTYPE_SPACE;
+		}
+
+		return null;
+	}
+
 }

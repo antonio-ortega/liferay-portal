@@ -610,3 +610,4 @@ public class PriceSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1922713147

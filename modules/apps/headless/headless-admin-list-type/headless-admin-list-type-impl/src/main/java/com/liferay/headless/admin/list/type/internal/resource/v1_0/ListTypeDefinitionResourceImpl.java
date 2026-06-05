@@ -5,6 +5,7 @@
 
 package com.liferay.headless.admin.list.type.internal.resource.v1_0;
 
+import com.liferay.exportimport.constants.ExportImportConstants;
 import com.liferay.exportimport.vulcan.batch.engine.ExportImportVulcanBatchEngineTaskItemDelegate;
 import com.liferay.headless.admin.list.type.dto.v1_0.ListTypeDefinition;
 import com.liferay.headless.admin.list.type.dto.v1_0.ListTypeEntry;
@@ -21,7 +22,6 @@ import com.liferay.object.rest.dto.v1_0.util.CreatorUtil;
 import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.search.Field;
@@ -86,18 +86,27 @@ public class ListTypeDefinitionResourceImpl
 	}
 
 	@Override
-	public ExportImportDescriptor getExportImportDescriptor() {
-		return new ExportImportDescriptor() {
+	public ExportImportDescriptor
+		<com.liferay.list.type.model.ListTypeDefinition>
+			getExportImportDescriptor() {
+
+		return new ExportImportDescriptor<>() {
 
 			@Override
-			public String getLabelLanguageKey() {
-				return "list-type-definitions";
+			public String getKey() {
+				return ListTypeDefinitionResourceImpl.class.getName();
 			}
 
 			@Override
-			public String getModelClassName() {
-				return com.liferay.list.type.model.ListTypeDefinition.class.
-					getName();
+			public String getLabelLanguageKey() {
+				return "picklists";
+			}
+
+			@Override
+			public Class<com.liferay.list.type.model.ListTypeDefinition>
+				getModelClass() {
+
+				return com.liferay.list.type.model.ListTypeDefinition.class;
 			}
 
 			@Override
@@ -111,13 +120,13 @@ public class ListTypeDefinitionResourceImpl
 			}
 
 			@Override
-			public String getResourceClassName() {
-				return ListTypeDefinitionResourceImpl.class.getName();
+			public Scope getScope() {
+				return Scope.COMPANY;
 			}
 
 			@Override
-			public Scope getScope() {
-				return Scope.COMPANY;
+			public String getSectionKey() {
+				return ExportImportConstants.SECTION_KEY_CONTENT;
 			}
 
 		};
@@ -389,32 +398,21 @@ public class ListTypeDefinitionResourceImpl
 							return permissions.toArray(new Permission[0]);
 						}));
 				setStatus(
-					() -> {
-						if (!FeatureFlagManagerUtil.isEnabled(
-								serviceBuilderListTypeDefinition.getCompanyId(),
-								"LPD-35914")) {
-
-							return null;
-						}
-
-						return new Status() {
-							{
-								setCode(
-									serviceBuilderListTypeDefinition::
-										getStatus);
-								setLabel(
-									() -> WorkflowConstants.getStatusLabel(
+					() -> new Status() {
+						{
+							setCode(
+								serviceBuilderListTypeDefinition::getStatus);
+							setLabel(
+								() -> WorkflowConstants.getStatusLabel(
+									serviceBuilderListTypeDefinition.
+										getStatus()));
+							setLabel_i18n(
+								() -> LanguageUtil.get(
+									LanguageResources.getResourceBundle(locale),
+									WorkflowConstants.getStatusLabel(
 										serviceBuilderListTypeDefinition.
-											getStatus()));
-								setLabel_i18n(
-									() -> LanguageUtil.get(
-										LanguageResources.getResourceBundle(
-											locale),
-										WorkflowConstants.getStatusLabel(
-											serviceBuilderListTypeDefinition.
-												getStatus())));
-							}
-						};
+											getStatus())));
+						}
 					});
 				setSystem(serviceBuilderListTypeDefinition::isSystem);
 			}

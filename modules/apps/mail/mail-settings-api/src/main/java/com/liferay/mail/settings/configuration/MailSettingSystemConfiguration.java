@@ -60,4 +60,18 @@ public interface MailSettingSystemConfiguration {
 	)
 	public boolean throwsExceptionOnFailure();
 
+	@Meta.AD(
+		deflt = "2",
+		description = "mail-engine-workers-core-size-key-description",
+		name = "mail-engine-workers-core-size", required = false
+	)
+	public int workersCoreSize();
+
+	@Meta.AD(
+		deflt = "3",
+		description = "mail-engine-workers-max-size-key-description",
+		name = "mail-engine-workers-max-size", required = false
+	)
+	public int workersMaxSize();
+
 }

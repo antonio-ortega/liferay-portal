@@ -51,6 +51,8 @@
 				tofile="${local.cache.artifact}"
 			/>
 
+			<mkdir dir="${project.dir}/.gradle" />
+
 			<propertyfile file="${project.dir}/.gradle/gradle.properties">
 				<entry key="@{artifact.name}.version" value="@{artifact.version}" />
 			</propertyfile>
@@ -85,6 +87,7 @@
 					<get-database-property property.name="database.version.cmd" />
 				</then>
 			</if>
+
 			<action />
 		</sequential>
 	</macrodef>
@@ -330,6 +333,35 @@ mariadb.executable=${mariadb.executable}]]></echo>
 		</sequential>
 	</macrodef>
 
+	<macrodef name="deploy-and-execute-rest-builder-or-service-builder-ant-target">
+		<attribute name="ant.target.file" />
+		<attribute name="ant.target.name" />
+		<attribute name="rest.builder.or.service.builder" />
+		<attribute name="tooling.dir" />
+
+		<sequential>
+			<if>
+				<available file="@{tooling.dir}" />
+				<then>
+					<gradle-execute dir="@{tooling.dir}" task="deploy">
+						<arg value="clean" />
+					</gradle-execute>
+				</then>
+			</if>
+
+			<exec executable="git">
+				<arg value="add" />
+				<arg value="--all" />
+			</exec>
+
+			<execute-rest-builder-or-service-builder-ant-target
+				ant.target.file="@{ant.target.file}"
+				ant.target.name="@{ant.target.name}"
+				rest.builder.or.service.builder="@{rest.builder.or.service.builder}"
+			/>
+		</sequential>
+	</macrodef>
+
 	<macrodef name="deploy-release-dependency-modules-post-startup">
 		<sequential>
 			<get-release-dependency-modules
@@ -392,110 +424,6 @@ mariadb.executable=${mariadb.executable}]]></echo>
 					</if>
 				</then>
 			</if>
-		</sequential>
-	</macrodef>
-
-	<macrodef name="execute-ant-target-build-services">
-		<attribute name="ant.target.name" />
-		<attribute name="ant.target.file" />
-
-		<sequential>
-			<trycatch property="ant.target.failure">
-				<try>
-					<beanshell>
-						project.setProperty("ant.target.start.time", String.valueOf(System.currentTimeMillis()));
-					</beanshell>
-
-					<generate-backend-batch-junit-report-ant-target
-						ant.target.failure.count="1"
-						ant.target.file="@{ant.target.file}"
-						ant.target.name="@{ant.target.name}"
-						ant.target.start.time="${ant.target.start.time}"
-					/>
-
-					<local name="ant.target.dir" />
-					<local name="ant.target.file.name" />
-
-					<propertyregex
-						input="@{ant.target.file}"
-						override="true"
-						property="ant.target.dir"
-						regexp="(.+)/(.+.xml)"
-						replace="\1"
-					/>
-
-					<propertyregex
-						input="@{ant.target.file}"
-						override="true"
-						property="ant.target.file.name"
-						regexp="(.+)/(.+.xml)"
-						replace="\2"
-					/>
-
-					<record action="start" name="${project.dir}/execute.ant.target.log" />
-
-					<record-git-diffs-build-services>
-						<action>
-							<ant antfile="${ant.target.file.name}" dir="${ant.target.dir}" target="@{ant.target.name}" />
-						</action>
-					</record-git-diffs-build-services>
-
-					<generate-backend-batch-junit-report-ant-target
-						ant.target.failure.count="0"
-						ant.target.file="@{ant.target.file}"
-						ant.target.name="@{ant.target.name}"
-						ant.target.start.time="${ant.target.start.time}"
-					/>
-				</try>
-				<catch>
-					<record action="stop" name="${project.dir}/execute.ant.target.log" />
-
-					<local name="execute.ant.target.log" />
-
-					<loadfile
-						property="execute.ant.target.log"
-						srcfile="${project.dir}/execute.ant.target.log"
-					/>
-
-					<delete failonerror="false" file="${project.dir}/execute.ant.target.log" />
-
-					<get-console-log-failure-message console.log="${execute.ant.target.log}" />
-
-					<local name="ant.target.failure.stacktrace" />
-
-					<condition else="${ant.target.failure}" property="ant.target.failure.stacktrace" value="${console.log.failure.message}">
-						<isset property="console.log.failure.message" />
-					</condition>
-
-					<generate-backend-batch-junit-report-ant-target
-						ant.target.failure.count="1"
-						ant.target.failure.message="Detected build services compilation error. Please check the logs for details."
-						ant.target.failure.stacktrace="${ant.target.failure.stacktrace}"
-						ant.target.file="@{ant.target.file}"
-						ant.target.name="@{ant.target.name}"
-						ant.target.start.time="${ant.target.start.time}"
-					/>
-				</catch>
-				<finally>
-					<record action="stop" name="${project.dir}/execute.ant.target.log" />
-
-					<delete failonerror="false" file="${project.dir}/execute.ant.target.log" />
-
-					<if>
-						<isset property="git.diffs" />
-						<then>
-							<generate-backend-batch-junit-report-ant-target
-								ant.target.failure.count="1"
-								ant.target.failure.message="Detected build services changes. Please check the logs for details. Make sure to commit in all build services results."
-								ant.target.failure.stacktrace="${git.diffs}"
-								ant.target.file="@{ant.target.file}"
-								ant.target.name="@{ant.target.name}"
-								ant.target.start.time="${ant.target.start.time}"
-							/>
-						</then>
-					</if>
-				</finally>
-			</trycatch>
 		</sequential>
 	</macrodef>
 
@@ -580,14 +508,13 @@ mariadb.executable=${mariadb.executable}]]></echo>
 		<sequential>
 			<execute-gradle-task gradle.task.module.dir="@{gradle.module.dir}" gradle.task.name="@{gradle.task.name}">
 				<action>
-					<record-git-diffs-build-services>
+					<record-git-diffs rest.builder.or.service.builder="service">
 						<action>
 							<gradle-execute dir="@{gradle.module.dir}" forcedcacheenabled="false" task="@{gradle.task.name}">
-								<arg value="-Dskip.read.only=${build.services.skip.read.only}" />
 								<arg value="-Pcom.liferay.portal.tools.service.builder.ignore.local=false" />
 							</gradle-execute>
 						</action>
-					</record-git-diffs-build-services>
+					</record-git-diffs>
 				</action>
 				<action-fail>
 					<if>
@@ -615,15 +542,14 @@ mariadb.executable=${mariadb.executable}]]></echo>
 		<sequential>
 			<execute-gradle-task gradle.task.module.dir="@{gradle.module.dir}" gradle.task.name="@{gradle.task.name}">
 				<action>
-					<record-git-diffs-rest-builder>
+					<record-git-diffs rest.builder.or.service.builder="rest">
 						<action>
 							<gradle-execute dir="@{gradle.module.dir}" forcedcacheenabled="false" task="@{gradle.task.name}">
 								<arg value="-DbuildREST.forceClientVersionDescription=false" />
-								<arg value="-Dskip.read.only=${build.rest.skip.read.only}" />
 								<arg value="-Pcom.liferay.portal.tools.rest.builder.ignore.local=false" />
 							</gradle-execute>
 						</action>
-					</record-git-diffs-rest-builder>
+					</record-git-diffs>
 				</action>
 				<action-fail>
 					<if>
@@ -641,6 +567,143 @@ mariadb.executable=${mariadb.executable}]]></echo>
 					</if>
 				</action-fail>
 			</execute-gradle-task>
+		</sequential>
+	</macrodef>
+
+	<macrodef name="execute-rest-builder-or-service-builder-ant-target">
+		<attribute name="ant.target.name" />
+		<attribute name="ant.target.file" />
+		<attribute name="rest.builder.or.service.builder" />
+
+		<sequential>
+			<local name="rest.builder.or.service.builder.label" />
+
+			<condition else="REST builder" property="rest.builder.or.service.builder.label" value="build services">
+				<equals arg1="@{rest.builder.or.service.builder}" arg2="service" />
+			</condition>
+
+			<trycatch property="ant.target.failure" reference="ant.target.failure.ref">
+				<try>
+					<beanshell>
+						project.setProperty("ant.target.start.time", String.valueOf(System.currentTimeMillis()));
+					</beanshell>
+
+					<generate-backend-batch-junit-report-ant-target
+						ant.target.failure.count="1"
+						ant.target.file="@{ant.target.file}"
+						ant.target.name="@{ant.target.name}"
+						ant.target.start.time="${ant.target.start.time}"
+					/>
+
+					<local name="ant.target.dir" />
+					<local name="ant.target.file.name" />
+
+					<propertyregex
+						input="@{ant.target.file}"
+						override="true"
+						property="ant.target.dir"
+						regexp="(.+)/(.+.xml)"
+						replace="\1"
+					/>
+
+					<propertyregex
+						input="@{ant.target.file}"
+						override="true"
+						property="ant.target.file.name"
+						regexp="(.+)/(.+.xml)"
+						replace="\2"
+					/>
+
+					<record action="start" name="${project.dir}/execute.ant.target.log" />
+
+					<record-git-diffs rest.builder.or.service.builder="@{rest.builder.or.service.builder}">
+						<action>
+							<ant antfile="${ant.target.file.name}" dir="${ant.target.dir}" target="@{ant.target.name}" />
+						</action>
+					</record-git-diffs>
+
+					<generate-backend-batch-junit-report-ant-target
+						ant.target.failure.count="0"
+						ant.target.file="@{ant.target.file}"
+						ant.target.name="@{ant.target.name}"
+						ant.target.start.time="${ant.target.start.time}"
+					/>
+				</try>
+				<catch>
+					<var name="ant.target.failure.full.stack" unset="true" />
+
+					<beanshell>
+						<![CDATA[
+							import java.io.PrintWriter;
+							import java.io.StringWriter;
+
+							Object reference = project.getReference("ant.target.failure.ref");
+
+							if (!(reference instanceof Throwable)) {
+								return;
+							}
+
+							Throwable throwable = (Throwable)reference;
+
+							StringWriter stringWriter = new StringWriter();
+							PrintWriter printWriter = new PrintWriter(stringWriter);
+
+							throwable.printStackTrace(printWriter);
+
+							project.setProperty("ant.target.failure.full.stack", stringWriter.toString());
+						]]>
+					</beanshell>
+
+					<record action="stop" name="${project.dir}/execute.ant.target.log" />
+
+					<echo>${ant.target.failure.full.stack}</echo>
+
+					<local name="execute.ant.target.log" />
+
+					<loadfile
+						property="execute.ant.target.log"
+						srcfile="${project.dir}/execute.ant.target.log"
+					/>
+
+					<delete failonerror="false" file="${project.dir}/execute.ant.target.log" />
+
+					<get-console-log-failure-message console.log="${execute.ant.target.log}" />
+
+					<local name="ant.target.failure.stacktrace" />
+
+					<condition else="${ant.target.failure.full.stack}" property="ant.target.failure.stacktrace" value="${console.log.failure.message}">
+						<isset property="console.log.failure.message" />
+					</condition>
+
+					<generate-backend-batch-junit-report-ant-target
+						ant.target.failure.count="1"
+						ant.target.failure.message="Detected ${rest.builder.or.service.builder.label} compilation error. Please check the logs for details."
+						ant.target.failure.stacktrace="${ant.target.failure.stacktrace}"
+						ant.target.file="@{ant.target.file}"
+						ant.target.name="@{ant.target.name}"
+						ant.target.start.time="${ant.target.start.time}"
+					/>
+				</catch>
+				<finally>
+					<record action="stop" name="${project.dir}/execute.ant.target.log" />
+
+					<delete failonerror="false" file="${project.dir}/execute.ant.target.log" />
+
+					<if>
+						<isset property="git.diffs" />
+						<then>
+							<generate-backend-batch-junit-report-ant-target
+								ant.target.failure.count="1"
+								ant.target.failure.message="Detected ${rest.builder.or.service.builder.label} changes. Please check the logs for details. Make sure to commit in all ${rest.builder.or.service.builder.label} results."
+								ant.target.failure.stacktrace="${git.diffs}"
+								ant.target.file="@{ant.target.file}"
+								ant.target.name="@{ant.target.name}"
+								ant.target.start.time="${ant.target.start.time}"
+							/>
+						</then>
+					</if>
+				</finally>
+			</trycatch>
 		</sequential>
 	</macrodef>
 
@@ -1078,6 +1141,8 @@ mariadb.executable=${mariadb.executable}]]></echo>
 		<attribute default="true" name="setup.testable.jboss" />
 		<attribute default="true" name="setup.testable.tomcat" />
 		<attribute default="" name="test.build.fix.pack.zip.url" />
+		<attribute default="" name="test.cmp.license.url" />
+		<attribute default="" name="test.dsr.license.url" />
 		<attribute default="" name="test.fix.pack.base.url" />
 		<attribute default="" name="test.license.xml.url" />
 		<attribute default="" name="test.plugins.war.zip.url" />
@@ -1105,6 +1170,28 @@ mariadb.executable=${mariadb.executable}]]></echo>
 				<param name="test.build.portal.war.url" value="@{test.portal.bundle.war.url}" />
 				<param name="test.fix.pack.base.url" value="@{test.fix.pack.base.url}" />
 			</antcall>
+
+			<if>
+				<matches pattern="https?://" string="@{test.cmp.license.url}" />
+				<then>
+					<var name="test.build.cmp.license.url" unset="true" />
+
+					<property name="test.build.cmp.license.url" value="@{test.cmp.license.url}" />
+
+					<echo append="true" file="test.${env.HOSTNAME}.properties"><![CDATA[${line.separator}test.build.cmp.license.url=@{test.cmp.license.url}]]></echo>
+				</then>
+			</if>
+
+			<if>
+				<matches pattern="https?://" string="@{test.dsr.license.url}" />
+				<then>
+					<var name="test.build.dsr.license.url" unset="true" />
+
+					<property name="test.build.dsr.license.url" value="@{test.dsr.license.url}" />
+
+					<echo append="true" file="test.${env.HOSTNAME}.properties"><![CDATA[${line.separator}test.build.dsr.license.url=@{test.dsr.license.url}]]></echo>
+				</then>
+			</if>
 
 			<if>
 				<matches pattern="https?://" string="@{test.license.xml.url}" />
@@ -1212,12 +1299,12 @@ mariadb.executable=${mariadb.executable}]]></echo>
 					<if>
 						<contains string="${test.batch.name}" substring="remote-elasticsearch" />
 						<then>
-							<ant antfile="build-test-elasticsearch7.xml" target="start-elasticsearch" />
+							<ant antfile="build-test-elasticsearch8.xml" target="start-elasticsearch" />
 						</then>
 					</if>
 
 					<if>
-						<equals arg1="${test.batch.name}" arg2="solr" />
+						<contains string="${test.batch.name}" substring="solr" />
 						<then>
 							<ant antfile="build-test-solr.xml" target="start-solr" />
 
@@ -1250,7 +1337,7 @@ mariadb.executable=${mariadb.executable}]]></echo>
 					<if>
 						<contains string="${suite.search.engine}" substring="remote-elasticsearch" />
 						<then>
-							<ant antfile="build-test-elasticsearch7.xml" target="start-elasticsearch" />
+							<ant antfile="build-test-elasticsearch8.xml" target="start-elasticsearch" />
 						</then>
 					</if>
 
@@ -1327,14 +1414,14 @@ app.server.type=@{app.server.type}]]></echo>
 
 			<antcall inheritAll="false" target="compile" />
 
+			<antcall inheritAll="false" target="install-portal-snapshots" />
+
 			<if>
 				<and>
 					<equals arg1="@{app.server.type}" arg2="tomcat" />
 					<equals arg1="@{dist.type}" arg2="release" />
 				</and>
 				<then>
-					<antcall inheritAll="false" target="install-portal-snapshots" />
-
 					<lstopwatch action="start" name="prepare-test-build-dist.bundles.@{app.server.type}.dist" />
 
 					<ant antfile="build-test.xml" target="prepare-release-bundle" />
@@ -1344,8 +1431,6 @@ app.server.type=@{app.server.type}]]></echo>
 				<elseif>
 					<equals arg1="@{app.server.type}" arg2="weblogic" />
 					<then>
-						<antcall inheritAll="false" target="install-portal-snapshots" />
-
 						<antcall inheritAll="false" target="prepare-test-build-custom">
 							<param name="app.server.type" value="@{app.server.type}" />
 						</antcall>
@@ -1360,7 +1445,9 @@ app.server.type=@{app.server.type}]]></echo>
 				</else>
 			</if>
 
-			<antcall if:set="env.JENKINS_HOME" inheritAll="false" target="prepare-portal-ext-properties" />
+			<antcall if:set="env.JENKINS_HOME" inheritAll="false" target="prepare-portal-ext-properties">
+				<param name="functional.test.type" value="${functional.test.type}" />
+			</antcall>
 
 			<antcall inheritAll="false" target="prepare-system-ext-properties" />
 
@@ -1549,7 +1636,8 @@ app.server.type=@{app.server.type}]]></echo>
 		</sequential>
 	</macrodef>
 
-	<macrodef name="record-git-diffs-build-services">
+	<macrodef name="record-git-diffs">
+		<attribute name="rest.builder.or.service.builder" />
 		<element name="action" />
 
 		<sequential>
@@ -1563,51 +1651,42 @@ app.server.type=@{app.server.type}]]></echo>
 				<format pattern="yyyyMMddkkmmssSSS" property="tstamp" />
 			</tstamp>
 
-			<exec executable="git" output="${tstamp}.diff">
-				<arg value="diff" />
-				<arg value="--" />
-				<arg value="." />
-				<arg value=":!*/*-portlet-service.jar" />
-				<arg value=":!*/packageinfo" />
-				<arg value=":!*/src/main/resources/service.properties" />
-				<arg value=":!*/src/service.properties" />
-			</exec>
+			<if>
+				<equals arg1="@{rest.builder.or.service.builder}" arg2="service" />
+				<then>
+					<if>
+						<and>
+							<available file="modules/yarn.lock" />
+							<isset property="nodejs.npm.ci.registry" />
+						</and>
+						<then>
+							<replace
+								file="modules/yarn.lock"
+								token="${nodejs.npm.ci.registry}"
+								value="https://registry.yarnpkg.com"
+							/>
+						</then>
+					</if>
 
-			<exec executable="git">
-				<arg value="checkout" />
-				<arg value="--" />
-				<arg value="." />
-			</exec>
-
-			<loadfile
-				property="git.diffs"
-				srcfile="${tstamp}.diff"
-			/>
-
-			<delete file="${tstamp}.diff" />
-		</sequential>
-	</macrodef>
-
-	<macrodef name="record-git-diffs-rest-builder">
-		<element name="action" />
-
-		<sequential>
-			<var name="git.diffs" unset="true" />
-
-			<action />
-
-			<local name="tstamp" />
-
-			<tstamp>
-				<format pattern="yyyyMMddkkmmssSSS" property="tstamp" />
-			</tstamp>
-
-			<exec executable="git" output="${tstamp}.diff">
-				<arg value="diff" />
-				<arg value="--" />
-				<arg value="." />
-				<arg value=":!*/packageinfo" />
-			</exec>
+					<exec executable="git" output="${tstamp}.diff">
+						<arg value="diff" />
+						<arg value="--" />
+						<arg value="." />
+						<arg value=":!*/*-portlet-service.jar" />
+						<arg value=":!*/packageinfo" />
+						<arg value=":!*/src/main/resources/service.properties" />
+						<arg value=":!*/src/service.properties" />
+					</exec>
+				</then>
+				<else>
+					<exec executable="git" output="${tstamp}.diff">
+						<arg value="diff" />
+						<arg value="--" />
+						<arg value="." />
+						<arg value=":!*/packageinfo" />
+					</exec>
+				</else>
+			</if>
 
 			<exec executable="git">
 				<arg value="checkout" />
@@ -2078,6 +2157,8 @@ app.server.type=@{app.server.type}]]></echo>
 
 								<prepare-release-test-environment
 									test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+									test.cmp.license.url="${test.cmp.license.url}"
+									test.dsr.license.url="${test.dsr.license.url}"
 									test.fix.pack.base.url="${test.fix.pack.base.url}"
 									test.license.xml.url="${test.license.xml.url}"
 									test.portal.bundle.dependencies.zip.url="${test.portal.bundle.dependencies.zip.url}"
@@ -2126,6 +2207,8 @@ app.server.type=@{app.server.type}]]></echo>
 		<attribute default="false" name="startup.testing.cold" />
 		<attribute default="false" name="startup.testing.warm" />
 		<attribute default="" name="test.build.fix.pack.zip.url" />
+		<attribute default="" name="test.cmp.license.url" />
+		<attribute default="" name="test.dsr.license.url" />
 		<attribute default="" name="test.fix.pack.base.url" />
 		<attribute default="" name="test.legacy.database.dump" />
 		<attribute default="" name="test.license.xml.url" />
@@ -2267,6 +2350,8 @@ app.server.type=@{app.server.type}]]></echo>
 									setup.testable.jboss="@{setup.testable.jboss}"
 									setup.testable.tomcat="@{setup.testable.tomcat}"
 									test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+									test.cmp.license.url="${test.cmp.license.url}"
+									test.dsr.license.url="${test.dsr.license.url}"
 									test.fix.pack.base.url="${test.fix.pack.base.url}"
 									test.license.xml.url="${test.license.xml.url}"
 									test.plugins.war.zip.url="${test.plugins.war.zip.url}"
@@ -2424,6 +2509,15 @@ ${poshi.runner.testsuite.testcase.name}</echo>
 								</if>
 							</then>
 						</if>
+
+						<is-cloud-ci-node />
+
+						<if>
+							<equals arg1="${is.cloud.ci.node}" arg2="true" />
+							<then>
+								<stop-docker-container name="clamd" />
+							</then>
+						</if>
 					</test-tear-down>
 				</run-batch-test>
 			</retry>
@@ -2443,6 +2537,8 @@ ${poshi.runner.testsuite.testcase.name}</echo>
 				database.version="@{database.version}"
 				setup.testable.jboss="false"
 				test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+				test.cmp.license.url="${test.cmp.license.url}"
+				test.dsr.license.url="${test.dsr.license.url}"
 				test.fix.pack.base.url="${test.fix.pack.base.url}"
 				test.legacy.database.dump="true"
 				test.license.xml.url="${test.license.xml.url}"
@@ -2890,15 +2986,20 @@ ${poshi.runner.testsuite.testcase.name}</echo>
 	<macrodef name="run-modules-integration-test">
 		<attribute default="tomcat" name="app.server.type" />
 		<attribute default="" name="aws.store.enabled" />
+		<attribute default="" name="azure.store.enabled" />
 		<attribute default="" name="database.partition.copy" />
 		<attribute default="" name="database.partition.enabled" />
 		<attribute default="" name="database.partition.export.and.import" />
 		<attribute name="database.type" />
 		<attribute default="${database.@{database.type}.version}" name="database.version" />
+		<attribute default="" name="gcs.store.enabled" />
+		<attribute default="" name="ibm.store.enabled" />
 		<attribute default="" name="refreshdependencies" />
 		<attribute default="true" name="setup.testable.tomcat" />
 		<attribute default="" name="subrepository.name" />
 		<attribute default="" name="test.build.fix.pack.zip.url" />
+		<attribute default="" name="test.cmp.license.url" />
+		<attribute default="" name="test.dsr.license.url" />
 		<attribute default="" name="test.fix.pack.base.url" />
 		<attribute default="" name="test.license.xml.url" />
 		<attribute default="" name="test.portal.bundle.dependencies.zip.url" />
@@ -2925,10 +3026,13 @@ ${poshi.runner.testsuite.testcase.name}</echo>
 
 							<antcall if:set="env.JENKINS_HOME" inheritAll="false" target="prepare-portal-ext-properties">
 								<param name="aws.store.enabled" value="@{aws.store.enabled}" />
+								<param name="azure.store.enabled" value="@{azure.store.enabled}" />
 								<param name="database.partition.copy" value="@{database.partition.copy}" />
 								<param name="database.partition.enabled" value="@{database.partition.enabled}" />
 								<param name="database.partition.export.and.import" value="@{database.partition.export.and.import}" />
 								<param name="database.type" value="@{database.type}" />
+								<param name="gcs.store.enabled" value="@{gcs.store.enabled}" />
+								<param name="ibm.store.enabled" value="@{ibm.store.enabled}" />
 							</antcall>
 
 							<antcall inheritAll="false" target="prepare-system-ext-properties" />
@@ -3036,6 +3140,8 @@ ${poshi.runner.testsuite.testcase.name}</echo>
 								app.server.type="@{app.server.type}"
 								setup.testable.tomcat="@{setup.testable.tomcat}"
 								test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+								test.cmp.license.url="${test.cmp.license.url}"
+								test.dsr.license.url="${test.dsr.license.url}"
 								test.fix.pack.base.url="${test.fix.pack.base.url}"
 								test.license.xml.url="${test.license.xml.url}"
 								test.portal.bundle.dependencies.zip.url="${test.portal.bundle.dependencies.zip.url}"
@@ -3465,6 +3571,8 @@ ${poshi.runner.testsuite.testcase.name}</echo>
 
 								<prepare-release-test-environment
 									test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+									test.cmp.license.url="${test.cmp.license.url}"
+									test.dsr.license.url="${test.dsr.license.url}"
 									test.fix.pack.base.url="${test.fix.pack.base.url}"
 									test.license.xml.url="${test.license.xml.url}"
 									test.portal.bundle.dependencies.zip.url="${test.portal.bundle.dependencies.zip.url}"
@@ -3504,6 +3612,8 @@ ${poshi.runner.testsuite.testcase.name}</echo>
 		<attribute default="tomcat" name="app.server.type" />
 		<attribute name="database.type" />
 		<attribute default="" name="test.build.fix.pack.zip.url" />
+		<attribute default="" name="test.cmp.license.url" />
+		<attribute default="" name="test.dsr.license.url" />
 		<attribute default="" name="test.fix.pack.base.url" />
 		<attribute default="" name="test.license.xml.url" />
 		<attribute default="" name="test.portal.bundle.dependencies.zip.url" />
@@ -3670,6 +3780,8 @@ ${poshi.runner.testsuite.testcase.name}</echo>
 							<prepare-release-test-environment
 								app.server.type="@{app.server.type}"
 								test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+								test.cmp.license.url="${test.cmp.license.url}"
+								test.dsr.license.url="${test.dsr.license.url}"
 								test.fix.pack.base.url="${test.fix.pack.base.url}"
 								test.license.xml.url="${test.license.xml.url}"
 								test.portal.bundle.dependencies.zip.url="${test.portal.bundle.dependencies.zip.url}"
@@ -3827,6 +3939,8 @@ ${poshi.runner.testsuite.testcase.name}</echo>
 
 								<prepare-release-test-environment
 									test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+									test.cmp.license.url="${test.cmp.license.url}"
+									test.dsr.license.url="${test.dsr.license.url}"
 									test.fix.pack.base.url="${test.fix.pack.base.url}"
 									test.license.xml.url="${test.license.xml.url}"
 									test.portal.bundle.dependencies.zip.url="${test.portal.bundle.dependencies.zip.url}"
@@ -3995,6 +4109,8 @@ ${poshi.runner.testsuite.testcase.name}</echo>
 
 								<prepare-release-test-environment
 									test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+									test.cmp.license.url="${test.cmp.license.url}"
+									test.dsr.license.url="${test.dsr.license.url}"
 									test.fix.pack.base.url="${test.fix.pack.base.url}"
 									test.license.xml.url="${test.license.xml.url}"
 									test.portal.bundle.dependencies.zip.url="${test.portal.bundle.dependencies.zip.url}"
@@ -4140,6 +4256,8 @@ ${poshi.runner.testsuite.testcase.name}</echo>
 
 								<prepare-release-test-environment
 									test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+									test.cmp.license.url="${test.cmp.license.url}"
+									test.dsr.license.url="${test.dsr.license.url}"
 									test.fix.pack.base.url="${test.fix.pack.base.url}"
 									test.license.xml.url="${test.license.xml.url}"
 									test.portal.bundle.dependencies.zip.url="${test.portal.bundle.dependencies.zip.url}"
@@ -4275,6 +4393,8 @@ ${poshi.runner.testsuite.testcase.name}</echo>
 
 								<prepare-release-test-environment
 									test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+									test.cmp.license.url="${test.cmp.license.url}"
+									test.dsr.license.url="${test.dsr.license.url}"
 									test.fix.pack.base.url="${test.fix.pack.base.url}"
 									test.license.xml.url="${test.license.xml.url}"
 									test.portal.bundle.dependencies.zip.url="${test.portal.bundle.dependencies.zip.url}"
@@ -4388,6 +4508,8 @@ ${poshi.runner.testsuite.testcase.name}</echo>
 
 								<prepare-release-test-environment
 									test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+									test.cmp.license.url="${test.cmp.license.url}"
+									test.dsr.license.url="${test.dsr.license.url}"
 									test.fix.pack.base.url="${test.fix.pack.base.url}"
 									test.license.xml.url="${test.license.xml.url}"
 									test.portal.bundle.dependencies.zip.url="${test.portal.bundle.dependencies.zip.url}"
@@ -4481,6 +4603,8 @@ ${poshi.runner.testsuite.testcase.name}</echo>
 
 								<prepare-release-test-environment
 									test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+									test.cmp.license.url="${test.cmp.license.url}"
+									test.dsr.license.url="${test.dsr.license.url}"
 									test.fix.pack.base.url="${test.fix.pack.base.url}"
 									test.license.xml.url="${test.license.xml.url}"
 									test.portal.bundle.dependencies.zip.url="${test.portal.bundle.dependencies.zip.url}"
@@ -4785,6 +4909,7 @@ ${poshi.runner.testsuite.testcase.name}</echo>
 					</echo>
 				</then>
 			</if>
+
 			<if>
 				<not>
 					<resourcecontains
@@ -4824,6 +4949,7 @@ ${poshi.runner.testsuite.testcase.name}</echo>
 					</echo>
 				</then>
 			</if>
+
 			<if>
 				<not>
 					<resourcecontains
@@ -4847,7 +4973,7 @@ ${poshi.runner.testsuite.testcase.name}</echo>
 			<if>
 				<contains string="${suite.search.engine}" substring="remote-elasticsearch" />
 				<then>
-					<ant antfile="build-test-elasticsearch7.xml" target="stop-elasticsearch" />
+					<ant antfile="build-test-elasticsearch8.xml" target="stop-elasticsearch" />
 				</then>
 			</if>
 
@@ -4946,6 +5072,26 @@ ${poshi.runner.testsuite.testcase.name}</echo>
 				</propertyfile>
 
 				<print-file file.name="${blade.samples.dir}/liferay-workspace/gradle.properties" />
+
+				<if>
+					<matches pattern="https?://" string="${test.cmp.license.url}" />
+					<then>
+						<mirrors-get
+							dest="${blade.samples.dir}/liferay-workspace/configs/common/deploy/license-cmp.xml"
+							src="${test.cmp.license.url}"
+						/>
+					</then>
+				</if>
+
+				<if>
+					<matches pattern="https?://" string="${test.dsr.license.url}" />
+					<then>
+						<mirrors-get
+							dest="${blade.samples.dir}/liferay-workspace/configs/common/deploy/license-dsr.xml"
+							src="${test.dsr.license.url}"
+						/>
+					</then>
+				</if>
 
 				<if>
 					<matches pattern="https?://" string="${test.license.xml.url}" />
@@ -5077,6 +5223,10 @@ information. Make sure to commit in all build-lib-versions results.
 		<run-bundle-blacklist-restart-test database.type="postgresql" database.version="16.3" />
 	</target>
 
+	<target name="bundle-blacklist-restart-postgresql175">
+		<run-bundle-blacklist-restart-test database.type="postgresql" database.version="17.5" />
+	</target>
+
 	<target name="central-requirements">
 		<fail message="Please set the property ${central.requirements.tests}." unless="central.requirements.tests" />
 
@@ -5187,6 +5337,14 @@ information. Make sure to commit in all build-lib-versions results.
 		<run-empty-osgi-core-dir-test database.type="postgresql" database.version="16.3" />
 	</target>
 
+	<target name="empty-osgi-core-dir-postgresql175">
+		<run-empty-osgi-core-dir-test database.type="postgresql" database.version="17.5" />
+	</target>
+
+	<target name="empty-osgi-core-dir-postgresql175-jdk21_zulu">
+		<run-empty-osgi-core-dir-test database.type="postgresql" database.version="17.5" />
+	</target>
+
 	<target name="format-javadoc-test">
 		<run-batch-test>
 			<test-action>
@@ -5294,6 +5452,8 @@ information. Make sure to commit in all format-javadoc results.
 			database.type="mysql"
 			setup.proxy="false"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
@@ -5315,6 +5475,8 @@ information. Make sure to commit in all format-javadoc results.
 			database.version="8.4"
 			setup.proxy="false"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
@@ -5335,6 +5497,8 @@ information. Make sure to commit in all format-javadoc results.
 			database.type="postgresql"
 			setup.proxy="false"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
@@ -5356,6 +5520,8 @@ information. Make sure to commit in all format-javadoc results.
 			database.version="15.5"
 			setup.proxy="false"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
@@ -5376,6 +5542,8 @@ information. Make sure to commit in all format-javadoc results.
 			database.type="mysql"
 			setup.proxy="false"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
@@ -5397,6 +5565,8 @@ information. Make sure to commit in all format-javadoc results.
 			database.version="8.4"
 			setup.proxy="false"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
@@ -5417,6 +5587,8 @@ information. Make sure to commit in all format-javadoc results.
 			database.type="postgresql"
 			setup.proxy="false"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
@@ -5438,6 +5610,8 @@ information. Make sure to commit in all format-javadoc results.
 			database.version="15.5"
 			setup.proxy="false"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
@@ -5571,6 +5745,8 @@ information. Make sure to commit in all format-javadoc results.
 			app.server.type="jboss"
 			database.type="db2"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
@@ -5588,6 +5764,8 @@ information. Make sure to commit in all format-javadoc results.
 			database.type="db2"
 			database.version="11.1.3"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
@@ -5605,6 +5783,8 @@ information. Make sure to commit in all format-javadoc results.
 			database.type="db2"
 			database.version="11.5.7"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
@@ -5621,6 +5801,8 @@ information. Make sure to commit in all format-javadoc results.
 			app.server.type="jboss"
 			database.type="mysql"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
@@ -5642,6 +5824,8 @@ information. Make sure to commit in all format-javadoc results.
 			database.type="mysql"
 			database.version="8.4"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
@@ -5663,6 +5847,8 @@ information. Make sure to commit in all format-javadoc results.
 			database.type="mysql"
 			database.version="8.4"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
@@ -5683,6 +5869,8 @@ information. Make sure to commit in all format-javadoc results.
 			app.server.type="jboss"
 			database.type="postgresql"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
@@ -5704,6 +5892,8 @@ information. Make sure to commit in all format-javadoc results.
 			database.type="postgresql"
 			database.version="15.5"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
@@ -5725,6 +5915,8 @@ information. Make sure to commit in all format-javadoc results.
 			database.type="postgresql"
 			database.version="15.5"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
@@ -5761,6 +5953,8 @@ information. Make sure to commit in all format-javadoc results.
 			database.type="mysql"
 			database.version="8.4"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
@@ -5797,6 +5991,8 @@ information. Make sure to commit in all format-javadoc results.
 			database.type="postgresql"
 			database.version="15.5"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
@@ -5848,8 +6044,8 @@ information. Make sure to commit in all format-javadoc results.
 		<run-functional-test app.server.type="tomcat" database.type="mysql" database.version="8.4" test.portal.log.assert="true" />
 	</target>
 
-	<target name="functional-opensearch2-tomcat101-postgresql155">
-		<run-functional-test app.server.type="tomcat" database.type="postgresql" database.version="15.5" test.portal.log.assert="true" />
+	<target name="functional-opensearch2-tomcat101-postgresql163">
+		<run-functional-test app.server.type="tomcat" database.type="postgresql" database.version="16.3" test.portal.log.assert="true" />
 	</target>
 
 	<target name="functional-orcllinux6-tomcat101-mysql">
@@ -5948,6 +6144,22 @@ information. Make sure to commit in all format-javadoc results.
 		<run-functional-test app.server.type="tomcat" database.type="postgresql" database.version="15.5" test.portal.log.assert="true" />
 	</target>
 
+	<target name="functional-redhat10-tomcat101-mysql">
+		<run-functional-test app.server.type="tomcat" database.type="mysql" test.portal.log.assert="true" />
+	</target>
+
+	<target name="functional-redhat10-tomcat101-mysql84">
+		<run-functional-test app.server.type="tomcat" database.type="mysql" database.version="8.4" test.portal.log.assert="true" />
+	</target>
+
+	<target name="functional-redhat10-tomcat101-postgresql">
+		<run-functional-test app.server.type="tomcat" database.type="postgresql" test.portal.log.assert="true" />
+	</target>
+
+	<target name="functional-redhat10-tomcat101-postgresql155">
+		<run-functional-test app.server.type="tomcat" database.type="postgresql" database.version="15.5" test.portal.log.assert="true" />
+	</target>
+
 	<target name="functional-remote-elasticsearch-tomcat101-mysql84">
 		<run-functional-test app.server.type="tomcat" database.type="mysql" database.version="8.4" test.portal.log.assert="true" />
 	</target>
@@ -5981,6 +6193,8 @@ information. Make sure to commit in all format-javadoc results.
 			app.server.type="jboss"
 			database.type="mysql"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
@@ -6002,6 +6216,8 @@ information. Make sure to commit in all format-javadoc results.
 			app.server.type="jboss"
 			database.type="mysql"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
@@ -6024,6 +6240,8 @@ information. Make sure to commit in all format-javadoc results.
 			database.type="mysql"
 			database.version="8.4"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
@@ -6046,6 +6264,8 @@ information. Make sure to commit in all format-javadoc results.
 			database.type="mysql"
 			database.version="8.4"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
@@ -6067,6 +6287,8 @@ information. Make sure to commit in all format-javadoc results.
 			app.server.type="jboss"
 			database.type="postgresql"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
@@ -6088,6 +6310,8 @@ information. Make sure to commit in all format-javadoc results.
 			app.server.type="jboss"
 			database.type="postgresql"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
@@ -6110,6 +6334,8 @@ information. Make sure to commit in all format-javadoc results.
 			database.type="postgresql"
 			database.version="15.5"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
@@ -6132,6 +6358,8 @@ information. Make sure to commit in all format-javadoc results.
 			database.type="postgresql"
 			database.version="15.5"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
@@ -6212,6 +6440,10 @@ information. Make sure to commit in all format-javadoc results.
 		<set-app-server-version-number app.server.type="jboss" app.server.version="8.0.0" />
 
 		<run-functional-test app.server.type="jboss" app.server.version="8.0.0" database.type="postgresql" database.version="15.5" test.portal.log.assert="true" />
+	</target>
+
+	<target name="functional-smoke-redhat10-tomcat101-postgresql155">
+		<run-functional-test app.server.type="tomcat" database.type="postgresql" test.portal.log.assert="true" />
 	</target>
 
 	<target name="functional-smoke-startup-cold-tomcat101-hypersonic">
@@ -6325,6 +6557,8 @@ information. Make sure to commit in all format-javadoc results.
 			app.server.type="tomcat"
 			database.type="mysql"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.portal.bundle.version="${test.portal.bundle.version}"
@@ -6350,6 +6584,8 @@ information. Make sure to commit in all format-javadoc results.
 			database.type="mysql"
 			database.version="8.4"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.portal.bundle.version="${test.portal.bundle.version}"
@@ -6371,6 +6607,8 @@ information. Make sure to commit in all format-javadoc results.
 			database.type="mysql"
 			database.version="8.4"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.portal.bundle.version="${test.portal.bundle.version}"
@@ -6440,6 +6678,8 @@ information. Make sure to commit in all format-javadoc results.
 			database.type="postgresql"
 			database.version="15.5"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.portal.bundle.version="${test.portal.bundle.version}"
@@ -6461,6 +6701,8 @@ information. Make sure to commit in all format-javadoc results.
 			database.type="postgresql"
 			database.version="15.5"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.portal.bundle.version="${test.portal.bundle.version}"
@@ -6476,6 +6718,14 @@ information. Make sure to commit in all format-javadoc results.
 
 	<target name="functional-smoke-tomcat-postgresql163-jdk21_zulu">
 		<antcall target="functional-tomcat-postgresql163-jdk21_zulu" />
+	</target>
+
+	<target name="functional-smoke-tomcat-postgresql175">
+		<antcall target="functional-tomcat-postgresql175" />
+	</target>
+
+	<target name="functional-smoke-tomcat-postgresql175-jdk21_zulu">
+		<antcall target="functional-tomcat-postgresql175-jdk21_zulu" />
 	</target>
 
 	<target name="functional-smoke-tomcat101-db2">
@@ -6512,6 +6762,10 @@ information. Make sure to commit in all format-javadoc results.
 
 	<target name="functional-smoke-tomcat101-mariadb106">
 		<run-functional-test app.server.type="tomcat" database.type="mariadb" database.version="10.6" test.portal.log.assert="true" />
+	</target>
+
+	<target name="functional-smoke-tomcat101-mariadb118">
+		<run-functional-test app.server.type="tomcat" database.type="mariadb" database.version="11.8" test.portal.log.assert="true" />
 	</target>
 
 	<target name="functional-smoke-tomcat101-mysql">
@@ -6606,6 +6860,14 @@ information. Make sure to commit in all format-javadoc results.
 		<run-functional-test app.server.type="tomcat" database.type="postgresql" database.version="16.3" test.portal.log.assert="true" />
 	</target>
 
+	<target name="functional-smoke-tomcat101-postgresql175">
+		<run-functional-test app.server.type="tomcat" database.type="postgresql" database.version="17.5" test.portal.log.assert="true" />
+	</target>
+
+	<target name="functional-smoke-tomcat101-postgresql175_stable">
+		<run-functional-test app.server.type="tomcat" database.type="postgresql" database.version="17.5" test.portal.log.assert="true" />
+	</target>
+
 	<target name="functional-smoke-tomcat101-sqlserver">
 		<run-functional-test app.server.type="tomcat" database.type="sqlserver" test.portal.log.assert="true" />
 	</target>
@@ -6677,6 +6939,8 @@ information. Make sure to commit in all format-javadoc results.
 			app.server.type="wildfly"
 			database.type="mysql"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
@@ -6698,6 +6962,8 @@ information. Make sure to commit in all format-javadoc results.
 			app.server.type="wildfly"
 			database.type="mysql"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
@@ -6720,6 +6986,8 @@ information. Make sure to commit in all format-javadoc results.
 			database.type="mysql"
 			database.version="8.4"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
@@ -6742,6 +7010,8 @@ information. Make sure to commit in all format-javadoc results.
 			database.type="mysql"
 			database.version="8.4"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
@@ -6763,6 +7033,8 @@ information. Make sure to commit in all format-javadoc results.
 			app.server.type="wildfly"
 			database.type="postgresql"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
@@ -6784,6 +7056,8 @@ information. Make sure to commit in all format-javadoc results.
 			app.server.type="wildfly"
 			database.type="postgresql"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
@@ -6806,6 +7080,8 @@ information. Make sure to commit in all format-javadoc results.
 			database.type="postgresql"
 			database.version="15.5"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
@@ -6828,6 +7104,8 @@ information. Make sure to commit in all format-javadoc results.
 			database.type="postgresql"
 			database.version="15.5"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
@@ -7102,6 +7380,14 @@ information. Make sure to commit in all format-javadoc results.
 		<run-functional-test app.server.type="tomcat" database.type="postgresql" database.version="16.3" />
 	</target>
 
+	<target name="functional-tomcat-postgresql175">
+		<run-functional-test app.server.type="tomcat" database.type="postgresql" database.version="17.5" />
+	</target>
+
+	<target name="functional-tomcat-postgresql175-jdk21_zulu">
+		<run-functional-test app.server.type="tomcat" database.type="postgresql" database.version="17.5" />
+	</target>
+
 	<target name="functional-tomcat-sqlserver">
 		<run-functional-test app.server.type="tomcat" database.type="sqlserver" />
 	</target>
@@ -7119,6 +7405,8 @@ information. Make sure to commit in all format-javadoc results.
 			database.version="2019"
 			setup.proxy="false"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
@@ -7139,6 +7427,8 @@ information. Make sure to commit in all format-javadoc results.
 			database.version="2019"
 			setup.proxy="false"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
@@ -7159,6 +7449,8 @@ information. Make sure to commit in all format-javadoc results.
 			database.version="2022"
 			setup.proxy="false"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
@@ -7204,6 +7496,10 @@ information. Make sure to commit in all format-javadoc results.
 
 	<target name="functional-tomcat101-mariadb106">
 		<run-functional-test app.server.type="tomcat" database.type="mariadb" database.version="10.6" />
+	</target>
+
+	<target name="functional-tomcat101-mariadb118">
+		<run-functional-test app.server.type="tomcat" database.type="mariadb" database.version="11.8" />
 	</target>
 
 	<target name="functional-tomcat101-mysql">
@@ -7320,6 +7616,10 @@ information. Make sure to commit in all format-javadoc results.
 
 	<target name="functional-tomcat101-postgresql163">
 		<run-functional-test app.server.type="tomcat" database.type="postgresql" database.version="16.3" />
+	</target>
+
+	<target name="functional-tomcat101-postgresql175">
+		<run-functional-test app.server.type="tomcat" database.type="postgresql" database.version="17.5" />
 	</target>
 
 	<target name="functional-tomcat101-sqlserver">
@@ -7550,6 +7850,14 @@ information. Make sure to commit in all format-javadoc results.
 		<run-functional-test app.server.type="tomcat" database.type="postgresql" database.version="16.3" />
 	</target>
 
+	<target name="functional-upgrade-tomcat101-postgresql175">
+		<run-functional-test app.server.type="tomcat" database.type="postgresql" database.version="17.5" />
+	</target>
+
+	<target name="functional-upgrade-tomcat101-postgresql175_stable">
+		<run-functional-test app.server.type="tomcat" database.type="postgresql" database.version="17.5" />
+	</target>
+
 	<target name="functional-upgrade-tomcat101-sqlserver">
 		<run-functional-test app.server.type="tomcat" database.type="sqlserver" />
 	</target>
@@ -7669,6 +7977,8 @@ information. Make sure to commit in all format-javadoc results.
 			app.server.type="wildfly"
 			database.type="mariadb"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
@@ -7689,6 +7999,8 @@ information. Make sure to commit in all format-javadoc results.
 			database.type="mariadb"
 			database.version="10.2"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
@@ -7709,6 +8021,8 @@ information. Make sure to commit in all format-javadoc results.
 			database.type="mariadb"
 			database.version="10.4"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
@@ -7729,6 +8043,8 @@ information. Make sure to commit in all format-javadoc results.
 			database.type="mariadb"
 			database.version="10.6"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
@@ -7748,6 +8064,8 @@ information. Make sure to commit in all format-javadoc results.
 			app.server.type="wildfly"
 			database.type="mysql"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
@@ -7767,6 +8085,8 @@ information. Make sure to commit in all format-javadoc results.
 			app.server.type="wildfly"
 			database.type="mysql"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
@@ -7787,6 +8107,8 @@ information. Make sure to commit in all format-javadoc results.
 			database.type="mysql"
 			database.version="8.4"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
@@ -7807,6 +8129,8 @@ information. Make sure to commit in all format-javadoc results.
 			database.type="mysql"
 			database.version="8.4"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
@@ -7826,6 +8150,8 @@ information. Make sure to commit in all format-javadoc results.
 			app.server.type="wildfly"
 			database.type="postgresql"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
@@ -7845,6 +8171,8 @@ information. Make sure to commit in all format-javadoc results.
 			app.server.type="wildfly"
 			database.type="postgresql"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
@@ -7865,6 +8193,8 @@ information. Make sure to commit in all format-javadoc results.
 			database.type="postgresql"
 			database.version="15.5"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
@@ -7885,6 +8215,8 @@ information. Make sure to commit in all format-javadoc results.
 			database.type="postgresql"
 			database.version="15.5"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
@@ -7991,6 +8323,8 @@ information. Make sure to commit in all format-javadoc results.
 			database.type="mysql"
 			setup.proxy="false"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
@@ -8011,6 +8345,8 @@ information. Make sure to commit in all format-javadoc results.
 			database.version="8.4"
 			setup.proxy="false"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
@@ -8030,6 +8366,8 @@ information. Make sure to commit in all format-javadoc results.
 			database.type="postgresql"
 			setup.proxy="false"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
@@ -8050,6 +8388,8 @@ information. Make sure to commit in all format-javadoc results.
 			database.version="15.5"
 			setup.proxy="false"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.plugin.zip.url="${test.plugin.zip.url}"
@@ -8510,50 +8850,17 @@ information. Make sure to commit in all format-javadoc results.
 					</then>
 				</if>
 
-				<loadresource property="modules.compile.task.groups">
+				<loadresource property="modules.compile.tasks">
 					<filterchain>
 						<replacestring from="-test:assemble" to="-test:compileTestIntegrationJava" />
-
-						<tokenfilter>
-							<replaceregex flags="g" pattern="(\S+ ){${test.module.groups.size}}" replace="\0," />
-						</tokenfilter>
 					</filterchain>
 					<propertyresource name="modules.test.class.group" />
 				</loadresource>
 
-				<get-gradle-module-dir-task-names gradle.task.names="${modules.compile.task.groups}" />
-
-				<for delimiter="|" list="${gradle.module.dir.task.names}" param="gradle.module.dir.task.name" trim="true">
-					<sequential>
-						<local name="gradle.module.dir" />
-						<local name="gradle.task.name" />
-
-						<propertyregex
-							input="@{gradle.module.dir.task.name}"
-							override="true"
-							property="gradle.module.dir"
-							regexp="([^=]+)=([^=]+)"
-							replace="\1"
-						/>
-
-						<propertyregex
-							input="@{gradle.module.dir.task.name}"
-							override="true"
-							property="gradle.task.name"
-							regexp="([^=]+)=([^=]+)"
-							replace="\2"
-						/>
-
-						<execute-gradle-task gradle.task.module.dir="${gradle.module.dir}" gradle.task.name="${gradle.task.name}">
-							<action>
-								<gradle-execute dir="${gradle.module.dir}" task="${gradle.task.name}">
-									<arg value="--continue" />
-									<arg value="--parallel" />
-								</gradle-execute>
-							</action>
-						</execute-gradle-task>
-					</sequential>
-				</for>
+				<gradle-execute dir="modules" task="${modules.compile.tasks}">
+					<arg value="--continue" />
+					<arg value="--parallel" />
+				</gradle-execute>
 			</test-action>
 
 			<test-set-up>
@@ -8617,39 +8924,7 @@ information. Make sure to commit in all format-javadoc results.
 		</run-batch-test>
 	</target>
 
-	<target name="modules-integration-aws-s3-mysql84">
-		<set-tomcat-version-number liferay.portal.bundle="${test.portal.bundle.version}" />
-
-		<tstamp>
-			<format pattern="yyyyMMddkkmmssSSS" property="s3.bucket.id" />
-		</tstamp>
-
-		<ant antfile="build-test-s3-store.xml" target="configure-aws-cli" />
-
-		<prepare-aws-s3-configuration />
-
-		<ant antfile="build-test-s3-store.xml" target="create-s3-bucket">
-			<property name="aws.store.enabled" value="true" />
-		</ant>
-
-		<trycatch>
-			<try>
-				<run-modules-integration-test
-					aws.store.enabled="true"
-					database.type="mysql"
-					database.version="8.4"
-				/>
-			</try>
-
-			<finally>
-				<ant antfile="build-test-s3-store.xml" target="delete-s3-bucket">
-					<property name="aws.store.enabled" value="true" />
-				</ant>
-			</finally>
-		</trycatch>
-	</target>
-
-	<target name="modules-integration-aws-s3-postgresql155">
+	<target name="modules-integration-aws-s3-postgresql163">
 		<set-tomcat-version-number liferay.portal.bundle="${test.portal.bundle.version}" />
 
 		<tstamp>
@@ -8669,13 +8944,40 @@ information. Make sure to commit in all format-javadoc results.
 				<run-modules-integration-test
 					aws.store.enabled="true"
 					database.type="postgresql"
-					database.version="15.5"
+					database.version="16.3"
 				/>
 			</try>
 
 			<finally>
 				<ant antfile="build-test-s3-store.xml" target="delete-s3-bucket">
 					<property name="aws.store.enabled" value="true" />
+				</ant>
+			</finally>
+		</trycatch>
+	</target>
+
+	<target name="modules-integration-azure-postgresql163">
+		<set-tomcat-version-number liferay.portal.bundle="${test.portal.bundle.version}" />
+
+		<tstamp>
+			<format pattern="yyyyMMddkkmmssSSS" property="azure.container.id" />
+		</tstamp>
+
+		<ant antfile="build-test-azure.xml" target="create-azure-container" />
+
+		<prepare-azure-store-configuration />
+
+		<trycatch>
+			<try>
+				<run-modules-integration-test
+					azure.store.enabled="true"
+					database.type="postgresql"
+					database.version="16.3"
+				/>
+			</try>
+			<finally>
+				<ant antfile="build-test-azure.xml" target="delete-azure-container">
+					<property name="azure.store.enabled" value="true" />
 				</ant>
 			</finally>
 		</trycatch>
@@ -8810,6 +9112,8 @@ information. Make sure to commit in all format-javadoc results.
 			database.type="db2"
 			database.version="11.1.3"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.portal.bundle.dependencies.zip.url="${test.portal.bundle.dependencies.zip.url}"
@@ -8826,6 +9130,34 @@ information. Make sure to commit in all format-javadoc results.
 		<run-modules-integration-test database.type="db2" database.version="11.5.7" />
 	</target>
 
+	<target name="modules-integration-gcs-postgresql163">
+		<set-tomcat-version-number liferay.portal.bundle="${test.portal.bundle.version}" />
+		<tstamp>
+			<format pattern="yyyyMMddkkmmssSSS" property="gcs.bucket.id" />
+		</tstamp>
+
+		<ant antfile="build-test-gcs-store.xml" target="configure-gcs-cli" />
+
+		<ant antfile="build-test-gcs-store.xml" target="create-gcs-bucket" />
+
+		<prepare-gcs-store-configuration />
+
+		<trycatch>
+			<try>
+				<run-modules-integration-test
+					database.type="postgresql"
+					database.version="16.3"
+					gcs.store.enabled="true"
+				/>
+			</try>
+			<finally>
+				<ant antfile="build-test-gcs-store.xml" target="delete-gcs-bucket">
+					<property name="gcs.store.enabled" value="true" />
+				</ant>
+			</finally>
+		</trycatch>
+	</target>
+
 	<target name="modules-integration-hypersonic">
 		<run-modules-integration-test database.type="hypersonic" />
 	</target>
@@ -8836,6 +9168,38 @@ information. Make sure to commit in all format-javadoc results.
 
 	<target name="modules-integration-hypersonic20-jdk21_zulu">
 		<run-modules-integration-test database.type="hypersonic" />
+	</target>
+
+	<target name="modules-integration-ibm-s3-postgresql163">
+		<set-tomcat-version-number liferay.portal.bundle="${test.portal.bundle.version}" />
+
+		<tstamp>
+			<format pattern="yyyyMMddkkmmssSSS" property="s3.bucket.id" />
+		</tstamp>
+
+		<ant antfile="build-test-s3-store.xml" target="configure-ibm-aws-cli" />
+
+		<ant antfile="build-test-s3-store.xml" target="create-s3-bucket">
+			<property name="ibm.store.enabled" value="true" />
+		</ant>
+
+		<prepare-ibm-s3-configuration />
+
+		<trycatch>
+			<try>
+				<run-modules-integration-test
+					database.type="postgresql"
+					database.version="16.3"
+					ibm.store.enabled="true"
+				/>
+			</try>
+
+			<finally>
+				<ant antfile="build-test-s3-store.xml" target="delete-s3-bucket">
+					<property name="ibm.store.enabled" value="true" />
+				</ant>
+			</finally>
+		</trycatch>
 	</target>
 
 	<target name="modules-integration-mariadb">
@@ -8894,8 +9258,8 @@ information. Make sure to commit in all format-javadoc results.
 		<run-modules-integration-test database.type="mysql" database.version="8.4" />
 	</target>
 
-	<target name="modules-integration-opensearch2-postgresql155">
-		<run-modules-integration-test database.type="postgresql" database.version="15.5" />
+	<target name="modules-integration-opensearch2-postgresql63">
+		<run-modules-integration-test database.type="postgresql" database.version="16.3" />
 	</target>
 
 	<target name="modules-integration-oracle">
@@ -8995,16 +9359,16 @@ information. Make sure to commit in all format-javadoc results.
 		<run-modules-integration-test database.type="mysql" database.version="8.4" />
 	</target>
 
-	<target name="modules-integration-remote-elasticsearch-postgresql155">
-		<run-modules-integration-test database.type="postgresql" database.version="15.5" />
+	<target name="modules-integration-remote-elasticsearch-postgresql163">
+		<run-modules-integration-test database.type="postgresql" database.version="16.3" />
 	</target>
 
 	<target name="modules-integration-solr-mysql84">
 		<run-modules-integration-test database.type="mysql" database.version="8.4" />
 	</target>
 
-	<target name="modules-integration-solr-postgresql155">
-		<run-modules-integration-test database.type="postgresql" database.version="15.5" />
+	<target name="modules-integration-solr-postgresql163">
+		<run-modules-integration-test database.type="postgresql" database.version="16.3" />
 	</target>
 
 	<target name="modules-integration-sqlserver">
@@ -9213,6 +9577,8 @@ information. Make sure to commit in all format-javadoc results.
 					</then>
 				</if>
 
+				<property name="test.batch.name" unless:set="test.batch.name" value="${env.TEST_BATCH_NAME}" />
+
 				<condition else="" property="test.arg.opensearch2.unit.tests" value="-Dcom.liferay.portal.search.opensearch2.test.unit.enabled=true">
 					<istrue value="${run.opensearch2.unit.tests}" />
 				</condition>
@@ -9333,7 +9699,7 @@ junit.jvm.override.version=21</echo>
 		</antcall>
 	</target>
 
-	<target name="modules-unit-remote-eleasticsearch">
+	<target name="modules-unit-remote-elasticsearch">
 		<antcall target="modules-unit" />
 	</target>
 
@@ -9534,6 +9900,8 @@ ${output.content}</echo>
 			database.type="mysql"
 			database.version="8.4"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.portal.bundle.version="${test.portal.bundle.version}"
@@ -9550,6 +9918,8 @@ ${output.content}</echo>
 			database.type="postgresl"
 			database.version="15.5"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.cmp.license.url="${test.cmp.license.url}"
+			test.dsr.license.url="${test.dsr.license.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
 			test.license.xml.url="${test.license.xml.url}"
 			test.portal.bundle.version="${test.portal.bundle.version}"
@@ -9877,6 +10247,39 @@ ${output.content}</echo>
 		<prepare-test-environment />
 	</target>
 
+	<target name="publish-source-formatter">
+		<fail message="Please set the property ${source.formatter.s3.path}." unless="source.formatter.s3.path" />
+
+		<local name="source.formatter.tree.sha" />
+
+		<exec executable="git" failonerror="true" outputproperty="source.formatter.tree.sha">
+			<arg value="rev-parse" />
+			<arg value="HEAD:modules/util/source-formatter" />
+		</exec>
+
+		<beanshell>
+			<![CDATA[
+				import com.liferay.jenkins.results.parser.CloudBucketUtil;
+
+				import java.io.File;
+
+				File libDir = new File(project.getBaseDir(), "tools/sdk/dependencies/com.liferay.source.formatter/lib");
+
+				File jarFile = new File(libDir, "com.liferay.source.formatter.jar");
+
+				if (!jarFile.exists()) {
+					throw new RuntimeException("Unable to find " + jarFile);
+				}
+
+				String treeSHA = project.getProperty("source.formatter.tree.sha").trim();
+
+				CloudBucketUtil.syncS3Files(project.getProperty("source.formatter.s3.path") + "/snapshots/" + treeSHA, libDir.getAbsolutePath());
+
+				System.out.println("Published source-formatter to S3 at tree SHA " + treeSHA);
+			]]>
+		</beanshell>
+	</target>
+
 	<target name="release-functional-smoke-tomcat-mysql84">
 		<antcall target="functional-tomcat-mysql84" />
 	</target>
@@ -9921,57 +10324,112 @@ ${output.content}</echo>
 		<run-release-osgi-state-lpkg-test database.type="postgresql" database.version="16.3" />
 	</target>
 
+	<target name="resolve-source-formatter">
+		<fail message="Please set the property ${source.formatter.s3.path}." unless="source.formatter.s3.path" />
+
+		<local name="source.formatter.tree.sha" />
+
+		<exec executable="git" failonerror="true" outputproperty="source.formatter.tree.sha">
+			<arg value="rev-parse" />
+			<arg value="${liferay.portal.branch}:modules/util/source-formatter" />
+		</exec>
+
+		<mkdir dir="tools/sdk/dependencies/com.liferay.source.formatter/lib" />
+
+		<trycatch property="source.formatter.s3.lookup.failure">
+			<try>
+				<beanshell>
+					<![CDATA[
+						import com.liferay.jenkins.results.parser.CloudBucketUtil;
+
+						import java.io.File;
+
+						String treeSHA = project.getProperty("source.formatter.tree.sha").trim();
+
+						String s3LibPath = project.getProperty("source.formatter.s3.path") + "/snapshots/" + treeSHA;
+
+						String s3JarPath = s3LibPath + "/com.liferay.source.formatter.jar";
+
+						if (!CloudBucketUtil.isS3ObjectPathAvailable(s3JarPath)) {
+							String message = "Unable to find " + s3JarPath;
+
+							System.out.println(message);
+
+							throw new RuntimeException(message);
+						}
+
+						String libPath = "tools/sdk/dependencies/com.liferay.source.formatter/lib";
+
+						File libDir = new File(project.getBaseDir(), libPath);
+
+						CloudBucketUtil.syncS3Files(libDir.getAbsolutePath(), s3LibPath);
+
+						File jarFile = new File(libDir, "com.liferay.source.formatter.jar");
+
+						if (!jarFile.exists() || (jarFile.length() == 0)) {
+							String message = "Unable to find " + jarFile;
+
+							System.out.println(message);
+
+							throw new RuntimeException(message);
+						}
+
+						System.out.println("Resolved source-formatter from S3 at tree SHA " + treeSHA);
+					]]>
+				</beanshell>
+			</try>
+			<catch>
+				<echo>Unable to find cached source-formatter. Building from source.</echo>
+
+				<antcall target="compile" />
+
+				<antcall target="install-portal-snapshots" />
+
+				<if>
+					<available file="modules/util/source-formatter" />
+					<then>
+						<gradle-execute dir="modules/util/source-formatter" task="deploy" />
+					</then>
+				</if>
+
+				<antcall target="publish-source-formatter" />
+			</catch>
+		</trycatch>
+	</target>
+
 	<target name="rest-builder">
 		<run-batch-test>
 			<test-action>
-				<if>
-					<available file="modules/util/portal-tools-rest-builder" />
-					<then>
-						<gradle-execute dir="modules/util/portal-tools-rest-builder" task="deploy">
-							<arg value="clean" />
-						</gradle-execute>
-					</then>
-				</if>
+				<deploy-and-execute-rest-builder-or-service-builder-ant-target
+					ant.target.file="portal-impl/build.xml"
+					ant.target.name="build-rests"
+					rest.builder.or.service.builder="rest"
+					tooling.dir="modules/util/portal-tools-rest-builder"
+				/>
+			</test-action>
 
-				<exec executable="git">
-					<arg value="add" />
-					<arg value="--all" />
-				</exec>
+			<test-set-up>
+				<setup-test-environment />
+			</test-set-up>
+		</run-batch-test>
+	</target>
 
-				<if>
-					<isset property="modules.test.class.group" />
-					<then>
-						<get-gradle-module-dir-task-names gradle.task.names="${modules.test.class.group}" />
+	<target name="rest-builder-and-service-builder">
+		<run-batch-test>
+			<test-action>
+				<deploy-and-execute-rest-builder-or-service-builder-ant-target
+					ant.target.file="portal-impl/build.xml"
+					ant.target.name="build-services"
+					rest.builder.or.service.builder="service"
+					tooling.dir="modules/util/portal-tools-service-builder"
+				/>
 
-						<for delimiter="|" list="${gradle.module.dir.task.names}" param="gradle.module.dir.task.name" trim="true">
-							<sequential>
-								<local name="gradle.module.dir" />
-								<local name="gradle.task.name" />
-
-								<propertyregex
-									input="@{gradle.module.dir.task.name}"
-									override="true"
-									property="gradle.module.dir"
-									regexp="([^=]+)=([^=]+)"
-									replace="\1"
-								/>
-
-								<propertyregex
-									input="@{gradle.module.dir.task.name}"
-									override="true"
-									property="gradle.task.name"
-									regexp="([^=]+)=([^=]+)"
-									replace="\2"
-								/>
-
-								<execute-gradle-task-rest-builder gradle.module.dir="${gradle.module.dir}" gradle.task.name="${gradle.task.name}" />
-							</sequential>
-						</for>
-					</then>
-					<else>
-						<execute-gradle-task-rest-builder gradle.module.dir="modules" gradle.task.name="buildREST" />
-					</else>
-				</if>
+				<deploy-and-execute-rest-builder-or-service-builder-ant-target
+					ant.target.file="portal-impl/build.xml"
+					ant.target.name="build-rests"
+					rest.builder.or.service.builder="rest"
+					tooling.dir="modules/util/portal-tools-rest-builder"
+				/>
 			</test-action>
 
 			<test-set-up>
@@ -10081,67 +10539,12 @@ tar --extract --file=liferay-portal-source.tar.gz modules/core/portal-bootstrap/
 	<target name="service-builder">
 		<run-batch-test>
 			<test-action>
-				<if>
-					<available file="modules/util/portal-tools-service-builder" />
-					<then>
-						<gradle-execute dir="modules/util/portal-tools-service-builder" task="deploy">
-							<arg value="clean" />
-						</gradle-execute>
-					</then>
-				</if>
-
-				<exec executable="git">
-					<arg value="add" />
-					<arg value="--all" />
-				</exec>
-
-				<if>
-					<or>
-						<not>
-							<equals arg1="${skip.service.builder.core}" arg2="true" />
-						</not>
-						<not>
-							<equals arg1="${skip.service.builder.full}" arg2="true" />
-						</not>
-					</or>
-					<then>
-						<execute-ant-target-build-services ant.target.file="portal-impl/build.xml" ant.target.name="build-service-counter" />
-						<execute-ant-target-build-services ant.target.file="portal-impl/build.xml" ant.target.name="build-service-portal" />
-						<execute-ant-target-build-services ant.target.file="portal-impl/build.xml" ant.target.name="build-service-portlets" />
-					</then>
-				</if>
-
-				<if>
-					<isset property="modules.test.class.group" />
-					<then>
-						<get-gradle-module-dir-task-names gradle.task.names="${modules.test.class.group}" />
-
-						<for delimiter="|" list="${gradle.module.dir.task.names}" param="gradle.module.dir.task.name" trim="true">
-							<sequential>
-								<local name="gradle.module.dir" />
-								<local name="gradle.task.name" />
-
-								<propertyregex
-									input="@{gradle.module.dir.task.name}"
-									override="true"
-									property="gradle.module.dir"
-									regexp="([^=]+)=([^=]+)"
-									replace="\1"
-								/>
-
-								<propertyregex
-									input="@{gradle.module.dir.task.name}"
-									override="true"
-									property="gradle.task.name"
-									regexp="([^=]+)=([^=]+)"
-									replace="\2"
-								/>
-
-								<execute-gradle-task-build-services gradle.module.dir="${gradle.module.dir}" gradle.task.name="${gradle.task.name}" />
-							</sequential>
-						</for>
-					</then>
-				</if>
+				<deploy-and-execute-rest-builder-or-service-builder-ant-target
+					ant.target.file="portal-impl/build.xml"
+					ant.target.name="build-services"
+					rest.builder.or.service.builder="service"
+					tooling.dir="modules/util/portal-tools-service-builder"
+				/>
 			</test-action>
 
 			<test-set-up>
@@ -10216,11 +10619,22 @@ tar --extract --file=liferay-portal-source.tar.gz modules/core/portal-bootstrap/
 						</if>
 
 						<echo>Running com.liferay.source.formatter.jar from HEAD.</echo>
+
+						<antcall target="publish-source-formatter" />
 					</then>
 					<else>
-						<antcall target="setup-sdk" />
+						<lstopwatch action="start" name="setup.source.format" />
 
-						<antcall target="setup-yarn" />
+						<antcall target="resolve-source-formatter" />
+
+						<lstopwatch action="total" name="setup.source.format" />
+
+						<if>
+							<matches pattern="${source.formatter.frontend.file.regex}" string="${git.diff}" />
+							<then>
+								<antcall target="setup-yarn" />
+							</then>
+						</if>
 
 						<loadproperties>
 							<zipentry name="META-INF/MANIFEST.MF" zipfile="tools/sdk/dependencies/com.liferay.source.formatter/lib/com.liferay.source.formatter.jar" />

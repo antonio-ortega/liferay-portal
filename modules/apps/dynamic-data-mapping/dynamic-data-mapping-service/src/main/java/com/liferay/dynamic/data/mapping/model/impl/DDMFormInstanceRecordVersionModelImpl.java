@@ -105,6 +105,8 @@ public class DDMFormInstanceRecordVersionModelImpl
 	public static final String TABLE_SQL_DROP =
 		"drop table DDMFormInstanceRecordVersion";
 
+	public static final String ENTITY_ALIAS = "ddmFormInstanceRecordVersion";
+
 	public static final String ORDER_BY_JPQL =
 		" ORDER BY ddmFormInstanceRecordVersion.formInstanceRecordVersionId ASC";
 
@@ -1327,3 +1329,4 @@ public class DDMFormInstanceRecordVersionModelImpl
 	private DDMFormInstanceRecordVersion _escapedModel;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:1949422478

@@ -177,9 +177,9 @@ public class JournalUserNotificationTest extends BaseUserNotificationTestCase {
 		String name = StringUtil.randomString();
 
 		_workflowDefinitionManager.deployWorkflowDefinition(
-			null, TestPropsValues.getCompanyId(), user.getUserId(),
-			StringUtil.randomString(), name,
-			_getContentBytes("workflow-definition.xml"));
+			_getContentBytes("workflow-definition.xml"),
+			TestPropsValues.getCompanyId(), null, name,
+			StringUtil.randomString(), user.getUserId());
 
 		WorkflowDefinitionLink workflowDefinitionLink =
 			_workflowDefinitionLinkLocalService.updateWorkflowDefinitionLink(
@@ -209,10 +209,10 @@ public class JournalUserNotificationTest extends BaseUserNotificationTestCase {
 			workflowDefinitionLink);
 
 		_workflowDefinitionManager.updateActive(
-			user.getCompanyId(), user.getUserId(), name, 1, false);
+			false, user.getCompanyId(), name, user.getUserId(), 1);
 
 		_workflowDefinitionManager.undeployWorkflowDefinition(
-			user.getCompanyId(), user.getUserId(), name, 1);
+			user.getCompanyId(), name, user.getUserId(), 1);
 	}
 
 	@Override

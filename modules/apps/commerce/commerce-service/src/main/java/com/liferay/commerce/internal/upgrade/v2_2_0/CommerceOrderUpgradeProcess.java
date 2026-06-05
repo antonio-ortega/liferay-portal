@@ -71,8 +71,10 @@ public class CommerceOrderUpgradeProcess extends UpgradeProcess {
 			PreparedStatement preparedStatement2 =
 				AutoBatchPreparedStatementUtil.concurrentAutoBatch(
 					connection, updateCommerceOrderSQL2);
+
 			Statement s = connection.createStatement(
 				ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+
 			ResultSet resultSet = s.executeQuery(
 				"select distinct orderOrganizationId, orderUserId from " +
 					"CommerceOrder")) {
@@ -159,6 +161,7 @@ public class CommerceOrderUpgradeProcess extends UpgradeProcess {
 				"where organizationId = " + organizationId;
 
 		try (Statement s = connection.createStatement();
+
 			ResultSet resultSet = s.executeQuery(sql)) {
 
 			if (resultSet.next()) {

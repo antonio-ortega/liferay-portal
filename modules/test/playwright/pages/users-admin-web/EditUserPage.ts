@@ -46,6 +46,7 @@ export class EditUserPage {
 	readonly categoryGridCell: (categoryName: string) => Locator;
 	readonly categoryInput: (vocabularyName: string) => Locator;
 	readonly categoryOption: (categoryName: string) => Locator;
+	readonly passwordConfirmationFrameCancelButton: Locator;
 	readonly changeImageButton: Locator;
 	readonly clearImageButton: Locator;
 	readonly confirmButton: Locator;
@@ -128,6 +129,7 @@ export class EditUserPage {
 	readonly regularRoleCellButton: (name: string) => Locator;
 	readonly regularRolesTable: DataTablePage;
 	readonly removeMenuItem: Locator;
+	readonly requiredPasswordResetCheckbox: Locator;
 	readonly rolesLink: Locator;
 	readonly saveButton: Locator;
 	readonly screenNameError: Locator;
@@ -193,6 +195,7 @@ export class EditUserPage {
 	readonly tagInput: (name: string) => Locator;
 	readonly tagsFrame: FrameLocator;
 	readonly timeZoneInput: Locator;
+	readonly uploadImageFrame: FrameLocator;
 	readonly uploadImageSelectImageButton: Locator;
 	readonly uploadImageDoneButton: Locator;
 	readonly userIDInput: Locator;
@@ -335,15 +338,18 @@ export class EditUserPage {
 			name: 'Contact Information',
 		});
 		this.customField = async (fieldName: string) => {
-			await page.getByText('Custom Fields').waitFor({timeout: 15 * 1000});
+			await page
+				.locator(
+					'[id="_com_liferay_users_admin_web_portlet_UsersAdminPortlet_fm"]'
+				)
+				.getByText('Custom Fields', {exact: true})
+				.waitFor({timeout: 15 * 1000});
 
 			const customField = page.getByText(fieldName);
 
-			if (await customField.isVisible()) {
-				return customField;
-			}
+			await expect(customField).toBeVisible();
 
-			throw new Error(`Cannot locate Custom Field ${fieldName}`);
+			return customField;
 		};
 		this.displaySettingsLink = page.getByRole('link', {
 			exact: true,
@@ -551,6 +557,9 @@ export class EditUserPage {
 		this.regularRoleCell = (name) => page.getByRole('cell', {name});
 		this.regularRoleCellButton = (name) =>
 			this.regularRoleCell(name).locator('..').getByRole('button');
+		this.requiredPasswordResetCheckbox = page.locator(
+			'#_com_liferay_users_admin_web_portlet_UsersAdminPortlet_passwordReset'
+		);
 		this.regularRolesTable = new DataTablePage(
 			page,
 			page.locator(
@@ -597,7 +606,7 @@ export class EditUserPage {
 			)
 			.or(
 				this.selectOrganizationRolesFrame.locator(
-					'#_com_liferay_roles_admin_web_portlet_RolesAdminPortlet_rolesSearchContainer'
+					'#_com_liferay_roles_admin_web_portlet_RolesAdminPortlet_rolesSearchContainerSearchContainer'
 				)
 			);
 		this.selectOrganizationRolesTableRow = async (
@@ -767,12 +776,14 @@ export class EditUserPage {
 		this.tagInput = (name) => page.getByRole('row', {name});
 		this.tagsFrame = page.frameLocator(`iframe[title="Tags"]`);
 		this.timeZoneInput = page.getByLabel('Time Zone');
-		this.uploadImageSelectImageButton = page
-			.frameLocator('iframe[title="Upload Image"]')
-			.getByLabel('Select Image');
-		this.uploadImageDoneButton = page
-			.frameLocator('iframe[title="Upload Image"]')
-			.getByRole('button', {name: 'Done'});
+		this.uploadImageFrame = page.frameLocator(
+			'iframe[title="Upload Image"]'
+		);
+		this.uploadImageSelectImageButton =
+			this.uploadImageFrame.getByLabel('Select Image');
+		this.uploadImageDoneButton = this.uploadImageFrame.getByRole('button', {
+			name: 'Done',
+		});
 		this.userIDInput = page.getByLabel('User ID');
 		this.urlInput = page.getByLabel('Url Required');
 		this.webDAVPasswordLabel = page.locator(
@@ -811,6 +822,10 @@ export class EditUserPage {
 			'button',
 			{name: 'Confirm'}
 		);
+		this.passwordConfirmationFrameCancelButton =
+			this.passwordConfirmationFrame.getByRole('button', {
+				name: 'Cancel',
+			});
 		this.yourPasswordInput =
 			this.passwordConfirmationFrame.getByLabel('Your Password');
 	}

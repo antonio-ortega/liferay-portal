@@ -171,6 +171,7 @@ public class UpgradeDLFileEntryTest {
 		throws Exception {
 
 		try (Connection connection = DataAccess.getConnection();
+
 			PreparedStatement preparedStatement = connection.prepareStatement(
 				"update DLFileEntry set externalReferenceCode = '' where " +
 					"ctCollectionId = ? and fileEntryId = ?")) {
@@ -183,13 +184,13 @@ public class UpgradeDLFileEntryTest {
 	}
 
 	@Inject
-	private static CTCollectionLocalService _ctCollectionLocalService;
-
-	@Inject
 	private ClassNameLocalService _classNameLocalService;
 
 	@DeleteAfterTestRun
 	private CTCollection _ctCollection;
+
+	@Inject
+	private CTCollectionLocalService _ctCollectionLocalService;
 
 	@Inject
 	private DLFileEntryLocalService _dlFileEntryLocalService;

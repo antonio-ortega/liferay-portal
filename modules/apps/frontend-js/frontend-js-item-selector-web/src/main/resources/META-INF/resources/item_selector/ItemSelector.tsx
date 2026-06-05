@@ -11,6 +11,7 @@ import {useModal} from '@clayui/modal';
 import ClayMultiSelect from '@clayui/multi-select';
 import {InternalDispatch, useControlledState} from '@clayui/shared';
 import {ClayTooltipProvider} from '@clayui/tooltip';
+import {DEFAULT_FETCH_HEADERS} from '@liferay/frontend-data-set-web';
 import {fetch, getObjectValueFromPath} from 'frontend-js-web';
 import React, {useCallback, useEffect, useMemo, useState} from 'react';
 
@@ -266,7 +267,9 @@ function ItemSelector<T extends Record<string, any>>({
 		resource: sourceItems = [],
 	} = useResource({
 		fetch: async (link) => {
-			const result = await fetch(link);
+			const result = await fetch(link, {
+				headers: DEFAULT_FETCH_HEADERS,
+			});
 
 			const contentType = result.headers.get('Content-Type') || '';
 
@@ -275,7 +278,7 @@ function ItemSelector<T extends Record<string, any>>({
 					'The ItemSelector expects an application/json response from apiURL provided.'
 				);
 
-				return;
+				return [] as any;
 			}
 
 			const json = await result.json();
@@ -285,7 +288,7 @@ function ItemSelector<T extends Record<string, any>>({
 					'The ItemSelector expects the response from apiURL to include an array of items.'
 				);
 
-				return json;
+				return [] as any;
 			}
 
 			const {items, lastPage, page} = json as HeadlessPage<T>;

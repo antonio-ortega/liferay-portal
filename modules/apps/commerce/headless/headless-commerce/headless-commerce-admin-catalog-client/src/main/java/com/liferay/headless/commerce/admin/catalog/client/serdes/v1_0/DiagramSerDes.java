@@ -424,3 +424,4 @@ public class DiagramSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-2020998811

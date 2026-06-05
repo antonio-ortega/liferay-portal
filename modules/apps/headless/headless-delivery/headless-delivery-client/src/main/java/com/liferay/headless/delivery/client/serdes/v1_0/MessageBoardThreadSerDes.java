@@ -1218,3 +1218,4 @@ public class MessageBoardThreadSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-985559291

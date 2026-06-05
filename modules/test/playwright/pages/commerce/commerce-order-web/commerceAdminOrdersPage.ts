@@ -5,14 +5,15 @@
 
 import {Locator, Page} from '@playwright/test';
 
-import {ApplicationsMenuPage} from '../../product-navigation-applications-menu/ApplicationsMenuPage';
+import {GlobalMenuPage} from '../../product-navigation-applications-menu/GlobalMenuPage';
 import {
 	CommerceDNDTablePage,
 	searchTableRowByValue,
 } from '../commerceDNDTablePage';
 
 export class CommerceAdminOrdersPage extends CommerceDNDTablePage {
-	readonly applicationsMenuPage: ApplicationsMenuPage;
+	readonly addFilterButton: Locator;
+	readonly globalMenuPage: GlobalMenuPage;
 	readonly backLink: Locator;
 	readonly deleteItemMenuItem: Locator;
 	readonly editCommerceOrderTable: Locator;
@@ -22,6 +23,7 @@ export class CommerceAdminOrdersPage extends CommerceDNDTablePage {
 		strictEqual?: boolean
 	) => Promise<{column: Locator; row: Locator}>;
 	readonly editCommerceOrderTableRows: () => Promise<Locator[]>;
+	readonly filterButton: Locator;
 	readonly editCommerceOrderTableRowLink: ({
 		colIndex,
 		rowValue,
@@ -40,9 +42,13 @@ export class CommerceAdminOrdersPage extends CommerceDNDTablePage {
 	readonly menuActionButton: (accountName: string) => Locator;
 	readonly menuItemAction: (action: string) => Locator;
 	readonly orderActionsButton: Locator;
+	readonly orderDate: Locator;
+	readonly orderDateByOrderId: (orderId: string) => Locator;
+	readonly orderId: Locator;
 	readonly orderStatusLink: (orderStatus: string) => Locator;
 	readonly page: Page;
 	readonly quoteProcessedButton: Locator;
+	readonly tableRowOrderIdLink: (orderId: number | string) => Locator;
 
 	constructor(page: Page) {
 		super(
@@ -90,7 +96,7 @@ export class CommerceAdminOrdersPage extends CommerceDNDTablePage {
 
 			throw new Error(`Cannot locate row with rowValue: ${rowValue}`);
 		};
-		this.applicationsMenuPage = new ApplicationsMenuPage(page);
+		this.globalMenuPage = new GlobalMenuPage(page);
 		this.backLink = page.locator('span[title="Back"]');
 		this.deleteItemMenuItem = page.getByRole('menuitem', {
 			exact: true,
@@ -104,7 +110,7 @@ export class CommerceAdminOrdersPage extends CommerceDNDTablePage {
 			if (itemsTableRow && itemsTableRow.column) {
 				return itemsTableRow.row.getByRole('button', {
 					exact: true,
-					name: 'Actions',
+					name: 'Item Actions',
 				});
 			}
 
@@ -127,15 +133,42 @@ export class CommerceAdminOrdersPage extends CommerceDNDTablePage {
 		this.orderActionsButton = page.getByRole('button', {
 			name: 'Actions',
 		});
+		this.orderDate = page.locator(
+			'dl.commerce-list:has-text("Order Date") dd'
+		);
+		this.orderDateByOrderId = (orderId: string) =>
+			page.locator(`tr:has-text("${orderId}") .cell-orderDate`);
+		this.orderId = page.locator('dl.commerce-list:has-text("Order ID") dd');
 		this.orderStatusLink = (orderStatus: string) =>
 			page.getByRole('link', {exact: true, name: orderStatus});
+		this.addFilterButton = page.getByRole('button', {
+			exact: true,
+			name: 'Add Filter',
+		});
+		this.filterButton = page.getByRole('button', {
+			exact: true,
+			name: 'Filter',
+		});
 		this.page = page;
 		this.quoteProcessedButton = page.getByRole('link', {
 			name: 'Quote Processed',
 		});
+		this.tableRowOrderIdLink = (orderId: number | string) =>
+			this.table
+				.locator('tbody')
+				.getByRole('link', {exact: true, name: String(orderId)});
+	}
+
+	async applyFilter(category: string, valueLabel: string) {
+		await this.filterButton.click();
+		await this.page
+			.getByRole('menuitem', {exact: true, name: category})
+			.click();
+		await this.page.getByLabel(valueLabel, {exact: true}).check();
+		await this.addFilterButton.click();
 	}
 
 	async goto() {
-		await this.applicationsMenuPage.goToCommerceOrders(false);
+		await this.globalMenuPage.goToCommerce('Orders');
 	}
 }

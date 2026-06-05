@@ -107,8 +107,7 @@ public class BasicFragmentEntryActionDropdownItemsProvider {
 					).add(
 						() ->
 							hasManageFragmentEntriesPermission &&
-							!_fragmentEntry.isReadOnly() &&
-							!_fragmentEntry.isMarketplace(),
+							!_fragmentEntry.isReadOnly(),
 						_getRenameFragmentEntryActionUnsafeConsumer()
 					).add(
 						() ->
@@ -511,7 +510,7 @@ public class BasicFragmentEntryActionDropdownItemsProvider {
 		_getViewGroupFragmentEntryUsagesActionUnsafeConsumer() {
 
 		return dropdownItem -> {
-			dropdownItem.setDisabled(_fragmentEntry.getGlobalUsageCount() == 0);
+			dropdownItem.setDisabled(_fragmentEntry.getUsageCount() == 0);
 			dropdownItem.setHref(
 				_renderResponse.createRenderURL(), "mvcRenderCommandName",
 				"/fragment/view_group_fragment_entry_usages", "redirect",

@@ -6,10 +6,11 @@
 package com.liferay.marketplace;
 
 import com.liferay.client.extension.util.spring.boot3.BaseRestController;
-import com.liferay.headless.commerce.admin.order.client.dto.v1_0.Order;
 import com.liferay.marketplace.constants.MarketplaceConstants;
+import com.liferay.marketplace.permission.AccountMemberPermission;
+import com.liferay.marketplace.service.AnalyticsService;
 import com.liferay.marketplace.service.KoroneikiService;
-import com.liferay.marketplace.service.MarketplaceService;
+import com.liferay.osb.koroneiki.phloem.rest.client.dto.v1_0.Account;
 import com.liferay.osb.koroneiki.phloem.rest.client.dto.v1_0.Product;
 import com.liferay.osb.koroneiki.phloem.rest.client.dto.v1_0.ProductConsumption;
 import com.liferay.osb.koroneiki.phloem.rest.client.dto.v1_0.ProductPurchase;
@@ -18,13 +19,10 @@ import com.liferay.osb.koroneiki.phloem.rest.client.pagination.Pagination;
 import com.liferay.osb.koroneiki.phloem.rest.client.resource.v1_0.ProductPurchaseResource;
 import com.liferay.osb.koroneiki.phloem.rest.client.resource.v1_0.ProductResource;
 import com.liferay.petra.string.StringBundler;
-import com.liferay.portal.kernel.util.HashMapBuilder;
 
 import java.time.Duration;
 
-import java.util.Base64;
 import java.util.Date;
-import java.util.Map;
 import java.util.Objects;
 
 import org.apache.commons.logging.Log;
@@ -36,15 +34,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -64,9 +60,15 @@ public class AnalyticsRestController extends BaseRestController {
 		throws Exception {
 
 		try {
-			if (!_koroneikiService.hasEntitlement(
-					_koroneikiService.getKoroneikiAccount(accountKey),
-					MarketplaceConstants.KORONEIKI_DXP_ENTITLEMENTS)) {
+			Account koroneikiAccount = _koroneikiService.getKoroneikiAccount(
+				accountKey);
+
+			if (!(_koroneikiService.hasEntitlement(
+					koroneikiAccount,
+					MarketplaceConstants.KORONEIKI_AC_ENTITLEMENTS) ||
+				  _koroneikiService.hasEntitlement(
+					  koroneikiAccount,
+					  MarketplaceConstants.KORONEIKI_DXP_ENTITLEMENTS))) {
 
 				throw new Exception(
 					"DXP entitlements not found for account " + accountKey);
@@ -170,7 +172,7 @@ public class AnalyticsRestController extends BaseRestController {
 	@GetMapping("project/{projectId}")
 	public String getProject(@PathVariable String projectId) throws Exception {
 		return get(
-			_getAuthorization(),
+			_analyticsService.getAuthorization(),
 			UriComponentsBuilder.fromUriString(
 				_analyticsAuthUrl
 			).path(
@@ -179,88 +181,49 @@ public class AnalyticsRestController extends BaseRestController {
 			).toUri());
 	}
 
-	@PostMapping("provisioning")
-	public void postProvisioning(@RequestBody String json) throws Exception {
-		JSONObject commerceOrderJSONObject = new JSONObject(
-			json
-		).getJSONObject(
-			"commerceOrder"
-		);
+	@GetMapping("project/corpProjectUuid/{corpProjectUuid}")
+	public ResponseEntity<?> getProjectCorpProjectUuid(
+			@AuthenticationPrincipal Jwt jwt,
+			@PathVariable String corpProjectUuid)
+		throws Exception {
 
-		Order order = _marketplaceService.getOrder(
-			commerceOrderJSONObject.getLong("id"));
+		_accountMemberPermission.check(corpProjectUuid, jwt);
 
-		if (_log.isInfoEnabled()) {
-			_log.info("Provisioning order " + order.getId());
+		String analyticsProject = _analyticsService.getCorpProjectUuid(
+			corpProjectUuid);
+
+		if (analyticsProject == null) {
+			return ResponseEntity.status(
+				HttpStatus.NOT_FOUND
+			).body(
+				null
+			);
 		}
 
-		Map<String, String> customFields =
-			(Map<String, String>)order.getCustomFields();
+		return ResponseEntity.status(
+			HttpStatus.OK
+		).body(
+			analyticsProject
+		);
+	}
 
-		JSONObject orderMetadataJSONObject = new JSONObject(
-			customFields.getOrDefault("order-metadata", "{}"));
+	@GetMapping("project/{projectId}/data-source/token")
+	public String getProjectDataSourceToken(@PathVariable String projectId)
+		throws Exception {
 
-		JSONObject analyticsFormJSONObject =
-			orderMetadataJSONObject.optJSONObject("analyticsForm");
-
-		String response = WebClient.builder(
+		return WebClient.builder(
 		).baseUrl(
 			_analyticsAuthUrl
 		).defaultHeader(
-			HttpHeaders.AUTHORIZATION, _getAuthorization()
+			HttpHeaders.AUTHORIZATION, _analyticsService.getAuthorization()
 		).build(
-		).post(
+		).get(
 		).uri(
-			"/o/faro/main/project/unprovisioned"
-		).contentType(
-			MediaType.APPLICATION_FORM_URLENCODED
-		).body(
-			BodyInserters.fromFormData(
-				"corpProjectName",
-				analyticsFormJSONObject.getString("corpProjectName")
-			).with(
-				"corpProjectUuid",
-				analyticsFormJSONObject.getString("corpProjectUuid")
-			).with(
-				"incidentReportEmailAddresses",
-				analyticsFormJSONObject.getJSONArray(
-					"incidentReportEmailAddresses"
-				).toString()
-			).with(
-				"name", analyticsFormJSONObject.getString("name")
-			).with(
-				"serverLocation",
-				analyticsFormJSONObject.optString(
-					"serverLocation", "us-west1-ac-uat-c1")
-			).with(
-				"sharedCluster", "false"
-			).with(
-				"trial", "true"
-			).with(
-				"ownerEmailAddress",
-				analyticsFormJSONObject.getString("ownerEmailAddress")
-			)
+			"/o/faro/contacts/" + projectId + "/data_source/token"
 		).retrieve(
 		).bodyToMono(
 			String.class
 		).block();
-
-		if (response == null) {
-			return;
-		}
-
-		if (_log.isInfoEnabled()) {
-			_log.info("Analytics project created for order " + order.getId());
-		}
-
-		_marketplaceService.updateOrder(
-			HashMapBuilder.put(
-				"order-metadata",
-				orderMetadataJSONObject.put(
-					"analyticsProject", new JSONObject(response)
-				).toString()
-			).build(),
-			order.getId(), MarketplaceConstants.ORDER_STATUS_COMPLETED);
 	}
 
 	@Override
@@ -274,38 +237,28 @@ public class AnalyticsRestController extends BaseRestController {
 				retrySignal -> {
 					if (_log.isInfoEnabled()) {
 						_log.info(
-							"Retry attempt " + retrySignal.totalRetries() + 1);
+							StringBundler.concat(
+								"Retrying ", clientRequest.url(),
+								retrySignal.totalRetries() + 1));
 					}
 				}
 			)
 		);
 	}
 
-	private String _getAuthorization() {
-		Base64.Encoder encoder = Base64.getEncoder();
-
-		String authorization =
-			_analyticsAuthEmailAddress + ":" + _analyticsAuthPassword;
-
-		return "Basic " + encoder.encodeToString(authorization.getBytes());
-	}
-
 	private static final Log _log = LogFactory.getLog(
 		AnalyticsRestController.class);
 
-	@Value("${liferay.marketplace.analytics.auth.email.address}")
-	private String _analyticsAuthEmailAddress;
-
-	@Value("${liferay.marketplace.analytics.auth.password}")
-	private String _analyticsAuthPassword;
+	@Autowired
+	private AccountMemberPermission _accountMemberPermission;
 
 	@Value("${liferay.marketplace.analytics.auth.url}")
 	private String _analyticsAuthUrl;
 
 	@Autowired
-	private KoroneikiService _koroneikiService;
+	private AnalyticsService _analyticsService;
 
 	@Autowired
-	private MarketplaceService _marketplaceService;
+	private KoroneikiService _koroneikiService;
 
 }

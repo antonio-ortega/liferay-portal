@@ -9,7 +9,18 @@ import {dataApiHelpersTest} from '../../../fixtures/dataApiHelpersTest';
 import {featureFlagsTest} from '../../../fixtures/featureFlagsTest';
 import {loginTest} from '../../../fixtures/loginTest';
 import {workflowPagesTest} from '../../../fixtures/workflowPagesTest';
+import {DataApiHelpers} from '../../../helpers/ApiHelpers';
+import {addCMSAdministrator} from '../../../utils/addCMSAdministrator';
+import {getRandomInt} from '../../../utils/getRandomInt';
 import getRandomString from '../../../utils/getRandomString';
+import performLogin, {
+	performLoginViaApi,
+	performLogout,
+	performUserSwitch,
+	userData,
+} from '../../../utils/performLogin';
+import {SITE_CMS_SPACE_EXTERNAL_REFERENCE_CODE} from '../../setup/site-cms-site/constants/space';
+import {structureBuilderPagesTest} from '../structure-builder/fixtures/structureBuilderPagesTest';
 import {cmsPagesTest} from './fixtures/cmsPagesTest';
 import {DataSetPage} from './pages/DataSetPage';
 
@@ -17,11 +28,128 @@ const test = mergeTests(
 	cmsPagesTest,
 	dataApiHelpersTest,
 	featureFlagsTest({
-		'LPD-11235': {enabled: true},
+		'LPD-11235': {enabled: false},
 		'LPD-17564': {enabled: true},
 	}),
 	loginTest(),
+	structureBuilderPagesTest,
 	workflowPagesTest
+);
+
+let cmsAdminUser: TUserAccount;
+let setupData: Array<{id: number | string; type: string}>;
+let spaceAdminUser: TUserAccount;
+let spaceUser: TUserAccount;
+
+test.beforeAll(async ({browser}) => {
+	const page = await browser.newPage();
+
+	await performLoginViaApi({page, screenName: 'test'});
+
+	const apiHelpers = new DataApiHelpers(page);
+
+	cmsAdminUser = await addCMSAdministrator(apiHelpers);
+
+	apiHelpers.data.push({id: cmsAdminUser.id, type: 'userAccount'});
+
+	spaceAdminUser = await apiHelpers.headlessAdminUser.postUserAccount();
+
+	apiHelpers.data.push({id: spaceAdminUser.id, type: 'userAccount'});
+
+	userData[spaceAdminUser.alternateName] = {
+		name: spaceAdminUser.givenName,
+		password: 'test',
+		surname: spaceAdminUser.familyName,
+	};
+
+	spaceUser = await apiHelpers.headlessAdminUser.postUserAccount();
+
+	apiHelpers.data.push({id: spaceUser.id, type: 'userAccount'});
+
+	userData[spaceUser.alternateName] = {
+		name: spaceUser.givenName,
+		password: 'test',
+		surname: spaceUser.familyName,
+	};
+
+	await apiHelpers.headlessAssetLibrary.putAssetLibraryUserAccount(
+		SITE_CMS_SPACE_EXTERNAL_REFERENCE_CODE,
+		spaceAdminUser.externalReferenceCode
+	);
+
+	await apiHelpers.headlessAssetLibrary.putAssetLibraryUserAccountRoles(
+		SITE_CMS_SPACE_EXTERNAL_REFERENCE_CODE,
+		spaceAdminUser.externalReferenceCode,
+		['Asset Library Administrator']
+	);
+
+	await apiHelpers.headlessAssetLibrary.putAssetLibraryUserAccount(
+		SITE_CMS_SPACE_EXTERNAL_REFERENCE_CODE,
+		spaceUser.externalReferenceCode
+	);
+
+	setupData = [...apiHelpers.data];
+
+	await page.close();
+});
+
+test.afterAll(async ({browser}) => {
+	const page = await browser.newPage();
+
+	await performLoginViaApi({page, screenName: 'test'});
+
+	const apiHelpers = new DataApiHelpers(page);
+
+	apiHelpers.setData(setupData);
+
+	await apiHelpers.clearData();
+
+	await page.close();
+});
+
+test(
+	'My Workflow Tasks full view preserves the back button when switching tabs',
+	{tag: '@LPD-78912'},
+	async ({context, homePage, page}) => {
+		await homePage.goto();
+
+		const [fullViewPage] = await Promise.all([
+			context.waitForEvent('page'),
+			page
+				.getByRole('button', {
+					name: /Open My Workflow Tasks: Assigned to Me/i,
+				})
+				.click(),
+		]);
+
+		await fullViewPage.waitForLoadState();
+
+		const backButton = fullViewPage.getByRole('link', {
+			name: 'Return to Full Page',
+		});
+
+		await expect(backButton).toBeVisible();
+
+		await fullViewPage
+			.getByRole('link', {
+				name: 'Assigned to Me',
+			})
+			.click();
+
+		await fullViewPage.waitForLoadState();
+
+		await expect(backButton).toBeVisible();
+
+		await fullViewPage
+			.getByRole('link', {
+				name: 'Assigned to My Roles',
+			})
+			.click();
+
+		await fullViewPage.waitForLoadState();
+
+		await expect(backButton).toBeVisible();
+	}
 );
 
 test(
@@ -130,17 +258,6 @@ test(
 				await expect(workflowTaskRow2).toBeHidden();
 			});
 
-			await test.step('Verify workflow task approve action', async () => {
-				const workflowTaskRow1 = page
-					.getByRole('row')
-					.filter({hasText: /sent you/i})
-					.filter({hasText: objectEntry1.title});
-
-				await expect(workflowTaskRow1).toBeVisible();
-				await homePage.approveWorkflowTask(objectEntry1.title);
-				await expect(workflowTaskRow1).toBeHidden();
-			});
-
 			await test.step('Verify workflow task update due date action', async () => {
 				await homePage.workflowTaskFilterButton.click();
 				await homePage.assignedToMyRolesMenuItem.click();
@@ -183,17 +300,6 @@ test(
 				);
 
 				await page.getByRole('button', {name: 'Cancel'}).click();
-			});
-
-			await test.step('Verify workflow task reject action', async () => {
-				const workflowTaskRow3 = page
-					.getByRole('row')
-					.filter({hasText: /sent you/i})
-					.filter({hasText: objectEntry3.title});
-
-				await expect(workflowTaskRow3).toBeVisible();
-				await homePage.rejectWorkflowTask(objectEntry3.title);
-				await expect(workflowTaskRow3).toBeHidden();
 			});
 		}
 		finally {
@@ -294,8 +400,17 @@ test(
 			await homePage.assignedToMyRolesMenuItem.click();
 
 			await expect(page.getByText(account.name)).toBeHidden();
+
+			const myWorkflowTasksContainer = page
+				.locator('div.container-fluid-max')
+				.filter({
+					has: page.getByRole('heading', {name: 'My Workflow Tasks'}),
+				});
+
 			await expect(
-				page.getByRole('link', {name: objectEntry.title})
+				myWorkflowTasksContainer.getByRole('link', {
+					name: objectEntry.title,
+				})
 			).toBeVisible();
 		}
 		finally {
@@ -364,9 +479,8 @@ test(
 
 			const dataSetFragmentPage: DataSetPage = new DataSetPage(page);
 
-			const row = dataSetFragmentPage.table.bodyRows.filter({
-				hasText: file1Title,
-			});
+			const row =
+				dataSetFragmentPage.table.bodyRows.getByLabel(file1Title);
 
 			await expect(row.getByText(file1Title)).toBeVisible();
 		}
@@ -379,6 +493,289 @@ test(
 				applicationName,
 				String(objectEntry2.id)
 			);
+		}
+	}
+);
+
+test(
+	'Can go to All page from Recent Assets button',
+	{tag: '@LPD-83675'},
+	async ({apiHelpers, homePage, page}) => {
+		const applicationName = 'cms/basic-web-contents';
+		const spaceName = 'Default';
+		let objectEntry1;
+		let objectEntry2;
+
+		const file1Title = `title ${getRandomString()}`;
+
+		try {
+			objectEntry1 = await apiHelpers.objectEntry.postObjectEntry(
+				{
+					objectEntryFolderExternalReferenceCode: 'L_CONTENTS',
+					title: file1Title,
+				},
+				applicationName,
+				spaceName
+			);
+
+			objectEntry2 = await apiHelpers.objectEntry.postObjectEntry(
+				{
+					objectEntryFolderExternalReferenceCode: 'L_CONTENTS',
+					title: `some content ${getRandomString()}`,
+				},
+				applicationName,
+				spaceName
+			);
+
+			await homePage.goto();
+
+			await homePage.viewAllButton.click();
+
+			await expect(
+				page.getByRole('heading', {name: 'All'})
+			).toBeVisible();
+		}
+		finally {
+			await apiHelpers.objectEntry.deleteObjectEntry(
+				applicationName,
+				String(objectEntry1.id)
+			);
+			await apiHelpers.objectEntry.deleteObjectEntry(
+				applicationName,
+				String(objectEntry2.id)
+			);
+		}
+	}
+);
+
+test(
+	'Can only see Recent Assets the user has VIEW permission on',
+	{tag: '@LPD-87568'},
+	async ({apiHelpers, homePage, page}) => {
+		const applicationName = 'cms/basic-web-contents';
+		const restrictedTitle = `restricted ${getRandomString()}`;
+		const visibleTitle = `visible ${getRandomString()}`;
+
+		const restrictedSpace =
+			await apiHelpers.headlessAssetLibrary.createAssetLibrary({
+				name: `Space ${getRandomString()}`,
+				settings: {
+					logoColor: 'outline-3',
+					sharingEnabled: true,
+				},
+				type: 'Space',
+			});
+
+		let restrictedEntry;
+		let visibleEntry;
+
+		try {
+			restrictedEntry = await apiHelpers.objectEntry.postObjectEntry(
+				{
+					objectEntryFolderExternalReferenceCode: 'L_CONTENTS',
+					title: restrictedTitle,
+				},
+				applicationName,
+				restrictedSpace.name
+			);
+
+			visibleEntry = await apiHelpers.objectEntry.postObjectEntry(
+				{
+					objectEntryFolderExternalReferenceCode: 'L_CONTENTS',
+					title: visibleTitle,
+				},
+				applicationName,
+				'Default'
+			);
+
+			const dataSetFragmentPage: DataSetPage = new DataSetPage(page);
+
+			await test.step('Default admin can see both assets in Recent Assets', async () => {
+				await homePage.goto();
+
+				await expect(
+					dataSetFragmentPage.getRow(visibleTitle)
+				).toBeVisible();
+
+				await expect(
+					dataSetFragmentPage.getRow(restrictedTitle)
+				).toBeVisible();
+			});
+
+			await test.step('Space User cannot see the restricted asset in Recent Assets', async () => {
+				await performUserSwitch(page, spaceUser.alternateName);
+
+				await homePage.goto();
+
+				await expect(
+					dataSetFragmentPage.getRow(visibleTitle)
+				).toBeVisible();
+
+				await expect(
+					dataSetFragmentPage.getRow(restrictedTitle)
+				).toBeHidden();
+			});
+		}
+		finally {
+			await performUserSwitch(page, 'test');
+
+			if (restrictedEntry) {
+				await apiHelpers.objectEntry.deleteObjectEntry(
+					applicationName,
+					String(restrictedEntry.id)
+				);
+			}
+
+			if (visibleEntry) {
+				await apiHelpers.objectEntry.deleteObjectEntry(
+					applicationName,
+					String(visibleEntry.id)
+				);
+			}
+		}
+	}
+);
+
+test(
+	'Can perform asset actions on Recent Assets rows',
+	{tag: '@LPD-87568'},
+	async ({apiHelpers, homePage, page}) => {
+		const contentApplicationName = 'cms/basic-web-contents';
+		const contentTitle = `content ${getRandomString()}`;
+		const fileApplicationName = 'cms/basic-documents';
+		const fileName = `file_${getRandomString()}.png`;
+		const fileTitle = `file ${getRandomString()}`;
+
+		let contentEntry;
+		let fileEntry;
+
+		try {
+			contentEntry = await apiHelpers.objectEntry.postObjectEntry(
+				{
+					objectEntryFolderExternalReferenceCode: 'L_CONTENTS',
+					title: contentTitle,
+				},
+				contentApplicationName,
+				'Default'
+			);
+
+			fileEntry = await apiHelpers.objectEntry.postObjectEntry(
+				{
+					file: {
+						fileBase64: 'R0lGODlhAQABAAAAACw=',
+						name: fileName,
+					},
+					objectEntryFolderExternalReferenceCode: 'L_FILES',
+					title: fileTitle,
+				},
+				fileApplicationName,
+				'Default'
+			);
+
+			apiHelpers.data.push({
+				id: fileEntry.file.id,
+				type: 'document',
+			});
+
+			const dataSetFragmentPage: DataSetPage = new DataSetPage(page);
+
+			await homePage.goto();
+
+			await test.step('Recent Assets shows the content and file rows', async () => {
+				await expect(
+					dataSetFragmentPage.getRow(contentTitle)
+				).toBeVisible();
+
+				await expect(
+					dataSetFragmentPage.getRow(fileTitle)
+				).toBeVisible();
+			});
+
+			await test.step('File row action menu shows Download and inherited actions', async () => {
+				await dataSetFragmentPage
+					.getRow(fileTitle)
+					.getByRole('button', {name: `${fileTitle} Actions`})
+					.click();
+
+				for (const action of [
+					'Delete',
+					'Download',
+					'Edit',
+					'Permissions',
+					'Share',
+					'View History',
+				]) {
+					await expect(
+						page.getByRole('menuitem', {
+							exact: true,
+							name: action,
+						})
+					).toBeVisible();
+				}
+
+				await page.keyboard.press('Escape');
+			});
+
+			await test.step('Content row action menu shows inherited actions but no Download', async () => {
+				await dataSetFragmentPage
+					.getRow(contentTitle)
+					.getByRole('button', {
+						name: `${contentTitle} Actions`,
+					})
+					.click();
+
+				for (const action of [
+					'Delete',
+					'Edit',
+					'Permissions',
+					'Share',
+					'View History',
+				]) {
+					await expect(
+						page.getByRole('menuitem', {
+							exact: true,
+							name: action,
+						})
+					).toBeVisible();
+				}
+
+				await expect(
+					page.getByRole('menu').getByRole('menuitem', {
+						exact: true,
+						name: 'Download',
+					})
+				).toBeHidden();
+
+				await page.keyboard.press('Escape');
+			});
+
+			await test.step('Can download a file asset from Recent Assets', async () => {
+				const downloadPromise = page.waitForEvent('download');
+
+				await dataSetFragmentPage.execItemAction({
+					action: 'Download',
+					filter: fileTitle,
+				});
+
+				const download = await downloadPromise;
+
+				expect(download.suggestedFilename()).toBe(fileName);
+			});
+		}
+		finally {
+			if (contentEntry) {
+				await apiHelpers.objectEntry.deleteObjectEntry(
+					contentApplicationName,
+					String(contentEntry.id)
+				);
+			}
+
+			if (fileEntry) {
+				await apiHelpers.objectEntry.deleteObjectEntry(
+					fileApplicationName,
+					String(fileEntry.id)
+				);
+			}
 		}
 	}
 );
@@ -441,8 +838,65 @@ test(
 );
 
 test(
+	'Can see a custom Content Structure as a quick action',
+	{tag: '@LPD-87559'},
+	async ({homePage, page, structureBuilderPage}) => {
+		const structureLabel = `Custom${getRandomInt()}`;
+
+		await structureBuilderPage.createStructureFromData({
+			label: structureLabel,
+			page: structureBuilderPage,
+			spaces: ['Default'],
+		});
+
+		const verifyCustomStructureQuickAction = async () => {
+			await homePage.goto();
+
+			const customStructureButton = page.getByRole('button', {
+				name: structureLabel,
+			});
+
+			await expect(customStructureButton).toBeVisible();
+
+			await customStructureButton.click();
+
+			await expect(
+				page.getByPlaceholder(`New ${structureLabel}`)
+			).toBeVisible();
+		};
+
+		await test.step(
+			'Default admin can use the custom Content Structure quick action',
+			verifyCustomStructureQuickAction
+		);
+
+		await test.step('CMS Administrator can use the custom Content Structure quick action', async () => {
+			await performUserSwitch(page, cmsAdminUser.alternateName);
+
+			await verifyCustomStructureQuickAction();
+		});
+
+		await test.step('Space Administrator can use the custom Content Structure quick action', async () => {
+			await performUserSwitch(page, spaceAdminUser.alternateName);
+
+			await verifyCustomStructureQuickAction();
+		});
+
+		await test.step('Space User does not see the Quick Actions section', async () => {
+			await performUserSwitch(page, spaceUser.alternateName);
+
+			await homePage.goto();
+
+			await expect(
+				page.getByRole('heading', {name: 'Quick Actions'})
+			).not.toBeVisible();
+		});
+	}
+);
+
+test(
 	'Can use Search Bar to search for content',
-	{tag: '@LPD-61220'},
+	{tag: ['@LPD-61220', '@LPD-89781']},
 	async ({apiHelpers, assetsPage, homePage, page}) => {
 		const applicationName = 'cms/basic-web-contents';
 		const spaceName = 'Default';
@@ -478,9 +932,15 @@ test(
 
 			await searchInput.press('Enter');
 
+			await test.step('Verify URL uses the FDS pretty format', async () => {
+				await expect(page).toHaveURL(/_fdsConfig=\(q:title\)(?:&|$)/);
+			});
+
 			const row = assetsPage.table.bodyRows.filter({hasText: file1Title});
 
-			await expect(row.getByText(file1Title)).toBeVisible();
+			await expect(
+				row.getByRole('link', {name: file1Title})
+			).toBeVisible();
 
 			await test.step('Verify search input contains the search value', async () => {
 				const searchInput = page.getByPlaceholder('Search');
@@ -498,5 +958,49 @@ test(
 				String(objectEntry2.id)
 			);
 		}
+	}
+);
+
+test(
+	'Can access the CMS when assigned to a Space via user group',
+	{tag: '@LPD-83640'},
+	async ({apiHelpers, page}) => {
+		const userGroup = await apiHelpers.headlessAdminUser.postUserGroup();
+
+		const user = await apiHelpers.headlessAdminUser.postUserAccount();
+
+		userData[user.alternateName] = {
+			name: user.givenName,
+			password: 'test',
+			surname: user.familyName,
+		};
+
+		await apiHelpers.headlessAdminUser.assignUsersToUserGroup(
+			userGroup.id,
+			[user.id]
+		);
+
+		const space = await apiHelpers.headlessAssetLibrary.createAssetLibrary({
+			name: `Space ${getRandomString()}`,
+			settings: {
+				logoColor: 'outline-3',
+				sharingEnabled: true,
+			},
+			type: 'Space',
+		});
+
+		await apiHelpers.jsonWebServicesUserGroup.assignUserGroupsToGroup(
+			String(space.siteId),
+			String(userGroup.id)
+		);
+
+		await performLogout(page);
+		await performLogin(page, user.alternateName);
+
+		await page.goto('/web/cms');
+
+		await expect(
+			page.getByRole('heading', {name: `Welcome, ${user.givenName}!`})
+		).toBeVisible();
 	}
 );

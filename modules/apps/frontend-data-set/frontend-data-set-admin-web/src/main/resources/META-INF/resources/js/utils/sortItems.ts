@@ -6,16 +6,12 @@
 import {IOrderable} from './types';
 
 /**
- * sorts the provided items array according to the itemsOrder comma-separated list of ids.
- * If array contains items not included in the list of ids, then those are appended after
- * Example:
- * 		items = [ {id: 1}, {id: 4}, {id: 2}, {id: 3} ]
- * 		itemsOrder = "2, 3, 1"
- * 		output is [ {id: 2}, {id: 3}, {id: 1}, {id: 4} ]
- * Optionally, not included items can be sorted by creation date
+ * Sorts the provided items array according to the itemsOrder comma-separated list of ERCs
+ * If array contains items not included in the list of ERCs, then those are appended after.
+ * Optionally, not included items can be sorted by creation date.
  *
  * @param items {IOrderable[]}
- * @param itemsOrder {string}
+ * @param itemsOrder {string} - CSV of ids or externalReferenceCodes
  * @param useCreationDate {boolean}
  * @returns {Array}
  */
@@ -26,17 +22,15 @@ export default function sortItems(
 ): IOrderable[] {
 	const itemsOrderArray = itemsOrder?.split(',') || ([] as string[]);
 
-	let included: IOrderable[] = [];
-	let notIncluded: IOrderable[] = [];
+	const getItemKey = (item: IOrderable) =>
+		String(item.externalReferenceCode ?? '');
 
-	included = itemsOrderArray
-		.map((itemId) =>
-			items.find((item) => Number(item.id) === Number(itemId))
-		)
+	const included = itemsOrderArray
+		.map((erc) => items.find((item) => getItemKey(item) === erc))
 		.filter(Boolean) as IOrderable[];
 
-	notIncluded = items.filter(
-		(item) => !itemsOrderArray.includes(String(item.id))
+	let notIncluded = items.filter(
+		(item) => !itemsOrderArray.includes(getItemKey(item))
 	);
 
 	if (useCreationDate) {

@@ -8,6 +8,10 @@
 <%@ include file="/osb_patcher/views/init.jsp" %>
 
 <%
+String patcherFixName = ParamUtil.getString(request, "patcherFixName");
+
+long patcherProjectVersionId = ParamUtil.getLong(request, "patcherProjectVersionId");
+
 String redirect = ParamUtil.getString(request, "redirect");
 %>
 
@@ -42,10 +46,10 @@ String redirect = ParamUtil.getString(request, "redirect");
 
 		</aui:select>
 
-		<aui:select label="project-version" name="patcherProjectVersionId" required="<%= true %>" />
+		<aui:select label="project-version" name="patcherProjectVersionId" required="<%= true %>" value="<%= patcherProjectVersionId %>" />
 
 		<div>
-			<aui:input label="content" name="patcherFixName" type="textarea" />
+			<aui:input label="content" name="patcherFixName" type="textarea" value="<%= patcherFixName %>" />
 
 			<react:component
 				module="{PopoverTooltip} from osb-patcher-web"
@@ -54,16 +58,22 @@ String redirect = ParamUtil.getString(request, "redirect");
 						"label", LanguageUtil.get(request, "content")
 					).put(
 						"name", "patcherFixName"
+					).put(
+						"tickets", patcherFixName
 					).build()
 				%>'
 			/>
 		</div>
 
-		<aui:input label="branch-name" name="committish" />
+		<aui:input helpMessage="enable-to-automatically-fetch-and-backport-code-instead-of-providing-a-manual-branch" label="auto-fix" name="autoFix" onChange='<%= liferayPortletResponse.getNamespace() + "autoFixOnChange();" %>' type="checkbox" value="<%= true %>" />
 
-		<aui:input label="github-url" name="gitRemoteURL" />
+		<aui:fieldset id='<%= liferayPortletResponse.getNamespace() + "manualFixFieldset" %>' style="display: none;">
+			<aui:input label="branch-name" name="committish" />
 
-		<aui:input name="workaround" type="checkbox" />
+			<aui:input label="github-url" name="gitRemoteURL" />
+
+			<aui:input name="workaround" type="checkbox" />
+		</aui:fieldset>
 	</liferay-frontend:edit-form-body>
 
 	<liferay-frontend:edit-form-footer>
@@ -74,8 +84,21 @@ String redirect = ParamUtil.getString(request, "redirect");
 </liferay-frontend:edit-form>
 
 <aui:script>
+	var autoFix = document.getElementById('<portlet:namespace />autoFix');
+	var manualFixFieldset = document.getElementById(
+		'<portlet:namespace />manualFixFieldset'
+	);
 	var select = document.getElementById(
 		'<portlet:namespace />patcherProjectVersionId'
+	);
+
+	Liferay.provide(
+		window,
+		'<portlet:namespace />autoFixOnChange',
+		function () {
+			Liferay.Patcher.handleAutoFixCheckbox(autoFix, manualFixFieldset);
+		},
+		['aui-base']
 	);
 
 	Liferay.provide(
@@ -103,5 +126,15 @@ String redirect = ParamUtil.getString(request, "redirect");
 			select,
 			<%= PatcherProjectVersionUtil.getPatcherProjectVersionsJSONObject(themeDisplay.getCompanyId()) %>
 		);
+
+		var patcherProjectVersionId = '<%= patcherProjectVersionId %>';
+
+		if (patcherProjectVersionId > 0) {
+			A.one('#<portlet:namespace />patcherProjectVersionId').val(
+				patcherProjectVersionId
+			);
+		}
+
+		Liferay.Patcher.handleAutoFixCheckbox(autoFix, manualFixFieldset);
 	});
 </aui:script>

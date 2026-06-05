@@ -14,6 +14,7 @@ import com.liferay.fragment.cache.FragmentEntryLinkCache;
 import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.processor.PortletRegistry;
 import com.liferay.fragment.service.FragmentEntryLinkLocalService;
+import com.liferay.friendly.url.constants.FriendlyURLEntryConstants;
 import com.liferay.friendly.url.model.FriendlyURLEntry;
 import com.liferay.friendly.url.service.FriendlyURLEntryLocalService;
 import com.liferay.layout.constants.LayoutTypeSettingsConstants;
@@ -196,6 +197,8 @@ public class LayoutLocalServiceWrapper
 		ServiceContext currentServiceContext =
 			ServiceContextThreadLocal.getServiceContext();
 
+		boolean pushedServiceContext = false;
+
 		try (SafeCloseable safeCloseable =
 				CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
 					layout.getCtCollectionId())) {
@@ -213,6 +216,8 @@ public class LayoutLocalServiceWrapper
 				serviceContext.setUserId(user.getUserId());
 
 				ServiceContextThreadLocal.pushServiceContext(serviceContext);
+
+				pushedServiceContext = true;
 			}
 
 			TransactionInvokerUtil.invoke(
@@ -236,7 +241,9 @@ public class LayoutLocalServiceWrapper
 		finally {
 			CopyLayoutThreadLocal.setCopyLayout(copyLayout);
 
-			ServiceContextThreadLocal.pushServiceContext(currentServiceContext);
+			if (pushedServiceContext) {
+				ServiceContextThreadLocal.popServiceContext();
+			}
 		}
 	}
 
@@ -333,6 +340,8 @@ public class LayoutLocalServiceWrapper
 		ServiceContext currentServiceContext =
 			ServiceContextThreadLocal.getServiceContext();
 
+		boolean pushedServiceContext = false;
+
 		long ctCollectionId = sourceLayout.getCtCollectionId();
 
 		if (ctCollectionId == 0) {
@@ -362,6 +371,8 @@ public class LayoutLocalServiceWrapper
 				serviceContext.setUserId(user.getUserId());
 
 				ServiceContextThreadLocal.pushServiceContext(serviceContext);
+
+				pushedServiceContext = true;
 			}
 
 			return TransactionInvokerUtil.invoke(
@@ -381,7 +392,9 @@ public class LayoutLocalServiceWrapper
 		finally {
 			CopyLayoutThreadLocal.setCopyLayout(copyLayout);
 
-			ServiceContextThreadLocal.pushServiceContext(currentServiceContext);
+			if (pushedServiceContext) {
+				ServiceContextThreadLocal.popServiceContext();
+			}
 		}
 	}
 
@@ -454,11 +467,15 @@ public class LayoutLocalServiceWrapper
 				_segmentsExperienceLocalService.fetchSegmentsExperience(
 					entry.getKey());
 
-			targetSegmentsExperience.setPriority(
-				sourceSegmentsExperience.getPriority());
+			if (targetSegmentsExperience.getPriority() !=
+					sourceSegmentsExperience.getPriority()) {
 
-			_segmentsExperienceLocalService.updateSegmentsExperience(
-				targetSegmentsExperience);
+				targetSegmentsExperience.setPriority(
+					sourceSegmentsExperience.getPriority());
+
+				_segmentsExperienceLocalService.updateSegmentsExperience(
+					targetSegmentsExperience);
+			}
 		}
 
 		_fragmentEntryLinkLocalService.deleteFragmentEntryLinks(
@@ -717,6 +734,8 @@ public class LayoutLocalServiceWrapper
 			_friendlyURLEntryLocalService.fetchFriendlyURLEntry(
 				groupId,
 				_layoutFriendlyURLEntryHelper.getClassNameId(privateLayout),
+				FriendlyURLEntryConstants.
+					FRIENDLY_URL_ENTRY_PARENT_CLASS_PK_DEFAULT,
 				friendlyURL);
 
 		if (friendlyURLEntry == null) {
@@ -819,6 +838,8 @@ public class LayoutLocalServiceWrapper
 						sourceSegmentsExperience.getSegmentsEntryERC());
 					targetSegmentsExperience.setSegmentsEntryScopeERC(
 						sourceSegmentsExperience.getSegmentsEntryScopeERC());
+					targetSegmentsExperience.setNameMap(
+						sourceSegmentsExperience.getNameMap());
 					targetSegmentsExperience.setPriority(minPriority++);
 
 					_segmentsExperienceLocalService.updateSegmentsExperience(
@@ -980,6 +1001,33 @@ public class LayoutLocalServiceWrapper
 		return false;
 	}
 
+	private boolean _isUnmodifiedFragmentEntryLink(
+		FragmentEntryLink sourceLayoutFragmentEntryLink,
+		FragmentEntryLink targetLayoutFragmentEntryLink) {
+
+		if ((targetLayoutFragmentEntryLink != null) &&
+			Objects.equals(
+				sourceLayoutFragmentEntryLink.getConfiguration(),
+				targetLayoutFragmentEntryLink.getConfiguration()) &&
+			Objects.equals(
+				sourceLayoutFragmentEntryLink.getCss(),
+				targetLayoutFragmentEntryLink.getCss()) &&
+			Objects.equals(
+				sourceLayoutFragmentEntryLink.getHtml(),
+				targetLayoutFragmentEntryLink.getHtml()) &&
+			Objects.equals(
+				sourceLayoutFragmentEntryLink.getJs(),
+				targetLayoutFragmentEntryLink.getJs()) &&
+			Objects.equals(
+				sourceLayoutFragmentEntryLink.getLastPropagationDate(),
+				targetLayoutFragmentEntryLink.getLastPropagationDate())) {
+
+			return true;
+		}
+
+		return false;
+	}
+
 	private JSONObject _processDataJSONObject(
 			Map<String, String> instanceIdsMap, LayoutStructure layoutStructure,
 			boolean masterLayoutCopy, Layout sourceLayout,
@@ -1052,7 +1100,59 @@ public class LayoutLocalServiceWrapper
 					originalFragmentEntryLink.getExternalReferenceCode(),
 					targetLayout.getPlid());
 
-			if (targetLayoutFragmentEntryLink != null) {
+			if (targetLayoutFragmentEntryLink == null) {
+				newFragmentEntryLink =
+					(FragmentEntryLink)sourceLayoutFragmentEntryLink.clone();
+
+				newFragmentEntryLink.setUuid(serviceContext.getUuid());
+				newFragmentEntryLink.setExternalReferenceCode(null);
+				newFragmentEntryLink.setFragmentEntryLinkId(
+					_counterLocalService.increment());
+				newFragmentEntryLink.setUserId(user.getUserId());
+				newFragmentEntryLink.setUserName(user.getFullName());
+				newFragmentEntryLink.setCreateDate(
+					serviceContext.getCreateDate(new Date()));
+				newFragmentEntryLink.setModifiedDate(
+					serviceContext.getModifiedDate(new Date()));
+
+				if (sourceLayout.getClassPK() == targetLayout.getPlid()) {
+					newFragmentEntryLink.setOriginalFragmentEntryLinkERC(
+						sourceLayoutFragmentEntryLink.
+							getExternalReferenceCode());
+				}
+				else {
+					newFragmentEntryLink.setOriginalFragmentEntryLinkERC(null);
+				}
+
+				newFragmentEntryLink.setSegmentsExperienceId(
+					targetSegmentsExperienceId);
+				newFragmentEntryLink.setClassNameId(
+					_portal.getClassNameId(Layout.class));
+				newFragmentEntryLink.setClassPK(targetLayout.getPlid());
+				newFragmentEntryLink.setPlid(targetLayout.getPlid());
+				newFragmentEntryLink.setEditableValues(
+					editableValuesJSONObject.toString());
+				newFragmentEntryLink.setNamespace(namespace);
+				newFragmentEntryLink.setLastPropagationDate(
+					sourceLayoutFragmentEntryLink.getLastPropagationDate());
+
+				newFragmentEntryLink =
+					_fragmentEntryLinkLocalService.addFragmentEntryLink(
+						newFragmentEntryLink);
+			}
+			else if (_isUnmodifiedFragmentEntryLink(
+						sourceLayoutFragmentEntryLink,
+						targetLayoutFragmentEntryLink) &&
+					 Objects.equals(
+						 editableValuesJSONObject.toString(),
+						 targetLayoutFragmentEntryLink.getEditableValues()) &&
+					 Objects.equals(
+						 namespace,
+						 targetLayoutFragmentEntryLink.getNamespace())) {
+
+				newFragmentEntryLink = targetLayoutFragmentEntryLink;
+			}
+			else {
 				targetLayoutFragmentEntryLink.setUserId(user.getUserId());
 				targetLayoutFragmentEntryLink.setUserName(user.getFullName());
 				targetLayoutFragmentEntryLink.setModifiedDate(
@@ -1098,46 +1198,6 @@ public class LayoutLocalServiceWrapper
 
 				_fragmentEntryLinkCache.removeFragmentEntryLinkCache(
 					newFragmentEntryLink);
-			}
-			else {
-				newFragmentEntryLink =
-					(FragmentEntryLink)sourceLayoutFragmentEntryLink.clone();
-
-				newFragmentEntryLink.setUuid(serviceContext.getUuid());
-				newFragmentEntryLink.setExternalReferenceCode(null);
-				newFragmentEntryLink.setFragmentEntryLinkId(
-					_counterLocalService.increment());
-				newFragmentEntryLink.setUserId(user.getUserId());
-				newFragmentEntryLink.setUserName(user.getFullName());
-				newFragmentEntryLink.setCreateDate(
-					serviceContext.getCreateDate(new Date()));
-				newFragmentEntryLink.setModifiedDate(
-					serviceContext.getModifiedDate(new Date()));
-
-				if (sourceLayout.getClassPK() == targetLayout.getPlid()) {
-					newFragmentEntryLink.setOriginalFragmentEntryLinkERC(
-						sourceLayoutFragmentEntryLink.
-							getExternalReferenceCode());
-				}
-				else {
-					newFragmentEntryLink.setOriginalFragmentEntryLinkERC(null);
-				}
-
-				newFragmentEntryLink.setSegmentsExperienceId(
-					targetSegmentsExperienceId);
-				newFragmentEntryLink.setClassNameId(
-					_portal.getClassNameId(Layout.class));
-				newFragmentEntryLink.setClassPK(targetLayout.getPlid());
-				newFragmentEntryLink.setPlid(targetLayout.getPlid());
-				newFragmentEntryLink.setEditableValues(
-					editableValuesJSONObject.toString());
-				newFragmentEntryLink.setNamespace(namespace);
-				newFragmentEntryLink.setLastPropagationDate(
-					sourceLayoutFragmentEntryLink.getLastPropagationDate());
-
-				newFragmentEntryLink =
-					_fragmentEntryLinkLocalService.addFragmentEntryLink(
-						newFragmentEntryLink);
 			}
 
 			fragmentStyledLayoutStructureItem.setFragmentEntryLinkId(

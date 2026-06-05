@@ -12,7 +12,7 @@ import com.liferay.change.tracking.exception.CTPublishConflictException;
 import com.liferay.change.tracking.internal.CTServiceRegistry;
 import com.liferay.change.tracking.internal.background.task.display.CTPublishBackgroundTaskDisplay;
 import com.liferay.change.tracking.internal.helper.CTTableMapperHelper;
-import com.liferay.change.tracking.internal.helper.CTUserNotificationHelper;
+import com.liferay.change.tracking.internal.notification.CTUserNotificationSender;
 import com.liferay.change.tracking.model.CTCollection;
 import com.liferay.change.tracking.model.CTEntry;
 import com.liferay.change.tracking.service.CTCollectionLocalService;
@@ -198,15 +198,18 @@ public class CTPublishBackgroundTaskExecutor
 				ctCollectionId, _multiVMPool.getPortalCacheManager());
 		}
 
+		CTCollection latestCTCollection =
+			_ctCollectionLocalService.getCTCollection(ctCollectionId);
+
 		Date modifiedDate = new Date();
 
-		ctCollection.setModifiedDate(modifiedDate);
+		latestCTCollection.setModifiedDate(modifiedDate);
 
-		ctCollection.setStatus(WorkflowConstants.STATUS_APPROVED);
-		ctCollection.setStatusByUserId(backgroundTask.getUserId());
-		ctCollection.setStatusDate(modifiedDate);
+		latestCTCollection.setStatus(WorkflowConstants.STATUS_APPROVED);
+		latestCTCollection.setStatusByUserId(backgroundTask.getUserId());
+		latestCTCollection.setStatusDate(modifiedDate);
 
-		_ctCollectionLocalService.updateCTCollection(ctCollection);
+		_ctCollectionLocalService.updateCTCollection(latestCTCollection);
 
 		_ctServiceRegistry.onAfterPublish(ctCollectionId);
 
@@ -242,7 +245,7 @@ public class CTPublishBackgroundTaskExecutor
 			CTCollection ctCollection =
 				_ctCollectionLocalService.getCTCollection(ctCollectionId);
 
-			_ctUserNotificationHelper.sendUserNotificationEvents(
+			_ctUserNotificationSender.sendUserNotificationEvents(
 				ctCollection,
 				JSONUtil.put(
 					"backgroundTaskId", backgroundTask.getBackgroundTaskId()
@@ -276,7 +279,7 @@ public class CTPublishBackgroundTaskExecutor
 		CTCollection ctCollection, boolean showConflicts) {
 
 		Set<Long> userIds = SetUtil.fromArray(
-			_ctUserNotificationHelper.getPublicationRoleUserIds(
+			_ctUserNotificationSender.getPublicationRoleUserIds(
 				ctCollection, true, PublicationRoleConstants.NAME_ADMIN,
 				PublicationRoleConstants.NAME_EDITOR,
 				PublicationRoleConstants.NAME_PUBLISHER));
@@ -316,7 +319,7 @@ public class CTPublishBackgroundTaskExecutor
 	private CTServiceRegistry _ctServiceRegistry;
 
 	@Reference
-	private CTUserNotificationHelper _ctUserNotificationHelper;
+	private CTUserNotificationSender _ctUserNotificationSender;
 
 	@Reference
 	private MultiVMPool _multiVMPool;

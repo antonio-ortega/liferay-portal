@@ -212,7 +212,7 @@ public class BaseIndexerGetSiteGroupIdTest {
 		}
 
 		@Override
-		protected void doReindex(String[] ids) throws Exception {
+		protected void doReindexCompany(long companyId) throws Exception {
 		}
 
 	}

@@ -51,8 +51,6 @@ public interface SegmentsExperience
 
 			};
 
-	public long getSegmentsEntryGroupId();
-
 	public long getSegmentsEntryId();
 
 	public String getSegmentsEntryName(java.util.Locale locale);
@@ -71,3 +69,4 @@ public interface SegmentsExperience
 			typeSettingsUnicodeProperties);
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-1323565830

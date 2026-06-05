@@ -5,20 +5,28 @@
 
 import {FrameLocator, Locator, Page} from '@playwright/test';
 
-import {ApplicationsMenuPage} from '../../product-navigation-applications-menu/ApplicationsMenuPage';
+import {GlobalMenuPage} from '../../product-navigation-applications-menu/GlobalMenuPage';
+
 export class CommerceAdminWarehousesPage {
 	readonly addButton: Locator;
-	readonly applicationsMenuPage: ApplicationsMenuPage;
-	readonly page: Page;
+	readonly deleteMenuItem: Locator;
+	readonly globalMenuPage: GlobalMenuPage;
 	readonly modalFieldName: Locator;
 	readonly modalFrameLocator: FrameLocator;
 	readonly modalSubmitButton: Locator;
+	readonly page: Page;
+	readonly rowActionsButton: (warehouseName: string) => Locator;
+	readonly warehouseLink: (warehouseName: string) => Locator;
 
 	constructor(page: Page) {
 		this.addButton = page
 			.getByTestId('managementToolbar')
 			.locator('[data-testid="fdsCreationActionButton"]');
-		this.applicationsMenuPage = new ApplicationsMenuPage(page);
+		this.deleteMenuItem = page.getByRole('menuitem', {
+			exact: true,
+			name: 'Delete',
+		});
+		this.globalMenuPage = new GlobalMenuPage(page);
 		this.modalFrameLocator = page.frameLocator('.fds-modal-body iframe');
 		this.modalFieldName =
 			this.modalFrameLocator.getByLabel('Name Required');
@@ -27,9 +35,13 @@ export class CommerceAdminWarehousesPage {
 			name: 'Submit',
 		});
 		this.page = page;
+		this.rowActionsButton = (warehouseName: string) =>
+			page.getByRole('button', {name: `${warehouseName} Actions`});
+		this.warehouseLink = (warehouseName: string) =>
+			page.getByRole('link', {exact: true, name: warehouseName});
 	}
 
 	async goto() {
-		await this.applicationsMenuPage.goToCommerceWarehouses();
+		await this.globalMenuPage.goToCommerce('Warehouses');
 	}
 }

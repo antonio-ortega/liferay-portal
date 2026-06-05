@@ -324,3 +324,4 @@ public interface RedirectNotFoundEntryLocalService
 		RedirectNotFoundEntry redirectNotFoundEntry);
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:922957065

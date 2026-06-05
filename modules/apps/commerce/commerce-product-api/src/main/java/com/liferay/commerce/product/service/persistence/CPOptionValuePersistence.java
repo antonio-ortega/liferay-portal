@@ -34,51 +34,10 @@ public interface CPOptionValuePersistence
 	 */
 
 	/**
-	 * Returns all the cp option values where uuid = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @return the matching cp option values
-	 */
-	public java.util.List<CPOptionValue> findByUuid(String uuid);
-
-	/**
-	 * Returns a range of all the cp option values where uuid = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPOptionValueModelImpl</code>.
-	 * </p>
-	 *
-	 * @param uuid the uuid
-	 * @param start the lower bound of the range of cp option values
-	 * @param end the upper bound of the range of cp option values (not inclusive)
-	 * @return the range of matching cp option values
-	 */
-	public java.util.List<CPOptionValue> findByUuid(
-		String uuid, int start, int end);
-
-	/**
 	 * Returns an ordered range of all the cp option values where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPOptionValueModelImpl</code>.
-	 * </p>
-	 *
-	 * @param uuid the uuid
-	 * @param start the lower bound of the range of cp option values
-	 * @param end the upper bound of the range of cp option values (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching cp option values
-	 */
-	public java.util.List<CPOptionValue> findByUuid(
-		String uuid, int start, int end,
-		com.liferay.portal.kernel.util.OrderByComparator<CPOptionValue>
-			orderByComparator);
-
-	/**
-	 * Returns an ordered range of all the cp option values where uuid = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPOptionValueModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.product.model.impl.CPOptionValueModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -121,47 +80,6 @@ public interface CPOptionValuePersistence
 			orderByComparator);
 
 	/**
-	 * Returns the last cp option value in the ordered set where uuid = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching cp option value
-	 * @throws NoSuchCPOptionValueException if a matching cp option value could not be found
-	 */
-	public CPOptionValue findByUuid_Last(
-			String uuid,
-			com.liferay.portal.kernel.util.OrderByComparator<CPOptionValue>
-				orderByComparator)
-		throws NoSuchCPOptionValueException;
-
-	/**
-	 * Returns the last cp option value in the ordered set where uuid = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching cp option value, or <code>null</code> if a matching cp option value could not be found
-	 */
-	public CPOptionValue fetchByUuid_Last(
-		String uuid,
-		com.liferay.portal.kernel.util.OrderByComparator<CPOptionValue>
-			orderByComparator);
-
-	/**
-	 * Returns the cp option values before and after the current cp option value in the ordered set where uuid = &#63;.
-	 *
-	 * @param CPOptionValueId the primary key of the current cp option value
-	 * @param uuid the uuid
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next cp option value
-	 * @throws NoSuchCPOptionValueException if a cp option value with the primary key could not be found
-	 */
-	public CPOptionValue[] findByUuid_PrevAndNext(
-			long CPOptionValueId, String uuid,
-			com.liferay.portal.kernel.util.OrderByComparator<CPOptionValue>
-				orderByComparator)
-		throws NoSuchCPOptionValueException;
-
-	/**
 	 * Removes all the cp option values where uuid = &#63; from the database.
 	 *
 	 * @param uuid the uuid
@@ -177,55 +95,10 @@ public interface CPOptionValuePersistence
 	public int countByUuid(String uuid);
 
 	/**
-	 * Returns all the cp option values where uuid = &#63; and companyId = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @return the matching cp option values
-	 */
-	public java.util.List<CPOptionValue> findByUuid_C(
-		String uuid, long companyId);
-
-	/**
-	 * Returns a range of all the cp option values where uuid = &#63; and companyId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPOptionValueModelImpl</code>.
-	 * </p>
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param start the lower bound of the range of cp option values
-	 * @param end the upper bound of the range of cp option values (not inclusive)
-	 * @return the range of matching cp option values
-	 */
-	public java.util.List<CPOptionValue> findByUuid_C(
-		String uuid, long companyId, int start, int end);
-
-	/**
 	 * Returns an ordered range of all the cp option values where uuid = &#63; and companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPOptionValueModelImpl</code>.
-	 * </p>
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param start the lower bound of the range of cp option values
-	 * @param end the upper bound of the range of cp option values (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching cp option values
-	 */
-	public java.util.List<CPOptionValue> findByUuid_C(
-		String uuid, long companyId, int start, int end,
-		com.liferay.portal.kernel.util.OrderByComparator<CPOptionValue>
-			orderByComparator);
-
-	/**
-	 * Returns an ordered range of all the cp option values where uuid = &#63; and companyId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPOptionValueModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.product.model.impl.CPOptionValueModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -271,50 +144,6 @@ public interface CPOptionValuePersistence
 			orderByComparator);
 
 	/**
-	 * Returns the last cp option value in the ordered set where uuid = &#63; and companyId = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching cp option value
-	 * @throws NoSuchCPOptionValueException if a matching cp option value could not be found
-	 */
-	public CPOptionValue findByUuid_C_Last(
-			String uuid, long companyId,
-			com.liferay.portal.kernel.util.OrderByComparator<CPOptionValue>
-				orderByComparator)
-		throws NoSuchCPOptionValueException;
-
-	/**
-	 * Returns the last cp option value in the ordered set where uuid = &#63; and companyId = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching cp option value, or <code>null</code> if a matching cp option value could not be found
-	 */
-	public CPOptionValue fetchByUuid_C_Last(
-		String uuid, long companyId,
-		com.liferay.portal.kernel.util.OrderByComparator<CPOptionValue>
-			orderByComparator);
-
-	/**
-	 * Returns the cp option values before and after the current cp option value in the ordered set where uuid = &#63; and companyId = &#63;.
-	 *
-	 * @param CPOptionValueId the primary key of the current cp option value
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next cp option value
-	 * @throws NoSuchCPOptionValueException if a cp option value with the primary key could not be found
-	 */
-	public CPOptionValue[] findByUuid_C_PrevAndNext(
-			long CPOptionValueId, String uuid, long companyId,
-			com.liferay.portal.kernel.util.OrderByComparator<CPOptionValue>
-				orderByComparator)
-		throws NoSuchCPOptionValueException;
-
-	/**
 	 * Removes all the cp option values where uuid = &#63; and companyId = &#63; from the database.
 	 *
 	 * @param uuid the uuid
@@ -332,51 +161,10 @@ public interface CPOptionValuePersistence
 	public int countByUuid_C(String uuid, long companyId);
 
 	/**
-	 * Returns all the cp option values where companyId = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @return the matching cp option values
-	 */
-	public java.util.List<CPOptionValue> findByCompanyId(long companyId);
-
-	/**
-	 * Returns a range of all the cp option values where companyId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPOptionValueModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param start the lower bound of the range of cp option values
-	 * @param end the upper bound of the range of cp option values (not inclusive)
-	 * @return the range of matching cp option values
-	 */
-	public java.util.List<CPOptionValue> findByCompanyId(
-		long companyId, int start, int end);
-
-	/**
 	 * Returns an ordered range of all the cp option values where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPOptionValueModelImpl</code>.
-	 * </p>
-	 *
-	 * @param companyId the company ID
-	 * @param start the lower bound of the range of cp option values
-	 * @param end the upper bound of the range of cp option values (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching cp option values
-	 */
-	public java.util.List<CPOptionValue> findByCompanyId(
-		long companyId, int start, int end,
-		com.liferay.portal.kernel.util.OrderByComparator<CPOptionValue>
-			orderByComparator);
-
-	/**
-	 * Returns an ordered range of all the cp option values where companyId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPOptionValueModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.product.model.impl.CPOptionValueModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -419,47 +207,6 @@ public interface CPOptionValuePersistence
 			orderByComparator);
 
 	/**
-	 * Returns the last cp option value in the ordered set where companyId = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching cp option value
-	 * @throws NoSuchCPOptionValueException if a matching cp option value could not be found
-	 */
-	public CPOptionValue findByCompanyId_Last(
-			long companyId,
-			com.liferay.portal.kernel.util.OrderByComparator<CPOptionValue>
-				orderByComparator)
-		throws NoSuchCPOptionValueException;
-
-	/**
-	 * Returns the last cp option value in the ordered set where companyId = &#63;.
-	 *
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching cp option value, or <code>null</code> if a matching cp option value could not be found
-	 */
-	public CPOptionValue fetchByCompanyId_Last(
-		long companyId,
-		com.liferay.portal.kernel.util.OrderByComparator<CPOptionValue>
-			orderByComparator);
-
-	/**
-	 * Returns the cp option values before and after the current cp option value in the ordered set where companyId = &#63;.
-	 *
-	 * @param CPOptionValueId the primary key of the current cp option value
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next cp option value
-	 * @throws NoSuchCPOptionValueException if a cp option value with the primary key could not be found
-	 */
-	public CPOptionValue[] findByCompanyId_PrevAndNext(
-			long CPOptionValueId, long companyId,
-			com.liferay.portal.kernel.util.OrderByComparator<CPOptionValue>
-				orderByComparator)
-		throws NoSuchCPOptionValueException;
-
-	/**
 	 * Removes all the cp option values where companyId = &#63; from the database.
 	 *
 	 * @param companyId the company ID
@@ -475,51 +222,10 @@ public interface CPOptionValuePersistence
 	public int countByCompanyId(long companyId);
 
 	/**
-	 * Returns all the cp option values where CPOptionId = &#63;.
-	 *
-	 * @param CPOptionId the cp option ID
-	 * @return the matching cp option values
-	 */
-	public java.util.List<CPOptionValue> findByCPOptionId(long CPOptionId);
-
-	/**
-	 * Returns a range of all the cp option values where CPOptionId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPOptionValueModelImpl</code>.
-	 * </p>
-	 *
-	 * @param CPOptionId the cp option ID
-	 * @param start the lower bound of the range of cp option values
-	 * @param end the upper bound of the range of cp option values (not inclusive)
-	 * @return the range of matching cp option values
-	 */
-	public java.util.List<CPOptionValue> findByCPOptionId(
-		long CPOptionId, int start, int end);
-
-	/**
 	 * Returns an ordered range of all the cp option values where CPOptionId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPOptionValueModelImpl</code>.
-	 * </p>
-	 *
-	 * @param CPOptionId the cp option ID
-	 * @param start the lower bound of the range of cp option values
-	 * @param end the upper bound of the range of cp option values (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching cp option values
-	 */
-	public java.util.List<CPOptionValue> findByCPOptionId(
-		long CPOptionId, int start, int end,
-		com.liferay.portal.kernel.util.OrderByComparator<CPOptionValue>
-			orderByComparator);
-
-	/**
-	 * Returns an ordered range of all the cp option values where CPOptionId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPOptionValueModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.product.model.impl.CPOptionValueModelImpl</code>.
 	 * </p>
 	 *
 	 * @param CPOptionId the cp option ID
@@ -562,47 +268,6 @@ public interface CPOptionValuePersistence
 			orderByComparator);
 
 	/**
-	 * Returns the last cp option value in the ordered set where CPOptionId = &#63;.
-	 *
-	 * @param CPOptionId the cp option ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching cp option value
-	 * @throws NoSuchCPOptionValueException if a matching cp option value could not be found
-	 */
-	public CPOptionValue findByCPOptionId_Last(
-			long CPOptionId,
-			com.liferay.portal.kernel.util.OrderByComparator<CPOptionValue>
-				orderByComparator)
-		throws NoSuchCPOptionValueException;
-
-	/**
-	 * Returns the last cp option value in the ordered set where CPOptionId = &#63;.
-	 *
-	 * @param CPOptionId the cp option ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching cp option value, or <code>null</code> if a matching cp option value could not be found
-	 */
-	public CPOptionValue fetchByCPOptionId_Last(
-		long CPOptionId,
-		com.liferay.portal.kernel.util.OrderByComparator<CPOptionValue>
-			orderByComparator);
-
-	/**
-	 * Returns the cp option values before and after the current cp option value in the ordered set where CPOptionId = &#63;.
-	 *
-	 * @param CPOptionValueId the primary key of the current cp option value
-	 * @param CPOptionId the cp option ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next cp option value
-	 * @throws NoSuchCPOptionValueException if a cp option value with the primary key could not be found
-	 */
-	public CPOptionValue[] findByCPOptionId_PrevAndNext(
-			long CPOptionValueId, long CPOptionId,
-			com.liferay.portal.kernel.util.OrderByComparator<CPOptionValue>
-				orderByComparator)
-		throws NoSuchCPOptionValueException;
-
-	/**
 	 * Removes all the cp option values where CPOptionId = &#63; from the database.
 	 *
 	 * @param CPOptionId the cp option ID
@@ -627,15 +292,6 @@ public interface CPOptionValuePersistence
 	 */
 	public CPOptionValue findByC_K(long CPOptionId, String key)
 		throws NoSuchCPOptionValueException;
-
-	/**
-	 * Returns the cp option value where CPOptionId = &#63; and key = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
-	 *
-	 * @param CPOptionId the cp option ID
-	 * @param key the key
-	 * @return the matching cp option value, or <code>null</code> if a matching cp option value could not be found
-	 */
-	public CPOptionValue fetchByC_K(long CPOptionId, String key);
 
 	/**
 	 * Returns the cp option value where CPOptionId = &#63; and key = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
@@ -680,16 +336,6 @@ public interface CPOptionValuePersistence
 		throws NoSuchCPOptionValueException;
 
 	/**
-	 * Returns the cp option value where externalReferenceCode = &#63; and companyId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
-	 *
-	 * @param externalReferenceCode the external reference code
-	 * @param companyId the company ID
-	 * @return the matching cp option value, or <code>null</code> if a matching cp option value could not be found
-	 */
-	public CPOptionValue fetchByERC_C(
-		String externalReferenceCode, long companyId);
-
-	/**
 	 * Returns the cp option value where externalReferenceCode = &#63; and companyId = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
 	 *
 	 * @param externalReferenceCode the external reference code
@@ -719,20 +365,6 @@ public interface CPOptionValuePersistence
 	 * @return the number of matching cp option values
 	 */
 	public int countByERC_C(String externalReferenceCode, long companyId);
-
-	/**
-	 * Caches the cp option value in the entity cache if it is enabled.
-	 *
-	 * @param cpOptionValue the cp option value
-	 */
-	public void cacheResult(CPOptionValue cpOptionValue);
-
-	/**
-	 * Caches the cp option values in the entity cache if it is enabled.
-	 *
-	 * @param cpOptionValues the cp option values
-	 */
-	public void cacheResult(java.util.List<CPOptionValue> cpOptionValues);
 
 	/**
 	 * Creates a new cp option value with the primary key. Does not add the cp option value to the database.
@@ -773,71 +405,244 @@ public interface CPOptionValuePersistence
 	public CPOptionValue fetchByPrimaryKey(long CPOptionValueId);
 
 	/**
-	 * Returns all the cp option values.
+	 * Returns the cp option value where CPOptionId = &#63; and key = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
 	 *
-	 * @return the cp option values
+	 * @param CPOptionId the cp option ID
+	 * @param key the key
+	 * @return the matching cp option value, or <code>null</code> if a matching cp option value could not be found
 	 */
-	public java.util.List<CPOptionValue> findAll();
+	public default CPOptionValue fetchByC_K(long CPOptionId, String key) {
+		return fetchByC_K(CPOptionId, key, true);
+	}
 
 	/**
-	 * Returns a range of all the cp option values.
+	 * Returns the cp option value where externalReferenceCode = &#63; and companyId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	 *
+	 * @param externalReferenceCode the external reference code
+	 * @param companyId the company ID
+	 * @return the matching cp option value, or <code>null</code> if a matching cp option value could not be found
+	 */
+	public default CPOptionValue fetchByERC_C(
+		String externalReferenceCode, long companyId) {
+
+		return fetchByERC_C(externalReferenceCode, companyId, true);
+	}
+
+	/**
+	 * Returns all the cp option values where uuid = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @return the matching cp option values
+	 */
+	public default java.util.List<CPOptionValue> findByUuid(String uuid) {
+		return findByUuid(
+			uuid, com.liferay.portal.kernel.dao.orm.QueryUtil.ALL_POS,
+			com.liferay.portal.kernel.dao.orm.QueryUtil.ALL_POS, null, true);
+	}
+
+	/**
+	 * Returns a range of all the cp option values where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPOptionValueModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.product.model.impl.CPOptionValueModelImpl</code>.
 	 * </p>
 	 *
+	 * @param uuid the uuid
 	 * @param start the lower bound of the range of cp option values
 	 * @param end the upper bound of the range of cp option values (not inclusive)
-	 * @return the range of cp option values
+	 * @return the range of matching cp option values
 	 */
-	public java.util.List<CPOptionValue> findAll(int start, int end);
+	public default java.util.List<CPOptionValue> findByUuid(
+		String uuid, int start, int end) {
+
+		return findByUuid(uuid, start, end, null, true);
+	}
 
 	/**
-	 * Returns an ordered range of all the cp option values.
+	 * Returns an ordered range of all the cp option values where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPOptionValueModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.product.model.impl.CPOptionValueModelImpl</code>.
 	 * </p>
 	 *
+	 * @param uuid the uuid
 	 * @param start the lower bound of the range of cp option values
 	 * @param end the upper bound of the range of cp option values (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of cp option values
+	 * @return the ordered range of matching cp option values
 	 */
-	public java.util.List<CPOptionValue> findAll(
-		int start, int end,
+	public default java.util.List<CPOptionValue> findByUuid(
+		String uuid, int start, int end,
 		com.liferay.portal.kernel.util.OrderByComparator<CPOptionValue>
-			orderByComparator);
+			orderByComparator) {
+
+		return findByUuid(uuid, start, end, orderByComparator, true);
+	}
 
 	/**
-	 * Returns an ordered range of all the cp option values.
+	 * Returns all the cp option values where uuid = &#63; and companyId = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @return the matching cp option values
+	 */
+	public default java.util.List<CPOptionValue> findByUuid_C(
+		String uuid, long companyId) {
+
+		return findByUuid_C(
+			uuid, companyId,
+			com.liferay.portal.kernel.dao.orm.QueryUtil.ALL_POS,
+			com.liferay.portal.kernel.dao.orm.QueryUtil.ALL_POS, null, true);
+	}
+
+	/**
+	 * Returns a range of all the cp option values where uuid = &#63; and companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPOptionValueModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.product.model.impl.CPOptionValueModelImpl</code>.
 	 * </p>
 	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of cp option values
+	 * @param end the upper bound of the range of cp option values (not inclusive)
+	 * @return the range of matching cp option values
+	 */
+	public default java.util.List<CPOptionValue> findByUuid_C(
+		String uuid, long companyId, int start, int end) {
+
+		return findByUuid_C(uuid, companyId, start, end, null, true);
+	}
+
+	/**
+	 * Returns an ordered range of all the cp option values where uuid = &#63; and companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.product.model.impl.CPOptionValueModelImpl</code>.
+	 * </p>
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
 	 * @param start the lower bound of the range of cp option values
 	 * @param end the upper bound of the range of cp option values (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param useFinderCache whether to use the finder cache
-	 * @return the ordered range of cp option values
+	 * @return the ordered range of matching cp option values
 	 */
-	public java.util.List<CPOptionValue> findAll(
-		int start, int end,
+	public default java.util.List<CPOptionValue> findByUuid_C(
+		String uuid, long companyId, int start, int end,
 		com.liferay.portal.kernel.util.OrderByComparator<CPOptionValue>
-			orderByComparator,
-		boolean useFinderCache);
+			orderByComparator) {
+
+		return findByUuid_C(
+			uuid, companyId, start, end, orderByComparator, true);
+	}
 
 	/**
-	 * Removes all the cp option values from the database.
-	 */
-	public void removeAll();
-
-	/**
-	 * Returns the number of cp option values.
+	 * Returns all the cp option values where companyId = &#63;.
 	 *
-	 * @return the number of cp option values
+	 * @param companyId the company ID
+	 * @return the matching cp option values
 	 */
-	public int countAll();
+	public default java.util.List<CPOptionValue> findByCompanyId(
+		long companyId) {
+
+		return findByCompanyId(
+			companyId, com.liferay.portal.kernel.dao.orm.QueryUtil.ALL_POS,
+			com.liferay.portal.kernel.dao.orm.QueryUtil.ALL_POS, null, true);
+	}
+
+	/**
+	 * Returns a range of all the cp option values where companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.product.model.impl.CPOptionValueModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of cp option values
+	 * @param end the upper bound of the range of cp option values (not inclusive)
+	 * @return the range of matching cp option values
+	 */
+	public default java.util.List<CPOptionValue> findByCompanyId(
+		long companyId, int start, int end) {
+
+		return findByCompanyId(companyId, start, end, null, true);
+	}
+
+	/**
+	 * Returns an ordered range of all the cp option values where companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.product.model.impl.CPOptionValueModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of cp option values
+	 * @param end the upper bound of the range of cp option values (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching cp option values
+	 */
+	public default java.util.List<CPOptionValue> findByCompanyId(
+		long companyId, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator<CPOptionValue>
+			orderByComparator) {
+
+		return findByCompanyId(companyId, start, end, orderByComparator, true);
+	}
+
+	/**
+	 * Returns all the cp option values where CPOptionId = &#63;.
+	 *
+	 * @param CPOptionId the cp option ID
+	 * @return the matching cp option values
+	 */
+	public default java.util.List<CPOptionValue> findByCPOptionId(
+		long CPOptionId) {
+
+		return findByCPOptionId(
+			CPOptionId, com.liferay.portal.kernel.dao.orm.QueryUtil.ALL_POS,
+			com.liferay.portal.kernel.dao.orm.QueryUtil.ALL_POS, null, true);
+	}
+
+	/**
+	 * Returns a range of all the cp option values where CPOptionId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.product.model.impl.CPOptionValueModelImpl</code>.
+	 * </p>
+	 *
+	 * @param CPOptionId the cp option ID
+	 * @param start the lower bound of the range of cp option values
+	 * @param end the upper bound of the range of cp option values (not inclusive)
+	 * @return the range of matching cp option values
+	 */
+	public default java.util.List<CPOptionValue> findByCPOptionId(
+		long CPOptionId, int start, int end) {
+
+		return findByCPOptionId(CPOptionId, start, end, null, true);
+	}
+
+	/**
+	 * Returns an ordered range of all the cp option values where CPOptionId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.product.model.impl.CPOptionValueModelImpl</code>.
+	 * </p>
+	 *
+	 * @param CPOptionId the cp option ID
+	 * @param start the lower bound of the range of cp option values
+	 * @param end the upper bound of the range of cp option values (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching cp option values
+	 */
+	public default java.util.List<CPOptionValue> findByCPOptionId(
+		long CPOptionId, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator<CPOptionValue>
+			orderByComparator) {
+
+		return findByCPOptionId(
+			CPOptionId, start, end, orderByComparator, true);
+	}
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-1716317904

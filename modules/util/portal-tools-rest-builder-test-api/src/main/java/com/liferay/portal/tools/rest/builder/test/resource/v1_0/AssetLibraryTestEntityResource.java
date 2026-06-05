@@ -158,3 +158,4 @@ public interface AssetLibraryTestEntityResource {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-298408198

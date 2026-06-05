@@ -101,3 +101,4 @@ public class NestedArrayItemsTestEntity implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:298422625

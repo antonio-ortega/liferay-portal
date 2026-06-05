@@ -309,3 +309,4 @@ public class AssigneeMetricSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-64906361

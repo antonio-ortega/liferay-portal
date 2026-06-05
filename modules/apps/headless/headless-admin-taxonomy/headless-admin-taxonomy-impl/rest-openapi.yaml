@@ -2,6 +2,10 @@ components:
     schemas:
         AssetLibrary:
             properties:
+                externalReferenceCode:
+                    description:
+                        The asset library's external reference code.
+                    type: string
                 id:
                     description:
                         The asset library's site ID.
@@ -324,6 +328,10 @@ components:
                         The `TaxonomyVocabulary` id, only if the category does not have a parent category.
                     format: int64
                     type: integer
+                uuid:
+                    description:
+                        The UUID of the category.
+                    type: string
                 viewableBy:
                     description:
                         A write-only property that specifies the category's default permissions.
@@ -457,6 +465,10 @@ components:
                     format: int64
                     readOnly: true
                     type: integer
+                uuid:
+                    description:
+                        The UUID of the vocabulary.
+                    type: string
                 viewableBy:
                     description:
                         A write-only property that specifies the vocabulary's default permissions.
@@ -474,7 +486,7 @@ components:
 info:
     description:
         "A Java client JAR is available for use with the group ID 'com.liferay', artifact ID
-        'com.liferay.headless.admin.taxonomy.client', and version '4.0.45'."
+        'com.liferay.headless.admin.taxonomy.client', and version '4.0.48'."
     license:
         name: Apache 2.0
         url: http://www.apache.org/licenses/LICENSE-2.0.html

@@ -257,3 +257,4 @@ public class ExpiredAssetSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-612780272

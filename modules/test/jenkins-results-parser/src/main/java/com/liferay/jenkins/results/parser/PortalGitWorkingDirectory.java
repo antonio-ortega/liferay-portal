@@ -34,6 +34,7 @@ import org.json.JSONObject;
  */
 public class PortalGitWorkingDirectory extends GitWorkingDirectory {
 
+	@Override
 	public File archive(String fileName) {
 		File archiveFile = super.archive(fileName);
 
@@ -52,7 +53,7 @@ public class PortalGitWorkingDirectory extends GitWorkingDirectory {
 			JenkinsResultsParserUtil.combine(
 				"zip -r -y ", fileName,
 				" $(git ls-files --directory --no-empty-directory --others | ",
-				"grep -v \\\\.gradle/)"));
+				"grep -v \\\\.gradle/) modules/yarn.lock"));
 
 		if (executionResult.getExitValue() != 0) {
 			throw new GitWorkingDirectoryRuntimeException(
@@ -93,7 +94,13 @@ public class PortalGitWorkingDirectory extends GitWorkingDirectory {
 	}
 
 	public List<File> getModifiedModuleDirsList() throws IOException {
-		return getModifiedModuleDirsList(null, null);
+		if (_modifiedModuleDirs != null) {
+			return _modifiedModuleDirs;
+		}
+
+		_modifiedModuleDirs = getModifiedModuleDirsList(null, null);
+
+		return _modifiedModuleDirs;
 	}
 
 	public List<File> getModifiedModuleDirsList(
@@ -101,9 +108,22 @@ public class PortalGitWorkingDirectory extends GitWorkingDirectory {
 			List<PathMatcher> includesPathMatchers)
 		throws IOException {
 
-		return JenkinsResultsParserUtil.getDirectoriesContainingFiles(
-			getModuleDirsList(excludesPathMatchers, includesPathMatchers),
-			getModifiedFilesList());
+		if ((excludesPathMatchers == null) && (includesPathMatchers == null) &&
+			(_modifiedModuleDirs != null)) {
+
+			return _modifiedModuleDirs;
+		}
+
+		List<File> modifiedModuleDirsList =
+			JenkinsResultsParserUtil.getDirectoriesContainingFiles(
+				getModuleDirsList(excludesPathMatchers, includesPathMatchers),
+				getModifiedFilesList());
+
+		if ((excludesPathMatchers == null) && (includesPathMatchers == null)) {
+			_modifiedModuleDirs = modifiedModuleDirsList;
+		}
+
+		return modifiedModuleDirsList;
 	}
 
 	public List<File> getModifiedNonposhiModules() throws IOException {
@@ -314,12 +334,21 @@ public class PortalGitWorkingDirectory extends GitWorkingDirectory {
 	}
 
 	public PluginsGitWorkingDirectory getPluginsGitWorkingDirectory() {
-		String lpPluginsDir = JenkinsResultsParserUtil.getProperty(
-			getReleaseProperties(), "lp.plugins.dir");
+		Properties buildProperties = null;
+
+		try {
+			buildProperties = JenkinsResultsParserUtil.getBuildProperties();
+		}
+		catch (IOException ioException) {
+			throw new RuntimeException(ioException);
+		}
+
+		String pluginsDir = JenkinsResultsParserUtil.getProperty(
+			buildProperties, "plugins.dir", getUpstreamBranchName());
 
 		GitWorkingDirectory pluginsGitWorkingDirectory =
 			GitWorkingDirectoryFactory.newGitWorkingDirectory(
-				getUpstreamBranchName(), new File(lpPluginsDir),
+				getUpstreamBranchName(), new File(pluginsDir),
 				"liferay-plugins-ee");
 
 		if (pluginsGitWorkingDirectory instanceof PluginsGitWorkingDirectory) {
@@ -370,12 +399,55 @@ public class PortalGitWorkingDirectory extends GitWorkingDirectory {
 			for (Map.Entry<String, String> entry : env.entrySet()) {
 				String key = entry.getKey();
 
-				if (!key.startsWith("ANT_") && !key.startsWith("JAVA_")) {
+				if (!key.startsWith("ANT_") && !key.startsWith("JAVA_") &&
+					!key.startsWith("JENKINS_HOME")) {
+
 					continue;
 				}
 
 				filteredEnv.put(key, entry.getValue());
 			}
+
+			String antOptsDefault = JenkinsResultsParserUtil.getBuildProperty(
+				"ant.opts.default", getUpstreamBranchName());
+
+			if (!JenkinsResultsParserUtil.isNullOrEmpty(antOptsDefault)) {
+				filteredEnv.put("ANT_OPTS", antOptsDefault);
+				filteredEnv.put("JAVA_OPTS", antOptsDefault);
+			}
+
+			String javaJDKDefaultRuntime =
+				JenkinsResultsParserUtil.getBuildProperty(
+					"java.jdk.default.runtime", getUpstreamBranchName());
+
+			if (!JenkinsResultsParserUtil.isNullOrEmpty(
+					javaJDKDefaultRuntime)) {
+
+				filteredEnv.put("JAVA_HOME", javaJDKDefaultRuntime);
+			}
+
+			Properties properties = new Properties();
+
+			String[] propertyNames = {
+				"build.binaries.cache.dir",
+				"build.binaries.cache.repository.name",
+				"nodejs.npm.ci.registry", "nodejs.node.env", "nodejs.npm.args",
+				"nodejs.npm.ci.sass.binary.site"
+			};
+
+			for (String propertyName : propertyNames) {
+				properties.put(
+					propertyName,
+					JenkinsResultsParserUtil.getBuildProperty(
+						"portal.build.properties[" + propertyName + "]"));
+			}
+
+			JenkinsResultsParserUtil.writePropertiesFile(
+				new File(
+					getWorkingDirectory(),
+					JenkinsResultsParserUtil.combine(
+						"build.", System.getenv("HOSTNAME"), ".properties")),
+				properties, true);
 
 			AntUtil.callTarget(
 				workingDirectory, "build.xml", "setup-sdk setup-yarn", null,
@@ -545,6 +617,7 @@ public class PortalGitWorkingDirectory extends GitWorkingDirectory {
 
 	private Properties _appServerProperties;
 	private List<File> _jsUnitFiles;
+	private List<File> _modifiedModuleDirs;
 	private Properties _releaseProperties;
 	private Properties _testProperties;
 

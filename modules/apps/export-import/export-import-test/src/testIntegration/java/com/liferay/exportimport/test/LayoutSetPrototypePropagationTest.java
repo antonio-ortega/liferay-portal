@@ -152,6 +152,51 @@ public class LayoutSetPrototypePropagationTest
 	}
 
 	@Test
+	@TestInfo("LPD-81592")
+	public void testIsLayoutSetMergeable() throws Exception {
+		setLinkEnabled(true);
+
+		LayoutSet layoutSet = LayoutSetLocalServiceUtil.getLayoutSet(
+			group.getGroupId(), false);
+
+		UnicodeProperties settingsUnicodeProperties =
+			layoutSet.getSettingsProperties();
+
+		settingsUnicodeProperties.remove(Sites.LAST_MERGE_TIME);
+		settingsUnicodeProperties.remove(Sites.LAST_MERGE_VERSION);
+
+		layoutSet = LayoutSetLocalServiceUtil.updateLayoutSet(layoutSet);
+
+		_layoutSetPrototype =
+			LayoutSetPrototypeLocalServiceUtil.getLayoutSetPrototype(
+				_layoutSetPrototype.getLayoutSetPrototypeId());
+
+		_layoutSetPrototype.setModifiedDate(new Date());
+
+		_layoutSetPrototype =
+			LayoutSetPrototypeLocalServiceUtil.updateLayoutSetPrototype(
+				_layoutSetPrototype);
+
+		Assert.assertTrue(_sites.isLayoutSetMergeable(group, layoutSet));
+
+		settingsUnicodeProperties = layoutSet.getSettingsProperties();
+
+		settingsUnicodeProperties.setProperty(
+			Sites.LAST_MERGE_TIME,
+			String.valueOf(System.currentTimeMillis() - Time.MINUTE));
+
+		_layoutSetPrototype.setModifiedDate(new Date());
+
+		_layoutSetPrototype =
+			LayoutSetPrototypeLocalServiceUtil.updateLayoutSetPrototype(
+				_layoutSetPrototype);
+
+		Assert.assertFalse(
+			_sites.isLayoutSetMergeable(
+				group, LayoutSetLocalServiceUtil.updateLayoutSet(layoutSet)));
+	}
+
+	@Test
 	public void testIsLayoutSortable() throws Exception {
 		Assert.assertFalse(layout.isLayoutSortable());
 
@@ -296,9 +341,8 @@ public class LayoutSetPrototypePropagationTest
 		ContentLayoutTestUtil.addFragmentEntryLinkToLayout(
 			StringPool.BLANK, fragmentEntry.getCss(),
 			fragmentEntry.getConfiguration(),
-			fragmentEntry.getExternalReferenceCode(),
-			fragmentEntry.getScopeERC(), fragmentEntry.getHtml(),
-			fragmentEntry.getJs(), draftLayout1,
+			fragmentEntry.getExternalReferenceCode(), null,
+			fragmentEntry.getHtml(), fragmentEntry.getJs(), draftLayout1,
 			fragmentEntry.getFragmentEntryKey(), fragmentEntry.getType(), null,
 			0,
 			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
@@ -484,6 +528,7 @@ public class LayoutSetPrototypePropagationTest
 	}
 
 	@Test
+	@TestInfo("LPD-80908")
 	public void testLayoutPropagationWithLinkEnabled() throws Exception {
 		doTestLayoutPropagation(true);
 	}
@@ -592,6 +637,34 @@ public class LayoutSetPrototypePropagationTest
 			groupPublishedLayout, portletId, key, value);
 
 		_verifyPortletPreferenceValue(groupDrafLayout, portletId, key, value);
+	}
+
+	@Test
+	@TestInfo("LPD-81019")
+	public void testLayoutSetPrototypeLayoutERCPropagation() throws Exception {
+		long prototypeGroupId = _layoutSetPrototypeGroup.getGroupId();
+
+		Layout contentLayout = _addLayout(prototypeGroupId);
+		Layout embeddedLayout = LayoutTestUtil.addTypeEmbeddedLayout(
+			prototypeGroupId, true);
+		Layout linkToPageLayout = LayoutTestUtil.addTypeLinkToLayoutLayout(
+			prototypeGroupId, true, prototypeLayout.getLayoutId());
+		Layout linkToURLLayout = LayoutTestUtil.addTypeLinkToURLLayout(
+			prototypeGroupId, true, "http://www.liferay.com");
+		Layout nodeLayout = LayoutTestUtil.addTypeNodeLayout(
+			prototypeGroupId, true);
+		Layout widgetLayout = LayoutTestUtil.addTypePortletLayout(
+			prototypeGroupId, true);
+
+		propagateChanges(group);
+
+		_assertLayoutSetPrototypeLayoutERC(contentLayout, group.getGroupId());
+		_assertLayoutSetPrototypeLayoutERC(embeddedLayout, group.getGroupId());
+		_assertLayoutSetPrototypeLayoutERC(
+			linkToPageLayout, group.getGroupId());
+		_assertLayoutSetPrototypeLayoutERC(linkToURLLayout, group.getGroupId());
+		_assertLayoutSetPrototypeLayoutERC(nodeLayout, group.getGroupId());
+		_assertLayoutSetPrototypeLayoutERC(widgetLayout, group.getGroupId());
 	}
 
 	@Test
@@ -1248,6 +1321,12 @@ public class LayoutSetPrototypePropagationTest
 		Layout layout = LayoutTestUtil.addTypePortletLayout(
 			_layoutSetPrototypeGroup, true);
 
+		Layout childLayout = LayoutTestUtil.addTypePortletLayout(
+			_layoutSetPrototypeGroup.getGroupId(), true);
+
+		childLayout = _layoutLocalService.updateParentLayoutId(
+			childLayout.getPlid(), layout.getPlid());
+
 		Assert.assertEquals(
 			_initialPrototypeLayoutsCount, getGroupLayoutCount());
 
@@ -1255,7 +1334,19 @@ public class LayoutSetPrototypePropagationTest
 
 		if (linkEnabled) {
 			Assert.assertEquals(
-				_initialPrototypeLayoutsCount + 1, getGroupLayoutCount());
+				_initialPrototypeLayoutsCount + 2, getGroupLayoutCount());
+
+			Layout propagatedLayout =
+				LayoutLocalServiceUtil.getLayoutByExternalReferenceCode(
+					layout.getExternalReferenceCode(), group.getGroupId());
+
+			Layout propagatedChildLayout =
+				LayoutLocalServiceUtil.getLayoutByExternalReferenceCode(
+					childLayout.getExternalReferenceCode(), group.getGroupId());
+
+			Assert.assertEquals(
+				propagatedLayout.getLayoutId(),
+				propagatedChildLayout.getParentLayoutId());
 		}
 		else {
 			Assert.assertEquals(
@@ -1267,7 +1358,7 @@ public class LayoutSetPrototypePropagationTest
 
 		if (linkEnabled) {
 			Assert.assertEquals(
-				_initialPrototypeLayoutsCount + 1, getGroupLayoutCount());
+				_initialPrototypeLayoutsCount + 2, getGroupLayoutCount());
 		}
 		else {
 			Assert.assertEquals(
@@ -1287,7 +1378,7 @@ public class LayoutSetPrototypePropagationTest
 		MergeLayoutPrototypesThreadLocal.clearMergeComplete();
 
 		_layoutSetPrototypeLayout = LayoutTestUtil.addTypePortletLayout(
-			_layoutSetPrototypeGroup, true, layoutPrototype,
+			_layoutSetPrototypeGroup, true, globalGroupId, layoutPrototype,
 			layoutSetLayoutLinkEnabled);
 
 		_layoutSetPrototypeLayout = propagateChanges(_layoutSetPrototypeLayout);
@@ -1381,6 +1472,14 @@ public class LayoutSetPrototypePropagationTest
 
 		LayoutSet layoutSet = LayoutSetLocalServiceUtil.getLayoutSet(
 			group.getGroupId(), false);
+
+		UnicodeProperties settingsUnicodeProperties =
+			layoutSet.getSettingsProperties();
+
+		settingsUnicodeProperties.remove(Sites.LAST_MERGE_TIME);
+		settingsUnicodeProperties.remove(Sites.LAST_MERGE_VERSION);
+
+		layoutSet = LayoutSetLocalServiceUtil.updateLayoutSet(layoutSet);
 
 		MergeLayoutPrototypesThreadLocal.setSkipMerge(false);
 
@@ -1535,6 +1634,20 @@ public class LayoutSetPrototypePropagationTest
 		return PortletIdCodec.encode(
 			editableValuesJSONObject.getString("portletId"),
 			editableValuesJSONObject.getString("instanceId"));
+	}
+
+	private void _assertLayoutSetPrototypeLayoutERC(
+			Layout prototypeLayout, long groupId)
+		throws Exception {
+
+		Layout propagatedLayout =
+			LayoutLocalServiceUtil.fetchLayoutByUuidAndGroupId(
+				prototypeLayout.getUuid(), groupId, false);
+
+		Assert.assertNotNull(propagatedLayout);
+		Assert.assertEquals(
+			prototypeLayout.getExternalReferenceCode(),
+			propagatedLayout.getLayoutSetPrototypeLayoutERC());
 	}
 
 	private void _propagateChanges(int failCount, int layoutCount)

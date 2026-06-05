@@ -419,3 +419,4 @@ public class ConditionSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:726616264

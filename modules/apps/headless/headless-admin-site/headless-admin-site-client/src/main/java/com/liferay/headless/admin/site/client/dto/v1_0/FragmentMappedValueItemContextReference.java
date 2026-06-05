@@ -126,3 +126,4 @@ public class FragmentMappedValueItemContextReference
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-489787925

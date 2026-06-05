@@ -5,20 +5,33 @@
 
 package com.liferay.portal.search.script;
 
-import org.osgi.annotation.versioning.ProviderType;
-
 /**
  * @author Michael C. Han
  * @author Wade Cao
  * @author André de Oliveira
  */
-@ProviderType
-public interface ScriptField {
+public class ScriptField {
 
-	public String getField();
+	public String getField() {
+		return _field;
+	}
 
-	public Script getScript();
+	public Script getScript() {
+		return _script;
+	}
 
-	public boolean isIgnoreFailure();
+	public boolean isIgnoreFailure() {
+		return _ignoreFailure;
+	}
+
+	protected ScriptField(String field, boolean ignoreFailure, Script script) {
+		_field = field;
+		_ignoreFailure = ignoreFailure;
+		_script = script;
+	}
+
+	private final String _field;
+	private final boolean _ignoreFailure;
+	private final Script _script;
 
 }

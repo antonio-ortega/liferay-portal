@@ -13,6 +13,7 @@ import {
 	EXPERIMENT_STATUS_QUERY
 } from 'experiments/queries/ExperimentQuery';
 import {getActions} from 'experiments/util/experiments';
+import {getSafeDecodedURIComponent} from 'shared/util/util';
 import {Routes} from 'shared/util/router';
 import {SessionsCard} from 'experiments/components/SessionsCard';
 import {Status} from 'experiments/components/summary-card/types';
@@ -20,10 +21,19 @@ import {SummaryCard} from 'experiments/components/summary-card/SummaryCard';
 import {useChannelContext} from 'shared/context/channel';
 import {useModal} from '@clayui/modal';
 import {useParams} from 'react-router-dom';
-import {useQuery} from '@apollo/react-hooks';
+import {useQuery} from '@apollo/client';
 import {VariantCard} from 'experiments/components/variant-card/VariantCard';
 
-const ExperimentActions = ({experiment}) => {
+const ExperimentActions = ({
+	experiment
+}: {
+	experiment: {
+		id: string;
+		pageURL: string;
+		publishable?: boolean;
+		status: string;
+	};
+}) => {
 	const {id, pageURL, publishable, status} = experiment;
 	const [visibleDeleteModal, setVisibleDeleteModal] = useState(false);
 	const {observer, onClose} = useModal({
@@ -53,7 +63,7 @@ const ExperimentActions = ({experiment}) => {
 };
 
 const ExperimentOverviewPage = () => {
-	const {channelId, id} = useParams();
+	const {channelId, id} = useParams<{channelId: string; id: string}>();
 
 	const {data, error, loading} = useQuery(EXPERIMENT_STATUS_QUERY, {
 		fetchPolicy: 'no-cache',
@@ -79,8 +89,16 @@ const ExperimentOverviewPage = () => {
 	);
 };
 
-const ExperimentOverviewContent = ({status}) => {
-	const {channelId, groupId, id} = useParams();
+const ExperimentOverviewContent = ({status}: {status: string}) => {
+	const {
+		channelId = '',
+		groupId = '',
+		id = ''
+	} = useParams<{
+		channelId: string;
+		groupId: string;
+		id: string;
+	}>();
 	const {selectedChannel} = useChannelContext();
 
 	let Query = EXPERIMENT_QUERY;
@@ -121,17 +139,17 @@ const ExperimentOverviewContent = ({status}) => {
 							<BasePage.Header.TitleSection
 								subtitle={
 									<TextTruncate
-										title={decodeURIComponent(
+										title={getSafeDecodedURIComponent(
 											data.experiment.pageURL
 										)}
 									>
 										<ClayLink
-											href={decodeURIComponent(
+											href={getSafeDecodedURIComponent(
 												data.experiment.pageURL
 											)}
 											target='_blank'
 										>
-											{decodeURIComponent(
+											{getSafeDecodedURIComponent(
 												data.experiment.pageURL
 											)}
 										</ClayLink>

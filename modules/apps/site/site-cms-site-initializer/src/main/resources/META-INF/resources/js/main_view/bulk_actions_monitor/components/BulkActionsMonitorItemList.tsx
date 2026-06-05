@@ -11,13 +11,14 @@ import moment from 'moment';
 import React from 'react';
 
 import {IBulkActionTask} from '../../../common/types/BulkActionTask';
-import {LABELS_BULK_ACTIONS, TASK_STATUS_PROPS} from '../util/constants';
+import {getTaskStatusProps} from '../util';
+import {LABELS_BULK_ACTIONS} from '../util/constants';
 
 function BulkActionsMonitorItemList({items}: {items: IBulkActionTask[]}) {
 	return (
 		<DropDown.ItemList className="task-status" items={items}>
 			{(bulkActionTask: unknown) => {
-				const {dateModified, executionStatus, id, numberOfItems, type} =
+				const {dateModified, id, numberOfItems, type} =
 					bulkActionTask as IBulkActionTask;
 
 				const {
@@ -25,10 +26,11 @@ function BulkActionsMonitorItemList({items}: {items: IBulkActionTask[]}) {
 					displayType,
 					icon,
 					label,
-				} = TASK_STATUS_PROPS[executionStatus.key];
+				} = getTaskStatusProps(bulkActionTask as IBulkActionTask);
 
 				return (
 					<ClayPanel
+						className="p-2"
 						displayTitle={
 							<ClayPanel.Title className="d-flex task-status-item">
 								<div className="task-status-item-icon">
@@ -67,8 +69,9 @@ function BulkActionsMonitorItemList({items}: {items: IBulkActionTask[]}) {
 									</span>
 
 									<Label
-										className="align-self-start"
+										className="align-self-start mt-1"
 										displayType={displayType}
+										inverse
 									>
 										{label}
 									</Label>

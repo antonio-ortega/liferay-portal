@@ -48,6 +48,7 @@ import com.liferay.portal.kernel.util.DateUtil;
 import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Time;
@@ -139,7 +140,8 @@ public abstract class BaseWorkflowDefinitionResourceTestCase {
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
 		).endpoint(
-			testCompany.getVirtualHostname(), 8080, "http"
+			testCompany.getVirtualHostname(),
+			PortalUtil.getPortalServerPort(false), "http"
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -149,7 +151,8 @@ public abstract class BaseWorkflowDefinitionResourceTestCase {
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
 		).endpoint(
-			testCompany.getVirtualHostname(), 8080, "http"
+			testCompany.getVirtualHostname(),
+			PortalUtil.getPortalServerPort(false), "http"
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -215,6 +218,7 @@ public abstract class BaseWorkflowDefinitionResourceTestCase {
 		workflowDefinition.setContent(regex);
 		workflowDefinition.setDescription(regex);
 		workflowDefinition.setExternalReferenceCode(regex);
+		workflowDefinition.setGroupExternalReferenceCode(regex);
 		workflowDefinition.setName(regex);
 		workflowDefinition.setScope(regex);
 		workflowDefinition.setTitle(regex);
@@ -230,6 +234,8 @@ public abstract class BaseWorkflowDefinitionResourceTestCase {
 		Assert.assertEquals(regex, workflowDefinition.getDescription());
 		Assert.assertEquals(
 			regex, workflowDefinition.getExternalReferenceCode());
+		Assert.assertEquals(
+			regex, workflowDefinition.getGroupExternalReferenceCode());
 		Assert.assertEquals(regex, workflowDefinition.getName());
 		Assert.assertEquals(regex, workflowDefinition.getScope());
 		Assert.assertEquals(regex, workflowDefinition.getTitle());
@@ -269,6 +275,7 @@ public abstract class BaseWorkflowDefinitionResourceTestCase {
 
 		// No namespace
 
+		@SuppressWarnings("PMD.UnusedLocalVariable")
 		WorkflowDefinition workflowDefinition1 =
 			testGraphQLDeleteWorkflowDefinition_addWorkflowDefinition();
 
@@ -304,6 +311,7 @@ public abstract class BaseWorkflowDefinitionResourceTestCase {
 
 		// Using the namespace headlessAdminWorkflow_v1_0
 
+		@SuppressWarnings("PMD.UnusedLocalVariable")
 		WorkflowDefinition workflowDefinition2 =
 			testGraphQLDeleteWorkflowDefinition_addWorkflowDefinition();
 
@@ -500,8 +508,9 @@ public abstract class BaseWorkflowDefinitionResourceTestCase {
 			public StringBuffer getRequestURL() {
 				return new StringBuffer(
 					StringBundler.concat(
-						"http://localhost:8080/o/v1.0/",
-						RandomTestUtil.randomString(), "/",
+						"http://localhost:",
+						String.valueOf(PortalUtil.getPortalServerPort(false)),
+						"/o/v1.0/", RandomTestUtil.randomString(), "/",
 						RandomTestUtil.randomString()));
 			}
 
@@ -537,8 +546,10 @@ public abstract class BaseWorkflowDefinitionResourceTestCase {
 			@Override
 			public URI getRequestUri() {
 				return URI.create(
-					"http://localhost:8080/o/" + applicationPath +
-						resourcePath);
+					StringBundler.concat(
+						"http://localhost:",
+						PortalUtil.getPortalServerPort(false), "/o/",
+						applicationPath, resourcePath));
 			}
 
 			@Override
@@ -558,7 +569,11 @@ public abstract class BaseWorkflowDefinitionResourceTestCase {
 
 			@Override
 			public URI getBaseUri() {
-				return URI.create("http://localhost:8080/o/" + applicationPath);
+				return URI.create(
+					StringBundler.concat(
+						"http://localhost:",
+						PortalUtil.getPortalServerPort(false), "/o/",
+						applicationPath));
 			}
 
 			@Override
@@ -864,7 +879,8 @@ public abstract class BaseWorkflowDefinitionResourceTestCase {
 	public void testGetWorkflowDefinitionsPage() throws Exception {
 		Page<WorkflowDefinition> page =
 			workflowDefinitionResource.getWorkflowDefinitionsPage(
-				null, Pagination.of(1, 10), null);
+				null, RandomTestUtil.randomString(), Pagination.of(1, 10),
+				null);
 
 		long totalCount = page.getTotalCount();
 
@@ -877,7 +893,7 @@ public abstract class BaseWorkflowDefinitionResourceTestCase {
 				randomWorkflowDefinition());
 
 		page = workflowDefinitionResource.getWorkflowDefinitionsPage(
-			null, Pagination.of(1, 10), null);
+			null, null, Pagination.of(1, 10), null);
 
 		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
@@ -909,7 +925,7 @@ public abstract class BaseWorkflowDefinitionResourceTestCase {
 
 		Page<WorkflowDefinition> workflowDefinitionsPage =
 			workflowDefinitionResource.getWorkflowDefinitionsPage(
-				null, null, null);
+				null, null, null, null);
 
 		int totalCount = GetterUtil.getInteger(
 			workflowDefinitionsPage.getTotalCount());
@@ -933,7 +949,7 @@ public abstract class BaseWorkflowDefinitionResourceTestCase {
 		if (totalCount >= (pageSizeLimit - 2)) {
 			Page<WorkflowDefinition> page1 =
 				workflowDefinitionResource.getWorkflowDefinitionsPage(
-					null,
+					null, null,
 					Pagination.of(
 						(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
 						pageSizeLimit),
@@ -947,7 +963,7 @@ public abstract class BaseWorkflowDefinitionResourceTestCase {
 
 			Page<WorkflowDefinition> page2 =
 				workflowDefinitionResource.getWorkflowDefinitionsPage(
-					null,
+					null, null,
 					Pagination.of(
 						(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
 						pageSizeLimit),
@@ -959,7 +975,7 @@ public abstract class BaseWorkflowDefinitionResourceTestCase {
 
 			Page<WorkflowDefinition> page3 =
 				workflowDefinitionResource.getWorkflowDefinitionsPage(
-					null,
+					null, null,
 					Pagination.of(
 						(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
 						pageSizeLimit),
@@ -972,7 +988,7 @@ public abstract class BaseWorkflowDefinitionResourceTestCase {
 		else {
 			Page<WorkflowDefinition> page1 =
 				workflowDefinitionResource.getWorkflowDefinitionsPage(
-					null, Pagination.of(1, totalCount + 2), null);
+					null, null, Pagination.of(1, totalCount + 2), null);
 
 			List<WorkflowDefinition> workflowDefinitions1 =
 				(List<WorkflowDefinition>)page1.getItems();
@@ -983,7 +999,7 @@ public abstract class BaseWorkflowDefinitionResourceTestCase {
 
 			Page<WorkflowDefinition> page2 =
 				workflowDefinitionResource.getWorkflowDefinitionsPage(
-					null, Pagination.of(2, totalCount + 2), null);
+					null, null, Pagination.of(2, totalCount + 2), null);
 
 			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
 
@@ -996,7 +1012,7 @@ public abstract class BaseWorkflowDefinitionResourceTestCase {
 
 			Page<WorkflowDefinition> page3 =
 				workflowDefinitionResource.getWorkflowDefinitionsPage(
-					null, Pagination.of(1, (int)totalCount + 3), null);
+					null, null, Pagination.of(1, (int)totalCount + 3), null);
 
 			assertContains(
 				workflowDefinition1,
@@ -1135,12 +1151,12 @@ public abstract class BaseWorkflowDefinitionResourceTestCase {
 
 		Page<WorkflowDefinition> page =
 			workflowDefinitionResource.getWorkflowDefinitionsPage(
-				null, null, null);
+				null, null, null, null);
 
 		for (EntityField entityField : entityFields) {
 			Page<WorkflowDefinition> ascPage =
 				workflowDefinitionResource.getWorkflowDefinitionsPage(
-					null, Pagination.of(1, (int)page.getTotalCount() + 1),
+					null, null, Pagination.of(1, (int)page.getTotalCount() + 1),
 					entityField.getName() + ":asc");
 
 			assertContains(
@@ -1152,7 +1168,7 @@ public abstract class BaseWorkflowDefinitionResourceTestCase {
 
 			Page<WorkflowDefinition> descPage =
 				workflowDefinitionResource.getWorkflowDefinitionsPage(
-					null, Pagination.of(1, (int)page.getTotalCount() + 1),
+					null, null, Pagination.of(1, (int)page.getTotalCount() + 1),
 					entityField.getName() + ":desc");
 
 			assertContains(
@@ -1179,6 +1195,9 @@ public abstract class BaseWorkflowDefinitionResourceTestCase {
 			"workflowDefinitions",
 			new HashMap<String, Object>() {
 				{
+					put(
+						"scope",
+						getGraphQLValue(RandomTestUtil.randomString()));
 					put("page", 1);
 					put("pageSize", 10);
 				}
@@ -1446,7 +1465,8 @@ public abstract class BaseWorkflowDefinitionResourceTestCase {
 			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
 		).endpoint(
-			testCompany.getVirtualHostname(), 8080, "http"
+			testCompany.getVirtualHostname(),
+			PortalUtil.getPortalServerPort(false), "http"
 		).parameters(
 			parameters
 		).build();
@@ -1529,16 +1549,22 @@ public abstract class BaseWorkflowDefinitionResourceTestCase {
 		else if (value instanceof Boolean || value instanceof Number) {
 			return value.toString();
 		}
-		else if (value instanceof Date date) {
+		else if (value instanceof Date) {
+			Date date = (Date)value;
+
 			return "\"" +
 				DateUtil.getDate(
 					date, "yyyy-MM-dd'T'HH:mm:ss'Z'", LocaleUtil.getDefault(),
 					TimeZone.getTimeZone("UTC")) + "\"";
 		}
-		else if (value instanceof Enum<?> enm) {
+		else if (value instanceof Enum) {
+			Enum<?> enm = (Enum<?>)value;
+
 			return enm.name();
 		}
-		else if (value instanceof Map<?, ?> map) {
+		else if (value instanceof Map) {
+			Map<?, ?> map = (Map<?, ?>)value;
+
 			List<String> entries = new ArrayList<>();
 
 			for (Map.Entry<?, ?> entry : map.entrySet()) {
@@ -1551,7 +1577,9 @@ public abstract class BaseWorkflowDefinitionResourceTestCase {
 
 			return "{" + String.join(", ", entries) + "}";
 		}
-		else if (value instanceof Object[] array) {
+		else if (value instanceof Object[]) {
+			Object[] array = (Object[])value;
+
 			List<String> entries = new ArrayList<>();
 
 			for (Object entry : array) {
@@ -1733,6 +1761,18 @@ public abstract class BaseWorkflowDefinitionResourceTestCase {
 					"externalReferenceCode", additionalAssertFieldName)) {
 
 				if (workflowDefinition.getExternalReferenceCode() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"groupExternalReferenceCode", additionalAssertFieldName)) {
+
+				if (workflowDefinition.getGroupExternalReferenceCode() ==
+						null) {
+
 					valid = false;
 				}
 
@@ -2003,6 +2043,19 @@ public abstract class BaseWorkflowDefinitionResourceTestCase {
 				if (!Objects.deepEquals(
 						workflowDefinition1.getExternalReferenceCode(),
 						workflowDefinition2.getExternalReferenceCode())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"groupExternalReferenceCode", additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						workflowDefinition1.getGroupExternalReferenceCode(),
+						workflowDefinition2.getGroupExternalReferenceCode())) {
 
 					return false;
 				}
@@ -2417,6 +2470,52 @@ public abstract class BaseWorkflowDefinitionResourceTestCase {
 			return sb.toString();
 		}
 
+		if (entityFieldName.equals("groupExternalReferenceCode")) {
+			Object object = workflowDefinition.getGroupExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
+
+			return sb.toString();
+		}
+
 		if (entityFieldName.equals("id")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
@@ -2634,7 +2733,9 @@ public abstract class BaseWorkflowDefinitionResourceTestCase {
 			).toString(),
 			"application/json");
 		httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
-		httpInvoker.path("http://localhost:8080/o/graphql");
+		httpInvoker.path(
+			"http://localhost:" + PortalUtil.getPortalServerPort(false) +
+				"/o/graphql");
 		httpInvoker.userNameAndPassword(
 			"test@liferay.com:" + PropsValues.DEFAULT_ADMIN_PASSWORD);
 
@@ -2673,6 +2774,8 @@ public abstract class BaseWorkflowDefinitionResourceTestCase {
 				description = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
 				externalReferenceCode = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
+				groupExternalReferenceCode = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
 				id = RandomTestUtil.randomLong();
 				name = StringUtil.toLowerCase(RandomTestUtil.randomString());
@@ -2954,3 +3057,4 @@ public abstract class BaseWorkflowDefinitionResourceTestCase {
 		_vulcanCRUDItemDelegateBuilderRegistry;
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1681011371

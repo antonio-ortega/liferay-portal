@@ -58,7 +58,6 @@ import com.liferay.portal.tools.java.parser.JavaSwitchStatement;
 import com.liferay.portal.tools.java.parser.JavaSynchronizedStatement;
 import com.liferay.portal.tools.java.parser.JavaTerm;
 import com.liferay.portal.tools.java.parser.JavaTernaryOperator;
-import com.liferay.portal.tools.java.parser.JavaTextBlock;
 import com.liferay.portal.tools.java.parser.JavaThrowStatement;
 import com.liferay.portal.tools.java.parser.JavaTryStatement;
 import com.liferay.portal.tools.java.parser.JavaType;
@@ -1214,14 +1213,19 @@ public class JavaParserUtil {
 		else if (detailAST.getType() == TokenTypes.QUESTION) {
 			javaExpression = _parseJavaTernaryOperator(detailAST);
 		}
-		else if (detailAST.getType() == TokenTypes.TEXT_BLOCK_LITERAL_BEGIN) {
-			javaExpression = _parseJavaTextBlock(detailAST.getFirstChild());
-		}
 		else if (detailAST.getType() == TokenTypes.TYPECAST) {
 			javaExpression = _parseJavaTypeCast(detailAST);
 		}
 		else if (ArrayUtil.contains(_SIMPLE_TYPES, detailAST.getType())) {
-			javaExpression = new JavaSimpleValue(detailAST.getText());
+			if (detailAST.getType() == TokenTypes.TEXT_BLOCK_LITERAL_BEGIN) {
+				DetailAST firstChildDetailAST = detailAST.getFirstChild();
+
+				javaExpression = new JavaSimpleValue(
+					"\"\"\"" + firstChildDetailAST.getText() + "\"\"\"");
+			}
+			else {
+				javaExpression = new JavaSimpleValue(detailAST.getText());
+			}
 		}
 		else {
 			for (JavaOperator operator : JavaOperator.values()) {
@@ -1814,12 +1818,6 @@ public class JavaParserUtil {
 			trueValueJavaExpression);
 	}
 
-	private static JavaTextBlock _parseJavaTextBlock(
-		DetailAST textBlockContentDetailAST) {
-
-		return new JavaTextBlock(textBlockContentDetailAST.getText());
-	}
-
 	private static JavaThrowStatement _parseJavaThrowStatement(
 		DetailAST literalThrowDetailAST) {
 
@@ -1849,9 +1847,44 @@ public class JavaParserUtil {
 		List<DetailAST> resourceDetailASTs = DetailASTUtil.getAllChildTokens(
 			resourcesDetailAST, false, TokenTypes.RESOURCE);
 
+		DetailAST previousResourceDetailAST = null;
+
 		for (DetailAST resourceDetailAST : resourceDetailASTs) {
+			if (previousResourceDetailAST == null) {
+				resourceJavaVariableDefinitions.add(
+					_parseJavaVariableDefinition(resourceDetailAST));
+
+				previousResourceDetailAST = resourceDetailAST;
+
+				continue;
+			}
+
+			DetailAST nextSiblingDetailAST =
+				previousResourceDetailAST.getNextSibling();
+
+			if ((nextSiblingDetailAST == null) ||
+				(nextSiblingDetailAST.getType() != TokenTypes.SEMI)) {
+
+				return null;
+			}
+
+			int lineNumber = resourceDetailAST.getLineNo();
+			int semiDetailASTLineNumber = nextSiblingDetailAST.getLineNo();
+
+			if (lineNumber > (semiDetailASTLineNumber + 1)) {
+				JavaVariableDefinition javaVariableDefinition =
+					new JavaVariableDefinition(
+						Collections.emptyList(), Collections.emptyList());
+
+				javaVariableDefinition.addVariable("// EMPTY_LINE_PLACEHOLDER");
+
+				resourceJavaVariableDefinitions.add(javaVariableDefinition);
+			}
+
 			resourceJavaVariableDefinitions.add(
 				_parseJavaVariableDefinition(resourceDetailAST));
+
+			previousResourceDetailAST = resourceDetailAST;
 		}
 
 		javaTryStatement.setResourceJavaVariableDefinitions(
@@ -2103,7 +2136,7 @@ public class JavaParserUtil {
 		TokenTypes.LITERAL_SUPER, TokenTypes.LITERAL_TRUE,
 		TokenTypes.LITERAL_THIS, TokenTypes.LITERAL_VOID, TokenTypes.NUM_DOUBLE,
 		TokenTypes.NUM_FLOAT, TokenTypes.NUM_INT, TokenTypes.NUM_LONG,
-		TokenTypes.STRING_LITERAL
+		TokenTypes.STRING_LITERAL, TokenTypes.TEXT_BLOCK_LITERAL_BEGIN
 	};
 
 }

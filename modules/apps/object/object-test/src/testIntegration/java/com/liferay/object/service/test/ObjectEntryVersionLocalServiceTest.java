@@ -99,8 +99,8 @@ public class ObjectEntryVersionLocalServiceTest {
 	public static void setUpClass() throws Exception {
 		_objectDefinition =
 			_objectDefinitionLocalService.addCustomObjectDefinition(
-				null, TestPropsValues.getUserId(), 0, null, false, true, false,
-				true, true, false, false, true, null,
+				null, TestPropsValues.getUserId(), 0, null, true, false, true,
+				false, true, true, false, false, true, null,
 				RandomTestUtil.randomLocaleStringMap(),
 				"A" + StringUtil.randomString(), null, null,
 				RandomTestUtil.randomLocaleStringMap(), true,
@@ -443,7 +443,7 @@ public class ObjectEntryVersionLocalServiceTest {
 		// Complete pending object entry's workflow instance
 
 		List<WorkflowTask> workflowTasks =
-			_workflowTaskManager.getWorkflowTasksByUserRoles(
+			_workflowTaskManager.getWorkflowTasksBySubmittingUser(
 				TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
 				false, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
 

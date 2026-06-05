@@ -34,18 +34,6 @@ public class LayoutSetPrototypeServiceUtil {
 	public static LayoutSetPrototype addLayoutSetPrototype(
 			Map<java.util.Locale, String> nameMap,
 			Map<java.util.Locale, String> descriptionMap, boolean active,
-			boolean layoutsUpdateable, boolean readyForPropagation,
-			ServiceContext serviceContext)
-		throws PortalException {
-
-		return getService().addLayoutSetPrototype(
-			nameMap, descriptionMap, active, layoutsUpdateable,
-			readyForPropagation, serviceContext);
-	}
-
-	public static LayoutSetPrototype addLayoutSetPrototype(
-			Map<java.util.Locale, String> nameMap,
-			Map<java.util.Locale, String> descriptionMap, boolean active,
 			boolean layoutsUpdateable, ServiceContext serviceContext)
 		throws PortalException {
 
@@ -55,13 +43,11 @@ public class LayoutSetPrototypeServiceUtil {
 
 	public static LayoutSetPrototype addLayoutSetPrototype(
 			String name, String description, boolean active,
-			boolean layoutsUpdateable, boolean readyForPropagation,
-			ServiceContext serviceContext)
+			boolean layoutsUpdateable, ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().addLayoutSetPrototype(
-			name, description, active, layoutsUpdateable, readyForPropagation,
-			serviceContext);
+			name, description, active, layoutsUpdateable, serviceContext);
 	}
 
 	public static void deleteLayoutSetPrototype(long layoutSetPrototypeId)
@@ -107,6 +93,14 @@ public class LayoutSetPrototypeServiceUtil {
 	}
 
 	public static List<LayoutSetPrototype> search(
+		long companyId, Boolean active, int start, int end,
+		OrderByComparator<LayoutSetPrototype> orderByComparator) {
+
+		return getService().search(
+			companyId, active, start, end, orderByComparator);
+	}
+
+	public static List<LayoutSetPrototype> search(
 			long companyId, Boolean active,
 			OrderByComparator<LayoutSetPrototype> orderByComparator)
 		throws PortalException {
@@ -114,16 +108,8 @@ public class LayoutSetPrototypeServiceUtil {
 		return getService().search(companyId, active, orderByComparator);
 	}
 
-	public static LayoutSetPrototype updateLayoutSetPrototype(
-			long layoutSetPrototypeId, Map<java.util.Locale, String> nameMap,
-			Map<java.util.Locale, String> descriptionMap, boolean active,
-			boolean layoutsUpdateable, boolean readyForPropagation,
-			ServiceContext serviceContext)
-		throws PortalException {
-
-		return getService().updateLayoutSetPrototype(
-			layoutSetPrototypeId, nameMap, descriptionMap, active,
-			layoutsUpdateable, readyForPropagation, serviceContext);
+	public static int searchCount(long companyId, Boolean active) {
+		return getService().searchCount(companyId, active);
 	}
 
 	public static LayoutSetPrototype updateLayoutSetPrototype(
@@ -156,3 +142,4 @@ public class LayoutSetPrototypeServiceUtil {
 	private static volatile LayoutSetPrototypeService _service;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-1048047440

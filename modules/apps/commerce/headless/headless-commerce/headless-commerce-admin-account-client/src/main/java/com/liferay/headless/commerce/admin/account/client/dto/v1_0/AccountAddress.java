@@ -404,3 +404,4 @@ public class AccountAddress implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-83284183

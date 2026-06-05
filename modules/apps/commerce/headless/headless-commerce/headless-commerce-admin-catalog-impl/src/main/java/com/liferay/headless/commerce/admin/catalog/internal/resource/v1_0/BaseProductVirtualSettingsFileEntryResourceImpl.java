@@ -5,6 +5,7 @@
 
 package com.liferay.headless.commerce.admin.catalog.internal.resource.v1_0;
 
+import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.ProductVirtualSettingsFileEntry;
 import com.liferay.headless.commerce.admin.catalog.resource.v1_0.ProductVirtualSettingsFileEntryResource;
 import com.liferay.petra.function.UnsafeBiConsumer;
@@ -77,6 +78,9 @@ public abstract class BaseProductVirtualSettingsFileEntryResourceImpl
 	 *
 	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/product-virtual-settings-file-entries/{id}'  -u 'test@liferay.com:test'
 	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Deletes the product virtual settings file entry identified by id. Calls CPDVirtualSettingFileEntryService.deleteCPDVirtualSettingFileEntry. Validation -- Service-level NoSuchCPDVirtualSettingFileEntryException -> 404. Side effects -- Removes the linked DL file entry reference (file is not deleted)."
+	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
@@ -158,6 +162,9 @@ public abstract class BaseProductVirtualSettingsFileEntryResourceImpl
 	 *
 	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/product-virtual-settings/{id}/product-virtual-settings-file-entries'  -u 'test@liferay.com:test'
 	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Lists the file entries attached to the product virtual setting identified by id. Calls CPDefinitionVirtualSettingService.getCPDefinitionVirtualSetting + getCPDVirtualSettingFileEntries. Validation -- NoSuchCPDefinitionVirtualSettingException -> 404 when parent id not found."
+	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
@@ -204,6 +211,9 @@ public abstract class BaseProductVirtualSettingsFileEntryResourceImpl
 	 *
 	 * curl -X 'GET' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/product-virtual-settings-file-entries/{id}'  -u 'test@liferay.com:test'
 	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Fetches the product virtual settings file entry identified by id. Calls CPDVirtualSettingFileEntryService.getCPDVirtualSettingFileEntry. Validation -- NoSuchCPDVirtualSettingFileEntryException -> 404 when id not found."
+	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
@@ -239,6 +249,7 @@ public abstract class BaseProductVirtualSettingsFileEntryResourceImpl
 	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/product-virtual-settings-file-entries/{id}'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
+		description = "Partially updates the product virtual settings file entry identified by id, optionally replacing the underlying file. Calls CPDVirtualSettingFileEntryService.getCPDVirtualSettingFileEntry + CPDefinitionVirtualSettingService.getCPDefinitionVirtualSetting + FileEntryUtil.getFileEntryId + updateCPDefinitionVirtualSetting. Validation -- NoSuchCPDVirtualSettingFileEntryException -> 404 when id not found. Side effects -- May create a new DL file entry under the product group when a binary file or attachment is supplied.",
 		requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "multipart/form-data", schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = PatchProductVirtualSettingsFileEntryRequestBody.class)))
 	)
 	@io.swagger.v3.oas.annotations.Parameters(
@@ -278,6 +289,7 @@ public abstract class BaseProductVirtualSettingsFileEntryResourceImpl
 	 * curl -X 'POST' 'http://localhost:8080/o/headless-commerce-admin-catalog/v1.0/product-virtual-settings/{id}/product-virtual-settings-file-entries'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
+		description = "Adds a file entry under the product virtual setting identified by id, accepting a binary upload or an existing attachment reference. Calls CPDefinitionVirtualSettingService.getCPDefinitionVirtualSetting + FileEntryUtil.getFileEntryId + CPDVirtualSettingFileEntryService.addCPDefinitionVirtualSetting. Validation -- BadRequestException -> 400 when neither binary file nor attachment is provided; NoSuchCPDefinitionVirtualSettingException -> 404 when parent id not found. Side effects -- Creates a DL file entry under the product group and records a new CPDVirtualSettingFileEntry.",
 		requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "multipart/form-data", schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = PostProductVirtualSettingIdProductVirtualSettingsFileEntryRequestBody.class)))
 	)
 	@io.swagger.v3.oas.annotations.Parameters(
@@ -417,6 +429,15 @@ public abstract class BaseProductVirtualSettingsFileEntryResourceImpl
 			@Override
 			public Locale getPreferredLocale() {
 				return LocaleUtil.fromLanguageId(languageId);
+			}
+
+			@Override
+			public boolean isAcceptAllLanguages() {
+				if (ExportImportThreadLocal.isExportInProcess()) {
+					return true;
+				}
+
+				return AcceptLanguage.super.isAcceptAllLanguages();
 			}
 
 		};
@@ -1067,3 +1088,4 @@ public abstract class BaseProductVirtualSettingsFileEntryResourceImpl
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1936314284

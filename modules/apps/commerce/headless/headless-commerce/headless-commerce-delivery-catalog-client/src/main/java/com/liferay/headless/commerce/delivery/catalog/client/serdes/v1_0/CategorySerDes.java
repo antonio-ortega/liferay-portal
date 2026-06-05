@@ -307,3 +307,4 @@ public class CategorySerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:484241608

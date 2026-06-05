@@ -95,7 +95,13 @@
 		$padding-y: if($padding-y == 0 or $padding-y == null, 0px, $padding-y);
 		$link-height: setter(
 			map-get($map, link-height),
-			'#{$height} - #{$border-bottom-width} - #{$border-top-width} - #{$padding-y} * 2'
+			calc(
+				#{$height} -
+					#{$border-bottom-width} -
+					#{$border-top-width} -
+					#{$padding-y} *
+					2
+			)
 		);
 
 		$link-margin-x: map-get($map, link-margin-x);
@@ -203,7 +209,8 @@
 								#{$border-top-width} -
 								#{$padding-y} *
 								2 -
-								(#{$brand-font-size} * #{$_line-height-base})
+								#{$brand-font-size} *
+								#{$_line-height-base}
 						) *
 						0.5
 				)
@@ -223,7 +230,13 @@
 		$min-height-mobile: map-get($map, min-height-mobile);
 		$link-height-mobile: setter(
 			map-get($map, link-height-mobile),
-			'#{$height-mobile} - #{$border-bottom-width} - #{$border-top-width} - #{$padding-y} * 2'
+			calc(
+				#{$height-mobile} -
+					#{$border-bottom-width} -
+					#{$border-top-width} -
+					#{$padding-y} *
+					2
+			)
 		);
 		$link-margin-x-mobile: setter(
 			map-get($map, link-margin-x-mobile),
@@ -252,7 +265,8 @@
 			calc(
 				(
 						#{$link-height-mobile} -
-							(#{$font-size-mobile} * #{$_line-height-base})
+							#{$font-size-mobile} *
+							#{$_line-height-base}
 					) *
 					0.5
 			)
@@ -411,7 +425,10 @@
 			map-get($map, toggler-link-line-height),
 			$_line-height-base
 		);
-		$toggler-link-margin-x: setter(map-get($map, toggler-link-margin-x), 0);
+		$toggler-link-margin-x: setter(
+			map-get($map, toggler-link-margin-x),
+			0px
+		);
 		$toggler-link-margin-y: map-get($map, toggler-link-margin-y);
 		$toggler-link-padding-x: setter(
 			map-get($map, toggler-link-padding-x),
@@ -503,10 +520,26 @@
 
 				@if ($enable-c-inner) {
 					.c-inner {
-						margin-bottom: math-sign($toggler-padding-y);
-						margin-left: math-sign($toggler-padding-x);
-						margin-right: math-sign($toggler-padding-x);
-						margin-top: math-sign($toggler-padding-y);
+						margin-bottom: if(
+							$toggler-padding-y,
+							calc(#{$toggler-padding-y} * -1),
+							null
+						);
+						margin-left: if(
+							$toggler-padding-x,
+							calc(#{$toggler-padding-x} * -1),
+							null
+						);
+						margin-right: if(
+							$toggler-padding-x,
+							calc(#{$toggler-padding-x} * -1),
+							null
+						);
+						margin-top: if(
+							$toggler-padding-y,
+							calc(#{$toggler-padding-y} * -1),
+							null
+						);
 					}
 				}
 			}
@@ -526,10 +559,26 @@
 
 				@if ($enable-c-inner) {
 					.c-inner {
-						margin-bottom: math-sign($toggler-link-padding-y);
-						margin-left: math-sign($toggler-link-padding-x);
-						margin-right: math-sign($toggler-link-padding-x);
-						margin-top: math-sign($toggler-link-padding-y);
+						margin-bottom: if(
+							$toggler-link-padding-y,
+							calc(#{$toggler-link-padding-y} * -1),
+							null
+						);
+						margin-left: if(
+							$toggler-link-padding-x,
+							calc(#{$toggler-link-padding-x} * -1),
+							null
+						);
+						margin-right: if(
+							$toggler-link-padding-x,
+							calc(#{$toggler-link-padding-x} * -1),
+							null
+						);
+						margin-top: if(
+							$toggler-link-padding-y,
+							calc(#{$toggler-link-padding-y} * -1),
+							null
+						);
 					}
 				}
 			}
@@ -545,10 +594,26 @@
 
 				@if ($enable-c-inner) {
 					.c-inner {
-						margin-bottom: math-sign($brand-padding-y-mobile);
-						margin-left: math-sign($brand-padding-x-mobile);
-						margin-right: math-sign($brand-padding-x-mobile);
-						margin-top: math-sign($brand-padding-y-mobile);
+						margin-bottom: if(
+							$brand-padding-y-mobile,
+							calc(#{$brand-padding-y-mobile} * -1),
+							null
+						);
+						margin-left: if(
+							$brand-padding-x-mobile,
+							calc(#{$brand-padding-x-mobile} * -1),
+							null
+						);
+						margin-right: if(
+							$brand-padding-x-mobile,
+							calc(#{$brand-padding-x-mobile} * -1),
+							null
+						);
+						margin-top: if(
+							$brand-padding-y-mobile,
+							calc(#{$brand-padding-y-mobile} * -1),
+							null
+						);
 					}
 				}
 			}
@@ -576,10 +641,26 @@
 
 					@if ($enable-c-inner) {
 						.c-inner {
-							margin-bottom: math-sign($btn-padding-y-mobile);
-							margin-left: math-sign($btn-padding-x-mobile);
-							margin-right: math-sign($btn-padding-x-mobile);
-							margin-top: math-sign($btn-padding-y-mobile);
+							margin-bottom: if(
+								$btn-padding-y-mobile,
+								calc(#{$btn-padding-y-mobile} * -1),
+								null
+							);
+							margin-left: if(
+								$btn-padding-x-mobile,
+								calc(#{$btn-padding-x-mobile} * -1),
+								null
+							);
+							margin-right: if(
+								$btn-padding-x-mobile,
+								calc(#{$btn-padding-x-mobile} * -1),
+								null
+							);
+							margin-top: if(
+								$btn-padding-y-mobile,
+								calc(#{$btn-padding-y-mobile} * -1),
+								null
+							);
 						}
 					}
 				}
@@ -616,10 +697,26 @@
 
 					@if ($enable-c-inner) {
 						.c-inner {
-							margin-bottom: math-sign($link-padding-y-mobile);
-							margin-left: math-sign($link-padding-x-mobile);
-							margin-right: math-sign($link-padding-x-mobile);
-							margin-top: math-sign($link-padding-y-mobile);
+							margin-bottom: if(
+								$link-padding-y-mobile,
+								calc(#{$link-padding-y-mobile} * -1),
+								null
+							);
+							margin-left: if(
+								$link-padding-x-mobile,
+								calc(#{$link-padding-x-mobile} * -1),
+								null
+							);
+							margin-right: if(
+								$link-padding-x-mobile,
+								calc(#{$link-padding-x-mobile} * -1),
+								null
+							);
+							margin-top: if(
+								$link-padding-y-mobile,
+								calc(#{$link-padding-y-mobile} * -1),
+								null
+							);
 						}
 					}
 				}
@@ -735,17 +832,37 @@
 
 											@if ($enable-c-inner) {
 												.c-inner {
-													margin-bottom: math-sign(
-														$brand-padding-y
+													margin-bottom: if(
+														$brand-padding-y,
+														calc(
+															#{$brand-padding-y} *
+																-1
+														),
+														null
 													);
-													margin-left: math-sign(
-														$brand-padding-x
+													margin-left: if(
+														$brand-padding-x,
+														calc(
+															#{$brand-padding-x} *
+																-1
+														),
+														null
 													);
-													margin-right: math-sign(
-														$brand-padding-x
+													margin-right: if(
+														$brand-padding-x,
+														calc(
+															#{$brand-padding-x} *
+																-1
+														),
+														null
 													);
-													margin-top: math-sign(
-														$brand-padding-y
+													margin-top: if(
+														$brand-padding-y,
+														calc(
+															#{$brand-padding-y} *
+																-1
+														),
+														null
 													);
 												}
 											}
@@ -790,17 +907,37 @@
 
 											@if ($enable-c-inner) {
 												.c-inner {
-													margin-bottom: math-sign(
-														$btn-padding-y
+													margin-bottom: if(
+														$btn-padding-y,
+														calc(
+															#{$btn-padding-y} *
+																-1
+														),
+														null
 													);
-													margin-left: math-sign(
-														$btn-padding-x
+													margin-left: if(
+														$btn-padding-x,
+														calc(
+															#{$btn-padding-x} *
+																-1
+														),
+														null
 													);
-													margin-right: math-sign(
-														$btn-padding-x
+													margin-right: if(
+														$btn-padding-x,
+														calc(
+															#{$btn-padding-x} *
+																-1
+														),
+														null
 													);
-													margin-top: math-sign(
-														$btn-padding-y
+													margin-top: if(
+														$btn-padding-y,
+														calc(
+															#{$btn-padding-y} *
+																-1
+														),
+														null
 													);
 												}
 											}
@@ -844,17 +981,37 @@
 
 											@if ($enable-c-inner) {
 												.c-inner {
-													margin-bottom: math-sign(
-														$link-padding-y
+													margin-bottom: if(
+														$link-padding-y,
+														calc(
+															#{$link-padding-y} *
+																-1
+														),
+														null
 													);
-													margin-left: math-sign(
-														$link-padding-x
+													margin-left: if(
+														$link-padding-x,
+														calc(
+															#{$link-padding-x} *
+																-1
+														),
+														null
 													);
-													margin-right: math-sign(
-														$link-padding-x
+													margin-right: if(
+														$link-padding-x,
+														calc(
+															#{$link-padding-x} *
+																-1
+														),
+														null
 													);
-													margin-top: math-sign(
-														$link-padding-y
+													margin-top: if(
+														$link-padding-y,
+														calc(
+															#{$link-padding-y} *
+																-1
+														),
+														null
 													);
 												}
 											}
@@ -1551,6 +1708,37 @@
 		);
 
 		$underline-active-bg: map-get($map, underline-active-bg);
+
+		$base: map-remove(
+			$base,
+			'bg',
+			'brand-bg',
+			'brand-color',
+			'brand-hover-bg',
+			'brand-hover-color',
+			'btn-font-weight',
+			'link-active-bg',
+			'link-active-color',
+			'link-bg',
+			'link-border-radius',
+			'link-color',
+			'link-disabled-bg',
+			'link-disabled-box-shadow',
+			'link-disabled-color',
+			'link-disabled-opacity',
+			'link-disabled-pointer-events',
+			'link-focus-bg',
+			'link-focus-box-shadow',
+			'link-focus-color',
+			'link-font-weight',
+			'link-hover-bg',
+			'link-hover-color',
+			'link-outline',
+			'link-transition',
+			'toggler-color',
+			'toggler-font-weight',
+			'underline-active-bg'
+		);
 
 		@if ($enabled) {
 			@if (length($base) != 0) {

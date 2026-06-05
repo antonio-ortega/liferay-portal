@@ -164,10 +164,11 @@ public class DLFileEntryDataCleanupPreupgradeProcess
 					"ClassName_ where value in ('",
 					DLFileEntryMetadata.class.getName(), "', '",
 					RawMetadataProcessor.class.getName(), "'))"));
+
 			ResultSet resultSet = preparedStatement.executeQuery()) {
 
 			while (resultSet.next()) {
-				structureIds.add(resultSet.getString(1));
+				structureIds.add(resultSet.getString("structureId"));
 			}
 		}
 

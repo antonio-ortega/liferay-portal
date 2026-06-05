@@ -202,3 +202,4 @@ public class InnerCollapseSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:879856147

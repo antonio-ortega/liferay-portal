@@ -28,15 +28,14 @@ const ProductPurchaseShell: React.FC<ProductPurchaseShellProps> = ({
 		{...props}
 		className={classNames('product-purchase-shell', props.className)}
 	>
-		<div className="mb-4 product-purchase-shell-heading">
-			<h1 className="my-4 text-center">{title}</h1>
-
+		<div className="mb-3 product-purchase-shell-heading">
+			<h1 className="m-0 text-center text-weight-bold">{title}</h1>
 			{subtitle && <span>{subtitle}</span>}
 		</div>
 
 		{children}
 
-		<ProductPurchaseFooter {...footerProps} />
+		{footerProps && <ProductPurchaseFooter {...footerProps} />}
 	</Component>
 );
 

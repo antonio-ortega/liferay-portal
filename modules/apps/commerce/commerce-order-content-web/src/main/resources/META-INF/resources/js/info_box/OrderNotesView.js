@@ -15,8 +15,10 @@ import InfoBoxModalNotes from '../InfoBoxModalNotes';
 const OrderNotesView = ({
 	buttonDisplayType,
 	elementId,
+	hasManageOrderNotesPermission,
 	hasManageOrderRestrictedNotesPermission,
 	hasViewPermission,
+	isOpen,
 	label,
 	namespace,
 	orderId,
@@ -125,13 +127,14 @@ const OrderNotesView = ({
 
 	return (
 		<div className={namespace + 'info-box'} id={elementId}>
-			{label ? (
+			{label && (
 				<div className="align-items-center d-flex">
 					<div className="h5 info-box-label m-0">{label}</div>
 
-					{hasViewPermission ? (
+					{hasViewPermission && (
 						<ClayButton
-							aria-controls={`${namespace}InfoBoxModalNotes`}
+							aria-expanded={isOpen}
+							aria-haspopup="dialog"
 							className="ml-2"
 							data-qa-id={`${label}-infoBoxButton`}
 							displayType={buttonDisplayType}
@@ -140,9 +143,9 @@ const OrderNotesView = ({
 						>
 							{Liferay.Language.get('open')}
 						</ClayButton>
-					) : null}
+					)}
 				</div>
-			) : null}
+			)}
 
 			<div>
 				<p className="info-box-value">{formatDate(modifiedDate)}</p>
@@ -152,6 +155,7 @@ const OrderNotesView = ({
 				handleDelete={handleDelete}
 				handleSubmit={handleSubmit}
 				handleToggle={handleToggle}
+				hasManageOrderNotesPermission={hasManageOrderNotesPermission}
 				hasManageOrderRestrictedNotesPermission={
 					hasManageOrderRestrictedNotesPermission
 				}

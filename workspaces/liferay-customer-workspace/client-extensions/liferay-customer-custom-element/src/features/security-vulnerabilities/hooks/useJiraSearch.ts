@@ -5,7 +5,7 @@
 
 import {useCallback, useEffect, useState} from 'react';
 import {useSearchParams} from 'react-router-dom';
-import {Liferay} from '~/services/liferay';
+import {searchSecurityVulnerabilities} from '~/services/liferay/rest/jira/Jira';
 
 import {
 	FILTER_MAP,
@@ -150,13 +150,7 @@ const useJiraSearch = (defaultParams?: IProps) => {
 
 			try {
 				const response: IJiraResponse =
-					await Liferay.OAuth2Client.FromUserAgentApplication(
-						'liferay-customer-etc-spring-boot-oaua'
-					)
-						.fetch(
-							`/jira/security-vulnerabilities/search?${queryString}`
-						)
-						.then((response: {json: () => any}) => response.json());
+					await searchSecurityVulnerabilities(queryString);
 
 				setJiraSearch(response);
 			}

@@ -124,6 +124,11 @@ public interface AnalyticsDeleteMessageLocalService
 			long analyticsDeleteMessageId)
 		throws PortalException;
 
+	public void deleteAnalyticsDeleteMessages(long companyId);
+
+	public void deleteAnalyticsDeleteMessages(
+		long companyId, Date modifiedDate);
+
 	/**
 	 * @throws PortalException
 	 */
@@ -308,3 +313,4 @@ public interface AnalyticsDeleteMessageLocalService
 		throws E;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-813743971

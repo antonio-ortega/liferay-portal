@@ -98,12 +98,14 @@ public class ResourcePermissionUpgradeProcess extends UpgradeProcess {
 
 		try (PreparedStatement preparedStatement = connection.prepareStatement(
 				"select calendarResourceId, companyId from CalendarResource");
+
 			ResultSet resultSet = preparedStatement.executeQuery()) {
 
 			while (resultSet.next()) {
-				long calendarResourceId = resultSet.getLong(1);
+				long calendarResourceId = resultSet.getLong(
+					"calendarResourceId");
 
-				long companyId = resultSet.getLong(2);
+				long companyId = resultSet.getLong("companyId");
 
 				Role guestRole = _roleLocalService.getRole(
 					companyId, RoleConstants.GUEST);

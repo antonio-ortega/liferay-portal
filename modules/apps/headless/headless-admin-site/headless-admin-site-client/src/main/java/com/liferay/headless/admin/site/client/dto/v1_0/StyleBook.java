@@ -269,3 +269,4 @@ public class StyleBook implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-683943060

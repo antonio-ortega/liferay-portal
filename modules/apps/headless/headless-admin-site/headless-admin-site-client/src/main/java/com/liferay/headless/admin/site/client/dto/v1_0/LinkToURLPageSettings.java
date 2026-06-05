@@ -80,3 +80,4 @@ public class LinkToURLPageSettings
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-430325885

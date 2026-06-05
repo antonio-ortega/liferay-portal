@@ -9,8 +9,8 @@ $cadmin-clay-color-input-group-text: map-merge(
 				$cadmin-white
 			),
 		border-color: $cadmin-input-border-color,
-		padding-left: 0,
-		padding-right: 0,
+		padding-left: 0px,
+		padding-right: 0px,
 	),
 	$cadmin-clay-color-input-group-text
 );
@@ -39,7 +39,7 @@ $cadmin-clay-color-dropdown-menu: map-deep-merge(
 	(
 		max-height: 500px,
 		max-width: none,
-		padding-bottom: 0,
+		padding-bottom: 0px,
 		padding-left: 16px,
 		padding-right: 16px,
 		padding-top: 16px,
@@ -94,15 +94,19 @@ $cadmin-clay-color-dropdown-menu-close: map-deep-merge(
 		color: $cadmin-gray-600,
 		font-size: 16px,
 		opacity: 1,
+
 		hover: (
 			background-color: rgba($cadmin-gray-900, 0.03),
 		),
+
 		focus: (
 			background-color: rgba($cadmin-gray-900, 0.03),
 		),
+
 		active: (
 			background-color: rgba($cadmin-gray-900, 0.06),
 		),
+
 		disabled: (
 			background-color: transparent,
 		),
@@ -147,11 +151,12 @@ $cadmin-clay-color-btn: map-deep-merge(
 	(
 		border-radius: 2px,
 		height: 24px,
-		padding-bottom: 0,
-		padding-left: 0,
-		padding-right: 0,
-		padding-top: 0,
+		padding-bottom: 0px,
+		padding-left: 0px,
+		padding-right: 0px,
+		padding-top: 0px,
 		width: 24px,
+
 		active: (
 			box-shadow: $cadmin-component-focus-box-shadow,
 		),
@@ -178,13 +183,14 @@ $cadmin-clay-color-pointer: map-deep-merge(
 		border-style: solid,
 		border-width: 2px,
 		height: 14px,
-		padding-bottom: 0,
-		padding-left: 0,
-		padding-right: 0,
-		padding-top: 0,
+		padding-bottom: 0px,
+		padding-left: 0px,
+		padding-right: 0px,
+		padding-top: 0px,
 		position: absolute,
 		transition: box-shadow 0.15s ease-in-out,
 		width: 14px,
+
 		focus: (
 			box-shadow: 0 0 0 2px $cadmin-primary-l0,
 			outline: 0,
@@ -288,7 +294,7 @@ $cadmin-clay-color-map-values-form-group: () !default;
 $cadmin-clay-color-map-values-input: () !default;
 $cadmin-clay-color-map-values-input: map-deep-merge(
 	(
-		padding-left: 0,
+		padding-left: 0px,
 		padding-right: 10%,
 		text-align: right,
 	),
@@ -302,7 +308,7 @@ $cadmin-clay-color-map-values-input-group-inset-item-before: map-deep-merge(
 	(
 		font-weight: $cadmin-font-weight-semi-bold,
 		padding-left: 10%,
-		padding-right: 0,
+		padding-right: 0px,
 		min-width: 18px,
 	),
 	$cadmin-clay-color-map-values-input-group-inset-item-before
@@ -342,22 +348,25 @@ $cadmin-clay-color-form-group: map-deep-merge(
 		align-items: center,
 		margin-top: 4px,
 		margin-bottom: 16px,
+
 		clay-range: (
 			flex-grow: 1,
 			flex-shrink: 0,
 			margin-right: 16px,
 			width: 144px,
 		),
+
 		form-control: (
-			padding-left: 0,
+			padding-left: 0px,
 			padding-right: 10%,
 			text-align: right,
 		),
+
 		input-group: (
 			input-group-inset-item-before: (
 				font-weight: $cadmin-font-weight-semi-bold,
 				padding-left: 10%,
-				padding-right: 0,
+				padding-right: 0px,
 				min-width: 18px,
 			),
 		),
@@ -372,11 +381,13 @@ $cadmin-clay-color-slider: map-deep-merge(
 	(
 		clay-range-input: (
 			border-radius: 100px,
+
 			clay-range-track: (
 				border-radius: inherit,
 				height: 8px,
 				margin-top: -4px,
 			),
+
 			clay-range-progress: (
 				background-color: transparent,
 				border-radius: inherit,
@@ -384,18 +395,22 @@ $cadmin-clay-color-slider: map-deep-merge(
 				margin-top: -4px,
 				width: 100%,
 			),
+
 			ms-thumb: (
 				visibility: visible,
 			),
+
 			moz-range-thumb: (
 				visibility: visible,
 			),
+
 			webkit-slider-thumb: (
 				visibility: visible,
 			),
+
 			clay-range-thumb: (
 				background-color: currentColor,
-				border-width: 0,
+				border-width: 0px,
 				box-shadow: 0 0 0 2px $cadmin-white,
 				height: 10px,
 				margin-top: -5px,
@@ -404,16 +419,19 @@ $cadmin-clay-color-slider: map-deep-merge(
 				visibility: hidden,
 				width: 10px,
 			),
+
 			form-control-range: (
 				background-color: inherit,
 				border-radius: inherit,
 				color: inherit,
 				height: 8px,
+
 				webkit-slider-runnable-track: (
 					-webkit-appearance: none,
 					appearance: none,
 				),
 			),
+
 			focus: (
 				clay-range-thumb: (
 					box-shadow: #{0 0 0 2px $cadmin-white,
@@ -430,6 +448,7 @@ $cadmin-clay-color-slider-hue: map-deep-merge(
 	(
 		clay-range-input: (
 			color: #26affd,
+
 			clay-range-track: (
 				background-image:
 					linear-gradient(
@@ -453,6 +472,7 @@ $cadmin-clay-color-slider-alpha: map-deep-merge(
 	(
 		clay-range-input: (
 			color: $cadmin-black,
+
 			clay-range-track: (
 				background-color: $cadmin-white,
 				background-image: #{linear-gradient(
@@ -477,11 +497,13 @@ $cadmin-clay-color-slider-alpha: map-deep-merge(
 				-4px 0px},
 				background-size: 8px 8px,
 			),
+
 			form-control-range: (
 				background-image:
 					linear-gradient(90deg, transparent 0%, currentcolor 100%),
 				color: inherit,
 			),
+
 			clay-range-progress: (
 				background-image:
 					linear-gradient(90deg, transparent 0%, currentcolor 100%),
@@ -504,7 +526,7 @@ $cadmin-clay-color-sm-input-group-inset-item-before: map-merge(
 $cadmin-clay-color-sm-input-group-text: () !default;
 $cadmin-clay-color-sm-input-group-text: map-merge(
 	(
-		padding: 0,
+		padding: 0px,
 	),
 	$cadmin-clay-color-sm-input-group-text
 );
@@ -514,7 +536,7 @@ $cadmin-clay-color-sm-clay-color-btn: map-deep-merge(
 	(
 		border-radius: 2px,
 		height: 20px,
-		padding: 0,
+		padding: 0px,
 		width: 20px,
 	),
 	$cadmin-clay-color-sm-clay-color-btn

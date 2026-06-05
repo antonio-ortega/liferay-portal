@@ -8,7 +8,6 @@ package com.liferay.portal.search.elasticsearch8.internal.connection;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.json.JsonpMapper;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
-import co.elastic.clients.transport.rest_client.RestClientTransport;
 
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
@@ -24,9 +23,6 @@ import com.liferay.portal.search.ccr.CrossClusterReplicationConfigurationHelper;
 import com.liferay.portal.search.elasticsearch8.internal.configuration.ElasticsearchConfigurationObserver;
 import com.liferay.portal.search.elasticsearch8.internal.configuration.ElasticsearchConfigurationWrapper;
 import com.liferay.portal.search.elasticsearch8.internal.connection.constants.ConnectionConstants;
-import com.liferay.portal.search.elasticsearch8.internal.helper.SearchLogHelperUtil;
-
-import java.lang.reflect.Field;
 
 import java.net.InetSocketAddress;
 
@@ -38,10 +34,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.FutureTask;
 import java.util.function.Supplier;
-
-import org.apache.http.HttpHost;
-
-import org.elasticsearch.client.RestClient;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
@@ -165,35 +157,6 @@ public class ElasticsearchConnectionManager
 					"Elasticsearch client not found.",
 					elasticsearchConnection.getConnectionId(),
 					preferLocalCluster));
-		}
-
-		try {
-			RestClientTransport restClientTransport =
-				elasticsearchConnection.getRestClientTransport();
-
-			RestClient restClient = restClientTransport.restClient();
-
-			Class<?> clazz = restClient.getClass();
-
-			Field blacklistField = clazz.getDeclaredField("blacklist");
-
-			blacklistField.setAccessible(true);
-
-			ConcurrentHashMap<HttpHost, Object> map =
-				(ConcurrentHashMap<HttpHost, Object>)blacklistField.get(
-					restClient);
-
-			for (HttpHost httpHost : map.keySet()) {
-				_log.error(
-					"The REST client network host address " +
-						httpHost.toString() + " is blacklisted");
-			}
-		}
-		catch (Exception exception) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(
-					"Unable to get REST client blacklist field", exception);
-			}
 		}
 
 		return elasticsearchClient;
@@ -354,10 +317,7 @@ public class ElasticsearchConnectionManager
 	}
 
 	protected void applyConfigurations() {
-		SearchLogHelperUtil.setRESTClientLoggerLevel(
-			elasticsearchConfigurationWrapper.restClientLoggerLevel());
-
-		if (elasticsearchConfigurationWrapper.isProductionModeEnabled()) {
+		if (elasticsearchConfigurationWrapper.productionModeEnabled()) {
 			if (Validator.isBlank(
 					elasticsearchConfigurationWrapper.
 						remoteClusterConnectionId())) {
@@ -418,7 +378,7 @@ public class ElasticsearchConnectionManager
 			return getElasticsearchConnection(connectionId);
 		}
 
-		if (elasticsearchConfigurationWrapper.isDevelopmentModeEnabled()) {
+		if (!elasticsearchConfigurationWrapper.productionModeEnabled()) {
 			if (_log.isInfoEnabled()) {
 				_log.info(
 					"Getting " + ConnectionConstants.SIDECAR_CONNECTION_ID +
@@ -468,23 +428,24 @@ public class ElasticsearchConnectionManager
 	protected Http http;
 
 	private ElasticsearchConnection _createRemoteElasticsearchConnection() {
-		ElasticsearchConnectionBuilder elasticsearchConnectionBuilder =
-			new ElasticsearchConnectionBuilder();
+		ElasticsearchConnection.Builder builder =
+			new ElasticsearchConnection.Builder(
+				elasticsearchConfigurationWrapper::networkHostAddresses);
 
-		elasticsearchConnectionBuilder.active(
+		builder.active(
 			true
 		).authenticationEnabled(
 			elasticsearchConfigurationWrapper.authenticationEnabled()
 		).connectionId(
 			ConnectionConstants.REMOTE_CONNECTION_ID
+		).compressionEnabled(
+			elasticsearchConfigurationWrapper.compressionEnabled()
 		).httpSSLEnabled(
 			elasticsearchConfigurationWrapper.httpSSLEnabled()
 		).maxConnections(
 			elasticsearchConfigurationWrapper.maxConnections()
 		).maxConnectionsPerRoute(
 			elasticsearchConfigurationWrapper.maxConnectionsPerRoute()
-		).networkHostAddresses(
-			elasticsearchConfigurationWrapper.networkHostAddresses()
 		).password(
 			elasticsearchConfigurationWrapper.password()
 		).proxyConfig(
@@ -499,7 +460,7 @@ public class ElasticsearchConnectionManager
 			elasticsearchConfigurationWrapper.userName()
 		);
 
-		return elasticsearchConnectionBuilder.build();
+		return builder.build();
 	}
 
 	private String _getExceptionMessage(
@@ -507,7 +468,7 @@ public class ElasticsearchConnectionManager
 
 		return StringBundler.concat(
 			message, " Production Mode Enabled: ",
-			elasticsearchConfigurationWrapper.isProductionModeEnabled(),
+			elasticsearchConfigurationWrapper.productionModeEnabled(),
 			", Connection ID: ", connectionId, ", Prefer Local Cluster: ",
 			preferLocalCluster, ", Cross-Cluster Replication Enabled: ",
 			isCrossClusterReplicationEnabled(), ". Enable INFO logs on ",

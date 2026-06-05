@@ -9,6 +9,11 @@ import com.liferay.object.admin.rest.dto.v1_0.ObjectDefinition;
 import com.liferay.object.admin.rest.dto.v1_0.util.ObjectDefinitionUtil;
 import com.liferay.object.admin.rest.resource.v1_0.ObjectDefinitionResource;
 import com.liferay.object.constants.ObjectPortletKeys;
+import com.liferay.object.service.ObjectDefinitionLocalService;
+import com.liferay.object.service.ObjectRelationshipLocalService;
+import com.liferay.object.tree.Node;
+import com.liferay.object.tree.ObjectDefinitionTreeFactory;
+import com.liferay.object.tree.Tree;
 import com.liferay.object.web.internal.util.JSONObjectSanitizerUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -24,12 +29,13 @@ import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.vulcan.pagination.Page;
 
 import jakarta.portlet.ResourceRequest;
 import jakarta.portlet.ResourceResponse;
 
-import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -56,36 +62,28 @@ public class ExportBoundObjectDefinitionsMVCResourceCommand
 			throw new UnsupportedOperationException();
 		}
 
-		ObjectDefinitionResource.Builder builder =
-			_objectDefinitionResourceFactory.create();
-
-		ThemeDisplay themeDisplay = (ThemeDisplay)resourceRequest.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
-		ObjectDefinitionResource objectDefinitionResource = builder.user(
-			themeDisplay.getUser()
-		).build();
+		JSONArray jsonArray = _jsonFactory.createJSONArray();
+		Set<Long> objectDefinitionIds = new HashSet<>();
 
 		long objectDefinitionId = ParamUtil.getLong(
 			resourceRequest, "objectDefinitionId");
+		ObjectDefinitionResource objectDefinitionResource =
+			_getObjectDefinitionResource(resourceRequest);
 
-		ObjectDefinition rootObjectDefinition =
-			objectDefinitionResource.getObjectDefinition(objectDefinitionId);
+		Iterator<Node> iterator = _getTreeIterator(
+			objectDefinitionId, objectDefinitionResource);
 
-		Page<ObjectDefinition> page =
-			objectDefinitionResource.getObjectDefinitionsPage(
-				null, null,
-				objectDefinitionResource.toFilter(
-					StringBundler.concat(
-						"rootObjectDefinitionExternalReferenceCode eq '",
-						rootObjectDefinition.getExternalReferenceCode(), "'")),
-				null, null);
+		while (iterator.hasNext()) {
+			Node node = iterator.next();
 
-		Collection<ObjectDefinition> objectDefinitions = page.getItems();
+			if (!objectDefinitionIds.add(node.getPrimaryKey())) {
+				continue;
+			}
 
-		JSONArray jsonArray = _jsonFactory.createJSONArray();
+			ObjectDefinition objectDefinition =
+				objectDefinitionResource.getObjectDefinition(
+					node.getPrimaryKey());
 
-		for (ObjectDefinition objectDefinition : objectDefinitions) {
 			ObjectDefinitionUtil.prepareObjectDefinitionForExport(
 				_jsonFactory, objectDefinition);
 
@@ -118,10 +116,48 @@ public class ExportBoundObjectDefinitionsMVCResourceCommand
 			json.getBytes(), ContentTypes.APPLICATION_JSON);
 	}
 
+	private ObjectDefinitionResource _getObjectDefinitionResource(
+		ResourceRequest resourceRequest) {
+
+		ObjectDefinitionResource.Builder builder =
+			_objectDefinitionResourceFactory.create();
+
+		ThemeDisplay themeDisplay = (ThemeDisplay)resourceRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
+
+		return builder.user(
+			themeDisplay.getUser()
+		).build();
+	}
+
+	private Iterator<Node> _getTreeIterator(
+			long objectDefinitionId,
+			ObjectDefinitionResource objectDefinitionResource)
+		throws Exception {
+
+		ObjectDefinitionTreeFactory objectDefinitionTreeFactory =
+			new ObjectDefinitionTreeFactory(
+				_objectDefinitionLocalService, _objectRelationshipLocalService);
+
+		ObjectDefinition rootObjectDefinition =
+			objectDefinitionResource.getObjectDefinition(objectDefinitionId);
+
+		Tree tree = objectDefinitionTreeFactory.create(
+			rootObjectDefinition.getId());
+
+		return tree.iterator();
+	}
+
 	@Reference
 	private JSONFactory _jsonFactory;
 
 	@Reference
+	private ObjectDefinitionLocalService _objectDefinitionLocalService;
+
+	@Reference
 	private ObjectDefinitionResource.Factory _objectDefinitionResourceFactory;
+
+	@Reference
+	private ObjectRelationshipLocalService _objectRelationshipLocalService;
 
 }

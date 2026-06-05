@@ -5,6 +5,7 @@
 
 package com.liferay.fragment.entry.processor.editable;
 
+import com.liferay.analytics.settings.rest.manager.AnalyticsSettingsManager;
 import com.liferay.fragment.entry.processor.constants.FragmentEntryProcessorConstants;
 import com.liferay.fragment.entry.processor.editable.mapper.EditableElementMapper;
 import com.liferay.fragment.entry.processor.editable.parser.EditableElementParser;
@@ -21,10 +22,11 @@ import com.liferay.info.item.InfoItemServiceRegistry;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
@@ -57,29 +59,42 @@ public class EditableDocumentFragmentEntryProcessor
 
 	@Override
 	public void processFragmentEntryLinkHTML(
-			FragmentEntryLink fragmentEntryLink, Document document,
+			Document document, FragmentEntryLink fragmentEntryLink,
 			FragmentEntryProcessorContext fragmentEntryProcessorContext)
 		throws PortalException {
 
-		JSONObject jsonObject = fragmentEntryLink.getEditableValuesJSONObject();
+		processFragmentEntryLinkHTML(
+			document, fragmentEntryLink.getEditableValuesJSONObject(),
+			fragmentEntryLink, fragmentEntryProcessorContext);
+	}
 
-		if (jsonObject.length() == 0) {
-			jsonObject.put(
+	@Override
+	public void processFragmentEntryLinkHTML(
+			Document document, JSONObject editableValuesJSONObject,
+			FragmentEntryLink fragmentEntryLink,
+			FragmentEntryProcessorContext fragmentEntryProcessorContext)
+		throws PortalException {
+
+		if (editableValuesJSONObject.length() == 0) {
+			editableValuesJSONObject.put(
 				FragmentEntryProcessorConstants.
 					KEY_EDITABLE_FRAGMENT_ENTRY_PROCESSOR,
 				_getDefaultEditableValuesJSONObject(document));
 		}
 
-		JSONObject editableValuesJSONObject = jsonObject.getJSONObject(
+		JSONObject jsonObject = editableValuesJSONObject.getJSONObject(
 			FragmentEntryProcessorConstants.
 				KEY_EDITABLE_FRAGMENT_ENTRY_PROCESSOR);
 
-		if (editableValuesJSONObject == null) {
+		if (jsonObject == null) {
 			return;
 		}
 
 		Map<InfoItemReference, InfoItemFieldValues> infoDisplaysFieldValues =
 			new HashMap<>();
+
+		boolean analyticsEnabled = _isAnalyticsEnabled(
+			fragmentEntryLink.getCompanyId());
 
 		Elements elements = Collector.collect(
 			new Evaluator() {
@@ -109,12 +124,11 @@ public class EditableDocumentFragmentEntryProcessor
 			String id = EditableFragmentEntryProcessorUtil.getElementId(
 				element);
 
-			if (!editableValuesJSONObject.has(id)) {
+			if (!jsonObject.has(id)) {
 				continue;
 			}
 
-			JSONObject editableValueJSONObject =
-				editableValuesJSONObject.getJSONObject(id);
+			JSONObject editableValueJSONObject = jsonObject.getJSONObject(id);
 
 			String value = null;
 
@@ -220,15 +234,15 @@ public class EditableDocumentFragmentEntryProcessor
 				element.removeAttr("view-tag-name");
 			}
 
-			if (FeatureFlagManagerUtil.isEnabled(
-					fragmentEntryLink.getCompanyId(), "LPD-39437") &&
+			if (analyticsEnabled &&
 				fragmentEntryProcessorContext.isViewMode()) {
 
-				AnalyticsAttributesUtil.addAnalyticsAttributes(
-					editableValueJSONObject, element,
-					fragmentEntryProcessorContext,
-					_fragmentEntryProcessorHelper, infoDisplaysFieldValues,
-					_infoItemServiceRegistry);
+				_setAnalyticsAttributes(
+					element,
+					AnalyticsAttributesUtil.getAnalyticsAttributes(
+						editableValueJSONObject, fragmentEntryProcessorContext,
+						_fragmentEntryProcessorHelper, infoDisplaysFieldValues,
+						_infoItemServiceRegistry));
 			}
 		}
 
@@ -303,6 +317,45 @@ public class EditableDocumentFragmentEntryProcessor
 
 		return _editableElementParserServiceTrackerMap.getService(type);
 	}
+
+	private boolean _isAnalyticsEnabled(long companyId) {
+		try {
+			return _analyticsSettingsManager.isAnalyticsEnabled(companyId);
+		}
+		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
+			return false;
+		}
+	}
+
+	private void _setAnalyticsAttributes(
+		Element element, Map<String, Object> analyticsAttributes) {
+
+		for (Map.Entry<String, Object> entry : analyticsAttributes.entrySet()) {
+			Object value = entry.getValue();
+
+			if (value == null) {
+				continue;
+			}
+
+			String stringValue = String.valueOf(value);
+
+			if (Validator.isNull(stringValue)) {
+				continue;
+			}
+
+			element.attr("data-" + entry.getKey(), stringValue);
+		}
+	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		EditableDocumentFragmentEntryProcessor.class);
+
+	@Reference
+	private AnalyticsSettingsManager _analyticsSettingsManager;
 
 	private ServiceTrackerMap<String, EditableElementMapper>
 		_editableElementMapperServiceTrackerMap;

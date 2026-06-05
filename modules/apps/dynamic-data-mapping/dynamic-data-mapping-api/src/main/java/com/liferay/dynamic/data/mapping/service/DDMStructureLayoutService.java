@@ -69,3 +69,4 @@ public interface DDMStructureLayoutService extends BaseService {
 		throws PortalException;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:1075914021

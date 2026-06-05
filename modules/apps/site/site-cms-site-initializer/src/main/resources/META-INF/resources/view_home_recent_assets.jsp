@@ -14,9 +14,16 @@ ViewHomeRecentAssetsSectionDisplayContext viewHomeRecentAssetsSectionDisplayCont
 <div class="cms-section p-2 p-sm-3">
 	<div class="container-fluid-max">
 		<div class="align-items-center d-flex justify-content-between">
-			<span class="font-weight-semi-bold text-4">Recent Assets</span>
+			<span aria-level=2 class="font-weight-semi-bold text-4" role="heading"><liferay-ui:message key="recent-assets" /></span>
 
-			<a class="btn btn-link btn-sm font-weight-semi-bold" href="<%= viewHomeRecentAssetsSectionDisplayContext.getAssetsAllURL() %>">View All</a>
+			<clay:link
+				borderless="<%= true %>"
+				cssClass="font-weight-semi-bold text-3"
+				data-canonical-name='<%= LanguageUtil.format(request, "view-x", "recent-assets", true) %>'
+				href="<%= viewHomeRecentAssetsSectionDisplayContext.getAssetsAllURL() %>"
+				label='<%= LanguageUtil.get(request, "view-all") %>'
+				small="<%= true %>"
+			/>
 		</div>
 
 		<div class="cms-fds-fluid cms-section custom-empty-state recent-assets-fds">

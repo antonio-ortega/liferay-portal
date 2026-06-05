@@ -212,3 +212,4 @@ public class QueryPrefilterContributorSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:1610369911

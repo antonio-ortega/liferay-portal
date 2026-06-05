@@ -36,6 +36,24 @@ public class AssetVocabularyGroupRelUtil {
 	 */
 
 	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(List)
+	 */
+	public static void cacheResult(
+		List<AssetVocabularyGroupRel> assetVocabularyGroupRels) {
+
+		getPersistence().cacheResult(assetVocabularyGroupRels);
+	}
+
+	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(com.liferay.portal.kernel.model.BaseModel)
+	 */
+	public static void cacheResult(
+		AssetVocabularyGroupRel assetVocabularyGroupRel) {
+
+		getPersistence().cacheResult(assetVocabularyGroupRel);
+	}
+
+	/**
 	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#clearCache()
 	 */
 	public static void clearCache() {
@@ -116,58 +134,10 @@ public class AssetVocabularyGroupRelUtil {
 	}
 
 	/**
-	 * Returns all the asset vocabulary group rels where uuid = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @return the matching asset vocabulary group rels
-	 */
-	public static List<AssetVocabularyGroupRel> findByUuid(String uuid) {
-		return getPersistence().findByUuid(uuid);
-	}
-
-	/**
-	 * Returns a range of all the asset vocabulary group rels where uuid = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetVocabularyGroupRelModelImpl</code>.
-	 * </p>
-	 *
-	 * @param uuid the uuid
-	 * @param start the lower bound of the range of asset vocabulary group rels
-	 * @param end the upper bound of the range of asset vocabulary group rels (not inclusive)
-	 * @return the range of matching asset vocabulary group rels
-	 */
-	public static List<AssetVocabularyGroupRel> findByUuid(
-		String uuid, int start, int end) {
-
-		return getPersistence().findByUuid(uuid, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the asset vocabulary group rels where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetVocabularyGroupRelModelImpl</code>.
-	 * </p>
-	 *
-	 * @param uuid the uuid
-	 * @param start the lower bound of the range of asset vocabulary group rels
-	 * @param end the upper bound of the range of asset vocabulary group rels (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching asset vocabulary group rels
-	 */
-	public static List<AssetVocabularyGroupRel> findByUuid(
-		String uuid, int start, int end,
-		OrderByComparator<AssetVocabularyGroupRel> orderByComparator) {
-
-		return getPersistence().findByUuid(uuid, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the asset vocabulary group rels where uuid = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetVocabularyGroupRelModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portlet.asset.model.impl.AssetVocabularyGroupRelModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -218,56 +188,6 @@ public class AssetVocabularyGroupRelUtil {
 	}
 
 	/**
-	 * Returns the last asset vocabulary group rel in the ordered set where uuid = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching asset vocabulary group rel
-	 * @throws NoSuchVocabularyGroupRelException if a matching asset vocabulary group rel could not be found
-	 */
-	public static AssetVocabularyGroupRel findByUuid_Last(
-			String uuid,
-			OrderByComparator<AssetVocabularyGroupRel> orderByComparator)
-		throws com.liferay.asset.kernel.exception.
-			NoSuchVocabularyGroupRelException {
-
-		return getPersistence().findByUuid_Last(uuid, orderByComparator);
-	}
-
-	/**
-	 * Returns the last asset vocabulary group rel in the ordered set where uuid = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching asset vocabulary group rel, or <code>null</code> if a matching asset vocabulary group rel could not be found
-	 */
-	public static AssetVocabularyGroupRel fetchByUuid_Last(
-		String uuid,
-		OrderByComparator<AssetVocabularyGroupRel> orderByComparator) {
-
-		return getPersistence().fetchByUuid_Last(uuid, orderByComparator);
-	}
-
-	/**
-	 * Returns the asset vocabulary group rels before and after the current asset vocabulary group rel in the ordered set where uuid = &#63;.
-	 *
-	 * @param assetVocabularyGroupRelId the primary key of the current asset vocabulary group rel
-	 * @param uuid the uuid
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next asset vocabulary group rel
-	 * @throws NoSuchVocabularyGroupRelException if a asset vocabulary group rel with the primary key could not be found
-	 */
-	public static AssetVocabularyGroupRel[] findByUuid_PrevAndNext(
-			long assetVocabularyGroupRelId, String uuid,
-			OrderByComparator<AssetVocabularyGroupRel> orderByComparator)
-		throws com.liferay.asset.kernel.exception.
-			NoSuchVocabularyGroupRelException {
-
-		return getPersistence().findByUuid_PrevAndNext(
-			assetVocabularyGroupRelId, uuid, orderByComparator);
-	}
-
-	/**
 	 * Removes all the asset vocabulary group rels where uuid = &#63; from the database.
 	 *
 	 * @param uuid the uuid
@@ -300,19 +220,6 @@ public class AssetVocabularyGroupRelUtil {
 			NoSuchVocabularyGroupRelException {
 
 		return getPersistence().findByUUID_G(uuid, groupId);
-	}
-
-	/**
-	 * Returns the asset vocabulary group rel where uuid = &#63; and groupId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
-	 *
-	 * @param uuid the uuid
-	 * @param groupId the group ID
-	 * @return the matching asset vocabulary group rel, or <code>null</code> if a matching asset vocabulary group rel could not be found
-	 */
-	public static AssetVocabularyGroupRel fetchByUUID_G(
-		String uuid, long groupId) {
-
-		return getPersistence().fetchByUUID_G(uuid, groupId);
 	}
 
 	/**
@@ -356,64 +263,10 @@ public class AssetVocabularyGroupRelUtil {
 	}
 
 	/**
-	 * Returns all the asset vocabulary group rels where uuid = &#63; and companyId = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @return the matching asset vocabulary group rels
-	 */
-	public static List<AssetVocabularyGroupRel> findByUuid_C(
-		String uuid, long companyId) {
-
-		return getPersistence().findByUuid_C(uuid, companyId);
-	}
-
-	/**
-	 * Returns a range of all the asset vocabulary group rels where uuid = &#63; and companyId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetVocabularyGroupRelModelImpl</code>.
-	 * </p>
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param start the lower bound of the range of asset vocabulary group rels
-	 * @param end the upper bound of the range of asset vocabulary group rels (not inclusive)
-	 * @return the range of matching asset vocabulary group rels
-	 */
-	public static List<AssetVocabularyGroupRel> findByUuid_C(
-		String uuid, long companyId, int start, int end) {
-
-		return getPersistence().findByUuid_C(uuid, companyId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the asset vocabulary group rels where uuid = &#63; and companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetVocabularyGroupRelModelImpl</code>.
-	 * </p>
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param start the lower bound of the range of asset vocabulary group rels
-	 * @param end the upper bound of the range of asset vocabulary group rels (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching asset vocabulary group rels
-	 */
-	public static List<AssetVocabularyGroupRel> findByUuid_C(
-		String uuid, long companyId, int start, int end,
-		OrderByComparator<AssetVocabularyGroupRel> orderByComparator) {
-
-		return getPersistence().findByUuid_C(
-			uuid, companyId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the asset vocabulary group rels where uuid = &#63; and companyId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetVocabularyGroupRelModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portlet.asset.model.impl.AssetVocabularyGroupRelModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -469,61 +322,6 @@ public class AssetVocabularyGroupRelUtil {
 	}
 
 	/**
-	 * Returns the last asset vocabulary group rel in the ordered set where uuid = &#63; and companyId = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching asset vocabulary group rel
-	 * @throws NoSuchVocabularyGroupRelException if a matching asset vocabulary group rel could not be found
-	 */
-	public static AssetVocabularyGroupRel findByUuid_C_Last(
-			String uuid, long companyId,
-			OrderByComparator<AssetVocabularyGroupRel> orderByComparator)
-		throws com.liferay.asset.kernel.exception.
-			NoSuchVocabularyGroupRelException {
-
-		return getPersistence().findByUuid_C_Last(
-			uuid, companyId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last asset vocabulary group rel in the ordered set where uuid = &#63; and companyId = &#63;.
-	 *
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching asset vocabulary group rel, or <code>null</code> if a matching asset vocabulary group rel could not be found
-	 */
-	public static AssetVocabularyGroupRel fetchByUuid_C_Last(
-		String uuid, long companyId,
-		OrderByComparator<AssetVocabularyGroupRel> orderByComparator) {
-
-		return getPersistence().fetchByUuid_C_Last(
-			uuid, companyId, orderByComparator);
-	}
-
-	/**
-	 * Returns the asset vocabulary group rels before and after the current asset vocabulary group rel in the ordered set where uuid = &#63; and companyId = &#63;.
-	 *
-	 * @param assetVocabularyGroupRelId the primary key of the current asset vocabulary group rel
-	 * @param uuid the uuid
-	 * @param companyId the company ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next asset vocabulary group rel
-	 * @throws NoSuchVocabularyGroupRelException if a asset vocabulary group rel with the primary key could not be found
-	 */
-	public static AssetVocabularyGroupRel[] findByUuid_C_PrevAndNext(
-			long assetVocabularyGroupRelId, String uuid, long companyId,
-			OrderByComparator<AssetVocabularyGroupRel> orderByComparator)
-		throws com.liferay.asset.kernel.exception.
-			NoSuchVocabularyGroupRelException {
-
-		return getPersistence().findByUuid_C_PrevAndNext(
-			assetVocabularyGroupRelId, uuid, companyId, orderByComparator);
-	}
-
-	/**
 	 * Removes all the asset vocabulary group rels where uuid = &#63; and companyId = &#63; from the database.
 	 *
 	 * @param uuid the uuid
@@ -545,59 +343,10 @@ public class AssetVocabularyGroupRelUtil {
 	}
 
 	/**
-	 * Returns all the asset vocabulary group rels where groupId = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @return the matching asset vocabulary group rels
-	 */
-	public static List<AssetVocabularyGroupRel> findByGroupId(long groupId) {
-		return getPersistence().findByGroupId(groupId);
-	}
-
-	/**
-	 * Returns a range of all the asset vocabulary group rels where groupId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetVocabularyGroupRelModelImpl</code>.
-	 * </p>
-	 *
-	 * @param groupId the group ID
-	 * @param start the lower bound of the range of asset vocabulary group rels
-	 * @param end the upper bound of the range of asset vocabulary group rels (not inclusive)
-	 * @return the range of matching asset vocabulary group rels
-	 */
-	public static List<AssetVocabularyGroupRel> findByGroupId(
-		long groupId, int start, int end) {
-
-		return getPersistence().findByGroupId(groupId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the asset vocabulary group rels where groupId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetVocabularyGroupRelModelImpl</code>.
-	 * </p>
-	 *
-	 * @param groupId the group ID
-	 * @param start the lower bound of the range of asset vocabulary group rels
-	 * @param end the upper bound of the range of asset vocabulary group rels (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching asset vocabulary group rels
-	 */
-	public static List<AssetVocabularyGroupRel> findByGroupId(
-		long groupId, int start, int end,
-		OrderByComparator<AssetVocabularyGroupRel> orderByComparator) {
-
-		return getPersistence().findByGroupId(
-			groupId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the asset vocabulary group rels where groupId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetVocabularyGroupRelModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portlet.asset.model.impl.AssetVocabularyGroupRelModelImpl</code>.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -649,56 +398,6 @@ public class AssetVocabularyGroupRelUtil {
 	}
 
 	/**
-	 * Returns the last asset vocabulary group rel in the ordered set where groupId = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching asset vocabulary group rel
-	 * @throws NoSuchVocabularyGroupRelException if a matching asset vocabulary group rel could not be found
-	 */
-	public static AssetVocabularyGroupRel findByGroupId_Last(
-			long groupId,
-			OrderByComparator<AssetVocabularyGroupRel> orderByComparator)
-		throws com.liferay.asset.kernel.exception.
-			NoSuchVocabularyGroupRelException {
-
-		return getPersistence().findByGroupId_Last(groupId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last asset vocabulary group rel in the ordered set where groupId = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching asset vocabulary group rel, or <code>null</code> if a matching asset vocabulary group rel could not be found
-	 */
-	public static AssetVocabularyGroupRel fetchByGroupId_Last(
-		long groupId,
-		OrderByComparator<AssetVocabularyGroupRel> orderByComparator) {
-
-		return getPersistence().fetchByGroupId_Last(groupId, orderByComparator);
-	}
-
-	/**
-	 * Returns the asset vocabulary group rels before and after the current asset vocabulary group rel in the ordered set where groupId = &#63;.
-	 *
-	 * @param assetVocabularyGroupRelId the primary key of the current asset vocabulary group rel
-	 * @param groupId the group ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next asset vocabulary group rel
-	 * @throws NoSuchVocabularyGroupRelException if a asset vocabulary group rel with the primary key could not be found
-	 */
-	public static AssetVocabularyGroupRel[] findByGroupId_PrevAndNext(
-			long assetVocabularyGroupRelId, long groupId,
-			OrderByComparator<AssetVocabularyGroupRel> orderByComparator)
-		throws com.liferay.asset.kernel.exception.
-			NoSuchVocabularyGroupRelException {
-
-		return getPersistence().findByGroupId_PrevAndNext(
-			assetVocabularyGroupRelId, groupId, orderByComparator);
-	}
-
-	/**
 	 * Removes all the asset vocabulary group rels where groupId = &#63; from the database.
 	 *
 	 * @param groupId the group ID
@@ -718,61 +417,10 @@ public class AssetVocabularyGroupRelUtil {
 	}
 
 	/**
-	 * Returns all the asset vocabulary group rels where vocabularyId = &#63;.
-	 *
-	 * @param vocabularyId the vocabulary ID
-	 * @return the matching asset vocabulary group rels
-	 */
-	public static List<AssetVocabularyGroupRel> findByVocabularyId(
-		long vocabularyId) {
-
-		return getPersistence().findByVocabularyId(vocabularyId);
-	}
-
-	/**
-	 * Returns a range of all the asset vocabulary group rels where vocabularyId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetVocabularyGroupRelModelImpl</code>.
-	 * </p>
-	 *
-	 * @param vocabularyId the vocabulary ID
-	 * @param start the lower bound of the range of asset vocabulary group rels
-	 * @param end the upper bound of the range of asset vocabulary group rels (not inclusive)
-	 * @return the range of matching asset vocabulary group rels
-	 */
-	public static List<AssetVocabularyGroupRel> findByVocabularyId(
-		long vocabularyId, int start, int end) {
-
-		return getPersistence().findByVocabularyId(vocabularyId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the asset vocabulary group rels where vocabularyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetVocabularyGroupRelModelImpl</code>.
-	 * </p>
-	 *
-	 * @param vocabularyId the vocabulary ID
-	 * @param start the lower bound of the range of asset vocabulary group rels
-	 * @param end the upper bound of the range of asset vocabulary group rels (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching asset vocabulary group rels
-	 */
-	public static List<AssetVocabularyGroupRel> findByVocabularyId(
-		long vocabularyId, int start, int end,
-		OrderByComparator<AssetVocabularyGroupRel> orderByComparator) {
-
-		return getPersistence().findByVocabularyId(
-			vocabularyId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the asset vocabulary group rels where vocabularyId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetVocabularyGroupRelModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portlet.asset.model.impl.AssetVocabularyGroupRelModelImpl</code>.
 	 * </p>
 	 *
 	 * @param vocabularyId the vocabulary ID
@@ -825,58 +473,6 @@ public class AssetVocabularyGroupRelUtil {
 	}
 
 	/**
-	 * Returns the last asset vocabulary group rel in the ordered set where vocabularyId = &#63;.
-	 *
-	 * @param vocabularyId the vocabulary ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching asset vocabulary group rel
-	 * @throws NoSuchVocabularyGroupRelException if a matching asset vocabulary group rel could not be found
-	 */
-	public static AssetVocabularyGroupRel findByVocabularyId_Last(
-			long vocabularyId,
-			OrderByComparator<AssetVocabularyGroupRel> orderByComparator)
-		throws com.liferay.asset.kernel.exception.
-			NoSuchVocabularyGroupRelException {
-
-		return getPersistence().findByVocabularyId_Last(
-			vocabularyId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last asset vocabulary group rel in the ordered set where vocabularyId = &#63;.
-	 *
-	 * @param vocabularyId the vocabulary ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching asset vocabulary group rel, or <code>null</code> if a matching asset vocabulary group rel could not be found
-	 */
-	public static AssetVocabularyGroupRel fetchByVocabularyId_Last(
-		long vocabularyId,
-		OrderByComparator<AssetVocabularyGroupRel> orderByComparator) {
-
-		return getPersistence().fetchByVocabularyId_Last(
-			vocabularyId, orderByComparator);
-	}
-
-	/**
-	 * Returns the asset vocabulary group rels before and after the current asset vocabulary group rel in the ordered set where vocabularyId = &#63;.
-	 *
-	 * @param assetVocabularyGroupRelId the primary key of the current asset vocabulary group rel
-	 * @param vocabularyId the vocabulary ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next asset vocabulary group rel
-	 * @throws NoSuchVocabularyGroupRelException if a asset vocabulary group rel with the primary key could not be found
-	 */
-	public static AssetVocabularyGroupRel[] findByVocabularyId_PrevAndNext(
-			long assetVocabularyGroupRelId, long vocabularyId,
-			OrderByComparator<AssetVocabularyGroupRel> orderByComparator)
-		throws com.liferay.asset.kernel.exception.
-			NoSuchVocabularyGroupRelException {
-
-		return getPersistence().findByVocabularyId_PrevAndNext(
-			assetVocabularyGroupRelId, vocabularyId, orderByComparator);
-	}
-
-	/**
 	 * Removes all the asset vocabulary group rels where vocabularyId = &#63; from the database.
 	 *
 	 * @param vocabularyId the vocabulary ID
@@ -909,19 +505,6 @@ public class AssetVocabularyGroupRelUtil {
 			NoSuchVocabularyGroupRelException {
 
 		return getPersistence().findByG_V(groupId, vocabularyId);
-	}
-
-	/**
-	 * Returns the asset vocabulary group rel where groupId = &#63; and vocabularyId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
-	 *
-	 * @param groupId the group ID
-	 * @param vocabularyId the vocabulary ID
-	 * @return the matching asset vocabulary group rel, or <code>null</code> if a matching asset vocabulary group rel could not be found
-	 */
-	public static AssetVocabularyGroupRel fetchByG_V(
-		long groupId, long vocabularyId) {
-
-		return getPersistence().fetchByG_V(groupId, vocabularyId);
 	}
 
 	/**
@@ -963,28 +546,6 @@ public class AssetVocabularyGroupRelUtil {
 	 */
 	public static int countByG_V(long groupId, long vocabularyId) {
 		return getPersistence().countByG_V(groupId, vocabularyId);
-	}
-
-	/**
-	 * Caches the asset vocabulary group rel in the entity cache if it is enabled.
-	 *
-	 * @param assetVocabularyGroupRel the asset vocabulary group rel
-	 */
-	public static void cacheResult(
-		AssetVocabularyGroupRel assetVocabularyGroupRel) {
-
-		getPersistence().cacheResult(assetVocabularyGroupRel);
-	}
-
-	/**
-	 * Caches the asset vocabulary group rels in the entity cache if it is enabled.
-	 *
-	 * @param assetVocabularyGroupRels the asset vocabulary group rels
-	 */
-	public static void cacheResult(
-		List<AssetVocabularyGroupRel> assetVocabularyGroupRels) {
-
-		getPersistence().cacheResult(assetVocabularyGroupRels);
 	}
 
 	/**
@@ -1047,84 +608,231 @@ public class AssetVocabularyGroupRelUtil {
 	}
 
 	/**
-	 * Returns all the asset vocabulary group rels.
+	 * Returns the asset vocabulary group rel where uuid = &#63; and groupId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
 	 *
-	 * @return the asset vocabulary group rels
+	 * @param uuid the uuid
+	 * @param groupId the group ID
+	 * @return the matching asset vocabulary group rel, or <code>null</code> if a matching asset vocabulary group rel could not be found
 	 */
-	public static List<AssetVocabularyGroupRel> findAll() {
-		return getPersistence().findAll();
+	public static AssetVocabularyGroupRel fetchByUUID_G(
+		String uuid, long groupId) {
+
+		return getPersistence().fetchByUUID_G(uuid, groupId);
 	}
 
 	/**
-	 * Returns a range of all the asset vocabulary group rels.
+	 * Returns the asset vocabulary group rel where groupId = &#63; and vocabularyId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	 *
+	 * @param groupId the group ID
+	 * @param vocabularyId the vocabulary ID
+	 * @return the matching asset vocabulary group rel, or <code>null</code> if a matching asset vocabulary group rel could not be found
+	 */
+	public static AssetVocabularyGroupRel fetchByG_V(
+		long groupId, long vocabularyId) {
+
+		return getPersistence().fetchByG_V(groupId, vocabularyId);
+	}
+
+	/**
+	 * Returns all the asset vocabulary group rels where uuid = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @return the matching asset vocabulary group rels
+	 */
+	public static List<AssetVocabularyGroupRel> findByUuid(String uuid) {
+		return getPersistence().findByUuid(uuid);
+	}
+
+	/**
+	 * Returns a range of all the asset vocabulary group rels where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetVocabularyGroupRelModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portlet.asset.model.impl.AssetVocabularyGroupRelModelImpl</code>.
 	 * </p>
 	 *
+	 * @param uuid the uuid
 	 * @param start the lower bound of the range of asset vocabulary group rels
 	 * @param end the upper bound of the range of asset vocabulary group rels (not inclusive)
-	 * @return the range of asset vocabulary group rels
+	 * @return the range of matching asset vocabulary group rels
 	 */
-	public static List<AssetVocabularyGroupRel> findAll(int start, int end) {
-		return getPersistence().findAll(start, end);
+	public static List<AssetVocabularyGroupRel> findByUuid(
+		String uuid, int start, int end) {
+
+		return getPersistence().findByUuid(uuid, start, end);
 	}
 
 	/**
-	 * Returns an ordered range of all the asset vocabulary group rels.
+	 * Returns an ordered range of all the asset vocabulary group rels where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetVocabularyGroupRelModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portlet.asset.model.impl.AssetVocabularyGroupRelModelImpl</code>.
 	 * </p>
 	 *
+	 * @param uuid the uuid
 	 * @param start the lower bound of the range of asset vocabulary group rels
 	 * @param end the upper bound of the range of asset vocabulary group rels (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of asset vocabulary group rels
+	 * @return the ordered range of matching asset vocabulary group rels
 	 */
-	public static List<AssetVocabularyGroupRel> findAll(
-		int start, int end,
+	public static List<AssetVocabularyGroupRel> findByUuid(
+		String uuid, int start, int end,
 		OrderByComparator<AssetVocabularyGroupRel> orderByComparator) {
 
-		return getPersistence().findAll(start, end, orderByComparator);
+		return getPersistence().findByUuid(uuid, start, end, orderByComparator);
 	}
 
 	/**
-	 * Returns an ordered range of all the asset vocabulary group rels.
+	 * Returns all the asset vocabulary group rels where uuid = &#63; and companyId = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @return the matching asset vocabulary group rels
+	 */
+	public static List<AssetVocabularyGroupRel> findByUuid_C(
+		String uuid, long companyId) {
+
+		return getPersistence().findByUuid_C(uuid, companyId);
+	}
+
+	/**
+	 * Returns a range of all the asset vocabulary group rels where uuid = &#63; and companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetVocabularyGroupRelModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portlet.asset.model.impl.AssetVocabularyGroupRelModelImpl</code>.
 	 * </p>
 	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of asset vocabulary group rels
+	 * @param end the upper bound of the range of asset vocabulary group rels (not inclusive)
+	 * @return the range of matching asset vocabulary group rels
+	 */
+	public static List<AssetVocabularyGroupRel> findByUuid_C(
+		String uuid, long companyId, int start, int end) {
+
+		return getPersistence().findByUuid_C(uuid, companyId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the asset vocabulary group rels where uuid = &#63; and companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portlet.asset.model.impl.AssetVocabularyGroupRelModelImpl</code>.
+	 * </p>
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
 	 * @param start the lower bound of the range of asset vocabulary group rels
 	 * @param end the upper bound of the range of asset vocabulary group rels (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param useFinderCache whether to use the finder cache
-	 * @return the ordered range of asset vocabulary group rels
+	 * @return the ordered range of matching asset vocabulary group rels
 	 */
-	public static List<AssetVocabularyGroupRel> findAll(
-		int start, int end,
-		OrderByComparator<AssetVocabularyGroupRel> orderByComparator,
-		boolean useFinderCache) {
+	public static List<AssetVocabularyGroupRel> findByUuid_C(
+		String uuid, long companyId, int start, int end,
+		OrderByComparator<AssetVocabularyGroupRel> orderByComparator) {
 
-		return getPersistence().findAll(
-			start, end, orderByComparator, useFinderCache);
+		return getPersistence().findByUuid_C(
+			uuid, companyId, start, end, orderByComparator);
 	}
 
 	/**
-	 * Removes all the asset vocabulary group rels from the database.
-	 */
-	public static void removeAll() {
-		getPersistence().removeAll();
-	}
-
-	/**
-	 * Returns the number of asset vocabulary group rels.
+	 * Returns all the asset vocabulary group rels where groupId = &#63;.
 	 *
-	 * @return the number of asset vocabulary group rels
+	 * @param groupId the group ID
+	 * @return the matching asset vocabulary group rels
 	 */
-	public static int countAll() {
-		return getPersistence().countAll();
+	public static List<AssetVocabularyGroupRel> findByGroupId(long groupId) {
+		return getPersistence().findByGroupId(groupId);
+	}
+
+	/**
+	 * Returns a range of all the asset vocabulary group rels where groupId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portlet.asset.model.impl.AssetVocabularyGroupRelModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param start the lower bound of the range of asset vocabulary group rels
+	 * @param end the upper bound of the range of asset vocabulary group rels (not inclusive)
+	 * @return the range of matching asset vocabulary group rels
+	 */
+	public static List<AssetVocabularyGroupRel> findByGroupId(
+		long groupId, int start, int end) {
+
+		return getPersistence().findByGroupId(groupId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the asset vocabulary group rels where groupId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portlet.asset.model.impl.AssetVocabularyGroupRelModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param start the lower bound of the range of asset vocabulary group rels
+	 * @param end the upper bound of the range of asset vocabulary group rels (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching asset vocabulary group rels
+	 */
+	public static List<AssetVocabularyGroupRel> findByGroupId(
+		long groupId, int start, int end,
+		OrderByComparator<AssetVocabularyGroupRel> orderByComparator) {
+
+		return getPersistence().findByGroupId(
+			groupId, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns all the asset vocabulary group rels where vocabularyId = &#63;.
+	 *
+	 * @param vocabularyId the vocabulary ID
+	 * @return the matching asset vocabulary group rels
+	 */
+	public static List<AssetVocabularyGroupRel> findByVocabularyId(
+		long vocabularyId) {
+
+		return getPersistence().findByVocabularyId(vocabularyId);
+	}
+
+	/**
+	 * Returns a range of all the asset vocabulary group rels where vocabularyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portlet.asset.model.impl.AssetVocabularyGroupRelModelImpl</code>.
+	 * </p>
+	 *
+	 * @param vocabularyId the vocabulary ID
+	 * @param start the lower bound of the range of asset vocabulary group rels
+	 * @param end the upper bound of the range of asset vocabulary group rels (not inclusive)
+	 * @return the range of matching asset vocabulary group rels
+	 */
+	public static List<AssetVocabularyGroupRel> findByVocabularyId(
+		long vocabularyId, int start, int end) {
+
+		return getPersistence().findByVocabularyId(vocabularyId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the asset vocabulary group rels where vocabularyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portlet.asset.model.impl.AssetVocabularyGroupRelModelImpl</code>.
+	 * </p>
+	 *
+	 * @param vocabularyId the vocabulary ID
+	 * @param start the lower bound of the range of asset vocabulary group rels
+	 * @param end the upper bound of the range of asset vocabulary group rels (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching asset vocabulary group rels
+	 */
+	public static List<AssetVocabularyGroupRel> findByVocabularyId(
+		long vocabularyId, int start, int end,
+		OrderByComparator<AssetVocabularyGroupRel> orderByComparator) {
+
+		return getPersistence().findByVocabularyId(
+			vocabularyId, start, end, orderByComparator);
 	}
 
 	public static AssetVocabularyGroupRelPersistence getPersistence() {
@@ -1140,3 +848,4 @@ public class AssetVocabularyGroupRelUtil {
 	private static volatile AssetVocabularyGroupRelPersistence _persistence;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-495397318

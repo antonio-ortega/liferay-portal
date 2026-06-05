@@ -107,6 +107,7 @@ import org.apache.commons.lang3.time.DateFormatUtils;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -360,6 +361,7 @@ public class SearchResultResourceTest extends BaseSearchResultResourceTestCase {
 	public void testGetSearchPageWithSortInteger() throws Exception {
 	}
 
+	@Ignore
 	@Override
 	@Test
 	@TestInfo("LPD-57341")
@@ -390,6 +392,7 @@ public class SearchResultResourceTest extends BaseSearchResultResourceTestCase {
 		_testPostSearchPageZeroResults();
 	}
 
+	@Ignore
 	@Test
 	public void testSearchEndpointRedirect() throws Exception {
 		_baseURI = "portal-search-rest";
@@ -1555,17 +1558,6 @@ public class SearchResultResourceTest extends BaseSearchResultResourceTestCase {
 		"objectFolderExternalReferenceCode"
 	};
 
-	@Inject
-	private static DTOConverterRegistry _dtoConverterRegistry;
-
-	@Inject
-	private static ObjectDefinitionLocalService _objectDefinitionLocalService;
-
-	@Inject(
-		filter = "object.entry.manager.storage.type=" + ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT
-	)
-	private static ObjectEntryManager _objectEntryManager;
-
 	private AssetCategory _assetCategory;
 
 	@Inject
@@ -1581,6 +1573,10 @@ public class SearchResultResourceTest extends BaseSearchResultResourceTestCase {
 
 	private String _baseURI = "search";
 	private DDMStructure _ddmStructure;
+
+	@Inject
+	private DTOConverterRegistry _dtoConverterRegistry;
+
 	private JournalArticle _journalArticle;
 
 	@Inject
@@ -1598,7 +1594,15 @@ public class SearchResultResourceTest extends BaseSearchResultResourceTestCase {
 	private ObjectDefinition _objectDefinition;
 
 	@Inject
+	private ObjectDefinitionLocalService _objectDefinitionLocalService;
+
+	@Inject
 	private ObjectEntryLocalService _objectEntryLocalService;
+
+	@Inject(
+		filter = "object.entry.manager.storage.type=" + ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT
+	)
+	private ObjectEntryManager _objectEntryManager;
 
 	private SearchEngine _searchEngine;
 

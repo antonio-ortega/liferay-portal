@@ -121,7 +121,7 @@ public class AssetUsageResourceTest extends BaseAssetUsageResourceTestCase {
 		_depotEntry = _depotEntryLocalService.addDepotEntry(
 			Collections.singletonMap(
 				LocaleUtil.US, RandomTestUtil.randomString()),
-			null, DepotConstants.TYPE_ASSET_LIBRARY, _serviceContext);
+			null, DepotConstants.TYPE_SPACE, _serviceContext);
 
 		_objectEntryFolder =
 			_objectEntryFolderLocalService.
@@ -164,7 +164,7 @@ public class AssetUsageResourceTest extends BaseAssetUsageResourceTestCase {
 			() -> StringBundler.concat(
 				_themeDisplay.getPortalURL(), _portal.getPathMain(),
 				GroupConstants.CMS_FRIENDLY_URL,
-				"/edit_content_item?&p_l_mode=read&p_p_state=",
+				"/edit_content_item?p_l_mode=read&p_p_state=",
 				LiferayWindowState.POP_UP, "&objectEntryId=",
 				objectEntry.getObjectEntryId()));
 
@@ -289,7 +289,7 @@ public class AssetUsageResourceTest extends BaseAssetUsageResourceTestCase {
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
 				null, TestPropsValues.getUserId(), testGroup.getGroupId(), 0,
-				null, 0, 0, name, type, 0, true, 0, 0, 0,
+				null, 0, null, name, type, 0, true, 0, 0, 0,
 				WorkflowConstants.STATUS_APPROVED, _serviceContext);
 
 		_layoutClassedModelUsageLocalService.addLayoutClassedModelUsage(
@@ -348,7 +348,7 @@ public class AssetUsageResourceTest extends BaseAssetUsageResourceTestCase {
 		themeDisplay.setPortalURL(
 			testCompany.getPortalURL(testGroup.getGroupId()));
 		themeDisplay.setServerName("localhost");
-		themeDisplay.setServerPort(8080);
+		themeDisplay.setServerPort(PortalUtil.getPortalServerPort(false));
 		themeDisplay.setSiteGroupId(testGroup.getGroupId());
 		themeDisplay.setUser(testCompany.getGuestUser());
 

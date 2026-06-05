@@ -9,6 +9,7 @@ import ClayForm from '@clayui/form';
 import ClayPopover from '@clayui/popover';
 import {
 	API,
+	COUNTRY_SOURCE,
 	FormError,
 	Input,
 	SingleSelect,
@@ -58,6 +59,7 @@ interface ObjectFieldFormBaseProps {
 	editingObjectField?: boolean;
 	errors: ObjectFieldErrors;
 	handleChange: ChangeEventHandler<HTMLInputElement>;
+	hasDepotEntry?: boolean;
 	learnResources?: ILearnResourceContext;
 	modelBuilder?: boolean;
 	objectDefinition?: ObjectDefinition | ObjectDefinitionNodeData;
@@ -125,6 +127,15 @@ const fieldSettingsMap = new Map<string, ObjectFieldSetting[]>([
 			{
 				name: 'showCounter',
 				value: false,
+			},
+		],
+	],
+	[
+		'PhoneNumber',
+		[
+			{
+				name: 'countrySource',
+				value: COUNTRY_SOURCE.DEFINED_BY_USER,
 			},
 		],
 	],
@@ -198,6 +209,7 @@ export default function ObjectFieldFormBase({
 	editingObjectField = false,
 	errors,
 	handleChange,
+	hasDepotEntry,
 	learnResources,
 	modelBuilder = false,
 	objectDefinition,
@@ -488,6 +500,7 @@ export default function ObjectFieldFormBase({
 				<AttachmentFormBase
 					disabled={disabled}
 					error={errors.fileSource}
+					hasDepotEntry={hasDepotEntry}
 					objectDefinitionName={objectDefinition.name}
 					objectFieldSettings={
 						values.objectFieldSettings as ObjectFieldSetting[]
@@ -800,7 +813,8 @@ export default function ObjectFieldFormBase({
 					</ClayForm.Group>
 				)}
 
-			{(values.businessType === 'Text' ||
+			{(values.businessType === 'PhoneNumber' ||
+				values.businessType === 'Text' ||
 				values.businessType === 'Integer') && (
 				<UniqueValues
 					disabled={disabled}

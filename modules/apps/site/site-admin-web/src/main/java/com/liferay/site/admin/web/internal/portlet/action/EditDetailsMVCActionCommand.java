@@ -8,6 +8,7 @@ package com.liferay.site.admin.web.internal.portlet.action;
 import com.liferay.configuration.admin.constants.ConfigurationAdminPortletKeys;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.GroupNameException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.MembershipRequest;
@@ -98,8 +99,29 @@ public class EditDetailsMVCActionCommand
 			actionRequest, "manualMembership", liveGroup.isManualMembership());
 		boolean inheritContent = ParamUtil.getBoolean(
 			actionRequest, "inheritContent", liveGroup.isInheritContent());
+
 		boolean active = ParamUtil.getBoolean(
 			actionRequest, "active", liveGroup.isActive());
+
+		UnicodeProperties typeSettingsUnicodeProperties =
+			liveGroup.getTypeSettingsProperties();
+
+		if (FeatureFlagManagerUtil.isEnabled(
+				liveGroup.getCompanyId(), "LPD-82960")) {
+
+			boolean maintenanceMode = ParamUtil.getBoolean(
+				actionRequest, "maintenanceMode");
+
+			if (maintenanceMode) {
+				typeSettingsUnicodeProperties.setProperty(
+					GroupConstants.TYPE_SETTINGS_KEY_MAINTENANCE_MODE,
+					Boolean.TRUE.toString());
+			}
+			else {
+				typeSettingsUnicodeProperties.remove(
+					GroupConstants.TYPE_SETTINGS_KEY_MAINTENANCE_MODE);
+			}
+		}
 
 		if (!liveGroup.isGuest() && !liveGroup.isOrganization()) {
 			UnicodeProperties unicodeProperties =
@@ -113,9 +135,10 @@ public class EditDetailsMVCActionCommand
 		}
 
 		_groupService.updateGroup(
-			liveGroupId, parentGroupId, nameMap, descriptionMap, type, null,
-			manualMembership, membershipRestriction, liveGroup.getFriendlyURL(),
-			inheritContent, active, serviceContext);
+			liveGroupId, parentGroupId, nameMap, descriptionMap, type,
+			typeSettingsUnicodeProperties.toString(), manualMembership,
+			membershipRestriction, liveGroup.getFriendlyURL(), inheritContent,
+			active, serviceContext);
 
 		if (type == GroupConstants.TYPE_SITE_OPEN) {
 			ThemeDisplay themeDisplay =

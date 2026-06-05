@@ -7,13 +7,22 @@ package com.liferay.portal.search.elasticsearch8.internal.search.engine.adapter;
 
 import co.elastic.clients.elasticsearch._types.query_dsl.QueryVariant;
 
+import com.liferay.petra.concurrent.DefaultNoticeableFuture;
 import com.liferay.petra.lang.CentralizedThreadLocal;
+import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
+import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.Query;
 import com.liferay.portal.kernel.search.SearchContext;
-import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.PropsKeys;
-import com.liferay.portal.kernel.util.PropsUtil;
+import com.liferay.portal.kernel.search.SearchEngineHelperUtil;
+import com.liferay.portal.search.elasticsearch8.internal.connection.ElasticsearchClientResolver;
 import com.liferay.portal.search.elasticsearch8.internal.legacy.query.ElasticsearchQueryVisitor;
+import com.liferay.portal.search.elasticsearch8.internal.search.engine.adapter.ccr.ElasticsearchCCRRequestExecutor;
+import com.liferay.portal.search.elasticsearch8.internal.search.engine.adapter.cluster.ElasticsearchClusterRequestExecutor;
+import com.liferay.portal.search.elasticsearch8.internal.search.engine.adapter.document.ElasticsearchDocumentRequestExecutor;
+import com.liferay.portal.search.elasticsearch8.internal.search.engine.adapter.document.configuration.BulkDocumentRequestRetryConfiguration;
+import com.liferay.portal.search.elasticsearch8.internal.search.engine.adapter.index.ElasticsearchIndexRequestExecutor;
+import com.liferay.portal.search.elasticsearch8.internal.search.engine.adapter.search.ElasticsearchSearchRequestExecutor;
+import com.liferay.portal.search.elasticsearch8.internal.search.engine.adapter.snapshot.ElasticsearchSnapshotRequestExecutor;
 import com.liferay.portal.search.engine.adapter.SearchEngineAdapter;
 import com.liferay.portal.search.engine.adapter.ccr.CCRRequest;
 import com.liferay.portal.search.engine.adapter.ccr.CCRRequestExecutor;
@@ -37,14 +46,19 @@ import com.liferay.portal.search.engine.adapter.snapshot.SnapshotRequestExecutor
 import com.liferay.portal.search.engine.adapter.snapshot.SnapshotResponse;
 
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
 
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Dylan Rebelak
  */
 @Component(
+	configurationPid = "com.liferay.portal.search.elasticsearch8.internal.search.engine.adapter.document.configuration.BulkDocumentRequestRetryConfiguration",
 	property = "search.engine.impl=Elasticsearch",
 	service = SearchEngineAdapter.class
 )
@@ -104,8 +118,8 @@ public class ElasticsearchSearchEngineAdapterImpl
 						}
 
 						try {
-							finalBulkDocumentRequest.accept(
-								_documentRequestExecutor);
+							_documentRequestExecutor.executeBulkDocumentRequest(
+								finalBulkDocumentRequest);
 						}
 						catch (RuntimeException runtimeException) {
 							throw _getRuntimeException(runtimeException);
@@ -138,21 +152,30 @@ public class ElasticsearchSearchEngineAdapterImpl
 			List<BulkableDocumentRequest<?>> bulkableDocumentRequests =
 				bulkDocumentRequest.getBulkableDocumentRequests();
 
-			if (bulkableDocumentRequests.size() < _HIBERNATE_JDBC_BATCH_SIZE) {
+			if (bulkableDocumentRequests.size() < Indexer.DEFAULT_INTERVAL) {
 				return null;
 			}
 
-			try {
-				S documentResponse = documentRequest.accept(
-					_documentRequestExecutor);
+			ExecutorService executorService =
+				SearchEngineHelperUtil.getDocumentsConsumerExecutorService();
 
-				bulkableDocumentRequests.clear();
+			BulkDocumentRequest transferCopyBulkDocumentRequest =
+				bulkDocumentRequest.transferCopy();
 
-				return documentResponse;
-			}
-			catch (RuntimeException runtimeException) {
-				throw _getRuntimeException(runtimeException);
-			}
+			DefaultNoticeableFuture<Void> defaultNoticeableFuture =
+				new DefaultNoticeableFuture<>(
+					() -> {
+						_documentRequestExecutor.executeBulkDocumentRequest(
+							transferCopyBulkDocumentRequest);
+
+						return null;
+					});
+
+			SearchContext.registerBatchModeSyncFuture(defaultNoticeableFuture);
+
+			executorService.execute(defaultNoticeableFuture);
+
+			return null;
 		}
 
 		try {
@@ -210,6 +233,35 @@ public class ElasticsearchSearchEngineAdapterImpl
 		}
 	}
 
+	@Activate
+	protected void activate(Map<String, Object> properties) {
+		modified(properties);
+
+		_ccrRequestExecutor = new ElasticsearchCCRRequestExecutor(
+			_elasticsearchClientResolver);
+		_clusterRequestExecutor = new ElasticsearchClusterRequestExecutor(
+			_elasticsearchClientResolver);
+		_indexRequestExecutor = new ElasticsearchIndexRequestExecutor(
+			_elasticsearchClientResolver);
+		_searchRequestExecutor = new ElasticsearchSearchRequestExecutor(
+			_elasticsearchClientResolver);
+		_snapshotRequestExecutor = new ElasticsearchSnapshotRequestExecutor(
+			_elasticsearchClientResolver);
+	}
+
+	@Modified
+	protected void modified(Map<String, Object> properties) {
+		BulkDocumentRequestRetryConfiguration
+			bulkDocumentRequestRetryConfiguration =
+				ConfigurableUtil.createConfigurable(
+					BulkDocumentRequestRetryConfiguration.class, properties);
+
+		_documentRequestExecutor = new ElasticsearchDocumentRequestExecutor(
+			_elasticsearchClientResolver,
+			bulkDocumentRequestRetryConfiguration.numberOfTries(),
+			bulkDocumentRequestRetryConfiguration.waitInSeconds());
+	}
+
 	protected void setThrowOriginalExceptions(boolean throwOriginalExceptions) {
 		_throwOriginalExceptions = throwOriginalExceptions;
 	}
@@ -241,32 +293,21 @@ public class ElasticsearchSearchEngineAdapterImpl
 		return runtimeException1;
 	}
 
-	private static final int _HIBERNATE_JDBC_BATCH_SIZE = GetterUtil.getInteger(
-		PropsUtil.get(PropsKeys.HIBERNATE_JDBC_BATCH_SIZE));
-
 	private static final ThreadLocal<BulkDocumentRequest> _bulkDocumentRequest =
 		new CentralizedThreadLocal<>(
 			ElasticsearchSearchEngineAdapterImpl.class.getName() +
 				"._bulkDocumentRequest");
 
-	@Reference(target = "(search.engine.impl=Elasticsearch)")
 	private CCRRequestExecutor _ccrRequestExecutor;
-
-	@Reference(target = "(search.engine.impl=Elasticsearch)")
 	private ClusterRequestExecutor _clusterRequestExecutor;
+	private volatile DocumentRequestExecutor _documentRequestExecutor;
 
-	@Reference(target = "(search.engine.impl=Elasticsearch)")
-	private DocumentRequestExecutor _documentRequestExecutor;
+	@Reference
+	private ElasticsearchClientResolver _elasticsearchClientResolver;
 
-	@Reference(target = "(search.engine.impl=Elasticsearch)")
 	private IndexRequestExecutor _indexRequestExecutor;
-
-	@Reference(target = "(search.engine.impl=Elasticsearch)")
 	private SearchRequestExecutor _searchRequestExecutor;
-
-	@Reference(target = "(search.engine.impl=Elasticsearch)")
 	private SnapshotRequestExecutor _snapshotRequestExecutor;
-
 	private boolean _throwOriginalExceptions;
 
 }

@@ -6,14 +6,12 @@
 import {expect, mergeTests} from '@playwright/test';
 
 import {apiHelpersTest} from '../../../../fixtures/apiHelpersTest';
-import {applicationsMenuPageTest} from '../../../../fixtures/applicationsMenuPageTest';
 import {commercePagesTest} from '../../../../fixtures/commercePagesTest';
 import {dataApiHelpersTest} from '../../../../fixtures/dataApiHelpersTest';
 import {loginTest} from '../../../../fixtures/loginTest';
 
 export const test = mergeTests(
 	apiHelpersTest,
-	applicationsMenuPageTest,
 	commercePagesTest,
 	dataApiHelpersTest,
 	loginTest()
@@ -25,13 +23,11 @@ test('LPD-3381 Error message is shown when saving an existing override category 
 	commerceAdminChannelDetailsPage,
 	commerceAdminChannelsPage,
 }) => {
-	const site = await apiHelpers.headlessSite.createSite({
+	await apiHelpers.headlessAdminSite.postSite({
 		name: 'Minium',
 		templateKey: 'minium-initializer',
 		templateType: 'site-initializer',
 	});
-
-	apiHelpers.data.push({id: site.id, type: 'site'});
 
 	const pageName = 'Placed Orders';
 

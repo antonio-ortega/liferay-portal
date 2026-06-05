@@ -71,10 +71,13 @@ public class MBMessageTreePathUpgradeProcess extends UpgradeProcess {
 		try (PreparedStatement preparedStatement = connection.prepareStatement(
 				"select messageId, parentMessageId from MBMessage where " +
 					"parentMessageId != 0 order by createDate desc");
+
 			ResultSet resultSet = preparedStatement.executeQuery()) {
 
 			while (resultSet.next()) {
-				relations.put(resultSet.getLong(1), resultSet.getLong(2));
+				relations.put(
+					resultSet.getLong("messageId"),
+					resultSet.getLong("parentMessageId"));
 			}
 		}
 
@@ -88,7 +91,7 @@ public class MBMessageTreePathUpgradeProcess extends UpgradeProcess {
 			ResultSet resultSet = preparedStatement1.executeQuery()) {
 
 			while (resultSet.next()) {
-				long messageId = resultSet.getLong(1);
+				long messageId = resultSet.getLong("messageId");
 
 				preparedStatement2.setString(
 					1, _calculatePath(relations, messageId));

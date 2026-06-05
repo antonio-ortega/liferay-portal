@@ -324,3 +324,4 @@ public class TimeRangeSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-722674769

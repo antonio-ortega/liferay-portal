@@ -10,10 +10,7 @@ import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.search.SearchException;
-import com.liferay.portal.search.batch.BatchIndexingActionable;
-import com.liferay.portal.search.batch.DynamicQueryBatchIndexingActionableFactory;
 import com.liferay.portal.search.spi.model.index.contributor.ModelIndexerWriterContributor;
-import com.liferay.portal.search.spi.model.index.contributor.helper.ModelIndexerWriterDocumentHelper;
 import com.liferay.portal.workflow.kaleo.model.KaleoInstance;
 import com.liferay.portal.workflow.kaleo.model.KaleoInstanceToken;
 import com.liferay.portal.workflow.kaleo.service.KaleoInstanceLocalService;
@@ -23,43 +20,16 @@ import com.liferay.portal.workflow.kaleo.service.KaleoInstanceTokenLocalService;
  * @author István András Dézsi
  */
 public class KaleoInstanceTokenModelIndexerWriterContributor
-	implements ModelIndexerWriterContributor<KaleoInstanceToken> {
+	extends ModelIndexerWriterContributor<KaleoInstanceToken> {
 
 	public KaleoInstanceTokenModelIndexerWriterContributor(
-		DynamicQueryBatchIndexingActionableFactory
-			dynamicQueryBatchIndexingActionableFactory,
 		KaleoInstanceLocalService kaleoInstanceLocalService,
 		KaleoInstanceTokenLocalService kaleoInstanceTokenLocalService) {
 
-		_dynamicQueryBatchIndexingActionableFactory =
-			dynamicQueryBatchIndexingActionableFactory;
+		super(
+			kaleoInstanceTokenLocalService::getIndexableActionableDynamicQuery);
+
 		_kaleoInstanceLocalService = kaleoInstanceLocalService;
-		_kaleoInstanceTokenLocalService = kaleoInstanceTokenLocalService;
-	}
-
-	@Override
-	public void customize(
-		BatchIndexingActionable batchIndexingActionable,
-		ModelIndexerWriterDocumentHelper modelIndexerWriterDocumentHelper) {
-
-		batchIndexingActionable.setPerformActionMethod(
-			(KaleoInstanceToken kaleoInstanceToken) ->
-				batchIndexingActionable.addDocuments(
-					modelIndexerWriterDocumentHelper.getDocument(
-						kaleoInstanceToken)));
-	}
-
-	@Override
-	public BatchIndexingActionable getBatchIndexingActionable() {
-		return _dynamicQueryBatchIndexingActionableFactory.
-			getBatchIndexingActionable(
-				_kaleoInstanceTokenLocalService.
-					getIndexableActionableDynamicQuery());
-	}
-
-	@Override
-	public long getCompanyId(KaleoInstanceToken kaleoInstanceToken) {
-		return kaleoInstanceToken.getCompanyId();
 	}
 
 	@Override
@@ -80,10 +50,6 @@ public class KaleoInstanceTokenModelIndexerWriterContributor
 		}
 	}
 
-	private final DynamicQueryBatchIndexingActionableFactory
-		_dynamicQueryBatchIndexingActionableFactory;
 	private final KaleoInstanceLocalService _kaleoInstanceLocalService;
-	private final KaleoInstanceTokenLocalService
-		_kaleoInstanceTokenLocalService;
 
 }

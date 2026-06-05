@@ -260,3 +260,4 @@ public class InventoryAnalysisItemSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:25441286

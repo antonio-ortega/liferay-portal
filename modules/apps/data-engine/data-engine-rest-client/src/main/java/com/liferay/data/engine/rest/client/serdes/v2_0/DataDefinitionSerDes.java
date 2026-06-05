@@ -717,3 +717,4 @@ public class DataDefinitionSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-2145397384

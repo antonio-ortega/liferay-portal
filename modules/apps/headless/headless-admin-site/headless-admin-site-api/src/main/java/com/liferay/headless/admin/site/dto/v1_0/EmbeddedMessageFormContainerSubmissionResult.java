@@ -322,3 +322,4 @@ public class EmbeddedMessageFormContainerSubmissionResult
 	private Map<String, Serializable> _extendedProperties;
 
 }
+// LIFERAY-REST-BUILDER-HASH:-686023891

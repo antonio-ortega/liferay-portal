@@ -329,3 +329,4 @@ public interface SocialActivityAchievementLocalService
 		throws E;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-37699237

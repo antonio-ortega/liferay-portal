@@ -8,16 +8,13 @@ import ClayButton from '@clayui/button';
 import ClayDropDown from '@clayui/drop-down';
 import ClayLayout from '@clayui/layout';
 import ClayModal, {useModal} from '@clayui/modal';
-import GraphiQL from 'graphiql';
+import {GraphiQL} from 'graphiql';
 import React, {useCallback, useEffect, useState} from 'react';
 import SwaggerUI from 'swagger-ui-react';
 
 import Icon from './Icon';
-import apiFetch from './util/apiFetch';
-
-import 'graphiql/graphiql.css';
-
 import helpInputSwaggerUIPlugin from './swagger-ui/plugins/helpInput';
+import apiFetch from './util/apiFetch';
 
 const APIGUI = () => {
 	const contextPath = window.location.pathname.substring(

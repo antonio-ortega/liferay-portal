@@ -984,3 +984,4 @@ public interface PriceListOrderTypeResource {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:820280124

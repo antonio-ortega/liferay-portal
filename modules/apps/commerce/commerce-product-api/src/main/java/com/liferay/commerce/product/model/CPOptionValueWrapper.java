@@ -680,3 +680,4 @@ public class CPOptionValueWrapper
 	}
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:835271593

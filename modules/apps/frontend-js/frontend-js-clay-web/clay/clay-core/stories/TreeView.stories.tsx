@@ -184,7 +184,7 @@ type Node = {
 	name: string;
 };
 
-function createNode(lenght: number, depth: number, currentDepth: number = 0) {
+function createNode(length: number, depth: number, currentDepth: number = 0) {
 	const node: Node = {
 		children: [],
 		id: String(nodeId),
@@ -194,8 +194,8 @@ function createNode(lenght: number, depth: number, currentDepth: number = 0) {
 	if (currentDepth === depth) {
 		return node;
 	}
-	for (let i = 0; i < lenght; i++) {
-		node.children.push(createNode(lenght, depth, currentDepth + 1));
+	for (let i = 0; i < length; i++) {
+		node.children.push(createNode(length, depth, currentDepth + 1));
 	}
 
 	return node;
@@ -900,6 +900,72 @@ MultipleSelectionWithAsyncLoad.argTypes = {
 MultipleSelectionWithAsyncLoad.args = {
 	selectionMode: 'multiple-recursive',
 };
+
+export function MultipleSelectionWithMultipleDragAndDrop() {
+	const [selectedKeys, setSelectionChange] = useState<Set<React.Key>>(
+		new Set()
+	);
+
+	return (
+		<TreeView
+			defaultItems={[
+				{
+					children: [{name: 'Blogs'}, {name: 'Documents and Media'}],
+					id: 1,
+					name: 'Liferay Drive',
+				},
+				{
+					children: [{name: 'Blogs'}, {name: 'Documents and Media'}],
+					id: 2,
+					name: 'Repositories',
+				},
+				{
+					children: [
+						{name: 'PDF'},
+						{name: 'Word'},
+						{name: 'Google Drive'},
+						{name: 'Figma'},
+					],
+					id: 3,
+					name: 'Documents and Media',
+				},
+				{
+					children: [],
+					id: 4,
+					name: 'Empty directory',
+				},
+			]}
+			dragAndDrop
+			dragAndDropMode="multiple"
+			nestedKey="children"
+			onSelectionChange={(keys) => setSelectionChange(keys)}
+			selectedKeys={selectedKeys}
+			selectionMode="multiple"
+		>
+			{(item) => (
+				<TreeView.Item>
+					<TreeView.ItemStack>
+						<ClayCheckbox />
+
+						<Icon symbol="folder" />
+
+						{item.name}
+					</TreeView.ItemStack>
+
+					<TreeView.Group items={item.children}>
+						{(item) => (
+							<TreeView.Item>
+								<ClayCheckbox />
+
+								{item.name}
+							</TreeView.Item>
+						)}
+					</TreeView.Group>
+				</TreeView.Item>
+			)}
+		</TreeView>
+	);
+}
 export function ManuallyTriggerMultipleSelection(args: any) {
 	const [selectedKeys, setSelectionChange] = useState<Set<React.Key>>(
 		new Set()

@@ -124,6 +124,20 @@ public class AnalyticsDeleteMessageLocalServiceWrapper
 			analyticsDeleteMessageId);
 	}
 
+	@Override
+	public void deleteAnalyticsDeleteMessages(long companyId) {
+		_analyticsDeleteMessageLocalService.deleteAnalyticsDeleteMessages(
+			companyId);
+	}
+
+	@Override
+	public void deleteAnalyticsDeleteMessages(
+		long companyId, java.util.Date modifiedDate) {
+
+		_analyticsDeleteMessageLocalService.deleteAnalyticsDeleteMessages(
+			companyId, modifiedDate);
+	}
+
 	/**
 	 * @throws PortalException
 	 */
@@ -421,3 +435,4 @@ public class AnalyticsDeleteMessageLocalServiceWrapper
 		_analyticsDeleteMessageLocalService;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-1339717468

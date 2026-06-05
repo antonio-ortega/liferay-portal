@@ -5,12 +5,10 @@
 
 package com.liferay.account.internal.search;
 
-import com.liferay.account.internal.search.spi.model.index.contributor.AccountGroupModelIndexerWriterContributor;
 import com.liferay.account.internal.search.spi.model.result.contributor.AccountGroupModelSummaryContributor;
 import com.liferay.account.model.AccountGroup;
 import com.liferay.account.service.AccountGroupLocalService;
 import com.liferay.portal.kernel.search.Field;
-import com.liferay.portal.search.batch.DynamicQueryBatchIndexingActionableFactory;
 import com.liferay.portal.search.spi.model.index.contributor.ModelIndexerWriterContributor;
 import com.liferay.portal.search.spi.model.registrar.ModelSearchConfigurator;
 import com.liferay.portal.search.spi.model.result.contributor.ModelSummaryContributor;
@@ -58,18 +56,12 @@ public class AccountGroupModelSearchConfigurator
 
 	@Activate
 	protected void activate() {
-		_modelIndexWriterContributor =
-			new AccountGroupModelIndexerWriterContributor(
-				_accountGroupLocalService,
-				_dynamicQueryBatchIndexingActionableFactory);
+		_modelIndexWriterContributor = new ModelIndexerWriterContributor<>(
+			_accountGroupLocalService::getIndexableActionableDynamicQuery);
 	}
 
 	@Reference
 	private AccountGroupLocalService _accountGroupLocalService;
-
-	@Reference
-	private DynamicQueryBatchIndexingActionableFactory
-		_dynamicQueryBatchIndexingActionableFactory;
 
 	private ModelIndexerWriterContributor<AccountGroup>
 		_modelIndexWriterContributor;

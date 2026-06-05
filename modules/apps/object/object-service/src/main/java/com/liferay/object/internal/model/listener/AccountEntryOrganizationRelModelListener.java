@@ -15,7 +15,7 @@ import com.liferay.object.scope.ObjectScopeProvider;
 import com.liferay.object.scope.ObjectScopeProviderRegistry;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectEntryLocalService;
-import com.liferay.object.service.ObjectFieldLocalServiceUtil;
+import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
 import com.liferay.petra.sql.dsl.expression.Predicate;
@@ -25,7 +25,6 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.BaseModelListener;
 import com.liferay.portal.kernel.model.ModelListener;
 import com.liferay.portal.kernel.transaction.TransactionCommitCallbackUtil;
-import com.liferay.portal.search.batch.DynamicQueryBatchIndexingActionableFactory;
 import com.liferay.portal.search.indexer.IndexerDocumentBuilder;
 
 import org.osgi.framework.BundleContext;
@@ -96,7 +95,7 @@ public class AccountEntryOrganizationRelModelListener
 
 			if (!objectScopeProvider.isGroupAware()) {
 				ObjectField objectField =
-					ObjectFieldLocalServiceUtil.fetchObjectField(
+					_objectFieldLocalService.fetchObjectField(
 						objectDefinition.
 							getAccountEntryRestrictedObjectFieldId());
 
@@ -123,7 +122,6 @@ public class AccountEntryOrganizationRelModelListener
 
 			ObjectEntryBatchReindexer objectEntryBatchReindexer =
 				new ObjectEntryBatchReindexer(
-					_dynamicQueryBatchIndexingActionableFactory,
 					_objectEntryLocalService, objectDefinition);
 
 			IndexerDocumentBuilder indexerDocumentBuilder =
@@ -137,10 +135,6 @@ public class AccountEntryOrganizationRelModelListener
 		}
 	}
 
-	@Reference
-	private DynamicQueryBatchIndexingActionableFactory
-		_dynamicQueryBatchIndexingActionableFactory;
-
 	@Reference(
 		target = "(filter.factory.key=" + ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT + ")"
 	)
@@ -151,6 +145,9 @@ public class AccountEntryOrganizationRelModelListener
 
 	@Reference
 	private ObjectEntryLocalService _objectEntryLocalService;
+
+	@Reference
+	private ObjectFieldLocalService _objectFieldLocalService;
 
 	@Reference
 	private ObjectScopeProviderRegistry _objectScopeProviderRegistry;

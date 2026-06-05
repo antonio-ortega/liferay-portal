@@ -50,6 +50,7 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.ScopeUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -399,8 +400,9 @@ public class DuplicateItemMVCActionCommandTest {
 				editableValues, fragmentEntry.getCss(),
 				fragmentEntry.getConfiguration(),
 				fragmentEntry.getExternalReferenceCode(),
-				fragmentEntry.getScopeERC(), fragmentEntry.getHtml(),
-				fragmentEntry.getJs(), _draftLayout,
+				ScopeUtil.getItemScopeExternalReferenceCode(
+					fragmentEntry.getGroupId(), _draftLayout.getGroupId()),
+				fragmentEntry.getHtml(), fragmentEntry.getJs(), _draftLayout,
 				fragmentEntry.getFragmentEntryKey(), fragmentEntry.getType(),
 				parentItemId, 0, _segmentsExperienceId);
 
@@ -440,9 +442,18 @@ public class DuplicateItemMVCActionCommandTest {
 		Assert.assertEquals(
 			fragmentEntryLink.getFragmentEntryERC(),
 			duplicatedFragmentEntryLink.getFragmentEntryERC());
-		Assert.assertEquals(
-			fragmentEntryLink.getFragmentEntryGroupId(),
-			duplicatedFragmentEntryLink.getFragmentEntryGroupId());
+
+		Long groupId1 = ScopeUtil.getItemGroupId(
+			fragmentEntryLink.getCompanyId(),
+			fragmentEntryLink.getFragmentEntryScopeERC(),
+			fragmentEntryLink.getGroupId());
+		Long groupId2 = ScopeUtil.getItemGroupId(
+			duplicatedFragmentEntryLink.getCompanyId(),
+			duplicatedFragmentEntryLink.getFragmentEntryScopeERC(),
+			duplicatedFragmentEntryLink.getGroupId());
+
+		Assert.assertEquals(groupId1, groupId2);
+
 		Assert.assertEquals(
 			fragmentEntryLink.getHtml(), duplicatedFragmentEntryLink.getHtml());
 		Assert.assertNotEquals(

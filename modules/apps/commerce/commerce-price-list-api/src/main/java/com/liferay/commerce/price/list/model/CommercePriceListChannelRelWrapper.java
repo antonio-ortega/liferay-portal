@@ -500,3 +500,4 @@ public class CommercePriceListChannelRelWrapper
 	}
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:1560072872

@@ -14,13 +14,16 @@ import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.cloud.pubsub.v1.Subscriber;
 import com.google.cloud.pubsub.v1.SubscriptionAdminClient;
 import com.google.cloud.pubsub.v1.SubscriptionAdminSettings;
+import com.google.protobuf.Duration;
+import com.google.pubsub.v1.RetryPolicy;
 import com.google.pubsub.v1.Subscription;
+import com.google.pubsub.v1.SubscriptionName;
 import com.google.pubsub.v1.TopicName;
 
 import com.liferay.marketplace.constants.MarketplaceConstants;
 import com.liferay.marketplace.service.KoroneikiService;
 import com.liferay.marketplace.service.MarketplaceService;
-import com.liferay.petra.string.StringBundler;
+import com.liferay.marketplace.service.ProvisioningHubService;
 
 import java.io.ByteArrayInputStream;
 
@@ -63,14 +66,22 @@ public class MarketplaceTopicSubscriber {
 
 	@PostConstruct
 	protected void activate() throws Exception {
-		GoogleCredentials googleCredentials =
-			ServiceAccountCredentials.fromStream(
+		GoogleCredentials googleCredentials;
+
+		try {
+			googleCredentials = ServiceAccountCredentials.fromStream(
 				new ByteArrayInputStream(
 					_serviceAccountKey.getBytes(StandardCharsets.UTF_8))
 			).createScoped(
 				Collections.singletonList(
 					"https://www.googleapis.com/auth/cloud-platform")
 			);
+		}
+		catch (Exception exception) {
+			_log.error("Unable to get Google Credentials", exception);
+
+			return;
+		}
 
 		CredentialsProvider credentialsProvider =
 			FixedCredentialsProvider.create(googleCredentials);
@@ -90,31 +101,45 @@ public class MarketplaceTopicSubscriber {
 		_subscribe(
 			credentialsProvider,
 			MarketplaceConstants.
-				PUBSUB_TOPIC_NAME_KORONEIKI_ENTITLEMENT_CREATE);
+				PUBSUB_TOPIC_NAME_KORONEIKI_PRODUCT_PURCHASE_CREATE);
 	}
 
 	private void _subscribe(
-			CredentialsProvider credentialsProvider, String topicName)
-		throws Exception {
+		CredentialsProvider credentialsProvider, String topicName) {
 
-		String subscriptionName = StringBundler.concat(
-			"projects/", _projectId, "/subscriptions/marketplace_", topicName,
-			"-subscription");
+		if (_disabledTopicNames.contains(topicName)) {
+			return;
+		}
+
+		String subscriptionName = SubscriptionName.of(
+			_projectId, _topicPrefix + topicName + "-subscription"
+		).toString();
 
 		try {
 			_subscriptionAdminClient.getSubscription(subscriptionName);
 		}
 		catch (NotFoundException notFoundException) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(notFoundException);
-			}
+			_log.error(notFoundException);
 
 			_subscriptionAdminClient.createSubscription(
 				Subscription.newBuilder(
 				).setAckDeadlineSeconds(
-					30
+					90
 				).setName(
 					subscriptionName
+				).setRetryPolicy(
+					RetryPolicy.newBuilder(
+					).setMaximumBackoff(
+						Duration.newBuilder(
+						).setSeconds(
+							600
+						).build()
+					).setMinimumBackoff(
+						Duration.newBuilder(
+						).setSeconds(
+							60
+						).build()
+					).build()
 				).setTopic(
 					String.valueOf(
 						TopicName.ofProjectTopicName(_projectId, topicName))
@@ -124,7 +149,8 @@ public class MarketplaceTopicSubscriber {
 		Subscriber subscriber = Subscriber.newBuilder(
 			subscriptionName,
 			new MarketplaceMessageReceiver(
-				_koroneikiService, _marketplaceService, topicName)
+				_koroneikiService, _marketplaceService, _productKeys,
+				_provisioningHubService, topicName)
 		).setCredentialsProvider(
 			credentialsProvider
 		).build();
@@ -144,19 +170,31 @@ public class MarketplaceTopicSubscriber {
 	private static final Log _log = LogFactory.getLog(
 		MarketplaceTopicSubscriber.class);
 
+	@Value("${liferay.marketplace.pubsub.gcp.disabled.topic.names}")
+	private List<String> _disabledTopicNames;
+
 	@Autowired
 	private KoroneikiService _koroneikiService;
 
 	@Autowired
 	private MarketplaceService _marketplaceService;
 
+	@Value("${liferay.marketplace.koroneiki.product.keys}")
+	private List<String> _productKeys;
+
 	@Value("${liferay.marketplace.pubsub.gcp.project.id}")
 	private String _projectId;
+
+	@Autowired
+	private ProvisioningHubService _provisioningHubService;
 
 	@Value("${liferay.marketplace.pubsub.gcp.service.account.key}")
 	private String _serviceAccountKey;
 
 	private final List<Subscriber> _subscribers = new ArrayList<>();
 	private SubscriptionAdminClient _subscriptionAdminClient;
+
+	@Value("${liferay.marketplace.pubsub.topic.prefix}")
+	private String _topicPrefix;
 
 }

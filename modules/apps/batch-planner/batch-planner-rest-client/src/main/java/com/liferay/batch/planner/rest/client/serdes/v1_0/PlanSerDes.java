@@ -628,3 +628,4 @@ public class PlanSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:1145226401

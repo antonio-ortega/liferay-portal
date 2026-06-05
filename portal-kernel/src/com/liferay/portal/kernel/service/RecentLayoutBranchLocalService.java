@@ -280,3 +280,4 @@ public interface RecentLayoutBranchLocalService
 		RecentLayoutBranch recentLayoutBranch);
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:1570576710

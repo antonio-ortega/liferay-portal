@@ -1583,3 +1583,4 @@ public interface UtilityPageResource {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-311455494

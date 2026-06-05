@@ -5,7 +5,7 @@
 
 import {Locator, Page} from '@playwright/test';
 
-import {ApplicationsMenuPage} from '../../product-navigation-applications-menu/ApplicationsMenuPage';
+import {GlobalMenuPage} from '../../product-navigation-applications-menu/GlobalMenuPage';
 import {CommerceDNDTablePage} from '../commerceDNDTablePage';
 
 export class CommerceAdminCurrenciesPage extends CommerceDNDTablePage {
@@ -13,7 +13,7 @@ export class CommerceAdminCurrenciesPage extends CommerceDNDTablePage {
 	readonly activeMenuItem: Locator;
 	readonly activeToggleMenuItem: Locator;
 	readonly addCurrencyAddButton: Locator;
-	readonly applicationsMenuPage: ApplicationsMenuPage;
+	readonly globalMenuPage: GlobalMenuPage;
 	readonly backLink: Locator;
 	readonly currencyNameLink: (currencyName: string) => Locator;
 	readonly deleteMenuItem: Locator;
@@ -41,7 +41,7 @@ export class CommerceAdminCurrenciesPage extends CommerceDNDTablePage {
 			exact: true,
 			name: 'Add Currency',
 		});
-		this.applicationsMenuPage = new ApplicationsMenuPage(page);
+		this.globalMenuPage = new GlobalMenuPage(page);
 		this.backLink = page.getByRole('link', {exact: true, name: 'Back'});
 		this.currencyNameLink = (currencyName) =>
 			page.getByRole('link', {name: currencyName});
@@ -58,13 +58,15 @@ export class CommerceAdminCurrenciesPage extends CommerceDNDTablePage {
 		this.priorityButton = page
 			.getByRole('columnheader', {name: 'Priority'})
 			.getByRole('button');
-		this.search = page.getByPlaceholder('Search');
+		this.search = page
+			.getByTestId('managementToolbar')
+			.getByPlaceholder('Search');
 		this.searchButton = page
 			.getByTestId('managementToolbar')
 			.getByRole('button', {name: 'Search'});
 	}
 
 	async goto() {
-		await this.applicationsMenuPage.goToCommerceCurrencies();
+		await this.globalMenuPage.goToCommerce('Currencies');
 	}
 }

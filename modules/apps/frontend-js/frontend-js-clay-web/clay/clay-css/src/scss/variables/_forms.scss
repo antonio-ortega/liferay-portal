@@ -3,10 +3,10 @@ $input-border-color: $gray-400 !default;
 $input-border-style: solid !default;
 $input-border-width: 0.0625rem !default;
 
-$input-border-top-width: 0.0625rem !default;
-$input-border-right-width: 0.0625rem !default;
 $input-border-bottom-width: 0.0625rem !default;
 $input-border-left-width: 0.0625rem !default;
+$input-border-right-width: 0.0625rem !default;
+$input-border-top-width: 0.0625rem !default;
 
 $input-border-radius: $border-radius !default;
 $input-box-shadow: inset 0 1px 1px rgba($black, 0.075) !default;
@@ -33,9 +33,9 @@ $input-placeholder-color: $gray-600 !default;
 
 $input-focus-bg: $input-bg !default;
 $input-focus-border-color: clay-lighten($component-active-bg, 25%) !default;
+$input-focus-box-shadow: $input-btn-focus-box-shadow !default;
 $input-focus-color: $input-color !default;
 $input-focus-width: $input-btn-focus-width !default;
-$input-focus-box-shadow: $input-btn-focus-box-shadow !default;
 
 // .form-control:focus::placeholder
 
@@ -58,13 +58,14 @@ $input: map-deep-merge(
 	(
 		background-color: $input-bg,
 		border-color: $input-border-color,
+		border-radius: clay-enable-rounded($input-border-radius),
 		border-style: $input-border-style,
 		border-width: $input-border-width,
+
 		border-bottom-width: $input-border-bottom-width,
 		border-left-width: $input-border-left-width,
 		border-right-width: $input-border-right-width,
 		border-top-width: $input-border-top-width,
-		border-radius: clay-enable-rounded($input-border-radius),
 		box-shadow: clay-enable-shadows([$input-box-shadow]),
 		color: $input-color,
 		display: block,
@@ -74,43 +75,50 @@ $input: map-deep-merge(
 		height: $input-height,
 		letter-spacing: inherit,
 		line-height: $input-line-height,
-		min-width: 0,
+		min-width: 0rem,
 		padding-bottom: $input-padding-y,
 		padding-left: $input-padding-x,
 		padding-right: $input-padding-x,
 		padding-top: $input-padding-y,
 		transition: clay-enable-transitions($input-transition),
 		width: 100%,
+
 		mobile: (
 			font-size: $input-font-size-mobile,
 			height: $input-height-mobile,
 		),
+
 		placeholder: (
 			color: $input-placeholder-color,
 			opacity: 1,
 		),
+
 		focus: (
 			background-color: $input-focus-bg,
 			border-color: $input-focus-border-color,
 			box-shadow: $input-focus-box-shadow,
 			color: $input-focus-color,
 			outline: 0,
+
 			placeholder: (
 				color: $input-placeholder-focus-color,
 			),
 		),
+
 		focus-within: (
 			background-color: $input-focus-bg,
 			border-color: $input-focus-border-color,
 			box-shadow: $input-focus-box-shadow,
 			color: $input-focus-color,
 		),
+
 		disabled: (
 			background-color: $input-disabled-bg,
 			border-color: $input-disabled-border-color,
 			color: $input-disabled-color,
 			cursor: $input-disabled-cursor,
 			opacity: $input-disabled-opacity,
+
 			placeholder: (
 				color: $input-placeholder-disabled-color,
 			),
@@ -155,11 +163,11 @@ $input-plaintext: map-deep-merge(
 		letter-spacing: inherit,
 		line-height: $input-line-height,
 		// match inputs if this class comes on inputs with default margins
-		margin-bottom: 0,
-		min-width: 0,
+		margin-bottom: 0rem,
+		min-width: 0rem,
 		padding-bottom: $input-padding-y,
-		padding-left: 0,
-		padding-right: 0,
+		padding-left: 0rem,
+		padding-right: 0rem,
 		padding-top: $input-padding-y,
 		text-overflow: ellipsis,
 		width: 100%,
@@ -208,6 +216,7 @@ $input-lg: map-deep-merge(
 		padding-left: $input-padding-x-lg,
 		padding-right: $input-padding-x-lg,
 		padding-top: $input-padding-y-lg,
+
 		media-breakpoint-down: (
 			sm: (
 				font-size: $input-font-size-lg-mobile,
@@ -241,6 +250,7 @@ $input-sm: map-deep-merge(
 		padding-left: $input-padding-x-sm,
 		padding-right: $input-padding-x-sm,
 		padding-top: $input-padding-y-sm,
+
 		media-breakpoint-down: (
 			sm: (
 				height: $input-height-sm-mobile,
@@ -284,35 +294,43 @@ $input-label: map-deep-merge(
 		margin-bottom: $input-label-margin-bottom,
 		max-width: 100%,
 		word-wrap: break-word,
+
 		mobile: (
 			font-size: $input-label-font-size-mobile,
 		),
+
 		focus: (
 			color: $input-label-focus-color,
 		),
+
 		disabled: (
 			color: $input-label-disabled-color,
 			cursor: $input-label-disabled-cursor,
 			opacity: $input-disabled-opacity,
 		),
+
 		for: (
 			cursor: $input-label-for-cursor,
 		),
+
 		'+ .form-feedback-group': (
 			margin-bottom: 0.75rem,
 		),
+
 		form-text: (
 			margin-bottom: $input-label-margin-bottom,
-			margin-top: 0,
+			margin-top: 0rem,
 		),
+
 		form-help-text: (
 			color: $secondary-l0,
 			display: inline,
 			font-size: 0.875rem,
 			font-weight: $font-weight-normal,
 			margin-left: 0.5rem,
-			margin-top: 0,
+			margin-top: 0rem,
 		),
+
 		reference-mark: (
 			color: $input-label-reference-mark-color,
 			font-size: $input-label-reference-mark-font-size,
@@ -330,7 +348,7 @@ $form-control-label: () !default;
 $form-control-label: map-merge(
 	(
 		display: inline,
-		margin-bottom: 0,
+		margin-bottom: 0rem,
 	),
 	$form-control-label
 );
@@ -385,6 +403,7 @@ $input-readonly: map-deep-merge(
 		color: $input-readonly-color,
 		cursor: $input-readonly-cursor,
 		opacity: 1,
+
 		focus: (
 			background-color: $input-readonly-focus-bg,
 			border-color: $input-readonly-focus-border-color,
@@ -471,8 +490,8 @@ $form-control-tag-group-padding-y: calc(
 		) * 0.5
 ) !default;
 
-$form-control-inset-min-height: 1.5rem !default;
 $form-control-inset-margin-y: 0.125rem !default;
+$form-control-inset-min-height: 1.5rem !default;
 
 $form-control-inset: () !default;
 $form-control-inset: map-deep-merge(
@@ -485,11 +504,13 @@ $form-control-inset: map-deep-merge(
 		margin-left: 0.25rem,
 		margin-top: $form-control-inset-margin-y,
 		min-height: $form-control-inset-min-height,
-		padding: 0,
+		padding: 0rem,
 		width: 50px,
+
 		focus: (
 			outline: 0,
 		),
+
 		disabled: (
 			background-color: $input-disabled-bg,
 			border-color: $input-disabled-border-color,
@@ -563,12 +584,12 @@ $form-control-tag-group-btn: map-deep-merge(
 		line-height: 1,
 		margin-bottom: $form-control-inset-margin-y,
 		margin-top: $form-control-inset-margin-y,
-		padding-bottom: 0,
+		padding-bottom: 0rem,
 		padding-left:
 			if(variable-exists(btn-padding-x-sm), $btn-padding-x-sm, 0.5rem),
 		padding-right:
 			if(variable-exists(btn-padding-x-sm), $btn-padding-x-sm, 0.5rem),
-		padding-top: 0,
+		padding-top: 0rem,
 	),
 	$form-control-tag-group-btn
 );
@@ -580,8 +601,8 @@ $form-control-tag-group-btn-monospaced: map-deep-merge(
 		line-height: 1,
 		margin-bottom: $form-control-inset-margin-y,
 		margin-top: $form-control-inset-margin-y,
-		padding-left: 0,
-		padding-right: 0,
+		padding-left: 0rem,
+		padding-right: 0rem,
 		width: $form-control-inset-min-height,
 	),
 	$form-control-tag-group-btn-monospaced
@@ -591,8 +612,8 @@ $form-control-tag-group-component-action: () !default;
 $form-control-tag-group-component-action: map-deep-merge(
 	(
 		height: 100%,
-		margin-bottom: 0,
-		margin-top: 0,
+		margin-bottom: 0rem,
+		margin-top: 0rem,
 		width: 2rem,
 	),
 	$form-control-tag-group-component-action
@@ -608,19 +629,22 @@ $form-control-tag-group-sm: map-deep-merge(
 		height: auto,
 		line-height: $input-line-height-sm,
 		min-height: $input-height-sm,
-		padding-bottom: 0,
+		padding-bottom: 0rem,
 		padding-left: 0.25rem,
 		padding-right: 0.25rem,
-		padding-top: 0,
+		padding-top: 0rem,
+
 		inline-item: (
-			margin-bottom: 0,
-			margin-top: 0,
+			margin-bottom: 0rem,
+			margin-top: 0rem,
 		),
+
 		label: (
 			margin-bottom: 0.1875rem,
 			margin-right: 0.25rem,
 			margin-top: 0.1875rem,
 		),
+
 		form-control-inset: (
 			margin-bottom: 0.125rem,
 			margin-left: 0.25rem,
@@ -651,9 +675,14 @@ $form-group-margin-bottom: 1rem !default;
 $form-group-margin-bottom-mobile: null !default;
 
 $form-group-sm-margin-bottom: 1rem !default; // 16px
-$form-group-sm-margin-bottom-mobile: null !default;
+
+$form-group-sm-input-label-font-size: 0.75rem !default; // 12px
+$form-group-sm-input-label-line-height: 1.5 !default; // 150%
 $form-group-sm-input-label-margin-bottom: 0.25rem !default; // 4px
+
 $form-group-sm-item-label-spacer: 1.75rem !default; // 28px
+
+$form-group-sm-margin-bottom-mobile: null !default;
 
 // Form Group Autofit
 
@@ -666,16 +695,17 @@ $input-file-cursor: $link-cursor !default;
 // Form Check
 
 $form-check-input-cursor: $link-cursor !default;
-$form-check-input-gutter: 0 !default;
+$form-check-input-gutter: 0rem !default;
 $form-check-input-margin-x: 0.25rem !default;
-$form-check-input-margin-y: 0 !default;
+$form-check-input-margin-y: 0rem !default;
+
+$form-check-input-disabled-cursor: $disabled-cursor !default;
 
 $form-check-label-cursor: $input-label-for-cursor !default;
 
 $form-check-label-text-margin-left: -0.1875rem !default;
 $form-check-label-text-padding-left: 0.5rem !default;
 
-$form-check-input-disabled-cursor: $disabled-cursor !default;
 $form-check-label-text-disabled-cursor: $disabled-cursor !default;
 
 // Form Check Inline
@@ -711,21 +741,23 @@ $form-text: map-merge(
 		font-weight: $form-text-font-weight,
 		margin-top: $form-text-margin-top,
 		word-wrap: break-word,
+
 		blockquote: (
 			font-style: italic,
 			font-weight: $font-weight-normal,
-			margin-bottom: 0,
+			margin-bottom: 0rem,
 			margin-top: 0.75rem,
 			padding-left: 0.75rem,
 			position: relative,
+
 			before: (
 				background-color: $secondary-l1,
-				bottom: 0,
+				bottom: 0rem,
 				content: '',
 				display: block,
-				left: 0,
+				left: 0rem,
 				position: absolute,
-				top: 0,
+				top: 0rem,
 				width: 0.125rem,
 			),
 		),
@@ -770,8 +802,9 @@ $form-feedback-indicator: map-deep-merge(
 	(
 		margin-left: $form-feedback-indicator-margin-x,
 		margin-right: $form-feedback-indicator-margin-x,
+
 		first-child: (
-			margin-left: 0,
+			margin-left: 0rem,
 		),
 	),
 	$form-feedback-indicator
@@ -808,10 +841,13 @@ $form-validation-states: map-merge(
 	(
 		'valid': (
 			'color': $form-feedback-valid-color,
+
 			'icon': $form-feedback-icon-valid,
 		),
+
 		'invalid': (
 			'color': $form-feedback-invalid-color,
+
 			'icon': $form-feedback-icon-invalid,
 		),
 	),
@@ -838,12 +874,14 @@ $input-danger: map-deep-merge(
 		border-color: $input-danger-border-color,
 		box-shadow: $input-danger-box-shadow,
 		color: $input-danger-color,
+
 		focus: (
 			background-color: $input-danger-focus-bg,
 			border-color: $input-danger-focus-border-color,
 			box-shadow: $input-danger-focus-box-shadow,
 			color: $input-danger-focus-color,
 		),
+
 		focus-within: (
 			background-color: $input-danger-bg,
 			border-color: $input-danger-border-color,
@@ -859,11 +897,13 @@ $input-danger: map-deep-merge(
 $input-danger-readonly: () !default;
 
 $input-danger-checkbox-label-color: $form-feedback-invalid-color !default;
+
 $input-danger-label-color: null !default;
 
 // .has-error select.form-control
 
 $input-danger-select-icon-color: $input-danger-border-color !default;
+
 $input-danger-select-icon: clay-str-replace(
 	url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'%3E%3Cpath fill='#{$input-danger-select-icon-color}' d='M2 0L0 2h4zm0 5L0 3h4z'/%3E%3C/svg%3E"),
 	'#',
@@ -904,9 +944,11 @@ $has-error: map-deep-merge(
 		label: (
 			color: $input-danger-label-color,
 		),
+
 		custom-control-label: (
 			color: $input-danger-checkbox-label-color,
 		),
+
 		form-control:
 			map-deep-merge(
 				(
@@ -917,6 +959,7 @@ $has-error: map-deep-merge(
 		form-feedback-item: (
 			color: $form-feedback-invalid-color,
 		),
+
 		select: (
 			form-control:
 				map-deep-merge(
@@ -927,6 +970,7 @@ $has-error: map-deep-merge(
 					$input-danger-select
 				),
 		),
+
 		input-group-item: (
 			focus: (
 				box-shadow:
@@ -953,14 +997,17 @@ $has-error: map-deep-merge(
 					),
 				),
 			),
+
 			input-group-inset: (
 				input-group-inset-item: (
 					background-color: $input-danger-bg,
 					border-color: $input-danger-border-color,
 					box-shadow: $input-danger-box-shadow,
 				),
+
 				focus: (
 					box-shadow: none,
+
 					input-group-inset-item: (
 						background-color:
 							setter($input-danger-focus-bg, $input-danger-bg),
@@ -997,12 +1044,14 @@ $input-warning: map-deep-merge(
 		border-color: $input-warning-border-color,
 		box-shadow: $input-warning-box-shadow,
 		color: $input-warning-color,
+
 		focus: (
 			background-color: $input-warning-focus-bg,
 			border-color: $input-warning-focus-border-color,
 			box-shadow: $input-warning-focus-box-shadow,
 			color: $input-warning-focus-color,
 		),
+
 		focus-within: (
 			background-color: $input-warning-bg,
 			border-color: $input-warning-border-color,
@@ -1018,11 +1067,13 @@ $input-warning: map-deep-merge(
 $input-warning-readonly: () !default;
 
 $input-warning-checkbox-label-color: $form-feedback-warning-color !default;
+
 $input-warning-label-color: null !default;
 
 // .has-warning select.form-control
 
 $input-warning-select-icon-color: $input-warning-border-color !default;
+
 $input-warning-select-icon: clay-str-replace(
 	url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'%3E%3Cpath fill='#{$input-warning-select-icon-color}' d='M2 0L0 2h4zm0 5L0 3h4z'/%3E%3C/svg%3E"),
 	'#',
@@ -1063,9 +1114,11 @@ $has-warning: map-deep-merge(
 		label: (
 			color: $input-warning-label-color,
 		),
+
 		custom-control-label: (
 			color: $input-warning-checkbox-label-color,
 		),
+
 		form-control:
 			map-deep-merge(
 				(
@@ -1076,6 +1129,7 @@ $has-warning: map-deep-merge(
 		form-feedback-item: (
 			color: $form-feedback-warning-color,
 		),
+
 		select: (
 			form-control:
 				map-deep-merge(
@@ -1086,6 +1140,7 @@ $has-warning: map-deep-merge(
 					$input-warning-select
 				),
 		),
+
 		input-group-item: (
 			focus: (
 				box-shadow:
@@ -1112,14 +1167,17 @@ $has-warning: map-deep-merge(
 					),
 				),
 			),
+
 			input-group-inset: (
 				input-group-inset-item: (
 					background-color: $input-warning-bg,
 					border-color: $input-warning-border-color,
 					box-shadow: $input-warning-box-shadow,
 				),
+
 				focus: (
 					box-shadow: none,
+
 					input-group-inset-item: (
 						background-color:
 							setter($input-warning-focus-bg, $input-warning-bg),
@@ -1156,12 +1214,14 @@ $input-success: map-deep-merge(
 		border-color: $input-success-border-color,
 		box-shadow: $input-success-box-shadow,
 		color: $input-success-color,
+
 		focus: (
 			background-color: $input-success-focus-bg,
 			border-color: $input-success-focus-border-color,
 			box-shadow: $input-success-focus-box-shadow,
 			color: $input-success-focus-color,
 		),
+
 		focus-within: (
 			background-color: $input-success-bg,
 			border-color: $input-success-border-color,
@@ -1177,11 +1237,13 @@ $input-success: map-deep-merge(
 $input-success-readonly: () !default;
 
 $input-success-checkbox-label-color: $form-feedback-valid-color !default;
+
 $input-success-label-color: null !default;
 
 // .has-success select.form-control
 
 $input-success-select-icon-color: $input-success-border-color !default;
+
 $input-success-select-icon: clay-str-replace(
 	url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'%3E%3Cpath fill='#{$input-success-select-icon-color}' d='M2 0L0 2h4zm0 5L0 3h4z'/%3E%3C/svg%3E"),
 	'#',
@@ -1222,9 +1284,11 @@ $has-success: map-deep-merge(
 		label: (
 			color: $input-success-label-color,
 		),
+
 		custom-control-label: (
 			color: $input-success-checkbox-label-color,
 		),
+
 		form-control:
 			map-deep-merge(
 				(
@@ -1235,6 +1299,7 @@ $has-success: map-deep-merge(
 		form-feedback-item: (
 			color: $form-feedback-valid-color,
 		),
+
 		select: (
 			form-control:
 				map-deep-merge(
@@ -1245,6 +1310,7 @@ $has-success: map-deep-merge(
 					$input-success-select
 				),
 		),
+
 		input-group-item: (
 			focus: (
 				box-shadow:
@@ -1271,14 +1337,17 @@ $has-success: map-deep-merge(
 					),
 				),
 			),
+
 			input-group-inset: (
 				input-group-inset-item: (
 					background-color: $input-success-bg,
 					border-color: $input-success-border-color,
 					box-shadow: $input-success-box-shadow,
 				),
+
 				focus: (
 					box-shadow: none,
+
 					input-group-inset-item: (
 						background-color:
 							setter($input-success-focus-bg, $input-success-bg),
@@ -1305,10 +1374,11 @@ $input-select-bg-size: 8px 10px !default;
 $input-select-cursor: $link-cursor !default;
 $input-select-padding-bottom: null !default;
 $input-select-padding-left: null !default;
-$input-select-padding-right: 1rem + $input-btn-padding-x !default;
+$input-select-padding-right: calc(1rem + #{$input-btn-padding-x}) !default;
 $input-select-padding-top: null !default;
 
 $input-select-icon-color: $input-color !default;
+
 $input-select-icon: clay-str-replace(
 	url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'%3E%3Cpath fill='#{$input-select-icon-color}' d='M2 0L0 2h4zm0 5L0 3h4z'/%3E%3C/svg%3E"),
 	'#',
@@ -1316,9 +1386,11 @@ $input-select-icon: clay-str-replace(
 ) !default;
 
 $input-select-icon-focus-color: null !default;
+
 $input-select-icon-focus: null !default;
 
 $input-select-icon-disabled-color: null !default;
+
 $input-select-icon-disabled: null !default;
 
 $input-select: () !default;
@@ -1334,16 +1406,20 @@ $input-select: map-deep-merge(
 		padding-left: $input-select-padding-left,
 		padding-right: $input-select-padding-right,
 		padding-top: $input-select-padding-top,
+
 		focus: (
 			background-color: $input-select-focus-bg,
 			background-image: $input-select-icon-focus,
 		),
+
 		disabled: (
 			background-image: $input-select-icon-disabled,
+
 			option: (
 				cursor: $disabled-cursor,
 			),
 		),
+
 		option: (
 			cursor: $input-select-cursor,
 		),
@@ -1365,6 +1441,7 @@ $form-control-select: map-deep-merge(
 				text-align: left,
 				text-overflow: ellipsis,
 				white-space: nowrap,
+
 				hover: (
 					color: inherit,
 					text-decoration: none,
@@ -1386,6 +1463,7 @@ $form-control-select-sm: map-deep-merge(
 	(
 		height: $input-height-sm,
 		padding-right: 2em,
+
 		mobile: (
 			height: $input-height-sm-mobile,
 		),
@@ -1403,13 +1481,15 @@ $input-select-size: map-deep-merge(
 	(
 		background-image: none,
 		height: auto,
-		margin-left: 0,
+		margin-left: 0rem,
 		padding-left: 0.5rem,
 		padding-right: 0.5rem,
 		scrollbar-width: thin,
+
 		focus: (
 			background-image: none,
 		),
+
 		option: (
 			padding: 0.25rem,
 		),
@@ -1440,6 +1520,7 @@ $input-group: map-deep-merge(
 		flex-wrap: wrap,
 		position: relative,
 		width: 100%,
+
 		btn-unstyled: (
 			color: inherit,
 		),
@@ -1476,7 +1557,7 @@ $input-group-text: map-deep-merge(
 		height: $input-height,
 		justify-content: center,
 		line-height: $input-line-height,
-		margin-bottom: 0,
+		margin-bottom: 0rem,
 		min-width: $input-group-addon-min-width,
 		padding-bottom: $input-group-addon-padding-y,
 		padding-left: $input-group-addon-padding-x,
@@ -1484,21 +1565,27 @@ $input-group-text: map-deep-merge(
 		padding-top: $input-group-addon-padding-y,
 		text-align: center,
 		white-space: nowrap,
+
 		label: (
 			color: $input-group-addon-color,
 		),
+
 		custom-control: (
-			margin-bottom: 0,
+			margin-bottom: 0rem,
 		),
+
 		form-check: (
-			margin-bottom: 0,
+			margin-bottom: 0rem,
+
 			input: (
-				margin-top: 0,
+				margin-top: 0rem,
 			),
 		),
+
 		lexicon-icon: (
-			margin-top: 0,
+			margin-top: 0rem,
 		),
+
 		media-breakpoint-down: (
 			sm: (
 				height: $input-height-mobile,
@@ -1523,6 +1610,7 @@ $input-group-text-secondary: map-deep-merge(
 		border-width: $input-group-secondary-addon-border-width,
 		color: $input-group-secondary-addon-color,
 		z-index: 2,
+
 		label: (
 			color: $input-group-secondary-addon-color,
 		),
@@ -1543,47 +1631,56 @@ $input-group-item: map-deep-merge(
 		margin-left: $input-group-item-margin-left,
 		width: 1%,
 		word-wrap: break-word,
+
 		after: (
 			border-radius: inherit,
-			bottom: 0,
+			bottom: 0rem,
 			content: '',
 			display: block,
-			left: 0,
+			left: 0rem,
 			pointer-events: none,
 			position: absolute,
-			right: 0,
-			top: 0,
+			right: 0rem,
+			top: 0rem,
 			transition: clay-enable-transitions($input-transition),
 		),
+
 		focus: (
 			border-radius: clay-enable-rounded($input-border-radius),
 			after: (
 				box-shadow: $input-focus-box-shadow,
 			),
+
 			input-group-prepend: (
 				border-bottom-right-radius: clay-enable-rounded(0),
 				border-top-right-radius: clay-enable-rounded(0),
 				z-index: 1,
 			),
+
 			input-group-append: (
 				border-bottom-left-radius: clay-enable-rounded(0),
 				border-top-left-radius: clay-enable-rounded(0),
 			),
+
 			form-control: (
 				background-color: $input-focus-bg,
 				border-color: $input-focus-border-color,
 			),
+
 			input-group-inset-item: (
 				background-color: $input-focus-bg,
 				border-color: $input-focus-border-color,
 			),
 		),
+
 		first-child: (
-			margin-left: 0,
+			margin-left: 0rem,
 		),
+
 		btn: (
 			align-self: flex-start,
 		),
+
 		dropdown: (
 			display: flex,
 			flex-wrap: wrap,
@@ -1617,13 +1714,15 @@ $input-group-item-focusable: map-deep-merge(
 			box-shadow: $input-focus-box-shadow,
 			outline: 0,
 			z-index: 1,
+
 			input-group-append: (
-				border-top-left-radius: 0,
-				border-bottom-left-radius: 0,
+				border-top-left-radius: 0rem,
+				border-bottom-left-radius: 0rem,
 			),
+
 			input-group-prepend: (
-				border-top-right-radius: 0,
-				border-bottom-right-radius: 0,
+				border-top-right-radius: 0rem,
+				border-bottom-right-radius: 0rem,
 			),
 		),
 	),
@@ -1646,18 +1745,20 @@ $input-group-inset-item-btn: map-deep-merge(
 		line-height: 1,
 		margin-left: 0.25rem,
 		margin-right: 0.25rem,
-		padding-bottom: 0,
+		padding-bottom: 0rem,
 		padding-left: 0.5rem,
 		padding-right: 0.5rem,
-		padding-top: 0,
+		padding-top: 0rem,
+
 		c-inner: (
 			align-items: center,
 			display: flex,
 			height: 100%,
 			justify-content: center,
 		),
+
 		lexicon-icon: (
-			margin-top: 0,
+			margin-top: 0rem,
 		),
 	),
 	$input-group-inset-item-btn
@@ -1668,9 +1769,9 @@ $input-group-inset-item-btn-monospaced: map-deep-merge(
 	(
 		font-size: 1rem,
 		height: 2rem,
-		margin-bottom: math-sign($input-border-bottom-width),
-		margin-top: math-sign($input-border-top-width),
-		padding: 0,
+		margin-bottom: calc(#{$input-border-bottom-width} * -1),
+		margin-top: calc(#{$input-border-top-width} * -1),
+		padding: 0rem,
 		width: 2rem,
 	),
 	$input-group-inset-item-btn-monospaced
@@ -1694,6 +1795,7 @@ $input-group-lg-item-btn: () !default; // .input-group-lg .input-group-item
 $input-group-lg-item-btn: map-deep-merge(
 	(
 		breakpoint-down: null,
+
 		font-size:
 			if(
 				variable-exists(btn-lg),
@@ -1726,6 +1828,7 @@ $input-group-lg-item-btn: map-deep-merge(
 					null
 				),
 		),
+
 		btn-section: (
 			font-size:
 				if(
@@ -1734,6 +1837,7 @@ $input-group-lg-item-btn: map-deep-merge(
 					0.8125rem
 				),
 		),
+
 		mobile: (
 			font-size:
 				if(
@@ -1774,6 +1878,7 @@ $input-group-lg-item-btn-monospaced: () !default;
 $input-group-lg-item-btn-monospaced: map-deep-merge(
 	(
 		breakpoint-down: null,
+
 		height:
 			if(
 				variable-exists(btn-monospaced-lg),
@@ -1837,12 +1942,13 @@ $input-group-lg-inset-item-form-file-btn: () !default;
 $input-group-lg-inset-item-form-file-btn: map-deep-merge(
 	(
 		breakpoint-down: null,
+
 		height: 100%,
 		line-height: 1,
-		padding-bottom: 0,
+		padding-bottom: 0rem,
 		padding-left: 0.75rem,
 		padding-right: 0.75rem,
-		padding-top: 0,
+		padding-top: 0rem,
 	),
 	$input-group-lg-inset-item-form-file-btn
 );
@@ -1853,6 +1959,7 @@ $input-group-lg: map-deep-merge(
 		input-group-item: (
 			btn: $input-group-lg-item-btn,
 			btn-monospaced: $input-group-lg-item-btn-monospaced,
+
 			form-control: (
 				border-radius: clay-enable-rounded($input-border-radius-lg),
 				font-size: $input-font-size-lg,
@@ -1864,10 +1971,12 @@ $input-group-lg: map-deep-merge(
 				padding-right: $input-padding-x-lg,
 				padding-top: $input-padding-y-lg,
 			),
+
 			form-control-inset: (
-				margin-bottom: 0,
-				margin-top: 0,
+				margin-bottom: 0rem,
+				margin-top: 0rem,
 			),
+
 			form-file: (
 				btn: (
 					border-radius: clay-enable-rounded($input-border-radius-lg),
@@ -1880,9 +1989,11 @@ $input-group-lg: map-deep-merge(
 					padding-top: $input-padding-y-lg,
 				),
 			),
+
 			textarea: (
 				height: $input-textarea-height-lg,
 			),
+
 			form-control-plaintext: (
 				font-size: $input-font-size-lg,
 				height: $input-height-lg,
@@ -1890,6 +2001,7 @@ $input-group-lg: map-deep-merge(
 				padding-bottom: $input-padding-y-lg,
 				padding-top: $input-padding-y-lg,
 			),
+
 			input-group-text: (
 				border-radius: clay-enable-rounded($input-border-radius-lg),
 				font-size: $input-font-size-lg,
@@ -1900,26 +2012,33 @@ $input-group-lg: map-deep-merge(
 				padding-right: $input-group-addon-padding-x-lg,
 				padding-top: $input-group-addon-padding-y-lg,
 			),
+
 			input-group-inset-item: (
 				btn: $input-group-lg-inset-item-btn,
+
 				btn-monospaced: $input-group-lg-inset-item-btn-monospaced,
+
 				form-file: (
 					height: 75%,
+
 					btn: $input-group-lg-inset-item-form-file-btn,
 				),
 			),
 		),
+
 		media-breakpoint-down: (
 			sm: (
 				input-group-item: (
 					form-control: (
 						height: $input-height-lg-mobile,
 					),
+
 					form-file: (
 						btn: (
 							height: $input-height-lg-mobile,
 						),
 					),
+
 					form-control-plaintext: (
 						height: $input-height-lg-mobile,
 					),
@@ -1971,6 +2090,7 @@ $input-group-sm-item-btn: map-deep-merge(
 					null
 				),
 		),
+
 		btn-section: (
 			font-size:
 				if(
@@ -1979,6 +2099,7 @@ $input-group-sm-item-btn: map-deep-merge(
 					0.5625rem
 				),
 		),
+
 		mobile: (
 			font-size:
 				if(
@@ -2077,10 +2198,10 @@ $input-group-sm-inset-item-btn: () !default;
 $input-group-sm-inset-item-btn: map-deep-merge(
 	(
 		line-height: 1,
-		padding-bottom: 0,
+		padding-bottom: 0rem,
 		padding-left: 0.5rem,
 		padding-right: 0.5rem,
-		padding-top: 0,
+		padding-top: 0rem,
 	),
 	$input-group-sm-inset-item-btn
 );
@@ -2101,10 +2222,10 @@ $input-group-sm-inset-item-form-file-btn: map-deep-merge(
 	(
 		height: 100%,
 		line-height: 1,
-		padding-bottom: 0,
+		padding-bottom: 0rem,
 		padding-left: 0.5rem,
 		padding-right: 0.5rem,
-		padding-top: 0,
+		padding-top: 0rem,
 	),
 	$input-group-sm-inset-item-form-file-btn
 );
@@ -2114,7 +2235,9 @@ $input-group-sm: map-deep-merge(
 	(
 		input-group-item: (
 			btn: $input-group-sm-item-btn,
+
 			btn-monospaced: $input-group-sm-item-btn-monospaced,
+
 			form-file: (
 				btn: (
 					border-radius: clay-enable-rounded($input-border-radius-sm),
@@ -2127,6 +2250,7 @@ $input-group-sm: map-deep-merge(
 					padding-top: $input-padding-y-sm,
 				),
 			),
+
 			form-control-plaintext: (
 				font-size: $input-font-size-sm,
 				height: $input-height-sm,
@@ -2134,9 +2258,11 @@ $input-group-sm: map-deep-merge(
 				padding-bottom: $input-padding-y-sm,
 				padding-top: $input-padding-y-sm,
 			),
+
 			textarea: (
 				height: $input-textarea-height-sm,
 			),
+
 			input-group-text: (
 				border-radius: clay-enable-rounded($input-border-radius-sm),
 				font-size: $input-font-size-sm,
@@ -2147,26 +2273,32 @@ $input-group-sm: map-deep-merge(
 				padding-right: $input-group-addon-padding-x-sm,
 				padding-top: $input-group-addon-padding-y-sm,
 			),
+
 			input-group-inset-item: (
 				btn: $input-group-sm-inset-item-btn,
+
 				btn-monospaced: $input-group-sm-inset-item-btn-monospaced,
+
 				form-file: (
 					height: 75%,
 					btn: $input-group-sm-inset-item-form-file-btn,
 				),
 			),
 		),
+
 		media-breakpoint-down: (
 			sm: (
 				input-group-item: (
 					form-control: (
 						height: $input-height-sm-mobile,
 					),
+
 					form-file: (
 						btn: (
 							height: $input-height-sm-mobile,
 						),
 					),
+
 					form-control-plaintext: (
 						height: $input-height-sm-mobile,
 					),
@@ -2185,13 +2317,16 @@ $input-group-inset: map-deep-merge(
 		flex-grow: 1,
 		order: 5,
 		width: 1%,
+
 		focus: (
 			box-shadow: none,
+
 			input-group-inset-item: (
 				background-color: $input-focus-bg,
 				border-color: $input-focus-border-color,
 			),
 		),
+
 		disabled: (
 			input-group-inset-item: (
 				background-color: $input-disabled-bg,
@@ -2213,6 +2348,7 @@ $input-group-inset-readonly: map-deep-merge(
 			color: $input-readonly-color,
 			cursor: $input-readonly-cursor,
 		),
+
 		focus: (
 			input-group-inset-item: (
 				background-color: $input-readonly-focus-bg,
@@ -2230,10 +2366,12 @@ $input-group-stacked-sm-down: () !default;
 $input-group-stacked-sm-down: map-deep-merge(
 	(
 		breakpoint: sm,
+
 		input-group-item: (
 			margin-bottom: 0.5rem,
-			margin-left: 0,
+			margin-left: 0rem,
 		),
+
 		input-group-item-shrink: (
 			margin-right: 0.5rem,
 		),

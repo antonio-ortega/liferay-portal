@@ -5,21 +5,27 @@
 
 package com.liferay.marketplace.model;
 
+import com.liferay.headless.admin.address.client.dto.v1_0.Country;
+import com.liferay.headless.admin.address.client.dto.v1_0.Region;
 import com.liferay.headless.admin.user.client.dto.v1_0.UserAccount;
-import com.liferay.headless.commerce.admin.catalog.client.dto.v1_0.Product;
+import com.liferay.headless.commerce.admin.catalog.client.custom.field.CustomField;
+import com.liferay.headless.commerce.admin.catalog.client.custom.field.CustomValue;
+import com.liferay.headless.commerce.admin.catalog.client.dto.v1_0.Sku;
 import com.liferay.headless.commerce.admin.order.client.dto.v1_0.Account;
 import com.liferay.headless.commerce.admin.order.client.dto.v1_0.BillingAddress;
 import com.liferay.headless.commerce.admin.order.client.dto.v1_0.Order;
 import com.liferay.headless.commerce.admin.order.client.dto.v1_0.OrderItem;
-import com.liferay.headless.commerce.admin.order.client.dto.v1_0.ShippingAddress;
 import com.liferay.marketplace.util.MarketplaceUtil;
+import com.liferay.portal.kernel.util.Validator;
 
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 
 import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 /**
@@ -28,36 +34,30 @@ import org.json.JSONObject;
 public class SalesforceOpportunity {
 
 	public SalesforceOpportunity(
-		String licenseType, Order order, OrderItem orderItem, Product product,
+		Country country, String licenseType, Order order, Sku sku,
 		UserAccount userAccount) {
 
+		_country = country;
 		_licenseType = licenseType;
 		_order = order;
-		_orderItem = orderItem;
-		_product = product;
+		_sku = sku;
 		_userAccount = userAccount;
 	}
 
 	public String toString() {
 		Account account = _order.getAccount();
 
-		Map<String, String> customFields =
-			(Map<String, String>)_order.getCustomFields();
-
-		JSONObject orderMetadataJSONObject = new JSONObject(
-			customFields.getOrDefault("order-metadata", "{}"));
-
-		ShippingAddress shippingAddress = _order.getShippingAddress();
-
 		JSONObject jsonObject = new JSONObject(
 		).put(
-			"accountId", account.getId()
+			"accountId", _getAccountId()
 		).put(
 			"accountName", account.getName()
 		).put(
 			"billingAddress", _getBillingAddressJSONObject()
 		).put(
 			"closeDate", _format(_order.getCreateDate())
+		).put(
+			"lineItems", _getLineItemsJSONArray()
 		).put(
 			"marketplaceDealId", _order.getId()
 		).put(
@@ -67,18 +67,11 @@ public class SalesforceOpportunity {
 		).put(
 			"primaryContact", _getPrimaryContactJSONObject()
 		).put(
-			"product", _getProductJSONObject()
-		).put(
-			"projectId",
-			orderMetadataJSONObject.optString("salesforceProjectId")
-		).put(
-			"shippingAddress", _getShippingAddressJSONObject()
-		).put(
-			"soldBySalesTerritory", shippingAddress.getCountryISOCode()
+			"project", _getProjectJSONObject()
 		).put(
 			"termType", "Single Year"
 		).put(
-			"typeOfBusiness", "New Business"
+			"typeOfBusiness", "Existing Business"
 		);
 
 		if (Objects.equals(_order.getPaymentMethod(), "money-order")) {
@@ -93,7 +86,29 @@ public class SalesforceOpportunity {
 			return null;
 		}
 
-		return DateTimeFormatter.ISO_INSTANT.format(date.toInstant());
+		return date.toInstant(
+		).atZone(
+			ZoneOffset.UTC
+		).toLocalDate(
+		).format(
+			DateTimeFormatter.ISO_LOCAL_DATE
+		);
+	}
+
+	private String _getAccountId() {
+		Account account = _order.getAccount();
+
+		Map<String, String> customFields =
+			(Map<String, String>)account.getCustomFields();
+
+		String salesforceAccountKey = customFields.get(
+			"salesforce-account-key");
+
+		if (Validator.isNotNull(salesforceAccountKey)) {
+			return salesforceAccountKey;
+		}
+
+		return account.getExternalReferenceCode();
 	}
 
 	private JSONObject _getBillingAddressJSONObject() {
@@ -101,13 +116,16 @@ public class SalesforceOpportunity {
 
 		return new JSONObject(
 		).put(
+			"addressName", billingAddress.getName()
+		).put(
 			"city", billingAddress.getCity()
 		).put(
-			"country", billingAddress.getCountryISOCode()
+			"country",
+			MarketplaceUtil.getDefaultLocale(_country.getTitle_i18n())
 		).put(
 			"postalCode", billingAddress.getZip()
 		).put(
-			"state", billingAddress.getRegionISOCode()
+			"state", _getState()
 		).put(
 			"street",
 			billingAddress.getStreet1() + " " + billingAddress.getStreet2()
@@ -131,65 +149,135 @@ public class SalesforceOpportunity {
 		);
 	}
 
+	private JSONArray _getLineItemsJSONArray() {
+		String productId = null;
+
+		for (CustomField customField : _sku.getCustomFields()) {
+			if (Objects.equals(
+					customField.getName(), "salesforce-product-id")) {
+
+				CustomValue customValue = customField.getCustomValue();
+
+				Object data = customValue.getData();
+
+				if (data != null) {
+					productId = data.toString();
+				}
+
+				break;
+			}
+		}
+
+		JSONArray jsonArray = new JSONArray();
+
+		for (OrderItem orderItem : _order.getOrderItems()) {
+			jsonArray.put(
+				new JSONObject(
+				).put(
+					"endDate",
+					_format(
+						MarketplaceUtil.getOrderPurchaseEndDate(
+							_licenseType,
+							MarketplaceUtil.getSkuOptionValue(
+								"license-usage-type", orderItem.getOptions())))
+				).put(
+					"orderType", "New"
+				).put(
+					"productId", productId
+				).put(
+					"quantity", orderItem.getQuantity()
+				).put(
+					"startDate", _format(_order.getCreateDate())
+				).put(
+					"unitPrice", orderItem.getUnitPrice()
+				));
+		}
+
+		return jsonArray;
+	}
+
 	private JSONObject _getPrimaryContactJSONObject() {
+		JSONObject orderMetadataJSONObject = MarketplaceUtil.getOrderMetadata(
+			_order);
+
+		JSONObject provisioningFormJSONObject =
+			orderMetadataJSONObject.getJSONObject("provisioningForm");
+
+		return _getPrimaryContactJSONObject(provisioningFormJSONObject);
+	}
+
+	private JSONObject _getPrimaryContactJSONObject(JSONObject jsonObject) {
 		return new JSONObject(
 		).put(
-			"email", _order.getCreatorEmailAddress()
+			"email",
+			jsonObject.optString(
+				"ownerEmailAddress", _order.getCreatorEmailAddress())
 		).put(
 			"firstName", _userAccount.getGivenName()
 		).put(
 			"lastName", _userAccount.getFamilyName()
 		).put(
-			"role", "Marketplace User"
+			"role", "Opportunity Owner"
 		);
 	}
 
-	private JSONObject _getProductJSONObject() {
-		return new JSONObject(
-		).put(
-			"listPrice", _order.getTotal()
-		).put(
-			"orderType", "New"
-		).put(
-			"productEndDate",
-			_format(
-				MarketplaceUtil.getOrderPurchaseEndDate(
-					_licenseType,
-					MarketplaceUtil.getSkuOptionValue(
-						"license-usage-type", _orderItem.getOptions())))
-		).put(
-			"productId", _product.getId()
-		).put(
-			"productName", MarketplaceUtil.getDefaultLocale(_product.getName())
-		).put(
-			"productStartDate", _format(_order.getCreateDate())
-		).put(
-			"quantity", _orderItem.getQuantity()
-		);
-	}
+	private JSONObject _getProjectJSONObject() {
+		JSONObject orderMetadataJSONObject = MarketplaceUtil.getOrderMetadata(
+			_order);
 
-	private JSONObject _getShippingAddressJSONObject() {
-		ShippingAddress shippingAddress = _order.getShippingAddress();
+		JSONObject provisioningFormJSONObject =
+			orderMetadataJSONObject.getJSONObject("provisioningForm");
 
 		return new JSONObject(
 		).put(
-			"city", shippingAddress.getCity()
+			"allowedEmailDomains",
+			provisioningFormJSONObject.optString("allowedEmailDomains")
 		).put(
-			"country", shippingAddress.getCountryISOCode()
+			"dataCenterLocation",
+			provisioningFormJSONObject.optString("dataCenterLocation")
 		).put(
-			"postalCode", shippingAddress.getZip()
+			"friendlyWorkspaceURL",
+			provisioningFormJSONObject.optString("friendlyWorkspaceURL")
 		).put(
-			"state", shippingAddress.getRegionISOCode()
+			"projectContacts",
+			new JSONArray(
+			).put(
+				_getPrimaryContactJSONObject(
+					provisioningFormJSONObject
+				).put(
+					"role", "LDP Administrator"
+				)
+			)
 		).put(
-			"street",
-			shippingAddress.getStreet1() + " " + shippingAddress.getStreet2()
+			"projectId",
+			orderMetadataJSONObject.getString("salesforceProjectId")
+		).put(
+			"securityContactEmailAddress", _order.getCreatorEmailAddress()
+		).put(
+			"workspaceName",
+			provisioningFormJSONObject.optString("workspaceName")
 		);
 	}
 
+	private String _getState() {
+		BillingAddress billingAddress = _order.getBillingAddress();
+
+		for (Region region : _country.getRegions()) {
+			if (Objects.equals(
+					billingAddress.getRegionISOCode(),
+					region.getRegionCode())) {
+
+				return MarketplaceUtil.getDefaultLocale(region.getTitle_i18n());
+			}
+		}
+
+		return null;
+	}
+
+	private final Country _country;
 	private final String _licenseType;
 	private final Order _order;
-	private final OrderItem _orderItem;
-	private final Product _product;
+	private final Sku _sku;
 	private final UserAccount _userAccount;
 
 }

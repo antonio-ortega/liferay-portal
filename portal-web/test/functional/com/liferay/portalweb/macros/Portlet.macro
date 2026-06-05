@@ -816,9 +816,9 @@ definition {
 
 	@summary = "Default summary"
 	macro viewNoPortletsPresentCP(portlet = null, panel = null, category = null) {
-		ApplicationsMenuHelper.openApplicationsMenu();
+		ApplicationsMenu.openApplicationsMenu();
 
-		Navigator.gotoNavTab(navTab = ${panel});
+		ApplicationsMenu.gotoPanel(panel = ${panel});
 
 		AssertElementNotPresent(
 			key_category = ${category},

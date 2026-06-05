@@ -31,6 +31,7 @@ type BaseOutletProps = {
 	actionButtons?: ReactNode | ((data: ProductAndOrderPayload) => ReactNode);
 	backTitle: string;
 	backURL?: string;
+	description?: ReactNode | ((data: ProductAndOrderPayload) => ReactNode);
 	routes:
 		| NavbarProps['routes']
 		| ((data: ProductAndOrderPayload) => NavbarProps['routes']);
@@ -41,6 +42,7 @@ const BaseOutlet: React.FC<BaseOutletProps> = ({
 	actionButtons,
 	backTitle,
 	backURL = '..',
+	description,
 	routes,
 	showActions = true,
 }) => {
@@ -48,6 +50,8 @@ const BaseOutlet: React.FC<BaseOutletProps> = ({
 	const outletContext = useOutletContext();
 	const {data, error, isLoading} = useGetProductByOrderId(orderId as string);
 
+	const beta =
+		data?.marketplaceDeliveryProduct?.specificationValues?.APP_BETA;
 	const placedOrderItems = data?.placedOrder.placedOrderItems ?? [];
 	const productCreatorAccountName = data?.product?.catalogName || '';
 
@@ -60,22 +64,35 @@ const BaseOutlet: React.FC<BaseOutletProps> = ({
 			<BackLink path={backURL}>{backTitle}</BackLink>
 
 			<div className="d-flex justify-content-between">
-				<OrderDetailsHeader
-					className="d-flex flex-row justify-content-between pb-3 pt-5"
-					hasOrderDetails
-					image={placedOrderItems[0]?.thumbnail}
-					name={placedOrderItems[0]?.name}
-					order={data?.placedOrder as unknown as Cart}
-					productOwner={productCreatorAccountName}
-				/>
+				<div className="d-flex flex-column w-100">
+					<div className="d-flex justify-content-between">
+						<OrderDetailsHeader
+							beta={beta}
+							className="d-flex flex-row justify-content-between pb-3 pt-5"
+							hasOrderDetails
+							image={placedOrderItems[0]?.thumbnail}
+							name={placedOrderItems[0]?.name}
+							order={data?.placedOrder}
+							productOwner={productCreatorAccountName}
+						/>
 
-				{actionButtons && (
-					<div id="solution-action-buttons">
-						{typeof actionButtons === 'function'
-							? actionButtons(data as ProductAndOrderPayload)
-							: actionButtons}
+						{actionButtons && (
+							<div id="solution-action-buttons">
+								{typeof actionButtons === 'function'
+									? actionButtons(
+											data as ProductAndOrderPayload
+										)
+									: actionButtons}
+							</div>
+						)}
 					</div>
-				)}
+
+					<p className="app-details-description">
+						{typeof description === 'function'
+							? description(data as ProductAndOrderPayload)
+							: description}
+					</p>
+				</div>
 
 				{showActions && (
 					<DropDown
@@ -170,9 +187,10 @@ const AppOutlet = () => (
 					name: i18n.translate('licenses'),
 					path: 'licenses',
 					visible:
-						isPaidApp &&
 						orderCompleted &&
+						isPaidApp &&
 						[
+							OrderTypes.COMPOSITE_APP,
 							OrderTypes.CLIENT_EXTENSION,
 							OrderTypes.DXP_APP,
 						].includes(

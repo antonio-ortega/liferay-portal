@@ -13,14 +13,15 @@ type Props = {
 	backURL?: string;
 	children?: React.ReactNode;
 	className?: string;
+	onBackClick?: () => void;
 	title: string;
 };
 
-function Toolbar({backURL, children, className, title}: Props) {
+function Toolbar({backURL, children, className, onBackClick, title}: Props) {
 	return (
 		<ClayToolbar
 			className={classNames(
-				'bg-white cms-control-menu px-4 sticky-top top-bar',
+				'bg-white cms-control-menu px-md-4 sticky-top top-bar',
 				className
 			)}
 		>
@@ -30,7 +31,11 @@ function Toolbar({backURL, children, className, title}: Props) {
 						<ClayToolbar.Item>
 							<ClayToolbar.Action
 								aria-label={Liferay.Language.get('back')}
+								data-canonical-name={Liferay.Language.get(
+									'back'
+								)}
 								href={backURL}
+								onClick={onBackClick}
 								symbol="angle-left"
 								title={Liferay.Language.get('back')}
 							/>

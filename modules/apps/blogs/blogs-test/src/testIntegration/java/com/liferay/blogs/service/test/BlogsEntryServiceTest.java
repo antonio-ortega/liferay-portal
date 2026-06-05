@@ -11,9 +11,9 @@ import com.liferay.blogs.model.BlogsEntry;
 import com.liferay.blogs.service.BlogsEntryLocalService;
 import com.liferay.blogs.service.BlogsEntryService;
 import com.liferay.document.library.kernel.model.DLFileEntry;
+import com.liferay.petra.io.unsync.UnsyncByteArrayInputStream;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayInputStream;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.Role;
@@ -1201,12 +1201,6 @@ public class BlogsEntryServiceTest {
 	private static final String _CLASS_NAME_BLOGS_ENTRY =
 		"com.liferay.blogs.model.BlogsEntry";
 
-	@DeleteAfterTestRun
-	private static Group _group;
-
-	private static User _groupUser;
-	private static PermissionChecker _permissionChecker;
-
 	@Inject
 	private BlogsEntryLocalService _blogsEntryLocalService;
 
@@ -1215,6 +1209,12 @@ public class BlogsEntryServiceTest {
 
 	@Inject
 	private CompanyLocalService _companyLocalService;
+
+	@DeleteAfterTestRun
+	private Group _group;
+
+	private User _groupUser;
+	private PermissionChecker _permissionChecker;
 
 	@Inject
 	private ResourcePermissionLocalService _resourcePermissionLocalService;

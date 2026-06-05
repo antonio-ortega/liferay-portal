@@ -227,3 +227,4 @@ public class StrategySerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-584498469

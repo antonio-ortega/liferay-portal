@@ -407,3 +407,4 @@ public class HighlightConfigurationSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1574818539

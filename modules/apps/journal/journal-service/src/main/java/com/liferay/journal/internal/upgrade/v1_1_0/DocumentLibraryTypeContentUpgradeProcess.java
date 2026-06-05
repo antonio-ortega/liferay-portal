@@ -68,10 +68,13 @@ public class DocumentLibraryTypeContentUpgradeProcess extends UpgradeProcess {
 
 	private void _updateContent() throws Exception {
 		try (LoggingTimer loggingTimer = new LoggingTimer();
+
 			PreparedStatement preparedStatement1 = connection.prepareStatement(
 				"select content, id_ from JournalArticle where content like " +
 					"'%type=\"document_library\"%'");
+
 			ResultSet resultSet = preparedStatement1.executeQuery();
+
 			PreparedStatement preparedStatement2 =
 				AutoBatchPreparedStatementUtil.concurrentAutoBatch(
 					connection,
@@ -79,8 +82,8 @@ public class DocumentLibraryTypeContentUpgradeProcess extends UpgradeProcess {
 
 			while (resultSet.next()) {
 				preparedStatement2.setString(
-					1, _convertContent(resultSet.getString(1)));
-				preparedStatement2.setLong(2, resultSet.getLong(2));
+					1, _convertContent(resultSet.getString("content")));
+				preparedStatement2.setLong(2, resultSet.getLong("id_"));
 
 				preparedStatement2.addBatch();
 			}

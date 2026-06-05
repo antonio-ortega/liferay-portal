@@ -115,21 +115,20 @@ public class ScriptManagementConfigurationUpgradeProcessTest {
 				TestPropsValues.getUserId());
 
 			_workflowDefinitionManager.deployWorkflowDefinition(
-				null, TestPropsValues.getCompanyId(),
-				TestPropsValues.getUserId(), "PublishedWorkflowDefinition",
-				StringUtil.randomId(),
-				_getContentBytes("workflow-definition-1.json"));
+				_getContentBytes("workflow-definition-1.json"),
+				TestPropsValues.getCompanyId(), null, StringUtil.randomId(),
+				"PublishedWorkflowDefinition", TestPropsValues.getUserId());
 
 			_workflowDefinitionManager.saveWorkflowDefinition(
-				null, TestPropsValues.getCompanyId(),
-				TestPropsValues.getUserId(),
-				"UnpublishedGroovyWorkflowDefinition", StringUtil.randomId(),
-				_getContentBytes("workflow-definition-2.json"));
+				_getContentBytes("workflow-definition-2.json"),
+				TestPropsValues.getCompanyId(), null, StringUtil.randomId(),
+				"UnpublishedGroovyWorkflowDefinition",
+				TestPropsValues.getUserId());
 			_workflowDefinitionManager.saveWorkflowDefinition(
-				null, TestPropsValues.getCompanyId(),
-				TestPropsValues.getUserId(),
-				"UnpublishedJavaWorkflowDefinition", StringUtil.randomId(),
-				_getContentBytes("workflow-definition-3.json"));
+				_getContentBytes("workflow-definition-3.json"),
+				TestPropsValues.getCompanyId(), null, StringUtil.randomId(),
+				"UnpublishedJavaWorkflowDefinition",
+				TestPropsValues.getUserId());
 		}
 
 		Assert.assertFalse(
@@ -181,10 +180,9 @@ public class ScriptManagementConfigurationUpgradeProcessTest {
 
 		_testUpgrade(
 			() -> _workflowDefinitionManager.deployWorkflowDefinition(
-				null, TestPropsValues.getCompanyId(),
-				TestPropsValues.getUserId(), StringUtil.randomId(),
-				StringUtil.randomId(),
-				_getContentBytes("workflow-definition-2.json")));
+				_getContentBytes("workflow-definition-2.json"),
+				TestPropsValues.getCompanyId(), null, StringUtil.randomId(),
+				StringUtil.randomId(), TestPropsValues.getUserId()));
 	}
 
 	@Test
@@ -193,10 +191,9 @@ public class ScriptManagementConfigurationUpgradeProcessTest {
 
 		_testUpgrade(
 			() -> _workflowDefinitionManager.deployWorkflowDefinition(
-				null, TestPropsValues.getCompanyId(),
-				TestPropsValues.getUserId(), StringUtil.randomId(),
-				StringUtil.randomId(),
-				_getContentBytes("workflow-definition-3.json")));
+				_getContentBytes("workflow-definition-3.json"),
+				TestPropsValues.getCompanyId(), null, StringUtil.randomId(),
+				StringUtil.randomId(), TestPropsValues.getUserId()));
 	}
 
 	private ObjectAction _addObjectAction(
@@ -257,8 +254,8 @@ public class ScriptManagementConfigurationUpgradeProcessTest {
 
 		ObjectDefinition objectDefinition =
 			_objectDefinitionLocalService.addCustomObjectDefinition(
-				null, userId, 0, null, false, true, false, true, false, false,
-				false, false, null,
+				null, userId, 0, null, true, false, true, false, true, false,
+				false, false, false, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				ObjectDefinitionTestUtil.getRandomName(), null, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),

@@ -1,6 +1,7 @@
 {
 	"active": true,
 	"externalReferenceCode": "C_SUPPORT_TICKET_ESCALATION",
+	"friendlyURLSeparator": "cpste",
 	"label": {
 		"en_US": "Support Ticket Escalation"
 	},
@@ -50,17 +51,18 @@
 		},
 		{
 			"DBType": "String",
-			"externalReferenceCode": "C_SUPPORT_TICKET_ESCALATION_ticketsIDs",
+			"externalReferenceCode": "C_SUPPORT_TICKET_ESCALATION_ticketIds",
 			"indexed": true,
 			"indexedAsKeyword": false,
 			"label": {
-				"en_US": "Tickets ID's"
+				"en_US": "Ticket IDs"
 			},
-			"name": "ticketsIDs",
+			"name": "ticketIds",
 			"required": true,
 			"type": "String"
 		}
 	],
+	"panelAppOrder": 310,
 	"panelCategoryKey": "applications_menu.applications.content",
 	"pluralLabel": {
 		"en_US": "Support Ticket Escalations"

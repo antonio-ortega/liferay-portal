@@ -3,9 +3,15 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import {
+	isHexFormat,
+	parseColor,
+	toHexColorString,
+	toHexValue,
+} from '@clayui/color-picker';
+
+import {Field, Token} from '../../types/ColorPicker';
 import convertRGBtoHex from '../../utils/convertRGBtoHex';
-import getValidHexColor from '../../utils/getValidHexColor';
-import {Field, Token} from './ColorPicker';
 
 const ERROR_MESSAGES = {
 	mutuallyReferenced: Liferay.Language.get(
@@ -13,6 +19,10 @@ const ERROR_MESSAGES = {
 	),
 	selfReferenced: Liferay.Language.get('tokens-cannot-reference-itself'),
 };
+
+const HEX_LENGTH_6 = 6;
+
+const HEX_LENGTH_8 = 8;
 
 interface ColorValue {
 	color?: string;
@@ -40,6 +50,8 @@ export function parseColorValue({
 	let tokenLabel: string | undefined = undefined;
 	let pickerColor: string = '';
 
+	const color = parseColor(value);
+
 	if (token) {
 		if (token.name === field.name) {
 			return {error: ERROR_MESSAGES.selfReferenced};
@@ -51,40 +63,60 @@ export function parseColorValue({
 
 		tokenLabel = token.label;
 	}
-	else if (value.startsWith('#')) {
-		validValue = getValidHexColor(value);
-
-		if (!validValue) {
-			return {};
+	else if (color.isValid()) {
+		if (isHexFormat(color)) {
+			validValue = toHexValue(color);
 		}
+		else if (color.toString() !== value) {
+			validValue = color.toString();
+		}
+		else {
+			const element = document.createElement('div');
 
-		pickerColor = validValue.replace('#', '');
+			element.style.background = value;
+			element.style.display = 'none';
+
+			document.body.appendChild(element);
+
+			validValue = element.style.background;
+
+			if (!validValue) {
+				return {};
+			}
+
+			pickerColor = convertRGBtoHex(
+				window.getComputedStyle(element).backgroundColor
+			).replace(/^#/, '');
+
+			element.remove();
+		}
 	}
 	else {
-		const element = document.createElement('div');
 
-		element.style.background = value;
-		element.style.display = 'none';
+		// Hexadecimals with 7 characters or more than 8 are invalid. Here the
+		// value is truncated to 6 or 8 characters, and it is checked to ensure
+		// the resulting value is still a valid hexadecimal.
 
-		document.body.appendChild(element);
+		if (value.length === 7) {
+			value = value.substring(0, HEX_LENGTH_6);
+		}
+		else if (value.length > 8) {
+			value = value.substring(0, HEX_LENGTH_8);
+		}
 
-		validValue = element.style.background;
+		const color = parseColor(value);
 
-		if (!validValue) {
+		if (!isHexFormat(color)) {
 			return {};
 		}
 
-		pickerColor = convertRGBtoHex(
-			window.getComputedStyle(element).backgroundColor
-		).replace(/^#/, '');
-
-		element.parentElement!.removeChild(element);
+		validValue = toHexValue(color);
 	}
 
 	return {
 		color: token?.value,
 		label: tokenLabel,
 		pickerColor,
-		value: validValue,
+		value: toHexColorString({isHex: isHexFormat(color), value: validValue}),
 	};
 }

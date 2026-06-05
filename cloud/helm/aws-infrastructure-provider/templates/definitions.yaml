@@ -22,136 +22,151 @@ spec:
                     properties:
                         spec:
                             properties:
+                                backup:
+                                    properties:
+                                        enabled:
+                                            default: false
+                                            type: boolean
+                                        region:
+                                            type: string
+                                        rules:
+                                            items:
+                                                properties:
+                                                    retentionDays:
+                                                        type: integer
+                                                    ruleName:
+                                                        type: string
+                                                    schedule:
+                                                        type: string
+                                                    startWindow:
+                                                        type: integer
+                                                required:
+                                                    -   retentionDays
+                                                    -   ruleName
+                                                    -   schedule
+                                                    -   startWindow
+                                                type: object
+                                            minItems: 1
+                                            type: array
+                                    required:
+                                        -   rules
+                                    type: object
+                                cmk:
+                                    default:
+                                        enabled: false
+                                    properties:
+                                        enabled:
+                                            default: false
+                                            type: boolean
+                                    type: object
                                 commonTags:
-                                    additionalProperties: true
+                                    additionalProperties:
+                                        type: string
                                     default: {}
                                     type: object
                                 database:
                                     properties:
-                                        activeSlot:
-                                            default: blue
-                                            enum:
-                                                -   blue
-                                                -   green
+                                        autoMinorVersionUpgrade:
+                                            type: boolean
+                                        databaseInsightsMode:
                                             type: string
-                                        blue:
-                                            properties:
-                                                engineVersion:
-                                                    default: "16.11"
-                                                    type: string
-                                                instanceClass:
-                                                    default: db.t3.medium
-                                                    type: string
-                                                region:
-                                                    default: us-west-2
-                                                    type: string
-                                                storageGB:
-                                                    default: 20
-                                                    type: integer
-                                                username:
-                                                    default: liferay_database_admin
-                                                    type: string
-                                            required:
-                                                -   region
-                                            type: object
-                                        green:
-                                            properties:
-                                                engineVersion:
-                                                    default: "16.11"
-                                                    type: string
-                                                instanceClass:
-                                                    default: db.t3.medium
-                                                    type: string
-                                                region:
-                                                    default: us-west-2
-                                                    type: string
-                                                storageGB:
-                                                    default: 20
-                                                    type: integer
-                                                username:
-                                                    default: liferay_database_admin
-                                                    type: string
-                                            required:
-                                                -   region
-                                            type: object
-                                    required:
-                                        -   activeSlot
+                                        deletionProtection:
+                                            type: boolean
+                                        engine:
+                                            type: string
+                                        engineVersion:
+                                            type: string
+                                        instanceClass:
+                                            type: string
+                                        iops:
+                                            type: integer
+                                        multiAz:
+                                            type: boolean
+                                        region:
+                                            type: string
+                                        snapshotIdentifier:
+                                            nullable: true
+                                            type: string
+                                        storageGB:
+                                            type: integer
+                                        storageThroughput:
+                                            type: integer
+                                        username:
+                                            type: string
                                     type: object
-                                deletionProtection:
-                                    default: false
-                                    type: boolean
                                 environmentId:
                                     type: string
+                                forceDestroy:
+                                    default: false
+                                    type: boolean
+                                orphanOnDelete:
+                                    type: boolean
                                 overlay:
                                     properties:
                                         region:
-                                            default: us-west-2
                                             type: string
-                                    required:
-                                        -   region
                                     type: object
                                 projectId:
                                     type: string
+                                region:
+                                    type: string
+                                restorePhase:
+                                    enum:
+                                        -   none
+                                        -   promoting
+                                        -   provisioning
+                                    type: string
                                 search:
                                     properties:
-                                        engineVersion:
-                                            default: OpenSearch_2.15
-                                            type: string
-                                        instanceCount:
-                                            default: 2
-                                            type: integer
-                                        instanceType:
-                                            default: t3.small.search
-                                            type: string
-                                        region:
-                                            default: us-west-2
-                                            type: string
-                                        username:
-                                            default: liferay_search_admin
-                                            type: string
-                                    required:
-                                        -   region
+                                        elasticsearch:
+                                            properties:
+                                                enabled:
+                                                    type: boolean
+                                            type: object
+                                        opensearch:
+                                            properties:
+                                                autoSoftwareUpdateEnabled:
+                                                    type: boolean
+                                                enabled:
+                                                    type: boolean
+                                                engineVersion:
+                                                    type: string
+                                                instanceCount:
+                                                    type: integer
+                                                instanceType:
+                                                    type: string
+                                                region:
+                                                    type: string
+                                                username:
+                                                    type: string
+                                                volumeSizeGB:
+                                                    type: integer
+                                            type: object
                                     type: object
                                 storage:
                                     properties:
-                                        activeSlot:
-                                            default: blue
-                                            enum:
-                                                -   blue
-                                                -   green
+                                        region:
                                             type: string
-                                        blue:
-                                            properties:
-                                                enableVersioning:
-                                                    default: true
-                                                    type: boolean
-                                                region:
-                                                    default: us-west-2
-                                                    type: string
-                                            required:
-                                                -   region
-                                            type: object
-                                        green:
-                                            properties:
-                                                enableVersioning:
-                                                    default: true
-                                                    type: boolean
-                                                region:
-                                                    default: us-west-2
-                                                    type: string
-                                            required:
-                                                -   region
-                                            type: object
-                                    required:
-                                        -   activeSlot
                                     type: object
+                                targetActiveDataPlane:
+                                    enum:
+                                        -   blue
+                                        -   green
+                                    type: string
                             required:
                                 -   database
-                                -   deletionProtection
                                 -   environmentId
+                                -   orphanOnDelete
                                 -   projectId
+                                -   region
                                 -   search
                                 -   storage
+                            type: object
+                        status:
+                            properties:
+                                managedServiceDetailsReady:
+                                    default: false
+                                    type: boolean
                             type: object
                     type: object
             served: true

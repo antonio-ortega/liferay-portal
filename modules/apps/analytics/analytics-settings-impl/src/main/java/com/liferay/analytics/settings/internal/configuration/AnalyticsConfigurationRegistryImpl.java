@@ -8,15 +8,17 @@ package com.liferay.analytics.settings.internal.configuration;
 import com.liferay.analytics.batch.exportimport.AnalyticsDXPEntityBatchExporter;
 import com.liferay.analytics.batch.exportimport.constants.AnalyticsDXPEntityBatchExporterConstants;
 import com.liferay.analytics.machine.learning.constants.AnalyticsMachineLearningConstants;
+import com.liferay.analytics.message.storage.service.AnalyticsAssociationLocalService;
+import com.liferay.analytics.message.storage.service.AnalyticsDeleteMessageLocalService;
 import com.liferay.analytics.settings.configuration.AnalyticsConfiguration;
 import com.liferay.analytics.settings.configuration.AnalyticsConfigurationRegistry;
 import com.liferay.analytics.settings.rest.manager.AnalyticsSettingsManager;
 import com.liferay.analytics.settings.security.constants.AnalyticsSecurityConstants;
 import com.liferay.petra.executor.PortalExecutorManager;
-import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
+import com.liferay.portal.configuration.module.configuration.BaseManagedServiceFactory;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.configuration.Filter;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
@@ -28,7 +30,6 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserConstants;
-import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
@@ -86,7 +87,10 @@ public class AnalyticsConfigurationRegistryImpl
 
 	@Override
 	public AnalyticsConfiguration getAnalyticsConfiguration(String pid) {
-		Long companyId = _companyIds.get(pid);
+		Map<String, Long> companyIdsMap =
+			_analyticsConfigurationManagedServiceFactory.getCompanyIdsMap();
+
+		Long companyId = companyIdsMap.get(pid);
 
 		if (companyId == null) {
 			return _systemAnalyticsConfiguration;
@@ -103,7 +107,10 @@ public class AnalyticsConfigurationRegistryImpl
 			return null;
 		}
 
-		for (Map.Entry<String, Long> entry : _companyIds.entrySet()) {
+		Map<String, Long> companyIdsMap =
+			_analyticsConfigurationManagedServiceFactory.getCompanyIdsMap();
+
+		for (Map.Entry<String, Long> entry : companyIdsMap.entrySet()) {
 			if (Objects.equals(entry.getValue(), companyId)) {
 				try {
 					Configuration configuration =
@@ -135,7 +142,10 @@ public class AnalyticsConfigurationRegistryImpl
 
 	@Override
 	public long getCompanyId(String pid) {
-		return _companyIds.getOrDefault(pid, CompanyConstants.SYSTEM);
+		Map<String, Long> companyIdsMap =
+			_analyticsConfigurationManagedServiceFactory.getCompanyIdsMap();
+
+		return companyIdsMap.getOrDefault(pid, CompanyConstants.SYSTEM);
 	}
 
 	@Override
@@ -172,7 +182,7 @@ public class AnalyticsConfigurationRegistryImpl
 			AnalyticsConfigurationRegistryImpl.class.getName());
 		_serviceRegistration = bundleContext.registerService(
 			ManagedServiceFactory.class,
-			new AnalyticsConfigurationManagedServiceFactory(),
+			_analyticsConfigurationManagedServiceFactory,
 			HashMapDictionaryBuilder.put(
 				Constants.SERVICE_PID,
 				"com.liferay.analytics.settings.configuration." +
@@ -191,7 +201,9 @@ public class AnalyticsConfigurationRegistryImpl
 			AnalyticsConfiguration.class, properties);
 	}
 
-	private void _addAnalyticsAdmin(long companyId) throws Exception {
+	private void _addAnalyticsAdministratorUser(long companyId)
+		throws Exception {
+
 		User user = _userLocalService.fetchUserByScreenName(
 			companyId, AnalyticsSecurityConstants.SCREEN_NAME_ANALYTICS_ADMIN);
 
@@ -237,6 +249,7 @@ public class AnalyticsConfigurationRegistryImpl
 			companyId,
 			new String[] {
 				"liferayAnalyticsConnectionType",
+				"liferayAnalyticsCredentialType",
 				"liferayAnalyticsDataSourceId", "liferayAnalyticsEndpointURL",
 				"liferayAnalyticsFaroBackendSecuritySignature",
 				"liferayAnalyticsFaroBackendURL", "liferayAnalyticsGroupIds",
@@ -282,6 +295,13 @@ public class AnalyticsConfigurationRegistryImpl
 		}
 	}
 
+	private void _deleteAnalyticsData(long companyId) throws Exception {
+		_analyticsAssociationLocalService.deleteAnalyticsAssociations(
+			companyId);
+		_analyticsDeleteMessageLocalService.deleteAnalyticsDeleteMessages(
+			companyId);
+	}
+
 	private void _deleteSAPEntry(long companyId) throws Exception {
 		SAPEntry sapEntry = _sapEntryLocalService.fetchSAPEntry(
 			companyId, AnalyticsSecurityConstants.SERVICE_ACCESS_POLICY_NAME);
@@ -314,6 +334,8 @@ public class AnalyticsConfigurationRegistryImpl
 				_executorService.execute(
 					() -> {
 						try {
+							_deleteAnalyticsData(companyId);
+
 							_deleteAnalyticsAdmin(companyId);
 							_deleteSAPEntry(companyId);
 						}
@@ -336,7 +358,7 @@ public class AnalyticsConfigurationRegistryImpl
 		try {
 			_active = true;
 
-			_addAnalyticsAdmin(companyId);
+			_addAnalyticsAdministratorUser(companyId);
 			_addSAPEntry(companyId);
 		}
 		catch (Exception exception) {
@@ -916,6 +938,8 @@ public class AnalyticsConfigurationRegistryImpl
 				unscheduleDispatchTriggerNames.add(
 					AnalyticsDXPEntityBatchExporterConstants.
 						DISPATCH_TRIGGER_NAME_DXP_ENTITIES);
+
+				_deleteAnalyticsData(companyId);
 			}
 
 			if (!unscheduleDispatchTriggerNames.isEmpty()) {
@@ -929,23 +953,18 @@ public class AnalyticsConfigurationRegistryImpl
 		}
 	}
 
-	private void _unmapPid(String pid) {
-		Long companyId = _companyIds.remove(pid);
-
-		if (companyId != null) {
+	private void _unmapPid(long companyId) {
+		if (companyId != CompanyConstants.SYSTEM) {
 			_analyticsConfigurations.remove(companyId);
 		}
 	}
 
-	private void _updated(
-		long companyId, String pid, Dictionary<String, ?> dictionary) {
-
+	private void _updated(long companyId, Dictionary<String, ?> dictionary) {
 		if (companyId != CompanyConstants.SYSTEM) {
 			_analyticsConfigurations.put(
 				companyId,
 				ConfigurableUtil.createConfigurable(
 					AnalyticsConfiguration.class, dictionary));
-			_companyIds.put(pid, companyId);
 		}
 
 		if (!_initializedCompanyIds.contains(companyId)) {
@@ -1010,16 +1029,25 @@ public class AnalyticsConfigurationRegistryImpl
 	private final Map<Long, Boolean> _activatedCompanyIds =
 		new ConcurrentHashMap<>();
 	private boolean _active;
+
+	@Reference
+	private AnalyticsAssociationLocalService _analyticsAssociationLocalService;
+
+	private final AnalyticsConfigurationManagedServiceFactory
+		_analyticsConfigurationManagedServiceFactory =
+			new AnalyticsConfigurationManagedServiceFactory();
 	private final Map<Long, AnalyticsConfiguration> _analyticsConfigurations =
 		new ConcurrentHashMap<>();
+
+	@Reference
+	private AnalyticsDeleteMessageLocalService
+		_analyticsDeleteMessageLocalService;
 
 	@Reference
 	private AnalyticsDXPEntityBatchExporter _analyticsDXPEntityBatchExporter;
 
 	@Reference
 	private AnalyticsSettingsManager _analyticsSettingsManager;
-
-	private final Map<String, Long> _companyIds = new ConcurrentHashMap<>();
 
 	@Reference
 	private CompanyLocalService _companyLocalService;
@@ -1053,20 +1081,10 @@ public class AnalyticsConfigurationRegistryImpl
 	private UserLocalService _userLocalService;
 
 	private class AnalyticsConfigurationManagedServiceFactory
-		implements ManagedServiceFactory {
+		extends BaseManagedServiceFactory {
 
-		@Override
-		public void deleted(String pid) {
-			long companyId = getCompanyId(pid);
-
-			_unmapPid(pid);
-
-			try (SafeCloseable safeCloseable =
-					CompanyThreadLocal.setCompanyIdWithSafeCloseable(
-						companyId)) {
-
-				_disable(companyId);
-			}
+		public Map<String, Long> getCompanyIdsMap() {
+			return companyIds;
 		}
 
 		@Override
@@ -1076,18 +1094,19 @@ public class AnalyticsConfigurationRegistryImpl
 		}
 
 		@Override
-		public void updated(String pid, Dictionary<String, ?> dictionary) {
-			_unmapPid(pid);
+		protected void doDeleted(long companyId, String pid) {
+			_unmapPid(companyId);
 
-			long companyId = GetterUtil.getLong(
-				dictionary.get("companyId"), CompanyConstants.SYSTEM);
+			_disable(companyId);
+		}
 
-			try (SafeCloseable safeCloseable =
-					CompanyThreadLocal.setCompanyIdWithSafeCloseable(
-						companyId)) {
+		@Override
+		protected void doUpdated(
+			long companyId, Dictionary<String, ?> dictionary, String pid) {
 
-				_updated(companyId, pid, dictionary);
-			}
+			_unmapPid(companyId);
+
+			_updated(companyId, dictionary);
 		}
 
 	}

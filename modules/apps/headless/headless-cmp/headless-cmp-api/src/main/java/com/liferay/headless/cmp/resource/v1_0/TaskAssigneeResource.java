@@ -44,7 +44,7 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface TaskAssigneeResource {
 
-	public Page<TaskAssignee> getTaskAssigneesPage(String search)
+	public Page<TaskAssignee> getTaskAssigneesPage(String search, String type)
 		throws Exception;
 
 	public default void setContextAcceptLanguage(
@@ -135,3 +135,4 @@ public interface TaskAssigneeResource {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:1370897932

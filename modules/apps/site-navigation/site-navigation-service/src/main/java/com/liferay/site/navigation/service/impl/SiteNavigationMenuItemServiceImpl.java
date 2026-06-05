@@ -40,6 +40,9 @@ public class SiteNavigationMenuItemServiceImpl
 			String type, String typeSettings, ServiceContext serviceContext)
 		throws PortalException {
 
+		_siteNavigationMenuModelResourcePermission.check(
+			getPermissionChecker(), siteNavigationMenuId, ActionKeys.UPDATE);
+
 		return siteNavigationMenuItemLocalService.addSiteNavigationMenuItem(
 			externalReferenceCode, getUserId(), groupId, siteNavigationMenuId,
 			parentSiteNavigationMenuItemId, type, typeSettings, serviceContext);
@@ -50,6 +53,15 @@ public class SiteNavigationMenuItemServiceImpl
 			long siteNavigationMenuItemId)
 		throws PortalException {
 
+		SiteNavigationMenuItem siteNavigationMenuItem =
+			siteNavigationMenuItemLocalService.getSiteNavigationMenuItem(
+				siteNavigationMenuItemId);
+
+		_siteNavigationMenuModelResourcePermission.check(
+			getPermissionChecker(),
+			siteNavigationMenuItem.getSiteNavigationMenuId(),
+			ActionKeys.UPDATE);
+
 		return siteNavigationMenuItemLocalService.deleteSiteNavigationMenuItem(
 			siteNavigationMenuItemId);
 	}
@@ -58,6 +70,15 @@ public class SiteNavigationMenuItemServiceImpl
 	public SiteNavigationMenuItem deleteSiteNavigationMenuItem(
 			long siteNavigationMenuItemId, boolean deleteChildren)
 		throws PortalException {
+
+		SiteNavigationMenuItem siteNavigationMenuItem =
+			siteNavigationMenuItemLocalService.getSiteNavigationMenuItem(
+				siteNavigationMenuItemId);
+
+		_siteNavigationMenuModelResourcePermission.check(
+			getPermissionChecker(),
+			siteNavigationMenuItem.getSiteNavigationMenuId(),
+			ActionKeys.UPDATE);
 
 		return siteNavigationMenuItemLocalService.deleteSiteNavigationMenuItem(
 			siteNavigationMenuItemId, deleteChildren);
@@ -68,6 +89,16 @@ public class SiteNavigationMenuItemServiceImpl
 			String externalReferenceCode, long groupId)
 		throws PortalException {
 
+		SiteNavigationMenuItem siteNavigationMenuItem =
+			siteNavigationMenuItemLocalService.
+				getSiteNavigationMenuItemByExternalReferenceCode(
+					externalReferenceCode, groupId);
+
+		_siteNavigationMenuModelResourcePermission.check(
+			getPermissionChecker(),
+			siteNavigationMenuItem.getSiteNavigationMenuId(),
+			ActionKeys.UPDATE);
+
 		return siteNavigationMenuItemLocalService.deleteSiteNavigationMenuItem(
 			externalReferenceCode, groupId);
 	}
@@ -76,13 +107,20 @@ public class SiteNavigationMenuItemServiceImpl
 	public void deleteSiteNavigationMenuItems(long siteNavigationMenuId)
 		throws PortalException {
 
+		_siteNavigationMenuModelResourcePermission.check(
+			getPermissionChecker(), siteNavigationMenuId, ActionKeys.UPDATE);
+
 		siteNavigationMenuItemLocalService.deleteSiteNavigationMenuItems(
 			siteNavigationMenuId);
 	}
 
 	@Override
 	public List<Long> getParentSiteNavigationMenuItemIds(
-		long siteNavigationMenuId, String typeSettingsKeyword) {
+			long siteNavigationMenuId, String typeSettingsKeyword)
+		throws PortalException {
+
+		_siteNavigationMenuModelResourcePermission.check(
+			getPermissionChecker(), siteNavigationMenuId, ActionKeys.VIEW);
 
 		return siteNavigationMenuItemLocalService.
 			getParentSiteNavigationMenuItemIds(
@@ -112,7 +150,11 @@ public class SiteNavigationMenuItemServiceImpl
 
 	@Override
 	public List<SiteNavigationMenuItem> getSiteNavigationMenuItems(
-		long siteNavigationMenuId) {
+			long siteNavigationMenuId)
+		throws PortalException {
+
+		_siteNavigationMenuModelResourcePermission.check(
+			getPermissionChecker(), siteNavigationMenuId, ActionKeys.VIEW);
 
 		return siteNavigationMenuItemLocalService.getSiteNavigationMenuItems(
 			siteNavigationMenuId);
@@ -132,8 +174,12 @@ public class SiteNavigationMenuItemServiceImpl
 
 	@Override
 	public List<SiteNavigationMenuItem> getSiteNavigationMenuItems(
-		long siteNavigationMenuId,
-		OrderByComparator<SiteNavigationMenuItem> orderByComparator) {
+			long siteNavigationMenuId,
+			OrderByComparator<SiteNavigationMenuItem> orderByComparator)
+		throws PortalException {
+
+		_siteNavigationMenuModelResourcePermission.check(
+			getPermissionChecker(), siteNavigationMenuId, ActionKeys.VIEW);
 
 		return siteNavigationMenuItemLocalService.getSiteNavigationMenuItems(
 			siteNavigationMenuId, orderByComparator);
@@ -141,22 +187,41 @@ public class SiteNavigationMenuItemServiceImpl
 
 	@Override
 	public SiteNavigationMenuItem updateSiteNavigationMenuItem(
-			long siteNavigationMenuId, long parentSiteNavigationMenuItemId,
+			long siteNavigationMenuItemId, long parentSiteNavigationMenuItemId,
 			int order)
 		throws PortalException {
 
+		SiteNavigationMenuItem siteNavigationMenuItem =
+			siteNavigationMenuItemLocalService.getSiteNavigationMenuItem(
+				siteNavigationMenuItemId);
+
+		_siteNavigationMenuModelResourcePermission.check(
+			getPermissionChecker(),
+			siteNavigationMenuItem.getSiteNavigationMenuId(),
+			ActionKeys.UPDATE);
+
 		return siteNavigationMenuItemLocalService.updateSiteNavigationMenuItem(
-			siteNavigationMenuId, parentSiteNavigationMenuItemId, order);
+			siteNavigationMenuItemId, parentSiteNavigationMenuItemId, order);
 	}
 
 	@Override
 	public SiteNavigationMenuItem updateSiteNavigationMenuItem(
-			long siteNavigationMenuId, String typeSettings,
+			long siteNavigationMenuItemId, String typeSettings,
 			ServiceContext serviceContext)
 		throws PortalException {
 
+		SiteNavigationMenuItem siteNavigationMenuItem =
+			siteNavigationMenuItemLocalService.getSiteNavigationMenuItem(
+				siteNavigationMenuItemId);
+
+		_siteNavigationMenuModelResourcePermission.check(
+			getPermissionChecker(),
+			siteNavigationMenuItem.getSiteNavigationMenuId(),
+			ActionKeys.UPDATE);
+
 		return siteNavigationMenuItemLocalService.updateSiteNavigationMenuItem(
-			getUserId(), siteNavigationMenuId, typeSettings, serviceContext);
+			getUserId(), siteNavigationMenuItemId, typeSettings,
+			serviceContext);
 	}
 
 	@Reference(

@@ -8,6 +8,10 @@ package com.liferay.change.tracking.internal.closure;
 import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 /**
  * @author Preston Crary
  */
@@ -18,6 +22,22 @@ public class Node {
 	public Node(long classNameId, long primaryKey) {
 		_classNameId = classNameId;
 		_primaryKey = primaryKey;
+	}
+
+	public void addChildNode(Node childNode) {
+		if (_childNodes == Collections.<Node>emptyList()) {
+			_childNodes = new ArrayList<>();
+		}
+
+		_childNodes.add(childNode);
+	}
+
+	public void addParentNode(Node parentNode) {
+		if (_parentNodes == Collections.<Node>emptyList()) {
+			_parentNodes = new ArrayList<>();
+		}
+
+		_parentNodes.add(parentNode);
 	}
 
 	@Override
@@ -41,8 +61,20 @@ public class Node {
 		return false;
 	}
 
+	public List<Node> getChildNodes() {
+		return Collections.unmodifiableList(_childNodes);
+	}
+
 	public long getClassNameId() {
 		return _classNameId;
+	}
+
+	public int getIndex() {
+		return _index;
+	}
+
+	public List<Node> getParentNodes() {
+		return Collections.unmodifiableList(_parentNodes);
 	}
 
 	public long getPrimaryKey() {
@@ -56,13 +88,20 @@ public class Node {
 		return HashUtil.hash(hash, _primaryKey);
 	}
 
+	public void setIndex(int index) {
+		_index = index;
+	}
+
 	@Override
 	public String toString() {
 		return StringBundler.concat(
 			"{classNameId=", _classNameId, ", primaryKey=", _primaryKey, "}");
 	}
 
+	private List<Node> _childNodes = Collections.emptyList();
 	private final long _classNameId;
+	private int _index;
+	private List<Node> _parentNodes = Collections.emptyList();
 	private final long _primaryKey;
 
 }

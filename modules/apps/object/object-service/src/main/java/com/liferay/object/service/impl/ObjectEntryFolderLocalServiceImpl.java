@@ -5,19 +5,25 @@
 
 package com.liferay.object.service.impl;
 
+import com.liferay.asset.categories.thread.local.AssetVocabularyThreadLocal;
 import com.liferay.asset.kernel.service.AssetEntryLocalService;
+import com.liferay.depot.constants.DepotConstants;
 import com.liferay.depot.constants.DepotRolesConstants;
+import com.liferay.depot.model.DepotEntry;
+import com.liferay.depot.service.DepotEntryLocalService;
 import com.liferay.exportimport.kernel.empty.model.EmptyModelManager;
+import com.liferay.exportimport.kernel.empty.model.EmptyModelManagerUtil;
+import com.liferay.object.constants.ObjectActionKeys;
 import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.constants.ObjectEntryFolderConstants;
 import com.liferay.object.entry.folder.subscription.util.ObjectEntryFolderSubscriptionUtil;
 import com.liferay.object.entry.folder.util.ObjectEntryFolderThreadLocal;
+import com.liferay.object.entry.folder.util.ObjectEntryFolderUtil;
 import com.liferay.object.exception.DuplicateObjectEntryFolderExternalReferenceCodeException;
 import com.liferay.object.exception.ObjectEntryFolderNameException;
 import com.liferay.object.exception.ObjectEntryFolderParentObjectEntryFolderIdException;
 import com.liferay.object.exception.ObjectEntryFolderScopeException;
 import com.liferay.object.exception.RequiredObjectEntryFolderException;
-import com.liferay.object.internal.entry.folder.util.ObjectEntryFolderUtil;
 import com.liferay.object.model.ObjectEntry;
 import com.liferay.object.model.ObjectEntryFolder;
 import com.liferay.object.model.ObjectEntryFolderTable;
@@ -36,6 +42,7 @@ import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.search.Indexer;
@@ -72,6 +79,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -289,6 +297,16 @@ public class ObjectEntryFolderLocalServiceImpl
 	}
 
 	@Override
+	public ObjectEntryFolder fetchObjectEntryFolder(
+		long groupId, long companyId, long parentObjectEntryFolderId,
+		String name) {
+
+		return objectEntryFolderPersistence.fetchByG_C_P_N_NotS_First(
+			groupId, companyId, parentObjectEntryFolderId, name,
+			WorkflowConstants.STATUS_IN_TRASH, null);
+	}
+
+	@Override
 	public ObjectEntryFolder fetchObjectEntryFolderByExternalReferenceCode(
 		String externalReferenceCode, long groupId, long companyId) {
 
@@ -472,12 +490,20 @@ public class ObjectEntryFolderLocalServiceImpl
 			ObjectEntryFolder.class.getName(),
 			objectEntryFolder.getObjectEntryFolderId());
 
-		objectEntryFolder.setParentObjectEntryFolderId(
+		long parentObjectEntryFolderId =
 			ObjectEntryFolderUtil.getObjectEntryFolderId(
 				objectEntryFolder.getParentObjectEntryFolderId(),
 				GetterUtil.getLong(
 					trashEntry.getTypeSettingsProperty(
-						"parentObjectEntryFolderId"))));
+						"parentObjectEntryFolderId")));
+
+		objectEntryFolder.setParentObjectEntryFolderId(
+			parentObjectEntryFolderId);
+		objectEntryFolder.setName(
+			_getUniqueName(
+				objectEntryFolder.getGroupId(),
+				objectEntryFolder.getCompanyId(), parentObjectEntryFolderId,
+				objectEntryFolder.getName()));
 
 		return _restoreObjectEntryFolderFromTrash(
 			objectEntryFolder, serviceContext, trashEntry, userId);
@@ -567,10 +593,13 @@ public class ObjectEntryFolderLocalServiceImpl
 		objectEntryFolder.setLabelMap(_getLabelMap(labelMap, name));
 		objectEntryFolder.setName(name);
 		objectEntryFolder.setTreePath(objectEntryFolder.buildTreePath());
-
-		if (objectEntryFolder.getStatus() == WorkflowConstants.STATUS_EMPTY) {
-			objectEntryFolder.setStatus(WorkflowConstants.STATUS_APPROVED);
-		}
+		objectEntryFolder.setStatus(
+			EmptyModelManagerUtil.solveEmptyModel(
+				objectEntryFolder.getExternalReferenceCode(),
+				objectEntryFolder.getModelClassName(),
+				objectEntryFolder.getCompanyId(),
+				objectEntryFolder.getGroupId(), objectEntryFolder.getStatus(),
+				() -> WorkflowConstants.STATUS_APPROVED));
 
 		_updateWorkflowDefinitionLinks(objectEntryFolderId, serviceContext);
 
@@ -593,7 +622,15 @@ public class ObjectEntryFolderLocalServiceImpl
 
 		objectEntryFolder.setStatus(status);
 
-		return objectEntryFolderPersistence.update(objectEntryFolder);
+		objectEntryFolder = objectEntryFolderPersistence.update(
+			objectEntryFolder);
+
+		_assetEntryLocalService.updateEntry(
+			ObjectEntryFolder.class.getName(),
+			objectEntryFolder.getObjectEntryFolderId(), null, null, true,
+			objectEntryFolder.getStatus() == WorkflowConstants.STATUS_APPROVED);
+
+		return objectEntryFolder;
 	}
 
 	private ObjectEntryFolder _addObjectEntryFolder(
@@ -669,7 +706,11 @@ public class ObjectEntryFolderLocalServiceImpl
 				ModelPermissions modelPermissions =
 					serviceContext.getModelPermissions();
 
-				if (modelPermissions == null) {
+				if ((modelPermissions == null) ||
+					!Objects.equals(
+						modelPermissions.getResourceName(),
+						ObjectEntryFolder.class.getName())) {
+
 					modelPermissions = ModelPermissionsFactory.create(
 						ObjectEntryFolder.class.getName());
 
@@ -678,10 +719,28 @@ public class ObjectEntryFolderLocalServiceImpl
 
 				modelPermissions.addRolePermissions(
 					DepotRolesConstants.ASSET_LIBRARY_ADMINISTRATOR,
-					ActionKeys.ADD_ENTRY, ActionKeys.VIEW);
+					ActionKeys.ADD_ENTRY,
+					ObjectActionKeys.ADD_OBJECT_ENTRY_FOLDER, ActionKeys.VIEW);
 				modelPermissions.addRolePermissions(
 					DepotRolesConstants.ASSET_LIBRARY_CONTENT_REVIEWER,
-					ActionKeys.ADD_ENTRY, ActionKeys.VIEW);
+					ActionKeys.ADD_ENTRY,
+					ObjectActionKeys.ADD_OBJECT_ENTRY_FOLDER, ActionKeys.VIEW);
+				modelPermissions.addRolePermissions(
+					DepotRolesConstants.ASSET_LIBRARY_MEMBER, ActionKeys.VIEW);
+
+				if (group.isDepot()) {
+					DepotEntry depotEntry =
+						_depotEntryLocalService.getGroupDepotEntry(
+							group.getGroupId());
+
+					if (depotEntry.getType() == DepotConstants.TYPE_SPACE) {
+						modelPermissions.addRolePermissions(
+							RoleConstants.CMS_ADMINISTRATOR,
+							ActionKeys.ADD_ENTRY,
+							ObjectActionKeys.ADD_OBJECT_ENTRY_FOLDER,
+							ActionKeys.VIEW);
+					}
+				}
 			}
 
 			_resourceLocalService.addModelResources(
@@ -762,29 +821,32 @@ public class ObjectEntryFolderLocalServiceImpl
 	}
 
 	private String _getUniqueName(
-			String name, ObjectEntryFolder parentObjectEntryFolder)
+			long groupId, long companyId, long parentObjectEntryFolderId,
+			String name)
 		throws PortalException {
 
-		if (_isUniqueName(name, parentObjectEntryFolder)) {
+		if (_isUniqueName(
+				groupId, companyId, parentObjectEntryFolderId, name)) {
+
 			return name;
 		}
 
 		return UniqueUtil.getUniqueValue(
 			"copy",
-			uniqueValue -> _isUniqueName(uniqueValue, parentObjectEntryFolder),
+			uniqueValue -> _isUniqueName(
+				groupId, companyId, parentObjectEntryFolderId, uniqueValue),
 			name);
 	}
 
 	private boolean _isUniqueName(
-		String copyValue, ObjectEntryFolder parentObjectEntryFolder) {
+		long groupId, long companyId, long parentObjectEntryFolderId,
+		String name) {
 
-		ObjectEntryFolder objectEntryFolder =
-			objectEntryFolderPersistence.fetchByG_C_P_N(
-				parentObjectEntryFolder.getGroupId(),
-				parentObjectEntryFolder.getCompanyId(),
-				parentObjectEntryFolder.getObjectEntryFolderId(), copyValue);
+		int count = objectEntryFolderPersistence.countByG_C_P_N_NotS(
+			groupId, companyId, parentObjectEntryFolderId, name,
+			WorkflowConstants.STATUS_IN_TRASH);
 
-		if (objectEntryFolder == null) {
+		if (count == 0) {
 			return true;
 		}
 
@@ -900,17 +962,38 @@ public class ObjectEntryFolderLocalServiceImpl
 			ObjectEntryFolder objectEntryFolder, ServiceContext serviceContext)
 		throws PortalException {
 
-		_assetEntryLocalService.updateEntry(
-			serviceContext.getUserId(), objectEntryFolder.getGroupId(),
-			objectEntryFolder.getCreateDate(),
-			objectEntryFolder.getModifiedDate(),
-			ObjectEntryFolder.class.getName(),
-			objectEntryFolder.getObjectEntryFolderId(),
-			objectEntryFolder.getUuid(), 0,
-			serviceContext.getAssetCategoryIds(),
-			serviceContext.getAssetTagNames(), true, true, null, null,
-			objectEntryFolder.getCreateDate(), null, null,
-			objectEntryFolder.getName(), null, null, null, null, 0, 0, null);
+		DepotEntry depotEntry = _depotEntryLocalService.fetchGroupDepotEntry(
+			objectEntryFolder.getGroupId());
+
+		boolean originalSkipRequiredCategoryValidation =
+			AssetVocabularyThreadLocal.isSkipRequiredCategoryValidation();
+
+		if ((depotEntry != null) &&
+			(depotEntry.getType() == DepotConstants.TYPE_SPACE)) {
+
+			AssetVocabularyThreadLocal.setSkipRequiredCategoryValidation(true);
+		}
+
+		try {
+			_assetEntryLocalService.updateEntry(
+				serviceContext.getUserId(), objectEntryFolder.getGroupId(),
+				objectEntryFolder.getCreateDate(),
+				objectEntryFolder.getModifiedDate(),
+				ObjectEntryFolder.class.getName(),
+				objectEntryFolder.getObjectEntryFolderId(),
+				objectEntryFolder.getUuid(), 0,
+				serviceContext.getAssetCategoryIds(),
+				serviceContext.getAssetTagNames(), true,
+				objectEntryFolder.getStatus() ==
+					WorkflowConstants.STATUS_APPROVED,
+				null, null, objectEntryFolder.getCreateDate(), null, null,
+				objectEntryFolder.getName(), null, null, null, null, 0, 0,
+				null);
+		}
+		finally {
+			AssetVocabularyThreadLocal.setSkipRequiredCategoryValidation(
+				originalSkipRequiredCategoryValidation);
+		}
 	}
 
 	private void _updateObjectEntryFolderName(
@@ -923,7 +1006,10 @@ public class ObjectEntryFolderLocalServiceImpl
 				parentObjectEntryFolderId);
 
 		String uniqueName = _getUniqueName(
-			objectEntryFolder.getName(), parentObjectEntryFolder);
+			parentObjectEntryFolder.getGroupId(),
+			parentObjectEntryFolder.getCompanyId(),
+			parentObjectEntryFolder.getObjectEntryFolderId(),
+			objectEntryFolder.getName());
 
 		if (StringUtil.equals(objectEntryFolder.getName(), uniqueName)) {
 			return;
@@ -931,11 +1017,12 @@ public class ObjectEntryFolderLocalServiceImpl
 
 		if (replace) {
 			ObjectEntryFolder duplicateObjectEntryFolder =
-				objectEntryFolderPersistence.fetchByG_C_P_N(
+				objectEntryFolderPersistence.fetchByG_C_P_N_NotS_First(
 					parentObjectEntryFolder.getGroupId(),
 					parentObjectEntryFolder.getCompanyId(),
 					parentObjectEntryFolder.getObjectEntryFolderId(),
-					objectEntryFolder.getName());
+					objectEntryFolder.getName(),
+					WorkflowConstants.STATUS_IN_TRASH, null);
 
 			if (duplicateObjectEntryFolder != null) {
 				duplicateObjectEntryFolder.setName(
@@ -1010,8 +1097,9 @@ public class ObjectEntryFolderLocalServiceImpl
 		}
 
 		ObjectEntryFolder objectEntryFolder =
-			objectEntryFolderPersistence.fetchByG_C_P_N(
-				groupId, companyId, parentObjectEntryFolderId, name);
+			objectEntryFolderPersistence.fetchByG_C_P_N_NotS_First(
+				groupId, companyId, parentObjectEntryFolderId, name,
+				WorkflowConstants.STATUS_IN_TRASH, null);
 
 		if ((objectEntryFolder != null) &&
 			(objectEntryFolder.getObjectEntryFolderId() !=
@@ -1063,6 +1151,9 @@ public class ObjectEntryFolderLocalServiceImpl
 
 	@Reference
 	private ClassNameLocalService _classNameLocalService;
+
+	@Reference
+	private DepotEntryLocalService _depotEntryLocalService;
 
 	@Reference
 	private EmptyModelManager _emptyModelManager;

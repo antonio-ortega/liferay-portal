@@ -20,6 +20,8 @@ import com.liferay.headless.admin.site.dto.v1_0.ModulePageElementDefinition;
 import com.liferay.headless.admin.site.dto.v1_0.PageElement;
 import com.liferay.headless.admin.site.dto.v1_0.PageElementDefinition;
 import com.liferay.headless.admin.site.dto.v1_0.WidgetInstancePageElementDefinition;
+import com.liferay.headless.admin.site.internal.dto.v1_0.util.DTOConverterContextUtil;
+import com.liferay.headless.admin.site.internal.dto.v1_0.util.InfoFormUtil;
 import com.liferay.layout.util.constants.LayoutDataItemTypeConstants;
 import com.liferay.layout.util.structure.CollectionStyledLayoutStructureItem;
 import com.liferay.layout.util.structure.ColumnLayoutStructureItem;
@@ -36,6 +38,7 @@ import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
 
@@ -78,41 +81,44 @@ public class PageElementDTOConverter
 			throw new UnsupportedOperationException();
 		}
 
-		return new PageElement() {
-			{
-				setExternalReferenceCode(layoutStructureItem::getItemId);
-				setPageElementDefinition(
-					() -> _getPageElementDefinition(
-						dtoConverterContext, layoutStructureItem));
-				setPageElements(
-					() -> _getPageElements(
-						dtoConverterContext, layoutStructure,
-						layoutStructureItem));
-				setParentExternalReferenceCode(
-					() -> {
-						if (Objects.equals(
-								layoutStructure.getMainItemId(),
-								layoutStructureItem.getParentItemId())) {
+		PageElementDefinition pageElementDefinition = _getPageElementDefinition(
+			dtoConverterContext, layoutStructureItem);
 
-							return StringPool.BLANK;
-						}
+		if (pageElementDefinition == null) {
+			return null;
+		}
 
-						return layoutStructureItem.getParentItemId();
-					});
-				setPosition(
-					() -> {
-						LayoutStructureItem parentLayoutStructureItem =
-							layoutStructure.getLayoutStructureItem(
-								layoutStructureItem.getParentItemId());
+		PageElement pageElement = new PageElement();
 
-						List<String> childrenItemIds =
-							parentLayoutStructureItem.getChildrenItemIds();
+		pageElement.setExternalReferenceCode(layoutStructureItem::getItemId);
+		pageElement.setPageElementDefinition(() -> pageElementDefinition);
+		pageElement.setPageElements(
+			() -> _getPageElements(
+				dtoConverterContext, layoutStructure, layoutStructureItem));
+		pageElement.setParentExternalReferenceCode(
+			() -> {
+				if (Objects.equals(
+						layoutStructure.getMainItemId(),
+						layoutStructureItem.getParentItemId())) {
 
-						return childrenItemIds.indexOf(
-							layoutStructureItem.getItemId());
-					});
-			}
-		};
+					return StringPool.BLANK;
+				}
+
+				return layoutStructureItem.getParentItemId();
+			});
+		pageElement.setPosition(
+			() -> {
+				LayoutStructureItem parentLayoutStructureItem =
+					layoutStructure.getLayoutStructureItem(
+						layoutStructureItem.getParentItemId());
+
+				List<String> childrenItemIds =
+					parentLayoutStructureItem.getChildrenItemIds();
+
+				return childrenItemIds.indexOf(layoutStructureItem.getItemId());
+			});
+
+		return pageElement;
 	}
 
 	private PageElementDefinition _getPageElementDefinition(
@@ -249,11 +255,53 @@ public class PageElementDTOConverter
 		LayoutStructure layoutStructure,
 		LayoutStructureItem layoutStructureItem) {
 
+		if (!(layoutStructureItem instanceof
+				CollectionStyledLayoutStructureItem)) {
+
+			return _getPageElements(
+				dtoConverterContext, layoutStructureItem.getChildrenItemIds(),
+				layoutStructure);
+		}
+
+		return _getPageElements(
+			DTOConverterContextUtil.getDTOConverterContext(
+				dtoConverterContext.isAcceptAllLanguages(),
+				HashMapBuilder.<String, Object>put(
+					"collectionInfoForm",
+					() -> {
+						Long scopeGroupId =
+							(Long)dtoConverterContext.getAttribute(
+								"scopeGroupId");
+
+						if (scopeGroupId == null) {
+							throw new UnsupportedOperationException();
+						}
+
+						return InfoFormUtil.getCollectionInfoForm(
+							(CollectionStyledLayoutStructureItem)
+								layoutStructureItem,
+							scopeGroupId);
+					}
+				).putAll(
+					dtoConverterContext.getAttributes()
+				).build(),
+				dtoConverterContext.getDTOConverterRegistry(),
+				dtoConverterContext.getHttpServletRequest(),
+				dtoConverterContext.getId(), dtoConverterContext.getLocale(),
+				dtoConverterContext.getUriInfo(),
+				dtoConverterContext.getUser()),
+			layoutStructureItem.getChildrenItemIds(), layoutStructure);
+	}
+
+	private PageElement[] _getPageElements(
+		DTOConverterContext dtoConverterContext, List<String> itemIds,
+		LayoutStructure layoutStructure) {
+
 		return TransformUtil.transformToArray(
-			layoutStructureItem.getChildrenItemIds(),
-			childrenItemId -> toDTO(
+			itemIds,
+			itemId -> toDTO(
 				dtoConverterContext,
-				layoutStructure.getLayoutStructureItem(childrenItemId)),
+				layoutStructure.getLayoutStructureItem(itemId)),
 			PageElement.class);
 	}
 

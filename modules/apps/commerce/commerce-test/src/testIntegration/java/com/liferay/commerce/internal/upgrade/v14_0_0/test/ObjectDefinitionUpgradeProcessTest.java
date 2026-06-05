@@ -255,6 +255,8 @@ public class ObjectDefinitionUpgradeProcessTest {
 		_originalSystemObjectDefinitionManager.addBaseModel(
 			false, _user,
 			HashMapBuilder.<String, Object>put(
+				"active", true
+			).put(
 				"catalogId",
 				() -> {
 					List<CommerceCatalog> commerceCatalogs =
@@ -353,8 +355,8 @@ public class ObjectDefinitionUpgradeProcessTest {
 
 			PreparedStatement preparedStatement = connection.prepareStatement(
 				StringBundler.concat(
-					"select count(*) from ", tableName, " where ", columnName,
-					" = ?"));
+					"select count(*) as count from ", tableName, " where ",
+					columnName, " = ?"));
 
 			preparedStatement.setLong(1, primaryKey);
 
@@ -362,7 +364,7 @@ public class ObjectDefinitionUpgradeProcessTest {
 
 			Assert.assertNotNull(resultSet.next());
 
-			Assert.assertEquals(1L, resultSet.getInt(1));
+			Assert.assertEquals(1L, resultSet.getLong("count"));
 		}
 	}
 
@@ -401,11 +403,6 @@ public class ObjectDefinitionUpgradeProcessTest {
 	private static SystemObjectDefinitionManagerRegistry
 		_systemObjectDefinitionManagerRegistry;
 
-	@Inject(
-		filter = "(&(component.name=com.liferay.commerce.internal.upgrade.registry.CommerceServiceUpgradeStepRegistrator))"
-	)
-	private static UpgradeStepRegistrator _upgradeStepRegistrator;
-
 	@Inject
 	private CommerceCatalogLocalService _commerceCatalogLocalService;
 
@@ -438,6 +435,11 @@ public class ObjectDefinitionUpgradeProcessTest {
 
 	@Inject
 	private ObjectRelationshipLocalService _objectRelationshipLocalService;
+
+	@Inject(
+		filter = "(&(component.name=com.liferay.commerce.internal.upgrade.registry.CommerceServiceUpgradeStepRegistrator))"
+	)
+	private UpgradeStepRegistrator _upgradeStepRegistrator;
 
 	private User _user;
 

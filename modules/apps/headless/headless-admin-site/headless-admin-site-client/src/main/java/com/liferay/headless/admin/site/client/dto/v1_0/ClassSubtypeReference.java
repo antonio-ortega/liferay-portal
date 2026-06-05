@@ -104,3 +104,4 @@ public class ClassSubtypeReference implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1035300728

@@ -73,3 +73,4 @@ public interface ObjectFolderService extends BaseService {
 		throws PortalException;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:770533026

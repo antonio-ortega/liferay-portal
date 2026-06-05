@@ -92,6 +92,27 @@ public class AssetLibrary implements Cloneable, Serializable {
 
 	protected ConnectedSite[] connectedSites;
 
+	public Creator getCreator() {
+		return creator;
+	}
+
+	public void setCreator(Creator creator) {
+		this.creator = creator;
+	}
+
+	public void setCreator(
+		UnsafeSupplier<Creator, Exception> creatorUnsafeSupplier) {
+
+		try {
+			creator = creatorUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Creator creator;
+
 	public Long getCreatorUserId() {
 		return creatorUserId;
 	}
@@ -218,6 +239,27 @@ public class AssetLibrary implements Cloneable, Serializable {
 	}
 
 	protected String externalReferenceCode;
+
+	public String getFriendlyURL() {
+		return friendlyURL;
+	}
+
+	public void setFriendlyURL(String friendlyURL) {
+		this.friendlyURL = friendlyURL;
+	}
+
+	public void setFriendlyURL(
+		UnsafeSupplier<String, Exception> friendlyURLUnsafeSupplier) {
+
+		try {
+			friendlyURL = friendlyURLUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String friendlyURL;
 
 	public Long getId() {
 		return id;
@@ -516,7 +558,8 @@ public class AssetLibrary implements Cloneable, Serializable {
 
 	public static enum Type {
 
-		ASSET_LIBRARY("AssetLibrary"), PROJECT("Project"), SPACE("Space");
+		ASSET_LIBRARY("AssetLibrary"), DESIGN_LIBRARY("DesignLibrary"),
+		PROJECT("Project"), SPACE("Space");
 
 		public static Type create(String value) {
 			for (Type type : values()) {
@@ -548,3 +591,4 @@ public class AssetLibrary implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:279296314

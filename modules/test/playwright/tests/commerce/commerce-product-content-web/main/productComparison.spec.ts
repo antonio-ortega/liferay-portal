@@ -5,10 +5,10 @@
 
 import {expect, mergeTests} from '@playwright/test';
 
-import {applicationsMenuPageTest} from '../../../../fixtures/applicationsMenuPageTest';
 import {commercePagesTest} from '../../../../fixtures/commercePagesTest';
 import {dataApiHelpersTest} from '../../../../fixtures/dataApiHelpersTest';
 import {featureFlagsTest} from '../../../../fixtures/featureFlagsTest';
+import {globalMenuPagesTest} from '../../../../fixtures/globalMenuPagesTest';
 import {isolatedSiteTest} from '../../../../fixtures/isolatedSiteTest';
 import {loginTest} from '../../../../fixtures/loginTest';
 import {pageViewModePagesTest} from '../../../../fixtures/pageViewModePagesTest';
@@ -19,12 +19,12 @@ import getWidgetDefinition from '../../../layout-content-page-editor-web/main/ut
 import {templatesPageTest} from '../../../template-web/main/fixtures/templatesPageTest';
 
 export const test = mergeTests(
-	applicationsMenuPageTest,
 	commercePagesTest,
 	dataApiHelpersTest,
 	featureFlagsTest({
 		'LPS-178052': {enabled: true},
 	}),
+	globalMenuPagesTest,
 	isolatedSiteTest,
 	loginTest(),
 	templatesPageTest,
@@ -124,12 +124,10 @@ test(
 test(
 	'Product Compare is removed upon logout and login',
 	{tag: ['@LPD-37427', '@LPD-60912']},
-	async ({apiHelpers, applicationsMenuPage, page, productComparisonPage}) => {
-		const site = await apiHelpers.headlessSite.createSite({
+	async ({apiHelpers, globalMenuPage, page, productComparisonPage}) => {
+		const site = await apiHelpers.headlessAdminSite.postSite({
 			name: getRandomString(),
 		});
-
-		apiHelpers.data.push({id: site.id, type: 'site'});
 
 		await apiHelpers.headlessCommerceAdminChannel.postChannel({
 			siteGroupId: site.id,
@@ -143,7 +141,7 @@ test(
 			name: {en_US: 'Product'},
 		});
 
-		await applicationsMenuPage.goToSite(site.name);
+		await globalMenuPage.goToSite(site.name);
 
 		const layout = await apiHelpers.headlessDelivery.createSitePage({
 			pageDefinition: getPageDefinition([
@@ -164,7 +162,7 @@ test(
 
 		await page.goto(`/web/${site.name}/${layout.friendlyUrlPath}`);
 
-		await applicationsMenuPage.goToSite(site.name);
+		await globalMenuPage.goToSite(site.name);
 
 		await page.getByRole('checkbox', {disabled: false}).first().click();
 
@@ -177,7 +175,7 @@ test(
 		await performLogout(page);
 		await performLogin(page, 'test');
 
-		await applicationsMenuPage.goToSite(site.name);
+		await globalMenuPage.goToSite(site.name);
 
 		await expect(productComparisonPage.compareBar).toHaveCount(0);
 	}

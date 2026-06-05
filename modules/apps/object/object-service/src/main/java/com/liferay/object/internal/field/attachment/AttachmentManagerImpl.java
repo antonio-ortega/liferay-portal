@@ -51,6 +51,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
 import java.util.Map;
+import java.util.Objects;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -90,12 +91,17 @@ public class AttachmentManagerImpl implements AttachmentManager {
 		ObjectField objectField = _objectFieldLocalService.getObjectField(
 			objectFieldId);
 
-		boolean showFilesInDocumentsAndMedia = GetterUtil.getBoolean(
-			ObjectFieldSettingUtil.getValue(
-				ObjectFieldSettingConstants.NAME_SHOW_FILES_IN_DOCS_AND_MEDIA,
-				objectField.getObjectFieldSettings()));
+		if (Objects.equals(
+				ObjectFieldSettingUtil.getValue(
+					ObjectFieldSettingConstants.NAME_FILE_SOURCE,
+					objectField.getObjectFieldSettings()),
+				ObjectFieldSettingConstants.
+					VALUE_USER_COMPUTER_TO_DOCS_AND_MEDIA) &&
+			GetterUtil.getBoolean(
+				ObjectFieldSettingUtil.getValue(
+					ObjectFieldSettingConstants.NAME_SHOW_FILES_IN_LIBRARY,
+					objectField.getObjectFieldSettings()))) {
 
-		if (showFilesInDocumentsAndMedia) {
 			String storageDLFolderPath = ObjectFieldSettingUtil.getValue(
 				ObjectFieldSettingConstants.NAME_STORAGE_DL_FOLDER_PATH,
 				objectField.getObjectFieldSettings());
@@ -138,7 +144,7 @@ public class AttachmentManagerImpl implements AttachmentManager {
 			null, _userLocalService.getGuestUserId(companyId),
 			repository.getGroupId(), repository.getRepositoryId(), false,
 			repository.getDlFolderId(), String.valueOf(userId), null, false,
-			serviceContext);
+			_getServiceContext(serviceContext));
 	}
 
 	@Override
@@ -331,13 +337,17 @@ public class AttachmentManagerImpl implements AttachmentManager {
 			return repository;
 		}
 
+		return _portletFileRepository.addPortletRepository(
+			groupId, portletId, _getServiceContext(serviceContext));
+	}
+
+	private ServiceContext _getServiceContext(ServiceContext serviceContext) {
 		serviceContext = (ServiceContext)serviceContext.clone();
 
 		serviceContext.setAddGroupPermissions(true);
 		serviceContext.setAddGuestPermissions(true);
 
-		return _portletFileRepository.addPortletRepository(
-			groupId, portletId, serviceContext);
+		return serviceContext;
 	}
 
 	private Long _getStorageDLFolderId(

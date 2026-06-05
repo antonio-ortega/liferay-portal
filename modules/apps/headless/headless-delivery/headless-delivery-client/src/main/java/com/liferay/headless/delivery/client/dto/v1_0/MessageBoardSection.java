@@ -434,3 +434,4 @@ public class MessageBoardSection implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:1687984854

@@ -390,7 +390,8 @@ public class FriendlyURLSeparatorSaveCompanyConfigurationMVCActionCommandTest {
 
 		for (FriendlyURLResolver friendlyURLResolver :
 				FriendlyURLResolverRegistryUtil.
-					getFriendlyURLResolversAsCollection()) {
+					getFriendlyURLResolversAsCollection(
+						_company.getCompanyId())) {
 
 			if (!friendlyURLResolver.isURLSeparatorConfigurable()) {
 				continue;
@@ -478,13 +479,13 @@ public class FriendlyURLSeparatorSaveCompanyConfigurationMVCActionCommandTest {
 		}
 	}
 
-	@Inject
-	private static ConfigurationAdmin _configurationAdmin;
-
 	private Company _company;
 
 	@Inject
 	private CompanyLocalService _companyLocalService;
+
+	@Inject
+	private ConfigurationAdmin _configurationAdmin;
 
 	@Inject
 	private FriendlyURLNormalizer _friendlyURLNormalizer;

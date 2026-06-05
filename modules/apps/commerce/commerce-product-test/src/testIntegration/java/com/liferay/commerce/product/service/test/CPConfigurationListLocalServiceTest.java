@@ -27,13 +27,13 @@ import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
 import org.frutilla.FrutillaRule;
 
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -67,12 +67,6 @@ public class CPConfigurationListLocalServiceTest {
 			RandomTestUtil.randomString(),
 			AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT,
 			RandomTestUtil.randomString(), "USD", "en_US", _serviceContext);
-	}
-
-	@After
-	public void tearDown() throws Exception {
-		_cpConfigurationListLocalService.deleteCPConfigurationLists(
-			_serviceContext.getCompanyId());
 	}
 
 	@Test
@@ -187,13 +181,19 @@ public class CPConfigurationListLocalServiceTest {
 			displayDateHour += 12;
 		}
 
-		return _cpConfigurationListLocalService.addCPConfigurationList(
-			externalReferenceCode, _user.getUserId(), groupId,
-			parentCPConfigurationListId, masterCPConfigurationList, name, 0D,
-			calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH),
-			calendar.get(Calendar.YEAR), displayDateHour,
-			calendar.get(Calendar.MINUTE), 0, 0, 0, 0, 0, true,
-			new ServiceContext());
+		CPConfigurationList cpConfigurationList =
+			_cpConfigurationListLocalService.addCPConfigurationList(
+				externalReferenceCode, _user.getUserId(), groupId,
+				parentCPConfigurationListId, masterCPConfigurationList, name,
+				0D, calendar.get(Calendar.MONTH),
+				calendar.get(Calendar.DAY_OF_MONTH),
+				calendar.get(Calendar.YEAR), displayDateHour,
+				calendar.get(Calendar.MINUTE), 0, 0, 0, 0, 0, true,
+				new ServiceContext());
+
+		_cpConfigurationsLists.add(cpConfigurationList);
+
+		return cpConfigurationList;
 	}
 
 	private CommerceCatalog _commerceCatalog;
@@ -203,6 +203,10 @@ public class CPConfigurationListLocalServiceTest {
 
 	@Inject
 	private CPConfigurationListLocalService _cpConfigurationListLocalService;
+
+	@DeleteAfterTestRun
+	private final List<CPConfigurationList> _cpConfigurationsLists =
+		new ArrayList<>();
 
 	@DeleteAfterTestRun
 	private Group _group;

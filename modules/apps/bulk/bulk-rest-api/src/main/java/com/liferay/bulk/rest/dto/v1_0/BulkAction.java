@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: (c) 2025 Liferay, Inc. https://liferay.com
+ * SPDX-FileCopyrightText: (c) 2026 Liferay, Inc. https://liferay.com
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
@@ -45,34 +45,76 @@ import java.util.function.Supplier;
 @JsonSubTypes(
 	{
 		@JsonSubTypes.Type(
-			name = "DefaultPermissionBulkAction",
-			value = DefaultPermissionBulkAction.class
+			name = "AssignStructureDefaultWorkflowBulkSelectionAction",
+			value = AssignStructureDefaultWorkflowBulkSelectionAction.class
 		),
 		@JsonSubTypes.Type(
-			name = "DeleteBulkAction", value = DeleteBulkAction.class
+			name = "AssignToObjectBulkSelectionAction",
+			value = AssignToObjectBulkSelectionAction.class
 		),
 		@JsonSubTypes.Type(
-			name = "ExpireBulkAction", value = ExpireBulkAction.class
+			name = "CopyObjectBulkSelectionAction",
+			value = CopyObjectBulkSelectionAction.class
 		),
 		@JsonSubTypes.Type(
-			name = "KeywordBulkAction", value = KeywordBulkAction.class
+			name = "DefaultPermissionObjectBulkSelectionAction",
+			value = DefaultPermissionObjectBulkSelectionAction.class
 		),
 		@JsonSubTypes.Type(
-			name = "MoveBulkAction", value = MoveBulkAction.class
+			name = "DeleteObjectAssetVersionBulkSelectionAction",
+			value = DeleteObjectAssetVersionBulkSelectionAction.class
 		),
 		@JsonSubTypes.Type(
-			name = "PermissionBulkAction", value = PermissionBulkAction.class
+			name = "DeleteObjectBulkSelectionAction",
+			value = DeleteObjectBulkSelectionAction.class
 		),
 		@JsonSubTypes.Type(
-			name = "ResetPermissionBulkAction",
-			value = ResetPermissionBulkAction.class
+			name = "DeleteObjectEntryBulkSelectionAction",
+			value = DeleteObjectEntryBulkSelectionAction.class
 		),
 		@JsonSubTypes.Type(
-			name = "StatusBulkAction", value = StatusBulkAction.class
+			name = "DueDateObjectBulkSelectionAction",
+			value = DueDateObjectBulkSelectionAction.class
 		),
 		@JsonSubTypes.Type(
-			name = "TaxonomyCategoryBulkAction",
-			value = TaxonomyCategoryBulkAction.class
+			name = "DuplicateObjectBulkSelectionAction",
+			value = DuplicateObjectBulkSelectionAction.class
+		),
+		@JsonSubTypes.Type(
+			name = "EditObjectCategoriesBulkSelectionAction",
+			value = EditObjectCategoriesBulkSelectionAction.class
+		),
+		@JsonSubTypes.Type(
+			name = "EditObjectTagsBulkSelectionAction",
+			value = EditObjectTagsBulkSelectionAction.class
+		),
+		@JsonSubTypes.Type(
+			name = "ExpireObjectBulkSelectionAction",
+			value = ExpireObjectBulkSelectionAction.class
+		),
+		@JsonSubTypes.Type(
+			name = "MoveObjectBulkSelectionAction",
+			value = MoveObjectBulkSelectionAction.class
+		),
+		@JsonSubTypes.Type(
+			name = "PermissionObjectBulkSelectionAction",
+			value = PermissionObjectBulkSelectionAction.class
+		),
+		@JsonSubTypes.Type(
+			name = "ResetPermissionObjectBulkSelectionAction",
+			value = ResetPermissionObjectBulkSelectionAction.class
+		),
+		@JsonSubTypes.Type(
+			name = "RestoreObjectBulkSelectionAction",
+			value = RestoreObjectBulkSelectionAction.class
+		),
+		@JsonSubTypes.Type(
+			name = "StatusObjectBulkSelectionAction",
+			value = StatusObjectBulkSelectionAction.class
+		),
+		@JsonSubTypes.Type(
+			name = "UpdateObjectValuesBulkSelectionAction",
+			value = UpdateObjectValuesBulkSelectionAction.class
 		)
 	}
 )
@@ -319,15 +361,37 @@ public abstract class BulkAction implements Serializable {
 	@GraphQLName("Type")
 	public static enum Type {
 
-		DEFAULT_PERMISSION_BULK_ACTION("DefaultPermissionBulkAction"),
-		DELETE_BULK_ACTION("DeleteBulkAction"),
-		EXPIRE_BULK_ACTION("ExpireBulkAction"),
-		KEYWORD_BULK_ACTION("KeywordBulkAction"),
-		MOVE_BULK_ACTION("MoveBulkAction"),
-		PERMISSION_BULK_ACTION("PermissionBulkAction"),
-		RESET_PERMISSION_BULK_ACTION("ResetPermissionBulkAction"),
-		STATUS_BULK_ACTION("StatusBulkAction"),
-		TAXONOMY_CATEGORY_BULK_ACTION("TaxonomyCategoryBulkAction");
+		ASSIGN_STRUCTURE_DEFAULT_WORKFLOW_BULK_SELECTION_ACTION(
+			"AssignStructureDefaultWorkflowBulkSelectionAction"),
+		ASSIGN_TO_OBJECT_BULK_SELECTION_ACTION(
+			"AssignToObjectBulkSelectionAction"),
+		COPY_OBJECT_BULK_SELECTION_ACTION("CopyObjectBulkSelectionAction"),
+		DEFAULT_PERMISSION_OBJECT_BULK_SELECTION_ACTION(
+			"DefaultPermissionObjectBulkSelectionAction"),
+		DELETE_OBJECT_ASSET_VERSION_BULK_SELECTION_ACTION(
+			"DeleteObjectAssetVersionBulkSelectionAction"),
+		DELETE_OBJECT_BULK_SELECTION_ACTION("DeleteObjectBulkSelectionAction"),
+		DELETE_OBJECT_ENTRY_BULK_SELECTION_ACTION(
+			"DeleteObjectEntryBulkSelectionAction"),
+		DUE_DATE_OBJECT_BULK_SELECTION_ACTION(
+			"DueDateObjectBulkSelectionAction"),
+		DUPLICATE_OBJECT_BULK_SELECTION_ACTION(
+			"DuplicateObjectBulkSelectionAction"),
+		EXPIRE_OBJECT_BULK_SELECTION_ACTION("ExpireObjectBulkSelectionAction"),
+		EDIT_OBJECT_TAGS_BULK_SELECTION_ACTION(
+			"EditObjectTagsBulkSelectionAction"),
+		MOVE_OBJECT_BULK_SELECTION_ACTION("MoveObjectBulkSelectionAction"),
+		PERMISSION_OBJECT_BULK_SELECTION_ACTION(
+			"PermissionObjectBulkSelectionAction"),
+		RESET_PERMISSION_OBJECT_BULK_SELECTION_ACTION(
+			"ResetPermissionObjectBulkSelectionAction"),
+		RESTORE_OBJECT_BULK_SELECTION_ACTION(
+			"RestoreObjectBulkSelectionAction"),
+		STATUS_OBJECT_BULK_SELECTION_ACTION("StatusObjectBulkSelectionAction"),
+		EDIT_OBJECT_CATEGORIES_BULK_SELECTION_ACTION(
+			"EditObjectCategoriesBulkSelectionAction"),
+		UPDATE_OBJECT_VALUES_BULK_SELECTION_ACTION(
+			"UpdateObjectValuesBulkSelectionAction");
 
 		@JsonCreator
 		public static Type create(String value) {
@@ -451,3 +515,4 @@ public abstract class BulkAction implements Serializable {
 	private Map<String, Serializable> _extendedProperties;
 
 }
+// LIFERAY-REST-BUILDER-HASH:1141910965

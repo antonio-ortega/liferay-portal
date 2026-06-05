@@ -251,3 +251,4 @@ public class TabletSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1460299490

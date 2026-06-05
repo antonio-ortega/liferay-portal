@@ -8,11 +8,15 @@ package com.liferay.object.definition.util;
 import com.liferay.batch.engine.unit.BatchEngineUnitThreadLocal;
 import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.constants.ObjectPortletKeys;
+import com.liferay.object.model.ObjectDefinition;
+import com.liferay.object.modifiable.system.ModifiableSystemObjectDefinition;
+import com.liferay.object.modifiable.system.ModifiableSystemObjectDefinitionRegistryUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.events.StartupHelperUtil;
 import com.liferay.portal.kernel.portlet.FriendlyURLResolver;
 import com.liferay.portal.kernel.portlet.FriendlyURLResolverRegistryUtil;
 import com.liferay.portal.kernel.portlet.constants.FriendlyURLResolverConstants;
+import com.liferay.portal.kernel.security.RandomUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.PortalRunMode;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -25,6 +29,29 @@ import java.util.Map;
  */
 public class ObjectDefinitionUtil {
 
+	public static String generateRandomClassName() {
+		StringBuilder sb = new StringBuilder();
+
+		sb.append(
+			ObjectDefinitionConstants.
+				CLASS_NAME_PREFIX_CUSTOM_OBJECT_DEFINITION);
+		sb.append(StringUtil.toUpperCase(StringUtil.randomId(1)));
+		sb.append(RandomUtil.nextInt(10));
+		sb.append(StringUtil.toUpperCase(StringUtil.randomId(1)));
+		sb.append(RandomUtil.nextInt(10));
+
+		return sb.toString();
+	}
+
+	public static String getItemClassName(ObjectDefinition objectDefinition) {
+		if (objectDefinition.isSystem()) {
+			return objectDefinition.getClassName() + StringPool.POUND +
+				objectDefinition.getObjectDefinitionId();
+		}
+
+		return objectDefinition.getClassName();
+	}
+
 	public static String getModifiableSystemObjectDefinitionRESTContextPath(
 		String name) {
 
@@ -32,7 +59,22 @@ public class ObjectDefinitionUtil {
 			return "/test";
 		}
 
-		return _allowedModifiableSystemObjectDefinitionNames.get(name);
+		String restContextPath =
+			_allowedModifiableSystemObjectDefinitionNames.get(name);
+
+		if (restContextPath != null) {
+			return restContextPath;
+		}
+
+		ModifiableSystemObjectDefinition modifiableSystemObjectDefinition =
+			ModifiableSystemObjectDefinitionRegistryUtil.
+				getModifiableSystemObjectDefinition(name);
+
+		if (modifiableSystemObjectDefinition == null) {
+			return null;
+		}
+
+		return modifiableSystemObjectDefinition.getRESTContextPath();
 	}
 
 	public static String getPortletId(String className) {
@@ -46,11 +88,26 @@ public class ObjectDefinitionUtil {
 	public static boolean isAllowedModifiableSystemObjectDefinitionName(
 		String name) {
 
-		if (PortalRunMode.isTestMode() && StringUtil.startsWith(name, "Test")) {
+		if ((PortalRunMode.isTestMode() &&
+			 StringUtil.startsWith(name, "Test")) ||
+			_allowedModifiableSystemObjectDefinitionNames.containsKey(name)) {
+
 			return true;
 		}
 
-		return _allowedModifiableSystemObjectDefinitionNames.containsKey(name);
+		if (!isInvokerBundleAllowed()) {
+			return false;
+		}
+
+		ModifiableSystemObjectDefinition modifiableSystemObjectDefinition =
+			ModifiableSystemObjectDefinitionRegistryUtil.
+				getModifiableSystemObjectDefinition(name);
+
+		if (modifiableSystemObjectDefinition != null) {
+			return true;
+		}
+
+		return false;
 	}
 
 	public static boolean isDefaultFriendlyURLSeparator(
@@ -107,18 +164,34 @@ public class ObjectDefinitionUtil {
 	}
 
 	private static final String[] _ALLOWED_INVOKER_BUNDLE_SYMBOLIC_NAMES = {
+		"com.liferay.ai.hub.pricing.site.initializer",
 		"com.liferay.ai.hub.site.initializer", "com.liferay.commerce.service",
-		"com.liferay.cookies.impl", "com.liferay.digital.sales.room.impl",
+		"com.liferay.content.site.generator.impl", "com.liferay.cookies.impl",
 		"com.liferay.frontend.data.set.admin.web",
 		"com.liferay.frontend.data.set.impl",
 		"com.liferay.headless.builder.impl", "com.liferay.list.type.service",
-		"com.liferay.mcp.server", "com.liferay.notification.service",
-		"com.liferay.object.service", "com.liferay.site.initializer.cmp",
-		"com.liferay.site.initializer.cms"
+		"com.liferay.mcp.server.rest.impl", "com.liferay.notification.service",
+		"com.liferay.object.service", "com.liferay.seo.studio.site.initializer",
+		"com.liferay.site.initializer.cmp", "com.liferay.site.initializer.cms",
+		"com.liferay.site.initializer.dsr"
 	};
 
 	private static final Map<String, String>
 		_allowedModifiableSystemObjectDefinitionNames = HashMapBuilder.put(
+			"AIHubAgentDefinition", "/ai-hub/agent-definitions"
+		).put(
+			"AIHubChatbot", "/ai-hub/chatbots"
+		).put(
+			"AIHubContentRetriever", "/ai-hub/content-retrievers"
+		).put(
+			"AIHubCrawlerJob", "/ai-hub/crawler-jobs"
+		).put(
+			"AIHubInstructionDefinition", "/ai-hub/instruction-definitions"
+		).put(
+			"AIHubMCPServer", "/ai-hub/mcp-servers"
+		).put(
+			"AIHubModelArmorTemplate", "/ai-hub/model-armor-templates"
+		).put(
 			"APIApplication", "/headless-builder/applications"
 		).put(
 			"APIEndpoint", "/headless-builder/endpoints"
@@ -145,8 +218,6 @@ public class ObjectDefinitionUtil {
 		).put(
 			"CMSBulkActionTask", "/cms/bulk-action-tasks"
 		).put(
-			"CMSBulkActionTaskItem", "/cms/bulk-action-task-items"
-		).put(
 			"CMSDefaultPermission", "/cms/default-permissions"
 		).put(
 			"CMSExternalVideo", "/cms/external-videos"
@@ -154,6 +225,10 @@ public class ObjectDefinitionUtil {
 			"CommerceReturn", "/commerce/returns"
 		).put(
 			"CommerceReturnItem", "/commerce/return-items"
+		).put(
+			"CSGGeneration", "/content-site-generator/generations"
+		).put(
+			"CSGGenerationItem", "/content-site-generator/generation-items"
 		).put(
 			"DataSet", "/data-set-admin/data-sets"
 		).put(
@@ -180,32 +255,15 @@ public class ObjectDefinitionUtil {
 		).put(
 			"DSRTemplate", "/digital-sales-room/templates"
 		).put(
-			"FDSAction", "/data-set-manager/actions"
-		).put(
-			"FDSCardsSection", "/data-set-manager/cards-sections"
-		).put(
-			"FDSClientExtensionFilter",
-			"/data-set-manager/client-extension-filters"
-		).put(
-			"FDSDateFilter", "/data-set-manager/date-filters"
-		).put(
-			"FDSDynamicFilter", "/data-set-manager/selection-filters"
-		).put(
-			"FDSEntry", "/data-set-manager/entries"
-		).put(
-			"FDSField", "/data-set-manager/table-sections"
-		).put(
-			"FDSListSection", "/data-set-manager/list-sections"
-		).put(
-			"FDSSort", "/data-set-manager/sorts"
-		).put(
-			"FDSView", "/data-set-manager/data-sets"
-		).put(
 			"FunctionalCookieEntry", "/functional-cookies-entries"
 		).put(
 			"KnowledgeBase", "/cms/knowledge-bases"
 		).put(
-			"MCPServer", "/mcp/servers"
+			"MCPServerDataMask", "/mcp/server-data-masks"
+		).put(
+			"MCPServerProfile", "/mcp/server-profiles"
+		).put(
+			"MCPServerProfileDataMask", "/mcp/server-profile-data-masks"
 		).put(
 			"MCPServerPrompt", "/mcp/server-prompts"
 		).put(
@@ -214,6 +272,14 @@ public class ObjectDefinitionUtil {
 			"PerformanceCookieEntry", "/performance-cookies-entries"
 		).put(
 			"PersonalizationCookieEntry", "/personalization-cookies-entries"
+		).put(
+			"SEOStudioDomain", "/seo-studio/domains"
+		).put(
+			"SEOStudioInstance", "/seo-studio/instances"
+		).put(
+			"SEOStudioScan", "/seo-studio/scans"
+		).put(
+			"SEOStudioScanInsight", "/seo-studio/scan-insights"
 		).build();
 
 }

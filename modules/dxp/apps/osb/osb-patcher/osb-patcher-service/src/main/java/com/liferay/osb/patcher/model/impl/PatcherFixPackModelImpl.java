@@ -97,6 +97,10 @@ public class PatcherFixPackModelImpl
 	public static final String TABLE_SQL_DROP =
 		"drop table OSBPatcher_PatcherFixPack";
 
+	public static final String ENTITY_ALIAS = "patcherFixPack";
+
+	public static final String FILTER_PK_COLUMN_NAME = "patcherFixPackId";
+
 	public static final String ORDER_BY_JPQL =
 		" ORDER BY patcherFixPack.patcherFixPackId ASC";
 
@@ -1125,3 +1129,4 @@ public class PatcherFixPackModelImpl
 	private PatcherFixPack _escapedModel;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:1298723365

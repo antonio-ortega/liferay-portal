@@ -3,11 +3,17 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {IInternalRenderer} from '@liferay/frontend-data-set-web';
+import {
+	IBulkActionItem,
+	IInternalRenderer,
+} from '@liferay/frontend-data-set-web';
 
+import StatusLabel from '../../common/components/StatusLabel';
+import {IBulkActionFDSData} from '../../common/types/BulkActionTask';
 import {ObjectDefinition} from '../../common/types/ObjectDefinition';
 import getLocalizedValue from '../../common/utils/getLocalizedValue';
 import {StructureWorkflowItem} from '../modal/AssignDefaultWorkflowModalContent';
+import assignStructureDefaultWorkflowBulkAction from './actions/AssignStructureDefaultWorkflowBulkSelectionAction';
 import defaultWorkflowStructureAction from './actions/defaultWorkflowStructureAction';
 import deleteStructureAction from './actions/deleteStructureAction';
 import importStructureAction from './actions/importStructureAction';
@@ -15,14 +21,19 @@ import AuthorRenderer from './cell_renderers/AuthorRenderer';
 import SimpleActionLinkRenderer from './cell_renderers/SimpleActionLinkRenderer';
 import StructureScopeRenderer from './cell_renderers/StructureScopeRenderer';
 import TypeRenderer from './cell_renderers/TypeRenderer';
+import transformFDSBulkActions from './utils/transformFDSBulkActions';
 
 export default function StructuresFDSPropsTransformer({
+	bulkActions = [],
 	...otherProps
 }: {
+	apiURL: string;
+	bulkActions: Array<IBulkActionItem>;
 	otherProps: any;
 }) {
 	return {
 		...otherProps,
+		bulkActions: transformFDSBulkActions(bulkActions),
 		customRenderers: {
 			tableCell: [
 				{
@@ -45,8 +56,14 @@ export default function StructuresFDSPropsTransformer({
 					name: 'typeTableCellRenderer',
 					type: 'internal',
 				} as IInternalRenderer,
+				{
+					component: ({value}) => StatusLabel(value),
+					name: 'statusTableCellRenderer',
+					type: 'internal',
+				} as IInternalRenderer,
 			],
 		},
+		hideManagementBarInEmptyState: true,
 		async onActionDropdownItemClick({
 			action,
 			event,
@@ -117,21 +134,36 @@ export default function StructuresFDSPropsTransformer({
 			selectedData,
 		}: {
 			action: {data?: {id?: string}};
-			selectedData: {items: Array<ItemData>};
+			selectedData: Required<IBulkActionFDSData>;
 		}) => {
 			if (action?.data?.id === 'assign-default-workflow') {
 				const structureWorkflows = selectedData.items.map(
-					(itemData: any): StructureWorkflowItem => ({
-						id: String(itemData.id),
-						name: getLocalizedValue(itemData.label),
-						workflow: itemData.workflowDefinitionLinks?.[0]
-							? itemData.workflowDefinitionLinks[0]
-									.workflowDefinitionName
-							: '',
-					})
+					(itemData: any): StructureWorkflowItem => {
+						const defaultWorkflowLink =
+							itemData.workflowDefinitionLinks.find(
+								(workflowDefinitionLink: {
+									groupExternalReferenceCode: string;
+									workflowDefinitionName: string;
+								}) =>
+									workflowDefinitionLink.groupExternalReferenceCode ===
+									''
+							);
+
+						return {
+							id: String(itemData.id),
+							name: getLocalizedValue(itemData.label),
+							workflow:
+								defaultWorkflowLink?.workflowDefinitionName ||
+								'',
+						};
+					}
 				);
 
-				defaultWorkflowStructureAction(structureWorkflows);
+				assignStructureDefaultWorkflowBulkAction({
+					apiURL: otherProps.apiURL,
+					selectedData,
+					structureWorkflows,
+				});
 			}
 		},
 	};

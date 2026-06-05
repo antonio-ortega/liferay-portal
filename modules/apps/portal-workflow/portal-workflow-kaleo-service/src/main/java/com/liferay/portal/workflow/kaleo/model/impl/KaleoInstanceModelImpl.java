@@ -10,6 +10,7 @@ import com.liferay.expando.kernel.util.ExpandoBridgeFactoryUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.bean.AutoEscapeBeanHandler;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.json.JSON;
 import com.liferay.portal.kernel.model.CacheModel;
 import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.model.User;
@@ -49,6 +50,7 @@ import java.util.function.Function;
  * @see KaleoInstanceImpl
  * @generated
  */
+@JSON(strict = true)
 public class KaleoInstanceModelImpl
 	extends BaseModelImpl<KaleoInstance> implements KaleoInstanceModel {
 
@@ -104,6 +106,8 @@ public class KaleoInstanceModelImpl
 		"create table KaleoInstance (mvccVersion LONG default 0 not null,ctCollectionId LONG default 0 not null,kaleoInstanceId LONG not null,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(200) null,createDate DATE null,modifiedDate DATE null,kaleoDefinitionId LONG,kaleoDefinitionVersionId LONG,kaleoDefinitionName VARCHAR(200) null,kaleoDefinitionVersion INTEGER,rootKaleoInstanceTokenId LONG,active_ BOOLEAN,className VARCHAR(200) null,classPK LONG,completed BOOLEAN,completionDate DATE null,workflowContext TEXT null,primary key (kaleoInstanceId, ctCollectionId))";
 
 	public static final String TABLE_SQL_DROP = "drop table KaleoInstance";
+
+	public static final String ENTITY_ALIAS = "kaleoInstance";
 
 	public static final String ORDER_BY_JPQL =
 		" ORDER BY kaleoInstance.kaleoInstanceId ASC";
@@ -427,6 +431,7 @@ public class KaleoInstanceModelImpl
 
 	}
 
+	@JSON
 	@Override
 	public long getMvccVersion() {
 		return _mvccVersion;
@@ -441,6 +446,7 @@ public class KaleoInstanceModelImpl
 		_mvccVersion = mvccVersion;
 	}
 
+	@JSON
 	@Override
 	public long getCtCollectionId() {
 		return _ctCollectionId;
@@ -455,6 +461,7 @@ public class KaleoInstanceModelImpl
 		_ctCollectionId = ctCollectionId;
 	}
 
+	@JSON
 	@Override
 	public long getKaleoInstanceId() {
 		return _kaleoInstanceId;
@@ -479,6 +486,7 @@ public class KaleoInstanceModelImpl
 			this.<Long>getColumnOriginalValue("kaleoInstanceId"));
 	}
 
+	@JSON
 	@Override
 	public long getGroupId() {
 		return _groupId;
@@ -493,6 +501,7 @@ public class KaleoInstanceModelImpl
 		_groupId = groupId;
 	}
 
+	@JSON
 	@Override
 	public long getCompanyId() {
 		return _companyId;
@@ -517,6 +526,7 @@ public class KaleoInstanceModelImpl
 			this.<Long>getColumnOriginalValue("companyId"));
 	}
 
+	@JSON
 	@Override
 	public long getUserId() {
 		return _userId;
@@ -556,6 +566,7 @@ public class KaleoInstanceModelImpl
 		return GetterUtil.getLong(this.<Long>getColumnOriginalValue("userId"));
 	}
 
+	@JSON
 	@Override
 	public String getUserName() {
 		if (_userName == null) {
@@ -575,6 +586,7 @@ public class KaleoInstanceModelImpl
 		_userName = userName;
 	}
 
+	@JSON
 	@Override
 	public Date getCreateDate() {
 		return _createDate;
@@ -589,6 +601,7 @@ public class KaleoInstanceModelImpl
 		_createDate = createDate;
 	}
 
+	@JSON
 	@Override
 	public Date getModifiedDate() {
 		return _modifiedDate;
@@ -609,6 +622,7 @@ public class KaleoInstanceModelImpl
 		_modifiedDate = modifiedDate;
 	}
 
+	@JSON
 	@Override
 	public long getKaleoDefinitionId() {
 		return _kaleoDefinitionId;
@@ -633,6 +647,7 @@ public class KaleoInstanceModelImpl
 			this.<Long>getColumnOriginalValue("kaleoDefinitionId"));
 	}
 
+	@JSON
 	@Override
 	public long getKaleoDefinitionVersionId() {
 		return _kaleoDefinitionVersionId;
@@ -657,6 +672,7 @@ public class KaleoInstanceModelImpl
 			this.<Long>getColumnOriginalValue("kaleoDefinitionVersionId"));
 	}
 
+	@JSON
 	@Override
 	public String getKaleoDefinitionName() {
 		if (_kaleoDefinitionName == null) {
@@ -685,6 +701,7 @@ public class KaleoInstanceModelImpl
 		return getColumnOriginalValue("kaleoDefinitionName");
 	}
 
+	@JSON
 	@Override
 	public int getKaleoDefinitionVersion() {
 		return _kaleoDefinitionVersion;
@@ -709,6 +726,7 @@ public class KaleoInstanceModelImpl
 			this.<Integer>getColumnOriginalValue("kaleoDefinitionVersion"));
 	}
 
+	@JSON
 	@Override
 	public long getRootKaleoInstanceTokenId() {
 		return _rootKaleoInstanceTokenId;
@@ -723,11 +741,13 @@ public class KaleoInstanceModelImpl
 		_rootKaleoInstanceTokenId = rootKaleoInstanceTokenId;
 	}
 
+	@JSON
 	@Override
 	public boolean getActive() {
 		return _active;
 	}
 
+	@JSON
 	@Override
 	public boolean isActive() {
 		return _active;
@@ -742,6 +762,7 @@ public class KaleoInstanceModelImpl
 		_active = active;
 	}
 
+	@JSON
 	@Override
 	public String getClassName() {
 		if (_className == null) {
@@ -770,6 +791,7 @@ public class KaleoInstanceModelImpl
 		return getColumnOriginalValue("className");
 	}
 
+	@JSON
 	@Override
 	public long getClassPK() {
 		return _classPK;
@@ -793,11 +815,13 @@ public class KaleoInstanceModelImpl
 		return GetterUtil.getLong(this.<Long>getColumnOriginalValue("classPK"));
 	}
 
+	@JSON
 	@Override
 	public boolean getCompleted() {
 		return _completed;
 	}
 
+	@JSON
 	@Override
 	public boolean isCompleted() {
 		return _completed;
@@ -822,6 +846,7 @@ public class KaleoInstanceModelImpl
 			this.<Boolean>getColumnOriginalValue("completed"));
 	}
 
+	@JSON
 	@Override
 	public Date getCompletionDate() {
 		return _completionDate;
@@ -845,6 +870,7 @@ public class KaleoInstanceModelImpl
 		return getColumnOriginalValue("completionDate");
 	}
 
+	@JSON
 	@Override
 	public String getWorkflowContext() {
 		if (_workflowContext == null) {
@@ -1374,3 +1400,4 @@ public class KaleoInstanceModelImpl
 	private KaleoInstance _escapedModel;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-459835106

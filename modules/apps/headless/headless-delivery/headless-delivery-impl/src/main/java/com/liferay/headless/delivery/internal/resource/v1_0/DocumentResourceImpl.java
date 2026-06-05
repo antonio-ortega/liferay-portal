@@ -82,7 +82,6 @@ import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.repository.liferayrepository.model.LiferayFileEntry;
 import com.liferay.portal.search.aggregation.Aggregations;
 import com.liferay.portal.search.legacy.searcher.SearchRequestBuilderFactory;
-import com.liferay.portal.search.query.Queries;
 import com.liferay.portal.search.searcher.SearchRequestBuilder;
 import com.liferay.portal.search.sort.Sorts;
 import com.liferay.portal.vulcan.aggregation.Aggregation;
@@ -104,7 +103,6 @@ import com.liferay.ratings.kernel.service.RatingsEntryLocalService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.core.MultivaluedMap;
 
 import java.io.Serializable;
@@ -874,12 +872,12 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 					_searchRequestBuilderFactory.builder(searchContext);
 
 				AggregationUtil.processVulcanAggregation(
-					_aggregations, _ddmIndexer, _queries, searchRequestBuilder,
+					_aggregations, _ddmIndexer, searchRequestBuilder,
 					aggregation);
 
 				SortUtil.processSorts(
 					_ddmIndexer, searchRequestBuilder, searchContext.getSorts(),
-					_queries, _sorts);
+					_sorts);
 			},
 			sorts,
 			document -> _toDocument(
@@ -1082,10 +1080,6 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 		Document document = multipartBody.getValueAsNullableInstance(
 			"document", Document.class);
 
-		if (document == null) {
-			throw new BadRequestException("Document not found in body");
-		}
-
 		BinaryFile binaryFile = multipartBody.getBinaryFile("file");
 
 		if (binaryFile == null) {
@@ -1098,11 +1092,18 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 			fileEntry.getFileEntryId(), document, fileEntry);
 
 		String fileName = null;
+
+		String contentType = binaryFile.getContentType();
+
+		if (contentType == null) {
+			contentType = fileEntry.getMimeType();
+		}
+
 		String title = null;
 		String urlTitle = null;
-		String description = null;
-		Date displayDate = null;
-		Date expirationDate = null;
+		String description = fileEntry.getDescription();
+		Date displayDate = fileEntry.getDisplayDate();
+		Date expirationDate = fileEntry.getExpirationDate();
 
 		if (document != null) {
 			fileName = document.getFileName();
@@ -1117,17 +1118,20 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 			fileName = binaryFile.getFileName();
 		}
 
+		if (fileName == null) {
+			fileName = fileEntry.getFileName();
+		}
+
 		if (title == null) {
 			title = fileEntry.getTitle();
 		}
 
 		return _toDocument(
 			_dlAppService.updateFileEntry(
-				fileEntry.getFileEntryId(), fileName,
-				binaryFile.getContentType(), title, urlTitle, description, null,
-				DLVersionNumberIncrease.AUTOMATIC, binaryFile.getInputStream(),
-				binaryFile.getSize(), displayDate, expirationDate,
-				fileEntry.getReviewDate(),
+				fileEntry.getFileEntryId(), fileName, contentType, title,
+				urlTitle, description, null, DLVersionNumberIncrease.AUTOMATIC,
+				binaryFile.getInputStream(), binaryFile.getSize(), displayDate,
+				expirationDate, fileEntry.getReviewDate(),
 				_createServiceContext(
 					Constants.UPDATE, () -> new Long[0], () -> new String[0],
 					_getDLFileEntryType(
@@ -1213,9 +1217,6 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 
 	@Reference
 	private Portal _portal;
-
-	@Reference
-	private Queries _queries;
 
 	@Reference
 	private RatingsEntryLocalService _ratingsEntryLocalService;

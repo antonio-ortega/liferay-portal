@@ -24,6 +24,7 @@ interface ActionContainerProps {
 	currentObjectDefinitionFields: ObjectField[];
 	disableGroovyAction: boolean;
 	errors: ActionError;
+	hasUserNotificationHandler: boolean;
 	newObjectActionExecutors: ObjectActionTriggerExecutorItem[];
 	objectActionCodeEditorElements: SidebarCategory[];
 	objectActionExecutors: ObjectActionTriggerExecutorItem[];
@@ -43,6 +44,7 @@ export function ActionContainer({
 	currentObjectDefinitionFields,
 	disableGroovyAction,
 	errors,
+	hasUserNotificationHandler,
 	newObjectActionExecutors,
 	objectActionCodeEditorElements,
 	objectActionExecutors,
@@ -232,6 +234,7 @@ export function ActionContainer({
 			<ThenContainer
 				disabled={disableGroovyAction}
 				errors={errors}
+				hasUserNotificationHandler={hasUserNotificationHandler}
 				isValidField={isValidField}
 				newObjectActionExecutors={newObjectActionExecutors}
 				objectActionExecutors={objectActionExecutors}
@@ -291,6 +294,7 @@ export function ActionContainer({
 					<Input
 						disabled={values.system}
 						error={errors.url}
+						id="urlInput"
 						label={Liferay.Language.get('url')}
 						name="url"
 						onChange={({target: {value}}) => {
@@ -307,6 +311,7 @@ export function ActionContainer({
 
 					<Input
 						disabled={values.system}
+						id="secretInput"
 						label={Liferay.Language.get('secret')}
 						name="secret"
 						onChange={({target: {value}}) => {
@@ -337,7 +342,7 @@ export function ActionContainer({
 					}
 					readOnly={values.system || disableGroovyAction}
 					sidebarElements={objectActionCodeEditorElements.filter(
-						(element) => element.label === 'Fields'
+						(element) => element.key === 'fields'
 					)}
 					sidebarElementsDisabled={values.system}
 					value={values.parameters?.script ?? ''}

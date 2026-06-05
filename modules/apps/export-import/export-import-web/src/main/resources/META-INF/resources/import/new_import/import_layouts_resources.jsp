@@ -213,7 +213,6 @@ ManifestSummary manifestSummary = ExportImportHelperUtil.getManifestSummary(user
 
 											<%
 											Set<String> displayedControls = new HashSet<String>();
-											Set<String> portletDataHandlerNames = new HashSet<String>();
 
 											for (Portlet portlet : dataPortlets) {
 												PortletDataHandler portletDataHandler = portlet.getPortletDataHandlerInstance();
@@ -222,19 +221,10 @@ ManifestSummary manifestSummary = ExportImportHelperUtil.getManifestSummary(user
 													continue;
 												}
 
-												String portletDataHandlerName = portletDataHandler.getName();
+												String portletTitle = portletDataHandler.getTitle(locale);
 
-												if (!portletDataHandlerNames.contains(portletDataHandlerName)) {
-													portletDataHandlerNames.add(portletDataHandlerName);
-												}
-												else {
-													continue;
-												}
-
-												String portletTitle = PortalUtil.getPortletTitle(portlet, application, locale);
-
-												if (StringUtil.equals(ObjectPortletKeys.OBJECT_DEFINITIONS, portlet.getPortletId())) {
-													portletTitle = LanguageUtil.get(request, "model.resource.com.liferay.object");
+												if (portletTitle == null) {
+													portletTitle = PortalUtil.getPortletTitle(portlet, application, locale);
 												}
 
 												long importModelCount = portletDataHandler.getExportModelCount(manifestSummary);
@@ -381,7 +371,7 @@ ManifestSummary manifestSummary = ExportImportHelperUtil.getManifestSummary(user
 
 										</ul>
 
-										<c:if test='<%= FeatureFlagManagerUtil.isEnabled(company.getCompanyId(), "LPD-43996") || !stagingGroupHelper.isCompanyGroup(group) %>'>
+										<c:if test='<%= !stagingGroupHelper.isCompanyGroup(group) || FeatureFlagManagerUtil.isEnabled(company.getCompanyId(), "LPD-43996") %>'>
 											<aui:fieldset cssClass="content-options" label="for-each-of-the-selected-content-types,-import-their">
 												<span class="selected-labels" id="<portlet:namespace />selectedContentOptions"></span>
 

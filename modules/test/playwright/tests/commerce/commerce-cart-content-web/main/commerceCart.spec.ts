@@ -6,7 +6,6 @@
 import {expect, mergeTests} from '@playwright/test';
 
 import {apiHelpersTest} from '../../../../fixtures/apiHelpersTest';
-import {applicationsMenuPageTest} from '../../../../fixtures/applicationsMenuPageTest';
 import {commercePagesTest} from '../../../../fixtures/commercePagesTest';
 import {dataApiHelpersTest} from '../../../../fixtures/dataApiHelpersTest';
 import {isolatedSiteTest} from '../../../../fixtures/isolatedSiteTest';
@@ -18,7 +17,6 @@ import getRandomString from '../../../../utils/getRandomString';
 export const test = mergeTests(
 	apiHelpersTest,
 	dataApiHelpersTest,
-	applicationsMenuPageTest,
 	commercePagesTest,
 	isolatedSiteTest,
 	loginTest(),
@@ -110,11 +108,9 @@ test('LPD-27036 Cart shows decimal quantities', async ({
 });
 
 test('LPD-29864 Cart updates when order is open', async ({apiHelpers}) => {
-	const site = await apiHelpers.headlessSite.createSite({
+	const site = await apiHelpers.headlessAdminSite.postSite({
 		name: 'Cart Site',
 	});
-
-	apiHelpers.data.push({id: site.id, type: 'site'});
 
 	const channel = await apiHelpers.headlessCommerceAdminChannel.postChannel({
 		siteGroupId: site.id,

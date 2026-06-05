@@ -511,3 +511,4 @@ public class DocumentShortcutSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-849349968

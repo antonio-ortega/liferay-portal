@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {openConfirmModal} from '@liferay/layout-js-components-web';
 import React, {
 	Dispatch,
 	ReactNode,
@@ -22,33 +21,27 @@ import {
 	RepeatableGroup,
 	Structure,
 	StructureChild,
+	StructureType,
 } from '../types/Structure';
 import {Uuid} from '../types/Uuid';
 import actionGeneratesChanges from '../utils/actionGeneratesChanges';
-import addGroup from '../utils/addGroup';
-import deleteChildren from '../utils/deleteChildren';
-import {
-	Field,
-	MultiselectField,
-	SingleSelectField,
-	getDefaultField,
-} from '../utils/field';
+import {Field, SelectFromListField, getDefaultField} from '../utils/field';
 import findAvailableFieldName from '../utils/findAvailableFieldName';
 import findChild from '../utils/findChild';
 import {getChildrenUuids} from '../utils/getChildrenUuids';
-import getHistory from '../utils/getHistory';
 import getRandomId from '../utils/getRandomId';
-import getRandomName from '../utils/getRandomName';
 import getUuid from '../utils/getUuid';
-import insertChild from '../utils/insertChild';
-import isField from '../utils/isField';
-import isLocked from '../utils/isLocked';
-import isReferenced from '../utils/isReferenced';
 import normalizeString from '../utils/normalizeString';
-import refreshReferencedStructures from '../utils/refreshReferencedStructures';
-import sortChildren from '../utils/sortChildren';
-import ungroup from '../utils/ungroup';
-import updateChild from '../utils/updateChild';
+import addChild from '../utils/state/addChild';
+import addRepeatableGroup from '../utils/state/addRepeatableGroup';
+import cloneChild from '../utils/state/cloneChild';
+import deleteChildren from '../utils/state/deleteChildren';
+import moveChildren from '../utils/state/moveChildren';
+import refreshReferencedStructures from '../utils/state/refreshReferencedStructures';
+import sortChildren from '../utils/state/sortChildren';
+import ungroup from '../utils/state/ungroupRepeatableGroup';
+import updateChild from '../utils/state/updateChild';
+import updateHistory from '../utils/state/updateHistory';
 import {
 	ErrorMap,
 	ValidationError,
@@ -58,8 +51,6 @@ import {
 	validateRepeatableGroup,
 	validateStructure,
 } from '../utils/validation';
-
-type UndeletableReason = 'is-locked' | 'is-referenced' | 'causes-invalid-group';
 
 type History = {
 	deletedChildren: Array<StructureChild>;
@@ -71,7 +62,12 @@ type History = {
 	modifiedNames: Set<Uuid>;
 };
 
+export type Clipboard = {
+	items: StructureChild[];
+};
+
 export type State = {
+	clipboard: Clipboard | null;
 	history: History;
 	invalids: Map<Uuid, ErrorMap>;
 	publishedChildren: Set<Uuid>;
@@ -82,6 +78,7 @@ export type State = {
 };
 
 const INITIAL_STATE: State = {
+	clipboard: null,
 	history: {
 		deletedChildren: [],
 		deletedGroupERCs: [],
@@ -97,16 +94,18 @@ const INITIAL_STATE: State = {
 		erc: '',
 		label: {},
 		name: '',
+		path: '',
 		spaces: 'all',
 		status: 'new',
 		system: false,
+		type: 'L_CMS_CONTENT_STRUCTURES',
 		uuid: getUuid(),
 		workflows: {},
 	},
 	unsavedChanges: false,
 };
 
-type AddFieldAction = {field: Field; parentUuid?: Uuid; type: 'add-field'};
+type AddFieldAction = {field: Field; type: 'add-field'};
 
 type AddReferencedStructuresAction = {
 	referencedStructures: ReferencedStructure[];
@@ -120,7 +119,7 @@ type AddRelatedContentAction = {
 
 type AddRepeatableGroupAction = {
 	type: 'add-repeatable-group';
-	uuid?: Uuid;
+	uuids: Uuid[];
 };
 
 type AddErrorAction = {
@@ -135,16 +134,24 @@ type ClearErrorsAction = {
 	type: 'clear-errors';
 };
 
+type CopyChildrenAction = {type: 'copy-children'; uuids: Uuid[]};
+
 type CreateStructureAction = {
 	id: number;
 	type: 'create-structure';
 };
 
-type DeleteChildAction = {type: 'delete-child'; uuid: Uuid};
+type DeleteChildrenAction = {type: 'delete-children'; uuids: Uuid[]};
 
-type DeleteSelectionAction = {type: 'delete-selection'};
+type DuplicateChildrenAction = {type: 'duplicate-children'; uuids: Uuid[]};
 
-type DuplicateChild = {type: 'duplicate-child'; uuid: Uuid};
+type MoveChildrenAction = {
+	items: StructureChild[];
+	targetUuid: Uuid;
+	type: 'move-children';
+};
+
+type PasteAction = {targetUuid: Uuid; type: 'paste'};
 
 type PublishStructureAction = {id?: number; type: 'publish-structure'};
 
@@ -153,13 +160,13 @@ type RefreshReferencedStructuresAction = {
 	type: 'refresh-referenced-structures';
 };
 
-type RenameItem = {
+type RenameItemAction = {
 	name: string;
 	type: 'rename-item';
 	uuid: Uuid;
 };
 
-type SetRenamingItemUuid = {
+type SetRenamingItemUuidAction = {
 	type: 'set-renaming-item-uuid';
 	uuid: Uuid;
 };
@@ -169,7 +176,7 @@ type SetSelectionAction = {
 	type: 'set-selection';
 };
 
-type SetStructureStatus = {
+type SetStructureStatusAction = {
 	status: Structure['status'];
 	type: 'set-structure-status';
 };
@@ -190,6 +197,7 @@ type UpdateFieldAction = {
 	indexableConfig?: Field['indexableConfig'];
 	label?: Liferay.Language.LocalizedValue<string>;
 	localized?: boolean;
+	multiselection?: boolean;
 	name?: string;
 	newName?: string;
 	picklistId?: number;
@@ -235,16 +243,18 @@ export type Action =
 	| AddRepeatableGroupAction
 	| AddErrorAction
 	| ClearErrorsAction
+	| CopyChildrenAction
 	| CreateStructureAction
-	| DeleteChildAction
-	| DeleteSelectionAction
-	| DuplicateChild
+	| DeleteChildrenAction
+	| DuplicateChildrenAction
+	| MoveChildrenAction
+	| PasteAction
 	| PublishStructureAction
 	| RefreshReferencedStructuresAction
-	| RenameItem
-	| SetRenamingItemUuid
+	| RenameItemAction
+	| SetRenamingItemUuidAction
 	| SetSelectionAction
-	| SetStructureStatus
+	| SetStructureStatusAction
 	| SetWorkflowAction
 	| UngroupAction
 	| UpdateFieldAction
@@ -260,14 +270,14 @@ function reducer(state: State, action: Action): State {
 
 	switch (action.type) {
 		case 'add-field': {
-			const {field, parentUuid} = action;
+			const {field} = action;
 
 			const {structure} = state;
 
 			let parent: Structure | RepeatableGroup = structure;
 
-			if (parentUuid) {
-				const item = findChild({root: structure, uuid: parentUuid});
+			if (field.parent !== structure.uuid) {
+				const item = findChild({root: structure, uuid: field.parent});
 
 				if (item?.type === 'repeatable-group') {
 					parent = item;
@@ -283,9 +293,8 @@ function reducer(state: State, action: Action): State {
 				),
 			};
 
-			const children = insertChild({
+			const children = addChild({
 				child: nextField,
-				parentUuid: parent.uuid,
 				root: structure,
 			});
 
@@ -303,7 +312,7 @@ function reducer(state: State, action: Action): State {
 
 			const {publishedChildren, structure} = state;
 
-			const children = new Map(structure.children);
+			let children = new Map(structure.children);
 
 			let nextPublishedChildren = new Set(publishedChildren);
 
@@ -313,7 +322,10 @@ function reducer(state: State, action: Action): State {
 				i,
 				referencedStructure,
 			] of referencedStructures.entries()) {
-				children.set(referencedStructure.uuid, referencedStructure);
+				children = addChild({
+					child: referencedStructure,
+					root: {...structure, children},
+				});
 
 				nextPublishedChildren = new Set([
 					...nextPublishedChildren,
@@ -339,9 +351,10 @@ function reducer(state: State, action: Action): State {
 
 			const {structure} = state;
 
-			const children = new Map(structure.children);
-
-			children.set(relatedContent.uuid, relatedContent);
+			const children = addChild({
+				child: relatedContent,
+				root: structure,
+			});
 
 			const sortedChildren = sortChildren(children);
 
@@ -352,106 +365,41 @@ function reducer(state: State, action: Action): State {
 			};
 		}
 		case 'add-repeatable-group': {
-			const {publishedChildren, selection, structure} = state;
+			const {history, publishedChildren, structure} = state;
 
-			const {uuid} = action;
-
-			const uuids = uuid ? [uuid] : selection;
+			const {uuids} = action;
 
 			const items = uuids.map(
 				(uuid) => findChild({root: structure, uuid})!
 			);
 
-			const undeletables = getUndeletableItems(items, structure);
-
-			const reasons = [...undeletables.values()];
-
-			if (reasons.includes('is-locked')) {
-				showWarning({
-					text: Liferay.Language.get(
-						'the-repeatable-group-cannot-be-created-because-one-or-more-fields-of-the-selection-are-system-fields'
-					),
-					title: Liferay.Language.get(
-						'repeatable-group-creation-not-allowed'
-					),
-				});
-
-				return state;
-			}
-
-			if (reasons.includes('is-referenced')) {
-				showWarning({
-					text: Liferay.Language.get(
-						'the-repeatable-group-cannot-be-created-because-referenced-structure-fields-are-not-allowed-in-repeatable-groups'
-					),
-					title: Liferay.Language.get(
-						'repeatable-group-creation-not-allowed'
-					),
-				});
-
-				return state;
-			}
-
-			if (items.some(({uuid}) => publishedChildren.has(uuid))) {
-				showWarning({
-					text: Liferay.Language.get(
-						'the-repeatable-group-cannot-be-created-because-one-or-more-fields-of-the-selection-are-already-published'
-					),
-					title: Liferay.Language.get(
-						'repeatable-group-creation-not-allowed'
-					),
-				});
-
-				return state;
-			}
-
-			if (reasons.includes('causes-invalid-group')) {
-				showWarning({
-					text: Liferay.Language.get(
-						'the-repeatable-group-cannot-be-created-because-at-least-one-field-is-required'
-					),
-					title: Liferay.Language.get(
-						'repeatable-group-creation-not-allowed'
-					),
-				});
-
-				return state;
-			}
-
-			const parents = items.map(
-				(item) =>
-					findChild({
-						root: structure,
-						uuid: item.parent,
-					}) || structure
-			);
-
-			const isSameParent = new Set(parents).size === 1;
-
-			if (!isSameParent) {
-				showWarning({
-					text: Liferay.Language.get(
-						'a-repeatable-group-requires-all-selected-items-to-be-at-the-same-hierarchy-level'
-					),
-					title: Liferay.Language.get(
-						'repeatable-group-creation-not-allowed'
-					),
-				});
-
-				return state;
-			}
-
 			const groupUuid = getUuid();
 
-			const children = addGroup({
+			const children = addRepeatableGroup({
 				groupChildren: items,
-				groupParent: parents[0].uuid,
+				groupParent: items[0].parent,
 				groupUuid,
 				root: structure,
 			});
 
+			const deletedChildrenUuids = new Set<Uuid>();
+
+			for (const item of items) {
+				if (publishedChildren.has(item.uuid)) {
+					deletedChildrenUuids.add(item.uuid);
+				}
+			}
+
 			return {
 				...state,
+				history: deletedChildrenUuids.size
+					? updateHistory({
+							deletedChildrenUuids,
+							initialHistory: history,
+							publishedChildren,
+							structure,
+						})
+					: history,
 				selection: [groupUuid],
 				structure: {...structure, children},
 			};
@@ -479,6 +427,20 @@ function reducer(state: State, action: Action): State {
 				invalids: new Map(),
 			};
 		}
+		case 'copy-children': {
+			const items = action.uuids
+				.map((uuid) => findChild({root: state.structure, uuid}))
+				.filter((item): item is StructureChild => Boolean(item));
+
+			if (!items.length) {
+				return state;
+			}
+
+			return {
+				...state,
+				clipboard: {items},
+			};
+		}
 		case 'create-structure': {
 			const {structure} = state;
 
@@ -492,33 +454,15 @@ function reducer(state: State, action: Action): State {
 				},
 			};
 		}
-		case 'delete-child': {
+		case 'delete-children': {
+			const {uuids} = action;
+
 			const {structure} = state;
-			const {uuid} = action;
-
-			const child = findChild({root: structure, uuid});
-
-			if (!child) {
-				return state;
-			}
-
-			const undeletables = getUndeletableItems([child], structure);
-
-			if (undeletables.get(child.uuid) === 'causes-invalid-group') {
-				showWarning({
-					text: Liferay.Language.get(
-						'you-must-keep-at-least-one-field-in-a-repeatable-group'
-					),
-					title: Liferay.Language.get('deletion-not-allowed'),
-				});
-
-				return state;
-			}
 
 			const {deletedChildrenUuids, updatedChildren: nextChildren} =
 				deleteChildren({
 					root: structure,
-					uuids: [child.uuid],
+					uuids,
 				});
 
 			const invalids = new Map(state.invalids);
@@ -527,127 +471,137 @@ function reducer(state: State, action: Action): State {
 				invalids.delete(deletedChild);
 			}
 
-			let nextState: State = {
-				...state,
-				invalids,
-				structure: {...state.structure, children: nextChildren},
-			};
-
-			if (state.selection.includes(uuid)) {
-				nextState = {
-					...nextState,
-					selection: INITIAL_STATE.selection,
-				};
-			}
-
-			nextState = {
-				...nextState,
-				history: getHistory({
-					deletedChildrenUuids,
-					initialHistory: nextState.history,
-					publishedChildren: state.publishedChildren,
-					structure,
-				}),
-			};
-
-			return nextState;
-		}
-		case 'delete-selection': {
-			const {selection, structure} = state;
-
-			const items = selection.map(
-				(uuid) => findChild({root: structure, uuid})!
-			);
-
-			const undeletables = getUndeletableItems(items, structure);
-
-			if (undeletables.size) {
-				showWarning({
-					text: Liferay.Language.get(
-						'one-or-more-selected-fields-are-system-or-referenced-fields'
-					),
-					title: Liferay.Language.get(
-						'some-fields-could-not-be-deleted'
-					),
-				});
-			}
-
-			const {deletedChildrenUuids, updatedChildren: nextChildren} =
-				deleteChildren({
-					root: structure,
-					uuids: selection.filter((uuid) => !undeletables.has(uuid)),
-				});
-
 			return {
 				...state,
-				history: getHistory({
+				history: updateHistory({
 					deletedChildrenUuids,
 					initialHistory: state.history,
 					publishedChildren: state.publishedChildren,
 					structure,
 				}),
-				selection: [...undeletables.keys()],
+				invalids,
+				selection: [],
 				structure: {
 					...structure,
 					children: nextChildren,
 				},
 			};
 		}
-		case 'duplicate-child': {
-			const {structure} = state;
+		case 'duplicate-children': {
+			const {uuids} = action;
 
-			const {uuid} = action;
+			let nextStructure = state.structure;
 
-			const child = findChild({root: structure, uuid});
+			const newSelection: Uuid[] = [];
 
-			if (!child) {
-				return state;
+			for (const uuid of uuids) {
+				const child = findChild({root: nextStructure, uuid});
+
+				if (!child) {
+					continue;
+				}
+
+				const parent = (findChild({
+					root: nextStructure,
+					uuid: child.parent,
+				}) || nextStructure) as Structure | RepeatableGroup;
+
+				const copy = cloneChild({
+					child,
+					deletedChildren: state.history.deletedChildren,
+					parent: parent.uuid,
+					siblings: parent.children,
+				});
+
+				const updatedChildren = addChild({
+					child: copy,
+					root: nextStructure,
+				});
+
+				nextStructure = {...nextStructure, children: updatedChildren};
+
+				newSelection.push(copy.uuid);
 			}
-
-			// Create copy of the given child
-
-			const parent = (findChild({
-				root: structure,
-				uuid: child.parent,
-			}) || structure) as Structure | RepeatableGroup;
-
-			const copyUuid = getUuid();
-
-			const copy = {...child, uuid: copyUuid};
-
-			if (copy.type === 'referenced-structure') {
-				copy.relationshipName = getRandomName();
-			}
-			else if (copy.type === 'repeatable-group') {
-				copy.erc = getRandomId();
-				copy.name = getRandomName({capitalize: true});
-				copy.relationshipERC = getRandomId();
-				copy.relationshipName = getRandomName();
-			}
-			else {
-				copy.erc = getRandomId();
-				copy.name = findAvailableFieldName(
-					parent.children,
-					state.history.deletedChildren,
-					child.name
-				);
-			}
-
-			// Insert the copy
-
-			const children = insertChild({
-				child: copy,
-				parentUuid: parent.uuid,
-				root: structure,
-			});
 
 			return {
 				...state,
-				selection: [copyUuid],
+				selection: newSelection.length ? newSelection : state.selection,
+				structure: nextStructure,
+			};
+		}
+		case 'move-children': {
+			const {items, targetUuid} = action;
+
+			const {history, publishedChildren, structure} = state;
+
+			const children = moveChildren({
+				items,
+				root: structure,
+				targetUuid,
+			});
+
+			const deletedChildrenUuids = new Set<Uuid>();
+
+			for (const item of items) {
+				if (publishedChildren.has(item.uuid)) {
+					deletedChildrenUuids.add(item.uuid);
+				}
+			}
+
+			return {
+				...state,
+				history: deletedChildrenUuids.size
+					? updateHistory({
+							deletedChildrenUuids,
+							initialHistory: history,
+							publishedChildren,
+							structure,
+						})
+					: history,
 				structure: {
 					...structure,
 					children,
 				},
+			};
+		}
+		case 'paste': {
+			const {clipboard, history, structure} = state;
+
+			const {targetUuid} = action;
+
+			if (!clipboard?.items.length) {
+				return state;
+			}
+
+			let nextStructure = structure;
+
+			const newSelection: Uuid[] = [];
+
+			for (const item of clipboard.items) {
+				const clone = cloneChild({
+					child: item,
+					deletedChildren: history.deletedChildren,
+					parent: targetUuid,
+					siblings: getTargetChildren({
+						structure: nextStructure,
+						targetUuid,
+					}),
+				});
+
+				const updatedChildren = addChild({
+					child: clone,
+					root: nextStructure,
+				});
+
+				nextStructure = {...nextStructure, children: updatedChildren};
+
+				newSelection.push(clone.uuid);
+			}
+
+			return {
+				...state,
+				selection: newSelection,
+				structure: nextStructure,
 			};
 		}
 		case 'publish-structure': {
@@ -689,8 +643,7 @@ function reducer(state: State, action: Action): State {
 			const {name, uuid} = action;
 			const {structure} = state;
 
-			const defaultLanguageId =
-				Liferay.ThemeDisplay.getDefaultLanguageId();
+			const languageId = Liferay.ThemeDisplay.getLanguageId();
 
 			if (uuid === structure.uuid) {
 				return {
@@ -698,7 +651,7 @@ function reducer(state: State, action: Action): State {
 					renamingItemUuid: null,
 					structure: {
 						...structure,
-						label: {...structure.label, [defaultLanguageId]: name},
+						label: {...structure.label, [languageId]: name},
 					},
 				};
 			}
@@ -712,7 +665,7 @@ function reducer(state: State, action: Action): State {
 			const children = updateChild({
 				child: {
 					...child,
-					label: {...child.label, [defaultLanguageId]: name},
+					label: {...child.label, [languageId]: name},
 				},
 				root: structure,
 			});
@@ -763,20 +716,9 @@ function reducer(state: State, action: Action): State {
 			return {...state, structure: nextStructure};
 		}
 		case 'ungroup': {
-			const {publishedChildren, structure} = state;
+			const {structure} = state;
 
 			const {uuid} = action;
-
-			if (publishedChildren.has(uuid)) {
-				showWarning({
-					text: Liferay.Language.get(
-						'the-ungroup-action-cannot-be-done-because-this-repeatable-group-is-already-published'
-					),
-					title: Liferay.Language.get('ungroup-action-not-allowed'),
-				});
-
-				return state;
-			}
 
 			const nextChildren = ungroup({root: structure, uuid});
 
@@ -794,6 +736,7 @@ function reducer(state: State, action: Action): State {
 				indexableConfig,
 				label,
 				localized,
+				multiselection,
 				name,
 				picklistId,
 				required,
@@ -838,9 +781,13 @@ function reducer(state: State, action: Action): State {
 				settings: settings ?? field.settings,
 			};
 
+			if (multiselection !== undefined) {
+				(nextField as SelectFromListField).multiselection =
+					multiselection;
+			}
+
 			if (picklistId) {
-				(nextField as SingleSelectField | MultiselectField).picklistId =
-					picklistId;
+				(nextField as SelectFromListField).picklistId = picklistId;
 			}
 
 			const nextChildren = updateChild({
@@ -1106,6 +1053,7 @@ function initState(state: State): State {
 			...structure,
 			children: getDefaultChildren(structure.uuid),
 			erc: getRandomId(),
+			type: getType(),
 		},
 	};
 }
@@ -1149,14 +1097,12 @@ function useStateDispatch() {
 }
 
 function getDefaultChildren(structureUuid: Uuid) {
-	const url = new URL(window.location.href);
-
-	const type = url.searchParams.get('objectFolderExternalReferenceCode');
+	const type = getType();
 
 	const children = new Map();
 
 	const title = getDefaultField({
-		label: Liferay.Language.get('title'),
+		languageKey: 'title',
 		locked: true,
 		name: 'title',
 		parent: structureUuid,
@@ -1168,7 +1114,7 @@ function getDefaultChildren(structureUuid: Uuid) {
 
 	if (type === 'L_CMS_FILE_TYPES') {
 		const file = getDefaultField({
-			label: Liferay.Language.get('file'),
+			languageKey: 'file',
 			locked: true,
 			name: 'file',
 			parent: structureUuid,
@@ -1195,7 +1141,11 @@ function getNextName({
 		return action.name!;
 	}
 
-	if (!action.label || modifiedNames.has(item.uuid)) {
+	if (
+		!action.label ||
+		modifiedNames.has(item.uuid) ||
+		('locked' in item && item.locked)
+	) {
 		return item.name;
 	}
 
@@ -1206,57 +1156,36 @@ function getNextName({
 	});
 }
 
-function getUndeletableItems(
-	items: StructureChild[],
-	structure: Structure
-): Map<Uuid, UndeletableReason> {
-	const undeletables = new Map<Uuid, UndeletableReason>();
-
-	for (const item of items) {
-		if (isLocked(item)) {
-			undeletables.set(item.uuid, 'is-locked');
-		}
-
-		if (isReferenced({item, root: structure})) {
-			undeletables.set(item.uuid, 'is-referenced');
-		}
-
-		const parent = findChild({
-			root: structure,
-			uuid: item.parent,
-		});
-
-		if (parent?.type === 'repeatable-group') {
-			const groupFields = Array.from(parent.children.values()).filter(
-				(child) => isField(child)
-			);
-
-			const fields = items.filter((item) => isField(item));
-
-			if (
-				groupFields.every(({uuid}) =>
-					fields.some((field) => field.uuid === uuid)
-				)
-			) {
-				groupFields.forEach((field) => {
-					undeletables.set(field.uuid, 'causes-invalid-group');
-				});
-			}
-		}
+function getTargetChildren({
+	structure,
+	targetUuid,
+}: {
+	structure: Structure;
+	targetUuid: Uuid;
+}): Structure['children'] {
+	if (targetUuid === structure.uuid) {
+		return structure.children;
 	}
 
-	return undeletables;
+	const target = findChild({root: structure, uuid: targetUuid});
+
+	if (
+		target &&
+		(target.type === 'repeatable-group' ||
+			target.type === 'referenced-structure')
+	) {
+		return target.children;
+	}
+
+	return new Map();
 }
 
-function showWarning({text, title}: {text: string; title: string}) {
-	openConfirmModal({
-		buttonLabel: Liferay.Language.get('done'),
-		center: true,
-		hideCancel: true,
-		status: 'warning',
-		text,
-		title,
-	});
+function getType() {
+	const url = new URL(window.location.href);
+
+	return url.searchParams.get(
+		'objectFolderExternalReferenceCode'
+	) as StructureType;
 }
 
 export {StateContext, StateContextProvider, useSelector, useStateDispatch};

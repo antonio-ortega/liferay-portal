@@ -166,7 +166,7 @@ public class CommerceChannelDisplayContext
 
 		return _workflowDefinitionManager.liberalGetActiveWorkflowDefinitions(
 			_commerceChannelRequestHelper.getCompanyId(), QueryUtil.ALL_POS,
-			QueryUtil.ALL_POS, null);
+			null, QueryUtil.ALL_POS);
 	}
 
 	public String getAddChannelURL() throws Exception {
@@ -267,7 +267,7 @@ public class CommerceChannelDisplayContext
 	public CreationMenu getCreationMenu() throws Exception {
 		CreationMenu creationMenu = new CreationMenu();
 
-		if (hasAddChannelPermission()) {
+		if (hasAddCommerceChannelPermission()) {
 			creationMenu.addDropdownItem(
 				dropdownItem -> {
 					dropdownItem.setHref(getAddChannelURL());
@@ -431,14 +431,14 @@ public class CommerceChannelDisplayContext
 			typePK, true);
 	}
 
-	public boolean hasAddChannelPermission() {
-		ThemeDisplay themeDisplay =
-			(ThemeDisplay)httpServletRequest.getAttribute(
-				WebKeys.THEME_DISPLAY);
-
+	public boolean hasAddCommerceChannelPermission() {
 		PortletResourcePermission portletResourcePermission =
 			_commerceChannelModelResourcePermission.
 				getPortletResourcePermission();
+
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		return portletResourcePermission.contains(
 			themeDisplay.getPermissionChecker(), null,
@@ -658,6 +658,19 @@ public class CommerceChannelDisplayContext
 					CommerceConstants.SERVICE_NAME_COMMERCE_ORDER));
 
 		return commerceOrderConfiguration.undoCartItemDeletionDisabled();
+	}
+
+	public boolean isUserNotificationScopeEnabled() throws PortalException {
+		CommerceChannel commerceChannel = getCommerceChannel();
+
+		CommerceOrderConfiguration commerceOrderConfiguration =
+			_configurationProvider.getConfiguration(
+				CommerceOrderConfiguration.class,
+				new GroupServiceSettingsLocator(
+					commerceChannel.getGroupId(),
+					CommerceConstants.SERVICE_NAME_COMMERCE_ORDER));
+
+		return commerceOrderConfiguration.userNotificationScopeEnabled();
 	}
 
 	private CommerceAccountGroupServiceConfiguration

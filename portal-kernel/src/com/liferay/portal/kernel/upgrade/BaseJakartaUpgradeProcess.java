@@ -5,13 +5,13 @@
 
 package com.liferay.portal.kernel.upgrade;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.dao.db.DBInspector;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.upgrade.util.JakartaUpgradeProcessUtil;
 import com.liferay.portal.kernel.util.PropsValues;
-import com.liferay.portal.kernel.util.StringBundler;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -157,7 +157,7 @@ public abstract class BaseJakartaUpgradeProcess extends UpgradeProcess {
 		String columnName, String[] primaryKeyColumnNames, String tableName) {
 
 		StringBundler sb = new StringBundler(
-			(primaryKeyColumnNames.length * 2) + 7);
+			(primaryKeyColumnNames.length * 2) + 9);
 
 		sb.append("select ");
 
@@ -171,7 +171,9 @@ public abstract class BaseJakartaUpgradeProcess extends UpgradeProcess {
 		sb.append(tableName);
 		sb.append(" where ");
 		sb.append(columnName);
-		sb.append(" is not null");
+		sb.append(" like '%javax%' or ");
+		sb.append(columnName);
+		sb.append(" like '%JAVAX%'");
 
 		return sb.toString();
 	}

@@ -1,5 +1,5 @@
 module "vpc" {
-	azs=slice(data.aws_availability_zones.available.names, 0, 3)
+	azs=local.selected_azs
 	cidr=var.vpc_cidr
 	enable_dns_hostnames=true
 	enable_nat_gateway=true
@@ -7,16 +7,15 @@ module "vpc" {
 	private_subnet_tags={
 		"kubernetes.io/role/internal-elb"=1
 	}
-	private_subnets=var.private_subnets
+	private_subnets=coalesce(var.private_subnets, local.default_private_subnets)
 	public_subnet_tags={
 		"kubernetes.io/role/elb"=1
 	}
-	public_subnets=var.public_subnets
+	public_subnets=coalesce(var.public_subnets, local.default_public_subnets)
 	single_nat_gateway=true
-	source="terraform-aws-modules/vpc/aws"
+	source="git::https://github.com/terraform-aws-modules/terraform-aws-vpc.git?ref=25322b6b6be69db6cca7f167d7b0e5327156a595"
 	tags={
 		DeploymentName=var.deployment_name
 		Name="${var.deployment_name}-vpc"
 	}
-	version="5.8.1"
 }

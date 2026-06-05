@@ -121,15 +121,13 @@ const PurchasedSolutionsTable: React.FC<PurchasedSolutionsTableProps> = ({
 				},
 				{
 					key: 'orderStatusInfo',
-					render: (orderStatusInfo) => (
-						<OrderStatus orderStatus={orderStatusInfo?.label}>
-							{orderStatusInfo?.label}
-						</OrderStatus>
+					render: (_, placedOrder) => (
+						<OrderStatus placedOrder={placedOrder} />
 					),
 					title: 'Status',
 				},
 				{
-					align: 'center',
+					align: 'right',
 					key: 'status',
 					render: (_, {customFields, id}) => {
 						const virtualHost =
@@ -138,6 +136,7 @@ const PurchasedSolutionsTable: React.FC<PurchasedSolutionsTableProps> = ({
 						return (
 							<div onClick={(event) => event.stopPropagation()}>
 								<ClayDropDown
+									alignmentPosition={['tr', 'br']}
 									trigger={
 										<ButtonWithIcon
 											aria-label="Kebab Button"

@@ -8,12 +8,16 @@ package com.liferay.fragment.model.impl.test;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.document.library.kernel.model.DLVersionNumberIncrease;
 import com.liferay.document.library.kernel.service.DLAppService;
+import com.liferay.fragment.constants.FragmentConstants;
 import com.liferay.fragment.constants.FragmentExportImportConstants;
 import com.liferay.fragment.constants.FragmentPortletKeys;
 import com.liferay.fragment.model.FragmentCollection;
+import com.liferay.fragment.model.FragmentComposition;
 import com.liferay.fragment.model.FragmentEntry;
 import com.liferay.fragment.service.FragmentCollectionLocalService;
+import com.liferay.fragment.service.FragmentCompositionLocalService;
 import com.liferay.fragment.service.FragmentEntryLocalService;
+import com.liferay.fragment.test.util.FragmentCompositionTestUtil;
 import com.liferay.fragment.test.util.FragmentEntryTestUtil;
 import com.liferay.fragment.test.util.FragmentTestUtil;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
@@ -103,6 +107,94 @@ public class FragmentCollectionImplTest {
 	}
 
 	@Test
+	@TestInfo("LPD-82487")
+	public void testIsExportable() throws Exception {
+		Assert.assertTrue(_fragmentCollection.isExportable());
+
+		FragmentCollection fragmentCollection =
+			FragmentTestUtil.addFragmentCollection(_group.getGroupId());
+
+		Assert.assertFalse(fragmentCollection.isExportable());
+
+		FragmentComposition marketplaceFragmentComposition =
+			FragmentCompositionTestUtil.addFragmentComposition(
+				fragmentCollection.getFragmentCollectionId(),
+				RandomTestUtil.randomString());
+
+		marketplaceFragmentComposition.setMarketplace(true);
+
+		_fragmentCompositionLocalService.updateFragmentComposition(
+			marketplaceFragmentComposition);
+
+		Assert.assertFalse(fragmentCollection.isExportable());
+
+		FragmentEntry reactFragmentEntry =
+			FragmentEntryTestUtil.addFragmentEntryByType(
+				fragmentCollection.getFragmentCollectionId(),
+				FragmentConstants.TYPE_REACT);
+
+		Assert.assertTrue(reactFragmentEntry.isTypeReact());
+
+		Assert.assertFalse(fragmentCollection.isExportable());
+
+		FragmentEntry marketplaceFragmentEntry =
+			FragmentEntryTestUtil.addFragmentEntry(
+				fragmentCollection.getFragmentCollectionId());
+
+		marketplaceFragmentEntry.setMarketplace(true);
+
+		_fragmentEntryLocalService.updateFragmentEntry(
+			marketplaceFragmentEntry);
+
+		Assert.assertFalse(fragmentCollection.isExportable());
+
+		FragmentComposition exportableFragmentComposition =
+			FragmentCompositionTestUtil.addFragmentComposition(
+				fragmentCollection.getFragmentCollectionId(),
+				RandomTestUtil.randomString());
+
+		Assert.assertFalse(exportableFragmentComposition.isMarketplace());
+
+		Assert.assertTrue(fragmentCollection.isExportable());
+	}
+
+	@Test
+	@TestInfo("LPD-83557")
+	public void testIsExportableWithMarketplaceFragmentCollection()
+		throws Exception {
+
+		FragmentCollection fragmentCollection =
+			FragmentTestUtil.addFragmentCollection(_group.getGroupId());
+
+		FragmentEntryTestUtil.addFragmentEntry(
+			fragmentCollection.getFragmentCollectionId());
+
+		fragmentCollection.setMarketplace(true);
+
+		fragmentCollection =
+			_fragmentCollectionLocalService.updateFragmentCollection(
+				fragmentCollection);
+
+		Assert.assertFalse(fragmentCollection.isExportable());
+	}
+
+	@Test
+	@TestInfo("LPD-83557")
+	public void testIsExportableWithResourceFoldersOnly() throws Exception {
+		FragmentCollection fragmentCollection =
+			FragmentTestUtil.addFragmentCollection(_group.getGroupId());
+
+		PortletFileRepositoryUtil.addPortletFolder(
+			_group.getGroupId(), TestPropsValues.getUserId(),
+			FragmentPortletKeys.FRAGMENT,
+			fragmentCollection.getResourcesFolderId(),
+			RandomTestUtil.randomString(),
+			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
+
+		Assert.assertFalse(fragmentCollection.isExportable());
+	}
+
+	@Test
 	@TestInfo("LPD-33704")
 	public void testPopulateZipWriter() throws Exception {
 		ZipWriter zipWriter = _zipWriterFactory.getZipWriter();
@@ -184,12 +276,15 @@ public class FragmentCollectionImplTest {
 	}
 
 	@Inject
-	private static DLAppService _dlAppService;
+	private DLAppService _dlAppService;
 
 	private FragmentCollection _fragmentCollection;
 
 	@Inject
 	private FragmentCollectionLocalService _fragmentCollectionLocalService;
+
+	@Inject
+	private FragmentCompositionLocalService _fragmentCompositionLocalService;
 
 	@Inject
 	private FragmentEntryLocalService _fragmentEntryLocalService;

@@ -36,6 +36,26 @@ public class CommercePaymentMethodGroupRelQualifierUtil {
 	 */
 
 	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(List)
+	 */
+	public static void cacheResult(
+		List<CommercePaymentMethodGroupRelQualifier>
+			commercePaymentMethodGroupRelQualifiers) {
+
+		getPersistence().cacheResult(commercePaymentMethodGroupRelQualifiers);
+	}
+
+	/**
+	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#cacheResult(com.liferay.portal.kernel.model.BaseModel)
+	 */
+	public static void cacheResult(
+		CommercePaymentMethodGroupRelQualifier
+			commercePaymentMethodGroupRelQualifier) {
+
+		getPersistence().cacheResult(commercePaymentMethodGroupRelQualifier);
+	}
+
+	/**
 	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#clearCache()
 	 */
 	public static void clearCache() {
@@ -122,67 +142,10 @@ public class CommercePaymentMethodGroupRelQualifierUtil {
 	}
 
 	/**
-	 * Returns all the commerce payment method group rel qualifiers where commercePaymentMethodGroupRelId = &#63;.
-	 *
-	 * @param commercePaymentMethodGroupRelId the commerce payment method group rel ID
-	 * @return the matching commerce payment method group rel qualifiers
-	 */
-	public static List<CommercePaymentMethodGroupRelQualifier>
-		findByCommercePaymentMethodGroupRelId(
-			long commercePaymentMethodGroupRelId) {
-
-		return getPersistence().findByCommercePaymentMethodGroupRelId(
-			commercePaymentMethodGroupRelId);
-	}
-
-	/**
-	 * Returns a range of all the commerce payment method group rel qualifiers where commercePaymentMethodGroupRelId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CommercePaymentMethodGroupRelQualifierModelImpl</code>.
-	 * </p>
-	 *
-	 * @param commercePaymentMethodGroupRelId the commerce payment method group rel ID
-	 * @param start the lower bound of the range of commerce payment method group rel qualifiers
-	 * @param end the upper bound of the range of commerce payment method group rel qualifiers (not inclusive)
-	 * @return the range of matching commerce payment method group rel qualifiers
-	 */
-	public static List<CommercePaymentMethodGroupRelQualifier>
-		findByCommercePaymentMethodGroupRelId(
-			long commercePaymentMethodGroupRelId, int start, int end) {
-
-		return getPersistence().findByCommercePaymentMethodGroupRelId(
-			commercePaymentMethodGroupRelId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the commerce payment method group rel qualifiers where commercePaymentMethodGroupRelId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CommercePaymentMethodGroupRelQualifierModelImpl</code>.
-	 * </p>
-	 *
-	 * @param commercePaymentMethodGroupRelId the commerce payment method group rel ID
-	 * @param start the lower bound of the range of commerce payment method group rel qualifiers
-	 * @param end the upper bound of the range of commerce payment method group rel qualifiers (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching commerce payment method group rel qualifiers
-	 */
-	public static List<CommercePaymentMethodGroupRelQualifier>
-		findByCommercePaymentMethodGroupRelId(
-			long commercePaymentMethodGroupRelId, int start, int end,
-			OrderByComparator<CommercePaymentMethodGroupRelQualifier>
-				orderByComparator) {
-
-		return getPersistence().findByCommercePaymentMethodGroupRelId(
-			commercePaymentMethodGroupRelId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the commerce payment method group rel qualifiers where commercePaymentMethodGroupRelId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CommercePaymentMethodGroupRelQualifierModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.payment.model.impl.CommercePaymentMethodGroupRelQualifierModelImpl</code>.
 	 * </p>
 	 *
 	 * @param commercePaymentMethodGroupRelId the commerce payment method group rel ID
@@ -242,67 +205,6 @@ public class CommercePaymentMethodGroupRelQualifierUtil {
 	}
 
 	/**
-	 * Returns the last commerce payment method group rel qualifier in the ordered set where commercePaymentMethodGroupRelId = &#63;.
-	 *
-	 * @param commercePaymentMethodGroupRelId the commerce payment method group rel ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching commerce payment method group rel qualifier
-	 * @throws NoSuchPaymentMethodGroupRelQualifierException if a matching commerce payment method group rel qualifier could not be found
-	 */
-	public static CommercePaymentMethodGroupRelQualifier
-			findByCommercePaymentMethodGroupRelId_Last(
-				long commercePaymentMethodGroupRelId,
-				OrderByComparator<CommercePaymentMethodGroupRelQualifier>
-					orderByComparator)
-		throws com.liferay.commerce.payment.exception.
-			NoSuchPaymentMethodGroupRelQualifierException {
-
-		return getPersistence().findByCommercePaymentMethodGroupRelId_Last(
-			commercePaymentMethodGroupRelId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last commerce payment method group rel qualifier in the ordered set where commercePaymentMethodGroupRelId = &#63;.
-	 *
-	 * @param commercePaymentMethodGroupRelId the commerce payment method group rel ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching commerce payment method group rel qualifier, or <code>null</code> if a matching commerce payment method group rel qualifier could not be found
-	 */
-	public static CommercePaymentMethodGroupRelQualifier
-		fetchByCommercePaymentMethodGroupRelId_Last(
-			long commercePaymentMethodGroupRelId,
-			OrderByComparator<CommercePaymentMethodGroupRelQualifier>
-				orderByComparator) {
-
-		return getPersistence().fetchByCommercePaymentMethodGroupRelId_Last(
-			commercePaymentMethodGroupRelId, orderByComparator);
-	}
-
-	/**
-	 * Returns the commerce payment method group rel qualifiers before and after the current commerce payment method group rel qualifier in the ordered set where commercePaymentMethodGroupRelId = &#63;.
-	 *
-	 * @param commercePaymentMethodGroupRelQualifierId the primary key of the current commerce payment method group rel qualifier
-	 * @param commercePaymentMethodGroupRelId the commerce payment method group rel ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next commerce payment method group rel qualifier
-	 * @throws NoSuchPaymentMethodGroupRelQualifierException if a commerce payment method group rel qualifier with the primary key could not be found
-	 */
-	public static CommercePaymentMethodGroupRelQualifier[]
-			findByCommercePaymentMethodGroupRelId_PrevAndNext(
-				long commercePaymentMethodGroupRelQualifierId,
-				long commercePaymentMethodGroupRelId,
-				OrderByComparator<CommercePaymentMethodGroupRelQualifier>
-					orderByComparator)
-		throws com.liferay.commerce.payment.exception.
-			NoSuchPaymentMethodGroupRelQualifierException {
-
-		return getPersistence().
-			findByCommercePaymentMethodGroupRelId_PrevAndNext(
-				commercePaymentMethodGroupRelQualifierId,
-				commercePaymentMethodGroupRelId, orderByComparator);
-	}
-
-	/**
 	 * Removes all the commerce payment method group rel qualifiers where commercePaymentMethodGroupRelId = &#63; from the database.
 	 *
 	 * @param commercePaymentMethodGroupRelId the commerce payment method group rel ID
@@ -328,70 +230,10 @@ public class CommercePaymentMethodGroupRelQualifierUtil {
 	}
 
 	/**
-	 * Returns all the commerce payment method group rel qualifiers where classNameId = &#63; and commercePaymentMethodGroupRelId = &#63;.
-	 *
-	 * @param classNameId the class name ID
-	 * @param commercePaymentMethodGroupRelId the commerce payment method group rel ID
-	 * @return the matching commerce payment method group rel qualifiers
-	 */
-	public static List<CommercePaymentMethodGroupRelQualifier> findByC_C(
-		long classNameId, long commercePaymentMethodGroupRelId) {
-
-		return getPersistence().findByC_C(
-			classNameId, commercePaymentMethodGroupRelId);
-	}
-
-	/**
-	 * Returns a range of all the commerce payment method group rel qualifiers where classNameId = &#63; and commercePaymentMethodGroupRelId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CommercePaymentMethodGroupRelQualifierModelImpl</code>.
-	 * </p>
-	 *
-	 * @param classNameId the class name ID
-	 * @param commercePaymentMethodGroupRelId the commerce payment method group rel ID
-	 * @param start the lower bound of the range of commerce payment method group rel qualifiers
-	 * @param end the upper bound of the range of commerce payment method group rel qualifiers (not inclusive)
-	 * @return the range of matching commerce payment method group rel qualifiers
-	 */
-	public static List<CommercePaymentMethodGroupRelQualifier> findByC_C(
-		long classNameId, long commercePaymentMethodGroupRelId, int start,
-		int end) {
-
-		return getPersistence().findByC_C(
-			classNameId, commercePaymentMethodGroupRelId, start, end);
-	}
-
-	/**
 	 * Returns an ordered range of all the commerce payment method group rel qualifiers where classNameId = &#63; and commercePaymentMethodGroupRelId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CommercePaymentMethodGroupRelQualifierModelImpl</code>.
-	 * </p>
-	 *
-	 * @param classNameId the class name ID
-	 * @param commercePaymentMethodGroupRelId the commerce payment method group rel ID
-	 * @param start the lower bound of the range of commerce payment method group rel qualifiers
-	 * @param end the upper bound of the range of commerce payment method group rel qualifiers (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching commerce payment method group rel qualifiers
-	 */
-	public static List<CommercePaymentMethodGroupRelQualifier> findByC_C(
-		long classNameId, long commercePaymentMethodGroupRelId, int start,
-		int end,
-		OrderByComparator<CommercePaymentMethodGroupRelQualifier>
-			orderByComparator) {
-
-		return getPersistence().findByC_C(
-			classNameId, commercePaymentMethodGroupRelId, start, end,
-			orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the commerce payment method group rel qualifiers where classNameId = &#63; and commercePaymentMethodGroupRelId = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CommercePaymentMethodGroupRelQualifierModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.payment.model.impl.CommercePaymentMethodGroupRelQualifierModelImpl</code>.
 	 * </p>
 	 *
 	 * @param classNameId the class name ID
@@ -452,67 +294,6 @@ public class CommercePaymentMethodGroupRelQualifierUtil {
 	}
 
 	/**
-	 * Returns the last commerce payment method group rel qualifier in the ordered set where classNameId = &#63; and commercePaymentMethodGroupRelId = &#63;.
-	 *
-	 * @param classNameId the class name ID
-	 * @param commercePaymentMethodGroupRelId the commerce payment method group rel ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching commerce payment method group rel qualifier
-	 * @throws NoSuchPaymentMethodGroupRelQualifierException if a matching commerce payment method group rel qualifier could not be found
-	 */
-	public static CommercePaymentMethodGroupRelQualifier findByC_C_Last(
-			long classNameId, long commercePaymentMethodGroupRelId,
-			OrderByComparator<CommercePaymentMethodGroupRelQualifier>
-				orderByComparator)
-		throws com.liferay.commerce.payment.exception.
-			NoSuchPaymentMethodGroupRelQualifierException {
-
-		return getPersistence().findByC_C_Last(
-			classNameId, commercePaymentMethodGroupRelId, orderByComparator);
-	}
-
-	/**
-	 * Returns the last commerce payment method group rel qualifier in the ordered set where classNameId = &#63; and commercePaymentMethodGroupRelId = &#63;.
-	 *
-	 * @param classNameId the class name ID
-	 * @param commercePaymentMethodGroupRelId the commerce payment method group rel ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the last matching commerce payment method group rel qualifier, or <code>null</code> if a matching commerce payment method group rel qualifier could not be found
-	 */
-	public static CommercePaymentMethodGroupRelQualifier fetchByC_C_Last(
-		long classNameId, long commercePaymentMethodGroupRelId,
-		OrderByComparator<CommercePaymentMethodGroupRelQualifier>
-			orderByComparator) {
-
-		return getPersistence().fetchByC_C_Last(
-			classNameId, commercePaymentMethodGroupRelId, orderByComparator);
-	}
-
-	/**
-	 * Returns the commerce payment method group rel qualifiers before and after the current commerce payment method group rel qualifier in the ordered set where classNameId = &#63; and commercePaymentMethodGroupRelId = &#63;.
-	 *
-	 * @param commercePaymentMethodGroupRelQualifierId the primary key of the current commerce payment method group rel qualifier
-	 * @param classNameId the class name ID
-	 * @param commercePaymentMethodGroupRelId the commerce payment method group rel ID
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next commerce payment method group rel qualifier
-	 * @throws NoSuchPaymentMethodGroupRelQualifierException if a commerce payment method group rel qualifier with the primary key could not be found
-	 */
-	public static CommercePaymentMethodGroupRelQualifier[]
-			findByC_C_PrevAndNext(
-				long commercePaymentMethodGroupRelQualifierId, long classNameId,
-				long commercePaymentMethodGroupRelId,
-				OrderByComparator<CommercePaymentMethodGroupRelQualifier>
-					orderByComparator)
-		throws com.liferay.commerce.payment.exception.
-			NoSuchPaymentMethodGroupRelQualifierException {
-
-		return getPersistence().findByC_C_PrevAndNext(
-			commercePaymentMethodGroupRelQualifierId, classNameId,
-			commercePaymentMethodGroupRelId, orderByComparator);
-	}
-
-	/**
 	 * Removes all the commerce payment method group rel qualifiers where classNameId = &#63; and commercePaymentMethodGroupRelId = &#63; from the database.
 	 *
 	 * @param classNameId the class name ID
@@ -555,21 +336,6 @@ public class CommercePaymentMethodGroupRelQualifierUtil {
 			NoSuchPaymentMethodGroupRelQualifierException {
 
 		return getPersistence().findByC_C_C(
-			classNameId, classPK, commercePaymentMethodGroupRelId);
-	}
-
-	/**
-	 * Returns the commerce payment method group rel qualifier where classNameId = &#63; and classPK = &#63; and commercePaymentMethodGroupRelId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
-	 *
-	 * @param classNameId the class name ID
-	 * @param classPK the class pk
-	 * @param commercePaymentMethodGroupRelId the commerce payment method group rel ID
-	 * @return the matching commerce payment method group rel qualifier, or <code>null</code> if a matching commerce payment method group rel qualifier could not be found
-	 */
-	public static CommercePaymentMethodGroupRelQualifier fetchByC_C_C(
-		long classNameId, long classPK, long commercePaymentMethodGroupRelId) {
-
-		return getPersistence().fetchByC_C_C(
 			classNameId, classPK, commercePaymentMethodGroupRelId);
 	}
 
@@ -622,30 +388,6 @@ public class CommercePaymentMethodGroupRelQualifierUtil {
 
 		return getPersistence().countByC_C_C(
 			classNameId, classPK, commercePaymentMethodGroupRelId);
-	}
-
-	/**
-	 * Caches the commerce payment method group rel qualifier in the entity cache if it is enabled.
-	 *
-	 * @param commercePaymentMethodGroupRelQualifier the commerce payment method group rel qualifier
-	 */
-	public static void cacheResult(
-		CommercePaymentMethodGroupRelQualifier
-			commercePaymentMethodGroupRelQualifier) {
-
-		getPersistence().cacheResult(commercePaymentMethodGroupRelQualifier);
-	}
-
-	/**
-	 * Caches the commerce payment method group rel qualifiers in the entity cache if it is enabled.
-	 *
-	 * @param commercePaymentMethodGroupRelQualifiers the commerce payment method group rel qualifiers
-	 */
-	public static void cacheResult(
-		List<CommercePaymentMethodGroupRelQualifier>
-			commercePaymentMethodGroupRelQualifiers) {
-
-		getPersistence().cacheResult(commercePaymentMethodGroupRelQualifiers);
 	}
 
 	/**
@@ -715,88 +457,135 @@ public class CommercePaymentMethodGroupRelQualifierUtil {
 	}
 
 	/**
-	 * Returns all the commerce payment method group rel qualifiers.
+	 * Returns the commerce payment method group rel qualifier where classNameId = &#63; and classPK = &#63; and commercePaymentMethodGroupRelId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
 	 *
-	 * @return the commerce payment method group rel qualifiers
+	 * @param classNameId the class name ID
+	 * @param classPK the class pk
+	 * @param commercePaymentMethodGroupRelId the commerce payment method group rel ID
+	 * @return the matching commerce payment method group rel qualifier, or <code>null</code> if a matching commerce payment method group rel qualifier could not be found
 	 */
-	public static List<CommercePaymentMethodGroupRelQualifier> findAll() {
-		return getPersistence().findAll();
+	public static CommercePaymentMethodGroupRelQualifier fetchByC_C_C(
+		long classNameId, long classPK, long commercePaymentMethodGroupRelId) {
+
+		return getPersistence().fetchByC_C_C(
+			classNameId, classPK, commercePaymentMethodGroupRelId);
 	}
 
 	/**
-	 * Returns a range of all the commerce payment method group rel qualifiers.
+	 * Returns all the commerce payment method group rel qualifiers where commercePaymentMethodGroupRelId = &#63;.
+	 *
+	 * @param commercePaymentMethodGroupRelId the commerce payment method group rel ID
+	 * @return the matching commerce payment method group rel qualifiers
+	 */
+	public static List<CommercePaymentMethodGroupRelQualifier>
+		findByCommercePaymentMethodGroupRelId(
+			long commercePaymentMethodGroupRelId) {
+
+		return getPersistence().findByCommercePaymentMethodGroupRelId(
+			commercePaymentMethodGroupRelId);
+	}
+
+	/**
+	 * Returns a range of all the commerce payment method group rel qualifiers where commercePaymentMethodGroupRelId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CommercePaymentMethodGroupRelQualifierModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.payment.model.impl.CommercePaymentMethodGroupRelQualifierModelImpl</code>.
 	 * </p>
 	 *
+	 * @param commercePaymentMethodGroupRelId the commerce payment method group rel ID
 	 * @param start the lower bound of the range of commerce payment method group rel qualifiers
 	 * @param end the upper bound of the range of commerce payment method group rel qualifiers (not inclusive)
-	 * @return the range of commerce payment method group rel qualifiers
+	 * @return the range of matching commerce payment method group rel qualifiers
 	 */
-	public static List<CommercePaymentMethodGroupRelQualifier> findAll(
-		int start, int end) {
+	public static List<CommercePaymentMethodGroupRelQualifier>
+		findByCommercePaymentMethodGroupRelId(
+			long commercePaymentMethodGroupRelId, int start, int end) {
 
-		return getPersistence().findAll(start, end);
+		return getPersistence().findByCommercePaymentMethodGroupRelId(
+			commercePaymentMethodGroupRelId, start, end);
 	}
 
 	/**
-	 * Returns an ordered range of all the commerce payment method group rel qualifiers.
+	 * Returns an ordered range of all the commerce payment method group rel qualifiers where commercePaymentMethodGroupRelId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CommercePaymentMethodGroupRelQualifierModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.payment.model.impl.CommercePaymentMethodGroupRelQualifierModelImpl</code>.
 	 * </p>
 	 *
+	 * @param commercePaymentMethodGroupRelId the commerce payment method group rel ID
 	 * @param start the lower bound of the range of commerce payment method group rel qualifiers
 	 * @param end the upper bound of the range of commerce payment method group rel qualifiers (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of commerce payment method group rel qualifiers
+	 * @return the ordered range of matching commerce payment method group rel qualifiers
 	 */
-	public static List<CommercePaymentMethodGroupRelQualifier> findAll(
-		int start, int end,
+	public static List<CommercePaymentMethodGroupRelQualifier>
+		findByCommercePaymentMethodGroupRelId(
+			long commercePaymentMethodGroupRelId, int start, int end,
+			OrderByComparator<CommercePaymentMethodGroupRelQualifier>
+				orderByComparator) {
+
+		return getPersistence().findByCommercePaymentMethodGroupRelId(
+			commercePaymentMethodGroupRelId, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns all the commerce payment method group rel qualifiers where classNameId = &#63; and commercePaymentMethodGroupRelId = &#63;.
+	 *
+	 * @param classNameId the class name ID
+	 * @param commercePaymentMethodGroupRelId the commerce payment method group rel ID
+	 * @return the matching commerce payment method group rel qualifiers
+	 */
+	public static List<CommercePaymentMethodGroupRelQualifier> findByC_C(
+		long classNameId, long commercePaymentMethodGroupRelId) {
+
+		return getPersistence().findByC_C(
+			classNameId, commercePaymentMethodGroupRelId);
+	}
+
+	/**
+	 * Returns a range of all the commerce payment method group rel qualifiers where classNameId = &#63; and commercePaymentMethodGroupRelId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.payment.model.impl.CommercePaymentMethodGroupRelQualifierModelImpl</code>.
+	 * </p>
+	 *
+	 * @param classNameId the class name ID
+	 * @param commercePaymentMethodGroupRelId the commerce payment method group rel ID
+	 * @param start the lower bound of the range of commerce payment method group rel qualifiers
+	 * @param end the upper bound of the range of commerce payment method group rel qualifiers (not inclusive)
+	 * @return the range of matching commerce payment method group rel qualifiers
+	 */
+	public static List<CommercePaymentMethodGroupRelQualifier> findByC_C(
+		long classNameId, long commercePaymentMethodGroupRelId, int start,
+		int end) {
+
+		return getPersistence().findByC_C(
+			classNameId, commercePaymentMethodGroupRelId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the commerce payment method group rel qualifiers where classNameId = &#63; and commercePaymentMethodGroupRelId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.commerce.payment.model.impl.CommercePaymentMethodGroupRelQualifierModelImpl</code>.
+	 * </p>
+	 *
+	 * @param classNameId the class name ID
+	 * @param commercePaymentMethodGroupRelId the commerce payment method group rel ID
+	 * @param start the lower bound of the range of commerce payment method group rel qualifiers
+	 * @param end the upper bound of the range of commerce payment method group rel qualifiers (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching commerce payment method group rel qualifiers
+	 */
+	public static List<CommercePaymentMethodGroupRelQualifier> findByC_C(
+		long classNameId, long commercePaymentMethodGroupRelId, int start,
+		int end,
 		OrderByComparator<CommercePaymentMethodGroupRelQualifier>
 			orderByComparator) {
 
-		return getPersistence().findAll(start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns an ordered range of all the commerce payment method group rel qualifiers.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CommercePaymentMethodGroupRelQualifierModelImpl</code>.
-	 * </p>
-	 *
-	 * @param start the lower bound of the range of commerce payment method group rel qualifiers
-	 * @param end the upper bound of the range of commerce payment method group rel qualifiers (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param useFinderCache whether to use the finder cache
-	 * @return the ordered range of commerce payment method group rel qualifiers
-	 */
-	public static List<CommercePaymentMethodGroupRelQualifier> findAll(
-		int start, int end,
-		OrderByComparator<CommercePaymentMethodGroupRelQualifier>
-			orderByComparator,
-		boolean useFinderCache) {
-
-		return getPersistence().findAll(
-			start, end, orderByComparator, useFinderCache);
-	}
-
-	/**
-	 * Removes all the commerce payment method group rel qualifiers from the database.
-	 */
-	public static void removeAll() {
-		getPersistence().removeAll();
-	}
-
-	/**
-	 * Returns the number of commerce payment method group rel qualifiers.
-	 *
-	 * @return the number of commerce payment method group rel qualifiers
-	 */
-	public static int countAll() {
-		return getPersistence().countAll();
+		return getPersistence().findByC_C(
+			classNameId, commercePaymentMethodGroupRelId, start, end,
+			orderByComparator);
 	}
 
 	public static CommercePaymentMethodGroupRelQualifierPersistence
@@ -815,3 +604,4 @@ public class CommercePaymentMethodGroupRelQualifierUtil {
 		_persistence;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:297350150

@@ -6,9 +6,9 @@
 /]
 
 [#if languageId == "ja_JP" && userLastName?has_content]
-	[#assign welcomeText = languageUtil.format(locale, "welcome-x", userLastName)]
+	[#assign welcomeText = languageUtil.format(locale, "welcome-x", "${userLastName}  ${userFirstName}")]
 [#elseif userFirstName?has_content]
 	[#assign welcomeText = languageUtil.format(locale, "welcome-x", userFirstName)]
 [/#if]
 
-<h1 clas="display-4">${welcomeText}</h1>
+<h1 class="display-4" data-testid="cp-welcome-text-heading">${welcomeText}</h1>

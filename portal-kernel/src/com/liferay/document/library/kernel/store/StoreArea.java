@@ -9,9 +9,9 @@ import com.liferay.petra.function.UnsafeRunnable;
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.lang.CentralizedThreadLocal;
 import com.liferay.petra.reflect.ReflectionUtil;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
@@ -26,6 +26,18 @@ import java.util.function.Predicate;
 public enum StoreArea {
 
 	DELETED("_deleted"), LIVE(StringPool.BLANK), NEW("_new");
+
+	public static String getCurrentStoreAreaPath() {
+		StoreArea storeArea = _storeAreaThreadLocal.get();
+
+		return storeArea.getPath();
+	}
+
+	public static String getCurrentStoreAreaPath(long companyId) {
+		StoreArea storeArea = _storeAreaThreadLocal.get();
+
+		return storeArea.getPath(companyId);
+	}
 
 	public static String getCurrentStoreAreaPath(
 		long companyId, long repositoryId, String... path) {
@@ -177,9 +189,28 @@ public enum StoreArea {
 		}
 	}
 
+	public String getPath() {
+		StringBundler sb = new StringBundler(2);
+
+		if (Validator.isNotNull(_namespace)) {
+			sb.append(_namespace);
+			sb.append(StringPool.SLASH);
+		}
+
+		return sb.toString();
+	}
+
 	public String getPath(long companyId) {
-		return StringBundler.concat(
-			_namespace, StringPool.SLASH, String.valueOf(companyId));
+		StringBundler sb = new StringBundler(3);
+
+		if (Validator.isNotNull(_namespace)) {
+			sb.append(_namespace);
+			sb.append(StringPool.SLASH);
+		}
+
+		sb.append(companyId + StringPool.SLASH);
+
+		return sb.toString();
 	}
 
 	public String getPath(long companyId, long repositoryId, String... path) {
@@ -208,7 +239,15 @@ public enum StoreArea {
 			return storeArea._namespace + StringPool.SLASH + name;
 		}
 
-		return storeArea._namespace + name.substring(_namespace.length());
+		if (_namespace.length() > 0) {
+			name = name.substring(_namespace.length() + 1);
+		}
+
+		if (storeArea == LIVE) {
+			return name;
+		}
+
+		return storeArea._namespace + StringPool.SLASH + name;
 	}
 
 	private StoreArea(String namespace) {

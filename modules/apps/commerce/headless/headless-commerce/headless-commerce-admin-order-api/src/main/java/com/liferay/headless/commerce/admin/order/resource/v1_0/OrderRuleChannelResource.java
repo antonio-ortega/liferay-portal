@@ -174,3 +174,4 @@ public interface OrderRuleChannelResource {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:1760400077

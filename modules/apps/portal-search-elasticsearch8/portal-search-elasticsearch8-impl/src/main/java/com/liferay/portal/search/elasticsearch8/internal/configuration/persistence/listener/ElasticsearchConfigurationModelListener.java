@@ -34,12 +34,6 @@ public class ElasticsearchConfigurationModelListener
 		throws ConfigurationModelListenerException {
 
 		try {
-			if (!GetterUtil.getBoolean(properties.get("trackTotalHits"))) {
-				_log.error(
-					"The track total hits configuration is deprecated, use " +
-						"the track total hits limit instead");
-			}
-
 			_validateTrackTotalHitsLimit(properties);
 		}
 		catch (Exception exception) {
@@ -75,7 +69,7 @@ public class ElasticsearchConfigurationModelListener
 		int indexMaxResultWindow = GetterUtil.getInteger(
 			properties.get("indexMaxResultWindow"));
 		int trackTotalHitsLimit = GetterUtil.getInteger(
-			properties.get("trackTotalHitsLimit"));
+			properties.get("trackTotalHitsLimit"), 2147483647);
 
 		if (trackTotalHitsLimit >= indexMaxResultWindow) {
 			return;

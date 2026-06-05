@@ -97,16 +97,14 @@ public class FragmentViewportUtil {
 					fragmentViewport.getFragmentViewportStyle())
 			);
 
-			if (Objects.equals(
-					fragmentViewport.getId(), FragmentViewport.Id.DESKTOP)) {
+			FragmentViewport.Id id = fragmentViewport.getId();
 
+			if (Objects.equals(id, FragmentViewport.Id.DESKTOP)) {
 				jsonObject = JSONUtil.merge(jsonObject, viewportJSONObject);
 			}
 			else {
 				jsonObject.put(
-					ViewportIdUtil.toInternalValue(
-						fragmentViewport.getId(
-						).getValue()),
+					ViewportIdUtil.toInternalValue(id.getValue()),
 					viewportJSONObject);
 			}
 		}
@@ -140,7 +138,8 @@ public class FragmentViewportUtil {
 		if (JSONUtil.isEmpty(viewportJSONObject) ||
 			(Validator.isNull(
 				viewportJSONObject.getString("customCSS", null)) &&
-			 JSONUtil.isEmpty(viewportJSONObject.getJSONObject("styles")))) {
+			 FragmentViewportStyleUtil.isViewportStyleJSONObjectEmpty(
+				 viewportJSONObject.getJSONObject("styles")))) {
 
 			return null;
 		}

@@ -519,14 +519,13 @@ const Sorting = ({
 		setFDSSorts(
 			sortItems(
 				storedFDSSorts,
-
 				storedFDSSorts?.[0]?.[OBJECT_RELATIONSHIP.DATA_SET_SORTS]
 					?.sortsOrder as string
 			) as IDataSetSort[]
 		);
 
 		setLoading(false);
-	}, [dataSet]);
+	}, [dataSet.externalReferenceCode]);
 
 	useEffect(() => {
 		fetchDataSetSorts();

@@ -258,3 +258,4 @@ public class RelatedContentSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-794361949

@@ -176,3 +176,4 @@ public interface PriceModifierCategoryResource {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:1785124717

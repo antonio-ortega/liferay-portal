@@ -20,19 +20,21 @@ public class AgentContext {
 	}
 
 	public AgentContext(AgentContext.Builder builder) {
-		_accessToken = builder._accessToken;
+		_chatbotExternalReferenceCode = builder._chatbotExternalReferenceCode;
 		_companyId = builder._companyId;
 		_dtoConverterContext = builder._dtoConverterContext;
 		_groupId = builder._groupId;
 		_input = builder._input;
+		_instructionDefinitionScope = builder._instructionDefinitionScope;
+		_oAuth2ApplicationId = builder._oAuth2ApplicationId;
 		_serviceContext = builder._serviceContext;
 		_sseEventSinkKey = builder._sseEventSinkKey;
 		_userId = builder._userId;
 		_userToken = builder._userToken;
 	}
 
-	public String getAccessToken() {
-		return _accessToken;
+	public String getChatbotExternalReferenceCode() {
+		return _chatbotExternalReferenceCode;
 	}
 
 	public long getCompanyId() {
@@ -49,6 +51,14 @@ public class AgentContext {
 
 	public Map<String, Object> getInput() {
 		return _input;
+	}
+
+	public String getInstructionDefinitionScope() {
+		return _instructionDefinitionScope;
+	}
+
+	public long getOAuth2ApplicationId() {
+		return _oAuth2ApplicationId;
 	}
 
 	public ServiceContext getServiceContext() {
@@ -69,14 +79,16 @@ public class AgentContext {
 
 	public static class Builder {
 
-		public Builder accessToken(String accessToken) {
-			_accessToken = accessToken;
-
-			return this;
-		}
-
 		public AgentContext build() {
 			return new AgentContext(this);
+		}
+
+		public Builder chatbotExternalReferenceCode(
+			String chatbotExternalReferenceCode) {
+
+			_chatbotExternalReferenceCode = chatbotExternalReferenceCode;
+
+			return this;
 		}
 
 		public Builder companyId(long companyId) {
@@ -105,6 +117,20 @@ public class AgentContext {
 			return this;
 		}
 
+		public Builder instructionDefinitionScope(
+			String instructionDefinitionScope) {
+
+			_instructionDefinitionScope = instructionDefinitionScope;
+
+			return this;
+		}
+
+		public Builder oAuth2ApplicationId(long oAuth2ApplicationId) {
+			_oAuth2ApplicationId = oAuth2ApplicationId;
+
+			return this;
+		}
+
 		public Builder serviceContext(ServiceContext serviceContext) {
 			_serviceContext = serviceContext;
 
@@ -129,11 +155,13 @@ public class AgentContext {
 			return this;
 		}
 
-		private String _accessToken;
+		private String _chatbotExternalReferenceCode;
 		private long _companyId;
 		private DTOConverterContext _dtoConverterContext;
 		private long _groupId;
 		private Map<String, Object> _input;
+		private String _instructionDefinitionScope;
+		private long _oAuth2ApplicationId;
 		private ServiceContext _serviceContext;
 		private String _sseEventSinkKey;
 		private long _userId;
@@ -141,11 +169,13 @@ public class AgentContext {
 
 	}
 
-	private final String _accessToken;
+	private final String _chatbotExternalReferenceCode;
 	private final long _companyId;
 	private final DTOConverterContext _dtoConverterContext;
 	private final long _groupId;
 	private final Map<String, Object> _input;
+	private final String _instructionDefinitionScope;
+	private final long _oAuth2ApplicationId;
 	private final ServiceContext _serviceContext;
 	private final String _sseEventSinkKey;
 	private final long _userId;

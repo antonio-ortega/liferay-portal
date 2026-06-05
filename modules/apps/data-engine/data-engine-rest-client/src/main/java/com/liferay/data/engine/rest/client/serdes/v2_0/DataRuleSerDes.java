@@ -295,3 +295,4 @@ public class DataRuleSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-408793996

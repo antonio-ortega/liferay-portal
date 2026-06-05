@@ -202,3 +202,4 @@ public class ProcessVersionSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:41689107

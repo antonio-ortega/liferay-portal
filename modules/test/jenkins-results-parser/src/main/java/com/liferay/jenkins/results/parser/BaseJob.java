@@ -39,7 +39,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeoutException;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
@@ -492,6 +492,25 @@ public abstract class BaseJob implements Job {
 	}
 
 	@Override
+	public Properties getJobProperties() {
+		Properties jobProperties = new Properties();
+
+		try {
+			jobProperties.putAll(JenkinsResultsParserUtil.getBuildProperties());
+		}
+		catch (IOException ioException) {
+			throw new RuntimeException(ioException);
+		}
+
+		for (File propertiesFile : getJobPropertiesFiles()) {
+			jobProperties.putAll(
+				JenkinsResultsParserUtil.getProperties(propertiesFile));
+		}
+
+		return jobProperties;
+	}
+
+	@Override
 	public List<File> getJobPropertiesFiles() {
 		return jobPropertiesFiles;
 	}
@@ -847,25 +866,8 @@ public abstract class BaseJob implements Job {
 
 	@Override
 	public boolean isBuildCachingEnabled() {
-		String buildCachingEnabled = System.getenv("BUILD_CACHING_ENABLED");
-
-		if (Objects.equals(buildCachingEnabled, "true")) {
-			return true;
-		}
-
-		try {
-			buildCachingEnabled = JenkinsResultsParserUtil.getBuildProperty(
-				"build.caching.enabled", getJobName(), getTestSuiteName());
-
-			if (Objects.equals(buildCachingEnabled, "true")) {
-				return true;
-			}
-		}
-		catch (IOException ioException) {
-			return false;
-		}
-
-		return false;
+		return JenkinsResultsParserUtil.isBuildCachingEnabled(
+			getJobName(), getTestSuiteName());
 	}
 
 	@Override

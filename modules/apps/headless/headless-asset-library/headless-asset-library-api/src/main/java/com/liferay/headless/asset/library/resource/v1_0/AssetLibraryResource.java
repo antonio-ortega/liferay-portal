@@ -205,3 +205,4 @@ public interface AssetLibraryResource {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-878948895

@@ -195,3 +195,4 @@ public class SelectionSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:637240598

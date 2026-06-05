@@ -27,6 +27,11 @@ import org.osgi.service.component.annotations.Reference;
 public class OAuth2AdminPanelApp extends BasePanelApp {
 
 	@Override
+	public String getIcon() {
+		return "shield-check";
+	}
+
+	@Override
 	public Portlet getPortlet() {
 		return _portlet;
 	}

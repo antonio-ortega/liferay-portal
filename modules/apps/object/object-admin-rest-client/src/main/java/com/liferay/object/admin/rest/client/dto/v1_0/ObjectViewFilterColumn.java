@@ -200,3 +200,4 @@ public class ObjectViewFilterColumn implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:409508737

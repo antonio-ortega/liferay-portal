@@ -46,6 +46,7 @@ export type ProductPurchaseOutletContext = {
 		nextStep: () => void;
 		previousStep: () => void;
 	};
+	form: Record<string, unknown>;
 	handlePurchase: (
 		ProductPurchase: ProductPurchaseService | typeof ProductPurchaseService,
 		cart?: Cart | undefined,
@@ -57,6 +58,7 @@ export type ProductPurchaseOutletContext = {
 	productPurchaseCart: ReturnType<typeof useProductPurchaseCart>;
 	productTypeRoute: ProductPurchaseOutletProps['productTypeRoute'];
 	setAlert: React.Dispatch<ReactNode>;
+	setForm: React.Dispatch<React.SetStateAction<Record<string, unknown>>>;
 	solutionTypeSpecificationValue: SolutionTypes;
 } & Omit<ReturnType<typeof useAccounts>, 'myUserAccount'>;
 
@@ -66,6 +68,7 @@ const ProductPurchaseOutlet: React.FC<ProductPurchaseOutletProps> = ({
 	solutionTypeSpecificationValue,
 }) => {
 	const [alert, setAlert] = useState('');
+	const [form, setForm] = useState<Record<string, unknown>>({});
 	const [isSubmitting, setSubmitting] = useState(false);
 	const {accounts, selectedAccount, setSelectedAccount} = useAccounts();
 
@@ -131,8 +134,12 @@ const ProductPurchaseOutlet: React.FC<ProductPurchaseOutletProps> = ({
 
 			const link = await _productPurchase.getNextStepsLink(order);
 
+			const orderId = order?.id || cart?.id;
+
 			if (licenseType === 'PAID') {
-				await marketplaceOAuth2.taxCalculate(cart?.id);
+				await marketplaceOAuth2
+					.taxCalculate(orderId)
+					.catch(console.error);
 			}
 
 			if (link.startsWith('http')) {
@@ -167,14 +174,17 @@ const ProductPurchaseOutlet: React.FC<ProductPurchaseOutletProps> = ({
 			nextStep: () => stepNavigate(1),
 			previousStep: () => stepNavigate(-1),
 		},
+		form,
 		handlePurchase,
 		isSingleAccount,
 		marketplaceDeliveryProduct,
 		product,
 		productPurchaseCart,
+		productTypeRoute,
 		routes: steps,
 		selectedAccount,
 		setAlert,
+		setForm,
 		setSelectedAccount,
 		solutionTypeSpecificationValue,
 	};
@@ -244,7 +254,7 @@ const ProductPurchaseOutlet: React.FC<ProductPurchaseOutletProps> = ({
 			<ProductPurchase.Body className="mt-4">
 				{showSteps && tinyStepsDisplay && (
 					<ProductPurchase.CircleSteps
-						className="my-5 px-8"
+						className="my-6"
 						steps={steps}
 					/>
 				)}

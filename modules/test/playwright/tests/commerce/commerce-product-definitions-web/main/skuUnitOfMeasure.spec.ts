@@ -6,9 +6,9 @@
 import {expect, mergeTests} from '@playwright/test';
 
 import {apiHelpersTest} from '../../../../fixtures/apiHelpersTest';
-import {applicationsMenuPageTest} from '../../../../fixtures/applicationsMenuPageTest';
 import {commercePagesTest} from '../../../../fixtures/commercePagesTest';
 import {dataApiHelpersTest} from '../../../../fixtures/dataApiHelpersTest';
+import {globalMenuPagesTest} from '../../../../fixtures/globalMenuPagesTest';
 import {isolatedSiteTest} from '../../../../fixtures/isolatedSiteTest';
 import {loginTest} from '../../../../fixtures/loginTest';
 import {getRandomInt} from '../../../../utils/getRandomInt';
@@ -19,7 +19,7 @@ import {configureBuyerUserForSite, miniumSetUp} from '../../utils/commerce';
 
 export const test = mergeTests(
 	apiHelpersTest,
-	applicationsMenuPageTest,
+	globalMenuPagesTest,
 	commercePagesTest,
 	isolatedSiteTest,
 	dataApiHelpersTest,
@@ -28,10 +28,10 @@ export const test = mergeTests(
 
 test('LPD-33466 User can update pricing quantity of UOM', async ({
 	apiHelpers,
-	applicationsMenuPage,
 	commerceAdminProductDetailsPage,
 	commerceAdminProductDetailsSkusPage,
 	commerceAdminProductPage,
+	globalMenuPage,
 }) => {
 	const catalog = await apiHelpers.headlessCommerceAdminCatalog.postCatalog({
 		name: 'Catalog',
@@ -60,7 +60,7 @@ test('LPD-33466 User can update pricing quantity of UOM', async ({
 		priority: 0,
 	});
 
-	await applicationsMenuPage.goToProducts();
+	await globalMenuPage.goToCommerce('Products');
 
 	await commerceAdminProductPage.managementToolbarSearchInput.fill('Product');
 	await commerceAdminProductPage.managementToolbarSearchInput.press('Enter');
@@ -2044,10 +2044,10 @@ test(
 	{tag: ['@LPD-57002']},
 	async ({
 		apiHelpers,
-		applicationsMenuPage,
 		commerceAdminOrdersPage,
 		commerceAdminProductPage,
 		commerceAdminShipmentsPage,
+		globalMenuPage,
 		page,
 		site,
 	}) => {
@@ -2140,7 +2140,7 @@ test(
 				}
 			);
 
-			await applicationsMenuPage.goToProducts();
+			await globalMenuPage.goToCommerce('Products');
 
 			await commerceAdminProductPage
 				.managementToolbarItemLink(product.name['en_US'])
@@ -2718,10 +2718,10 @@ test(
 	{tag: ['@LPD-62187']},
 	async ({
 		apiHelpers,
-		applicationsMenuPage,
 		commerceAdminProductDetailsPage,
 		commerceAdminProductDetailsSkusPage,
 		commerceAdminProductPage,
+		globalMenuPage,
 	}) => {
 		const catalog =
 			await apiHelpers.headlessCommerceAdminCatalog.postCatalog({
@@ -2755,7 +2755,7 @@ test(
 			}
 		);
 
-		await applicationsMenuPage.goToProducts();
+		await globalMenuPage.goToCommerce('Products');
 
 		await commerceAdminProductPage.managementToolbarSearchInput.fill(
 			'Product'

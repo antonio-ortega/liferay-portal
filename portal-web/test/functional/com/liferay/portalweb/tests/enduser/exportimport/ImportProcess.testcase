@@ -1,6 +1,7 @@
 @component-name = "portal-headless"
 definition {
 
+	property browser.chrome.version = "139.0";
 	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
@@ -30,6 +31,12 @@ definition {
 	test LARFileRemovedAfterImportProcess {
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
+
+		task ("Workaround for the issue with friendlyURL collision") {
+			PagesAdmin.openPagesAdmin(siteURLKey = "guest");
+
+			PagesAdmin.deletePage(pageName = "Home");
+		}
 
 		task ("Given: Import two types of LAR files") {
 			HeadlessSite.addSite(siteName = "Site Name");
@@ -77,6 +84,12 @@ definition {
 	test TriggerSchedulerJobManuallyCanRemoveExpiredImportEntry {
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
+
+		task ("Workaround for the issue with friendlyURL collision") {
+			PagesAdmin.openPagesAdmin(siteURLKey = "guest");
+
+			PagesAdmin.deletePage(pageName = "Home");
+		}
 
 		task ("Given: Import two types of LAR files") {
 			HeadlessSite.addSite(siteName = "Site Name");
@@ -162,6 +175,12 @@ definition {
 	@description = "This is a use case for LPS-182567. TC-1: Verify that a confirmation pop-up should show up when Delete Application Data Before Importing checkbox is checked."
 	@priority = 5
 	test ViewDeletingApplicationDataPopUpOnDefaultSite {
+		task ("Workaround for the issue with friendlyURL collision") {
+			PagesAdmin.openPagesAdmin(siteURLKey = "guest");
+
+			PagesAdmin.deletePage(pageName = "Home");
+		}
+
 		task ("Given: Add a web content article and a document file") {
 			JSONWebcontent.addWebContent(
 				content = "WC WebContent Content",
@@ -237,6 +256,12 @@ definition {
 	@description = "This is a use case for LPS-182567. TC-6: Verify that a confirmation pop-up should show up when Delete Application Data Before Importing checkbox is checked on staging site."
 	@priority = 5
 	test ViewDeletingApplicationDataPopUpOnStagingSite {
+		task ("Workaround for the issue with friendlyURL collision") {
+			PagesAdmin.openPagesAdmin(siteURLKey = "guest");
+
+			PagesAdmin.deletePage(pageName = "Home");
+		}
+
 		task ("Given: Add a web content article and a document file on staging site") {
 			JSONStaging.enableLocalStaging(groupName = "Guest");
 
@@ -424,6 +449,12 @@ definition {
 	@description = "This is a use case for LPS-182567. TC-2: Verify that no confirmation pop-up should show up when Delete Application Data Before Importing checkbox is not checked."
 	@priority = 5
 	test ViewNoDeletingApplicationDataPopUpWhenUncheckCheckbox {
+		task ("Workaround for the issue with friendlyURL collision") {
+			PagesAdmin.openPagesAdmin(siteURLKey = "guest");
+
+			PagesAdmin.deletePage(pageName = "Home");
+		}
+
 		task ("Given: Add a web content article and a document file") {
 			JSONWebcontent.addWebContent(
 				content = "WC WebContent Content",

@@ -3,19 +3,18 @@
 		"actions": [
 			{
 				"actionIds": [
-					"MANAGE_AVAILABLE_ACCOUNTS"
-				],
-				"resource": "com.liferay.portal.kernel.model.Organization"
-			},
-			{
-				"actionIds": [
 					"MANAGE_ORGANIZATIONS"
 				],
 				"resource": "com.liferay.account.model.AccountEntry"
 			},
 			{
 				"actionIds": [
-					"MANAGE_USERS"
+					"ADD_USER",
+					"ASSIGN_USERS",
+					"INVITE_USER",
+					"UNASSIGN_USERS",
+					"UPDATE_USERS",
+					"VIEW_USERS"
 				],
 				"resource": "com.liferay.account.model.AccountEntry"
 			},
@@ -24,6 +23,12 @@
 					"VIEW"
 				],
 				"resource": "com.liferay.account.model.AccountRole"
+			},
+			{
+				"actionIds": [
+					"MANAGE_AVAILABLE_ACCOUNTS"
+				],
+				"resource": "com.liferay.portal.kernel.model.Organization"
 			}
 		],
 		"name": "Sales Agent",

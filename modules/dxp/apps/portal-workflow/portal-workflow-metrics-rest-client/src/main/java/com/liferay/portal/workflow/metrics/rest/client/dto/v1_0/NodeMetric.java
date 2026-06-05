@@ -206,3 +206,4 @@ public class NodeMetric implements Cloneable, Serializable {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:2073439826

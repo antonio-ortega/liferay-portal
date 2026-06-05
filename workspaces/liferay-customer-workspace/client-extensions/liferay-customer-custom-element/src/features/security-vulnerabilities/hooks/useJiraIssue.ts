@@ -4,7 +4,7 @@
  */
 
 import {useCallback, useEffect, useState} from 'react';
-import {Liferay} from '~/services/liferay';
+import {getIssue} from '~/services/liferay/rest/jira/Jira';
 
 import {JiraEnum} from '../utils/constants/jiraEnum';
 
@@ -42,12 +42,7 @@ const useJiraIssue = (issueKey?: string) => {
 		setLoading(true);
 
 		try {
-			const response: IJiraIssue =
-				await Liferay.OAuth2Client.FromUserAgentApplication(
-					'liferay-customer-etc-spring-boot-oaua'
-				)
-					.fetch(`/jira/issue/${issueKey}`)
-					.then((response: {json: () => any}) => response.json());
+			const response: IJiraIssue = await getIssue(issueKey);
 
 			setJiraIssue(response);
 		}

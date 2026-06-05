@@ -6,7 +6,6 @@
 import ClayButton from '@clayui/button';
 import ClayForm from '@clayui/form';
 import ClayModal from '@clayui/modal';
-import {FDS_EVENT} from '@liferay/frontend-data-set-web';
 import {AssigneeValue} from '@liferay/object-dynamic-data-mapping-form-field-type';
 import {DatePicker} from '@liferay/object-js-components-web';
 import {
@@ -30,13 +29,15 @@ import './../AssigneeTrigger.scss';
 
 type CreateTaskModalProps = {
 	closeModal: () => void;
-	dataSetId: string;
+	loadData: Function;
+	projectId?: string;
 	state: string;
 };
 
 export default function CreateTaskModal({
 	closeModal,
-	dataSetId,
+	loadData,
+	projectId,
 	state,
 }: CreateTaskModalProps) {
 	const [states, setStates] = useState([]);
@@ -61,20 +62,26 @@ export default function CreateTaskModal({
 		initialValues: {
 			assignTo: {},
 			dueDate: '',
-			r_cmpProjectToCMPTasks_c_cmpProjectId: 0,
+			r_cmpProjectToCMPTasks_c_cmpProjectId: Number(projectId) ?? 0,
 			state,
 			title: '',
 		},
 		onSubmit: async (values) => {
 			const {error} = await postTaskByScope({
-				body: values,
+				body: {
+					...values,
+					keywords: [
+						'L_CMP_TASK_' +
+							Math.floor(Math.random() * 100000000).toString(),
+					],
+				},
 				scopeKey,
 			});
 
 			if (!error) {
 				closeModal();
 
-				Liferay.fire(FDS_EVENT.UPDATE_DISPLAY, {id: dataSetId});
+				loadData();
 
 				displayCreateSuccessToast(values.title);
 			}
@@ -121,10 +128,20 @@ export default function CreateTaskModal({
 					};
 				})
 			);
+
+			if (projectId) {
+				const scopeKey = items.find(
+					({embedded: {id}}) => String(id) === projectId
+				)?.embedded.scopeKey;
+
+				if (scopeKey) {
+					setScopeKey(scopeKey);
+				}
+			}
 		};
 
 		makeFetch();
-	}, []);
+	}, [projectId]);
 
 	return (
 		<ClayForm
@@ -150,6 +167,7 @@ export default function CreateTaskModal({
 				/>
 
 				<FieldPicker
+					disabled={!!projectId}
 					errorMessage={
 						touched.r_cmpProjectToCMPTasks_c_cmpProjectId
 							? errors.r_cmpProjectToCMPTasks_c_cmpProjectId
@@ -157,7 +175,7 @@ export default function CreateTaskModal({
 					}
 					id="r_cmpProjectToCMPTasks_c_cmpProjectId"
 					items={projects}
-					label={Liferay.Language.get('projects')}
+					label={Liferay.Language.get('project')}
 					name="r_cmpProjectToCMPTasks_c_cmpProjectId"
 					onSelectionChange={(key: string) => {
 						setFieldValue(

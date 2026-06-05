@@ -29,8 +29,6 @@ import com.liferay.commerce.model.CommerceAddress;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.model.CommerceOrderItem;
 import com.liferay.commerce.order.engine.CommerceOrderEngine;
-import com.liferay.commerce.price.list.model.CommercePriceEntry;
-import com.liferay.commerce.price.list.model.CommercePriceList;
 import com.liferay.commerce.price.list.service.CommercePriceEntryLocalService;
 import com.liferay.commerce.price.list.service.CommercePriceListLocalService;
 import com.liferay.commerce.product.model.CPDefinition;
@@ -773,22 +771,10 @@ public class CommerceCheckoutTest {
 				continue;
 			}
 
-			CommercePriceList commercePriceList =
-				_commercePriceListLocalService.getCatalogBaseCommercePriceList(
-					cpInstance.getGroupId());
+			BigDecimal unitPrice = commerceOrderItem.getUnitPrice();
 
-			CommercePriceEntry commercePriceEntry =
-				_commercePriceEntryLocalService.fetchCommercePriceEntry(
-					commercePriceList.getCommercePriceListId(),
-					cpInstance.getCPInstanceUuid(),
-					commerceOrderItem.getUnitOfMeasureKey());
-
-			BigDecimal price = commercePriceEntry.getPrice();
-
-			BigDecimal totalItemPrice = price.multiply(
-				commerceOrderItem.getQuantity());
-
-			expectedSubtotal = expectedSubtotal.add(totalItemPrice);
+			expectedSubtotal = expectedSubtotal.add(
+				unitPrice.multiply(commerceOrderItem.getQuantity()));
 		}
 
 		BigDecimal actualSubtotal = commerceOrder.getSubtotal();
@@ -828,7 +814,7 @@ public class CommerceCheckoutTest {
 
 		if (country == null) {
 			country = CountryLocalServiceUtil.addCountry(
-				a2, a3, true, true, RandomTestUtil.randomString(),
+				null, a2, a3, true, true, RandomTestUtil.randomString(),
 				RandomTestUtil.randomString(), RandomTestUtil.randomString(),
 				0D, true, true, false, _serviceContext);
 		}
@@ -842,9 +828,6 @@ public class CommerceCheckoutTest {
 			RandomTestUtil.randomString(), StringPool.BLANK, addressType,
 			RandomTestUtil.randomString(), _serviceContext);
 	}
-
-	private static Company _company;
-	private static User _user;
 
 	private AccountEntry _accountEntry;
 
@@ -877,6 +860,8 @@ public class CommerceCheckoutTest {
 	@Inject
 	private CommercePriceListLocalService _commercePriceListLocalService;
 
+	private Company _company;
+
 	@Inject
 	private CPDefinitionInventoryLocalService
 		_cpDefinitionInventoryLocalService;
@@ -889,5 +874,6 @@ public class CommerceCheckoutTest {
 
 	private Group _group;
 	private ServiceContext _serviceContext;
+	private User _user;
 
 }

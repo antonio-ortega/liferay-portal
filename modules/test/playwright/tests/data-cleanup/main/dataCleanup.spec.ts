@@ -5,7 +5,7 @@
 
 import {expect, mergeTests} from '@playwright/test';
 
-import {applicationsMenuPageTest} from '../../../fixtures/applicationsMenuPageTest';
+import {globalMenuPagesTest} from '../../../fixtures/globalMenuPagesTest';
 import {loginTest} from '../../../fixtures/loginTest';
 import {serverAdministrationPageTest} from '../../../fixtures/serverAdministrationPageTest';
 
@@ -17,19 +17,16 @@ const SERVLET_CONTEXT_NAMES = [
 
 export const test = mergeTests(
 	loginTest(),
-	applicationsMenuPageTest,
+	globalMenuPagesTest,
 	serverAdministrationPageTest
 );
 
-test('execute all system cleanup actions', async ({
-	applicationsMenuPage,
-	page,
-}) => {
+test('execute all system cleanup actions', async ({globalMenuPage, page}) => {
 	test.setTimeout(150000);
 
 	// Go to Server Admin Page
 
-	await applicationsMenuPage.goToServerAdministration();
+	await globalMenuPage.goToControlPanel('Server Administration');
 
 	// Execute System Cleanup Actions
 
@@ -37,7 +34,7 @@ test('execute all system cleanup actions', async ({
 });
 
 test('execute all module cleanup actions', async ({
-	applicationsMenuPage,
+	globalMenuPage,
 	page,
 	serverAdministrationPage,
 }) => {
@@ -45,7 +42,7 @@ test('execute all module cleanup actions', async ({
 
 	// Go to Server Admin Page
 
-	await applicationsMenuPage.goToServerAdministration();
+	await globalMenuPage.goToControlPanel('Server Administration');
 
 	// Add releases for Module Cleanup Actions
 
@@ -115,7 +112,7 @@ test('execute all module cleanup actions', async ({
 			resetDataCleanupRegistratorScript
 		);
 
-		await applicationsMenuPage.goToServerAdministration();
+		await globalMenuPage.goToControlPanel('Server Administration');
 
 		// Execute Module Cleanup Actions
 

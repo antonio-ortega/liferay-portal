@@ -123,11 +123,18 @@ test.beforeEach(
 	}
 );
 
-test.afterEach(async ({apiHelpers, ctCollection}) => {
-	await apiHelpers.headlessChangeTracking.deleteCTCollection(
-		ctCollection.body.id
-	);
-});
+test.afterEach(
+	async ({apiHelpers, blogsPage, changeTrackingPage, ctCollection}) => {
+		await apiHelpers.headlessChangeTracking.deleteCTCollection(
+			ctCollection.body.id
+		);
+
+		await changeTrackingPage.workOnProduction();
+
+		await blogsPage.goto();
+		await blogsPage.deleteAllBlogEntries();
+	}
+);
 
 test('LPD-25853 Edit in x publication is added in the timeline dropdown actions', async ({
 	changeTrackingPage,
@@ -561,11 +568,12 @@ test('LPD-39412 Assert publication timeline history is enabled for templates', a
 		.getByPlaceholder('Untitled Template')
 		.pressSequentially(title2, {delay: 50});
 
-	await page
-		.getByRole('button', {exact: true, name: 'Save and Continue'})
-		.click();
-
-	await page.waitForTimeout(500);
+	await Promise.all([
+		page.waitForLoadState('load'),
+		page
+			.getByRole('button', {exact: true, name: 'Save and Continue'})
+			.click(),
+	]);
 
 	const timelineButton = page.getByLabel('timeline-button');
 	await timelineButton.waitFor();
@@ -577,8 +585,6 @@ test('LPD-39412 Assert publication timeline history is enabled for templates', a
 	await expect(timelineActionsButton).toBeVisible();
 
 	await journalEditTemplatePage.goto(site.friendlyUrlPath);
-
-	await page.waitForTimeout(500);
 
 	await timelineButton.waitFor();
 	await timelineButton.click();

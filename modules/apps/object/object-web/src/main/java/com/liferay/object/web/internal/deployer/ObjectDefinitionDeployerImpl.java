@@ -9,10 +9,10 @@ import com.liferay.application.list.PanelApp;
 import com.liferay.asset.display.page.portlet.AssetDisplayPageFriendlyURLProvider;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.asset.kernel.service.AssetCategoryLocalService;
+import com.liferay.asset.kernel.service.AssetEntryLocalService;
 import com.liferay.asset.kernel.service.AssetTagLocalService;
 import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
 import com.liferay.asset.util.AssetHelper;
-import com.liferay.depot.service.DepotEntryLocalService;
 import com.liferay.document.library.kernel.exception.FileExtensionException;
 import com.liferay.document.library.kernel.exception.FileSizeException;
 import com.liferay.document.library.kernel.exception.InvalidFileException;
@@ -59,6 +59,7 @@ import com.liferay.list.type.service.ListTypeEntryLocalService;
 import com.liferay.object.configuration.ObjectConfiguration;
 import com.liferay.object.constants.ObjectActionKeys;
 import com.liferay.object.constants.ObjectDefinitionConstants;
+import com.liferay.object.constants.ObjectFolderConstants;
 import com.liferay.object.definition.security.permission.resource.ObjectDefinitionPortletResourcePermissionRegistryUtil;
 import com.liferay.object.definition.util.ObjectDefinitionUtil;
 import com.liferay.object.deployer.ObjectDefinitionDeployer;
@@ -123,9 +124,12 @@ import com.liferay.object.web.internal.object.entries.portlet.action.EditObjectE
 import com.liferay.object.web.internal.object.entries.portlet.action.EditObjectEntryMVCRenderCommand;
 import com.liferay.object.web.internal.object.entries.portlet.action.EditObjectEntryRelatedModelMVCActionCommand;
 import com.liferay.object.web.internal.object.entries.portlet.action.UploadAttachmentMVCActionCommand;
+import com.liferay.object.web.internal.sharing.servlet.taglib.ui.ObjectEntrySharingEntryDropdownItemContributor;
+import com.liferay.petra.io.unsync.UnsyncByteArrayInputStream;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.Language;
@@ -141,6 +145,7 @@ import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCResourceCommand;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.PortletLocalService;
@@ -152,7 +157,6 @@ import com.liferay.portal.kernel.upload.UploadPortletRequest;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
-import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MimeTypes;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -160,9 +164,9 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.TempFileEntryUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.search.query.Queries;
 import com.liferay.portal.search.searcher.SearchRequestBuilderFactory;
 import com.liferay.portal.search.searcher.Searcher;
+import com.liferay.sharing.servlet.taglib.ui.SharingEntryDropdownItemContributor;
 import com.liferay.template.info.item.capability.TemplateInfoItemCapability;
 import com.liferay.template.info.item.provider.TemplateInfoItemFieldSetProvider;
 import com.liferay.translation.info.item.provider.InfoItemLanguagesProvider;
@@ -233,24 +237,26 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 
 		InfoItemFriendlyURLProvider infoItemFriendlyURLProvider =
 			new ObjectEntryInfoItemFriendlyURLProvider(
-				_friendlyURLEntryLocalService, objectDefinition, _portal);
+				_friendlyURLEntryLocalService, _groupLocalService,
+				objectDefinition, _portal);
 
 		PortletResourcePermission portletResourcePermission =
 			_getPortletResourcePermission(objectDefinition.getResourceName());
 
 		InfoPermissionProvider infoPermissionProvider =
 			new ObjectEntryInfoPermissionProvider(
-				objectDefinition, _portletLocalService,
-				portletResourcePermission);
+				objectDefinition, _objectDefinitionModelResourcePermission,
+				_portletLocalService, portletResourcePermission);
 
 		List<ServiceRegistration<?>> serviceRegistrations = ListUtil.fromArray(
 			_bundleContext.registerService(
 				AssetRendererFactory.class,
 				new ObjectEntryAssetRendererFactory(
-					_assetDisplayPageFriendlyURLProvider,
-					_depotEntryLocalService, objectDefinition,
+					_assetDisplayPageFriendlyURLProvider, _dlAppLocalService,
+					_dlURLHelper, objectDefinition,
 					_objectEntryDisplayContextFactory, _objectEntryLocalService,
-					_objectEntryService, _servletContext),
+					_objectEntryService, _objectFieldLocalService,
+					_servletContext),
 				HashMapDictionaryBuilder.<String, Object>put(
 					"company.id", objectDefinition.getCompanyId()
 				).put(
@@ -357,6 +363,7 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 					objectDefinition, _objectDefinitionLocalService,
 					objectFieldInfoFieldConverter, _objectEntryLocalService,
 					_objectEntryManagerRegistry, _objectFieldLocalService,
+					_objectRelatedModelsProviderRegistry,
 					_objectRelationshipLocalService,
 					_objectScopeProviderRegistry, _portal,
 					_templateInfoItemFieldSetProvider, _userLocalService),
@@ -499,6 +506,8 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 						objectDefinition.getStorageType()),
 					_objectRelationshipLocalService, _userLocalService),
 				HashMapDictionaryBuilder.<String, Object>put(
+					"company.id", objectDefinition.getCompanyId()
+				).put(
 					"item.class.name", objectDefinition.getClassName()
 				).build()),
 			_bundleContext.registerService(
@@ -525,7 +534,7 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 					}
 				).put(
 					"jakarta.portlet.display-name",
-					objectDefinition.getPluralLabel(LocaleUtil.getSiteDefault())
+					objectDefinition.getPluralLabelCurrentValue()
 				).put(
 					"jakarta.portlet.init-param.view-template",
 					"/object_entries/view_object_entries.jsp"
@@ -589,8 +598,8 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 			_bundleContext.registerService(
 				MVCResourceCommand.class,
 				new AutocompleteAssigneeMVCResourceCommand(
-					_queries, _roleLocalService, _searcher,
-					_searchRequestBuilderFactory, _userLocalService),
+					_roleLocalService, _searcher, _searchRequestBuilderFactory,
+					_userLocalService),
 				HashMapDictionaryBuilder.<String, Object>put(
 					"jakarta.portlet.name", objectDefinition.getPortletId()
 				).put(
@@ -670,6 +679,15 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 		// Register ObjectEntriesPanelApp after ObjectEntriesPortlet. See
 		// LPS-140379.
 
+		String panelCategoryKey = objectDefinition.getPanelCategoryKey();
+
+		if (FeatureFlagManagerUtil.isEnabled(
+				objectDefinition.getCompanyId(), "LPD-69877") &&
+			!objectDefinition.isAllowStandaloneObjectEntry()) {
+
+			panelCategoryKey = StringPool.BLANK;
+		}
+
 		serviceRegistrations.add(
 			_bundleContext.registerService(
 				PanelApp.class,
@@ -690,8 +708,23 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 					"panel.app.order:Integer",
 					objectDefinition.getPanelAppOrder()
 				).put(
-					"panel.category.key", objectDefinition.getPanelCategoryKey()
+					"panel.category.key", panelCategoryKey
 				).build()));
+
+		if (objectDefinition.isCMS() &&
+			Objects.equals(
+				objectDefinition.getObjectFolderExternalReferenceCode(),
+				ObjectFolderConstants.EXTERNAL_REFERENCE_CODE_FILE_TYPES)) {
+
+			serviceRegistrations.add(
+				_bundleContext.registerService(
+					SharingEntryDropdownItemContributor.class,
+					new ObjectEntrySharingEntryDropdownItemContributor(
+						_assetEntryLocalService, _language),
+					HashMapDictionaryBuilder.<String, Object>put(
+						"model.class.name", objectDefinition.getClassName()
+					).build()));
+		}
 
 		return serviceRegistrations;
 	}
@@ -740,6 +773,9 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 		_assetDisplayPageFriendlyURLProvider;
 
 	@Reference
+	private AssetEntryLocalService _assetEntryLocalService;
+
+	@Reference
 	private AssetHelper _assetHelper;
 
 	@Reference
@@ -764,9 +800,6 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 
 	@Reference(target = "(upload.response.handler.system.default=true)")
 	private UploadResponseHandler _defaultUploadResponseHandler;
-
-	@Reference
-	private DepotEntryLocalService _depotEntryLocalService;
 
 	@Reference(
 		target = "(info.item.capability.key=" + DisplayPageInfoItemCapability.KEY + ")"
@@ -832,6 +865,12 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 	@Reference
 	private ObjectDefinitionLocalService _objectDefinitionLocalService;
 
+	@Reference(
+		target = "(model.class.name=com.liferay.object.model.ObjectDefinition)"
+	)
+	private ModelResourcePermission<ObjectDefinition>
+		_objectDefinitionModelResourcePermission;
+
 	@Reference
 	private ObjectEntryDisplayContextFactory _objectEntryDisplayContextFactory;
 
@@ -887,9 +926,6 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 
 	@Reference
 	private PortletLocalService _portletLocalService;
-
-	@Reference
-	private Queries _queries;
 
 	@Reference
 	private ResourcePermissionLocalService _resourcePermissionLocalService;
@@ -963,7 +999,13 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 			try (InputStream inputStream = uploadPortletRequest.getFileAsStream(
 					"file")) {
 
-				file = FileUtil.createTempFile(inputStream);
+				if (inputStream == null) {
+					file = FileUtil.createTempFile(
+						new UnsyncByteArrayInputStream(new byte[0]));
+				}
+				else {
+					file = FileUtil.createTempFile(inputStream);
+				}
 
 				if (file == null) {
 					throw new InvalidFileException(

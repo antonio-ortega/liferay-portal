@@ -7,6 +7,7 @@ package com.liferay.portal.search.elasticsearch8.internal.search.engine.adapter;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.Refresh;
+import co.elastic.clients.elasticsearch._types.Result;
 import co.elastic.clients.elasticsearch._types.mapping.TypeMapping;
 import co.elastic.clients.elasticsearch.core.GetRequest;
 import co.elastic.clients.elasticsearch.core.GetResponse;
@@ -25,14 +26,12 @@ import com.liferay.portal.kernel.search.BooleanQuery;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.DocumentImpl;
 import com.liferay.portal.kernel.search.Field;
-import com.liferay.portal.kernel.search.generic.BooleanQueryImpl;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.search.elasticsearch8.internal.connection.ElasticsearchClientResolver;
 import com.liferay.portal.search.elasticsearch8.internal.connection.ElasticsearchFixture;
 import com.liferay.portal.search.elasticsearch8.internal.index.constants.IndexMappingsConstants;
-import com.liferay.portal.search.elasticsearch8.internal.search.engine.adapter.document.DocumentRequestExecutorFixture;
 import com.liferay.portal.search.elasticsearch8.internal.util.ConversionUtil;
 import com.liferay.portal.search.elasticsearch8.internal.util.IndexUtil;
 import com.liferay.portal.search.engine.adapter.SearchEngineAdapter;
@@ -43,14 +42,12 @@ import com.liferay.portal.search.engine.adapter.document.DeleteByQueryDocumentRe
 import com.liferay.portal.search.engine.adapter.document.DeleteByQueryDocumentResponse;
 import com.liferay.portal.search.engine.adapter.document.DeleteDocumentRequest;
 import com.liferay.portal.search.engine.adapter.document.DeleteDocumentResponse;
-import com.liferay.portal.search.engine.adapter.document.DocumentRequestExecutor;
 import com.liferay.portal.search.engine.adapter.document.IndexDocumentRequest;
 import com.liferay.portal.search.engine.adapter.document.IndexDocumentResponse;
 import com.liferay.portal.search.engine.adapter.document.UpdateByQueryDocumentRequest;
 import com.liferay.portal.search.engine.adapter.document.UpdateByQueryDocumentResponse;
 import com.liferay.portal.search.engine.adapter.document.UpdateDocumentRequest;
 import com.liferay.portal.search.engine.adapter.document.UpdateDocumentResponse;
-import com.liferay.portal.search.internal.script.ScriptsImpl;
 import com.liferay.portal.search.script.Script;
 import com.liferay.portal.search.script.Scripts;
 import com.liferay.portal.search.test.util.indexing.DocumentFixture;
@@ -58,6 +55,7 @@ import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.io.IOException;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -67,7 +65,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -364,7 +361,7 @@ public class ElasticsearchSearchEngineAdapterDocumentRequestTest {
 					_FIELD_NAME, Boolean.FALSE
 				).build()));
 
-		BooleanQuery query = new BooleanQueryImpl();
+		BooleanQuery query = new BooleanQuery();
 
 		query.addExactTerm(_FIELD_NAME, true);
 
@@ -408,13 +405,15 @@ public class ElasticsearchSearchEngineAdapterDocumentRequestTest {
 		Assert.assertFalse(getResponse2.found());
 	}
 
-	@Ignore
 	@Test
 	public void testExecuteIndexDocumentRequestNoUid() {
 		IndexDocumentResponse indexDocumentResponse = _indexDocumentWithAdapter(
 			null, new DocumentImpl());
 
-		Assert.assertEquals(201, indexDocumentResponse.getStatus());
+		Assert.assertEquals(
+			Result.Created.jsonValue(),
+			indexDocumentResponse.getStatusString());
+
 		Assert.assertNotNull(indexDocumentResponse.getUid());
 	}
 
@@ -438,7 +437,6 @@ public class ElasticsearchSearchEngineAdapterDocumentRequestTest {
 			Boolean.TRUE.toString(), String.valueOf(fields.get(_FIELD_NAME)));
 	}
 
-	@Ignore
 	@Test
 	public void testExecuteIndexDocumentRequestUidInDocument() {
 		Document document = new DocumentImpl();
@@ -448,17 +446,22 @@ public class ElasticsearchSearchEngineAdapterDocumentRequestTest {
 		IndexDocumentResponse indexDocumentResponse = _indexDocumentWithAdapter(
 			null, document);
 
-		Assert.assertEquals(201, indexDocumentResponse.getStatus());
+		Assert.assertEquals(
+			Result.Created.jsonValue(),
+			indexDocumentResponse.getStatusString());
+
 		Assert.assertEquals("1", indexDocumentResponse.getUid());
 	}
 
-	@Ignore
 	@Test
 	public void testExecuteIndexDocumentRequestUidInRequest() {
 		IndexDocumentResponse indexDocumentResponse = _indexDocumentWithAdapter(
 			"1", new DocumentImpl());
 
-		Assert.assertEquals(201, indexDocumentResponse.getStatus());
+		Assert.assertEquals(
+			Result.Created.jsonValue(),
+			indexDocumentResponse.getStatusString());
+
 		Assert.assertEquals("1", indexDocumentResponse.getUid());
 	}
 
@@ -471,7 +474,7 @@ public class ElasticsearchSearchEngineAdapterDocumentRequestTest {
 					_FIELD_NAME, Boolean.TRUE
 				).build()));
 
-		BooleanQuery query = new BooleanQueryImpl();
+		BooleanQuery query = new BooleanQuery();
 
 		query.addExactTerm(_FIELD_NAME, true);
 
@@ -598,7 +601,7 @@ public class ElasticsearchSearchEngineAdapterDocumentRequestTest {
 		UpdateDocumentResponse updateDocumentResponse =
 			_updateDocumentWithAdapter(
 				id,
-				_scripts.script(
+				Scripts.INSTANCE.script(
 					StringBundler.concat(
 						"ctx._source.", _FIELD_NAME, "=\"false\" ")),
 				false);
@@ -619,7 +622,7 @@ public class ElasticsearchSearchEngineAdapterDocumentRequestTest {
 
 		_updateDocumentWithAdapter(
 			id,
-			_scripts.script(
+			Scripts.INSTANCE.script(
 				StringBundler.concat(
 					"ctx._source.", _FIELD_NAME, "=\"true\" ")),
 			true);
@@ -633,29 +636,17 @@ public class ElasticsearchSearchEngineAdapterDocumentRequestTest {
 	protected static SearchEngineAdapter createSearchEngineAdapter(
 		ElasticsearchClientResolver elasticsearchClientResolver) {
 
-		SearchEngineAdapter searchEngineAdapter =
-			new ElasticsearchSearchEngineAdapterImpl();
+		ElasticsearchSearchEngineAdapterImpl
+			elasticsearchSearchEngineAdapterImpl =
+				new ElasticsearchSearchEngineAdapterImpl();
 
 		ReflectionTestUtil.setFieldValue(
-			searchEngineAdapter, "_documentRequestExecutor",
-			_createDocumentRequestExecutor(elasticsearchClientResolver));
+			elasticsearchSearchEngineAdapterImpl,
+			"_elasticsearchClientResolver", elasticsearchClientResolver);
 
-		return searchEngineAdapter;
-	}
+		elasticsearchSearchEngineAdapterImpl.activate(Collections.emptyMap());
 
-	private static DocumentRequestExecutor _createDocumentRequestExecutor(
-		ElasticsearchClientResolver elasticsearchClientResolver) {
-
-		DocumentRequestExecutorFixture documentRequestExecutorFixture =
-			new DocumentRequestExecutorFixture() {
-				{
-					setElasticsearchClientResolver(elasticsearchClientResolver);
-				}
-			};
-
-		documentRequestExecutorFixture.setUp();
-
-		return documentRequestExecutorFixture.getDocumentRequestExecutor();
+		return elasticsearchSearchEngineAdapterImpl;
 	}
 
 	private void _createIndex() {
@@ -784,7 +775,6 @@ public class ElasticsearchSearchEngineAdapterDocumentRequestTest {
 	private static final String _INDEX_NAME = "test_request_index";
 
 	private static ElasticsearchFixture _elasticsearchFixture;
-	private static final Scripts _scripts = new ScriptsImpl();
 
 	private final DocumentFixture _documentFixture = new DocumentFixture();
 	private ElasticsearchClient _elasticsearchClient;

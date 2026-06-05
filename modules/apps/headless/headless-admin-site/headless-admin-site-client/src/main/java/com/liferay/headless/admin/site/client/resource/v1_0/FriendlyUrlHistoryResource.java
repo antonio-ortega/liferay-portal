@@ -529,3 +529,4 @@ public interface FriendlyUrlHistoryResource {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:1745996029

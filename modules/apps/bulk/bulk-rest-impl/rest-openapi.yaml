@@ -8,18 +8,43 @@ components:
                     type: string
                 url:
                     type: string
+        AssignStructureDefaultWorkflowBulkSelectionAction:
+            allOf:
+                -   $ref: "#/components/schemas/BulkAction"
+                -   properties:
+                        workflow:
+                            type: string
+        AssignToObjectBulkSelectionAction:
+            allOf:
+                -   $ref: "#/components/schemas/BulkAction"
+                -   properties:
+                        className:
+                            type: string
+                        externalReferenceCode:
+                            type: string
+                        name:
+                            type: string
         BulkAction:
             discriminator:
                 mapping:
-                    DefaultPermissionBulkAction: "#/components/schemas/DefaultPermissionBulkAction"
-                    DeleteBulkAction: "#/components/schemas/DeleteBulkAction"
-                    ExpireBulkAction: "#/components/schemas/ExpireBulkAction"
-                    KeywordBulkAction: "#/components/schemas/KeywordBulkAction"
-                    MoveBulkAction: "#/components/schemas/MoveBulkAction"
-                    PermissionBulkAction: "#/components/schemas/PermissionBulkAction"
-                    ResetPermissionBulkAction: "#/components/schemas/ResetPermissionBulkAction"
-                    StatusBulkAction: "#/components/schemas/StatusBulkAction"
-                    TaxonomyCategoryBulkAction: "#/components/schemas/TaxonomyCategoryBulkAction"
+                    AssignStructureDefaultWorkflowBulkSelectionAction: "#/components/schemas/AssignStructureDefaultWorkflowBulkSelectionAction"
+                    AssignToObjectBulkSelectionAction: "#/components/schemas/AssignToObjectBulkSelectionAction"
+                    CopyObjectBulkSelectionAction: "#/components/schemas/CopyObjectBulkSelectionAction"
+                    DefaultPermissionObjectBulkSelectionAction: "#/components/schemas/DefaultPermissionObjectBulkSelectionAction"
+                    DeleteObjectAssetVersionBulkSelectionAction: "#/components/schemas/DeleteObjectAssetVersionBulkSelectionAction"
+                    DeleteObjectBulkSelectionAction: "#/components/schemas/DeleteObjectBulkSelectionAction"
+                    DeleteObjectEntryBulkSelectionAction: "#/components/schemas/DeleteObjectEntryBulkSelectionAction"
+                    DueDateObjectBulkSelectionAction: "#/components/schemas/DueDateObjectBulkSelectionAction"
+                    DuplicateObjectBulkSelectionAction: "#/components/schemas/DuplicateObjectBulkSelectionAction"
+                    EditObjectCategoriesBulkSelectionAction: "#/components/schemas/EditObjectCategoriesBulkSelectionAction"
+                    EditObjectTagsBulkSelectionAction: "#/components/schemas/EditObjectTagsBulkSelectionAction"
+                    ExpireObjectBulkSelectionAction: "#/components/schemas/ExpireObjectBulkSelectionAction"
+                    MoveObjectBulkSelectionAction: "#/components/schemas/MoveObjectBulkSelectionAction"
+                    PermissionObjectBulkSelectionAction: "#/components/schemas/PermissionObjectBulkSelectionAction"
+                    ResetPermissionObjectBulkSelectionAction: "#/components/schemas/ResetPermissionObjectBulkSelectionAction"
+                    RestoreObjectBulkSelectionAction: "#/components/schemas/RestoreObjectBulkSelectionAction"
+                    StatusObjectBulkSelectionAction: "#/components/schemas/StatusObjectBulkSelectionAction"
+                    UpdateObjectValuesBulkSelectionAction: "#/components/schemas/UpdateObjectValuesBulkSelectionAction"
                 propertyName: type
             properties:
                 bulkActionItems:
@@ -30,15 +55,24 @@ components:
                     $ref: "#/components/schemas/SelectionScope"
                 type:
                     enum:
-                        -   DefaultPermissionBulkAction
-                        -   DeleteBulkAction
-                        -   ExpireBulkAction
-                        -   KeywordBulkAction
-                        -   MoveBulkAction
-                        -   PermissionBulkAction
-                        -   ResetPermissionBulkAction
-                        -   StatusBulkAction
-                        -   TaxonomyCategoryBulkAction
+                        -   AssignStructureDefaultWorkflowBulkSelectionAction
+                        -   AssignToObjectBulkSelectionAction
+                        -   CopyObjectBulkSelectionAction
+                        -   DefaultPermissionObjectBulkSelectionAction
+                        -   DeleteObjectAssetVersionBulkSelectionAction
+                        -   DeleteObjectBulkSelectionAction
+                        -   DeleteObjectEntryBulkSelectionAction
+                        -   DueDateObjectBulkSelectionAction
+                        -   DuplicateObjectBulkSelectionAction
+                        -   ExpireObjectBulkSelectionAction
+                        -   EditObjectTagsBulkSelectionAction
+                        -   MoveObjectBulkSelectionAction
+                        -   PermissionObjectBulkSelectionAction
+                        -   ResetPermissionObjectBulkSelectionAction
+                        -   RestoreObjectBulkSelectionAction
+                        -   StatusObjectBulkSelectionAction
+                        -   EditObjectCategoriesBulkSelectionAction
+                        -   UpdateObjectValuesBulkSelectionAction
                     type: string
         BulkActionItem:
             properties:
@@ -78,7 +112,16 @@ components:
                     type: integer
                 type:
                     type: string
-        DefaultPermissionBulkAction:
+        CopyObjectBulkSelectionAction:
+            allOf:
+                -   $ref: "#/components/schemas/BulkAction"
+                -   properties:
+                        objectEntryFolderId:
+                            description:
+                                The object entry folder's ID.
+                            format: int64
+                            type: integer
+        DefaultPermissionObjectBulkSelectionAction:
             allOf:
                 -   $ref: "#/components/schemas/BulkAction"
                 -   properties:
@@ -91,7 +134,26 @@ components:
                             type: string
                         treePath:
                             type: string
-        DeleteBulkAction:
+        DeleteObjectAssetVersionBulkSelectionAction:
+            allOf:
+                -   $ref: "#/components/schemas/BulkAction"
+                -   properties:
+                        className:
+                            type: string
+                        classPK:
+                            format: int64
+                            type: integer
+                        versions:
+                            items:
+                                type: integer
+                            type: array
+        DeleteObjectBulkSelectionAction:
+            allOf:
+                -   $ref: "#/components/schemas/BulkAction"
+                -   properties:
+                        className:
+                            type: string
+        DeleteObjectEntryBulkSelectionAction:
             allOf:
                 -   $ref: "#/components/schemas/BulkAction"
         DocumentBulkSelection:
@@ -102,21 +164,33 @@ components:
                     type: array
                 selectionScope:
                     $ref: "#/components/schemas/SelectionScope"
-        ExpireBulkAction:
+        DueDateObjectBulkSelectionAction:
             allOf:
                 -   $ref: "#/components/schemas/BulkAction"
-        GenericError:
-            description:
-                https://www.schema.org/GenericError
-            properties:
-                message:
-                    type: string
-            type: object
-        Keyword:
-            properties:
-                name:
-                    type: string
-        KeywordBulkAction:
+                -   properties:
+                        dueDate:
+                            format: date-time
+                            type: string
+        DuplicateObjectBulkSelectionAction:
+            allOf:
+                -   $ref: "#/components/schemas/BulkAction"
+        EditObjectCategoriesBulkSelectionAction:
+            allOf:
+                -   $ref: "#/components/schemas/BulkAction"
+                -   properties:
+                        append:
+                            type: boolean
+                        taxonomyCategoryIdsToAdd:
+                            items:
+                                format: int64
+                                type: integer
+                            type: array
+                        taxonomyCategoryIdsToRemove:
+                            items:
+                                format: int64
+                                type: integer
+                            type: array
+        EditObjectTagsBulkSelectionAction:
             allOf:
                 -   $ref: "#/components/schemas/BulkAction"
                 -   properties:
@@ -130,6 +204,20 @@ components:
                             items:
                                 type: string
                             type: array
+        ExpireObjectBulkSelectionAction:
+            allOf:
+                -   $ref: "#/components/schemas/BulkAction"
+        GenericError:
+            description:
+                https://www.schema.org/GenericError
+            properties:
+                message:
+                    type: string
+            type: object
+        Keyword:
+            properties:
+                name:
+                    type: string
         KeywordBulkSelection:
             allOf:
                 -   $ref: "#/components/schemas/DocumentBulkSelection"
@@ -143,7 +231,7 @@ components:
                             items:
                                 type: string
                             type: array
-        MoveBulkAction:
+        MoveObjectBulkSelectionAction:
             allOf:
                 -   $ref: "#/components/schemas/BulkAction"
                 -   properties:
@@ -152,7 +240,7 @@ components:
                                 The object entry folder's ID.
                             format: int64
                             type: integer
-        PermissionBulkAction:
+        PermissionObjectBulkSelectionAction:
             allOf:
                 -   $ref: "#/components/schemas/BulkAction"
                 -   properties:
@@ -164,7 +252,10 @@ components:
                             type: array
                         roleKey:
                             type: string
-        ResetPermissionBulkAction:
+        ResetPermissionObjectBulkSelectionAction:
+            allOf:
+                -   $ref: "#/components/schemas/BulkAction"
+        RestoreObjectBulkSelectionAction:
             allOf:
                 -   $ref: "#/components/schemas/BulkAction"
         Selection:
@@ -188,13 +279,12 @@ components:
                 actionInProgress:
                     type: boolean
             type: object
-        StatusBulkAction:
+        StatusObjectBulkSelectionAction:
             allOf:
                 -   $ref: "#/components/schemas/BulkAction"
                 -   properties:
                         status:
-                            format: int32
-                            type: integer
+                            type: string
         TaxonomyCategory:
             properties:
                 taxonomyCategoryId:
@@ -202,22 +292,6 @@ components:
                     type: integer
                 taxonomyCategoryName:
                     type: string
-        TaxonomyCategoryBulkAction:
-            allOf:
-                -   $ref: "#/components/schemas/BulkAction"
-                -   properties:
-                        append:
-                            type: boolean
-                        taxonomyCategoryIdsToAdd:
-                            items:
-                                format: int64
-                                type: integer
-                            type: array
-                        taxonomyCategoryIdsToRemove:
-                            items:
-                                format: int64
-                                type: integer
-                            type: array
         TaxonomyCategoryBulkSelection:
             allOf:
                 -   $ref: "#/components/schemas/DocumentBulkSelection"
@@ -248,10 +322,18 @@ components:
                 taxonomyVocabularyId:
                     format: int64
                     type: integer
+        UpdateObjectValuesBulkSelectionAction:
+            allOf:
+                -   $ref: "#/components/schemas/BulkAction"
+                -   properties:
+                        values:
+                            additionalProperties:
+                                type: object
+                            type: object
 info:
     description:
         "A Java client JAR is available for use with the group ID 'com.liferay', artifact ID
-        'com.liferay.bulk.rest.client', and version '3.0.35'."
+        'com.liferay.bulk.rest.client', and version '3.0.41'."
     license:
         name: Apache 2.0
         url: http://www.apache.org/licenses/LICENSE-2.0.html

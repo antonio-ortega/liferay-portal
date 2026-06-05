@@ -170,8 +170,8 @@ public class CTCollectionServiceTest {
 			_group.getGroupId(), folder.getFolderId());
 
 		_ctCollection = _ctCollectionService.addCTCollection(
-			null, _user.getCompanyId(), _user.getUserId(), 0,
-			RandomTestUtil.randomString(), RandomTestUtil.randomString());
+			null, 0, RandomTestUtil.randomString(),
+			RandomTestUtil.randomString());
 
 		_ctCollections.add(_ctCollection);
 
@@ -221,9 +221,10 @@ public class CTCollectionServiceTest {
 				_ctCollection.getCtCollectionId()));
 
 		try (Connection connection = DataAccess.getConnection();
+
 			PreparedStatement preparedStatement = connection.prepareStatement(
-				"select count(*) from JournalArticle where id_ = ? and " +
-					"ctCollectionId = ?")) {
+				"select count(*) as count from JournalArticle where id_ = ? " +
+					"and ctCollectionId = ?")) {
 
 			preparedStatement.setLong(1, journalArticle.getPrimaryKey());
 			preparedStatement.setLong(2, _ctCollection.getCtCollectionId());
@@ -231,7 +232,7 @@ public class CTCollectionServiceTest {
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				Assert.assertTrue(resultSet.next());
 
-				Assert.assertEquals(0, resultSet.getInt(1));
+				Assert.assertEquals(0, resultSet.getLong("count"));
 			}
 		}
 
@@ -281,8 +282,8 @@ public class CTCollectionServiceTest {
 		UserTestUtil.setUser(_user);
 
 		CTCollection fromCollection = _ctCollectionService.addCTCollection(
-			null, _user.getCompanyId(), _user.getUserId(), 0,
-			RandomTestUtil.randomString(), RandomTestUtil.randomString());
+			null, 0, RandomTestUtil.randomString(),
+			RandomTestUtil.randomString());
 
 		_ctCollections.add(fromCollection);
 
@@ -298,8 +299,8 @@ public class CTCollectionServiceTest {
 		}
 
 		CTCollection toCTCollection = _ctCollectionService.addCTCollection(
-			null, _user.getCompanyId(), _user.getUserId(), 0,
-			RandomTestUtil.randomString(), RandomTestUtil.randomString());
+			null, 0, RandomTestUtil.randomString(),
+			RandomTestUtil.randomString());
 
 		_ctCollections.add(toCTCollection);
 
@@ -340,8 +341,8 @@ public class CTCollectionServiceTest {
 		UserTestUtil.setUser(_user);
 
 		CTCollection fromCollection = _ctCollectionService.addCTCollection(
-			null, _user.getCompanyId(), _user.getUserId(), 0,
-			RandomTestUtil.randomString(), RandomTestUtil.randomString());
+			null, 0, RandomTestUtil.randomString(),
+			RandomTestUtil.randomString());
 
 		_ctCollections.add(fromCollection);
 
@@ -359,8 +360,8 @@ public class CTCollectionServiceTest {
 		}
 
 		CTCollection toCTCollection = _ctCollectionService.addCTCollection(
-			null, _user.getCompanyId(), _user.getUserId(), 0,
-			RandomTestUtil.randomString(), RandomTestUtil.randomString());
+			null, 0, RandomTestUtil.randomString(),
+			RandomTestUtil.randomString());
 
 		_ctCollections.add(toCTCollection);
 
@@ -401,8 +402,8 @@ public class CTCollectionServiceTest {
 		UserTestUtil.setUser(_user);
 
 		CTCollection fromCollection = _ctCollectionService.addCTCollection(
-			null, _user.getCompanyId(), _user.getUserId(), 0,
-			RandomTestUtil.randomString(), RandomTestUtil.randomString());
+			null, 0, RandomTestUtil.randomString(),
+			RandomTestUtil.randomString());
 
 		_ctCollections.add(fromCollection);
 
@@ -418,8 +419,8 @@ public class CTCollectionServiceTest {
 		}
 
 		CTCollection toCTCollection = _ctCollectionService.addCTCollection(
-			null, _user.getCompanyId(), _user.getUserId(), 0,
-			RandomTestUtil.randomString(), RandomTestUtil.randomString());
+			null, 0, RandomTestUtil.randomString(),
+			RandomTestUtil.randomString());
 
 		_ctCollections.add(toCTCollection);
 
@@ -453,13 +454,11 @@ public class CTCollectionServiceTest {
 		UserTestUtil.setUser(_user);
 
 		Assert.assertEquals(
-			0,
-			_ctCollectionService.getCTCollectionsCount(
-				_user.getCompanyId(), null, ""));
+			0, _ctCollectionService.getCTCollectionsCount(null, ""));
 
 		_ctCollection = _ctCollectionService.addCTCollection(
-			null, _user.getCompanyId(), _user.getUserId(), 0,
-			RandomTestUtil.randomString(), RandomTestUtil.randomString());
+			null, 0, RandomTestUtil.randomString(),
+			RandomTestUtil.randomString());
 
 		_ctCollections.add(_ctCollection);
 
@@ -478,8 +477,7 @@ public class CTCollectionServiceTest {
 
 		Assert.assertEquals(
 			expectedCTCollectionsCount,
-			_ctCollectionService.getCTCollectionsCount(
-				_user.getCompanyId(), null, ""));
+			_ctCollectionService.getCTCollectionsCount(null, ""));
 
 		JournalFolder journalFolder = null;
 
@@ -523,40 +521,21 @@ public class CTCollectionServiceTest {
 	}
 
 	@Inject
-	private static BackgroundTaskDisplayFactory _backgroundTaskDisplayFactory;
-
-	@Inject
-	private static BackgroundTaskLocalService _backgroundTaskLocalService;
-
-	@Inject
-	private static ClassNameLocalService _classNameLocalService;
-
-	@Inject
-	private static CTCollectionLocalService _ctCollectionLocalService;
-
-	@Inject
-	private static CTCollectionService _ctCollectionService;
-
-	@Inject
-	private static CTEntryLocalService _ctEntryLocalService;
-
-	@Inject
-	private static CTProcessService _ctProcessService;
-
-	@Inject
-	private static JournalArticleLocalService _journalArticleLocalService;
-
-	@Inject
 	private static JournalFolderLocalService _journalFolderLocalService;
 
 	@Inject
-	private static ResourcePermissionLocalService
-		_resourcePermissionLocalService;
+	private BackgroundTaskDisplayFactory _backgroundTaskDisplayFactory;
 
 	@Inject
-	private static RoleLocalService _roleLocalService;
+	private BackgroundTaskLocalService _backgroundTaskLocalService;
+
+	@Inject
+	private ClassNameLocalService _classNameLocalService;
 
 	private CTCollection _ctCollection;
+
+	@Inject
+	private CTCollectionLocalService _ctCollectionLocalService;
 
 	@Inject(
 		filter = "model.class.name=com.liferay.change.tracking.model.CTCollection"
@@ -567,10 +546,30 @@ public class CTCollectionServiceTest {
 	@DeleteAfterTestRun
 	private final List<CTCollection> _ctCollections = new ArrayList<>();
 
+	@Inject
+	private CTCollectionService _ctCollectionService;
+
+	@Inject
+	private CTEntryLocalService _ctEntryLocalService;
+
+	@Inject
+	private CTProcessService _ctProcessService;
+
 	private Group _group;
+
+	@Inject
+	private JournalArticleLocalService _journalArticleLocalService;
+
 	private final JournalFolderFixture _journalFolderFixture =
 		new JournalFolderFixture(_journalFolderLocalService);
+
+	@Inject
+	private ResourcePermissionLocalService _resourcePermissionLocalService;
+
 	private Role _role;
+
+	@Inject
+	private RoleLocalService _roleLocalService;
 
 	@Inject
 	private Searcher _searcher;

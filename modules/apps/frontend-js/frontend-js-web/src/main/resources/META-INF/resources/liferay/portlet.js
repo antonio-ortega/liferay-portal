@@ -562,6 +562,7 @@
 
 			const canEditTitle = options.canEditTitle;
 			const columnPos = options.columnPos;
+			const isAjaxable = options.isAjaxable;
 			const isStatic =
 				options.isStatic === 'no' ? null : options.isStatic;
 			const namespacedId = options.namespacedId;
@@ -579,6 +580,7 @@
 				portlet.portletProcessed = true;
 				portlet.portletId = portletId;
 				portlet.columnPos = columnPos;
+				portlet.isAjaxable = isAjaxable;
 				portlet.isStatic = isStatic;
 				portlet.refreshURL = refreshURL;
 				portlet.refreshURLData = refreshURLData;
@@ -610,11 +612,11 @@
 
 								const buttonGroupFragment = buildFragment(`
 									<div class="btn-group hide" id="${portletId}_button-group-title-edit">
-									<button class="btn-toolbar-button  btn btn-default" id="${portletId}_cancel-edit-title">
+									<button aria-label="${Liferay.Language.get('cancel')}" class="btn-toolbar-button btn btn-default lfr-portal-tooltip" id="${portletId}_cancel-edit-title" title="${Liferay.Language.get('cancel')}">
 									<svg aria-hidden="true" class="lexicon-icon lexicon-icon-times" focusable="false" role="presentation"><use href="${Liferay.Icons.spritemap}#times"></use></svg>
 									</button>
-									<button class="btn-toolbar-button btn btn-default" id="${portletId}_confirm-edit-title">
-									<svg aria-hidden="true" class="lexicon-icon lexicon-icon-check " focusable="false" role="presentation"><use href="${Liferay.Icons.spritemap}#check"></use></svg>
+									<button aria-label="${Liferay.Language.get('confirm')}" class="btn-toolbar-button btn btn-default lfr-portal-tooltip" id="${portletId}_confirm-edit-title" title="${Liferay.Language.get('confirm')}">
+									<svg aria-hidden="true" class="lexicon-icon lexicon-icon-check" focusable="false" role="presentation"><use href="${Liferay.Icons.spritemap}#check"></use></svg>
 									</button>
 									</div>
 								`);
@@ -790,15 +792,6 @@
 					data = data || portlet.refreshURLData || {};
 				}
 
-				if (
-					!Object.prototype.hasOwnProperty.call(
-						data,
-						'portletAjaxable'
-					)
-				) {
-					data.portletAjaxable = true;
-				}
-
 				const id = portlet.attr('portlet');
 
 				let url = portlet.refreshURL;
@@ -807,7 +800,7 @@
 					'<div class="loading-animation" id="p_p_id' + id + '" />'
 				);
 
-				if (data.portletAjaxable && url) {
+				if (portlet.isAjaxable && url) {
 					portlet.placeBefore(placeHolder);
 
 					portlet.remove(true);

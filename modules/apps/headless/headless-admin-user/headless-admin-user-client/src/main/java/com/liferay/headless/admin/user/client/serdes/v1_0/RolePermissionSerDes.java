@@ -378,3 +378,4 @@ public class RolePermissionSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-181351949

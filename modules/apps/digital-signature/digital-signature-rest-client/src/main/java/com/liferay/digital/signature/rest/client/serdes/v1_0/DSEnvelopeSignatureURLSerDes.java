@@ -204,3 +204,4 @@ public class DSEnvelopeSignatureURLSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-772814616

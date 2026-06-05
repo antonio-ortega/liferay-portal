@@ -56,7 +56,7 @@ export class ClientExtensionsPage extends POM {
 	async deleteClientExtension(clientExtensionName: string) {
 		await this._openItemActionsDropdown(clientExtensionName);
 
-		this.page.on('dialog', (dialog) => dialog.accept());
+		this.page.once('dialog', (dialog) => dialog.accept());
 
 		await this.deleteMenuItem.click();
 	}
@@ -93,7 +93,10 @@ export class ClientExtensionsPage extends POM {
 	}
 
 	async search(query: string) {
-		await this.page.getByPlaceholder('Search').fill(query);
+		await this.page
+			.getByTestId('managementToolbar')
+			.getByRole('searchbox', {name: 'Search'})
+			.fill(query);
 		await this.page.getByRole('button', {name: 'Search'}).click();
 	}
 

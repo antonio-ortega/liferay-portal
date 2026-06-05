@@ -311,3 +311,4 @@ public class LayoutSerDes {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:212333737

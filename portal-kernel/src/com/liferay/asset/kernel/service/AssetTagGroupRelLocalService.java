@@ -355,3 +355,4 @@ public interface AssetTagGroupRelLocalService
 		throws E;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:1264920504

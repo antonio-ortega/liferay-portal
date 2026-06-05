@@ -31,6 +31,7 @@ const test = mergeTests(
 	displayPageTemplatesPagesTest,
 	documentLibraryPagesTest,
 	featureFlagsTest({
+		'LPD-11235': {enabled: true},
 		'LPS-178052': {enabled: true},
 	}),
 	isolatedSiteTest,
@@ -81,7 +82,6 @@ async function addBasicJournalArticleWithSpecificDisplayPageTemplate(
 
 async function addDefaultJournalArticleDisplayPageLayoutPageTemplateEntry(
 	apiHelpers: ApiHelpers,
-	contentStructureId: string,
 	displayPageTemplateName: string,
 	site: Site
 ) {
@@ -93,7 +93,7 @@ async function addDefaultJournalArticleDisplayPageLayoutPageTemplateEntry(
 		await apiHelpers.jsonWebServicesLayoutPageTemplateEntry.addDisplayPageLayoutPageTemplateEntry(
 			{
 				classNameId: className.classNameId,
-				classTypeId: contentStructureId,
+				classTypeKey: 'BASIC-WEB-CONTENT',
 				groupId: site.id,
 				name: displayPageTemplateName,
 			}
@@ -129,7 +129,6 @@ test.describe('Configuration', () => {
 
 			await addDefaultJournalArticleDisplayPageLayoutPageTemplateEntry(
 				apiHelpers,
-				String(contentStructureId),
 				displayPageTemplateName,
 				site
 			);
@@ -215,7 +214,6 @@ test.describe('Configuration', () => {
 
 		await addDefaultJournalArticleDisplayPageLayoutPageTemplateEntry(
 			apiHelpers,
-			String(contentStructureId),
 			displayPageTemplateName,
 			site
 		);
@@ -351,7 +349,6 @@ test.describe('Configuration', () => {
 
 		await addDefaultJournalArticleDisplayPageLayoutPageTemplateEntry(
 			apiHelpers,
-			String(contentStructureId),
 			displayPageTemplateName,
 			site
 		);
@@ -432,14 +429,10 @@ test.describe('Configuration', () => {
 
 			// Create a display page template for Basic Web Content and mark as default
 
-			const contentStructureId =
-				await getBasicWebContentStructureId(apiHelpers);
-
 			const displayPageTemplateName = getRandomString();
 
 			await addDefaultJournalArticleDisplayPageLayoutPageTemplateEntry(
 				apiHelpers,
-				String(contentStructureId),
 				displayPageTemplateName,
 				site
 			);
@@ -942,14 +935,10 @@ test.describe('Usages', () => {
 
 			// Create a display page template for Basic Web Content and mark as default
 
-			const contentStructureId =
-				await getBasicWebContentStructureId(apiHelpers);
-
 			const defaultDisplayPageTemplateName = getRandomString();
 
 			await addDefaultJournalArticleDisplayPageLayoutPageTemplateEntry(
 				apiHelpers,
-				String(contentStructureId),
 				defaultDisplayPageTemplateName,
 				site
 			);
@@ -1213,7 +1202,6 @@ test.describe('View', () => {
 
 			await addDefaultJournalArticleDisplayPageLayoutPageTemplateEntry(
 				apiHelpers,
-				String(contentStructureId),
 				displayPageTemplateName,
 				site
 			);
@@ -1318,7 +1306,6 @@ test.describe('View', () => {
 
 			await addDefaultJournalArticleDisplayPageLayoutPageTemplateEntry(
 				apiHelpers,
-				String(contentStructureId),
 				displayPageTemplateName,
 				site
 			);

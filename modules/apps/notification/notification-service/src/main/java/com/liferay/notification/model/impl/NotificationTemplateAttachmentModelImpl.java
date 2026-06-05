@@ -80,6 +80,8 @@ public class NotificationTemplateAttachmentModelImpl
 	public static final String TABLE_SQL_DROP =
 		"drop table NTemplateAttachment";
 
+	public static final String ENTITY_ALIAS = "notificationTemplateAttachment";
+
 	public static final String ORDER_BY_JPQL =
 		" ORDER BY notificationTemplateAttachment.notificationTemplateAttachmentId ASC";
 
@@ -708,3 +710,4 @@ public class NotificationTemplateAttachmentModelImpl
 	private NotificationTemplateAttachment _escapedModel;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-1871795183

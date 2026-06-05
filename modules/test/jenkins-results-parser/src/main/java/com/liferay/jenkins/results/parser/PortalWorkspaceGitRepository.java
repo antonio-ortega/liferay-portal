@@ -131,35 +131,6 @@ public class PortalWorkspaceGitRepository extends BaseWorkspaceGitRepository {
 			"liferay-portal-ee", getUpstreamBranchName() + "-private");
 	}
 
-	public void setUpPortalProfile() {
-		String upstreamBranchName = getUpstreamBranchName();
-
-		if (upstreamBranchName.startsWith("ee-")) {
-			return;
-		}
-
-		Retryable<Object> setupProfileDXPRetryable = new Retryable<Object>(
-			true, _SETUP_PROFILE_DXP_RETRY_COUNT,
-			_SETUP_PROFILE_DXP_RETRY_DELAY, true) {
-
-			@Override
-			public Object execute() {
-				try {
-					AntUtil.callTarget(
-						getDirectory(), "build.xml", "setup-profile-dxp");
-				}
-				catch (AntException antException) {
-					throw new RuntimeException(antException);
-				}
-
-				return null;
-			}
-
-		};
-
-		setupProfileDXPRetryable.executeWithRetries();
-	}
-
 	public void setUpTCKHome() {
 		Map<String, String> parameters = new HashMap<>();
 
@@ -214,6 +185,25 @@ public class PortalWorkspaceGitRepository extends BaseWorkspaceGitRepository {
 		return propertyOptions;
 	}
 
+	protected boolean isBinariesCacheEnabled() {
+		try {
+			return Boolean.parseBoolean(
+				JenkinsResultsParserUtil.getBuildProperty(
+					"binaries.cache.enabled", System.getenv("CI_TEST_SUITE"),
+					System.getenv("JOB_NAME")));
+		}
+		catch (IOException ioException) {
+			return true;
+		}
+	}
+
+	@Override
+	protected void setUpAdditionalCaches() throws IOException {
+		if (isBinariesCacheEnabled()) {
+			_setUpBinariesCache();
+		}
+	}
+
 	private String _getLiferayFacesURL(
 		String repositoryName, String propertyName) {
 
@@ -247,28 +237,36 @@ public class PortalWorkspaceGitRepository extends BaseWorkspaceGitRepository {
 				"test.company.default.locale", companyDefaultLocale);
 		}
 
-		Properties buildProperties = null;
+		String portalLatestBundleVersion = System.getenv(
+			"PORTAL_LATEST_BUNDLE_VERSION");
 
-		try {
-			buildProperties = JenkinsResultsParserUtil.getBuildProperties();
-		}
-		catch (IOException ioException) {
-			throw new RuntimeException(ioException);
-		}
-
-		String latestBundleVersion = JenkinsResultsParserUtil.getProperty(
-			buildProperties, "portal.latest.bundle.version",
-			getUpstreamBranchName());
-
-		if (!JenkinsResultsParserUtil.isNullOrEmpty(latestBundleVersion)) {
-			testProperties.put(
-				"test.released.release.bundle.version", latestBundleVersion);
+		if (!JenkinsResultsParserUtil.isNullOrEmpty(
+				portalLatestBundleVersion)) {
 
 			testProperties.put(
-				"test.released.test.portal.bundle.zip.url",
-				JenkinsResultsParserUtil.getProperty(
-					buildProperties, "portal.bundle.tomcat",
-					latestBundleVersion));
+				"test.released.release.bundle.version",
+				portalLatestBundleVersion);
+
+			Properties buildProperties = null;
+
+			try {
+				buildProperties = JenkinsResultsParserUtil.getBuildProperties();
+			}
+			catch (IOException ioException) {
+				throw new RuntimeException(ioException);
+			}
+
+			String portalBundleTomcatURL = JenkinsResultsParserUtil.getProperty(
+				buildProperties, "portal.bundle.tomcat",
+				portalLatestBundleVersion);
+
+			if (!JenkinsResultsParserUtil.isNullOrEmpty(
+					portalBundleTomcatURL)) {
+
+				testProperties.put(
+					"test.released.test.portal.bundle.zip.url",
+					portalBundleTomcatURL);
+			}
 		}
 
 		return testProperties;
@@ -289,6 +287,64 @@ public class PortalWorkspaceGitRepository extends BaseWorkspaceGitRepository {
 			null, portalGitWorkingDirectory, upstreamBranchName, null,
 			portalGitWorkingDirectory.getGitRepositoryName(), "relevant",
 			upstreamBranchName);
+	}
+
+	private void _setUpBinariesCache() {
+		if (!JenkinsResultsParserUtil.isCloudCINode() || _setUpBinariesCache) {
+			return;
+		}
+
+		String binariesCacheS3Path;
+
+		try {
+			binariesCacheS3Path = JenkinsResultsParserUtil.getBuildProperty(
+				"binaries.cache.s3.path", getUpstreamBranchName());
+		}
+		catch (IOException ioException) {
+			System.out.println(
+				"WARNING: Unable to get \"binaries.cache.s3.path\"");
+
+			_setUpBinariesCache = true;
+
+			return;
+		}
+
+		if (JenkinsResultsParserUtil.isNullOrEmpty(binariesCacheS3Path)) {
+			return;
+		}
+
+		File binariesCacheTarGzipFile = new File(
+			getDirectory(), "binaries-cache.tar.gz");
+
+		try {
+			CloudBucketUtil.downloadS3File(
+				binariesCacheTarGzipFile, binariesCacheS3Path);
+		}
+		catch (IOException ioException) {
+			System.out.println(
+				"WARNING: Unable to download " + binariesCacheS3Path);
+
+			_setUpBinariesCache = true;
+
+			return;
+		}
+
+		try {
+			JenkinsResultsParserUtil.unTarGzip(
+				binariesCacheTarGzipFile, getDirectory());
+
+			System.out.println(
+				"Successfully untared " + binariesCacheS3Path + " to " +
+					getDirectory());
+		}
+		catch (Exception exception) {
+			throw new RuntimeException(exception);
+		}
+		finally {
+			JenkinsResultsParserUtil.delete(binariesCacheTarGzipFile);
+
+			_setUpBinariesCache = true;
+		}
 	}
 
 	private void _writeAppServerPropertiesFile() {
@@ -336,10 +392,7 @@ public class PortalWorkspaceGitRepository extends BaseWorkspaceGitRepository {
 			_getPortalTestProperties(), true);
 	}
 
-	private static final int _SETUP_PROFILE_DXP_RETRY_COUNT = 2;
-
-	private static final int _SETUP_PROFILE_DXP_RETRY_DELAY = 5;
-
 	private Properties _appServerProperties;
+	private boolean _setUpBinariesCache;
 
 }

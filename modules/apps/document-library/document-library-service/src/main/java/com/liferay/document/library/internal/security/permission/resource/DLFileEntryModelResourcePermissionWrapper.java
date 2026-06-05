@@ -44,7 +44,10 @@ import org.osgi.service.component.annotations.Reference;
  * @author Preston Crary
  */
 @Component(
-	property = "model.class.name=com.liferay.document.library.kernel.model.DLFileEntry",
+	property = {
+		"model.class.name=com.liferay.document.library.kernel.model.DLFileEntry",
+		"permissions.view.dynamic.inheritance.checking=true"
+	},
 	service = ModelResourcePermission.class
 )
 public class DLFileEntryModelResourcePermissionWrapper
@@ -138,6 +141,10 @@ public class DLFileEntryModelResourcePermissionWrapper
 
 					consumer.accept(
 						(permissionChecker, name, model, actionId) -> {
+							if (model.getClassNameId() > 0) {
+								return null;
+							}
+
 							if (actionId.equals(ActionKeys.DOWNLOAD)) {
 								actionId = ActionKeys.VIEW;
 							}

@@ -180,6 +180,8 @@ public interface Group extends GroupModel, PersistedModel, TreeModel {
 
 	public boolean isLimitedToParentSiteMembers();
 
+	public boolean isMaintenanceMode();
+
 	public boolean isOrganization();
 
 	public boolean isPrivateLayoutsEnabled();
@@ -213,3 +215,4 @@ public interface Group extends GroupModel, PersistedModel, TreeModel {
 			typeSettingsUnicodeProperties);
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:-71914651

@@ -8,7 +8,7 @@ package com.liferay.headless.admin.site.internal.dto.v1_0.converter;
 import com.liferay.headless.admin.site.dto.v1_0.UtilityPage;
 import com.liferay.headless.admin.site.dto.v1_0.UtilityPageSEOSettings;
 import com.liferay.headless.admin.site.dto.v1_0.UtilityPageSettings;
-import com.liferay.headless.admin.site.internal.dto.v1_0.util.ThumbnailUtil;
+import com.liferay.headless.admin.site.dto.v1_0.util.ThumbnailURLReferenceUtil;
 import com.liferay.headless.admin.user.dto.v1_0.Creator;
 import com.liferay.layout.utility.page.kernel.constants.LayoutUtilityPageEntryConstants;
 import com.liferay.layout.utility.page.model.LayoutUtilityPageEntry;
@@ -82,10 +82,10 @@ public class UtilityPageDTOConverter
 				setName(layoutUtilityPageEntry::getName);
 				setThumbnailURLReference(
 					() -> NestedFieldsSupplier.supply(
-						"thumbnail",
+						"thumbnailURLReference",
 						fieldName ->
-							ThumbnailUtil.
-								getPortletFileEntryThumbnailURLReference(
+							ThumbnailURLReferenceUtil.
+								getFileEntryThumbnailURLReference(
 									layoutUtilityPageEntry.
 										getPreviewFileEntryId())));
 				setType(() -> _getType(layoutUtilityPageEntry.getType()));
@@ -137,6 +137,9 @@ public class UtilityPageDTOConverter
 		).put(
 			LayoutUtilityPageEntryConstants.TYPE_SC_NOT_FOUND,
 			UtilityPage.Type.ERROR_CODE404
+		).put(
+			LayoutUtilityPageEntryConstants.TYPE_SC_SERVICE_UNAVAILABLE,
+			UtilityPage.Type.ERROR_CODE503
 		).put(
 			LayoutUtilityPageEntryConstants.TYPE_STATUS, UtilityPage.Type.ERROR
 		).put(

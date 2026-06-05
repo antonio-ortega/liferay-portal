@@ -6,12 +6,12 @@
 import {expect, mergeTests} from '@playwright/test';
 import {readFileSync, statSync} from 'fs';
 
-import {applicationsMenuPageTest} from '../../../fixtures/applicationsMenuPageTest';
+import {globalMenuPagesTest} from '../../../fixtures/globalMenuPagesTest';
 import {loginTest} from '../../../fixtures/loginTest';
 import {clickAndExpectToBeVisible} from '../../../utils/clickAndExpectToBeVisible';
 import {getTempDir} from '../../../utils/temp';
 
-export const test = mergeTests(loginTest(), applicationsMenuPageTest);
+export const test = mergeTests(loginTest(), globalMenuPagesTest);
 
 const AUDIT_PORTLET_NAMESPACE =
 	'_com_liferay_portal_security_audit_web_portlet_AuditPortlet_';
@@ -45,12 +45,12 @@ const fields = [
 ];
 
 test('LPD-55895: Check if the additional information field is exported correctly in the .csv', async ({
-	applicationsMenuPage,
+	globalMenuPage,
 	page,
 }) => {
 	page.on('dialog', (dialog) => dialog.accept());
 
-	await applicationsMenuPage.goToAudit();
+	await globalMenuPage.goToControlPanel('Audit');
 
 	await page.locator('#toggle_id_audit_event_searchtoggleAdvanced').click();
 
@@ -58,9 +58,11 @@ test('LPD-55895: Check if the additional information field is exported correctly
 		.locator(`#${AUDIT_PORTLET_NAMESPACE}eventType:visible`)
 		.fill('UPDATE');
 
-	await expect(page.locator('.lexicon-icon-search')).toBeVisible();
+	await expect(
+		page.locator('#main-content .lexicon-icon-search')
+	).toBeVisible();
 
-	await page.locator('.lexicon-icon-search').click();
+	await page.locator('#main-content .lexicon-icon-search').click();
 
 	await page.waitForTimeout(500);
 
@@ -91,12 +93,12 @@ test('LPD-55895: Check if the additional information field is exported correctly
 });
 
 test('LPD-40224: Check if the export audit events .csv is being filtered by the search fields', async ({
-	applicationsMenuPage,
+	globalMenuPage,
 	page,
 }) => {
 	page.on('dialog', (dialog) => dialog.accept());
 
-	await applicationsMenuPage.goToAudit();
+	await globalMenuPage.goToControlPanel('Audit');
 
 	await page.locator('#toggle_id_audit_event_searchtoggleAdvanced').click();
 
@@ -124,9 +126,11 @@ test('LPD-40224: Check if the export audit events .csv is being filtered by the 
 		.locator(`#${AUDIT_PORTLET_NAMESPACE}eventType:visible`)
 		.fill(resourceAction);
 
-	await expect(page.locator('.lexicon-icon-search')).toBeVisible();
+	await expect(
+		page.locator('#main-content .lexicon-icon-search')
+	).toBeVisible();
 
-	await page.locator('.lexicon-icon-search').click();
+	await page.locator('#main-content .lexicon-icon-search').click();
 
 	await page.waitForTimeout(500);
 
@@ -191,12 +195,12 @@ test('LPD-40224: Check if the export audit events .csv is being filtered by the 
 });
 
 test('LPD-40224: Check if the audit events filtered by date are being exported', async ({
-	applicationsMenuPage,
+	globalMenuPage,
 	page,
 }) => {
 	page.on('dialog', (dialog) => dialog.accept());
 
-	await applicationsMenuPage.goToAudit();
+	await globalMenuPage.goToControlPanel('Audit');
 
 	await page.locator('#toggle_id_audit_event_searchtoggleAdvanced').click();
 
@@ -210,7 +214,7 @@ test('LPD-40224: Check if the audit events filtered by date are being exported',
 
 	await clickAndExpectToBeVisible({
 		target: page.getByText('There are no events.'),
-		trigger: page.locator('.lexicon-icon-search'),
+		trigger: page.locator('#main-content .lexicon-icon-search'),
 	});
 
 	await clickAndExpectToBeVisible({
@@ -233,10 +237,10 @@ test('LPD-40224: Check if the audit events filtered by date are being exported',
 });
 
 test("LPS-192555: Assert that the page's URL with advanced search doesn't get over 2048 characters", async ({
-	applicationsMenuPage,
+	globalMenuPage,
 	page,
 }) => {
-	await applicationsMenuPage.goToAudit();
+	await globalMenuPage.goToControlPanel('Audit');
 
 	await page.locator('#toggle_id_audit_event_searchtoggleAdvanced').click();
 
@@ -248,7 +252,7 @@ test("LPS-192555: Assert that the page's URL with advanced search doesn't get ov
 		.locator(`#${AUDIT_PORTLET_NAMESPACE}eventType:visible`)
 		.fill('LOGIN');
 
-	await page.locator('.lexicon-icon-search').click();
+	await page.locator('#main-content .lexicon-icon-search').click();
 
 	await page.waitForTimeout(500);
 

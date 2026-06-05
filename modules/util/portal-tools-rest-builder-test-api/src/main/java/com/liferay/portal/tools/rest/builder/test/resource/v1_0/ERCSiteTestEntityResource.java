@@ -192,3 +192,4 @@ public interface ERCSiteTestEntityResource {
 	}
 
 }
+// LIFERAY-REST-BUILDER-HASH:-1830349064

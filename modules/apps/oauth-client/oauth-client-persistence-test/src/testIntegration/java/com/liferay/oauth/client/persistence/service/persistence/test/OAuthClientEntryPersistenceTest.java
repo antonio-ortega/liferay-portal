@@ -6,6 +6,7 @@
 package com.liferay.oauth.client.persistence.service.persistence.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.oauth.client.persistence.exception.DuplicateOAuthClientEntryExternalReferenceCodeException;
 import com.liferay.oauth.client.persistence.exception.NoSuchOAuthClientEntryException;
 import com.liferay.oauth.client.persistence.model.OAuthClientEntry;
 import com.liferay.oauth.client.persistence.service.OAuthClientEntryLocalServiceUtil;
@@ -118,6 +119,11 @@ public class OAuthClientEntryPersistenceTest {
 
 		newOAuthClientEntry.setMvccVersion(RandomTestUtil.nextLong());
 
+		newOAuthClientEntry.setUuid(RandomTestUtil.randomString());
+
+		newOAuthClientEntry.setExternalReferenceCode(
+			RandomTestUtil.randomString());
+
 		newOAuthClientEntry.setCompanyId(RandomTestUtil.nextLong());
 
 		newOAuthClientEntry.setUserId(RandomTestUtil.nextLong());
@@ -140,6 +146,8 @@ public class OAuthClientEntryPersistenceTest {
 
 		newOAuthClientEntry.setInfoJSON(RandomTestUtil.randomString());
 
+		newOAuthClientEntry.setMatcherField(RandomTestUtil.randomString());
+
 		newOAuthClientEntry.setMetadataCacheTime(RandomTestUtil.nextLong());
 
 		newOAuthClientEntry.setOIDCUserInfoMapperJSON(
@@ -156,6 +164,11 @@ public class OAuthClientEntryPersistenceTest {
 		Assert.assertEquals(
 			existingOAuthClientEntry.getMvccVersion(),
 			newOAuthClientEntry.getMvccVersion());
+		Assert.assertEquals(
+			existingOAuthClientEntry.getUuid(), newOAuthClientEntry.getUuid());
+		Assert.assertEquals(
+			existingOAuthClientEntry.getExternalReferenceCode(),
+			newOAuthClientEntry.getExternalReferenceCode());
 		Assert.assertEquals(
 			existingOAuthClientEntry.getOAuthClientEntryId(),
 			newOAuthClientEntry.getOAuthClientEntryId());
@@ -190,6 +203,9 @@ public class OAuthClientEntryPersistenceTest {
 			existingOAuthClientEntry.getInfoJSON(),
 			newOAuthClientEntry.getInfoJSON());
 		Assert.assertEquals(
+			existingOAuthClientEntry.getMatcherField(),
+			newOAuthClientEntry.getMatcherField());
+		Assert.assertEquals(
 			existingOAuthClientEntry.getMetadataCacheTime(),
 			newOAuthClientEntry.getMetadataCacheTime());
 		Assert.assertEquals(
@@ -198,6 +214,46 @@ public class OAuthClientEntryPersistenceTest {
 		Assert.assertEquals(
 			existingOAuthClientEntry.getTokenRequestParametersJSON(),
 			newOAuthClientEntry.getTokenRequestParametersJSON());
+	}
+
+	@Test(
+		expected = DuplicateOAuthClientEntryExternalReferenceCodeException.class
+	)
+	public void testUpdateWithExistingExternalReferenceCode() throws Exception {
+		OAuthClientEntry oAuthClientEntry = addOAuthClientEntry();
+
+		OAuthClientEntry newOAuthClientEntry = addOAuthClientEntry();
+
+		newOAuthClientEntry.setCompanyId(oAuthClientEntry.getCompanyId());
+
+		newOAuthClientEntry = _persistence.update(newOAuthClientEntry);
+
+		Session session = _persistence.getCurrentSession();
+
+		session.evict(newOAuthClientEntry);
+
+		newOAuthClientEntry.setExternalReferenceCode(
+			oAuthClientEntry.getExternalReferenceCode());
+
+		_persistence.update(newOAuthClientEntry);
+	}
+
+	@Test
+	public void testCountByUuid() throws Exception {
+		_persistence.countByUuid("");
+
+		_persistence.countByUuid("null");
+
+		_persistence.countByUuid((String)null);
+	}
+
+	@Test
+	public void testCountByUuid_C() throws Exception {
+		_persistence.countByUuid_C("", RandomTestUtil.nextLong());
+
+		_persistence.countByUuid_C("null", 0L);
+
+		_persistence.countByUuid_C((String)null, 0L);
 	}
 
 	@Test
@@ -233,6 +289,15 @@ public class OAuthClientEntryPersistenceTest {
 	}
 
 	@Test
+	public void testCountByERC_C() throws Exception {
+		_persistence.countByERC_C("", RandomTestUtil.nextLong());
+
+		_persistence.countByERC_C("null", 0L);
+
+		_persistence.countByERC_C((String)null, 0L);
+	}
+
+	@Test
 	public void testFindByPrimaryKeyExisting() throws Exception {
 		OAuthClientEntry newOAuthClientEntry = addOAuthClientEntry();
 
@@ -257,11 +322,12 @@ public class OAuthClientEntryPersistenceTest {
 
 	protected OrderByComparator<OAuthClientEntry> getOrderByComparator() {
 		return OrderByComparatorFactoryUtil.create(
-			"OAuthClientEntry", "mvccVersion", true, "oAuthClientEntryId", true,
+			"OAuthClientEntry", "mvccVersion", true, "uuid", true,
+			"externalReferenceCode", true, "oAuthClientEntryId", true,
 			"companyId", true, "userId", true, "userName", true, "createDate",
 			true, "modifiedDate", true, "authRequestParametersJSON", true,
-			"authServerWellKnownURI", true, "clientId", true,
-			"metadataCacheTime", true, "oidcUserInfoMapperJSON", true,
+			"authServerWellKnownURI", true, "clientId", true, "matcherField",
+			true, "metadataCacheTime", true, "oidcUserInfoMapperJSON", true,
 			"tokenRequestParametersJSON", true);
 	}
 
@@ -549,6 +615,17 @@ public class OAuthClientEntryPersistenceTest {
 			ReflectionTestUtil.invoke(
 				oAuthClientEntry, "getColumnOriginalValue",
 				new Class<?>[] {String.class}, "clientId"));
+
+		Assert.assertEquals(
+			oAuthClientEntry.getExternalReferenceCode(),
+			ReflectionTestUtil.invoke(
+				oAuthClientEntry, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "externalReferenceCode"));
+		Assert.assertEquals(
+			Long.valueOf(oAuthClientEntry.getCompanyId()),
+			ReflectionTestUtil.<Long>invoke(
+				oAuthClientEntry, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "companyId"));
 	}
 
 	protected OAuthClientEntry addOAuthClientEntry() throws Exception {
@@ -557,6 +634,11 @@ public class OAuthClientEntryPersistenceTest {
 		OAuthClientEntry oAuthClientEntry = _persistence.create(pk);
 
 		oAuthClientEntry.setMvccVersion(RandomTestUtil.nextLong());
+
+		oAuthClientEntry.setUuid(RandomTestUtil.randomString());
+
+		oAuthClientEntry.setExternalReferenceCode(
+			RandomTestUtil.randomString());
 
 		oAuthClientEntry.setCompanyId(RandomTestUtil.nextLong());
 
@@ -580,6 +662,8 @@ public class OAuthClientEntryPersistenceTest {
 
 		oAuthClientEntry.setInfoJSON(RandomTestUtil.randomString());
 
+		oAuthClientEntry.setMatcherField(RandomTestUtil.randomString());
+
 		oAuthClientEntry.setMetadataCacheTime(RandomTestUtil.nextLong());
 
 		oAuthClientEntry.setOIDCUserInfoMapperJSON(
@@ -599,3 +683,4 @@ public class OAuthClientEntryPersistenceTest {
 	private ClassLoader _dynamicQueryClassLoader;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:1432047800

@@ -5,7 +5,7 @@
  */
 --%>
 
-<%@ include file="/applications_menu/init.jsp" %>
+<%@ include file="/init.jsp" %>
 
 <%
 ApplicationsMenuDisplayContext applicationsMenuDisplayContext = new ApplicationsMenuDisplayContext(request);
@@ -21,6 +21,6 @@ ApplicationsMenuDisplayContext applicationsMenuDisplayContext = new Applications
 />
 
 <react:component
-	module="{ApplicationsMenu} from product-navigation-applications-menu-web"
+	module="{GlobalMenu} from product-navigation-applications-menu-web"
 	props="<%= applicationsMenuDisplayContext.getApplicationsMenuComponentData() %>"
 />

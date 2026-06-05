@@ -14,10 +14,12 @@ import React, {useEffect, useId, useState} from 'react';
 export default function EditorToolbar({
 	backURL,
 	formSubmitURL,
+	isNew,
 	title,
 }: {
 	backURL: string;
 	formSubmitURL?: string;
+	isNew: boolean;
 	title: string;
 }) {
 	const [formId, setFormId] = useState<string | undefined>();
@@ -44,11 +46,20 @@ export default function EditorToolbar({
 			setFormId(form.id);
 
 			const handlePublishShortcut = (event: KeyboardEvent) => {
-				if (
-					event.altKey &&
+				const isShortcut =
 					event.key === 'Enter' &&
-					isCtrlOrMeta(event)
+					event.altKey &&
+					isCtrlOrMeta(event);
+
+				if (
+					event.key === 'Enter' &&
+					(event.target as HTMLElement).tagName === 'INPUT' &&
+					!isShortcut
 				) {
+					event.preventDefault();
+				}
+
+				if (isShortcut) {
 					(form as HTMLFormElement).submit();
 				}
 			};
@@ -96,9 +107,13 @@ export default function EditorToolbar({
 							sessionStorage.setItem(
 								'com.liferay.site.cmp.site.initializer.successMessage',
 								sub(
-									Liferay.Language.get(
-										'x-was-published-successfully'
-									),
+									isNew
+										? Liferay.Language.get(
+												'x-was-created-successfully'
+											)
+										: Liferay.Language.get(
+												'x-was-updated-successfully'
+											),
 									`<strong>${value}</strong>`
 								),
 								sessionStorage.TYPES.NECESSARY

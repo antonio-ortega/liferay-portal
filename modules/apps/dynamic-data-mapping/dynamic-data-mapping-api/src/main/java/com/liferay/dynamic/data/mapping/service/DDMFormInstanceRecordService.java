@@ -102,3 +102,4 @@ public interface DDMFormInstanceRecordService extends BaseService {
 		throws PortalException;
 
 }
+// LIFERAY-SERVICE-BUILDER-HASH:648128067
