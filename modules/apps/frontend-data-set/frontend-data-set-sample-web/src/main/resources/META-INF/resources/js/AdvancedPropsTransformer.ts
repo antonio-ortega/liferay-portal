@@ -85,6 +85,7 @@ export default function propsTransformer({
 			return {
 				...props,
 				imgProps: {
+					alt: `${item[schema.title]} 🚀`,
 					src: '/documents/d/guest/planet-png',
 				},
 				stickerProps: {

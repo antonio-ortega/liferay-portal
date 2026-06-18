@@ -29,6 +29,14 @@
 				}
 			}
 		}
+
+		// The selected row background ($primary-l2) does not meet the WCAG AA
+		// contrast ratio against the default link color, so links inside a
+		// selected row use a high-contrast token instead.
+
+		tr.table-active td a {
+			color: $gray-900;
+		}
 	}
 
 	table {
