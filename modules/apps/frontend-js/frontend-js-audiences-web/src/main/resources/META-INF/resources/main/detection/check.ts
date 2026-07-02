@@ -61,6 +61,8 @@ const OPERATOR_VALUE_TYPES: {[operator in Operator]: string[]} = {
 export function check(audiencesDefinition: AudiencesDefinition) {
 	const what = 'Audiences definition';
 
+	console.log("audiences definition: " + JSON.stringify(audiencesDefinition));
+
 	checkObject(audiencesDefinition, what);
 	checkKeys(audiencesDefinition, ['audiences'], what);
 	checkArray(audiencesDefinition.audiences, `${what} field 'audiences'`);

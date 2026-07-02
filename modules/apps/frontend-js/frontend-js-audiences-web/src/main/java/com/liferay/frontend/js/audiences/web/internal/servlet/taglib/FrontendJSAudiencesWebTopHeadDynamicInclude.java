@@ -51,12 +51,18 @@ public class FrontendJSAudiencesWebTopHeadDynamicInclude
 			return;
 		}
 
+		System.out.println("FrontendJSAudiencesWebTopHeadDynamicInclude");
+
 		AudiencesDefinition audiencesDefinition =
 			_audiencesDefinitionProvider.getAudiencesDefinition(companyId);
 
 		if (audiencesDefinition == null) {
+			System.out.println("audiencesDefinition is null");
 			return;
 		}
+
+		System.out.println("audiencesDefinition content: " + audiencesDefinition.getContent());
+		System.out.println("audiencesDefinition hash: " + audiencesDefinition.getHash());
 
 		ThemeDisplay themeDisplay =
 			(ThemeDisplay)httpServletRequest.getAttribute(
@@ -67,8 +73,11 @@ public class FrontendJSAudiencesWebTopHeadDynamicInclude
 				themeDisplay.getPlid());
 
 		if (elementVariations == null) {
+			System.out.println("elementVariations is null");
 			return;
 		}
+
+		System.out.println("elementVariations is NOT null");
 
 		PrintWriter printWriter = httpServletResponse.getWriter();
 
