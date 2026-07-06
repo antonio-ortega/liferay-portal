@@ -15,6 +15,7 @@ import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.frontend.hashed.files.HashedFilesUtil;
 import com.liferay.portal.kernel.json.JSONArray;
+import com.liferay.portal.kernel.json.JSONException;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONUtil;
 
@@ -51,7 +52,14 @@ public class AudiencesDefinitionProviderImpl
 				companyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
 
 		for (AudiencesEntry audiencesEntry : audiencesEntries) {
-			audiencesJSONArray.put(audiencesEntry);
+			try {
+				audiencesJSONArray.put(
+					_jsonFactory.createJSONObject(audiencesEntry.getJSON()).put(
+						"id", audiencesEntry.getExternalReferenceCode()));
+			}
+			catch (JSONException e) {
+				throw new RuntimeException(e);
+			}
 		}
 
 		String json = JSONUtil.put(
@@ -59,7 +67,7 @@ public class AudiencesDefinitionProviderImpl
 		).toString();
 
 		audiencesDefinition = new AudiencesDefinition(
-			HashedFilesUtil.computeHash(json), json);
+			json, HashedFilesUtil.computeHash(json));
 
 		_portalCache.put(companyId, audiencesDefinition);
 
