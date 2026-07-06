@@ -170,11 +170,12 @@ public class ObjectDefinitionUtil {
 		"com.liferay.content.site.generator.impl", "com.liferay.cookies.impl",
 		"com.liferay.frontend.data.set.admin.web",
 		"com.liferay.frontend.data.set.impl",
-		"com.liferay.headless.builder.impl", "com.liferay.list.type.service",
-		"com.liferay.mcp.server.rest.impl", "com.liferay.notification.service",
-		"com.liferay.object.service", "com.liferay.seo.studio.site.initializer",
+		"com.liferay.headless.builder.impl", "com.liferay.launch.impl",
+		"com.liferay.list.type.service", "com.liferay.mcp.server.rest.impl",
+		"com.liferay.notification.service", "com.liferay.object.service",
+		"com.liferay.seo.studio.site.initializer",
 		"com.liferay.site.initializer.cmp", "com.liferay.site.initializer.cms",
-		"com.liferay.site.initializer.dsr"
+		"com.liferay.site.initializer.dsr", "com.liferay.site.initializer.pim"
 	};
 
 	private static final Map<String, String>
@@ -185,15 +186,19 @@ public class ObjectDefinitionUtil {
 		).put(
 			"AIHubChatbot", "/ai-hub/chatbots"
 		).put(
+			"AIHubConfiguration", "/ai-hub/configurations"
+		).put(
 			"AIHubContentRetriever", "/ai-hub/content-retrievers"
 		).put(
 			"AIHubCrawlerJob", "/ai-hub/crawler-jobs"
+		).put(
+			"AIHubGuardrail", "/ai-hub/guardrails"
 		).put(
 			"AIHubInstructionDefinition", "/ai-hub/instruction-definitions"
 		).put(
 			"AIHubMCPServer", "/ai-hub/mcp-servers"
 		).put(
-			"AIHubModelArmorTemplate", "/ai-hub/model-armor-templates"
+			"AIHubReport", "/ai-hub/reports"
 		).put(
 			"APIApplication", "/headless-builder/applications"
 		).put(
@@ -256,11 +261,13 @@ public class ObjectDefinitionUtil {
 		).put(
 			"DSRRoom", "/digital-sales-room/rooms"
 		).put(
-			"DSRTemplate", "/digital-sales-room/templates"
-		).put(
 			"FunctionalCookieEntry", "/functional-cookies-entries"
 		).put(
 			"KnowledgeBase", "/cms/knowledge-bases"
+		).put(
+			"LaunchEntry", "/launch-entries"
+		).put(
+			"LaunchSet", "/launch-sets"
 		).put(
 			"MCPServerDataMask", "/mcp/server-data-masks"
 		).put(
@@ -276,13 +283,27 @@ public class ObjectDefinitionUtil {
 		).put(
 			"PersonalizationCookieEntry", "/personalization-cookies-entries"
 		).put(
+			"PIMBaseSku", "/pim/base-skus"
+		).put(
+			"PIMCatalog", "/pim/catalogs"
+		).put(
 			"SEOStudioDomain", "/seo-studio/domains"
 		).put(
+			"SEOStudioGSCCredentials", "/seo-studio/gsc-credentials"
+		).put(
+			"SEOStudioInsightType", "/seo-studio/insight-types"
+		).put(
 			"SEOStudioInstance", "/seo-studio/instances"
+		).put(
+			"SEOStudioPage", "/seo-studio/pages"
 		).put(
 			"SEOStudioScan", "/seo-studio/scans"
 		).put(
 			"SEOStudioScanInsight", "/seo-studio/scan-insights"
+		).put(
+			"SEOStudioScanMetric", "/seo-studio/scan-metrics"
+		).put(
+			"SEOStudioScanRun", "/seo-studio/scan-runs"
 		).build();
 
 }

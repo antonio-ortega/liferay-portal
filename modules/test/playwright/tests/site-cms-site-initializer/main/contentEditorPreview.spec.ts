@@ -719,6 +719,11 @@ test(
 					},
 					label: 'Upload',
 				},
+				{
+					action: () =>
+						fill(form.locator('input[type="tel"]'), '2125551234'),
+					label: 'Phone Number',
+				},
 			];
 
 			await contentsPage.previewButton.click();

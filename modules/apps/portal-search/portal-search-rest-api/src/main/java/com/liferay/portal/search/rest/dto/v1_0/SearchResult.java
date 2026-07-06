@@ -28,6 +28,8 @@ import java.io.Serializable;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Map;
@@ -43,6 +45,9 @@ import java.util.function.Supplier;
 @GraphQLName(
 	description = "A single search hit returned by GET /search and POST /search. The properties below appear on every result; the embedded property carries asset-specific payload and so its shape varies by entryClassName.",
 	value = "SearchResult"
+)
+@io.swagger.v3.oas.annotations.media.Schema(
+	description = "A single search hit returned by GET /search and POST /search. The properties below appear on every result; the embedded property carries asset-specific payload and so its shape varies by entryClassName."
 )
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "SearchResult")
@@ -619,9 +624,18 @@ public class SearchResult implements Serializable {
 
 			sb.append("\"embedded\": ");
 
-			if (embedded instanceof Map) {
+			if (embedded instanceof Collection) {
+				sb.append(
+					JSONFactoryUtil.createJSONArray((Collection<?>)embedded));
+			}
+			else if (embedded instanceof Map) {
 				sb.append(
 					JSONFactoryUtil.createJSONObject((Map<?, ?>)embedded));
+			}
+			else if (embedded instanceof Object[]) {
+				sb.append(
+					JSONFactoryUtil.createJSONArray(
+						Arrays.asList((Object[])embedded)));
 			}
 			else if (embedded instanceof String) {
 				sb.append("\"");
@@ -794,4 +808,4 @@ public class SearchResult implements Serializable {
 	private Map<String, Serializable> _extendedProperties;
 
 }
-// LIFERAY-REST-BUILDER-HASH:734633468
+// LIFERAY-REST-BUILDER-HASH:-1707493621

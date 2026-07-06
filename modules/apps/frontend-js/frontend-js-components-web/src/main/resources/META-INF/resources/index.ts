@@ -27,6 +27,15 @@ export {
 	LearnResourcesContext,
 } from './learn_message/LearnMessage';
 
+export {ManageMembersList} from './manage_members_modal/ManageMembersList';
+export {default as ManageMembersModal} from './manage_members_modal/ManageMembersModal';
+export {MembersSelectOptions} from './manage_members_modal/MembersSelectOptions';
+export {MemberType} from './manage_members_modal/types';
+export type {
+	AddMembersInputApi,
+	MembersConfig,
+} from './manage_members_modal/types';
+
 export {default as ManagementToolbar} from './management_toolbar/ManagementToolbar';
 
 export {default as openAlertModal} from './modal/commands/openAlertModal';

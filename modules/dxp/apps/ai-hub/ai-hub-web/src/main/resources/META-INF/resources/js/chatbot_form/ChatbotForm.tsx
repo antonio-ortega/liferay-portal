@@ -20,11 +20,11 @@ import './ChatbotForm.scss';
 import {getAgentDefinitions} from '../agent_definition_form/services/AgentDefinitionService';
 import Toolbar from '../components/ToolBar';
 import {
-	deleteChatbotAgentDefinitionRelationship,
-	getChatbot,
-	postChatbot,
-	putChatbot,
+	disassociateChatbotFromAgentDefinition,
+	getChatbotDefinition,
+	postChatbotDefinition,
 	putChatbotAgentDefinitionRelationship,
+	putChatbotDefinition,
 } from './services/ChatbotService';
 import {Chatbot} from './types/Chatbot';
 
@@ -275,10 +275,13 @@ export default function ChatbotForm({
 				existingChatbotExternalReferenceCode;
 
 			if (existingChatbotExternalReferenceCode) {
-				await putChatbot(existingChatbotExternalReferenceCode, payload);
+				await putChatbotDefinition(
+					existingChatbotExternalReferenceCode,
+					payload
+				);
 			}
 			else {
-				const created = await postChatbot(payload);
+				const created = await postChatbotDefinition(payload);
 
 				chatbotExternalReferenceCode = created.externalReferenceCode;
 
@@ -314,7 +317,7 @@ export default function ChatbotForm({
 
 			await Promise.all(
 				removedAgents.map((agent) =>
-					deleteChatbotAgentDefinitionRelationship(
+					disassociateChatbotFromAgentDefinition(
 						chatbotExternalReferenceCode,
 						agent.externalReferenceCode
 					)
@@ -367,32 +370,39 @@ export default function ChatbotForm({
 			}
 
 			try {
-				const chatbot = await getChatbot(externalReferenceCode);
+				const chatbotDefinition = await getChatbotDefinition(
+					externalReferenceCode
+				);
 
 				const avatarAttachment =
-					chatbot.avatar && typeof chatbot.avatar === 'object'
-						? chatbot.avatar
+					chatbotDefinition.avatar &&
+					typeof chatbotDefinition.avatar === 'object'
+						? chatbotDefinition.avatar
 						: null;
 
 				setFormData({
-					active: chatbot.active ?? false,
+					active: chatbotDefinition.active ?? false,
 					avatar: avatarAttachment
 						? avatarAttachment.id
-						: chatbot.avatar,
+						: chatbotDefinition.avatar,
 					avatarFileName: avatarAttachment?.name,
-					description: chatbot.description,
-					disclaimerMessage_i18n: chatbot.disclaimerMessage_i18n,
-					externalReferenceCode: chatbot.externalReferenceCode,
-					introMessage_i18n: chatbot.introMessage_i18n,
-					notificationMessage_i18n: chatbot.notificationMessage_i18n,
-					placeholderMessage_i18n: chatbot.placeholderMessage_i18n,
+					description: chatbotDefinition.description,
+					disclaimerMessage_i18n:
+						chatbotDefinition.disclaimerMessage_i18n,
+					externalReferenceCode:
+						chatbotDefinition.externalReferenceCode,
+					introMessage_i18n: chatbotDefinition.introMessage_i18n,
+					notificationMessage_i18n:
+						chatbotDefinition.notificationMessage_i18n,
+					placeholderMessage_i18n:
+						chatbotDefinition.placeholderMessage_i18n,
 					r_accountToAIHubChatbots_accountEntryERC:
-						chatbot.r_accountToAIHubChatbots_accountEntryERC,
-					title_i18n: chatbot.title_i18n,
+						chatbotDefinition.r_accountToAIHubChatbots_accountEntryERC,
+					title_i18n: chatbotDefinition.title_i18n,
 				});
 
 				const agentDefinitions = (
-					chatbot.agentDefinitionsToChatbots ?? []
+					chatbotDefinition.agentDefinitionsToChatbots ?? []
 				).map((a: {externalReferenceCode: string; title: string}) => ({
 					externalReferenceCode: a.externalReferenceCode,
 					title: a.title,

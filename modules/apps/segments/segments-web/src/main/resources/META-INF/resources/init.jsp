@@ -27,6 +27,7 @@ page import="com.liferay.portal.kernel.util.HashMapBuilder" %><%@
 page import="com.liferay.portal.kernel.util.HtmlUtil" %><%@
 page import="com.liferay.portal.kernel.util.ParamUtil" %><%@
 page import="com.liferay.portal.kernel.util.Validator" %><%@
+page import="com.liferay.segments.exception.LockedSegmentsEntryException" %><%@
 page import="com.liferay.segments.exception.NoSuchEntryException" %><%@
 page import="com.liferay.segments.exception.RequiredSegmentsEntryException" %><%@
 page import="com.liferay.segments.exception.SegmentsEntryCriteriaException" %><%@
@@ -38,7 +39,6 @@ page import="com.liferay.segments.web.internal.display.context.PreviewSegmentsEn
 page import="com.liferay.segments.web.internal.display.context.SegmentsCompanyConfigurationDisplayContext" %><%@
 page import="com.liferay.segments.web.internal.display.context.SegmentsDisplayContext" %><%@
 page import="com.liferay.segments.web.internal.display.context.SegmentsManagementToolbarDisplayContext" %><%@
-page import="com.liferay.segments.web.internal.util.AudiencesPortletUtil" %><%@
 page import="com.liferay.segments.web.internal.util.SegmentsEntryActionDropdownItemsProvider" %><%@
 page import="com.liferay.segments.web.internal.util.SegmentsSourceDetailsProviderUtil" %>
 
@@ -49,5 +49,5 @@ page import="com.liferay.segments.web.internal.util.SegmentsSourceDetailsProvide
 <portlet:defineObjects />
 
 <%
-portletDisplay.setShowExportImportIcon(FeatureFlagManagerUtil.isEnabled(themeDisplay.getCompanyId(), "LPD-78863") || AudiencesPortletUtil.isAudiencesPortlet(renderRequest));
+portletDisplay.setShowExportImportIcon(FeatureFlagManagerUtil.isEnabled(themeDisplay.getCompanyId(), "LPD-78863"));
 %>

@@ -44,6 +44,9 @@ import java.util.function.Supplier;
 	description = "Media or document attached to a catalog product, used for images, downloadable resources, or gallery entries.",
 	value = "Attachment"
 )
+@io.swagger.v3.oas.annotations.media.Schema(
+	description = "Media or document attached to a catalog product, used for images, downloadable resources, or gallery entries."
+)
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "Attachment")
 public class Attachment implements Serializable {
@@ -248,7 +251,7 @@ public class Attachment implements Serializable {
 		_customFieldsSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
-		description = "Date from which the attachment becomes visible to storefront callers, in ISO 8601 (date only). Optional; absent means visible immediately.",
+		description = "Date and time from which the attachment becomes visible to storefront callers, in ISO 8601. Optional; absent means visible immediately.",
 		example = "2017-07-21"
 	)
 	public Date getDisplayDate() {
@@ -285,7 +288,7 @@ public class Attachment implements Serializable {
 	}
 
 	@GraphQLField(
-		description = "Date from which the attachment becomes visible to storefront callers, in ISO 8601 (date only). Optional; absent means visible immediately."
+		description = "Date and time from which the attachment becomes visible to storefront callers, in ISO 8601. Optional; absent means visible immediately."
 	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Date displayDate;
@@ -294,7 +297,7 @@ public class Attachment implements Serializable {
 	private Supplier<Date> _displayDateSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
-		description = "Date after which the attachment is no longer visible to storefront callers, in ISO 8601 (date only). Ignored when neverExpire is true.",
+		description = "Date and time after which the attachment is no longer visible to storefront callers, in ISO 8601. Ignored when neverExpire is true.",
 		example = "2017-08-21"
 	)
 	public Date getExpirationDate() {
@@ -331,7 +334,7 @@ public class Attachment implements Serializable {
 	}
 
 	@GraphQLField(
-		description = "Date after which the attachment is no longer visible to storefront callers, in ISO 8601 (date only). Ignored when neverExpire is true."
+		description = "Date and time after which the attachment is no longer visible to storefront callers, in ISO 8601. Ignored when neverExpire is true."
 	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Date expirationDate;
@@ -1230,4 +1233,4 @@ public class Attachment implements Serializable {
 	private Map<String, Serializable> _extendedProperties;
 
 }
-// LIFERAY-REST-BUILDER-HASH:1602253605
+// LIFERAY-REST-BUILDER-HASH:-193253019

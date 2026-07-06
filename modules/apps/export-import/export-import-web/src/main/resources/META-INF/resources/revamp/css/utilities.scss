@@ -1,23 +1,21 @@
-.checkbox-row {
-	align-items: center;
-	display: grid;
-	grid-template-columns: auto 1fr;
-}
+@import 'atlas-variables';
 
-.checkbox-row .custom-control {
-	align-items: center;
-	display: flex;
-}
+.content-section-scroll {
+	max-height: 600px;
+	overflow: auto;
 
-.checkbox-row-content {
-	grid-column: 2;
-	min-width: 0;
-}
-
-.content-section-controls {
-	max-height: 400px;
+	@include media-breakpoint-down(sm) {
+		max-height: none;
+		overflow: visible;
+	}
 }
 
 .cursor-pointer {
 	cursor: pointer;
+}
+
+.option-group {
+	> label + label {
+		margin-top: 1rem;
+	}
 }

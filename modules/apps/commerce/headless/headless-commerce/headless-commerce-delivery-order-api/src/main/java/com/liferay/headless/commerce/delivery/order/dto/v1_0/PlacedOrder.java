@@ -43,6 +43,9 @@ import java.util.function.Supplier;
 	description = "Buyer-facing projection of a committed (non-open) commerce order. Read via the placed-orders list or by id and ERC; PATCH applies JSON Merge Patch to a small set of buyer-editable fields (name, printedNote, purchaseOrderNumber). The open cart counterpart lives in headless-commerce-delivery-cart.",
 	value = "PlacedOrder"
 )
+@io.swagger.v3.oas.annotations.media.Schema(
+	description = "Buyer-facing projection of a committed (non-open) commerce order. Read via the placed-orders list or by id and ERC; PATCH applies JSON Merge Patch to a small set of buyer-editable fields (name, printedNote, purchaseOrderNumber). The open cart counterpart lives in headless-commerce-delivery-cart."
+)
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "PlacedOrder")
 public class PlacedOrder implements Serializable {
@@ -376,7 +379,7 @@ public class PlacedOrder implements Serializable {
 	private Supplier<String> _couponCodeSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
-		description = "Creation date of the order. ISO 8601 date. Read-only; sortable and filterable via the OData query parameter.",
+		description = "Creation timestamp of the order. ISO 8601 date-time. Read-only; sortable and filterable via the OData query parameter.",
 		example = "2017-07-21"
 	)
 	public Date getCreateDate() {
@@ -413,7 +416,7 @@ public class PlacedOrder implements Serializable {
 	}
 
 	@GraphQLField(
-		description = "Creation date of the order. ISO 8601 date. Read-only; sortable and filterable via the OData query parameter."
+		description = "Creation timestamp of the order. ISO 8601 date-time. Read-only; sortable and filterable via the OData query parameter."
 	)
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Date createDate;
@@ -696,7 +699,7 @@ public class PlacedOrder implements Serializable {
 	private Supplier<Long> _idSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
-		description = "Date the order's pricing was last recalculated. ISO 8601 date. Read-only.",
+		description = "Timestamp when the order's pricing was last recalculated. ISO 8601 date-time. Read-only.",
 		example = "2017-07-21"
 	)
 	public Date getLastPriceUpdateDate() {
@@ -733,7 +736,7 @@ public class PlacedOrder implements Serializable {
 	}
 
 	@GraphQLField(
-		description = "Date the order's pricing was last recalculated. ISO 8601 date. Read-only."
+		description = "Timestamp when the order's pricing was last recalculated. ISO 8601 date-time. Read-only."
 	)
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Date lastPriceUpdateDate;
@@ -742,7 +745,7 @@ public class PlacedOrder implements Serializable {
 	private Supplier<Date> _lastPriceUpdateDateSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
-		description = "Last modification date of the order. ISO 8601 date. Read-only; sortable and filterable via the OData query parameter.",
+		description = "Last modification timestamp of the order. ISO 8601 date-time. Read-only; sortable and filterable via the OData query parameter.",
 		example = "2017-07-21"
 	)
 	public Date getModifiedDate() {
@@ -779,7 +782,7 @@ public class PlacedOrder implements Serializable {
 	}
 
 	@GraphQLField(
-		description = "Last modification date of the order. ISO 8601 date. Read-only; sortable and filterable via the OData query parameter."
+		description = "Last modification timestamp of the order. ISO 8601 date-time. Read-only; sortable and filterable via the OData query parameter."
 	)
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Date modifiedDate;
@@ -1668,7 +1671,7 @@ public class PlacedOrder implements Serializable {
 	private Supplier<String> _purchaseOrderNumberSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
-		description = "Date the buyer requested the order to be delivered. ISO 8601 date. Read-only; sortable and filterable via the OData query parameter.",
+		description = "Date and time the buyer requested the order to be delivered. ISO 8601 date-time. Read-only; sortable and filterable via the OData query parameter.",
 		example = "2017-07-21"
 	)
 	public Date getRequestedDeliveryDate() {
@@ -1705,7 +1708,7 @@ public class PlacedOrder implements Serializable {
 	}
 
 	@GraphQLField(
-		description = "Date the buyer requested the order to be delivered. ISO 8601 date. Read-only; sortable and filterable via the OData query parameter."
+		description = "Date and time the buyer requested the order to be delivered. ISO 8601 date-time. Read-only; sortable and filterable via the OData query parameter."
 	)
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Date requestedDeliveryDate;
@@ -2931,4 +2934,4 @@ public class PlacedOrder implements Serializable {
 	private Map<String, Serializable> _extendedProperties;
 
 }
-// LIFERAY-REST-BUILDER-HASH:-1112746692
+// LIFERAY-REST-BUILDER-HASH:2126157850

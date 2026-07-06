@@ -41,6 +41,9 @@ import java.util.function.Supplier;
 	description = "A customer account that places orders. Represents either a person or a business and carries identity, contact, and tax-attribution data; created on POST and updated on PATCH.",
 	value = "Account"
 )
+@io.swagger.v3.oas.annotations.media.Schema(
+	description = "A customer account that places orders. Represents either a person or a business and carries identity, contact, and tax-attribution data; created on POST and updated on PATCH."
+)
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "Account")
 public class Account implements Serializable {
@@ -229,7 +232,7 @@ public class Account implements Serializable {
 	@GraphQLField(
 		description = "Reference to the account (FK identifier). Read-only; set by the service when the account is first persisted."
 	)
-	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Long id;
 
 	@JsonIgnore
@@ -714,4 +717,4 @@ public class Account implements Serializable {
 	private Map<String, Serializable> _extendedProperties;
 
 }
-// LIFERAY-REST-BUILDER-HASH:-1988706684
+// LIFERAY-REST-BUILDER-HASH:562208474

@@ -80,7 +80,6 @@ export default function CMSShareModalContent({
 	collaboratorURL,
 	creator,
 	entryClassName,
-	externalUserSharingEnabled = false,
 	initialCollaborators,
 	itemId,
 	title,
@@ -96,18 +95,13 @@ export default function CMSShareModalContent({
 		name: string;
 	};
 	entryClassName?: string;
-	externalUserSharingEnabled?: boolean;
 	initialCollaborators: Collaborator[];
 	itemId: number;
 	title: string;
 }) {
 	const isFolder = entryClassName === OBJECT_ENTRY_FOLDER_CLASS_NAME;
 
-	const visibleCollaborators = initialCollaborators.filter(
-		({type}) =>
-			externalUserSharingEnabled ||
-			type !== COLLABORATOR_TYPE.EXTERNAL_USER
-	);
+	const visibleCollaborators = initialCollaborators;
 
 	const transformSourceItems = (
 		rawItems: any[],
@@ -138,7 +132,6 @@ export default function CMSShareModalContent({
 		const trimmedQuery = query.trim();
 
 		const offerExternalUserInvite =
-			externalUserSharingEnabled &&
 			!isFolder &&
 			isEmailAddressValid(trimmedQuery) &&
 			!items.some(
@@ -198,14 +191,7 @@ export default function CMSShareModalContent({
 		CollaboratorService.updateCollaborators(
 			collaboratorURL,
 			itemId,
-			collaborators
-				.filter(
-					({type}) =>
-						externalUserSharingEnabled ||
-						(type as CollaboratorType) !==
-							COLLABORATOR_TYPE.EXTERNAL_USER
-				)
-				.map(mapCollaboratorToPayload)
+			collaborators.map(mapCollaboratorToPayload)
 		);
 
 	const autocompleteItem = ({
@@ -270,17 +256,22 @@ export default function CMSShareModalContent({
 		type: CollaboratorType;
 		user: ShareModalUserAccount | ShareModalUserGroup;
 	}): string | null => {
-		if (
-			externalUserSharingEnabled &&
-			type === COLLABORATOR_TYPE.EXTERNAL_USER
-		) {
-			return toBeShared
-				? Liferay.Language.get('pending')
-				: Liferay.Language.get('invited');
+		if (type === COLLABORATOR_TYPE.EXTERNAL_USER && !toBeShared) {
+			return Liferay.Language.get('invited');
 		}
 
 		return toBeShared ? Liferay.Language.get('to-be-shared') : null;
 	};
+
+	const collaboratorNameSuffix = ({
+		type,
+	}: {
+		type: CollaboratorType;
+		user: ShareModalUserAccount | ShareModalUserGroup;
+	}): string | null =>
+		type === COLLABORATOR_TYPE.EXTERNAL_USER
+			? `(${Liferay.Language.get('guest').toLocaleLowerCase()})`
+			: null;
 
 	const collaboratorStickerIcon = ({
 		type,
@@ -333,6 +324,7 @@ export default function CMSShareModalContent({
 			canManageCollaborators={canManageCollaborators}
 			closeModal={closeModal}
 			collaboratorBadgeText={collaboratorBadgeText}
+			collaboratorNameSuffix={collaboratorNameSuffix}
 			collaboratorStickerIcon={collaboratorStickerIcon}
 			creator={creator}
 			initialCollaborators={

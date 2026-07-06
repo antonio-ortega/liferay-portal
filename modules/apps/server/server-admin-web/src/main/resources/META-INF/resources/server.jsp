@@ -8,7 +8,7 @@
 <%@ include file="/init.jsp" %>
 
 <%
-ServerDisplayContext serverDisplayContext = new ServerDisplayContext(renderRequest, renderResponse);
+ServerDisplayContext serverDisplayContext = (ServerDisplayContext)request.getAttribute(ServerAdminWebKeys.SERVER_DISPLAY_CONTEXT);
 %>
 
 <clay:navigation-bar
@@ -46,6 +46,9 @@ ServerDisplayContext serverDisplayContext = new ServerDisplayContext(renderReque
 		</c:when>
 		<c:when test='<%= tabs1.equals("mail") %>'>
 			<liferay-util:include page="/mail.jsp" servletContext="<%= application %>" />
+		</c:when>
+		<c:when test='<%= tabs1.equals("production-readiness") %>'>
+			<liferay-util:include page="/production_readiness.jsp" servletContext="<%= application %>" />
 		</c:when>
 		<c:when test='<%= tabs1.equals("properties") %>'>
 			<liferay-util:include page="/properties.jsp" servletContext="<%= application %>" />

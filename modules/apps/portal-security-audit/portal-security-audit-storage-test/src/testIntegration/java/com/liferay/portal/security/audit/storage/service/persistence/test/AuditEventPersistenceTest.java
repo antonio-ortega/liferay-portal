@@ -110,9 +110,7 @@ public class AuditEventPersistenceTest {
 
 	@Test
 	public void testUpdateExisting() throws Exception {
-		long pk = RandomTestUtil.nextLong();
-
-		AuditEvent newAuditEvent = _persistence.create(pk);
+		AuditEvent newAuditEvent = addAuditEvent();
 
 		newAuditEvent.setGroupId(RandomTestUtil.nextLong());
 
@@ -148,7 +146,9 @@ public class AuditEventPersistenceTest {
 
 		newAuditEvent.setSessionID(RandomTestUtil.randomString());
 
-		_auditEvents.add(_persistence.update(newAuditEvent));
+		newAuditEvent = _persistence.update(newAuditEvent);
+
+		_auditEvents.add(newAuditEvent);
 
 		AuditEvent existingAuditEvent = _persistence.findByPrimaryKey(
 			newAuditEvent.getPrimaryKey());
@@ -494,4 +494,4 @@ public class AuditEventPersistenceTest {
 	private ClassLoader _dynamicQueryClassLoader;
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:1831983958
+// LIFERAY-SERVICE-BUILDER-HASH:-1124926776

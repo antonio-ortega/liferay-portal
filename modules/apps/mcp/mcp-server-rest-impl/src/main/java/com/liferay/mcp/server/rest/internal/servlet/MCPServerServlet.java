@@ -8,7 +8,6 @@ package com.liferay.mcp.server.rest.internal.servlet;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.liferay.mcp.server.rest.dto.v1_0.Tool;
-import com.liferay.mcp.server.rest.internal.configuration.MCPServerConfiguration;
 import com.liferay.mcp.server.rest.internal.constants.MCPServerConstants;
 import com.liferay.mcp.server.rest.internal.util.ToolSetUtil;
 import com.liferay.object.model.ObjectDefinition;
@@ -19,14 +18,12 @@ import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -118,12 +115,6 @@ public class MCPServerServlet extends HttpServlet {
 
 		long companyId = _portal.getCompanyId(httpServletRequest);
 
-		if (!_isEnabled(companyId)) {
-			httpServletResponse.setStatus(HttpServletResponse.SC_NOT_FOUND);
-
-			return;
-		}
-
 		ObjectEntry mcpServerProfileObjectEntry =
 			_getMCPServerProfileObjectEntry(companyId, httpServletRequest);
 
@@ -176,11 +167,25 @@ public class MCPServerServlet extends HttpServlet {
 					String toolName = tokens[1];
 					String toolSetName = tokens[0];
 
-					return new McpStatelessServerFeatures.SyncToolSpecification(
-						_getTool(httpServletRequest, toolName, toolSetName),
-						(mcpTransportContext, callToolRequest) -> _call(
-							mcpTransportContext, callToolRequest.arguments(),
-							toolName, toolSetName));
+					try {
+						return new McpStatelessServerFeatures.
+							SyncToolSpecification(
+								_getTool(
+									httpServletRequest, toolName, toolSetName),
+								(mcpTransportContext, callToolRequest) -> _call(
+									mcpTransportContext,
+									callToolRequest.arguments(), toolName,
+									toolSetName));
+					}
+					catch (Exception exception) {
+						_log.error(
+							StringBundler.concat(
+								"Skipping MCP tool \"", toolName,
+								"\" from tool set \"", toolSetName, "\""),
+							exception);
+
+						return null;
+					}
 				});
 
 		McpStatelessSyncServer mcpStatelessSyncServer = McpServer.sync(
@@ -349,11 +354,8 @@ public class MCPServerServlet extends HttpServlet {
 		HttpServletRequest httpServletRequest, long companyId,
 		ObjectEntry mcpServerProfileObjectEntry) {
 
-		String mcpServerProfileName =
-			(String)mcpServerProfileObjectEntry.getValues(
-			).get(
-				"name"
-			);
+		String mcpServerProfileName = MapUtil.getString(
+			mcpServerProfileObjectEntry.getValues(), "name");
 
 		synchronized (this) {
 			return _servlets.computeIfAbsent(
@@ -428,30 +430,10 @@ public class MCPServerServlet extends HttpServlet {
 		}
 	}
 
-	private boolean _isEnabled(long companyId) {
-		if (!FeatureFlagManagerUtil.isEnabled(companyId, "LPD-63311")) {
-			return false;
-		}
-
-		try {
-			MCPServerConfiguration mcpServerConfiguration =
-				_configurationProvider.getCompanyConfiguration(
-					MCPServerConfiguration.class, companyId);
-
-			return mcpServerConfiguration.enabled();
-		}
-		catch (ConfigurationException configurationException) {
-			throw new RuntimeException(configurationException);
-		}
-	}
-
 	private static final Log _log = LogFactoryUtil.getLog(
 		MCPServerServlet.class);
 
 	private static final ObjectMapper _objectMapper = new ObjectMapper();
-
-	@Reference
-	private ConfigurationProvider _configurationProvider;
 
 	@Reference
 	private ObjectDefinitionLocalService _objectDefinitionLocalService;

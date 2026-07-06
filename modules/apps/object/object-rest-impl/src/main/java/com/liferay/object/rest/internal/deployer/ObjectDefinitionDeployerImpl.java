@@ -29,6 +29,7 @@ import com.liferay.object.rest.internal.jaxrs.exception.mapper.ObjectEntryManage
 import com.liferay.object.rest.internal.jaxrs.exception.mapper.ObjectEntryScopeExceptionMapper;
 import com.liferay.object.rest.internal.jaxrs.exception.mapper.ObjectEntryStatusExceptionMapper;
 import com.liferay.object.rest.internal.jaxrs.exception.mapper.ObjectEntryValuesExceptionMapper;
+import com.liferay.object.rest.internal.jaxrs.exception.mapper.ObjectFieldReadOnlyExceptionMapper;
 import com.liferay.object.rest.internal.jaxrs.exception.mapper.ObjectRelationshipDeletionTypeExceptionMapper;
 import com.liferay.object.rest.internal.jaxrs.exception.mapper.RequiredObjectEntryVersionExceptionMapper;
 import com.liferay.object.rest.internal.jaxrs.exception.mapper.RequiredObjectRelationshipExceptionMapper;
@@ -76,7 +77,6 @@ import com.liferay.portal.configuration.module.configuration.ConfigurationProvid
 import com.liferay.portal.db.partition.util.DBPartitionUtil;
 import com.liferay.portal.kernel.comment.CommentManager;
 import com.liferay.portal.kernel.comment.DiscussionPermission;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -333,9 +333,7 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 				BaseObjectEntryResourceImpl.class.getMethods(),
 				objectScopeProvider);
 
-			if (FeatureFlagManagerUtil.isEnabled(
-					objectDefinition.getCompanyId(), "LPD-69877") &&
-				!objectDefinition.isAllowStandaloneObjectEntry() &&
+			if (!objectDefinition.isAllowStandaloneObjectEntry() &&
 				objectDefinition.isRootDescendantNode()) {
 
 				excludedOperationIds.addAll(_objectEntryCRUDOperationIds);
@@ -952,6 +950,7 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 				ObjectEntryScopeExceptionMapper::new,
 				() -> new ObjectEntryStatusExceptionMapper(_language),
 				() -> new ObjectEntryValuesExceptionMapper(_language),
+				ObjectFieldReadOnlyExceptionMapper::new,
 				() -> new ObjectRelationshipDeletionTypeExceptionMapper(
 					_language),
 				() -> new RequiredObjectEntryVersionExceptionMapper(_language),

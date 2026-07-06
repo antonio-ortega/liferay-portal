@@ -98,6 +98,7 @@ create table AssetCategory (
 	title TEXT null,
 	description TEXT null,
 	vocabularyId LONG,
+	system_ BOOLEAN,
 	lastPublishDate DATE null,
 	status INTEGER,
 	primary key (categoryId, ctCollectionId)
@@ -203,6 +204,7 @@ create table AssetVocabularyGroupRel (
 	groupId LONG,
 	companyId LONG,
 	vocabularyId LONG,
+	depotEntryType INTEGER,
 	primary key (assetVocabularyGroupRelId, ctCollectionId)
 );
 

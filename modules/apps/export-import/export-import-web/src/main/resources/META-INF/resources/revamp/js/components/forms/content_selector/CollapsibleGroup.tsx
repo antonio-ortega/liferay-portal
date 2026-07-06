@@ -4,12 +4,13 @@
  */
 
 import classnames from 'classnames';
-import React, {ReactNode, useId, useState} from 'react';
+import React, {ReactNode, Ref, useId, useState} from 'react';
 
 import ControlRow from './ControlRow';
 
 export default function CollapsibleGroup({
 	bodyClassName,
+	bodyRef,
 	bodyVisibleClassName,
 	checkboxId,
 	children,
@@ -24,6 +25,7 @@ export default function CollapsibleGroup({
 	tags,
 }: {
 	bodyClassName?: string;
+	bodyRef?: Ref<HTMLDivElement>;
 	bodyVisibleClassName?: string;
 	checkboxId: string;
 	children: ReactNode;
@@ -62,11 +64,11 @@ export default function CollapsibleGroup({
 				onToggle={onToggle}
 				selected={selected}
 				tags={tags}
-			>
-				<small className="d-block text-secondary text-truncate">
-					{summary || Liferay.Language.get('nothing-selected')}
-				</small>
-			</ControlRow>
+			/>
+
+			<small className="d-block pl-4 text-secondary text-truncate">
+				{summary || Liferay.Language.get('nothing-selected')}
+			</small>
 
 			<div
 				className={classnames(
@@ -75,6 +77,7 @@ export default function CollapsibleGroup({
 				)}
 				hidden={!expanded}
 				id={bodyId}
+				ref={bodyRef}
 			>
 				{children}
 			</div>

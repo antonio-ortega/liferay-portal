@@ -81,6 +81,7 @@ public abstract class BaseWishListResourceImpl
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "Reference to the addressed CommerceWishList; raises 404 when missing or when the caller lacks VIEW permission.",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
 				name = "wishListId"
 			)
@@ -156,22 +157,32 @@ public abstract class BaseWishListResourceImpl
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "External reference code of the addressed CommerceChannel; raises 404 when no channel with this code exists in the company.",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
 				name = "externalReferenceCode"
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "Reference to the AccountEntry the request is scoped to. When omitted, AccountUtil resolves the effective account from the authenticated user's commerce account assignments and channel eligibility; when the user has multiple accounts the explicit value is required (NoSuchEntryException otherwise).",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
 				name = "accountId"
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "ISO 4217 currency code applied to the request's CommerceContext for price resolution. When omitted, the channel's default currency is used; a non-active currency raises 422.",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
 				name = "currencyCode"
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "Comma-separated list of nested fields to embed in each returned resource. Each value names a relationship exposed on the resource; when omitted, those relationships are not expanded inline.",
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "nestedFields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				description = "One-based page index for paginated results. Combine with pageSize to walk pages; when omitted the server returns page 1.",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
 				name = "page"
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "Number of items per page. When omitted the server applies the configured default page size; the maximum page size is bounded by the portal's PortalUtil.PROPS_REST_MAX_RETURN_SIZE.",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
 				name = "pageSize"
 			)
@@ -214,22 +225,32 @@ public abstract class BaseWishListResourceImpl
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "Reference to the addressed CommerceChannel; raises 404 when no channel with this primary key exists.",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
 				name = "channelId"
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "Reference to the AccountEntry the request is scoped to. When omitted, AccountUtil resolves the effective account from the authenticated user's commerce account assignments and channel eligibility; when the user has multiple accounts the explicit value is required (NoSuchEntryException otherwise).",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
 				name = "accountId"
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "ISO 4217 currency code applied to the request's CommerceContext for price resolution. When omitted, the channel's default currency is used; a non-active currency raises 422.",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
 				name = "currencyCode"
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "Comma-separated list of nested fields to embed in each returned resource. Each value names a relationship exposed on the resource; when omitted, those relationships are not expanded inline.",
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "nestedFields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				description = "One-based page index for paginated results. Combine with pageSize to walk pages; when omitted the server returns page 1.",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
 				name = "page"
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "Number of items per page. When omitted the server applies the configured default page size; the maximum page size is bounded by the portal's PortalUtil.PROPS_REST_MAX_RETURN_SIZE.",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
 				name = "pageSize"
 			)
@@ -270,8 +291,14 @@ public abstract class BaseWishListResourceImpl
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "Reference to the addressed CommerceWishList; raises 404 when missing or when the caller lacks VIEW permission.",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
 				name = "wishListId"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				description = "Comma-separated list of nested fields to embed in each returned resource. Each value names a relationship exposed on the resource; when omitted, those relationships are not expanded inline.",
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "nestedFields"
 			)
 		}
 	)
@@ -303,10 +330,12 @@ public abstract class BaseWishListResourceImpl
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "Reference to the addressed CommerceWishList; raises 404 when missing or when the caller lacks VIEW permission.",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
 				name = "wishListId"
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "Reference to the AccountEntry the request is scoped to. When omitted, AccountUtil resolves the effective account from the authenticated user's commerce account assignments and channel eligibility; when the user has multiple accounts the explicit value is required (NoSuchEntryException otherwise).",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
 				name = "accountId"
 			)
@@ -345,10 +374,12 @@ public abstract class BaseWishListResourceImpl
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "External reference code of the addressed CommerceChannel; raises 404 when no channel with this code exists in the company.",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
 				name = "externalReferenceCode"
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "Reference to the AccountEntry the request is scoped to. When omitted, AccountUtil resolves the effective account from the authenticated user's commerce account assignments and channel eligibility; when the user has multiple accounts the explicit value is required (NoSuchEntryException otherwise).",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
 				name = "accountId"
 			)
@@ -389,10 +420,12 @@ public abstract class BaseWishListResourceImpl
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "Reference to the addressed CommerceChannel; raises 404 when no channel with this primary key exists.",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
 				name = "channelId"
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "Reference to the AccountEntry the request is scoped to. When omitted, AccountUtil resolves the effective account from the authenticated user's commerce account assignments and channel eligibility; when the user has multiple accounts the explicit value is required (NoSuchEntryException otherwise).",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
 				name = "accountId"
 			)
@@ -1138,4 +1171,4 @@ public abstract class BaseWishListResourceImpl
 		LogFactoryUtil.getLog(BaseWishListResourceImpl.class);
 
 }
-// LIFERAY-REST-BUILDER-HASH:-1076820692
+// LIFERAY-REST-BUILDER-HASH:-1146709118

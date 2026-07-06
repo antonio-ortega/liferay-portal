@@ -236,7 +236,7 @@ public class ObjectServiceUpgradeStepRegistrator
 		registry.register(
 			"3.23.0", "3.23.1",
 			UpgradeProcessFactory.runSQL(
-				"update ObjectField set indexed = [$TRUE$], indexedAsKeyWord " +
+				"update ObjectField set indexed = [$TRUE$], indexedAsKeyword " +
 					"= [$TRUE$] where indexed = [$FALSE$] and name = 'id' " +
 						"and system_ = [$TRUE$]"));
 
@@ -713,6 +713,11 @@ public class ObjectServiceUpgradeStepRegistrator
 			"12.1.0", "12.1.1",
 			new com.liferay.object.internal.upgrade.v12_1_1.
 				ObjectEntryPicklistDefaultValueUpgradeProcess());
+
+		registry.register(
+			"12.1.1", "12.2.0",
+			new com.liferay.object.internal.upgrade.v12_2_0.
+				ObjectEntryIndexedColumnSizeUpgradeProcess());
 	}
 
 	@Reference

@@ -221,7 +221,7 @@ function BulkActions({
 	return showBulkActionsManagementBar && selectedItemsValue.length ? (
 		<FrontendDataSetContext.Consumer>
 			{({formId, formName, loadData, namespace, sidePanelId}) => (
-				<ManagementToolbar.ItemList
+				<div
 					className="container-fluid ml-2 navbar navbar-expand-md"
 					data-qa-id="selectionToolbar"
 				>
@@ -291,7 +291,9 @@ function BulkActions({
 												<ClayButton
 													className={classNames(
 														'bulk-action-btn nav-link',
-														highlightedBulkAction.className
+														!highlightedBulkAction
+															.data?.disabled &&
+															highlightedBulkAction.className
 													)}
 													disabled={
 														highlightedBulkAction
@@ -352,7 +354,10 @@ function BulkActions({
 												(actionDefinition) => (
 													<DropDown.Item
 														className={
-															actionDefinition.className
+															actionDefinition
+																.data?.disabled
+																? undefined
+																: actionDefinition.className
 														}
 														disabled={
 															actionDefinition
@@ -391,7 +396,7 @@ function BulkActions({
 							)}
 						</ManagementToolbar.ItemList>
 					)}
-				</ManagementToolbar.ItemList>
+				</div>
 			)}
 		</FrontendDataSetContext.Consumer>
 	) : null;

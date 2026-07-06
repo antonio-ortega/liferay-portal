@@ -1028,6 +1028,13 @@ test.describe('Fragments Panel', () => {
 			await page.getByLabel(`Add ${fragmentName}`).focus();
 
 			await page.keyboard.press('Enter');
+
+			// Wait for the keyboard movement to start before committing it
+
+			await expect(
+				page.locator('.page-editor__keyboard-movement-preview__content')
+			).toBeVisible();
+
 			await page.keyboard.press('Enter');
 
 			await expect(
@@ -1090,21 +1097,28 @@ testWithCKEditor4.describe('Page Contents Panel with CKEditor 4', () => {
 				fragmentId: headingId,
 			});
 
-			await editable.locator('[contenteditable="true"]').waitFor();
+			const editor = editable.locator('[contenteditable="true"]');
+
+			await editor.waitFor();
+
+			await editor.click();
 
 			// Clear current content text and fill with new one
 
-			await page.keyboard.press('Control+KeyA');
+			await page.keyboard.press('ControlOrMeta+KeyA');
 			await page.keyboard.press('Backspace');
 
 			await page.keyboard.type('New Content');
-			await page.locator('body').click();
 
-			await pageEditorPage.waitForChangesSaved();
+			await expect(async () => {
+				await page.keyboard.press('Escape');
 
-			await expect(
-				page.locator('.page-editor__page-contents__page-content')
-			).toContainText('New Content');
+				await pageEditorPage.waitForChangesSaved({timeout: 3000});
+
+				await expect(
+					page.locator('.page-editor__page-contents__page-content')
+				).toContainText('New Content', {timeout: 1000});
+			}).toPass();
 		}
 	);
 });
@@ -1449,7 +1463,7 @@ test.describe('Page Contents Panel', () => {
 				'Animal'
 			);
 
-			const articleTitle = 'Animal 03 - Elephant';
+			const articleTitle = `Animal 03 - Elephant ${getRandomString()}`;
 
 			await journalEditArticlePage.fillTitle(articleTitle);
 			await journalEditArticlePage.publishArticle();

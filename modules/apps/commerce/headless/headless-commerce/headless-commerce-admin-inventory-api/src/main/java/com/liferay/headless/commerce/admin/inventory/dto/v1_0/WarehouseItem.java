@@ -46,6 +46,9 @@ import java.util.function.Supplier;
 	description = "On-hand inventory record for one SKU at one warehouse, scaled to a unit-of-measure key. The triple (warehouse, sku, unitOfMeasureKey) is unique; when the SKU has exactly one unit-of-measure defined the key may be omitted and the runtime resolves it automatically.",
 	value = "WarehouseItem"
 )
+@io.swagger.v3.oas.annotations.media.Schema(
+	description = "On-hand inventory record for one SKU at one warehouse, scaled to a unit-of-measure key. The triple (warehouse, sku, unitOfMeasureKey) is unique; when the SKU has exactly one unit-of-measure defined the key may be omitted and the runtime resolves it automatically."
+)
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "WarehouseItem")
 public class WarehouseItem implements Serializable {
@@ -150,7 +153,7 @@ public class WarehouseItem implements Serializable {
 	private Supplier<Long> _idSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
-		description = "Last-modified timestamp of the warehouse-item row, in ISO 8601 date format. Maintained automatically by the persistence layer and surfaces only through the dedicated /warehouseItems/updated listing; not populated on the standard read paths.",
+		description = "Last modified timestamp of the warehouse item row, in ISO 8601 date-time format. Maintained automatically by the persistence layer and surfaces only through the dedicated /warehouseItems/updated listing; not populated on the standard read paths.",
 		example = "2017-07-21"
 	)
 	public Date getModifiedDate() {
@@ -187,7 +190,7 @@ public class WarehouseItem implements Serializable {
 	}
 
 	@GraphQLField(
-		description = "Last-modified timestamp of the warehouse-item row, in ISO 8601 date format. Maintained automatically by the persistence layer and surfaces only through the dedicated /warehouseItems/updated listing; not populated on the standard read paths."
+		description = "Last modified timestamp of the warehouse item row, in ISO 8601 date-time format. Maintained automatically by the persistence layer and surfaces only through the dedicated /warehouseItems/updated listing; not populated on the standard read paths."
 	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Date modifiedDate;
@@ -738,4 +741,4 @@ public class WarehouseItem implements Serializable {
 	private Map<String, Serializable> _extendedProperties;
 
 }
-// LIFERAY-REST-BUILDER-HASH:-991492318
+// LIFERAY-REST-BUILDER-HASH:-781551859

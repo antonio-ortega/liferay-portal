@@ -44,6 +44,9 @@ import java.util.function.Supplier;
 	description = "An attachment associated with a product (or one of its options or option values) in the admin catalog write surface. Used to create, read, replace, and patch either gallery images (type 0) or generic attachments (type 1).",
 	value = "Attachment"
 )
+@io.swagger.v3.oas.annotations.media.Schema(
+	description = "An attachment associated with a product (or one of its options or option values) in the admin catalog write surface. Used to create, read, replace, and patch either gallery images (type 0) or generic attachments (type 1)."
+)
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "Attachment")
 public class Attachment implements Serializable {
@@ -294,7 +297,7 @@ public class Attachment implements Serializable {
 		_customFieldsSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
-		description = "Date when the attachment becomes visible. ISO 8601 date (yyyy-MM-dd) interpreted in the request user's time zone. When the value lies in the future the attachment is persisted as scheduled instead of draft or approved.",
+		description = "Date and time when the attachment becomes visible. ISO 8601 date-time interpreted in the request user's time zone. When the value lies in the future the attachment is persisted as scheduled instead of draft or approved.",
 		example = "2017-07-21"
 	)
 	public Date getDisplayDate() {
@@ -331,7 +334,7 @@ public class Attachment implements Serializable {
 	}
 
 	@GraphQLField(
-		description = "Date when the attachment becomes visible. ISO 8601 date (yyyy-MM-dd) interpreted in the request user's time zone. When the value lies in the future the attachment is persisted as scheduled instead of draft or approved."
+		description = "Date and time when the attachment becomes visible. ISO 8601 date-time interpreted in the request user's time zone. When the value lies in the future the attachment is persisted as scheduled instead of draft or approved."
 	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Date displayDate;
@@ -340,7 +343,7 @@ public class Attachment implements Serializable {
 	private Supplier<Date> _displayDateSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
-		description = "Date when the attachment is hidden. ISO 8601 date in the user's time zone; must be in the future and after `displayDate`. When this date has already passed the attachment is persisted as expired. Ignored when `neverExpire` is true.",
+		description = "Date and time when the attachment is hidden. ISO 8601 date-time in the user's time zone; must be in the future and after `displayDate`. When this date has already passed the attachment is persisted as expired. Ignored when `neverExpire` is true.",
 		example = "2017-08-21"
 	)
 	public Date getExpirationDate() {
@@ -377,7 +380,7 @@ public class Attachment implements Serializable {
 	}
 
 	@GraphQLField(
-		description = "Date when the attachment is hidden. ISO 8601 date in the user's time zone; must be in the future and after `displayDate`. When this date has already passed the attachment is persisted as expired. Ignored when `neverExpire` is true."
+		description = "Date and time when the attachment is hidden. ISO 8601 date-time in the user's time zone; must be in the future and after `displayDate`. When this date has already passed the attachment is persisted as expired. Ignored when `neverExpire` is true."
 	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Date expirationDate;
@@ -1424,4 +1427,4 @@ public class Attachment implements Serializable {
 	private Map<String, Serializable> _extendedProperties;
 
 }
-// LIFERAY-REST-BUILDER-HASH:496563325
+// LIFERAY-REST-BUILDER-HASH:1704614327

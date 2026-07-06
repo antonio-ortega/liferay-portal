@@ -12,10 +12,16 @@ import com.liferay.portal.kernel.exception.PortalException;
  */
 public interface QuotaManager {
 
+	public String acquireAgentInstancePermit(long userId)
+		throws PortalException;
+
 	public void addQuotas(long accountEntryId, long companyId, long userId)
 		throws PortalException;
 
-	public void checkUsage(long companyId, long userId) throws PortalException;
+	public void checkTokensUsage(long companyId, long userId)
+		throws PortalException;
+
+	public void releaseAgentInstancePermit(String permit);
 
 	public void updateUsage(long companyId, Usage usage, long userId)
 		throws PortalException;

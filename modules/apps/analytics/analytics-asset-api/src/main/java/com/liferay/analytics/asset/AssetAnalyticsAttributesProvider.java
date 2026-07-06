@@ -14,7 +14,6 @@ import com.liferay.journal.model.JournalArticle;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.service.ObjectDefinitionLocalServiceUtil;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.ExternalReferenceCodeModel;
@@ -55,33 +54,11 @@ public class AssetAnalyticsAttributesProvider {
 	}
 
 	public String buildAttributes(String action, String field) {
-		if ((_assetEntry == null) ||
-			!FeatureFlagManagerUtil.isEnabled(
-				_assetEntry.getCompanyId(), "LPD-81914") ||
-			!_isAnalyticsEnabled()) {
-
+		if ((_assetEntry == null) || !_isAnalyticsEnabled()) {
 			return StringPool.BLANK;
 		}
 
 		return HtmlUtil.buildData(_getAttributes(action, field));
-	}
-
-	private String _getAnalyticsCMSVersion() {
-		String className = _assetEntry.getClassName();
-
-		if (!className.startsWith(_CLASS_NAME_OBJECT_DEFINITION)) {
-			return "1.0";
-		}
-
-		ObjectDefinition objectDefinition =
-			ObjectDefinitionLocalServiceUtil.fetchObjectDefinitionByClassName(
-				_assetEntry.getCompanyId(), className);
-
-		if ((objectDefinition != null) && objectDefinition.isCMS()) {
-			return "2.0";
-		}
-
-		return "1.0";
 	}
 
 	private String _getAnalyticsExternalReferenceCode() {
@@ -96,6 +73,22 @@ public class AssetAnalyticsAttributesProvider {
 		}
 
 		return null;
+	}
+
+	private String _getAnalyticsObjectDefinitionName() {
+		ObjectDefinition objectDefinition = _getObjectDefinition();
+
+		if (objectDefinition == null) {
+			return null;
+		}
+
+		String name = objectDefinition.getName();
+
+		if (Validator.isNull(name)) {
+			return null;
+		}
+
+		return TextFormatter.format(name, TextFormatter.K);
 	}
 
 	private String _getAnalyticsSubtype() {
@@ -116,19 +109,6 @@ public class AssetAnalyticsAttributesProvider {
 		String className = _assetEntry.getClassName();
 
 		if (className.startsWith(_CLASS_NAME_OBJECT_DEFINITION)) {
-			ObjectDefinition objectDefinition =
-				ObjectDefinitionLocalServiceUtil.
-					fetchObjectDefinitionByClassName(
-						_assetEntry.getCompanyId(), className);
-
-			if (objectDefinition != null) {
-				String name = objectDefinition.getName();
-
-				if (Validator.isNotNull(name)) {
-					return TextFormatter.format(name, TextFormatter.K);
-				}
-			}
-
 			return "object-entry";
 		}
 
@@ -145,8 +125,6 @@ public class AssetAnalyticsAttributesProvider {
 		return TreeMapBuilder.<String, Object>put(
 			"analytics-asset-action", () -> action
 		).put(
-			"analytics-asset-cmsversion", () -> _getAnalyticsCMSVersion()
-		).put(
 			"analytics-asset-field", () -> field
 		).put(
 			"analytics-asset-id", () -> String.valueOf(_assetEntry.getClassPK())
@@ -161,7 +139,28 @@ public class AssetAnalyticsAttributesProvider {
 		).put(
 			"analytics-external-reference-code",
 			() -> _getAnalyticsExternalReferenceCode()
+		).put(
+			"analytics-object-definition-name",
+			() -> _getAnalyticsObjectDefinitionName()
 		).build();
+	}
+
+	private ObjectDefinition _getObjectDefinition() {
+		if (_objectDefinition != null) {
+			return _objectDefinition;
+		}
+
+		String className = _assetEntry.getClassName();
+
+		if (!className.startsWith(_CLASS_NAME_OBJECT_DEFINITION)) {
+			return null;
+		}
+
+		_objectDefinition =
+			ObjectDefinitionLocalServiceUtil.fetchObjectDefinitionByClassName(
+				_assetEntry.getCompanyId(), className);
+
+		return _objectDefinition;
 	}
 
 	private boolean _isAnalyticsEnabled() {
@@ -206,5 +205,6 @@ public class AssetAnalyticsAttributesProvider {
 	private final AssetEntry _assetEntry;
 	private final AssetRenderer<?> _assetRenderer;
 	private final Locale _locale;
+	private ObjectDefinition _objectDefinition;
 
 }

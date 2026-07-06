@@ -8,6 +8,7 @@ package com.liferay.ai.hub.internal.langchain4j.rag.content.retriever;
 import com.liferay.oauth2.provider.model.OAuth2Application;
 import com.liferay.oauth2.provider.service.OAuth2ApplicationLocalServiceUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
@@ -78,9 +79,9 @@ public class LiferayWebSearchContentRetriever extends BaseContentRetriever {
 	private List<Content> _search(Query query) throws Exception {
 		Http.Options options = new Http.Options();
 
+		options.addHeader(HttpHeaders.AUTHORIZATION, "Bearer " + _userToken);
 		options.addHeader(
 			HttpHeaders.CONTENT_TYPE, ContentTypes.APPLICATION_JSON);
-		options.addHeader("Liferay-AI-Hub-Cell-On-Behalf-Of", _userToken);
 
 		URL urlObject = new URL(_homePageURL);
 
@@ -91,8 +92,6 @@ public class LiferayWebSearchContentRetriever extends BaseContentRetriever {
 			throw new SecurityException(
 				"Local links are not allowed: " + urlObject);
 		}
-
-		List<Content> contents = new ArrayList<>();
 
 		String location = _homePageURL + "/o/search/v1.0/search";
 
@@ -111,8 +110,22 @@ public class LiferayWebSearchContentRetriever extends BaseContentRetriever {
 
 		options.setMethod(Http.Method.GET);
 
-		JSONObject jsonObject = JSONFactoryUtil.createJSONObject(
-			HttpUtil.URLtoString(options));
+		String json = HttpUtil.URLtoString(options);
+
+		Http.Response response = options.getResponse();
+
+		if ((response.getResponseCode() < 200) ||
+			(response.getResponseCode() >= 300)) {
+
+			throw new PortalException(
+				StringBundler.concat(
+					"Search request to ", location,
+					" failed with response code ", response.getResponseCode()));
+		}
+
+		JSONObject jsonObject = JSONFactoryUtil.createJSONObject(json);
+
+		List<Content> contents = new ArrayList<>();
 
 		for (JSONObject itemJSONObject :
 				(Iterable<JSONObject>)jsonObject.getJSONArray("items")) {

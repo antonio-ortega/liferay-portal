@@ -46,6 +46,9 @@ import java.util.function.Supplier;
 	description = "Buyer-facing projection of a shipment that fulfills a placed order item. Returned by the placed-order-item shipments list; carries the carrier, tracking, status, and per-line shipped quantity.",
 	value = "PlacedOrderItemShipment"
 )
+@io.swagger.v3.oas.annotations.media.Schema(
+	description = "Buyer-facing projection of a shipment that fulfills a placed order item. Returned by the placed-order-item shipments list; carries the carrier, tracking, status, and per-line shipped quantity."
+)
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "PlacedOrderItemShipment")
 public class PlacedOrderItemShipment implements Serializable {
@@ -199,7 +202,7 @@ public class PlacedOrderItemShipment implements Serializable {
 	private Supplier<String> _carrierSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
-		description = "Creation date of the shipment. ISO 8601 date. Read-only.",
+		description = "Creation timestamp of the shipment. ISO 8601 date-time. Read-only.",
 		example = "2017-07-21"
 	)
 	public Date getCreateDate() {
@@ -236,7 +239,7 @@ public class PlacedOrderItemShipment implements Serializable {
 	}
 
 	@GraphQLField(
-		description = "Creation date of the shipment. ISO 8601 date. Read-only."
+		description = "Creation timestamp of the shipment. ISO 8601 date-time. Read-only."
 	)
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Date createDate;
@@ -245,7 +248,7 @@ public class PlacedOrderItemShipment implements Serializable {
 	private Supplier<Date> _createDateSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
-		description = "Expected delivery date of the shipment (mapped from the underlying expectedDate). ISO 8601 date. Read-only.",
+		description = "Expected delivery date and time of the shipment (mapped from the underlying expectedDate). ISO 8601 date-time. Read-only.",
 		example = "2017-07-25"
 	)
 	public Date getEstimatedDeliveryDate() {
@@ -282,7 +285,7 @@ public class PlacedOrderItemShipment implements Serializable {
 	}
 
 	@GraphQLField(
-		description = "Expected delivery date of the shipment (mapped from the underlying expectedDate). ISO 8601 date. Read-only."
+		description = "Expected delivery date and time of the shipment (mapped from the underlying expectedDate). ISO 8601 date-time. Read-only."
 	)
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Date estimatedDeliveryDate;
@@ -291,7 +294,7 @@ public class PlacedOrderItemShipment implements Serializable {
 	private Supplier<Date> _estimatedDeliveryDateSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
-		description = "Expected ship-out date of the shipment (mapped from the underlying shippingDate). ISO 8601 date. Read-only.",
+		description = "Expected ship-out date and time of the shipment (mapped from the underlying shippingDate). ISO 8601 date-time. Read-only.",
 		example = "2017-07-22"
 	)
 	public Date getEstimatedShippingDate() {
@@ -328,7 +331,7 @@ public class PlacedOrderItemShipment implements Serializable {
 	}
 
 	@GraphQLField(
-		description = "Expected ship-out date of the shipment (mapped from the underlying shippingDate). ISO 8601 date. Read-only."
+		description = "Expected ship-out date and time of the shipment (mapped from the underlying shippingDate). ISO 8601 date-time. Read-only."
 	)
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Date estimatedShippingDate;
@@ -426,7 +429,7 @@ public class PlacedOrderItemShipment implements Serializable {
 	private Supplier<Long> _idSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
-		description = "Last modification date of the shipment. ISO 8601 date. Read-only.",
+		description = "Last modification timestamp of the shipment. ISO 8601 date-time. Read-only.",
 		example = "2017-07-22"
 	)
 	public Date getModifiedDate() {
@@ -463,7 +466,7 @@ public class PlacedOrderItemShipment implements Serializable {
 	}
 
 	@GraphQLField(
-		description = "Last modification date of the shipment. ISO 8601 date. Read-only."
+		description = "Last modification timestamp of the shipment. ISO 8601 date-time. Read-only."
 	)
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Date modifiedDate;
@@ -1335,4 +1338,4 @@ public class PlacedOrderItemShipment implements Serializable {
 	private Map<String, Serializable> _extendedProperties;
 
 }
-// LIFERAY-REST-BUILDER-HASH:1732905869
+// LIFERAY-REST-BUILDER-HASH:301457934

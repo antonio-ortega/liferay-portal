@@ -772,35 +772,45 @@ public class DBTest {
 
 			long endTime = System.currentTimeMillis() + 30000;
 
+			boolean foundLongRunningQuery = false;
+
 			while (System.currentTimeMillis() < endTime) {
 				for (DB.QueryInfo queryInfo :
 						db.getLongRunningQueryInfos(pollingConnection)) {
 
 					String query = queryInfo.getQuery();
 
-					if (query.contains(_getSlowQueryFragment())) {
-						Assert.assertNotNull(queryInfo.getId());
-						Assert.assertNotNull(queryInfo.getSchema());
-						Assert.assertNotNull(queryInfo.getState());
+					if (!query.contains(_getSlowQueryFragment()) ||
+						(queryInfo.getState() == null)) {
 
-						for (DB.QueryInfo lockedQueryInfo :
-								db.getLockedQueryInfos(pollingConnection)) {
-
-							Assert.assertFalse(
-								lockedQueryInfo.getQuery(
-								).contains(
-									_getSlowQueryFragment()
-								));
-						}
-
-						return;
+						continue;
 					}
+
+					Assert.assertNotNull(queryInfo.getId());
+					Assert.assertNotNull(queryInfo.getSchema());
+
+					for (DB.QueryInfo lockedQueryInfo :
+							db.getLockedQueryInfos(pollingConnection)) {
+
+						String lockedQuery = lockedQueryInfo.getQuery();
+
+						Assert.assertFalse(
+							lockedQuery.contains(_getSlowQueryFragment()));
+					}
+
+					foundLongRunningQuery = true;
+
+					break;
+				}
+
+				if (foundLongRunningQuery) {
+					break;
 				}
 
 				Thread.sleep(200);
 			}
 
-			Assert.fail();
+			Assert.assertTrue(foundLongRunningQuery);
 		}
 		finally {
 			if (futureTask != null) {

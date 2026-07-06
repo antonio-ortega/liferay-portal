@@ -5,6 +5,7 @@
 
 import ClayButton from '@clayui/button';
 import ClayIcon from '@clayui/icon';
+import classnames from 'classnames';
 import {sub} from 'frontend-js-web';
 import React, {ReactNode, useId} from 'react';
 
@@ -13,7 +14,7 @@ import {PreviewPortletDataHandlerControl} from '../../../types/portletDataHandle
 import {
 	HandlerSelection,
 	LAYOUT_SET_LAYOUTS_PORTLET_DATA_KEY,
-	getInitialSelection,
+	getHandlerSelection,
 	getSelectionSummary,
 	isSelected,
 	updateSelection,
@@ -25,6 +26,7 @@ import PortletDataControlChoice from './PortletDataControlChoice';
 import SectionTags from './SectionTags';
 
 export default function PortletDataControl({
+	compact = false,
 	control,
 	onChange,
 	pageTreeModalConfiguration,
@@ -32,6 +34,7 @@ export default function PortletDataControl({
 	topLevel = false,
 	value,
 }: {
+	compact?: boolean;
 	control: PreviewPortletDataHandlerControl;
 	onChange: (value: HandlerSelection | undefined) => void;
 	pageTreeModalConfiguration?: PageTreeModalConfiguration;
@@ -71,7 +74,6 @@ export default function PortletDataControl({
 			? (value as Record<string, HandlerSelection>)
 			: {};
 	const nestedControls = control.previewPortletDataHandlerControls ?? [];
-	const expandable = !!nestedControls.length;
 
 	const additionCount =
 		control.type === 'Boolean' ? control.additionCount : undefined;
@@ -91,9 +93,11 @@ export default function PortletDataControl({
 		description,
 		indeterminate: !!value && !selected,
 		label: control.label,
-		labelClassName: topLevel ? 'font-weight-semi-bold' : '',
+		labelClassName: topLevel
+			? 'font-weight-semi-bold'
+			: 'font-weight-normal',
 		onToggle: () =>
-			onChange(selected ? undefined : getInitialSelection(control)),
+			onChange(selected ? undefined : getHandlerSelection(control)),
 		selected,
 		tags: (
 			<SectionTags
@@ -104,28 +108,33 @@ export default function PortletDataControl({
 		),
 	};
 
-	const body = nestedControls.map((nestedControl) => (
-		<PortletDataControl
-			control={nestedControl}
-			key={nestedControl.name}
-			onChange={(controlValue) =>
-				onChange(
-					updateSelection(
-						currentSelection,
-						nestedControl.name,
-						controlValue
+	const body = nestedControls
+		.filter((nestedControl) => nestedControl.type !== 'Choice' || !!value)
+		.map((nestedControl) => (
+			<PortletDataControl
+				control={nestedControl}
+				key={nestedControl.name}
+				onChange={(controlValue) =>
+					onChange(
+						updateSelection(
+							currentSelection,
+							nestedControl.name,
+							controlValue
+						)
 					)
-				)
-			}
-			pageTreeModalConfiguration={pageTreeModalConfiguration}
-			value={currentSelection[nestedControl.name]}
-		/>
-	));
+				}
+				pageTreeModalConfiguration={pageTreeModalConfiguration}
+				value={currentSelection[nestedControl.name]}
+			/>
+		));
+
+	const expandable = !!body.length;
 
 	if (topLevel) {
 		return (
 			<PortletDataHandlerPanel
 				bodyChildren={body}
+				compact={compact}
 				currentSelection={currentSelection}
 				expandable={expandable}
 				nestedControls={nestedControls}
@@ -147,19 +156,21 @@ export default function PortletDataControl({
 
 function PortletDataHandlerPanel({
 	bodyChildren,
+	compact = false,
 	currentSelection,
 	expandable,
 	nestedControls,
 	rowProps,
 }: {
 	bodyChildren: ReactNode;
+	compact?: boolean;
 	currentSelection: Record<string, HandlerSelection>;
 	expandable: boolean;
 	nestedControls: PreviewPortletDataHandlerControl[];
 	rowProps: React.ComponentProps<typeof ControlRow>;
 }) {
 	return (
-		<div className="p-3">
+		<div className={classnames('px-3', compact ? 'py-2' : 'py-3')}>
 			{expandable ? (
 				<CollapsibleGroup
 					{...rowProps}
@@ -179,6 +190,7 @@ function PortletDataHandlerPanel({
 											rowProps.label
 										)
 							}
+							className="font-weight-semi-bold"
 							displayType="link"
 							size="sm"
 						>

@@ -84,6 +84,7 @@ public abstract class BaseCartResourceImpl
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "Internal numeric identifier of a cart. Counterpart to the by-externalReferenceCode path variant; identifiers are server-assigned and stable across the cart's lifetime.",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
 				name = "cartId"
 			)
@@ -163,6 +164,7 @@ public abstract class BaseCartResourceImpl
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "External reference code that addresses the target resource on the by-externalReferenceCode paths. The code is the integration-supplied idempotency key, unique within the resource scope; POST against this path is upsert (create when absent, replace when present).",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
 				name = "externalReferenceCode"
 			)
@@ -200,8 +202,14 @@ public abstract class BaseCartResourceImpl
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "Internal numeric identifier of a cart. Counterpart to the by-externalReferenceCode path variant; identifiers are server-assigned and stable across the cart's lifetime.",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
 				name = "cartId"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				description = "Comma-separated list of nested fields to embed in each returned resource. Each value names a relationship exposed on the resource; when omitted, those relationships are not expanded inline.",
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "nestedFields"
 			)
 		}
 	)
@@ -233,8 +241,14 @@ public abstract class BaseCartResourceImpl
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "External reference code that addresses the target resource on the by-externalReferenceCode paths. The code is the integration-supplied idempotency key, unique within the resource scope; POST against this path is upsert (create when absent, replace when present).",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
 				name = "externalReferenceCode"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				description = "Comma-separated list of nested fields to embed in each returned resource. Each value names a relationship exposed on the resource; when omitted, those relationships are not expanded inline.",
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "nestedFields"
 			)
 		}
 	)
@@ -268,10 +282,12 @@ public abstract class BaseCartResourceImpl
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "External reference code that addresses the target resource on the by-externalReferenceCode paths. The code is the integration-supplied idempotency key, unique within the resource scope; POST against this path is upsert (create when absent, replace when present).",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
 				name = "externalReferenceCode"
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "Optional URL the payment gateway redirects the buyer to after the payment flow completes or is abandoned. When omitted, the gateway-default callback configured on the channel is used.",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
 				name = "callbackURL"
 			)
@@ -312,10 +328,12 @@ public abstract class BaseCartResourceImpl
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "Internal numeric identifier of a cart. Counterpart to the by-externalReferenceCode path variant; identifiers are server-assigned and stable across the cart's lifetime.",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
 				name = "cartId"
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "Optional URL the payment gateway redirects the buyer to after the payment flow completes or is abandoned. When omitted, the gateway-default callback configured on the channel is used.",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
 				name = "callbackURL"
 			)
@@ -354,30 +372,42 @@ public abstract class BaseCartResourceImpl
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "Internal numeric identifier of the account whose carts are being queried in the given channel. Counterpart to the by-externalReferenceCode variant.",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
 				name = "accountId"
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "Internal numeric identifier of the CommerceChannel that scopes the carts. Counterpart to the by-externalReferenceCode variant.",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
 				name = "channelId"
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "OData v4 filter expression that narrows the result set. Supported fields depend on the endpoint and come from the matching entity model. For /carts list endpoints, supported fields include accountId, orderStatus, createDate, modifiedDate, orderDate, id, orderId, account, author, externalReferenceCode, name, orderType, and purchaseOrderNumber. For /carts/<cartId>/attachments, restricted, dateCreated, dateModified, priority, commerceOrderId, externalReferenceCode, title, and type are supported. For /carts/<cartId>/items, quantity, name, sku, and unitOfMeasure are supported. Example -- filter=accountId eq 12345.",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
 				name = "filter"
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "Comma-separated list of nested fields to embed in each returned resource. Each value names a relationship exposed on the resource; when omitted, those relationships are not expanded inline.",
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "nestedFields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				description = "One-based page index. Combined with pageSize to paginate the result set; defaults to 1 when omitted.",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
 				name = "page"
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "Number of items per page. Defaults to the portal's configured page size when omitted; capped by the portal configuration to prevent unbounded reads.",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
 				name = "pageSize"
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "Full-text search query. For /carts list endpoints the search corpus is the cart index (matches against account, author, name, and other indexed fields). For nested /items and /attachments endpoints the corpus is the corresponding cart item or attachment index.",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
 				name = "search"
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "Sort expression. Comma-separated `field:direction` pairs (direction `asc` or `desc`). Supported sort fields are the same as the filterable fields documented on filter for the same endpoint.",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
 				name = "sort"
 			)
@@ -423,30 +453,42 @@ public abstract class BaseCartResourceImpl
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "External reference code identifying the account whose carts are being queried in the given channel. Resolved against the company scope before filtering carts.",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
 				name = "accountExternalReferenceCode"
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "External reference code identifying the CommerceChannel that scopes the carts. The channel determines currency, available payment methods, available shipping methods, and visibility rules.",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
 				name = "channelExternalReferenceCode"
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "OData v4 filter expression that narrows the result set. Supported fields depend on the endpoint and come from the matching entity model. For /carts list endpoints, supported fields include accountId, orderStatus, createDate, modifiedDate, orderDate, id, orderId, account, author, externalReferenceCode, name, orderType, and purchaseOrderNumber. For /carts/<cartId>/attachments, restricted, dateCreated, dateModified, priority, commerceOrderId, externalReferenceCode, title, and type are supported. For /carts/<cartId>/items, quantity, name, sku, and unitOfMeasure are supported. Example -- filter=accountId eq 12345.",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
 				name = "filter"
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "Comma-separated list of nested fields to embed in each returned resource. Each value names a relationship exposed on the resource; when omitted, those relationships are not expanded inline.",
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "nestedFields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				description = "One-based page index. Combined with pageSize to paginate the result set; defaults to 1 when omitted.",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
 				name = "page"
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "Number of items per page. Defaults to the portal's configured page size when omitted; capped by the portal configuration to prevent unbounded reads.",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
 				name = "pageSize"
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "Full-text search query. For /carts list endpoints the search corpus is the cart index (matches against account, author, name, and other indexed fields). For nested /items and /attachments endpoints the corpus is the corresponding cart item or attachment index.",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
 				name = "search"
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "Sort expression. Comma-separated `field:direction` pairs (direction `asc` or `desc`). Supported sort fields are the same as the filterable fields documented on filter for the same endpoint.",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
 				name = "sort"
 			)
@@ -495,26 +537,37 @@ public abstract class BaseCartResourceImpl
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "Internal numeric identifier of the CommerceChannel that scopes the carts. Counterpart to the by-externalReferenceCode variant.",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
 				name = "channelId"
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "OData v4 filter expression that narrows the result set. Supported fields depend on the endpoint and come from the matching entity model. For /carts list endpoints, supported fields include accountId, orderStatus, createDate, modifiedDate, orderDate, id, orderId, account, author, externalReferenceCode, name, orderType, and purchaseOrderNumber. For /carts/<cartId>/attachments, restricted, dateCreated, dateModified, priority, commerceOrderId, externalReferenceCode, title, and type are supported. For /carts/<cartId>/items, quantity, name, sku, and unitOfMeasure are supported. Example -- filter=accountId eq 12345.",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
 				name = "filter"
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "Comma-separated list of nested fields to embed in each returned resource. Each value names a relationship exposed on the resource; when omitted, those relationships are not expanded inline.",
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "nestedFields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				description = "One-based page index. Combined with pageSize to paginate the result set; defaults to 1 when omitted.",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
 				name = "page"
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "Number of items per page. Defaults to the portal's configured page size when omitted; capped by the portal configuration to prevent unbounded reads.",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
 				name = "pageSize"
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "Full-text search query. For /carts list endpoints the search corpus is the cart index (matches against account, author, name, and other indexed fields). For nested /items and /attachments endpoints the corpus is the corresponding cart item or attachment index.",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
 				name = "search"
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "Sort expression. Comma-separated `field:direction` pairs (direction `asc` or `desc`). Supported sort fields are the same as the filterable fields documented on filter for the same endpoint.",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
 				name = "sort"
 			)
@@ -556,6 +609,7 @@ public abstract class BaseCartResourceImpl
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "Internal numeric identifier of a cart. Counterpart to the by-externalReferenceCode path variant; identifiers are server-assigned and stable across the cart's lifetime.",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
 				name = "cartId"
 			)
@@ -692,6 +746,7 @@ public abstract class BaseCartResourceImpl
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "External reference code that addresses the target resource on the by-externalReferenceCode paths. The code is the integration-supplied idempotency key, unique within the resource scope; POST against this path is upsert (create when absent, replace when present).",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
 				name = "externalReferenceCode"
 			)
@@ -832,6 +887,7 @@ public abstract class BaseCartResourceImpl
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "External reference code that addresses the target resource on the by-externalReferenceCode paths. The code is the integration-supplied idempotency key, unique within the resource scope; POST against this path is upsert (create when absent, replace when present).",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
 				name = "externalReferenceCode"
 			)
@@ -867,6 +923,7 @@ public abstract class BaseCartResourceImpl
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "External reference code that addresses the target resource on the by-externalReferenceCode paths. The code is the integration-supplied idempotency key, unique within the resource scope; POST against this path is upsert (create when absent, replace when present).",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
 				name = "externalReferenceCode"
 			)
@@ -904,6 +961,7 @@ public abstract class BaseCartResourceImpl
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "Internal numeric identifier of a cart. Counterpart to the by-externalReferenceCode path variant; identifiers are server-assigned and stable across the cart's lifetime.",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
 				name = "cartId"
 			)
@@ -937,6 +995,7 @@ public abstract class BaseCartResourceImpl
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "Internal numeric identifier of a cart. Counterpart to the by-externalReferenceCode path variant; identifiers are server-assigned and stable across the cart's lifetime.",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
 				name = "cartId"
 			)
@@ -972,6 +1031,7 @@ public abstract class BaseCartResourceImpl
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "Internal numeric identifier of the CommerceChannel that scopes the carts. Counterpart to the by-externalReferenceCode variant.",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
 				name = "channelId"
 			)
@@ -1007,6 +1067,7 @@ public abstract class BaseCartResourceImpl
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "External reference code that addresses the target resource on the by-externalReferenceCode paths. The code is the integration-supplied idempotency key, unique within the resource scope; POST against this path is upsert (create when absent, replace when present).",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
 				name = "externalReferenceCode"
 			)
@@ -1044,6 +1105,7 @@ public abstract class BaseCartResourceImpl
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "Internal numeric identifier of a cart. Counterpart to the by-externalReferenceCode path variant; identifiers are server-assigned and stable across the cart's lifetime.",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
 				name = "cartId"
 			)
@@ -1123,6 +1185,7 @@ public abstract class BaseCartResourceImpl
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "External reference code that addresses the target resource on the by-externalReferenceCode paths. The code is the integration-supplied idempotency key, unique within the resource scope; POST against this path is upsert (create when absent, replace when present).",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
 				name = "externalReferenceCode"
 			)
@@ -1911,4 +1974,4 @@ public abstract class BaseCartResourceImpl
 		LogFactoryUtil.getLog(BaseCartResourceImpl.class);
 
 }
-// LIFERAY-REST-BUILDER-HASH:43038831
+// LIFERAY-REST-BUILDER-HASH:1630830338

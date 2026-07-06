@@ -27,6 +27,23 @@ jest.mock(
 	})
 );
 
+jest.mock(
+	'../../../src/main/resources/META-INF/resources/js/configuration_form/CredentialsPanel',
+	() => {
+		const React = require('react');
+
+		return {
+			__esModule: true,
+			default: ({clientId}: any) =>
+				React.createElement(
+					'div',
+					{'data-testid': 'credentials-panel'},
+					clientId
+				),
+		};
+	}
+);
+
 jest.mock('frontend-js-components-web', () => {
 	const React = require('react');
 
@@ -81,6 +98,14 @@ describe('ConfigurationForm', () => {
 		cleanup();
 	});
 
+	it('does not render the credentials panel without a clientId', () => {
+		render(<ConfigurationForm {...defaultProps} />);
+
+		expect(
+			screen.queryByTestId('credentials-panel')
+		).not.toBeInTheDocument();
+	});
+
 	it('exposes a Cancel link that points at backURL', () => {
 		render(<ConfigurationForm {...defaultProps} backURL="/back-here" />);
 
@@ -92,9 +117,8 @@ describe('ConfigurationForm', () => {
 
 	it('hydrates the inputs after the fetch resolves in edit mode', async () => {
 		mockGetConfiguration.mockResolvedValueOnce({
-			environmentUrls: 'https://test.example.com',
+			environmentURLs: 'https://test.example.com',
 			externalReferenceCode: 'CONFIG_X',
-			recipientEmailAddress: 'test@example.com',
 		});
 
 		render(
@@ -109,27 +133,20 @@ describe('ConfigurationForm', () => {
 				screen.getByDisplayValue('https://test.example.com')
 			).toBeInTheDocument();
 		});
-
-		expect(
-			screen.getByDisplayValue('test@example.com')
-		).toBeInTheDocument();
 	});
 
-	it('renders the Environment URL and Notification Email fields', () => {
-		render(<ConfigurationForm {...defaultProps} />);
+	it('renders the credentials panel when a clientId is provided', () => {
+		render(<ConfigurationForm {...defaultProps} clientId="CLIENT_X" />);
 
-		expect(screen.getByLabelText(/^environment-url/)).toBeInTheDocument();
-
-		expect(
-			screen.getByLabelText(/^notification-email/)
-		).toBeInTheDocument();
+		expect(screen.getByTestId('credentials-panel')).toHaveTextContent(
+			'CLIENT_X'
+		);
 	});
 
 	it('submits the values with the account relationship and shows a success toast', async () => {
 		mockGetConfiguration.mockResolvedValueOnce({
-			environmentUrls: '',
+			environmentURLs: '',
 			externalReferenceCode: 'CONFIG_X',
-			recipientEmailAddress: '',
 		});
 
 		mockPutConfiguration.mockResolvedValueOnce({});
@@ -151,19 +168,14 @@ describe('ConfigurationForm', () => {
 			target: {value: 'https://www.example.com'},
 		});
 
-		fireEvent.change(screen.getByLabelText(/^notification-email/), {
-			target: {value: 'test@example.com'},
-		});
-
 		fireEvent.click(screen.getByRole('button', {name: 'save'}));
 
 		await waitFor(() => {
 			expect(mockPutConfiguration).toHaveBeenCalledWith(
 				'CONFIG_X',
 				expect.objectContaining({
-					environmentUrls: 'https://www.example.com',
+					environmentURLs: 'https://www.example.com',
 					r_accountToAIHubConfigurations_accountEntryId: 12345,
-					recipientEmailAddress: 'test@example.com',
 				})
 			);
 		});

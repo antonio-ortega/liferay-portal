@@ -2,6 +2,10 @@
 
 This is Liferay Portal's main source code repository.
 
+## Code Style
+
+Follow the canonical code style rules in `pr-reviewer/rules` when writing, modifying, or reviewing code. Each numbered file states one rule with its rationale, and `pr-reviewer/STYLE.md` records the philosophy and the matters of taste behind them.
+
 ## High-Level Architecture
 
 ### Portal Core (Ant Based)
@@ -92,6 +96,8 @@ ant test-package -Dtest.package=com.liferay.portal.kernel.util
 cd <module-root> && yarn test
 cd <module-root> && yarn test <test-file-path>
 ```
+
+Read `.claude/rules/jest-testing.md` before creating a frontend unit test.
 
 #### Integration Tests
 

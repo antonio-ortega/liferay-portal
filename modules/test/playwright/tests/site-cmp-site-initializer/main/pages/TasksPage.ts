@@ -18,6 +18,18 @@ export class TasksPage {
 	readonly allTasksTab: Locator;
 	readonly assetTagNameField: Locator;
 	readonly assignTaskToDialog: Locator;
+	readonly calendarView: {
+		datePickerMenu: Locator;
+		moreLinkButton: Locator;
+		moreLinkPopover: Locator;
+		nextMonthButton: Locator;
+		previousMonthButton: Locator;
+		title: Locator;
+		todayButton: Locator;
+		unscheduledTasksButton: Locator;
+		unscheduledTasksPanel: Locator;
+		viewOption: Locator;
+	};
 	readonly dataSetFragmentPage: DataSetPage;
 	readonly dialogDeleteButton: Locator;
 	readonly dropdownKanbanViewButton: Locator;
@@ -50,6 +62,22 @@ export class TasksPage {
 		this.assignTaskToDialog = page.getByRole('dialog', {
 			name: 'Assign Tasks to',
 		});
+		this.calendarView = {
+			datePickerMenu: page.getByRole('dialog', {name: 'Select Date'}),
+			moreLinkButton: page.getByText(/\d+ More/),
+			moreLinkPopover: page.getByTestId('calendarMoreLinkPopover'),
+			nextMonthButton: page.getByRole('button', {name: 'Next Month'}),
+			previousMonthButton: page.getByRole('button', {
+				name: 'Previous Month',
+			}),
+			title: page.getByTestId('calendarTitle'),
+			todayButton: page.getByRole('button', {name: 'Today'}),
+			unscheduledTasksButton: page.getByText(/\d+ Unscheduled Tasks?/),
+			unscheduledTasksPanel: page.getByTestId(
+				'calendarUnscheduledTasksPanel'
+			),
+			viewOption: page.getByRole('option', {name: 'Calendar'}),
+		};
 		this.dataSetFragmentPage = new DataSetPage(page);
 		this.dialogDeleteButton = page
 			.getByRole('dialog')

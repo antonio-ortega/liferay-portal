@@ -87,6 +87,10 @@ test(
 			filter: structureName,
 		});
 
+		await expect(page.locator('.liferay-modal .modal-dialog')).toHaveClass(
+			/modal-dialog-centered/
+		);
+
 		await page
 			.getByPlaceholder('Confirm Content Structure Name')
 			.fill(structureName);
@@ -139,6 +143,10 @@ test(
 		await expect(
 			page.getByRole('heading', {name: 'Deletion Not Allowed'})
 		).toBeVisible();
+
+		await expect(page.locator('.liferay-modal .modal-dialog')).toHaveClass(
+			/modal-dialog-centered/
+		);
 
 		await clickAndExpectToBeHidden({
 			target: page.getByRole('button', {name: 'OK'}),
@@ -724,13 +732,13 @@ test(
 );
 
 test(
-	'Basic Web Content usages list includes assets that use the structure',
-	{tag: '@LPD-89302'},
+	'View Usages lists the assets using the structure and deletes them with the CMS confirmation modal',
+	{tag: ['@LPD-89302', '@LPD-89560']},
 	async ({apiHelpers, page, structuresPage}) => {
 		const applicationName = 'cms/basic-web-contents';
 		const title = `Content ${getRandomString()}`;
 
-		const objectEntry = await apiHelpers.objectEntry.postObjectEntry(
+		await apiHelpers.objectEntry.postObjectEntry(
 			{
 				objectEntryFolderExternalReferenceCode: 'L_CONTENTS',
 				title,
@@ -739,24 +747,48 @@ test(
 			'Default'
 		);
 
-		try {
-			await structuresPage.goto();
+		// Open the usages list of the structure
 
-			await structuresPage.execItemAction({
-				action: 'View Usages',
-				filter: 'Basic Web Content',
-			});
+		await structuresPage.goto();
 
+		await structuresPage.execItemAction({
+			action: 'View Usages',
+			filter: 'Basic Web Content',
+		});
+
+		await test.step('Usages list includes the asset', async () => {
 			await page.locator('.fds').waitFor();
 
 			await expect(page.getByRole('row', {name: title})).toBeVisible();
-		}
-		finally {
-			await apiHelpers.objectEntry.deleteObjectEntry(
-				applicationName,
-				String(objectEntry.id)
-			);
-		}
+		});
+
+		await test.step('Delete shows the CMS confirmation modal', async () => {
+
+			// Open the delete action of the usage entry
+
+			await structuresPage.dataSetFragmentPage.execItemAction({
+				action: 'Delete',
+				filter: title,
+			});
+
+			// The CMS confirmation modal must appear instead of a native
+			// confirm dialog
+
+			await expect(
+				page.getByText('Are you sure you want to delete this entry?')
+			).toBeVisible();
+
+			// Confirm the deletion
+
+			await page
+				.locator('.liferay-modal')
+				.getByRole('button', {exact: true, name: 'Delete'})
+				.click();
+
+			await waitForAlert(page, `${title} was successfully deleted`, {
+				type: 'success',
+			});
+		});
 	}
 );
 

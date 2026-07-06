@@ -45,7 +45,6 @@ const DEFAULT_PROPS = {
 		name: 'Test1 Test1',
 	},
 	entryClassName: '11111-className',
-	externalUserSharingEnabled: true,
 	initialCollaborators: [
 		{
 			actionIds: 'VIEW',
@@ -125,15 +124,15 @@ describe('CMSShareModalContent', () => {
 		).toHaveTextContent(/owner/);
 	});
 
-	it('renders the cancel and save buttons', () => {
+	it('renders the cancel and share buttons', () => {
 		const {getByText} = renderComponent();
 
 		expect(getByText('cancel')).toBeInTheDocument();
 
-		const saveButton = getByText('save');
+		const shareButton = getByText('share');
 
-		expect(saveButton).toBeInTheDocument();
-		expect(saveButton).toBeDisabled();
+		expect(shareButton).toBeInTheDocument();
+		expect(shareButton).toBeDisabled();
 	});
 
 	it('calls search when the autocomplete input changes', async () => {
@@ -166,7 +165,7 @@ describe('CMSShareModalContent', () => {
 		});
 	});
 
-	it('calls submission when save is clicked', async () => {
+	it('calls submission when share is clicked', async () => {
 		const {getByLabelText, getByRole, getByText} = renderComponent();
 
 		fireEvent.click(getByLabelText('more-options'));
@@ -182,11 +181,11 @@ describe('CMSShareModalContent', () => {
 		});
 
 		waitFor(() => {
-			expect(getByText('save')).toBeEnabled();
+			expect(getByText('share')).toBeEnabled();
 		});
 
 		await act(async () => {
-			fireEvent.click(getByText('save'));
+			fireEvent.click(getByText('share'));
 		});
 
 		const fetchMock = global.fetch as jest.Mock;
@@ -457,7 +456,7 @@ describe('CMSShareModalContent', () => {
 		});
 
 		await act(async () => {
-			fireEvent.click(getByText('save'));
+			fireEvent.click(getByText('share'));
 		});
 
 		const fetchMock = global.fetch as jest.Mock;
@@ -514,7 +513,7 @@ describe('CMSShareModalContent', () => {
 		});
 
 		await act(async () => {
-			fireEvent.click(getByText('save'));
+			fireEvent.click(getByText('share'));
 		});
 
 		const fetchMock = global.fetch as jest.Mock;
@@ -533,55 +532,5 @@ describe('CMSShareModalContent', () => {
 				type: 'Email',
 			},
 		]);
-	});
-
-	it('does not offer the invite-external-user option when externalUserSharingEnabled is false', async () => {
-		const {container, queryByText} = renderComponent({
-			...DEFAULT_PROPS,
-			externalUserSharingEnabled: false,
-		});
-
-		const input = container.querySelector<HTMLInputElement>(
-			'input#collaboratorAutocomplete'
-		)!;
-
-		await act(async () => {
-			fireEvent.change(input, {
-				target: {value: 'external@example.com'},
-			});
-		});
-
-		await act(async () => {
-			jest.advanceTimersByTime(300);
-		});
-
-		expect(queryByText('invite-external-user')).not.toBeInTheDocument();
-	});
-
-	it('does not render existing external user collaborators when externalUserSharingEnabled is false', () => {
-		const {container, queryByText} = renderComponent({
-			...DEFAULT_PROPS,
-			externalUserSharingEnabled: false,
-			initialCollaborators: [
-				{
-					actionIds: 'VIEW',
-					share: false,
-					type: 'Email',
-					user: {
-						emailAddress: 'external@example.com',
-						name: 'external@example.com',
-					},
-				},
-			] as Collaborator[],
-		});
-
-		expect(queryByText('invited')).not.toBeInTheDocument();
-		expect(queryByText('external@example.com')).not.toBeInTheDocument();
-
-		// Only the creator/owner row remains.
-
-		expect(container.querySelectorAll('li.list-group-item')).toHaveLength(
-			1
-		);
 	});
 });

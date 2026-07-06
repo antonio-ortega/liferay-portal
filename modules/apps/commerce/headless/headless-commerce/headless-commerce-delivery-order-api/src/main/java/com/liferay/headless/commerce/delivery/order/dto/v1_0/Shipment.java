@@ -44,6 +44,9 @@ import java.util.function.Supplier;
 	description = "Buyer-facing projection of a shipment dispatched against a placed order. Returned by the placed-order shipments list; carries the carrier, tracking, status, item count, and shipping address summary.",
 	value = "Shipment"
 )
+@io.swagger.v3.oas.annotations.media.Schema(
+	description = "Buyer-facing projection of a shipment dispatched against a placed order. Returned by the placed-order shipments list; carries the carrier, tracking, status, item count, and shipping address summary."
+)
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "Shipment")
 public class Shipment implements Serializable {
@@ -150,7 +153,7 @@ public class Shipment implements Serializable {
 	private Supplier<String> _carrierSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
-		description = "Creation date of the shipment. ISO 8601 date. Read-only; sortable and filterable via the OData query parameter.",
+		description = "Creation timestamp of the shipment. ISO 8601 date-time. Read-only; sortable and filterable via the OData query parameter.",
 		example = "2017-07-21"
 	)
 	public Date getCreateDate() {
@@ -187,7 +190,7 @@ public class Shipment implements Serializable {
 	}
 
 	@GraphQLField(
-		description = "Creation date of the shipment. ISO 8601 date. Read-only; sortable and filterable via the OData query parameter."
+		description = "Creation timestamp of the shipment. ISO 8601 date-time. Read-only; sortable and filterable via the OData query parameter."
 	)
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Date createDate;
@@ -196,7 +199,7 @@ public class Shipment implements Serializable {
 	private Supplier<Date> _createDateSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
-		description = "Expected delivery date of the shipment. ISO 8601 date. Read-only; sortable and filterable via the OData query parameter.",
+		description = "Expected delivery date and time of the shipment. ISO 8601 date-time. Read-only; sortable and filterable via the OData query parameter.",
 		example = "2017-07-25"
 	)
 	public Date getExpectedDate() {
@@ -233,7 +236,7 @@ public class Shipment implements Serializable {
 	}
 
 	@GraphQLField(
-		description = "Expected delivery date of the shipment. ISO 8601 date. Read-only; sortable and filterable via the OData query parameter."
+		description = "Expected delivery date and time of the shipment. ISO 8601 date-time. Read-only; sortable and filterable via the OData query parameter."
 	)
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Date expectedDate;
@@ -379,7 +382,7 @@ public class Shipment implements Serializable {
 	private Supplier<Integer> _itemsCountSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
-		description = "Last modification date of the shipment. ISO 8601 date. Read-only.",
+		description = "Last modification timestamp of the shipment. ISO 8601 date-time. Read-only.",
 		example = "2017-07-22"
 	)
 	public Date getModifiedDate() {
@@ -416,7 +419,7 @@ public class Shipment implements Serializable {
 	}
 
 	@GraphQLField(
-		description = "Last modification date of the shipment. ISO 8601 date. Read-only."
+		description = "Last modification timestamp of the shipment. ISO 8601 date-time. Read-only."
 	)
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Date modifiedDate;
@@ -658,7 +661,7 @@ public class Shipment implements Serializable {
 	private Supplier<Long> _shippingAddressIdSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
-		description = "Date the shipment was dispatched. ISO 8601 date. Read-only; sortable and filterable via the OData query parameter.",
+		description = "Date and time the shipment was dispatched. ISO 8601 date-time. Read-only; sortable and filterable via the OData query parameter.",
 		example = "2017-07-22"
 	)
 	public Date getShippingDate() {
@@ -695,7 +698,7 @@ public class Shipment implements Serializable {
 	}
 
 	@GraphQLField(
-		description = "Date the shipment was dispatched. ISO 8601 date. Read-only; sortable and filterable via the OData query parameter."
+		description = "Date and time the shipment was dispatched. ISO 8601 date-time. Read-only; sortable and filterable via the OData query parameter."
 	)
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Date shippingDate;
@@ -1395,4 +1398,4 @@ public class Shipment implements Serializable {
 	private Map<String, Serializable> _extendedProperties;
 
 }
-// LIFERAY-REST-BUILDER-HASH:-975569511
+// LIFERAY-REST-BUILDER-HASH:1693189089

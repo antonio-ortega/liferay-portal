@@ -44,8 +44,7 @@ function renderConfigurationHook({
 }
 
 function fillFields(result: any) {
-	result.current.setField('environmentUrls', 'https://www.example.com');
-	result.current.setField('recipientEmailAddress', 'admin@example.com');
+	result.current.setField('environmentURLs', 'https://www.example.com');
 }
 
 describe('fetch lifecycle', () => {
@@ -56,9 +55,8 @@ describe('fetch lifecycle', () => {
 
 	it('loads the configuration and replaces values on mount in edit mode', async () => {
 		mockGetConfiguration.mockResolvedValueOnce({
-			environmentUrls: 'https://loaded.example.com',
+			environmentURLs: 'https://loaded.example.com',
 			externalReferenceCode: 'CONFIG_X',
-			recipientEmailAddress: 'loaded@example.com',
 		});
 
 		const {result} = renderConfigurationHook({
@@ -66,14 +64,10 @@ describe('fetch lifecycle', () => {
 		});
 
 		await waitFor(() => {
-			expect(result.current.values.environmentUrls).toBe(
+			expect(result.current.values.environmentURLs).toBe(
 				'https://loaded.example.com'
 			);
 		});
-
-		expect(result.current.values.recipientEmailAddress).toBe(
-			'loaded@example.com'
-		);
 
 		expect(result.current.values.externalReferenceCode).toBe('CONFIG_X');
 
@@ -119,9 +113,7 @@ describe('useConfigurationForm', () => {
 				externalReferenceCode: '',
 			});
 
-			expect(result.current.values.environmentUrls).toBe('');
-
-			expect(result.current.values.recipientEmailAddress).toBe('');
+			expect(result.current.values.environmentURLs).toBe('');
 
 			expect(result.current.values.externalReferenceCode).toBe('');
 		});
@@ -151,7 +143,7 @@ describe('useConfigurationForm', () => {
 			});
 		});
 
-		it('saves even when both fields are left empty', async () => {
+		it('saves even when the field is left empty', async () => {
 			mockPutConfiguration.mockResolvedValueOnce({});
 
 			const {result} = renderConfigurationHook({
@@ -166,8 +158,7 @@ describe('useConfigurationForm', () => {
 				expect(mockPutConfiguration).toHaveBeenCalledWith(
 					'',
 					expect.objectContaining({
-						environmentUrls: '',
-						recipientEmailAddress: '',
+						environmentURLs: '',
 					})
 				);
 			});
@@ -192,10 +183,9 @@ describe('useConfigurationForm', () => {
 				expect(mockPutConfiguration).toHaveBeenCalledWith(
 					'',
 					expect.objectContaining({
-						environmentUrls: 'https://www.example.com',
+						environmentURLs: 'https://www.example.com',
 						r_accountToAIHubConfigurations_accountEntryId:
 							ACCOUNT_ENTRY_ID,
-						recipientEmailAddress: 'admin@example.com',
 					})
 				);
 			});

@@ -11,19 +11,19 @@ import {generateExternalReferenceCode} from '../../utils/externalReferenceCode';
 import {required, requiredLocalized, validate} from '../../utils/validations';
 import {DEFAULT_AGENT_DEFINITION} from '../constants';
 import {
-	deleteAgentDefinitionToContentRetrievers,
-	deleteAgentDefinitionToModelArmorTemplates,
+	disassociateAgentDefinitionFromContentRetriever,
+	disassociateAgentDefinitionFromGuardrail,
 	getAgentDefinition,
 	postAgentDefinition,
 	putAgentDefinition,
 	putAgentDefinitionToContentRetrievers,
-	putAgentDefinitionToModelArmorTemplates,
+	putAgentDefinitionToGuardrails,
 } from '../services/AgentDefinitionService';
 import {getContentRetrievers} from '../services/ContentRetrieverService';
-import {getModelArmorTemplates} from '../services/ModelArmorTemplateService';
+import {getGuardrails} from '../services/GuardrailService';
 import {AgentDefinition} from '../types/AgentDefinition';
 import {ContentRetriever} from '../types/ContentRetriever';
-import {ModelArmorTemplate} from '../types/ModelArmorTemplate';
+import {Guardrail} from '../types/Guardrail';
 import {useRelationshipPicker} from './useRelationshipPicker';
 
 interface UseAgentDefinitionFormProps {
@@ -42,14 +42,14 @@ export function useAgentDefinitionForm({
 	);
 
 	const contentRetrievers = useRelationshipPicker<ContentRetriever>({
-		deleteRelationship: deleteAgentDefinitionToContentRetrievers,
+		deleteRelationship: disassociateAgentDefinitionFromContentRetriever,
 		fetchSourceList: getContentRetrievers,
 		putRelationship: putAgentDefinitionToContentRetrievers,
 	});
-	const modelArmorTemplates = useRelationshipPicker<ModelArmorTemplate>({
-		deleteRelationship: deleteAgentDefinitionToModelArmorTemplates,
-		fetchSourceList: getModelArmorTemplates,
-		putRelationship: putAgentDefinitionToModelArmorTemplates,
+	const guardrails = useRelationshipPicker<Guardrail>({
+		deleteRelationship: disassociateAgentDefinitionFromGuardrail,
+		fetchSourceList: getGuardrails,
+		putRelationship: putAgentDefinitionToGuardrails,
 	});
 
 	const {
@@ -72,7 +72,10 @@ export function useAgentDefinitionForm({
 		onSubmit: async (formValues) => {
 			try {
 				const response = externalReferenceCode
-					? await putAgentDefinition(formValues)
+					? await putAgentDefinition(
+							formValues,
+							externalReferenceCode
+						)
 					: await postAgentDefinition(formValues);
 
 				if (formValues.externalReferenceCode) {
@@ -80,9 +83,7 @@ export function useAgentDefinitionForm({
 						contentRetrievers.sync(
 							formValues.externalReferenceCode
 						),
-						modelArmorTemplates.sync(
-							formValues.externalReferenceCode
-						),
+						guardrails.sync(formValues.externalReferenceCode),
 					]);
 				}
 
@@ -140,7 +141,7 @@ export function useAgentDefinitionForm({
 	);
 
 	const {reset: resetContentRetrievers} = contentRetrievers;
-	const {reset: resetModelArmorTemplates} = modelArmorTemplates;
+	const {reset: resetGuardrails} = guardrails;
 
 	useEffect(() => {
 		async function fetchFormData() {
@@ -170,9 +171,8 @@ export function useAgentDefinitionForm({
 				resetContentRetrievers(
 					agentDefinition.agentDefinitionsToContentRetrievers || []
 				);
-				resetModelArmorTemplates(
-					agentDefinition.aiHubAgentDefinitionsToAIHubMATemplates ||
-						[]
+				resetGuardrails(
+					agentDefinition.aiHubAgentDefinitionsToAIHubGuardrails || []
 				);
 			}
 			catch (error) {
@@ -187,17 +187,17 @@ export function useAgentDefinitionForm({
 	}, [
 		externalReferenceCode,
 		resetContentRetrievers,
-		resetModelArmorTemplates,
+		resetGuardrails,
 		setValues,
 	]);
 
 	return {
 		contentRetrievers,
 		errors,
+		guardrails,
 		handleBlur,
 		handleSubmit,
 		isSubmitting,
-		modelArmorTemplates,
 		setField,
 		setFieldTouched,
 		touched,

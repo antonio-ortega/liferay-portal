@@ -108,6 +108,7 @@
 			<hint name="display-width">350</hint>
 		</field>
 		<field name="vocabularyId" type="long" />
+		<field name="system" type="boolean" />
 		<field name="lastPublishDate" type="Date" />
 		<field name="status" type="int" />
 	</model>
@@ -211,6 +212,7 @@
 		<field name="groupId" type="long" />
 		<field name="companyId" type="long" />
 		<field name="vocabularyId" type="long" />
+		<field name="depotEntryType" type="int" />
 	</model>
 	<model name="com.liferay.counter.kernel.model.Counter">
 		<field name="name" type="String">

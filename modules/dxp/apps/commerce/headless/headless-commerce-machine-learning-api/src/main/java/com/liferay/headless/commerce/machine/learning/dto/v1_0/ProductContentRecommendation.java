@@ -43,6 +43,9 @@ import java.util.function.Supplier;
 	description = "Wire shape for a content-based product recommendation downloaded from the analytics pipeline. Given a source product, the model recommends similar products based on product metadata such as name, description, and categorisation.",
 	value = "ProductContentRecommendation"
 )
+@io.swagger.v3.oas.annotations.media.Schema(
+	description = "Wire shape for a content-based product recommendation downloaded from the analytics pipeline. Given a source product, the model recommends similar products based on product metadata such as name, description, and categorisation."
+)
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "ProductContentRecommendation")
 public class ProductContentRecommendation implements Serializable {
@@ -58,7 +61,7 @@ public class ProductContentRecommendation implements Serializable {
 	}
 
 	@io.swagger.v3.oas.annotations.media.Schema(
-		description = "Date the recommendation was materialised by the download executor, in ISO 8601 (yyyy-MM-dd).",
+		description = "Timestamp when the recommendation was materialised by the download executor, in ISO 8601.",
 		example = "2017-07-21"
 	)
 	public Date getCreateDate() {
@@ -95,7 +98,7 @@ public class ProductContentRecommendation implements Serializable {
 	}
 
 	@GraphQLField(
-		description = "Date the recommendation was materialised by the download executor, in ISO 8601 (yyyy-MM-dd)."
+		description = "Timestamp when the recommendation was materialised by the download executor, in ISO 8601."
 	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Date createDate;
@@ -543,4 +546,4 @@ public class ProductContentRecommendation implements Serializable {
 	private Map<String, Serializable> _extendedProperties;
 
 }
-// LIFERAY-REST-BUILDER-HASH:-1955417048
+// LIFERAY-REST-BUILDER-HASH:-1744622296

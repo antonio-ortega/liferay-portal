@@ -5,12 +5,9 @@
 
 package com.liferay.exportimport.rest.dto.v1_0;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonFilter;
-import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonValue;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
@@ -57,6 +54,47 @@ public class ExportProcessRequest implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(
 			ExportProcessRequest.class, json);
 	}
+
+	@io.swagger.v3.oas.annotations.media.Schema
+	public Boolean getComments() {
+		if (_commentsSupplier != null) {
+			comments = _commentsSupplier.get();
+
+			_commentsSupplier = null;
+		}
+
+		return comments;
+	}
+
+	public void setComments(Boolean comments) {
+		this.comments = comments;
+
+		_commentsSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setComments(
+		UnsafeSupplier<Boolean, Exception> commentsUnsafeSupplier) {
+
+		_commentsSupplier = () -> {
+			try {
+				return commentsUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Boolean comments;
+
+	@JsonIgnore
+	private Supplier<Boolean> _commentsSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema
 	public Boolean getDeletions() {
@@ -141,27 +179,27 @@ public class ExportProcessRequest implements Serializable {
 	private Supplier<Date> _endDateSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema
-	public Integer getLast() {
-		if (_lastSupplier != null) {
-			last = _lastSupplier.get();
+	public Boolean getLogo() {
+		if (_logoSupplier != null) {
+			logo = _logoSupplier.get();
 
-			_lastSupplier = null;
+			_logoSupplier = null;
 		}
 
-		return last;
+		return logo;
 	}
 
-	public void setLast(Integer last) {
-		this.last = last;
+	public void setLogo(Boolean logo) {
+		this.logo = logo;
 
-		_lastSupplier = null;
+		_logoSupplier = null;
 	}
 
 	@JsonIgnore
-	public void setLast(UnsafeSupplier<Integer, Exception> lastUnsafeSupplier) {
-		_lastSupplier = () -> {
+	public void setLogo(UnsafeSupplier<Boolean, Exception> logoUnsafeSupplier) {
+		_logoSupplier = () -> {
 			try {
-				return lastUnsafeSupplier.get();
+				return logoUnsafeSupplier.get();
 			}
 			catch (RuntimeException runtimeException) {
 				throw runtimeException;
@@ -174,10 +212,10 @@ public class ExportProcessRequest implements Serializable {
 
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	protected Integer last;
+	protected Boolean logo;
 
 	@JsonIgnore
-	private Supplier<Integer> _lastSupplier;
+	private Supplier<Boolean> _logoSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema
 	public String getName() {
@@ -261,40 +299,29 @@ public class ExportProcessRequest implements Serializable {
 	private Supplier<Boolean> _permissionsSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema
-	@JsonGetter("range")
-	@Valid
-	public Range getRange() {
-		if (_rangeSupplier != null) {
-			range = _rangeSupplier.get();
+	public Boolean getRatings() {
+		if (_ratingsSupplier != null) {
+			ratings = _ratingsSupplier.get();
 
-			_rangeSupplier = null;
+			_ratingsSupplier = null;
 		}
 
-		return range;
+		return ratings;
+	}
+
+	public void setRatings(Boolean ratings) {
+		this.ratings = ratings;
+
+		_ratingsSupplier = null;
 	}
 
 	@JsonIgnore
-	public String getRangeAsString() {
-		Range range = getRange();
+	public void setRatings(
+		UnsafeSupplier<Boolean, Exception> ratingsUnsafeSupplier) {
 
-		if (range == null) {
-			return null;
-		}
-
-		return range.toString();
-	}
-
-	public void setRange(Range range) {
-		this.range = range;
-
-		_rangeSupplier = null;
-	}
-
-	@JsonIgnore
-	public void setRange(UnsafeSupplier<Range, Exception> rangeUnsafeSupplier) {
-		_rangeSupplier = () -> {
+		_ratingsSupplier = () -> {
 			try {
-				return rangeUnsafeSupplier.get();
+				return ratingsUnsafeSupplier.get();
 			}
 			catch (RuntimeException runtimeException) {
 				throw runtimeException;
@@ -307,10 +334,10 @@ public class ExportProcessRequest implements Serializable {
 
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	protected Range range;
+	protected Boolean ratings;
 
 	@JsonIgnore
-	private Supplier<Range> _rangeSupplier;
+	private Supplier<Boolean> _ratingsSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
@@ -360,6 +387,88 @@ public class ExportProcessRequest implements Serializable {
 		_requestPortletDataHandlersSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema
+	public Boolean getSitePagesSettings() {
+		if (_sitePagesSettingsSupplier != null) {
+			sitePagesSettings = _sitePagesSettingsSupplier.get();
+
+			_sitePagesSettingsSupplier = null;
+		}
+
+		return sitePagesSettings;
+	}
+
+	public void setSitePagesSettings(Boolean sitePagesSettings) {
+		this.sitePagesSettings = sitePagesSettings;
+
+		_sitePagesSettingsSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setSitePagesSettings(
+		UnsafeSupplier<Boolean, Exception> sitePagesSettingsUnsafeSupplier) {
+
+		_sitePagesSettingsSupplier = () -> {
+			try {
+				return sitePagesSettingsUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Boolean sitePagesSettings;
+
+	@JsonIgnore
+	private Supplier<Boolean> _sitePagesSettingsSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
+	public Boolean getSiteTemplateSettings() {
+		if (_siteTemplateSettingsSupplier != null) {
+			siteTemplateSettings = _siteTemplateSettingsSupplier.get();
+
+			_siteTemplateSettingsSupplier = null;
+		}
+
+		return siteTemplateSettings;
+	}
+
+	public void setSiteTemplateSettings(Boolean siteTemplateSettings) {
+		this.siteTemplateSettings = siteTemplateSettings;
+
+		_siteTemplateSettingsSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setSiteTemplateSettings(
+		UnsafeSupplier<Boolean, Exception> siteTemplateSettingsUnsafeSupplier) {
+
+		_siteTemplateSettingsSupplier = () -> {
+			try {
+				return siteTemplateSettingsUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Boolean siteTemplateSettings;
+
+	@JsonIgnore
+	private Supplier<Boolean> _siteTemplateSettingsSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Date getStartDate() {
 		if (_startDateSupplier != null) {
 			startDate = _startDateSupplier.get();
@@ -400,6 +509,47 @@ public class ExportProcessRequest implements Serializable {
 	@JsonIgnore
 	private Supplier<Date> _startDateSupplier;
 
+	@io.swagger.v3.oas.annotations.media.Schema
+	public Boolean getThemeSettings() {
+		if (_themeSettingsSupplier != null) {
+			themeSettings = _themeSettingsSupplier.get();
+
+			_themeSettingsSupplier = null;
+		}
+
+		return themeSettings;
+	}
+
+	public void setThemeSettings(Boolean themeSettings) {
+		this.themeSettings = themeSettings;
+
+		_themeSettingsSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setThemeSettings(
+		UnsafeSupplier<Boolean, Exception> themeSettingsUnsafeSupplier) {
+
+		_themeSettingsSupplier = () -> {
+			try {
+				return themeSettingsUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Boolean themeSettings;
+
+	@JsonIgnore
+	private Supplier<Boolean> _themeSettingsSupplier;
+
 	@Override
 	public boolean equals(Object object) {
 		if (this == object) {
@@ -431,6 +581,18 @@ public class ExportProcessRequest implements Serializable {
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ss'Z'");
 
+		Boolean comments = getComments();
+
+		if (comments != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"comments\": ");
+
+			sb.append(comments);
+		}
+
 		Boolean deletions = getDeletions();
 
 		if (deletions != null) {
@@ -459,16 +621,16 @@ public class ExportProcessRequest implements Serializable {
 			sb.append("\"");
 		}
 
-		Integer last = getLast();
+		Boolean logo = getLogo();
 
-		if (last != null) {
+		if (logo != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"last\": ");
+			sb.append("\"logo\": ");
 
-			sb.append(last);
+			sb.append(logo);
 		}
 
 		String name = getName();
@@ -499,18 +661,16 @@ public class ExportProcessRequest implements Serializable {
 			sb.append(permissions);
 		}
 
-		Range range = getRange();
+		Boolean ratings = getRatings();
 
-		if (range != null) {
+		if (ratings != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"range\": ");
+			sb.append("\"ratings\": ");
 
-			sb.append("\"");
-			sb.append(range);
-			sb.append("\"");
+			sb.append(ratings);
 		}
 
 		RequestPortletDataHandler[] requestPortletDataHandlers =
@@ -536,6 +696,30 @@ public class ExportProcessRequest implements Serializable {
 			sb.append("]");
 		}
 
+		Boolean sitePagesSettings = getSitePagesSettings();
+
+		if (sitePagesSettings != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"sitePagesSettings\": ");
+
+			sb.append(sitePagesSettings);
+		}
+
+		Boolean siteTemplateSettings = getSiteTemplateSettings();
+
+		if (siteTemplateSettings != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"siteTemplateSettings\": ");
+
+			sb.append(siteTemplateSettings);
+		}
+
 		Date startDate = getStartDate();
 
 		if (startDate != null) {
@@ -552,6 +736,18 @@ public class ExportProcessRequest implements Serializable {
 			sb.append("\"");
 		}
 
+		Boolean themeSettings = getThemeSettings();
+
+		if (themeSettings != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"themeSettings\": ");
+
+			sb.append(themeSettings);
+		}
+
 		sb.append("}");
 
 		return sb.toString();
@@ -563,44 +759,6 @@ public class ExportProcessRequest implements Serializable {
 		name = "x-class-name"
 	)
 	public String xClassName;
-
-	@GraphQLName("Range")
-	public static enum Range {
-
-		ALL("all"), DATE_RANGE("dateRange"), LAST("last");
-
-		@JsonCreator
-		public static Range create(String value) {
-			if ((value == null) || value.equals("")) {
-				return null;
-			}
-
-			for (Range range : values()) {
-				if (Objects.equals(range.getValue(), value)) {
-					return range;
-				}
-			}
-
-			throw new IllegalArgumentException("Invalid enum value: " + value);
-		}
-
-		@JsonValue
-		public String getValue() {
-			return _value;
-		}
-
-		@Override
-		public String toString() {
-			return _value;
-		}
-
-		private Range(String value) {
-			_value = value;
-		}
-
-		private final String _value;
-
-	}
 
 	private static String _escape(Object object) {
 		return StringUtil.replace(
@@ -691,4 +849,4 @@ public class ExportProcessRequest implements Serializable {
 	private Map<String, Serializable> _extendedProperties;
 
 }
-// LIFERAY-REST-BUILDER-HASH:533579518
+// LIFERAY-REST-BUILDER-HASH:866154181

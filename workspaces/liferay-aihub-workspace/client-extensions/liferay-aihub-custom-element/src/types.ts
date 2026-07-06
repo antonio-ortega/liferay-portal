@@ -12,18 +12,18 @@ export interface AuthorizationToken {
 
 export interface ChatbotConfiguration {
 	active: boolean;
-	companyLogo?: {
+	avatar?: {
 		fileURL: string;
 	};
-	defaultLanguageId: string;
-	disclaimerMessage_i18n?: Record<string, string>;
-	introMessage_i18n?: Record<string, string>;
-	notificationMessage_i18n?: Record<string, string>;
-	placeholderMessage_i18n?: Record<string, string>;
-	title_i18n?: Record<string, string>;
+	disclaimerMessage?: string;
+	introMessage?: string;
+	notificationMessage?: string;
+	placeholderMessage?: string;
+	title?: string;
 }
 
 export interface ChatMessage {
+	agentDefinitionExternalReferenceCodes?: string[];
 	sender: 'assistant' | 'error' | 'user';
 	text: string;
 }

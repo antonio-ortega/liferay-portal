@@ -7,6 +7,7 @@ package com.liferay.exportimport.rest.resource.v1_0;
 
 import com.liferay.exportimport.rest.dto.v1_0.ImportProcess;
 import com.liferay.exportimport.rest.dto.v1_0.ImportProcessRequest;
+import com.liferay.exportimport.rest.dto.v1_0.ProcessProgress;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
@@ -47,13 +48,28 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface ImportProcessResource {
 
+	public void deleteImportProcess(Long importProcessId) throws Exception;
+
+	public Response deleteImportProcessBatch(String callbackURL, Object object)
+		throws Exception;
+
 	public Page<ImportProcess> getAssetLibraryImportProcessesPage(
-			Long assetLibraryId, Long creatorId, String search, Integer status,
+			String assetLibraryExternalReferenceCode, Long creatorId,
+			String search, Integer status, Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts)
+		throws Exception;
+
+	public Page<ImportProcess> getAssetLibraryPortletImportProcessesPage(
+			String assetLibraryExternalReferenceCode, String portletId,
+			Long creatorId, String search, Integer status,
 			Pagination pagination,
 			com.liferay.portal.kernel.search.Sort[] sorts)
 		throws Exception;
 
 	public ImportProcess getImportProcess(Long importProcessId)
+		throws Exception;
+
+	public ProcessProgress getImportProcessProgress(Long importProcessId)
 		throws Exception;
 
 	public Page<ImportProcess> getImportProcessesPage(
@@ -63,8 +79,14 @@ public interface ImportProcessResource {
 		throws Exception;
 
 	public Page<ImportProcess> getSiteImportProcessesPage(
-			Long siteId, Long creatorId, String search, Integer status,
-			Pagination pagination,
+			String siteExternalReferenceCode, Long creatorId, String search,
+			Integer status, Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts)
+		throws Exception;
+
+	public Page<ImportProcess> getSitePortletImportProcessesPage(
+			String siteExternalReferenceCode, String portletId, Long creatorId,
+			String search, Integer status, Pagination pagination,
 			com.liferay.portal.kernel.search.Sort[] sorts)
 		throws Exception;
 
@@ -80,9 +102,15 @@ public interface ImportProcessResource {
 		throws Exception;
 
 	public Response postAssetLibraryImportProcessesPageExportBatch(
-			Long assetLibraryId, Long creatorId, String search, Integer status,
+			String assetLibraryExternalReferenceCode, Long creatorId,
+			String search, Integer status,
 			com.liferay.portal.kernel.search.Sort[] sorts, String callbackURL,
 			String contentType, String fieldNames)
+		throws Exception;
+
+	public ImportProcess postAssetLibraryPortletImportProcess(
+			String assetLibraryExternalReferenceCode, String portletId,
+			Long plid, ImportProcessRequest importProcessRequest)
 		throws Exception;
 
 	public ImportProcess postImportProcess(
@@ -112,9 +140,14 @@ public interface ImportProcessResource {
 		throws Exception;
 
 	public Response postSiteImportProcessesPageExportBatch(
-			Long siteId, Long creatorId, String search, Integer status,
-			com.liferay.portal.kernel.search.Sort[] sorts, String callbackURL,
-			String contentType, String fieldNames)
+			String siteExternalReferenceCode, Long creatorId, String search,
+			Integer status, com.liferay.portal.kernel.search.Sort[] sorts,
+			String callbackURL, String contentType, String fieldNames)
+		throws Exception;
+
+	public ImportProcess postSitePortletImportProcess(
+			String siteExternalReferenceCode, String portletId, Long plid,
+			ImportProcessRequest importProcessRequest)
 		throws Exception;
 
 	public default void setContextAcceptLanguage(
@@ -213,4 +246,4 @@ public interface ImportProcessResource {
 	}
 
 }
-// LIFERAY-REST-BUILDER-HASH:862013812
+// LIFERAY-REST-BUILDER-HASH:1370542329

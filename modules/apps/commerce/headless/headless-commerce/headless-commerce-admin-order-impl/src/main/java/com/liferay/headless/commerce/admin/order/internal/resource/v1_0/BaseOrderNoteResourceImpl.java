@@ -82,6 +82,7 @@ public abstract class BaseOrderNoteResourceImpl
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "Internal numeric identifier of the target resource. Counterpart to the by-externalReferenceCode path variant; identifiers are server-assigned and stable across the resource lifetime.",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
 				name = "id"
 			)
@@ -161,6 +162,7 @@ public abstract class BaseOrderNoteResourceImpl
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "External reference code that addresses the target resource on the by-externalReferenceCode paths. The code is the integration-supplied idempotency key, unique within the resource scope; POST against this path is upsert (create when absent, replace when present).",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
 				name = "externalReferenceCode"
 			)
@@ -198,14 +200,17 @@ public abstract class BaseOrderNoteResourceImpl
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "External reference code that addresses the target resource on the by-externalReferenceCode paths. The code is the integration-supplied idempotency key, unique within the resource scope; POST against this path is upsert (create when absent, replace when present).",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
 				name = "externalReferenceCode"
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "One-based page number used together with pageSize to navigate paginated result sets. Defaults to 1 when omitted.",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
 				name = "page"
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "Number of items to return per page in paginated result sets. Defaults to the resource pagination configuration when omitted.",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
 				name = "pageSize"
 			)
@@ -242,14 +247,17 @@ public abstract class BaseOrderNoteResourceImpl
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "Internal numeric identifier of the target resource. Counterpart to the by-externalReferenceCode path variant; identifiers are server-assigned and stable across the resource lifetime.",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
 				name = "id"
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "One-based page number used together with pageSize to navigate paginated result sets. Defaults to 1 when omitted.",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
 				name = "page"
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "Number of items to return per page in paginated result sets. Defaults to the resource pagination configuration when omitted.",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
 				name = "pageSize"
 			)
@@ -284,6 +292,7 @@ public abstract class BaseOrderNoteResourceImpl
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "Internal numeric identifier of the target resource. Counterpart to the by-externalReferenceCode path variant; identifiers are server-assigned and stable across the resource lifetime.",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
 				name = "id"
 			)
@@ -317,6 +326,7 @@ public abstract class BaseOrderNoteResourceImpl
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "External reference code that addresses the target resource on the by-externalReferenceCode paths. The code is the integration-supplied idempotency key, unique within the resource scope; POST against this path is upsert (create when absent, replace when present).",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
 				name = "externalReferenceCode"
 			)
@@ -344,7 +354,7 @@ public abstract class BaseOrderNoteResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-commerce-admin-order/v1.0/orderNotes/{id}' -d $'{"author": ___, "content": ___, "externalReferenceCode": ___, "id": ___, "orderExternalReferenceCode": ___, "orderId": ___, "restricted": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-commerce-admin-order/v1.0/orderNotes/{id}' -d $'{"content": ___, "externalReferenceCode": ___, "orderExternalReferenceCode": ___, "orderId": ___, "restricted": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
 		description = "Partial update of an order note. Returns 200 OK (note: returns Response, not OrderNote). Throws NoSuchOrderNoteException (404) if not found."
@@ -352,6 +362,7 @@ public abstract class BaseOrderNoteResourceImpl
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "Internal numeric identifier of the target resource. Counterpart to the by-externalReferenceCode path variant; identifiers are server-assigned and stable across the resource lifetime.",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
 				name = "id"
 			)
@@ -381,7 +392,7 @@ public abstract class BaseOrderNoteResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-commerce-admin-order/v1.0/orderNotes/by-externalReferenceCode/{externalReferenceCode}' -d $'{"author": ___, "content": ___, "externalReferenceCode": ___, "id": ___, "orderExternalReferenceCode": ___, "orderId": ___, "restricted": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'PATCH' 'http://localhost:8080/o/headless-commerce-admin-order/v1.0/orderNotes/by-externalReferenceCode/{externalReferenceCode}' -d $'{"content": ___, "externalReferenceCode": ___, "orderExternalReferenceCode": ___, "orderId": ___, "restricted": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
 		description = "Partial update of an order note by externalReferenceCode. Returns 200 OK. Throws NoSuchOrderNoteException (404) if not found."
@@ -389,6 +400,7 @@ public abstract class BaseOrderNoteResourceImpl
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "External reference code that addresses the target resource on the by-externalReferenceCode paths. The code is the integration-supplied idempotency key, unique within the resource scope; POST against this path is upsert (create when absent, replace when present).",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
 				name = "externalReferenceCode"
 			)
@@ -420,7 +432,7 @@ public abstract class BaseOrderNoteResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'POST' 'http://localhost:8080/o/headless-commerce-admin-order/v1.0/orders/by-externalReferenceCode/{externalReferenceCode}/orderNotes' -d $'{"author": ___, "content": ___, "externalReferenceCode": ___, "id": ___, "orderExternalReferenceCode": ___, "orderId": ___, "restricted": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'POST' 'http://localhost:8080/o/headless-commerce-admin-order/v1.0/orders/by-externalReferenceCode/{externalReferenceCode}/orderNotes' -d $'{"content": ___, "externalReferenceCode": ___, "orderExternalReferenceCode": ___, "orderId": ___, "restricted": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
 		description = "Create an order note for an order accessed by externalReferenceCode. Delegates to _addOrUpdateOrderNote(). Throws NoSuchOrderException (404) if order not found."
@@ -428,6 +440,7 @@ public abstract class BaseOrderNoteResourceImpl
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "External reference code that addresses the target resource on the by-externalReferenceCode paths. The code is the integration-supplied idempotency key, unique within the resource scope; POST against this path is upsert (create when absent, replace when present).",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
 				name = "externalReferenceCode"
 			)
@@ -457,7 +470,7 @@ public abstract class BaseOrderNoteResourceImpl
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'POST' 'http://localhost:8080/o/headless-commerce-admin-order/v1.0/orders/{id}/orderNotes' -d $'{"author": ___, "content": ___, "externalReferenceCode": ___, "id": ___, "orderExternalReferenceCode": ___, "orderId": ___, "restricted": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'POST' 'http://localhost:8080/o/headless-commerce-admin-order/v1.0/orders/{id}/orderNotes' -d $'{"content": ___, "externalReferenceCode": ___, "orderExternalReferenceCode": ___, "orderId": ___, "restricted": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
 		description = "Create an order note for an order accessed by order ID. Delegates to _addOrUpdateOrderNote()."
@@ -465,6 +478,7 @@ public abstract class BaseOrderNoteResourceImpl
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "Internal numeric identifier of the target resource. Counterpart to the by-externalReferenceCode path variant; identifiers are server-assigned and stable across the resource lifetime.",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
 				name = "id"
 			)
@@ -1302,4 +1316,4 @@ public abstract class BaseOrderNoteResourceImpl
 		LogFactoryUtil.getLog(BaseOrderNoteResourceImpl.class);
 
 }
-// LIFERAY-REST-BUILDER-HASH:-1075737543
+// LIFERAY-REST-BUILDER-HASH:1371977764

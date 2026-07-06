@@ -9,18 +9,31 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.liferay.mcp.server.rest.dto.v1_0.Tool;
 import com.liferay.mcp.server.rest.dto.v1_0.ToolSummary;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.test.AssertUtils;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
-import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
+import com.liferay.portal.vulcan.http.VulcanRequestForwarder;
+
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+
+import java.nio.charset.StandardCharsets;
 
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.FileUpload;
+import org.apache.commons.fileupload.UploadContext;
+import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -49,57 +62,70 @@ public class OpenAPIUtilTest {
 	}
 
 	@Test
-	public void testGetOptions() {
-		_testGetOptions(
-			null, null, Http.Method.GET,
-			"http://localhost/test/v1.0/items?restrictFields=actions",
-			JSONFactoryUtil.createJSONObject(), "getItems");
-		_testGetOptions(
-			null, null, Http.Method.GET,
-			"http://localhost/test/v1.0/items?page=1&pageSize=20" +
-				"&restrictFields=actions",
+	public void testGetRequest() throws Exception {
+		_testGetRequest(
+			null, null, "GET",
+			"/v1.0/items/123?fields=name&restrictFields=actions",
 			JSONUtil.put(
+				"fields", "name"
+			).put(
+				"itemId", "123"
+			),
+			"getItem");
+		_testGetRequest(
+			null, null, "GET", "/v1.0/items/123?restrictFields=actions",
+			JSONUtil.put("itemId", "123"), "getItem");
+		_testGetRequest(
+			null, null, "GET",
+			"/v1.0/items?fields=name%2Cinteger&restrictFields=actions",
+			JSONUtil.put("fields", JSONUtil.putAll("name", "integer")),
+			"getItems");
+		_testGetRequest(
+			null, null, "GET",
+			"/v1.0/items?filter=name+eq+%27John+Doe%27&restrictFields=actions",
+			JSONUtil.put("filter", "name eq 'John Doe'"), "getItems");
+		_testGetRequest(
+			null, null, "GET",
+			"/v1.0/items?page=1&pageSize=20&fields=name&restrictFields=actions",
+			JSONUtil.put(
+				"fields", "name"
+			).put(
 				"page", "1"
 			).put(
 				"pageSize", "20"
 			),
 			"getItems");
-		_testGetOptions(
-			null, null, Http.Method.GET,
-			"http://localhost/test/v1.0/items?filter=name+eq+%27John+Doe%27" +
-				"&restrictFields=actions",
-			JSONUtil.put("filter", "name eq 'John Doe'"), "getItems");
-		_testGetOptions(
-			null, null, Http.Method.GET,
-			"http://localhost/test/v1.0/items?restrictFields=actions",
-			JSONUtil.put("fields", "name"), "getItems");
-		_testGetOptions(
-			null, null, Http.Method.GET,
-			"http://localhost/test/v1.0/items?restrictFields=actions",
+		_testGetRequest(
+			null, null, "GET", "/v1.0/items?restrictFields=actions",
+			JSONFactoryUtil.createJSONObject(), "getItems");
+		_testGetRequest(
+			null, null, "GET", "/v1.0/items?restrictFields=actions",
+			JSONUtil.put("fields", ""), "getItems");
+		_testGetRequest(
+			null, null, "GET", "/v1.0/items?restrictFields=actions",
 			JSONUtil.put("restrictFields", "name"), "getItems");
-		_testGetOptions(
-			null, null, Http.Method.GET,
-			"http://localhost/test/v1.0/items/123?restrictFields=actions",
-			JSONUtil.put("itemId", "123"), "getItem");
-		_testGetOptions(
+		_testGetRequest(
 			JSONUtil.put(
 				"name", "Test"
 			).toString(),
-			"application/json", Http.Method.PATCH,
-			"http://localhost/test/v1.0/items/123",
+			"application/json", "PATCH", "/v1.0/items/123",
 			JSONUtil.put(
 				"body", JSONUtil.put("name", "Test")
 			).put(
 				"itemId", "123"
 			),
 			"patchItem");
+		_testGetRequest(
+			"{}", "application/json", "POST", "/v1.0/items",
+			JSONUtil.put("body", JSONFactoryUtil.createJSONObject()),
+			"postItem");
 
 		String fileContent = RandomTestUtil.randomString();
 		String fileName = RandomTestUtil.randomString();
 		String name = RandomTestUtil.randomString();
 
-		Http.Options options = OpenAPIUtil.getOptions(
-			"http://localhost/test",
+		VulcanRequestForwarder.Request request = OpenAPIUtil.getRequest(
+			StringPool.BLANK,
 			JSONUtil.put(
 				"data",
 				JSONUtil.put(
@@ -117,32 +143,30 @@ public class OpenAPIUtilTest {
 			).put(
 				"name", name
 			),
-			_openAPIJSONObject, "postBinary");
+			_openAPIJSONObject, "postBinary", null);
 
-		Assert.assertNull(options.getBody());
-		_assertMultipartContentType(options);
-		Assert.assertEquals(Http.Method.POST, options.getMethod());
-		Assert.assertEquals(
-			"http://localhost/test/v1.0/binaries", options.getLocation());
+		Assert.assertEquals("POST", request.getMethod());
+		Assert.assertEquals("/v1.0/binaries", request.getPath());
+		_assertMultipartContentType(request);
 
-		List<Http.FilePart> fileParts = options.getFileParts();
+		List<FileItem> fileItems = _getFileItems(request);
 
-		Assert.assertEquals(fileParts.toString(), 1, fileParts.size());
+		Assert.assertEquals(fileItems.toString(), 2, fileItems.size());
 
-		Http.FilePart filePart = fileParts.get(0);
+		FileItem fileItem = _getFileItem(fileItems, "data");
 
-		Assert.assertEquals("text/plain", filePart.getContentType());
-		Assert.assertEquals(fileName, filePart.getFileName());
-		Assert.assertEquals("data", filePart.getName());
-		Assert.assertArrayEquals(fileContent.getBytes(), filePart.getValue());
+		Assert.assertFalse(fileItem.isFormField());
+		Assert.assertEquals("text/plain", fileItem.getContentType());
+		Assert.assertEquals(fileName, fileItem.getName());
+		Assert.assertArrayEquals(fileContent.getBytes(), fileItem.get());
 
-		Map<String, String> parts = options.getParts();
+		fileItem = _getFileItem(fileItems, "name");
 
-		Assert.assertEquals(parts.toString(), 1, parts.size());
-		Assert.assertEquals(name, parts.get("name"));
+		Assert.assertTrue(fileItem.isFormField());
+		Assert.assertEquals(name, fileItem.getString());
 
-		options = OpenAPIUtil.getOptions(
-			"http://localhost/test",
+		request = OpenAPIUtil.getRequest(
+			StringPool.BLANK,
 			JSONUtil.put(
 				"boolean", true
 			).put(
@@ -150,21 +174,34 @@ public class OpenAPIUtilTest {
 			).put(
 				"string", fileContent
 			),
-			_openAPIJSONObject, "postUpload");
+			_openAPIJSONObject, "postUpload", null);
 
-		Assert.assertNull(options.getBody());
-		_assertMultipartContentType(options);
-		Assert.assertNull(options.getFileParts());
-		Assert.assertEquals(Http.Method.POST, options.getMethod());
+		Assert.assertEquals("POST", request.getMethod());
+		Assert.assertEquals("/v1.0/uploads", request.getPath());
+		_assertMultipartContentType(request);
+
+		fileItems = _getFileItems(request);
+
+		Assert.assertEquals(fileItems.toString(), 3, fileItems.size());
+
+		Assert.assertEquals("true", _getFileItemValue(fileItems, "boolean"));
+		Assert.assertEquals("1", _getFileItemValue(fileItems, "integer"));
 		Assert.assertEquals(
-			"http://localhost/test/v1.0/uploads", options.getLocation());
+			fileContent, _getFileItemValue(fileItems, "string"));
 
-		parts = options.getParts();
-
-		Assert.assertEquals(parts.toString(), 3, parts.size());
-		Assert.assertEquals("true", parts.get("boolean"));
-		Assert.assertEquals("1", parts.get("integer"));
-		Assert.assertEquals(fileContent, parts.get("string"));
+		AssertUtils.assertFailure(
+			IllegalArgumentException.class,
+			StringBundler.concat(
+				"The \"postItem\" tool requires the request payload nested ",
+				"under a \"body\" property. Pass any path or query parameters ",
+				"as siblings of \"body\" rather than flattening the payload ",
+				"into the input map."),
+			() -> OpenAPIUtil.getRequest(
+				StringPool.BLANK,
+				JSONUtil.put(
+					RandomTestUtil.randomString(),
+					RandomTestUtil.randomString()),
+				_openAPIJSONObject, "postItem", null));
 	}
 
 	@Test
@@ -172,16 +209,13 @@ public class OpenAPIUtilTest {
 		AssertUtils.assertFailure(
 			IllegalArgumentException.class,
 			"OpenAPI document has no tool with name \"missing\"",
-			() -> OpenAPIUtil.getTool(_openAPIJSONObject, "missing"));
+			() -> OpenAPIUtil.getTool(true, _openAPIJSONObject, "missing"));
 		AssertUtils.assertFailure(
 			IllegalArgumentException.class,
 			"OpenAPI document has no \"paths\" object",
 			() -> OpenAPIUtil.getTool(
-				JSONFactoryUtil.createJSONObject(),
+				true, JSONFactoryUtil.createJSONObject(),
 				RandomTestUtil.randomString()));
-		AssertUtils.assertFailure(
-			IllegalArgumentException.class, "Request body has no \"content\"",
-			() -> _getInputSchema(_openAPIJSONObject, "postNoContent"));
 		AssertUtils.assertFailure(
 			IllegalArgumentException.class, "Request body has no content",
 			() -> _getInputSchema(_openAPIJSONObject, "postEmptyContent"));
@@ -196,6 +230,9 @@ public class OpenAPIUtilTest {
 		_testGetTool(
 			"This is the summary. This is the description",
 			"get_test_v1.0_items.json", "getItems");
+		_testGetTool(
+			"This is the summary. This is the description",
+			"get_test_v1.0_items_no_inject.json", false, "getItems");
 		_testGetTool("This is the summary", "get_c_test.json", "getItemsPage");
 		_testGetTool(
 			"PATCH /v1.0/items/{itemId}", "patch_test_v1.0_items_itemId.json",
@@ -204,9 +241,20 @@ public class OpenAPIUtilTest {
 			"POST /v1.0/binaries", "post_test_v1.0_binaries.json",
 			"postBinary");
 		_testGetTool(
+			"POST /v1.0/described", "post_test_v1.0_described.json",
+			"postDescribed");
+		_testGetTool(
 			"POST /v1.0/items", "post_test_v1.0_items.json", "postItem");
 		_testGetTool(
+			"POST /v1.0/levels", "post_test_v1.0_levels.json", "postLevel");
+		_testGetTool(
+			"POST /v1.0/no-content", "post_test_v1.0_no-content.json",
+			"postNoContent");
+		_testGetTool(
 			"POST /v1.0/parents", "post_test_v1.0_parents.json", "postParent");
+		_testGetTool(
+			"POST /v1.0/undescribed", "post_test_v1.0_undescribed.json",
+			"postUndescribed");
 		_testGetTool(
 			"POST /v1.0/uploads", "post_test_v1.0_uploads.json", "postUpload");
 		_testGetTool(
@@ -219,33 +267,39 @@ public class OpenAPIUtilTest {
 		List<ToolSummary> toolSummaries = OpenAPIUtil.getToolSummaries(
 			_openAPIJSONObject);
 
-		Assert.assertEquals(toolSummaries.toString(), 12, toolSummaries.size());
+		Assert.assertEquals(toolSummaries.toString(), 15, toolSummaries.size());
 		_assertToolSummary(
-			toolSummaries.get(0), "This is the description", "getItem");
+			"POST /v1.0/described", "postDescribed", toolSummaries.get(0));
 		_assertToolSummary(
-			toolSummaries.get(1), "PATCH /v1.0/items/{itemId}", "patchItem");
+			"POST /v1.0/levels", "postLevel", toolSummaries.get(1));
 		_assertToolSummary(
-			toolSummaries.get(2), "PUT /v1.0/items/{itemId}", "putItem");
+			"POST /v1.0/undescribed", "postUndescribed", toolSummaries.get(2));
 		_assertToolSummary(
-			toolSummaries.get(3), "POST /v1.0/binaries", "postBinary");
+			"This is the description", "getItem", toolSummaries.get(3));
 		_assertToolSummary(
-			toolSummaries.get(4), "POST /v1.0/empty-content",
-			"postEmptyContent");
+			"PATCH /v1.0/items/{itemId}", "patchItem", toolSummaries.get(4));
 		_assertToolSummary(
-			toolSummaries.get(5), "POST /v1.0/no-content", "postNoContent");
+			"PUT /v1.0/items/{itemId}", "putItem", toolSummaries.get(5));
 		_assertToolSummary(
-			toolSummaries.get(6), "POST /v1.0/parents", "postParent");
+			"POST /v1.0/binaries", "postBinary", toolSummaries.get(6));
 		_assertToolSummary(
-			toolSummaries.get(7), "POST /v1.0/uploads", "postUpload");
+			"POST /v1.0/empty-content", "postEmptyContent",
+			toolSummaries.get(7));
 		_assertToolSummary(
-			toolSummaries.get(8),
-			"This is the summary. This is the description", "getItems");
+			"POST /v1.0/no-content", "postNoContent", toolSummaries.get(8));
 		_assertToolSummary(
-			toolSummaries.get(9), "POST /v1.0/items", "postItem");
+			"POST /v1.0/parents", "postParent", toolSummaries.get(9));
 		_assertToolSummary(
-			toolSummaries.get(10), "POST /v1.0/no-schema", "postNoSchema");
+			"POST /v1.0/uploads", "postUpload", toolSummaries.get(10));
 		_assertToolSummary(
-			toolSummaries.get(11), "This is the summary", "getItemsPage");
+			"This is the summary. This is the description", "getItems",
+			toolSummaries.get(11));
+		_assertToolSummary(
+			"POST /v1.0/items", "postItem", toolSummaries.get(12));
+		_assertToolSummary(
+			"POST /v1.0/no-schema", "postNoSchema", toolSummaries.get(13));
+		_assertToolSummary(
+			"This is the summary", "getItemsPage", toolSummaries.get(14));
 
 		AssertUtils.assertFailure(
 			IllegalArgumentException.class,
@@ -254,27 +308,85 @@ public class OpenAPIUtilTest {
 				JSONFactoryUtil.createJSONObject()));
 	}
 
-	private void _assertMultipartContentType(Http.Options options) {
-		String contentTypeHeader = options.getHeader("Content-Type");
+	private void _assertMultipartContentType(
+		VulcanRequestForwarder.Request request) {
 
-		Assert.assertNotNull(contentTypeHeader);
+		String contentType = request.getContentType();
+
+		Assert.assertNotNull(contentType);
 		Assert.assertTrue(
-			contentTypeHeader,
-			contentTypeHeader.startsWith("multipart/form-data; boundary="));
+			contentType,
+			contentType.startsWith("multipart/form-data; boundary="));
 	}
 
 	private void _assertToolSummary(
-		ToolSummary toolSummary, String expectedDescription,
-		String expectedName) {
+		String expectedDescription, String expectedName,
+		ToolSummary toolSummary) {
 
 		Assert.assertEquals(expectedDescription, toolSummary.getDescription());
 		Assert.assertEquals(expectedName, toolSummary.getName());
 	}
 
+	private FileItem _getFileItem(List<FileItem> fileItems, String fieldName) {
+		for (FileItem fileItem : fileItems) {
+			if (Objects.equals(fileItem.getFieldName(), fieldName)) {
+				return fileItem;
+			}
+		}
+
+		throw new IllegalArgumentException(
+			StringBundler.concat(
+				"No part named \"", fieldName, "\" in ", fileItems));
+	}
+
+	private List<FileItem> _getFileItems(VulcanRequestForwarder.Request request)
+		throws Exception {
+
+		FileUpload fileUpload = new FileUpload(new DiskFileItemFactory());
+
+		byte[] body = request.getBody();
+
+		return fileUpload.parseRequest(
+			new UploadContext() {
+
+				@Override
+				public long contentLength() {
+					return body.length;
+				}
+
+				@Override
+				public String getCharacterEncoding() {
+					return StandardCharsets.UTF_8.name();
+				}
+
+				@Override
+				public int getContentLength() {
+					return body.length;
+				}
+
+				@Override
+				public String getContentType() {
+					return request.getContentType();
+				}
+
+				@Override
+				public InputStream getInputStream() {
+					return new ByteArrayInputStream(body);
+				}
+
+			});
+	}
+
+	private String _getFileItemValue(List<FileItem> fileItems, String name) {
+		FileItem fileItem = _getFileItem(fileItems, name);
+
+		return fileItem.getString();
+	}
+
 	private Map<String, ?> _getInputSchema(
 		JSONObject openAPIJSONObject, String toolName) {
 
-		Tool tool = OpenAPIUtil.getTool(openAPIJSONObject, toolName);
+		Tool tool = OpenAPIUtil.getTool(true, openAPIJSONObject, toolName);
 
 		return tool.getInputSchema();
 	}
@@ -284,37 +396,38 @@ public class OpenAPIUtilTest {
 			getClass().getResourceAsStream("dependencies/" + fileName));
 	}
 
-	private void _testGetOptions(
-		String expectedBody, String expectedContentType,
-		Http.Method expectedMethod, String expectedURL,
-		JSONObject inputJSONObject, String toolName) {
+	private void _testGetRequest(
+			String expectedBody, String expectedContentType,
+			String expectedMethod, String expectedPathWithQuery,
+			JSONObject inputJSONObject, String toolName)
+		throws Exception {
 
-		Http.Options options = OpenAPIUtil.getOptions(
-			"http://localhost/test", inputJSONObject, _openAPIJSONObject,
-			toolName);
-
-		Http.Body body = options.getBody();
+		VulcanRequestForwarder.Request request = OpenAPIUtil.getRequest(
+			StringPool.BLANK, inputJSONObject, _openAPIJSONObject, toolName,
+			null);
 
 		if (expectedBody == null) {
-			Assert.assertNull(body);
+			Assert.assertNull(request.getBody());
+			Assert.assertNull(request.getContentType());
 		}
 		else {
-			Assert.assertEquals(expectedBody, body.getContent());
-			Assert.assertEquals(expectedContentType, body.getContentType());
+			Assert.assertEquals(
+				expectedBody,
+				new String(request.getBody(), StandardCharsets.UTF_8));
+			Assert.assertEquals(expectedContentType, request.getContentType());
 		}
 
-		Assert.assertNull(options.getFileParts());
-		Assert.assertEquals(expectedURL, options.getLocation());
-		Assert.assertEquals(expectedMethod, options.getMethod());
-		Assert.assertNull(options.getParts());
+		Assert.assertEquals(expectedMethod, request.getMethod());
+		Assert.assertEquals(expectedPathWithQuery, request.getPath());
 	}
 
 	private void _testGetTool(
 			String expectedDescription, String expectedSchemaFileName,
-			String toolName)
+			boolean injectVulcanParameters, String toolName)
 		throws Exception {
 
-		Tool tool = OpenAPIUtil.getTool(_openAPIJSONObject, toolName);
+		Tool tool = OpenAPIUtil.getTool(
+			injectVulcanParameters, _openAPIJSONObject, toolName);
 
 		Assert.assertEquals(expectedDescription, tool.getDescription());
 		Assert.assertEquals(toolName, tool.getName());
@@ -326,6 +439,15 @@ public class OpenAPIUtilTest {
 				tool.getInputSchema()
 			),
 			true);
+	}
+
+	private void _testGetTool(
+			String expectedDescription, String expectedSchemaFileName,
+			String toolName)
+		throws Exception {
+
+		_testGetTool(
+			expectedDescription, expectedSchemaFileName, true, toolName);
 	}
 
 	private JSONObject _openAPIJSONObject;

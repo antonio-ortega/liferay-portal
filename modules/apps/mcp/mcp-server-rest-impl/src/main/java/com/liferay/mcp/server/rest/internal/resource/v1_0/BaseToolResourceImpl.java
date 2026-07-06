@@ -48,15 +48,17 @@ public abstract class BaseToolResourceImpl implements ToolResource {
 	 * curl -X 'GET' 'http://localhost:8080/o/mcp-server/v1.0/tool-sets/{toolSetName}/tools/{toolName}'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
-		description = "Use this once you have identified a tool (via `getToolSummaries`) and need its input schema before invoking it. Returns the tool's `inputSchema`. Build an input map matching `inputSchema` and POST it to `invoke` under the same URL to execute the tool."
+		description = "Use this once you have identified a tool (via `getToolSetToolSetNameToolSummariesPage`) and need its input schema before invoking it. Returns the tool's `inputSchema`. Build an input map matching `inputSchema` and POST it to `invoke` under the same URL to execute the tool."
 	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "The tool-set name returned by `getToolSetsPage`.",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
 				name = "toolSetName"
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "The tool name returned by `getToolSetToolSetNameToolSummariesPage`.",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
 				name = "toolName"
 			)
@@ -69,7 +71,7 @@ public abstract class BaseToolResourceImpl implements ToolResource {
 	@jakarta.ws.rs.Path("/tool-sets/{toolSetName}/tools/{toolName}")
 	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
 	@Override
-	public Tool getTool(
+	public Tool getToolSetToolSetNameTool(
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@jakarta.validation.constraints.NotNull
 			@jakarta.ws.rs.PathParam("toolSetName")
@@ -89,16 +91,19 @@ public abstract class BaseToolResourceImpl implements ToolResource {
 	 * curl -X 'POST' 'http://localhost:8080/o/mcp-server/v1.0/tool-sets/{toolSetName}/tools/{toolName}/invoke'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(
-		description = "Invokes a tool. ALWAYS call `getTool` first to fetch the tool's `inputSchema`, then build the request `body` to match it exactly. Skipping `getTool` leads to malformed input and avoidable failures. Returns the tool's response body unchanged.",
-		operationId = "invokeTool"
+		description = "Invokes a tool. ALWAYS call `getToolSetToolSetNameTool` first to fetch the tool's `inputSchema`, then build the request `body` to match it exactly. Skipping `getToolSetToolSetNameTool` leads to malformed input and avoidable failures. Returns the tool's response body unchanged.",
+		operationId = "postToolSetToolSetNameToolInvoke",
+		requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json", schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = Object.class)), description = "The complete input map for the target tool, matching the `inputSchema` that `getToolSetToolSetNameTool` returns for this `toolName`. Use that schema's properties exactly as named: when the `inputSchema` declares a `body` property, it holds the request payload and must stay nested under `body` here rather than be flattened into this map; pass any path or query parameters as siblings of `body`. For example, a tool whose `inputSchema` has `body` and `itemId` properties is invoked with `{\"body\": {...}, \"itemId\": \"123\"}`.")
 	)
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "The tool-set name returned by `getToolSetsPage`.",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
 				name = "toolSetName"
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
+				description = "The tool name returned by `getToolSetToolSetNameToolSummariesPage`.",
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
 				name = "toolName"
 			)
@@ -112,7 +117,7 @@ public abstract class BaseToolResourceImpl implements ToolResource {
 	@jakarta.ws.rs.POST
 	@jakarta.ws.rs.Produces("text/plain")
 	@Override
-	public Response invokeToolObject(
+	public Response postToolSetToolSetNameToolInvokeObject(
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@jakarta.validation.constraints.NotNull
 			@jakarta.ws.rs.PathParam("toolSetName")
@@ -574,4 +579,4 @@ public abstract class BaseToolResourceImpl implements ToolResource {
 		LogFactoryUtil.getLog(BaseToolResourceImpl.class);
 
 }
-// LIFERAY-REST-BUILDER-HASH:341248448
+// LIFERAY-REST-BUILDER-HASH:-1516858284

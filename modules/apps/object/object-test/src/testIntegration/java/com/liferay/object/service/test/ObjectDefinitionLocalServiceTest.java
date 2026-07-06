@@ -16,6 +16,7 @@ import com.liferay.asset.list.service.AssetListEntryLocalService;
 import com.liferay.asset.list.service.AssetListEntrySegmentsEntryRelLocalService;
 import com.liferay.blogs.model.BlogsEntry;
 import com.liferay.depot.constants.DepotConstants;
+import com.liferay.depot.constants.DepotRolesConstants;
 import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.service.DepotEntryLocalService;
 import com.liferay.exportimport.report.constants.ExportImportReportEntryConstants;
@@ -181,7 +182,6 @@ import com.liferay.portal.kernel.workflow.WorkflowDefinition;
 import com.liferay.portal.language.override.model.PLOEntry;
 import com.liferay.portal.language.override.service.PLOEntryLocalService;
 import com.liferay.portal.test.rule.FeatureFlag;
-import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
@@ -193,6 +193,8 @@ import com.liferay.portal.workflow.manager.WorkflowDefinitionManager;
 import com.liferay.segments.constants.SegmentsEntryConstants;
 import com.liferay.sharing.security.permission.SharingEntryAction;
 import com.liferay.sharing.service.SharingEntryLocalService;
+
+import jakarta.portlet.Portlet;
 
 import java.io.Serializable;
 
@@ -217,6 +219,11 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceReference;
+
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 
@@ -224,11 +231,7 @@ import org.skyscreamer.jsonassert.JSONCompareMode;
  * @author Marco Leo
  * @author Brian Wing Shun Chan
  */
-@FeatureFlags(
-	featureFlags = {
-		@FeatureFlag(value = "LPD-34594"), @FeatureFlag(value = "LPD-69877")
-	}
-)
+@FeatureFlag("LPD-34594")
 @RunWith(Arquillian.class)
 public class ObjectDefinitionLocalServiceTest {
 
@@ -1046,6 +1049,38 @@ public class ObjectDefinitionLocalServiceTest {
 		AssertUtils.assertFailure(
 			ObjectDefinitionSettingNameException.NotAllowedNames.class,
 			StringBundler.concat(
+				"The settings ", ObjectDefinitionSettingConstants.NAME_DOMAIN,
+				" are not allowed for object definition ",
+				randomObjectDefinitionName),
+			() -> _publishCustomObjectDefinition(
+				randomObjectDefinitionName,
+				ObjectDefinitionConstants.SCOPE_COMPANY,
+				Collections.singletonList(
+					new ObjectDefinitionSettingBuilder(
+					).name(
+						ObjectDefinitionSettingConstants.NAME_DOMAIN
+					).value(
+						RandomTestUtil.randomString()
+					).build())));
+		AssertUtils.assertFailure(
+			ObjectDefinitionSettingNameException.NotAllowedNames.class,
+			StringBundler.concat(
+				"The settings ", ObjectDefinitionSettingConstants.NAME_DOMAIN,
+				" are not allowed for object definition ",
+				randomObjectDefinitionName),
+			() -> _publishCustomObjectDefinition(
+				randomObjectDefinitionName,
+				ObjectDefinitionConstants.SCOPE_SITE,
+				Collections.singletonList(
+					new ObjectDefinitionSettingBuilder(
+					).name(
+						ObjectDefinitionSettingConstants.NAME_DOMAIN
+					).value(
+						RandomTestUtil.randomString()
+					).build())));
+		AssertUtils.assertFailure(
+			ObjectDefinitionSettingNameException.NotAllowedNames.class,
+			StringBundler.concat(
 				"The settings ", ObjectDefinitionSettingConstants.NAME_VISIBLE,
 				" are not allowed for object definition ",
 				randomObjectDefinitionName),
@@ -1122,6 +1157,24 @@ public class ObjectDefinitionLocalServiceTest {
 						StringBundler.concat(
 							depotEntry1.getGroupId(), StringPool.COMMA,
 							TestPropsValues.getGroupId())
+					).build())));
+
+		AssertUtils.assertFailure(
+			ObjectDefinitionSettingValueException.InvalidValue.class,
+			StringBundler.concat(
+				"The value ", objectDefinitionSettingValue, " of setting \"",
+				ObjectDefinitionSettingConstants.NAME_DOMAIN,
+				"\" is invalid for object definition \"",
+				randomObjectDefinitionName, "\""),
+			() -> _publishCustomObjectDefinition(
+				randomObjectDefinitionName,
+				ObjectDefinitionConstants.SCOPE_DEPOT,
+				Collections.singletonList(
+					new ObjectDefinitionSettingBuilder(
+					).name(
+						ObjectDefinitionSettingConstants.NAME_DOMAIN
+					).value(
+						objectDefinitionSettingValue
 					).build())));
 
 		ObjectDefinition objectDefinition1 = _publishCustomObjectDefinition(
@@ -1251,8 +1304,44 @@ public class ObjectDefinitionLocalServiceTest {
 			_objectEntryLocalService.fetchObjectEntry(
 				objectEntry3.getObjectEntryId()));
 
+		ObjectDefinition objectDefinition3 = _publishCustomObjectDefinition(
+			ObjectDefinitionTestUtil.getRandomName(),
+			ObjectDefinitionConstants.SCOPE_DEPOT,
+			Collections.singletonList(
+				new ObjectDefinitionSettingBuilder(
+				).name(
+					ObjectDefinitionSettingConstants.NAME_DOMAIN
+				).value(
+					DepotRolesConstants.SUBTYPE_PROJECT
+				).build()));
+
+		_assertObjectDefinitionSettingsValues(
+			objectDefinition3.getObjectDefinitionSettings(),
+			Collections.singletonMap(
+				ObjectDefinitionSettingConstants.NAME_DOMAIN,
+				DepotRolesConstants.SUBTYPE_PROJECT));
+
+		ObjectDefinition objectDefinition4 = _publishCustomObjectDefinition(
+			ObjectDefinitionTestUtil.getRandomName(),
+			ObjectDefinitionConstants.SCOPE_DEPOT,
+			Collections.singletonList(
+				new ObjectDefinitionSettingBuilder(
+				).name(
+					ObjectDefinitionSettingConstants.NAME_DOMAIN
+				).value(
+					DepotRolesConstants.SUBTYPE_SPACE
+				).build()));
+
+		_assertObjectDefinitionSettingsValues(
+			objectDefinition4.getObjectDefinitionSettings(),
+			Collections.singletonMap(
+				ObjectDefinitionSettingConstants.NAME_DOMAIN,
+				DepotRolesConstants.SUBTYPE_SPACE));
+
 		_objectDefinitionLocalService.deleteObjectDefinition(objectDefinition1);
 		_objectDefinitionLocalService.deleteObjectDefinition(objectDefinition2);
+		_objectDefinitionLocalService.deleteObjectDefinition(objectDefinition3);
+		_objectDefinitionLocalService.deleteObjectDefinition(objectDefinition4);
 	}
 
 	@FeatureFlag("LPD-17564")
@@ -2772,7 +2861,7 @@ public class ObjectDefinitionLocalServiceTest {
 								StringUtil.randomId()
 							).objectDefinitionId(
 								_addCustomObjectDefinition(
-									"Test" + RandomTestUtil.randomString()
+									ObjectDefinitionTestUtil.getRandomName()
 								).getObjectDefinitionId()
 							).required(
 								true
@@ -2793,7 +2882,7 @@ public class ObjectDefinitionLocalServiceTest {
 								StringUtil.randomId()
 							).objectDefinitionId(
 								_addCustomObjectDefinition(
-									"Test" + RandomTestUtil.randomString()
+									ObjectDefinitionTestUtil.getRandomName()
 								).getObjectDefinitionId()
 							).required(
 								true
@@ -2916,10 +3005,10 @@ public class ObjectDefinitionLocalServiceTest {
 				_objectRelationshipLocalService.addObjectRelationship(
 					null, TestPropsValues.getUserId(),
 					_addCustomObjectDefinition(
-						"Test" + RandomTestUtil.randomString()
+						ObjectDefinitionTestUtil.getRandomName()
 					).getObjectDefinitionId(),
 					_addCustomObjectDefinition(
-						"Test" + RandomTestUtil.randomString()
+						ObjectDefinitionTestUtil.getRandomName()
 					).getObjectDefinitionId(),
 					0, ObjectRelationshipConstants.DELETION_TYPE_PREVENT, false,
 					LocalizedMapUtil.getLocalizedMap(
@@ -3163,6 +3252,55 @@ public class ObjectDefinitionLocalServiceTest {
 	}
 
 	@Test
+	public void testGetOrAddEmptyObjectDefinitionDerivesSystemFlagFromPrefix()
+		throws Throwable {
+
+		ObjectDefinition customObjectDefinition = null;
+		ObjectDefinition systemObjectDefinition = null;
+
+		try (AutoCloseable autoCloseable =
+				new ExportImportConfigurationTemporarySwapper(
+					RandomTestUtil.randomLong())) {
+
+			long companyId = TestPropsValues.getCompanyId();
+			long userId = TestPropsValues.getUserId();
+
+			// Nonprefixed external reference code
+
+			customObjectDefinition =
+				_objectDefinitionLocalService.getOrAddEmptyObjectDefinition(
+					RandomTestUtil.randomString(), companyId, userId,
+					_defaultObjectFolder.getObjectFolderId(), true,
+					ObjectDefinitionConstants.SCOPE_COMPANY, false);
+
+			Assert.assertFalse(customObjectDefinition.isSystem());
+
+			// System prefixed external reference code
+
+			systemObjectDefinition =
+				_objectDefinitionLocalService.getOrAddEmptyObjectDefinition(
+					ObjectDefinitionConstants.
+						EXTERNAL_REFERENCE_CODE_PREFIX_SYSTEM_OBJECT_DEFINITION +
+							RandomTestUtil.randomString(),
+					companyId, userId, _defaultObjectFolder.getObjectFolderId(),
+					true, ObjectDefinitionConstants.SCOPE_COMPANY, false);
+
+			Assert.assertTrue(systemObjectDefinition.isSystem());
+		}
+		finally {
+			if (customObjectDefinition != null) {
+				_objectDefinitionLocalService.deleteObjectDefinition(
+					customObjectDefinition);
+			}
+
+			if (systemObjectDefinition != null) {
+				_objectDefinitionLocalService.deleteObjectDefinition(
+					systemObjectDefinition);
+			}
+		}
+	}
+
+	@Test
 	public void testPublishCustomObjectDefinition() throws Exception {
 		ObjectDefinition objectDefinition1 =
 			_objectDefinitionLocalService.addCustomObjectDefinition(
@@ -3232,9 +3370,25 @@ public class ObjectDefinitionLocalServiceTest {
 			FriendlyURLResolverConstants.URL_SEPARATOR_Y_OBJECT_ENTRY,
 			objectDefinition2.getFriendlyURLSeparator());
 
+		String name = ObjectDefinitionTestUtil.getRandomName();
+
 		ObjectDefinition objectDefinition3 =
 			ObjectDefinitionTestUtil.publishObjectDefinition(
-				"Test",
+				name + RandomTestUtil.randomString(),
+				Collections.singletonList(
+					new TextObjectFieldBuilder(
+					).labelMap(
+						LocalizedMapUtil.getLocalizedMap(
+							RandomTestUtil.randomString())
+					).name(
+						StringUtil.randomId()
+					).build()),
+				ObjectDefinitionConstants.SCOPE_COMPANY,
+				TestPropsValues.getUserId());
+
+		ObjectDefinition objectDefinition4 =
+			ObjectDefinitionTestUtil.publishObjectDefinition(
+				name,
 				Collections.singletonList(
 					new TextObjectFieldBuilder(
 					).labelMap(
@@ -3247,9 +3401,10 @@ public class ObjectDefinitionLocalServiceTest {
 				TestPropsValues.getUserId());
 
 		Assert.assertEquals(
-			"c_test", objectDefinition3.getFriendlyURLSeparator());
+			StringUtil.toLowerCase("c_" + name),
+			objectDefinition4.getFriendlyURLSeparator());
 
-		ObjectDefinition objectDefinition4 =
+		ObjectDefinition objectDefinition5 =
 			_objectDefinitionLocalService.addCustomObjectDefinition(
 				null, TestPropsValues.getUserId(), 0, null, true, false, true,
 				true, true, false, false, false, false, "api",
@@ -3271,12 +3426,13 @@ public class ObjectDefinitionLocalServiceTest {
 			"Other asset types may use this prefix.",
 			() -> _objectDefinitionLocalService.publishCustomObjectDefinition(
 				TestPropsValues.getUserId(),
-				objectDefinition4.getObjectDefinitionId()));
+				objectDefinition5.getObjectDefinitionId()));
 
 		_objectDefinitionLocalService.deleteObjectDefinition(objectDefinition1);
 		_objectDefinitionLocalService.deleteObjectDefinition(objectDefinition2);
 		_objectDefinitionLocalService.deleteObjectDefinition(objectDefinition3);
 		_objectDefinitionLocalService.deleteObjectDefinition(objectDefinition4);
+		_objectDefinitionLocalService.deleteObjectDefinition(objectDefinition5);
 	}
 
 	@FeatureFlag("LPD-17564")
@@ -4306,6 +4462,28 @@ public class ObjectDefinitionLocalServiceTest {
 			));
 	}
 
+	private String _getPortletDisplayCategory(ObjectDefinition objectDefinition)
+		throws Exception {
+
+		Bundle bundle = FrameworkUtil.getBundle(
+			ObjectDefinitionLocalServiceTest.class);
+
+		BundleContext bundleContext = bundle.getBundleContext();
+
+		for (ServiceReference<Portlet> serviceReference :
+				bundleContext.getServiceReferences(
+					Portlet.class,
+					"(jakarta.portlet.name=" + objectDefinition.getPortletId() +
+						")")) {
+
+			return String.valueOf(
+				serviceReference.getProperty(
+					"com.liferay.portlet.display-category"));
+		}
+
+		return null;
+	}
+
 	private int _getSharingEntriesCount(ObjectDefinition objectDefinition) {
 		return _sharingEntryLocalService.getCompanySharingEntriesCount(
 			objectDefinition.getCompanyId(),
@@ -5051,8 +5229,8 @@ public class ObjectDefinitionLocalServiceTest {
 
 		Assert.assertFalse(objectDefinition.isAllowStandaloneObjectEntry());
 
-		// Panel app is not visible when the allow standalone object entry
-		// setting is disabled
+		// Panel app is not visible and the portlet is not selectable as a page
+		// widget when the allow standalone object entry setting is disabled
 
 		objectDefinition.setPanelCategoryKey(RandomTestUtil.randomString());
 
@@ -5068,9 +5246,11 @@ public class ObjectDefinitionLocalServiceTest {
 				).build()));
 
 		Assert.assertFalse(_isPanelAppRegistered(objectDefinition));
+		Assert.assertEquals(
+			"category.hidden", _getPortletDisplayCategory(objectDefinition));
 
-		// Panel app is visible when the allow standalone object entry setting
-		// is enabled
+		// Panel app is visible and the portlet is selectable as a page widget
+		// when the allow standalone object entry setting is enabled
 
 		objectDefinition = _updateCustomObjectDefinition(
 			objectDefinition.getClassName(), objectDefinition,
@@ -5084,6 +5264,8 @@ public class ObjectDefinitionLocalServiceTest {
 				).build()));
 
 		Assert.assertTrue(_isPanelAppRegistered(objectDefinition));
+		Assert.assertEquals(
+			"category.object", _getPortletDisplayCategory(objectDefinition));
 	}
 
 	private ObjectDefinition _updateCustomObjectDefinition(

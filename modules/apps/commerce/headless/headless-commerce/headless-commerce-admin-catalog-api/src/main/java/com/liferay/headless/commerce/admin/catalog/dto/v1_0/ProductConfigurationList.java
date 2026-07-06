@@ -44,6 +44,9 @@ import java.util.function.Supplier;
 	description = "Container that groups product configuration entries under a single inventory, shipping, and tax template; each catalog has one master configuration list used as the catalog-level default, and additional sub-templates can inherit from a parent and be qualified by account, account group, channel, or order type.",
 	value = "ProductConfigurationList"
 )
+@io.swagger.v3.oas.annotations.media.Schema(
+	description = "Container that groups product configuration entries under a single inventory, shipping, and tax template; each catalog has one master configuration list used as the catalog-level default, and additional sub-templates can inherit from a parent and be qualified by account, account group, channel, or order type."
+)
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "ProductConfigurationList")
 public class ProductConfigurationList implements Serializable {
@@ -301,7 +304,7 @@ public class ProductConfigurationList implements Serializable {
 		_customFieldsSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
-		description = "Date at which the configuration list becomes effective; interpreted in the requesting user's time zone; rejected when invalid.",
+		description = "Date and time at which the configuration list becomes effective; interpreted in the requesting user's time zone; rejected when invalid.",
 		example = "2017-07-21"
 	)
 	public Date getDisplayDate() {
@@ -338,7 +341,7 @@ public class ProductConfigurationList implements Serializable {
 	}
 
 	@GraphQLField(
-		description = "Date at which the configuration list becomes effective; interpreted in the requesting user's time zone; rejected when invalid."
+		description = "Date and time at which the configuration list becomes effective; interpreted in the requesting user's time zone; rejected when invalid."
 	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Date displayDate;
@@ -347,7 +350,7 @@ public class ProductConfigurationList implements Serializable {
 	private Supplier<Date> _displayDateSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
-		description = "Date after which the configuration list is no longer effective; ignored when `neverExpire` is true; rejected when invalid.",
+		description = "Date and time after which the configuration list is no longer effective; ignored when `neverExpire` is true; rejected when invalid.",
 		example = "2017-08-21"
 	)
 	public Date getExpirationDate() {
@@ -384,7 +387,7 @@ public class ProductConfigurationList implements Serializable {
 	}
 
 	@GraphQLField(
-		description = "Date after which the configuration list is no longer effective; ignored when `neverExpire` is true; rejected when invalid."
+		description = "Date and time after which the configuration list is no longer effective; ignored when `neverExpire` is true; rejected when invalid."
 	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Date expirationDate;
@@ -1125,4 +1128,4 @@ public class ProductConfigurationList implements Serializable {
 	private Map<String, Serializable> _extendedProperties;
 
 }
-// LIFERAY-REST-BUILDER-HASH:-1362019932
+// LIFERAY-REST-BUILDER-HASH:164501718

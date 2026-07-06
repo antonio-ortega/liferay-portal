@@ -8,6 +8,7 @@ package com.liferay.mcp.server.rest.resource.v1_0.test;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.mcp.server.rest.client.dto.v1_0.Tool;
 import com.liferay.mcp.server.rest.client.http.HttpInvoker;
+import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
@@ -29,33 +30,31 @@ public class ToolResourceTest extends BaseToolResourceTestCase {
 
 	@Override
 	@Test
-	public void testGetTool() throws Exception {
-		Tool tool = toolResource.getTool("mcp-server-v1.0", "getToolSets");
+	public void testGetToolSetToolSetNameTool() throws Exception {
+		Tool tool = toolResource.getToolSetToolSetNameTool(
+			"mcp-server-v1.0", "getToolSetsPage");
 
-		Assert.assertEquals("getToolSets", tool.getName());
+		Assert.assertEquals("getToolSetsPage", tool.getName());
 		Assert.assertNotNull(tool.getInputSchema());
 	}
 
 	@Override
 	@Test
-	public void testInvokeTool() throws Exception {
+	public void testPostToolSetToolSetNameToolInvoke() throws Exception {
 		byte[] bytes = RandomTestUtil.randomBytes();
+		Base64.Encoder encoder = Base64.getEncoder();
 		String fileName =
 			"mcp-upload-" + RandomTestUtil.randomString() + ".txt";
 
 		HttpInvoker.HttpResponse httpResponse =
-			toolResource.invokeToolHttpResponse(
+			toolResource.postToolSetToolSetNameToolInvokeHttpResponse(
 				"headless-delivery-v1.0", "postSiteDocument",
 				JSONUtil.put(
 					"file",
 					JSONUtil.put(
 						"contentType", "text/plain"
 					).put(
-						"data",
-						Base64.getEncoder(
-						).encodeToString(
-							bytes
-						)
+						"data", encoder.encodeToString(bytes)
 					).put(
 						"filename", fileName
 					)
@@ -74,22 +73,43 @@ public class ToolResourceTest extends BaseToolResourceTestCase {
 			bytes.length, documentJSONObject.getInt("sizeInBytes"));
 		Assert.assertEquals(fileName, documentJSONObject.getString("title"));
 
-		httpResponse = toolResource.invokeToolHttpResponse(
-			"mcp-server-v1.0", "getToolSummaries",
-			JSONUtil.put(
-				"toolSetName", "mcp-server-v1.0"
-			).toString());
+		httpResponse =
+			toolResource.postToolSetToolSetNameToolInvokeHttpResponse(
+				"mcp-server-v1.0", "getToolSetToolSetNameToolSummariesPage",
+				JSONUtil.put(
+					"toolSetName", "mcp-server-v1.0"
+				).toString());
+
+		JSONObject jsonObject = JSONFactoryUtil.createJSONObject(
+			httpResponse.getContent());
+
+		JSONArray jsonArray = jsonObject.getJSONArray("items");
 
 		Assert.assertFalse(
-			JSONFactoryUtil.createJSONObject(
-				httpResponse.getContent()
-			).getJSONArray(
-				"items"
-			).getJSONObject(
+			jsonArray.getJSONObject(
 				0
 			).has(
 				"xClassName"
 			));
+
+		httpResponse =
+			toolResource.postToolSetToolSetNameToolInvokeHttpResponse(
+				"headless-delivery-v1.0", "getSiteDocumentsPage",
+				JSONUtil.put(
+					"fields", "id"
+				).put(
+					"siteId", testGroup.getGroupId()
+				).toString());
+
+		jsonObject = JSONFactoryUtil.createJSONObject(
+			httpResponse.getContent());
+
+		jsonArray = jsonObject.getJSONArray("items");
+
+		JSONObject itemJSONObject = jsonArray.getJSONObject(0);
+
+		Assert.assertTrue(itemJSONObject.has("id"));
+		Assert.assertFalse(itemJSONObject.has("title"));
 	}
 
 }

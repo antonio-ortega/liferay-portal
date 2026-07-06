@@ -45,6 +45,9 @@ import java.util.function.Supplier;
 	description = "Buyer-facing projection of a single line item on a placed order. Carries the priced SKU, quantity, options, child items, and the shipments that fulfill the line.",
 	value = "PlacedOrderItem"
 )
+@io.swagger.v3.oas.annotations.media.Schema(
+	description = "Buyer-facing projection of a single line item on a placed order. Carries the priced SKU, quantity, options, child items, and the shipments that fulfill the line."
+)
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "PlacedOrderItem")
 public class PlacedOrderItem implements Serializable {
@@ -840,7 +843,7 @@ public class PlacedOrderItem implements Serializable {
 	private Supplier<String> _replacedSkuSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
-		description = "Buyer-requested delivery date for the line item. ISO 8601 date. Read-only.",
+		description = "Buyer-requested delivery date and time for the line item. ISO 8601 date-time. Read-only.",
 		example = "2017-07-21"
 	)
 	public Date getRequestedDeliveryDate() {
@@ -877,7 +880,7 @@ public class PlacedOrderItem implements Serializable {
 	}
 
 	@GraphQLField(
-		description = "Buyer-requested delivery date for the line item. ISO 8601 date. Read-only."
+		description = "Buyer-requested delivery date and time for the line item. ISO 8601 date-time. Read-only."
 	)
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Date requestedDeliveryDate;
@@ -2035,4 +2038,4 @@ public class PlacedOrderItem implements Serializable {
 	private Map<String, Serializable> _extendedProperties;
 
 }
-// LIFERAY-REST-BUILDER-HASH:508542579
+// LIFERAY-REST-BUILDER-HASH:315251696

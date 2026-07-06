@@ -24,11 +24,17 @@ components:
                     items:
                         $ref: "#/components/schemas/Variable"
                     type: array
+                model:
+                    $ref: "#/components/schemas/Model"
+                    readOnly: true
                 outputVariable:
                     $ref: "#/components/schemas/Variable"
                 status:
                     $ref: "#/components/schemas/Status"
                     readOnly: true
+                system:
+                    readOnly: true
+                    type: boolean
                 title:
                     type: string
                 version:
@@ -62,6 +68,31 @@ components:
                 externalReferenceCode:
                     type: string
             type: object
+        Chatbot:
+            properties:
+                active:
+                    type: boolean
+                avatar:
+                    readOnly: true
+                    type: string
+                disclaimerMessage:
+                    readOnly: true
+                    type: string
+                externalReferenceCode:
+                    type: string
+                introMessage:
+                    readOnly: true
+                    type: string
+                notificationMessage:
+                    readOnly: true
+                    type: string
+                placeholderMessage:
+                    readOnly: true
+                    type: string
+                title:
+                    readOnly: true
+                    type: string
+            type: object
         ContentRetriever:
             properties:
                 crawlDate:
@@ -90,26 +121,16 @@ components:
                 url:
                     type: string
             type: object
-        Message:
+        Credential:
             properties:
-                chat:
-                    $ref: "#/components/schemas/Chat"
+                clientId:
                     readOnly: true
-                chatbotExternalReferenceCode:
                     type: string
-                context:
-                    additionalProperties: true
-                    type: object
-                instructionDefinitionScope:
-                    enum:
-                        -   clickToChat
-                        -   cms
-                        -   everywhere
-                    type: string
-                text:
+                clientSecret:
+                    readOnly: true
                     type: string
             type: object
-        ModelArmorTemplate:
+        Guardrail:
             properties:
                 active:
                     type: boolean
@@ -179,6 +200,34 @@ components:
                         type: string
                     type: object
             type: object
+        Message:
+            properties:
+                chat:
+                    $ref: "#/components/schemas/Chat"
+                    readOnly: true
+                chatbotExternalReferenceCode:
+                    type: string
+                context:
+                    additionalProperties: true
+                    type: object
+                instructionDefinitionScope:
+                    enum:
+                        -   clickToChat
+                        -   cms
+                        -   everywhere
+                    type: string
+                text:
+                    type: string
+            type: object
+        Model:
+            properties:
+                label:
+                    type: string
+                name:
+                    type: string
+                providerLabel:
+                    type: string
+            type: object
         ProvisioningRequest:
             properties:
                 accountEntryExternalReferenceCode:
@@ -189,16 +238,48 @@ components:
                     type: integer
                 accountEntryName:
                     type: string
-                liferayDXPURL:
-                    type: string
                 userAccounts:
                     items:
                         $ref: "#/components/schemas/UserAccount"
                     type: array
             required:
                 -   accountEntryName
-                -   liferayDXPURL
                 -   userAccounts
+            type: object
+        Report:
+            properties:
+                agentDefinitionExternalReferenceCodes:
+                    items:
+                        type: string
+                    type: array
+                chatbotExternalReferenceCode:
+                    type: string
+                dateCreated:
+                    format: date-time
+                    readOnly: true
+                    type: string
+                externalReferenceCode:
+                    readOnly: true
+                    type: string
+                feedback:
+                    type: string
+                id:
+                    format: int64
+                    readOnly: true
+                    type: integer
+                level:
+                    readOnly: true
+                    type: string
+                reason:
+                    type: string
+                surface:
+                    type: string
+                userMessage:
+                    type: string
+            required:
+                -   agentDefinitionExternalReferenceCodes
+                -   feedback
+                -   surface
             type: object
         Site:
             properties:
@@ -238,8 +319,7 @@ components:
             type: object
 info:
     description:
-        "A Java client JAR is available for use with the group ID 'com.liferay', artifact ID
-        'com.liferay.ai.hub.rest.client', and version '1.0.6'."
+        "A Java client JAR is available for use with the group ID 'com.liferay', artifact ID 'com.liferay.ai.hub.rest.client', and version '1.0.6'."
     license:
         name: Apache 2.0
         url: http://www.apache.org/licenses/LICENSE-2.0.html
@@ -377,6 +457,25 @@ paths:
                     content:
                         text/event-stream: {}
             tags: ["AgentInstance"]
+    "/chatbots/by-external-reference-code/{externalReferenceCode}":
+        get:
+            operationId: getChatbotByExternalReferenceCode
+            parameters:
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Chatbot"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Chatbot"
+            tags: ["Chatbot"]
     "/chats/by-external-reference-code/{externalReferenceCode}/messages":
         post:
             operationId: postChatByExternalReferenceCodeMessage
@@ -458,30 +557,43 @@ paths:
                             schema:
                                 $ref: "#/components/schemas/ContentRetriever"
             tags: ["ContentRetriever"]
-    "/model-armor-templates":
-        post:
-            operationId: postModelArmorTemplate
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: "#/components/schemas/ModelArmorTemplate"
-                    application/xml:
-                        schema:
-                            $ref: "#/components/schemas/ModelArmorTemplate"
+    "/credentials":
+        get:
+            operationId: getCredential
             responses:
                 200:
                     content:
                         application/json:
                             schema:
-                                $ref: "#/components/schemas/ModelArmorTemplate"
+                                $ref: "#/components/schemas/Credential"
                         application/xml:
                             schema:
-                                $ref: "#/components/schemas/ModelArmorTemplate"
-            tags: ["ModelArmorTemplate"]
-    "/model-armor-templates/by-external-reference-code/{externalReferenceCode}":
+                                $ref: "#/components/schemas/Credential"
+            tags: ["Credential"]
+    "/guardrails":
+        post:
+            operationId: postGuardrail
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/Guardrail"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/Guardrail"
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Guardrail"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Guardrail"
+            tags: ["Guardrail"]
+    "/guardrails/by-external-reference-code/{externalReferenceCode}":
         delete:
-            operationId: deleteModelArmorTemplateByExternalReferenceCode
+            operationId: deleteGuardrailByExternalReferenceCode
             parameters:
                 -   in: path
                     name: externalReferenceCode
@@ -493,9 +605,9 @@ paths:
                     content:
                         application/json: {}
                         application/xml: {}
-            tags: ["ModelArmorTemplate"]
+            tags: ["Guardrail"]
         put:
-            operationId: putModelArmorTemplateByExternalReferenceCode
+            operationId: putGuardrailByExternalReferenceCode
             parameters:
                 -   in: path
                     name: externalReferenceCode
@@ -506,20 +618,20 @@ paths:
                 content:
                     application/json:
                         schema:
-                            $ref: "#/components/schemas/ModelArmorTemplate"
+                            $ref: "#/components/schemas/Guardrail"
                     application/xml:
                         schema:
-                            $ref: "#/components/schemas/ModelArmorTemplate"
+                            $ref: "#/components/schemas/Guardrail"
             responses:
                 200:
                     content:
                         application/json:
                             schema:
-                                $ref: "#/components/schemas/ModelArmorTemplate"
+                                $ref: "#/components/schemas/Guardrail"
                         application/xml:
                             schema:
-                                $ref: "#/components/schemas/ModelArmorTemplate"
-            tags: ["ModelArmorTemplate"]
+                                $ref: "#/components/schemas/Guardrail"
+            tags: ["Guardrail"]
     "/provisioning":
         post:
             operationId: postProvisioning
@@ -541,6 +653,27 @@ paths:
                             schema:
                                 $ref: "#/components/schemas/ProvisioningRequest"
             tags: ["ProvisioningRequest"]
+    "/reports":
+        post:
+            operationId: postReport
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/Report"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/Report"
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Report"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Report"
+            tags: ["Report"]
     "/sites/by-external-reference-code/{externalReferenceCode}/site-initializer":
         put:
             operationId: putSiteByExternalReferenceCodeSiteInitializer

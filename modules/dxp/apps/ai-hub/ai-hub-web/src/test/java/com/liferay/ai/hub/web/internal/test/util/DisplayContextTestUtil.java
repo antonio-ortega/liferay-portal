@@ -5,6 +5,7 @@
 
 package com.liferay.ai.hub.web.internal.test.util;
 
+import com.liferay.frontend.data.set.model.FDSActionDropdownItem;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntry;
 import com.liferay.object.service.ObjectDefinitionLocalServiceUtil;
@@ -14,9 +15,16 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import jakarta.servlet.http.HttpServletRequest;
+
+import java.io.Serializable;
+
+import java.util.Map;
+
+import org.junit.Assert;
 
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
@@ -26,11 +34,27 @@ import org.mockito.Mockito;
  */
 public class DisplayContextTestUtil {
 
+	public static void assertFDSActionDropdownItem(
+		FDSActionDropdownItem fdsActionDropdownItem, String href, String icon,
+		String id, String label, String method, String target) {
+
+		Map<String, String> data =
+			(Map<String, String>)fdsActionDropdownItem.get("data");
+
+		Assert.assertEquals(id, data.get("id"));
+		Assert.assertEquals(method, data.get("method"));
+
+		Assert.assertEquals(href, fdsActionDropdownItem.get("href"));
+		Assert.assertEquals(icon, fdsActionDropdownItem.get("icon"));
+		Assert.assertEquals(label, fdsActionDropdownItem.get("label"));
+		Assert.assertEquals(target, fdsActionDropdownItem.get("target"));
+	}
+
 	public static void setGetReactDataMocks(
 		MockedStatic<ObjectDefinitionLocalServiceUtil>
 			objectDefinitionLocalServiceUtilMockedStatic,
 		MockedStatic<ObjectEntryServiceUtil> objectEntryServiceUtilMockedStatic,
-		boolean hasUpdatePermission) {
+		boolean hasUpdatePermission, boolean system) {
 
 		objectDefinitionLocalServiceUtilMockedStatic.when(
 			() ->
@@ -42,6 +66,14 @@ public class DisplayContextTestUtil {
 		);
 
 		ObjectEntry objectEntry = Mockito.mock(ObjectEntry.class);
+
+		Mockito.when(
+			objectEntry.getValues()
+		).thenReturn(
+			HashMapBuilder.<String, Serializable>put(
+				"system", system
+			).build()
+		);
 
 		objectEntryServiceUtilMockedStatic.when(
 			() -> ObjectEntryServiceUtil.getObjectEntry(

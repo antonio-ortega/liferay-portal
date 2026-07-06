@@ -63,7 +63,7 @@ customInitContainers:
                             {{- end }}
                     envFrom:
                         -   secretRef:
-                                name: managed-service-details
+                                name: overlay-bucket-details
                     image: {{ printf "%s:%s" .overlay.image.repository (.overlay.image.tag | toString) }}
                     name: liferay-overlay
                     {{- with .securityContext }}
@@ -237,7 +237,7 @@ env:
     -   name: LIFERAY_TOMCAT_SESSION_REPLICATION_ENABLED
         value: "true"
     -   name: LIFERAY_VIRTUAL_PERIOD_HOSTS_PERIOD_IGNORE_PERIOD_HOSTS
-        value: 127.0.0.1,localhost,${env:POD_IP}
+        value: 127.0.0.1,localhost,${env.POD_IP}
     -   name: POD_APP
         valueFrom:
             fieldRef:
@@ -279,7 +279,7 @@ image:
     pullPolicy: IfNotPresent
     pullSecrets: []
     repository: liferay/dxp
-    tag: latest
+    tag: 2026.q1.8-lts
 initContainers: []
 livenessProbe:
     failureThreshold: 3

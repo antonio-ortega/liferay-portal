@@ -8,9 +8,9 @@ import {cleanup, render} from '@testing-library/react';
 import React from 'react';
 
 import RoomStatistics from '../../../src/main/resources/META-INF/resources/js/main_view/analytics/components/RoomStatistics';
-import {roomStatisticsDevEnvData} from '../fixtures/analyticsDevEnvData';
+import {roomStatisticsFixture} from '../fixtures/RoomStatisticsFixture';
 
-const {Liferay: originalLiferay} = global.window;
+let originalLiferay: any;
 
 const mockLiferayLanguageGet = jest.fn((key: string) => {
 	if (key === '1-day') {
@@ -51,12 +51,6 @@ jest.mock('frontend-js-web', () => ({
 	},
 }));
 
-(global as any).Liferay = {
-	Language: {
-		get: mockLiferayLanguageGet,
-	},
-};
-
 jest.mock(
 	'../../../src/main/resources/META-INF/resources/js/common/hooks/useIsInViewport',
 	() => ({
@@ -80,19 +74,21 @@ jest.mock(
 );
 
 const withTotalSessionDuration = (totalSessionDuration: number) => ({
-	...roomStatisticsDevEnvData,
+	...roomStatisticsFixture,
 	siteVisitorBehavior: {
-		...roomStatisticsDevEnvData.siteVisitorBehavior,
+		...roomStatisticsFixture.siteVisitorBehavior,
 		totalSessionDuration,
 	},
 });
 
 describe('RoomStatistics', () => {
 	beforeAll(() => {
-		window['Liferay'] = {
+		originalLiferay = window.Liferay;
+
+		window.Liferay = {
 			...originalLiferay,
 			Language: {
-				...originalLiferay.Language,
+				...originalLiferay?.Language,
 				get: mockLiferayLanguageGet,
 			},
 
@@ -137,13 +133,13 @@ describe('RoomStatistics', () => {
 	});
 
 	beforeEach(() => {
-		mockAnalyticsResponse = roomStatisticsDevEnvData;
+		mockAnalyticsResponse = roomStatisticsFixture;
 	});
 
 	afterAll(() => {
-		cleanup();
-
 		window.Liferay = originalLiferay;
+
+		cleanup();
 
 		jest.resetAllMocks();
 	});

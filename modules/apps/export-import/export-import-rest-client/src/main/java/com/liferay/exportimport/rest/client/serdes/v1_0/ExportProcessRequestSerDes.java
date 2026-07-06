@@ -53,6 +53,16 @@ public class ExportProcessRequestSerDes {
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ssXX");
 
+		if (exportProcessRequest.getComments() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"comments\": ");
+
+			sb.append(exportProcessRequest.getComments());
+		}
+
 		if (exportProcessRequest.getDeletions() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -79,14 +89,14 @@ public class ExportProcessRequestSerDes {
 			sb.append("\"");
 		}
 
-		if (exportProcessRequest.getLast() != null) {
+		if (exportProcessRequest.getLogo() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"last\": ");
+			sb.append("\"logo\": ");
 
-			sb.append(exportProcessRequest.getLast());
+			sb.append(exportProcessRequest.getLogo());
 		}
 
 		if (exportProcessRequest.getName() != null) {
@@ -113,16 +123,14 @@ public class ExportProcessRequestSerDes {
 			sb.append(exportProcessRequest.getPermissions());
 		}
 
-		if (exportProcessRequest.getRange() != null) {
+		if (exportProcessRequest.getRatings() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"range\": ");
+			sb.append("\"ratings\": ");
 
-			sb.append("\"");
-			sb.append(exportProcessRequest.getRange());
-			sb.append("\"");
+			sb.append(exportProcessRequest.getRatings());
 		}
 
 		if (exportProcessRequest.getRequestPortletDataHandlers() != null) {
@@ -155,6 +163,26 @@ public class ExportProcessRequestSerDes {
 			sb.append("]");
 		}
 
+		if (exportProcessRequest.getSitePagesSettings() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"sitePagesSettings\": ");
+
+			sb.append(exportProcessRequest.getSitePagesSettings());
+		}
+
+		if (exportProcessRequest.getSiteTemplateSettings() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"siteTemplateSettings\": ");
+
+			sb.append(exportProcessRequest.getSiteTemplateSettings());
+		}
+
 		if (exportProcessRequest.getStartDate() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -169,6 +197,16 @@ public class ExportProcessRequestSerDes {
 					exportProcessRequest.getStartDate()));
 
 			sb.append("\"");
+		}
+
+		if (exportProcessRequest.getThemeSettings() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"themeSettings\": ");
+
+			sb.append(exportProcessRequest.getThemeSettings());
 		}
 
 		sb.append("}");
@@ -195,6 +233,14 @@ public class ExportProcessRequestSerDes {
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ssXX");
 
+		if (exportProcessRequest.getComments() == null) {
+			map.put("comments", null);
+		}
+		else {
+			map.put(
+				"comments", String.valueOf(exportProcessRequest.getComments()));
+		}
+
 		if (exportProcessRequest.getDeletions() == null) {
 			map.put("deletions", null);
 		}
@@ -214,11 +260,11 @@ public class ExportProcessRequestSerDes {
 					exportProcessRequest.getEndDate()));
 		}
 
-		if (exportProcessRequest.getLast() == null) {
-			map.put("last", null);
+		if (exportProcessRequest.getLogo() == null) {
+			map.put("logo", null);
 		}
 		else {
-			map.put("last", String.valueOf(exportProcessRequest.getLast()));
+			map.put("logo", String.valueOf(exportProcessRequest.getLogo()));
 		}
 
 		if (exportProcessRequest.getName() == null) {
@@ -237,11 +283,12 @@ public class ExportProcessRequestSerDes {
 				String.valueOf(exportProcessRequest.getPermissions()));
 		}
 
-		if (exportProcessRequest.getRange() == null) {
-			map.put("range", null);
+		if (exportProcessRequest.getRatings() == null) {
+			map.put("ratings", null);
 		}
 		else {
-			map.put("range", String.valueOf(exportProcessRequest.getRange()));
+			map.put(
+				"ratings", String.valueOf(exportProcessRequest.getRatings()));
 		}
 
 		if (exportProcessRequest.getRequestPortletDataHandlers() == null) {
@@ -254,6 +301,24 @@ public class ExportProcessRequestSerDes {
 					exportProcessRequest.getRequestPortletDataHandlers()));
 		}
 
+		if (exportProcessRequest.getSitePagesSettings() == null) {
+			map.put("sitePagesSettings", null);
+		}
+		else {
+			map.put(
+				"sitePagesSettings",
+				String.valueOf(exportProcessRequest.getSitePagesSettings()));
+		}
+
+		if (exportProcessRequest.getSiteTemplateSettings() == null) {
+			map.put("siteTemplateSettings", null);
+		}
+		else {
+			map.put(
+				"siteTemplateSettings",
+				String.valueOf(exportProcessRequest.getSiteTemplateSettings()));
+		}
+
 		if (exportProcessRequest.getStartDate() == null) {
 			map.put("startDate", null);
 		}
@@ -262,6 +327,15 @@ public class ExportProcessRequestSerDes {
 				"startDate",
 				liferayToJSONDateFormat.format(
 					exportProcessRequest.getStartDate()));
+		}
+
+		if (exportProcessRequest.getThemeSettings() == null) {
+			map.put("themeSettings", null);
+		}
+		else {
+			map.put(
+				"themeSettings",
+				String.valueOf(exportProcessRequest.getThemeSettings()));
 		}
 
 		return map;
@@ -282,13 +356,16 @@ public class ExportProcessRequestSerDes {
 
 		@Override
 		protected boolean parseMaps(String jsonParserFieldName) {
-			if (Objects.equals(jsonParserFieldName, "deletions")) {
+			if (Objects.equals(jsonParserFieldName, "comments")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "deletions")) {
 				return false;
 			}
 			else if (Objects.equals(jsonParserFieldName, "endDate")) {
 				return false;
 			}
-			else if (Objects.equals(jsonParserFieldName, "last")) {
+			else if (Objects.equals(jsonParserFieldName, "logo")) {
 				return false;
 			}
 			else if (Objects.equals(jsonParserFieldName, "name")) {
@@ -297,7 +374,7 @@ public class ExportProcessRequestSerDes {
 			else if (Objects.equals(jsonParserFieldName, "permissions")) {
 				return false;
 			}
-			else if (Objects.equals(jsonParserFieldName, "range")) {
+			else if (Objects.equals(jsonParserFieldName, "ratings")) {
 				return false;
 			}
 			else if (Objects.equals(
@@ -305,7 +382,18 @@ public class ExportProcessRequestSerDes {
 
 				return false;
 			}
+			else if (Objects.equals(jsonParserFieldName, "sitePagesSettings")) {
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "siteTemplateSettings")) {
+
+				return false;
+			}
 			else if (Objects.equals(jsonParserFieldName, "startDate")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "themeSettings")) {
 				return false;
 			}
 
@@ -317,7 +405,13 @@ public class ExportProcessRequestSerDes {
 			ExportProcessRequest exportProcessRequest,
 			String jsonParserFieldName, Object jsonParserFieldValue) {
 
-			if (Objects.equals(jsonParserFieldName, "deletions")) {
+			if (Objects.equals(jsonParserFieldName, "comments")) {
+				if (jsonParserFieldValue != null) {
+					exportProcessRequest.setComments(
+						(Boolean)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "deletions")) {
 				if (jsonParserFieldValue != null) {
 					exportProcessRequest.setDeletions(
 						(Boolean)jsonParserFieldValue);
@@ -329,10 +423,9 @@ public class ExportProcessRequestSerDes {
 						toDate((String)jsonParserFieldValue));
 				}
 			}
-			else if (Objects.equals(jsonParserFieldName, "last")) {
+			else if (Objects.equals(jsonParserFieldName, "logo")) {
 				if (jsonParserFieldValue != null) {
-					exportProcessRequest.setLast(
-						Integer.valueOf((String)jsonParserFieldValue));
+					exportProcessRequest.setLogo((Boolean)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "name")) {
@@ -346,11 +439,10 @@ public class ExportProcessRequestSerDes {
 						(Boolean)jsonParserFieldValue);
 				}
 			}
-			else if (Objects.equals(jsonParserFieldName, "range")) {
+			else if (Objects.equals(jsonParserFieldName, "ratings")) {
 				if (jsonParserFieldValue != null) {
-					exportProcessRequest.setRange(
-						ExportProcessRequest.Range.create(
-							(String)jsonParserFieldValue));
+					exportProcessRequest.setRatings(
+						(Boolean)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(
@@ -377,10 +469,30 @@ public class ExportProcessRequestSerDes {
 						requestPortletDataHandlersArray);
 				}
 			}
+			else if (Objects.equals(jsonParserFieldName, "sitePagesSettings")) {
+				if (jsonParserFieldValue != null) {
+					exportProcessRequest.setSitePagesSettings(
+						(Boolean)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "siteTemplateSettings")) {
+
+				if (jsonParserFieldValue != null) {
+					exportProcessRequest.setSiteTemplateSettings(
+						(Boolean)jsonParserFieldValue);
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "startDate")) {
 				if (jsonParserFieldValue != null) {
 					exportProcessRequest.setStartDate(
 						toDate((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "themeSettings")) {
+				if (jsonParserFieldValue != null) {
+					exportProcessRequest.setThemeSettings(
+						(Boolean)jsonParserFieldValue);
 				}
 			}
 		}
@@ -464,4 +576,4 @@ public class ExportProcessRequestSerDes {
 	}
 
 }
-// LIFERAY-REST-BUILDER-HASH:1211673737
+// LIFERAY-REST-BUILDER-HASH:111588564

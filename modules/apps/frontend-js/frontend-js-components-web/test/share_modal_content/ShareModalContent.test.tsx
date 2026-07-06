@@ -8,6 +8,7 @@ import '@testing-library/jest-dom';
 // eslint-disable-next-line
 import {checkAccessibility} from '@liferay/layout-js-components-web/test/__lib__/index';
 import {act, fireEvent, render, waitFor} from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import React from 'react';
 
 import ShareModalContent from '../../src/main/resources/META-INF/resources/share_modal_content/ShareModalContent';
@@ -205,15 +206,15 @@ describe('ShareModalContent', () => {
 		).toHaveTextContent(/owner/);
 	});
 
-	it('renders the cancel and save buttons', () => {
+	it('renders the cancel and share buttons', () => {
 		const {getByText} = renderComponent();
 
 		expect(getByText('cancel')).toBeInTheDocument();
 
-		const saveButton = getByText('save');
+		const shareButton = getByText('share');
 
-		expect(saveButton).toBeInTheDocument();
-		expect(saveButton).toBeDisabled();
+		expect(shareButton).toBeInTheDocument();
+		expect(shareButton).toBeDisabled();
 	});
 
 	it('calls search when the autocomplete input changes', async () => {
@@ -246,7 +247,23 @@ describe('ShareModalContent', () => {
 		});
 	});
 
-	it('calls submission when save is clicked', async () => {
+	it('keeps the typed value in the autocomplete input when a special character is entered', async () => {
+		const user = userEvent.setup({
+			advanceTimers: jest.advanceTimersByTime,
+		});
+
+		const {container} = renderComponent();
+
+		const input = container.querySelector<HTMLInputElement>(
+			'input#collaboratorAutocomplete'
+		)!;
+
+		await user.type(input, 'Test3,');
+
+		expect(input).toHaveValue('Test3,');
+	});
+
+	it('calls submission when share is clicked', async () => {
 		const {getByLabelText, getByRole, getByText} = renderComponent();
 
 		fireEvent.click(getByLabelText('more-options'));
@@ -262,11 +279,11 @@ describe('ShareModalContent', () => {
 		});
 
 		waitFor(() => {
-			expect(getByText('save')).toBeEnabled();
+			expect(getByText('share')).toBeEnabled();
 		});
 
 		await act(async () => {
-			fireEvent.click(getByText('save'));
+			fireEvent.click(getByText('share'));
 		});
 
 		expect(mockOnCollaboratorsUpdate).toHaveBeenCalledWith([
@@ -304,6 +321,16 @@ describe('ShareModalContent', () => {
 		});
 
 		expect(queryByLabelText('edit-permissions')).not.toBeInTheDocument();
+	});
+
+	it('renders the permission as read-only text when the user cannot manage collaborators', () => {
+		const {getByText, queryByLabelText} = renderComponent({
+			...DEFAULT_PROPS,
+			canManageCollaborators: false,
+		});
+
+		expect(queryByLabelText('edit-permissions')).not.toBeInTheDocument();
+		expect(getByText('view-and-download')).toBeInTheDocument();
 	});
 
 	it('renders only the permission options the caller provides', () => {

@@ -44,6 +44,9 @@ import java.util.function.Supplier;
 	description = "Fulfillment record that ships a single parcel for a source order. Carries the carrier, tracking identifiers, expected and shipping dates, the ship-to address, the picked items, and the workflow status that advances from processing through ready-to-be-shipped and shipped to delivered.",
 	value = "Shipment"
 )
+@io.swagger.v3.oas.annotations.media.Schema(
+	description = "Fulfillment record that ships a single parcel for a source order. Carries the carrier, tracking identifiers, expected and shipping dates, the ship-to address, the picked items, and the workflow status that advances from processing through ready-to-be-shipped and shipped to delivered."
+)
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "Shipment")
 public class Shipment implements Serializable {
@@ -296,7 +299,7 @@ public class Shipment implements Serializable {
 		_customFieldsSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
-		description = "Estimated delivery date in ISO 8601. Supplied by the fulfillment operator; updatable until the shipment is delivered.",
+		description = "Estimated delivery date and time in ISO 8601. Supplied by the fulfillment operator; updatable until the shipment is delivered.",
 		example = "2017-07-21"
 	)
 	public Date getExpectedDate() {
@@ -333,7 +336,7 @@ public class Shipment implements Serializable {
 	}
 
 	@GraphQLField(
-		description = "Estimated delivery date in ISO 8601. Supplied by the fulfillment operator; updatable until the shipment is delivered."
+		description = "Estimated delivery date and time in ISO 8601. Supplied by the fulfillment operator; updatable until the shipment is delivered."
 	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Date expectedDate;
@@ -716,7 +719,7 @@ public class Shipment implements Serializable {
 	private Supplier<Long> _shippingAddressIdSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
-		description = "Date the parcel was handed over to the carrier, in ISO 8601. Typically set when the shipment transitions to shipped.",
+		description = "Date and time the parcel was handed over to the carrier, in ISO 8601. Typically set when the shipment transitions to shipped.",
 		example = "2017-07-21"
 	)
 	public Date getShippingDate() {
@@ -753,7 +756,7 @@ public class Shipment implements Serializable {
 	}
 
 	@GraphQLField(
-		description = "Date the parcel was handed over to the carrier, in ISO 8601. Typically set when the shipment transitions to shipped."
+		description = "Date and time the parcel was handed over to the carrier, in ISO 8601. Typically set when the shipment transitions to shipped."
 	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Date shippingDate;
@@ -1486,4 +1489,4 @@ public class Shipment implements Serializable {
 	private Map<String, Serializable> _extendedProperties;
 
 }
-// LIFERAY-REST-BUILDER-HASH:1928946063
+// LIFERAY-REST-BUILDER-HASH:718594777

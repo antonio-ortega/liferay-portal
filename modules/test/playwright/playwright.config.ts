@@ -21,6 +21,7 @@ import {config as applicationListTaglibConfig} from './tests/application-list-ta
 import {config as assetCategoriesAdminWebConfig} from './tests/asset-categories-admin-web/main/config';
 import {config as assetPublisherWebConfig} from './tests/asset-publisher-web/main/config';
 import {config as assetTagsAdminWebConfig} from './tests/asset-tags-admin-web/main/config';
+import {config as audiencesWebConfig} from './tests/audiences-web/main/config';
 import {config as batchPlannerConfig} from './tests/batch-planner/main/config';
 import {config as blogsWebConfig} from './tests/blogs-web/main/config';
 import {config as calendarWebConfig} from './tests/calendar-web/main/config';
@@ -61,6 +62,7 @@ import {config as systemSettingsOverrideConfig} from './tests/configuration-admi
 import {config as systemSettingsOverrideOsgiConfig} from './tests/configuration-admin-web/override-with-osgi/config';
 import {config as systemSettingsExportConfig} from './tests/configuration-admin-web/site-settings-export/config';
 import {config as systemSettingsWithUIConfig} from './tests/configuration-admin-web/system-settings-with-ui/config';
+import {config as consentManagementPlatformIntegrationConfig} from './tests/consent-management-platform-integration/main/config';
 import {config as contactsWebConfig} from './tests/contacts-web/main/config';
 import {config as contentDashboardWebConfig} from './tests/content-dashboard-web/main/config';
 import {config as cookiesBannerWebConfig} from './tests/cookies-banner-web/main/config';
@@ -70,6 +72,10 @@ import {config as designLibraryWebConfig} from './tests/design-library-web/main/
 import {config as dispatchWebConfig} from './tests/dispatch-web/main/config';
 import {config as documentLibraryWebConfig} from './tests/document-library-web/main/config';
 import {config as dynamicDataMappingFormWebConfig} from './tests/dynamic-data-mapping-form-web/main/config';
+import {config as e2eCmsDxpContentPageConfig} from './tests/e2e-cms-dxp/content-page/main/config';
+import {config as e2eCmsDxpDisplayPageTemplateConfig} from './tests/e2e-cms-dxp/display-page-template/main/config';
+import {config as e2eCmsDxpSharingConfig} from './tests/e2e-cms-dxp/sharing/main/config';
+import {config as e2eCmsDxpWorkflowConfig} from './tests/e2e-cms-dxp/workflow/main/config';
 import {config as expandoWebConfig} from './tests/expando-web/main/config';
 import {config as exportImportServiceConfig} from './tests/export-import-service/main/config';
 import {config as exportImportWebConfig} from './tests/export-import-web/main/config';
@@ -85,6 +91,7 @@ import {config as frontendDataSetWebConfig} from './tests/frontend-data-set-web/
 import {config as frontendEditorAlloyEditorWebConfig} from './tests/frontend-editor-alloyeditor-web/main/config';
 import {config as frontendEditorCKEditorWebConfig} from './tests/frontend-editor-ckeditor-web/main/config';
 import {config as frontendJsAuiWebConfig} from './tests/frontend-js-aui-web/main/config';
+import {config as frontendJsAuiWebSearchContainerSelectConfig} from './tests/frontend-js-aui-web/search-container-select/config';
 import {config as frontendJsBootstrapSupportWebConfig} from './tests/frontend-js-bootstrap-support-web/main/config';
 import {config as frontendJsClayWebConfig} from './tests/frontend-js-clay-web/main/config';
 import {config as frontendJsComponentsWebConfig} from './tests/frontend-js-components-web/main/config';
@@ -113,8 +120,10 @@ import {config as lockedItemsWebConfig} from './tests/locked-items-web/main/conf
 import {config as loginWebMainCaptchaEnableConfig} from './tests/login-web/main-captcha-enable/config';
 import {config as loginWebConfig} from './tests/login-web/main/config';
 import {config as loginWebSetupAdminConfig} from './tests/login-web/setup-admin/config';
+import {config as mapsConfig} from './tests/maps/main/config';
 import {config as marketplaceAppManagerWebConfig} from './tests/marketplace-app-manager-web/main/config';
 import {config as messageBoardsWebConfig} from './tests/message-boards-web/main/config';
+import {config as multifactorAuthenticationEmailOTPConfig} from './tests/multi-factor-authentication-email-otp-web/main/config';
 import {config as multifactorAuthenticationConfig} from './tests/multi-factor-authentication-timebased-otp-web/main/config';
 import {config as multifactorAuthenticationWebConfig} from './tests/multi-factor-authentication-web/main/config';
 import {config as nestedPortletsWebConfig} from './tests/nested-portlets-web/main/config';
@@ -142,7 +151,11 @@ import {config as objectValidationWebConfig} from './tests/object-web/validation
 import {config as objectViewWebConfig} from './tests/object-web/view/config';
 import {config as objectWorkflowWebConfig} from './tests/object-web/workflow/config';
 import {config as openIdLinkConfig} from './tests/openid-link/main/config';
+import {config as osbFaroWebAssetsConfig} from './tests/osb-faro-web/assets/config';
+import {config as osbFaroWebEventsConfig} from './tests/osb-faro-web/events/config';
 import {config as osbFaroWebConfig} from './tests/osb-faro-web/main/config';
+import {config as osbFaroWebSegmentsConfig} from './tests/osb-faro-web/segments/config';
+import {config as osbFaroWebSettingsConfig} from './tests/osb-faro-web/settings/config';
 import {config as passwordPoliciesAdminWebFirstLoginConfig} from './tests/password-policies-admin-web/first-login/config';
 import {config as passwordPoliciesAdminWebConfig} from './tests/password-policies-admin-web/main/config';
 import {config as passwordPoliciesAdminWebSetupAdminConfig} from './tests/password-policies-admin-web/setup-admin/config';
@@ -182,6 +195,8 @@ import {config as scimConfiguraitonWebConfig} from './tests/scim-configuration-w
 import {config as searchExperiencesWebConfig} from './tests/search-experiences-web/main/config';
 import {config as segmentExperimentWebConfig} from './tests/segment-experiment-web/main/config';
 import {config as segmentsWebConfig} from './tests/segments-web/main/config';
+import {config as seoStudioWebConfig} from './tests/seo-studio-web/main/config';
+import {config as serverAdminWebConfig} from './tests/server-admin-web/main/config';
 import {config as pageManagementSiteConfig} from './tests/setup/page-management-site/main/config';
 import {config as pageManagementSiteTeardownConfig} from './tests/setup/page-management-site/teardown/config';
 import {config as siteCmsSiteConfig} from './tests/setup/site-cms-site/main/config';
@@ -205,6 +220,7 @@ import {config as smokeConfig} from './tests/smoke/main/config';
 import {config as stagingConfig} from './tests/staging-configuration-web/main/config';
 import {config as stylebookWebConfig} from './tests/style-book-web/main/config';
 import {config as templateWebConfig} from './tests/template-web/main/config';
+import {config as translationWebConfig} from './tests/translation-web/main/config';
 import {config as trashWebConfig} from './tests/trash-web/main/config';
 import {config as usersAdminWebEmailConfig} from './tests/users-admin-web/email/config';
 import {config as usersAdminWebConfig} from './tests/users-admin-web/main/config';
@@ -246,6 +262,7 @@ export default defineConfig({
 		assetCategoriesAdminWebConfig,
 		assetPublisherWebConfig,
 		assetTagsAdminWebConfig,
+		audiencesWebConfig,
 		batchPlannerConfig,
 		blogsWebConfig,
 		calendarWebConfig,
@@ -283,6 +300,7 @@ export default defineConfig({
 		commerceWishListWebConfig,
 		commerceWorkspaceConfig,
 		configurationAdminWebConfig,
+		consentManagementPlatformIntegrationConfig,
 		contactsWebConfig,
 		systemSettingsExportConfig,
 		systemSettingsOverrideOsgiConfig,
@@ -296,6 +314,10 @@ export default defineConfig({
 		dispatchWebConfig,
 		documentLibraryWebConfig,
 		dynamicDataMappingFormWebConfig,
+		e2eCmsDxpDisplayPageTemplateConfig,
+		e2eCmsDxpContentPageConfig,
+		e2eCmsDxpSharingConfig,
+		e2eCmsDxpWorkflowConfig,
 		expandoWebConfig,
 		exportImportServiceConfig,
 		exportImportWebConfig,
@@ -311,6 +333,7 @@ export default defineConfig({
 		frontendEditorAlloyEditorWebConfig,
 		frontendEditorCKEditorWebConfig,
 		frontendJsAuiWebConfig,
+		frontendJsAuiWebSearchContainerSelectConfig,
 		frontendJsBootstrapSupportWebConfig,
 		frontendJsClayWebConfig,
 		frontendJsComponentsWebConfig,
@@ -340,10 +363,12 @@ export default defineConfig({
 		loginWebConfig,
 		loginWebMainCaptchaEnableConfig,
 		loginWebSetupAdminConfig,
+		mapsConfig,
 		marketplaceAppManagerWebConfig,
 		marketplaceConfig,
 		messageBoardsWebConfig,
 		multifactorAuthenticationConfig,
+		multifactorAuthenticationEmailOTPConfig,
 		multifactorAuthenticationWebConfig,
 		nestedPortletsWebConfig,
 		notificationWebConfig,
@@ -370,7 +395,11 @@ export default defineConfig({
 		objectViewWebConfig,
 		objectWorkflowWebConfig,
 		openIdLinkConfig,
+		osbFaroWebAssetsConfig,
 		osbFaroWebConfig,
+		osbFaroWebEventsConfig,
+		osbFaroWebSegmentsConfig,
+		osbFaroWebSettingsConfig,
 		passwordPoliciesAdminWebConfig,
 		passwordPoliciesAdminWebFirstLoginConfig,
 		passwordPoliciesAdminWebSetupAdminConfig,
@@ -411,6 +440,8 @@ export default defineConfig({
 		searchExperiencesWebConfig,
 		segmentExperimentWebConfig,
 		segmentsWebConfig,
+		seoStudioWebConfig,
+		serverAdminWebConfig,
 		siteAdminWebConfig,
 		siteCmpSiteInitializerConfig,
 		siteCmsSiteInitializerConfig,
@@ -430,6 +461,7 @@ export default defineConfig({
 		stagingConfig,
 		stylebookWebConfig,
 		templateWebConfig,
+		translationWebConfig,
 		trashWebConfig,
 		usersAdminWebConfig,
 		usersAdminWebEmailConfig,

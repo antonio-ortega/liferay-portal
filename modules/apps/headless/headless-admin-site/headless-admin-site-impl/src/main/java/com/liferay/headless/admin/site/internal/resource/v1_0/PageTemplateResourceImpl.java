@@ -31,6 +31,7 @@ import com.liferay.headless.admin.site.resource.v1_0.PageTemplateResource;
 import com.liferay.headless.common.spi.util.GroupUtil;
 import com.liferay.info.item.InfoItemServiceRegistry;
 import com.liferay.layout.admin.constants.LayoutAdminPortletKeys;
+import com.liferay.layout.page.template.admin.constants.LayoutPageTemplateAdminPortletKeys;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateCollectionTypeConstants;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateConstants;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
@@ -157,7 +158,7 @@ public class PageTemplateResourceImpl
 
 			@Override
 			public String getPortletId() {
-				return LayoutAdminPortletKeys.GROUP_PAGES;
+				return LayoutPageTemplateAdminPortletKeys.LAYOUT_PAGE_TEMPLATES;
 			}
 
 			@Override
@@ -167,7 +168,7 @@ public class PageTemplateResourceImpl
 
 			@Override
 			public String getSectionKey() {
-				return ExportImportConstants.SECTION_KEY_SITE_BUILDER;
+				return ExportImportConstants.SECTION_KEY_DESIGN;
 			}
 
 			@Override
@@ -422,12 +423,9 @@ public class PageTemplateResourceImpl
 					layoutPageTemplateCollectionId);
 		}
 
-		ServiceContext serviceContext = _getServiceContext(
-			groupId, pageTemplate);
-
 		long previewFileEntryId = FileEntryUtil.getPreviewFileEntryId(
-			groupId, LayoutAdminPortletKeys.GROUP_PAGES, getResourceName(),
-			serviceContext, pageTemplate.getThumbnailURLReference());
+			groupId, LayoutAdminPortletKeys.GROUP_PAGES,
+			pageTemplate.getThumbnailURLReference(), contextUser.getUserId());
 
 		if (previewFileEntryId !=
 				layoutPageTemplateEntry.getPreviewFileEntryId()) {
@@ -535,8 +533,8 @@ public class PageTemplateResourceImpl
 				LayoutPageTemplateEntryTypeConstants.BASIC,
 				FileEntryUtil.getPreviewFileEntryId(
 					groupId, LayoutAdminPortletKeys.GROUP_PAGES,
-					getResourceName(), serviceContext,
-					contentPageTemplate.getThumbnailURLReference()),
+					contentPageTemplate.getThumbnailURLReference(),
+					contextUser.getUserId()),
 				false, 0,
 				_getLayoutPlid(contentPageTemplate, groupId, serviceContext), 0,
 				PageSpecificationUtil.getPublishedStatus(
@@ -647,8 +645,9 @@ public class PageTemplateResourceImpl
 
 		layoutPageTemplateEntry.setPreviewFileEntryId(
 			FileEntryUtil.getPreviewFileEntryId(
-				groupId, LayoutAdminPortletKeys.GROUP_PAGES, getResourceName(),
-				serviceContext, widgetPageTemplate.getThumbnailURLReference()));
+				groupId, LayoutAdminPortletKeys.GROUP_PAGES,
+				widgetPageTemplate.getThumbnailURLReference(),
+				contextUser.getUserId()));
 
 		layoutPageTemplateEntry =
 			_layoutPageTemplateEntryLocalService.updateLayoutPageTemplateEntry(

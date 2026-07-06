@@ -46,6 +46,9 @@ import java.util.function.Supplier;
 	description = "Wire shape for an order line uploaded alongside its parent order to the analytics pipeline. Carries product, SKU, quantity, and price information per line.",
 	value = "OrderItem"
 )
+@io.swagger.v3.oas.annotations.media.Schema(
+	description = "Wire shape for an order line uploaded alongside its parent order to the analytics pipeline. Carries product, SKU, quantity, and price information per line."
+)
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "OrderItem")
 public class OrderItem implements Serializable {
@@ -105,7 +108,7 @@ public class OrderItem implements Serializable {
 	private Supplier<Long> _cpDefinitionIdSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
-		description = "Date the order line was created, in ISO 8601 (yyyy-MM-dd). Read-only.",
+		description = "Timestamp when the order line was created, in ISO 8601. Read-only.",
 		example = "2017-07-21"
 	)
 	public Date getCreateDate() {
@@ -142,7 +145,7 @@ public class OrderItem implements Serializable {
 	}
 
 	@GraphQLField(
-		description = "Date the order line was created, in ISO 8601 (yyyy-MM-dd). Read-only."
+		description = "Timestamp when the order line was created, in ISO 8601. Read-only."
 	)
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Date createDate;
@@ -335,7 +338,7 @@ public class OrderItem implements Serializable {
 	private Supplier<Long> _idSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
-		description = "Date the order line was last modified, in ISO 8601 (yyyy-MM-dd). Read-only.",
+		description = "Timestamp when the order line was last modified, in ISO 8601. Read-only.",
 		example = "2017-07-21"
 	)
 	public Date getModifiedDate() {
@@ -372,7 +375,7 @@ public class OrderItem implements Serializable {
 	}
 
 	@GraphQLField(
-		description = "Date the order line was last modified, in ISO 8601 (yyyy-MM-dd). Read-only."
+		description = "Timestamp when the order line was last modified, in ISO 8601. Read-only."
 	)
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Date modifiedDate;
@@ -1203,4 +1206,4 @@ public class OrderItem implements Serializable {
 	private Map<String, Serializable> _extendedProperties;
 
 }
-// LIFERAY-REST-BUILDER-HASH:1810767700
+// LIFERAY-REST-BUILDER-HASH:-938370507

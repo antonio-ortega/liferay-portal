@@ -114,6 +114,10 @@
 
 [#assign displayValue = (input.value)!"" /]
 
+[#if displayValue == "null"]
+	[#assign displayValue = "" /]
+[/#if]
+
 [#if prefix?has_content && displayValue?starts_with(prefix)]
 	[#assign displayValue = displayValue?remove_beginning(prefix) /]
 [/#if]
@@ -217,7 +221,7 @@
 		[/#if]
 
 		[#if input.errorMessage?has_content]
-			<p class="font-weight-semi-bold mt-1 text-danger" id="${fragmentElementId}-error-message">
+			<p class="font-weight-semi-bold mt-1 text-3 text-danger" id="${fragmentElementId}-error-message">
 				[@clay["icon"] symbol="info-circle" /]
 
 				<span>${input.errorMessage}</span>

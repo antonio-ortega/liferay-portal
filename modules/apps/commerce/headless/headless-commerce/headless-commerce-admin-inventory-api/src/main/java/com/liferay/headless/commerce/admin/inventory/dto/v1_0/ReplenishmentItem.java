@@ -45,6 +45,9 @@ import java.util.function.Supplier;
 	description = "Planned restock event for a SKU at a warehouse. Records the expected quantity (strictly positive) and the date it becomes available; on create the underlying warehouse item identified by warehouseId and sku must already exist.",
 	value = "ReplenishmentItem"
 )
+@io.swagger.v3.oas.annotations.media.Schema(
+	description = "Planned restock event for a SKU at a warehouse. Records the expected quantity (strictly positive) and the date it becomes available; on create the underlying warehouse item identified by warehouseId and sku must already exist."
+)
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "ReplenishmentItem")
 public class ReplenishmentItem implements Serializable {
@@ -58,7 +61,7 @@ public class ReplenishmentItem implements Serializable {
 	}
 
 	@io.swagger.v3.oas.annotations.media.Schema(
-		description = "Date the planned restock becomes available, in ISO 8601 date format (YYYY-MM-DD). Optional -- a missing value is allowed.",
+		description = "Date the planned restock becomes available, in ISO 8601 date-time format. Optional -- a missing value is allowed.",
 		example = "2017-07-21"
 	)
 	public Date getAvailabilityDate() {
@@ -95,7 +98,7 @@ public class ReplenishmentItem implements Serializable {
 	}
 
 	@GraphQLField(
-		description = "Date the planned restock becomes available, in ISO 8601 date format (YYYY-MM-DD). Optional -- a missing value is allowed."
+		description = "Date the planned restock becomes available, in ISO 8601 date-time format. Optional -- a missing value is allowed."
 	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Date availabilityDate;
@@ -607,4 +610,4 @@ public class ReplenishmentItem implements Serializable {
 	private Map<String, Serializable> _extendedProperties;
 
 }
-// LIFERAY-REST-BUILDER-HASH:651281351
+// LIFERAY-REST-BUILDER-HASH:1705604030

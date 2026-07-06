@@ -1197,6 +1197,22 @@
 				{
 					"DBType": "Integer",
 					"businessType": "Integer",
+					"externalReferenceCode": "NUMBER_OF_FAILED_ITEMS",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"label": {
+						"en_US": "Number of Failed Items"
+					},
+					"name": "numberOfFailedItems",
+					"readOnly": "false",
+					"required": false,
+					"state": false,
+					"system": true,
+					"type": "Integer"
+				},
+				{
+					"DBType": "Integer",
+					"businessType": "Integer",
 					"externalReferenceCode": "NUMBER_OF_ITEMS",
 					"indexed": true,
 					"indexedAsKeyword": false,
@@ -1243,22 +1259,6 @@
 				{
 					"DBType": "Integer",
 					"businessType": "Integer",
-					"externalReferenceCode": "NUMBER_OF_FAILED_ITEMS",
-					"indexed": true,
-					"indexedAsKeyword": false,
-					"label": {
-						"en_US": "Number of Failed Items"
-					},
-					"name": "numberOfFailedItems",
-					"readOnly": "false",
-					"required": false,
-					"state": false,
-					"system": true,
-					"type": "Integer"
-				},
-				{
-					"DBType": "Integer",
-					"businessType": "Integer",
 					"externalReferenceCode": "NUMBER_OF_SUCCESSFUL_ITEMS",
 					"indexed": true,
 					"indexedAsKeyword": false,
@@ -1271,6 +1271,22 @@
 					"state": false,
 					"system": true,
 					"type": "Integer"
+				},
+				{
+					"DBType": "Clob",
+					"businessType": "LongText",
+					"externalReferenceCode": "TASK_RESULT",
+					"indexed": false,
+					"indexedAsKeyword": false,
+					"label": {
+						"en_US": "Task Result"
+					},
+					"name": "taskResult",
+					"readOnly": "false",
+					"required": false,
+					"state": false,
+					"system": true,
+					"type": "Clob"
 				},
 				{
 					"DBType": "String",

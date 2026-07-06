@@ -19,10 +19,13 @@ public class AIHubFDSNames {
 	public static final String CONTENT_RETRIEVERS =
 		AIHubWebConstants.BUNDLE_SYMBOLIC_NAME + "-contentRetrievers";
 
+	public static final String GUARDRAILS =
+		AIHubWebConstants.BUNDLE_SYMBOLIC_NAME + "-guardrails";
+
 	public static final String INSTRUCTION_DEFINITIONS =
 		AIHubWebConstants.BUNDLE_SYMBOLIC_NAME + "-instructionDefinitions";
 
-	public static final String MODEL_ARMOR_TEMPLATES =
-		AIHubWebConstants.BUNDLE_SYMBOLIC_NAME + "-modelArmorTemplates";
+	public static final String ISSUE_REPORTS =
+		AIHubWebConstants.BUNDLE_SYMBOLIC_NAME + "-issueReports";
 
 }
