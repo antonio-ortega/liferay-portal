@@ -4,7 +4,7 @@
  */
 
 import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
-import {LanguagePicker} from '@clayui/core';
+import {LanguagePicker, Option, Picker} from '@clayui/core';
 import ClayForm, {ClayInput, ClayToggle} from '@clayui/form';
 import ClayIcon from '@clayui/icon';
 import ClayMultiSelect from '@clayui/multi-select';
@@ -12,6 +12,7 @@ import {useId} from 'frontend-js-components-web';
 import React from 'react';
 
 import {ElementVariation} from './elementVariationsReducer';
+import {EditableElementOption} from './getEditableElementOptions';
 
 type ElementVariationFormData = Pick<
 	ElementVariation,
@@ -21,6 +22,7 @@ type ElementVariationFormData = Pick<
 interface Props {
 	audiences: Array<{label: string; value: string}>;
 	defaultLanguageId: string;
+	editableElementOptions: EditableElementOption[];
 	elementVariation: ElementVariationFormData;
 	languageId: string;
 	locales: Array<{id: string; label: string; symbol: string}>;
@@ -29,11 +31,13 @@ interface Props {
 	onLanguageIdChange: (languageId: string) => void;
 	onReloadPreview: () => void;
 	onSave: () => void;
+	onTargetElementHover: (targetElement: string | null) => void;
 }
 
 export default function ElementVariationForm({
 	audiences,
 	defaultLanguageId,
+	editableElementOptions,
 	elementVariation,
 	languageId,
 	locales,
@@ -42,12 +46,26 @@ export default function ElementVariationForm({
 	onLanguageIdChange,
 	onReloadPreview,
 	onSave,
+	onTargetElementHover,
 }: Props) {
 	const audienceId = useId();
 	const htmlId = useId();
 	const jsId = useId();
 	const nameId = useId();
 	const targetElementId = useId();
+
+	const targetElementItems = editableElementOptions.map(
+		(editableElementOption, index) => ({
+			key: String(index),
+			label: editableElementOption.label,
+			value: editableElementOption.value,
+		})
+	);
+
+	const selectedTargetElementItem = targetElementItems.find(
+		(targetElementItem) =>
+			targetElementItem.value === elementVariation.targetElement
+	);
 
 	return (
 		<>
@@ -121,14 +139,40 @@ export default function ElementVariationForm({
 						/>
 					</label>
 
-					<ClayInput
-						defaultValue={elementVariation.targetElement}
+					<Picker
+						aria-label={Liferay.Language.get('page-element')}
+						className="form-control-sm"
 						id={targetElementId}
-						onBlur={(event) =>
-							onChange({targetElement: event.target.value})
-						}
-						type="text"
-					/>
+						items={targetElementItems}
+						onSelectionChange={(selection) => {
+							const targetElementItem = targetElementItems.find(
+								(currentTargetElementItem) =>
+									currentTargetElementItem.key ===
+									String(selection)
+							);
+
+							onChange({
+								targetElement: targetElementItem?.value ?? '',
+							});
+						}}
+						selectedKey={selectedTargetElementItem?.key}
+					>
+						{(item) => (
+							<Option key={item.key} textValue={item.label}>
+								<span
+									className="d-block"
+									onMouseEnter={() =>
+										onTargetElementHover(item.value)
+									}
+									onMouseLeave={() =>
+										onTargetElementHover(null)
+									}
+								>
+									{item.label}
+								</span>
+							</Option>
+						)}
+					</Picker>
 				</ClayForm.Group>
 
 				<ClayForm.Group small>

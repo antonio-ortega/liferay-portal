@@ -24,6 +24,7 @@ import {
 	createInitialState,
 	reducer,
 } from './elementVariationsReducer';
+import {EditableElementOption} from './getEditableElementOptions';
 
 import './ElementVariations.scss';
 
@@ -96,6 +97,13 @@ function ElementVariations({
 	const elementVariationsPreviewRef =
 		useRef<ElementVariationsPreviewRef>(null);
 
+	const [editableElementOptions, setEditableElementOptions] = useState<
+		EditableElementOption[]
+	>([]);
+	const [highlightedTargetElement, setHighlightedTargetElement] = useState<
+		string | null
+	>(null);
+
 	return (
 		<div className="d-flex element-variations flex-column">
 			<div className="d-flex element-variations__content flex-grow-1">
@@ -104,6 +112,7 @@ function ElementVariations({
 						<ElementVariationForm
 							audiences={audiences}
 							defaultLanguageId={defaultLanguageId}
+							editableElementOptions={editableElementOptions}
 							elementVariation={draftElementVariation}
 							key={draftElementVariation.key}
 							languageId={languageId}
@@ -139,6 +148,7 @@ function ElementVariations({
 									})
 								)
 							}
+							onTargetElementHover={setHighlightedTargetElement}
 						/>
 					) : (
 						<>
@@ -247,7 +257,9 @@ function ElementVariations({
 				<ElementVariationsPreview
 					defaultLanguageId={defaultLanguageId}
 					draftElementVariation={draftElementVariation}
+					highlightedTargetElement={highlightedTargetElement}
 					languageId={languageId}
+					onEditableElementOptionsChange={setEditableElementOptions}
 					previewURL={previewURL}
 					ref={elementVariationsPreviewRef}
 				/>

@@ -14,7 +14,12 @@ import React, {
 } from 'react';
 
 import {ElementVariation} from './elementVariationsReducer';
+import getEditableElementOptions, {
+	EditableElementOption,
+} from './getEditableElementOptions';
 import getElementVariationScript from './getElementVariationScript';
+
+const HIGHLIGHT_STYLE_ELEMENT_ID = 'lfr-element-variation-highlight';
 
 export interface ElementVariationsPreviewRef {
 	reload: () => void;
@@ -23,7 +28,11 @@ export interface ElementVariationsPreviewRef {
 interface Props {
 	defaultLanguageId: string;
 	draftElementVariation: ElementVariation | null;
+	highlightedTargetElement: string | null;
 	languageId: string;
+	onEditableElementOptionsChange: (
+		editableElementOptions: EditableElementOption[]
+	) => void;
 	previewURL: string;
 }
 
@@ -32,7 +41,9 @@ const ElementVariationsPreview = forwardRef<ElementVariationsPreviewRef, Props>(
 		{
 			defaultLanguageId,
 			draftElementVariation,
+			highlightedTargetElement,
 			languageId,
+			onEditableElementOptionsChange,
 			previewURL: initialPreviewURL,
 		},
 		ref
@@ -139,9 +150,55 @@ const ElementVariationsPreview = forwardRef<ElementVariationsPreviewRef, Props>(
 			};
 		}, [defaultLanguageId, draftElementVariation, languageId]);
 
+		const highlightTargetElements = useCallback(() => {
+			const iframeDocument = iframeRef.current?.contentDocument;
+
+			if (!iframeDocument?.head) {
+				return;
+			}
+
+			let styleElement = iframeDocument.getElementById(
+				HIGHLIGHT_STYLE_ELEMENT_ID
+			) as HTMLStyleElement | null;
+
+			const rules = [];
+
+			if (highlightedTargetElement) {
+				rules.push(
+					`${highlightedTargetElement} { box-shadow: inset 0 0 0 2px var(--primary-l1, #4b93ff) !important; }`
+				);
+			}
+
+			if (draftElementVariation?.targetElement) {
+				rules.push(
+					`${draftElementVariation.targetElement} { box-shadow: inset 0 0 0 2px var(--primary, #0b5fff) !important; }`
+				);
+			}
+
+			if (!rules.length) {
+				styleElement?.remove();
+
+				return;
+			}
+
+			if (!styleElement) {
+				styleElement = iframeDocument.createElement('style');
+
+				styleElement.id = HIGHLIGHT_STYLE_ELEMENT_ID;
+
+				iframeDocument.head.appendChild(styleElement);
+			}
+
+			styleElement.textContent = rules.join(' ');
+		}, [draftElementVariation, highlightedTargetElement]);
+
 		useEffect(() => {
 			applyDraftElementVariation();
 		}, [applyDraftElementVariation]);
+
+		useEffect(() => {
+			highlightTargetElements();
+		}, [highlightTargetElements, previewReady]);
 
 		useEffect(() => {
 			setPreviewReady(false);
@@ -158,7 +215,18 @@ const ElementVariationsPreview = forwardRef<ElementVariationsPreviewRef, Props>(
 				<iframe
 					className="border-0 flex-grow-1 w-100"
 					onLoad={() => {
+						const iframeDocument =
+							iframeRef.current?.contentDocument;
+
+						if (iframeDocument) {
+							onEditableElementOptionsChange(
+								getEditableElementOptions(iframeDocument)
+							);
+						}
+
 						applyDraftElementVariation();
+
+						highlightTargetElements();
 
 						setPreviewReady(true);
 					}}
