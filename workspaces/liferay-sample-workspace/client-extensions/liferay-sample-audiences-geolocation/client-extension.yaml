@@ -5,13 +5,13 @@ assemble:
 liferay-sample-audiences-geolocation:
     name: Liferay Sample Audiences Geolocation
     names:
-        -   Time of Day
-        -   Touch Device
+        -   Country
+        -   City
     symbols:
-        -   timeOfDay
-        -   touchDevice
+        -   country
+        -   city
     type: audiencesCustomAttributes
     types:
         -   string
-        -   boolean
+        -   string
     url: geolocation.*.js
