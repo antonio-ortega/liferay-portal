@@ -30,6 +30,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+
 import java.util.Objects;
 
 import org.osgi.service.component.annotations.Component;
@@ -57,7 +58,7 @@ public class FrontendJSAudiencesWebTopHeadDynamicInclude
 		String layoutMode = ParamUtil.getString(
 			httpServletRequest, "p_l_mode", Constants.VIEW);
 
-		if  (!Objects.equals(layoutMode, Constants.VIEW)) {
+		if (!Objects.equals(layoutMode, Constants.VIEW)) {
 			return;
 		}
 
@@ -82,7 +83,8 @@ public class FrontendJSAudiencesWebTopHeadDynamicInclude
 
 		PrintWriter printWriter = httpServletResponse.getWriter();
 
-		printWriter.print("<script data-senna-track=\"temporary\"");
+		printWriter.print(
+			"<script data-senna-track=\"permanent\" id=\"audiencesBootstrap\"");
 		printWriter.print(
 			ContentSecurityPolicyNonceProviderUtil.getNonceAttribute(
 				httpServletRequest));
