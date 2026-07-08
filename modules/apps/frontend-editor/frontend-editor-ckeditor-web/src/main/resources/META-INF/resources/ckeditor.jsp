@@ -193,6 +193,10 @@ name = HtmlUtil.escapeJS(name);
 		preventImageDropHandler,
 	];
 
+	<c:if test="<%= Validator.isNotNull(onChangeMethod) %>">
+		var oldData = getInitialContent();
+	</c:if>
+
 	window['<%= name %>'] = {
 		create: function () {
 			if (!window['<%= name %>'].instanceReady) {
@@ -282,15 +286,12 @@ name = HtmlUtil.escapeJS(name);
 
 		<c:if test="<%= Validator.isNotNull(onChangeMethod) %>">
 			onChangeCallback: function () {
-				var ckEditor = CKEDITOR.instances['<%= name %>'];
-				var dirty = ckEditor.checkDirty();
+				var currentData = window['<%= name %>'].getHTML();
 
-				if (dirty) {
-					window['<%= HtmlUtil.escapeJS(onChangeMethod) %>'](
-						window['<%= name %>'].getHTML()
-					);
+				if (currentData !== oldData) {
+					oldData = currentData;
 
-					ckEditor.resetDirty();
+					window['<%= HtmlUtil.escapeJS(onChangeMethod) %>'](currentData);
 				}
 			},
 		</c:if>
