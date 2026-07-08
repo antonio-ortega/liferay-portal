@@ -32,6 +32,13 @@ export class LanguageApiHelper {
 		);
 	}
 
+	async getMessage(messageId: MessageId): Promise<Message> {
+		return this.apiHelpers.get(
+			`${this.apiHelpers.baseUrl}${this.basePath}/messages?key=${messageId.key}&languageId=${messageId.languageId}`,
+			true
+		);
+	}
+
 	async putMessage(message: Message): Promise<Message> {
 		return this.apiHelpers.put(
 			`${this.apiHelpers.baseUrl}${this.basePath}/messages`,

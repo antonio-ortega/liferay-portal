@@ -3,13 +3,18 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {mergeTests} from '@playwright/test';
+import {expect, mergeTests} from '@playwright/test';
 
+import {apiHelpersTest} from '../../../fixtures/apiHelpersTest';
 import {languageOverridePageTest} from '../../../fixtures/languageOverridePageTest';
 import {loginTest} from '../../../fixtures/loginTest';
 import {TLanguageKey} from '../../../pages/portal-language-override-web/LanguageOverridePage';
 
-const testSample = mergeTests(languageOverridePageTest, loginTest());
+const testSample = mergeTests(
+	languageOverridePageTest,
+	loginTest(),
+	apiHelpersTest
+);
 
 testSample.describe('Samples', () => {
 	const EXPECTED_LANGUAGE_KEY: TLanguageKey = {
@@ -108,7 +113,7 @@ testSample.describe('Samples', () => {
 
 	testSample(
 		'LPD-36494 Assert that the language client extension is deployed',
-		async ({languageOverridePage}) => {
+		async ({apiHelpers, languageOverridePage}) => {
 			await testSample.step(
 				'Check that the translations were imported',
 				async () => {
@@ -124,23 +129,27 @@ testSample.describe('Samples', () => {
 						EXPECTED_LANGUAGE_KEY
 					);
 
-					await languageOverridePage.assertLanguageKeyTranslations(
-						EXPECTED_LANGUAGE_KEY
-					);
+					// The edit form only renders inputs for enabled locales, so
+					// read each override through the REST API, which resolves it
+					// regardless of whether the locale is enabled.
+
+					for (const {
+						languageId,
+						value,
+					} of EXPECTED_LANGUAGE_KEY.translations) {
+						const message = await apiHelpers.language.getMessage({
+							key: EXPECTED_LANGUAGE_KEY.key,
+							languageId: languageId.replace('-', '_'),
+						});
+
+						expect(message.value).toBe(value);
+					}
 				}
 			);
 
 			await testSample.step(
 				'Check that a translation for a disabled locale was not imported',
 				async () => {
-					await languageOverridePage.goto();
-
-					await languageOverridePage.changeFilter('Any Language');
-
-					await languageOverridePage.searchLanguageKey(
-						EXPECTED_LANGUAGE_KEY.key
-					);
-
 					await languageOverridePage.assertLanguageKeyHasNoOverrideForLocale(
 						EXPECTED_LANGUAGE_KEY.key,
 						'th-TH'
