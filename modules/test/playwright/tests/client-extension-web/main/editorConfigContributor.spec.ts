@@ -185,6 +185,14 @@ test('Check client extension does not apply to new instances @LPD-63018', async 
 
 		await virtualInstancePage.keyboard.press('Enter');
 
+		// Wait for the keyboard movement to start before committing it
+
+		await expect(
+			virtualInstancePage.locator(
+				'.page-editor__keyboard-movement-preview__content'
+			)
+		).toBeVisible();
+
 		await virtualInstancePage.keyboard.press('Enter');
 
 		await virtualInstancePage
