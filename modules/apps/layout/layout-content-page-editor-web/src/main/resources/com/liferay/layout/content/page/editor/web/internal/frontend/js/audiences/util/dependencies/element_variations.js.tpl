@@ -110,18 +110,27 @@ function applyElementVariationOnce(elementVariation) {
 const elementVariations = [$ELEMENT_VARIATIONS$];
 const sortedAudienceEntryERCs = [$SORTED_AUDIENCE_ENTRY_ERCS$];
 
-elementVariations.forEach((elementVariation) => {
-	elementVariation.audienceEntryERCs.forEach((audienceEntryERC) => {
-		audiences.on(audienceEntryERC, () => {
-			if (
-				elementVariation.targetElement &&
-				getWinnerAudienceEntryERC(elementVariation.targetElement) !==
-					audienceEntryERC
-			) {
-				return;
-			}
+// This module is evaluated once per page (its URL is unique per plid and hash),
+// but register() is called on every SPA navigation to this page. It resets the
+// per-navigation state and re-registers the handlers into the audiences engine,
+// whose handler registry is cleared before each navigation.
 
-			applyElementVariationOnce(elementVariation);
+export function register() {
+	appliedElementVariations.clear();
+
+	elementVariations.forEach((elementVariation) => {
+		elementVariation.audienceEntryERCs.forEach((audienceEntryERC) => {
+			audiences.on(audienceEntryERC, () => {
+				if (
+					elementVariation.targetElement &&
+					getWinnerAudienceEntryERC(elementVariation.targetElement) !==
+						audienceEntryERC
+				) {
+					return;
+				}
+
+				applyElementVariationOnce(elementVariation);
+			});
 		});
 	});
-});
+}
