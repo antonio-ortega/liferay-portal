@@ -25,3 +25,31 @@ export function timeOfDay() {
 export function touchDevice() {
 	return navigator.maxTouchPoints > 0;
 }
+
+let reverseGeocodePromise;
+
+function getReverseGeocode() {
+	if (!reverseGeocodePromise) {
+		reverseGeocodePromise = new Promise((resolve, reject) => {
+			navigator.geolocation.getCurrentPosition(resolve, reject);
+		}).then(({coords}) =>
+			fetch(
+				`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${coords.latitude}&longitude=${coords.longitude}`
+			).then((response) => response.json())
+		);
+	}
+
+	return reverseGeocodePromise;
+}
+
+export async function country() {
+	const {countryName} = await getReverseGeocode();
+
+	return countryName;
+}
+
+export async function city() {
+	const reverseGeocode = await getReverseGeocode();
+
+	return reverseGeocode.city;
+}
