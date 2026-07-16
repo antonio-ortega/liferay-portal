@@ -18,6 +18,7 @@ IPInfo ipInfo = (IPInfo)request.getAttribute(IPInfo.class.getName());
 <c:choose>
 	<c:when test="<%= ipInfo != null %>">
 		Country Code: <%= ipInfo.getCountryCode() %><br />
+		Country Name: <%= ipInfo.getCountryName() %><br />
 		IP Address: <%= ipInfo.getIPAddress() %><br />
 	</c:when>
 	<c:otherwise>

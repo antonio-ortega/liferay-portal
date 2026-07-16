@@ -48,6 +48,7 @@ export type Attribute =
 	| 'cookies'
 	| `custom:${string}`
 	| 'hostname'
+	| 'ip_geocoder'
 	| 'language'
 	| 'local_date'
 	| 'local_hour'

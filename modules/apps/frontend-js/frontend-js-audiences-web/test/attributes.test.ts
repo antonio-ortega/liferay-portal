@@ -10,6 +10,7 @@ import {getBrowserVersion} from '../src/main/resources/META-INF/resources/main/d
 import {getCookies} from '../src/main/resources/META-INF/resources/main/detection/attributes/cookies';
 import {getCustom} from '../src/main/resources/META-INF/resources/main/detection/attributes/custom';
 import {getHostname} from '../src/main/resources/META-INF/resources/main/detection/attributes/hostname';
+import {getIPGeocoder} from '../src/main/resources/META-INF/resources/main/detection/attributes/ip_geocoder';
 import {getLanguage} from '../src/main/resources/META-INF/resources/main/detection/attributes/language';
 import {getLocalDate} from '../src/main/resources/META-INF/resources/main/detection/attributes/local_date';
 import {getLocalHour} from '../src/main/resources/META-INF/resources/main/detection/attributes/local_hour';
@@ -33,6 +34,10 @@ describe('attributes', () => {
 		delete (document as any).referrer;
 
 		delete (navigator as any).userAgent;
+
+		document
+			.querySelector('meta[name="audiences-ip-geocoder"]')
+			?.remove();
 
 		window.history.replaceState({}, '', '/');
 	});
@@ -172,6 +177,28 @@ describe('attributes', () => {
 
 			expect(typeof value).toBe('string');
 			expect(value).toBe('localhost');
+		});
+	});
+
+	describe('attribute ip_geocoder', () => {
+		it('works and returns the country name from the meta tag', async () => {
+			const metaElement = document.createElement('meta');
+
+			metaElement.content = 'Spain';
+			metaElement.name = 'audiences-ip-geocoder';
+
+			document.head.appendChild(metaElement);
+
+			const value = getIPGeocoder();
+
+			expect(typeof value).toBe('string');
+			expect(value).toBe('Spain');
+		});
+
+		it('returns an empty string when the meta tag is missing', async () => {
+			const value = getIPGeocoder();
+
+			expect(value).toBe('');
 		});
 	});
 

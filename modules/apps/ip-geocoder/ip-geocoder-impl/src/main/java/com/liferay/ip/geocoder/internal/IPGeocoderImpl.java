@@ -33,6 +33,7 @@ import java.io.IOException;
 
 import java.net.InetAddress;
 
+import java.util.Collections;
 import java.util.Map;
 
 import org.osgi.service.component.annotations.Activate;
@@ -53,18 +54,18 @@ public class IPGeocoderImpl implements IPGeocoder {
 		String ipAddress = _getIPAddress(httpServletRequest);
 
 		if (Validator.isNull(ipAddress)) {
-			return new IPInfo(StringPool.BLANK, ipAddress);
+			return new IPInfo(StringPool.BLANK, StringPool.BLANK, ipAddress);
 		}
 
-		String countryCode = _portalCache.get(ipAddress);
+		IPInfo ipInfo = _portalCache.get(ipAddress);
 
-		if (countryCode == null) {
-			countryCode = _getCountryCode(ipAddress);
+		if (ipInfo == null) {
+			ipInfo = _getIPInfo(ipAddress);
 
-			_portalCache.put(ipAddress, countryCode);
+			_portalCache.put(ipAddress, ipInfo);
 		}
 
-		return new IPInfo(countryCode, ipAddress);
+		return ipInfo;
 	}
 
 	@Activate
@@ -72,7 +73,7 @@ public class IPGeocoderImpl implements IPGeocoder {
 		_properties = properties;
 
 		_portalCache =
-			(PortalCache<String, String>)_singleVMPool.getPortalCache(
+			(PortalCache<String, IPInfo>)_singleVMPool.getPortalCache(
 				IPGeocoderImpl.class.getName());
 	}
 
@@ -80,6 +81,8 @@ public class IPGeocoderImpl implements IPGeocoder {
 		try {
 			return new DatabaseReader.Builder(
 				_getFile()
+			).locales(
+				Collections.singletonList("en")
 			).withCache(
 				new CHMCache()
 			).build();
@@ -92,14 +95,15 @@ public class IPGeocoderImpl implements IPGeocoder {
 		}
 	}
 
-	private String _getCountryCode(String ipAddress) {
+	private IPInfo _getIPInfo(String ipAddress) {
 		try {
 			InetAddress inetAddress = InetAddress.getByName(ipAddress);
 
 			if (inetAddress.isAnyLocalAddress() ||
 				inetAddress.isLoopbackAddress()) {
 
-				return StringPool.BLANK;
+				return new IPInfo(
+					StringPool.BLANK, StringPool.BLANK, ipAddress);
 			}
 
 			DatabaseReader databaseReader =
@@ -110,12 +114,15 @@ public class IPGeocoderImpl implements IPGeocoder {
 				inetAddress);
 
 			if (countryResponse == null) {
-				return StringPool.BLANK;
+				return new IPInfo(
+					StringPool.BLANK, StringPool.BLANK, ipAddress);
 			}
 
 			Country country = countryResponse.getCountry();
 
-			return GetterUtil.getString(country.getIsoCode());
+			return new IPInfo(
+				GetterUtil.getString(country.getIsoCode()),
+				GetterUtil.getString(country.getName()), ipAddress);
 		}
 		catch (AddressNotFoundException addressNotFoundException) {
 			if (_log.isDebugEnabled()) {
@@ -128,7 +135,7 @@ public class IPGeocoderImpl implements IPGeocoder {
 			}
 		}
 
-		return StringPool.BLANK;
+		return new IPInfo(StringPool.BLANK, StringPool.BLANK, ipAddress);
 	}
 
 	private File _getFile() throws IOException {
@@ -187,7 +194,7 @@ public class IPGeocoderImpl implements IPGeocoder {
 	@Reference
 	private Portal _portal;
 
-	private PortalCache<String, String> _portalCache;
+	private PortalCache<String, IPInfo> _portalCache;
 	private volatile Map<String, String> _properties;
 
 	@Reference

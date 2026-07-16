@@ -11,6 +11,8 @@ import com.liferay.frontend.js.audiences.ElementVariations;
 import com.liferay.frontend.js.audiences.ElementVariationsProvider;
 import com.liferay.frontend.js.audiences.web.internal.configuration.FrontendJSAudiencesConfiguration;
 import com.liferay.frontend.js.audiences.web.internal.util.BootstrapJavaScriptUtil;
+import com.liferay.ip.geocoder.IPGeocoder;
+import com.liferay.ip.geocoder.IPInfo;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.content.security.policy.ContentSecurityPolicyNonceProviderUtil;
@@ -99,6 +101,12 @@ public class FrontendJSAudiencesWebTopHeadDynamicInclude
 			printWriter.print("\" name=\"audiences-variations\">");
 		}
 
+		IPInfo ipInfo = _ipGeocoder.getIPInfo(httpServletRequest);
+
+		printWriter.print("<meta content=\"");
+		printWriter.print(ipInfo.getCountryName());
+		printWriter.print("\" name=\"audiences-ip-geocoder\">");
+
 		printWriter.print(
 			"<script data-senna-track=\"permanent\" id=\"audiencesBootstrap\"");
 		printWriter.print(
@@ -141,6 +149,9 @@ public class FrontendJSAudiencesWebTopHeadDynamicInclude
 
 	@Reference
 	private ElementVariationsProvider _elementVariationsProvider;
+
+	@Reference
+	private IPGeocoder _ipGeocoder;
 
 	@Reference
 	private Portal _portal;

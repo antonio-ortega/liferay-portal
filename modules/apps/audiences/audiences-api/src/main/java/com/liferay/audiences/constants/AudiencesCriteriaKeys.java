@@ -18,9 +18,9 @@ public class AudiencesCriteriaKeys {
 
 	public static final String DEVICE_TYPE = "device_type";
 
-	public static final String GEOLOCATION = "geolocation";
-
 	public static final String HOSTNAME = "hostname";
+
+	public static final String IP_GEOCODER = "ip_geocoder";
 
 	public static final String LANGUAGE = "language";
 

@@ -12,13 +12,18 @@ import com.liferay.petra.string.StringBundler;
  */
 public class IPInfo {
 
-	public IPInfo(String countryCode, String ipAddress) {
+	public IPInfo(String countryCode, String countryName, String ipAddress) {
 		_countryCode = countryCode;
+		_countryName = countryName;
 		_ipAddress = ipAddress;
 	}
 
 	public String getCountryCode() {
 		return _countryCode;
+	}
+
+	public String getCountryName() {
+		return _countryName;
 	}
 
 	public String getIPAddress() {
@@ -28,10 +33,12 @@ public class IPInfo {
 	@Override
 	public String toString() {
 		return StringBundler.concat(
-			"{countryCode=", _countryCode, ", ipAddress=", _ipAddress, "}");
+			"{countryCode=", _countryCode, ", countryName=", _countryName,
+			", ipAddress=", _ipAddress, "}");
 	}
 
 	private final String _countryCode;
+	private final String _countryName;
 	private final String _ipAddress;
 
 }

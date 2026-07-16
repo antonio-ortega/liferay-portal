@@ -56,21 +56,23 @@ public class IPGeocoderImplTest {
 
 	@Test
 	public void testGetIPInfoWhenCountryIsoCodeIsNull() throws Exception {
-		_setUpDatabaseReader(null);
+		_setUpDatabaseReader(null, null);
 
 		IPInfo ipInfo = _ipGeocoderImpl.getIPInfo(_getHttpServletRequest());
 
 		Assert.assertEquals(StringPool.BLANK, ipInfo.getCountryCode());
+		Assert.assertEquals(StringPool.BLANK, ipInfo.getCountryName());
 		Assert.assertEquals("8.8.8.8", ipInfo.getIPAddress());
 	}
 
 	@Test
 	public void testGetIPInfoWhenCountryIsoCodeIsValid() throws Exception {
-		_setUpDatabaseReader("US");
+		_setUpDatabaseReader("US", "United States");
 
 		IPInfo ipInfo = _ipGeocoderImpl.getIPInfo(_getHttpServletRequest());
 
 		Assert.assertEquals("US", ipInfo.getCountryCode());
+		Assert.assertEquals("United States", ipInfo.getCountryName());
 		Assert.assertEquals("8.8.8.8", ipInfo.getIPAddress());
 	}
 
@@ -89,13 +91,21 @@ public class IPGeocoderImplTest {
 		return mockHttpServletRequest;
 	}
 
-	private void _setUpDatabaseReader(String isoCode) throws Exception {
+	private void _setUpDatabaseReader(String isoCode, String name)
+		throws Exception {
+
 		Country country = Mockito.mock(Country.class);
 
 		Mockito.when(
 			country.getIsoCode()
 		).thenReturn(
 			isoCode
+		);
+
+		Mockito.when(
+			country.getName()
+		).thenReturn(
+			name
 		);
 
 		CountryResponse countryResponse = Mockito.mock(CountryResponse.class);
@@ -117,7 +127,7 @@ public class IPGeocoderImplTest {
 		DatabaseReader.class);
 	private final IPGeocoderImpl _ipGeocoderImpl = new IPGeocoderImpl();
 	private final Portal _portal = Mockito.mock(Portal.class);
-	private final PortalCache<String, String> _portalCache = Mockito.mock(
+	private final PortalCache<String, IPInfo> _portalCache = Mockito.mock(
 		PortalCache.class);
 
 }

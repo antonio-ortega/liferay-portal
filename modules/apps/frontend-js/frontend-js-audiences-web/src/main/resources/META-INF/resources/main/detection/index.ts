@@ -11,6 +11,7 @@ import {getBrowserVersion} from './attributes/browser_version';
 import {getCookies} from './attributes/cookies';
 import {getCustom} from './attributes/custom';
 import {getHostname} from './attributes/hostname';
+import {getIPGeocoder} from './attributes/ip_geocoder';
 import {getLanguage} from './attributes/language';
 import {getLocalDate} from './attributes/local_date';
 import {getLocalHour} from './attributes/local_hour';
@@ -119,6 +120,9 @@ export class Detection {
 		}
 		else if (attr === 'hostname') {
 			return getHostname();
+		}
+		else if (attr === 'ip_geocoder') {
+			return getIPGeocoder();
 		}
 		else if (attr === 'language') {
 			return getLanguage();

@@ -117,9 +117,9 @@ public class AudiencesCriteriaProviderImpl
 				).setInputType(
 					AudiencesCriteria.InputType.TEXT
 				).setKey(
-					AudiencesCriteriaKeys.GEOLOCATION
+					AudiencesCriteriaKeys.HOSTNAME
 				).setLabel(
-					_language.get(locale, "geolocation")
+					_language.get(locale, "hostname")
 				).setType(
 					AudiencesCriteria.Type.STRING
 				).build(),
@@ -128,9 +128,9 @@ public class AudiencesCriteriaProviderImpl
 				).setInputType(
 					AudiencesCriteria.InputType.TEXT
 				).setKey(
-					AudiencesCriteriaKeys.HOSTNAME
+					AudiencesCriteriaKeys.IP_GEOCODER
 				).setLabel(
-					_language.get(locale, "hostname")
+					_language.get(locale, "ip-geocoder")
 				).setType(
 					AudiencesCriteria.Type.STRING
 				).build(),
