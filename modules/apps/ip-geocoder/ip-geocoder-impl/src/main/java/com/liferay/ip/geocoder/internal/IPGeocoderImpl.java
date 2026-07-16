@@ -95,49 +95,6 @@ public class IPGeocoderImpl implements IPGeocoder {
 		}
 	}
 
-	private IPInfo _getIPInfo(String ipAddress) {
-		try {
-			InetAddress inetAddress = InetAddress.getByName(ipAddress);
-
-			if (inetAddress.isAnyLocalAddress() ||
-				inetAddress.isLoopbackAddress()) {
-
-				return new IPInfo(
-					StringPool.BLANK, StringPool.BLANK, ipAddress);
-			}
-
-			DatabaseReader databaseReader =
-				_databaseReaderDCLSingleton.getSingleton(
-					this::_createDatabaseReader);
-
-			CountryResponse countryResponse = databaseReader.country(
-				inetAddress);
-
-			if (countryResponse == null) {
-				return new IPInfo(
-					StringPool.BLANK, StringPool.BLANK, ipAddress);
-			}
-
-			Country country = countryResponse.getCountry();
-
-			return new IPInfo(
-				GetterUtil.getString(country.getIsoCode()),
-				GetterUtil.getString(country.getName()), ipAddress);
-		}
-		catch (AddressNotFoundException addressNotFoundException) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(addressNotFoundException);
-			}
-		}
-		catch (Exception exception) {
-			if (_log.isWarnEnabled()) {
-				_log.warn(exception);
-			}
-		}
-
-		return new IPInfo(StringPool.BLANK, StringPool.BLANK, ipAddress);
-	}
-
 	private File _getFile() throws IOException {
 		IPGeocoderConfiguration ipGeocoderConfiguration =
 			ConfigurableUtil.createConfigurable(
@@ -184,6 +141,49 @@ public class IPGeocoderImpl implements IPGeocoder {
 		}
 
 		return httpServletRequest.getRemoteAddr();
+	}
+
+	private IPInfo _getIPInfo(String ipAddress) {
+		try {
+			InetAddress inetAddress = InetAddress.getByName(ipAddress);
+
+			if (inetAddress.isAnyLocalAddress() ||
+				inetAddress.isLoopbackAddress()) {
+
+				return new IPInfo(
+					StringPool.BLANK, StringPool.BLANK, ipAddress);
+			}
+
+			DatabaseReader databaseReader =
+				_databaseReaderDCLSingleton.getSingleton(
+					this::_createDatabaseReader);
+
+			CountryResponse countryResponse = databaseReader.country(
+				inetAddress);
+
+			if (countryResponse == null) {
+				return new IPInfo(
+					StringPool.BLANK, StringPool.BLANK, ipAddress);
+			}
+
+			Country country = countryResponse.getCountry();
+
+			return new IPInfo(
+				GetterUtil.getString(country.getIsoCode()),
+				GetterUtil.getString(country.getName()), ipAddress);
+		}
+		catch (AddressNotFoundException addressNotFoundException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(addressNotFoundException);
+			}
+		}
+		catch (Exception exception) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(exception);
+			}
+		}
+
+		return new IPInfo(StringPool.BLANK, StringPool.BLANK, ipAddress);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(IPGeocoderImpl.class);
