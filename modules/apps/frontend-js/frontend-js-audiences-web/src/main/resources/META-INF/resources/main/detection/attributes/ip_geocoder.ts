@@ -10,7 +10,7 @@
  */
 export function getIPGeocoder(): string {
 	const metaElement = document.querySelector<HTMLMetaElement>(
-		'meta[name="audiences-ip-geocoder"]'
+		'meta[name="audiences-attribute-ip_geocoder"]'
 	);
 
 	return metaElement?.content ?? '';

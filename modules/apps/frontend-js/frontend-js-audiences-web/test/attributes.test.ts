@@ -36,7 +36,7 @@ describe('attributes', () => {
 		delete (navigator as any).userAgent;
 
 		document
-			.querySelector('meta[name="audiences-ip-geocoder"]')
+			.querySelector('meta[name="audiences-attribute-ip_geocoder"]')
 			?.remove();
 
 		window.history.replaceState({}, '', '/');
@@ -185,7 +185,7 @@ describe('attributes', () => {
 			const metaElement = document.createElement('meta');
 
 			metaElement.content = 'Spain';
-			metaElement.name = 'audiences-ip-geocoder';
+			metaElement.name = 'audiences-attribute-ip_geocoder';
 
 			document.head.appendChild(metaElement);
 

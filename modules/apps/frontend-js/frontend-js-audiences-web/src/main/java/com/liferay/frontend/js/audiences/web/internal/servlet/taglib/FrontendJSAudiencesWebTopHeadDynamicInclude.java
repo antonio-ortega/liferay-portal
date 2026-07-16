@@ -7,12 +7,11 @@ package com.liferay.frontend.js.audiences.web.internal.servlet.taglib;
 
 import com.liferay.frontend.js.audiences.AudiencesDefinition;
 import com.liferay.frontend.js.audiences.AudiencesDefinitionProvider;
+import com.liferay.frontend.js.audiences.AudiencesServerAttributeProvider;
 import com.liferay.frontend.js.audiences.ElementVariations;
 import com.liferay.frontend.js.audiences.ElementVariationsProvider;
 import com.liferay.frontend.js.audiences.web.internal.configuration.FrontendJSAudiencesConfiguration;
 import com.liferay.frontend.js.audiences.web.internal.util.BootstrapJavaScriptUtil;
-import com.liferay.ip.geocoder.IPGeocoder;
-import com.liferay.ip.geocoder.IPInfo;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.content.security.policy.ContentSecurityPolicyNonceProviderUtil;
@@ -21,6 +20,7 @@ import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.servlet.taglib.DynamicInclude;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Constants;
+import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -34,10 +34,14 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 
+import java.util.List;
 import java.util.Objects;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Iván Zaera Avellón
@@ -101,11 +105,18 @@ public class FrontendJSAudiencesWebTopHeadDynamicInclude
 			printWriter.print("\" name=\"audiences-variations\">");
 		}
 
-		IPInfo ipInfo = _ipGeocoder.getIPInfo(httpServletRequest);
+		for (AudiencesServerAttributeProvider audiencesServerAttributeProvider :
+				_audiencesServerAttributeProviders) {
 
-		printWriter.print("<meta content=\"");
-		printWriter.print(ipInfo.getCountryName());
-		printWriter.print("\" name=\"audiences-ip-geocoder\">");
+			printWriter.print("<meta content=\"");
+			printWriter.print(
+				HtmlUtil.escapeAttribute(
+					audiencesServerAttributeProvider.getValue(
+						httpServletRequest)));
+			printWriter.print("\" name=\"audiences-attribute-");
+			printWriter.print(audiencesServerAttributeProvider.getName());
+			printWriter.print("\">");
+		}
 
 		printWriter.print(
 			"<script data-senna-track=\"permanent\" id=\"audiencesBootstrap\"");
@@ -144,14 +155,19 @@ public class FrontendJSAudiencesWebTopHeadDynamicInclude
 	@Reference
 	private AudiencesDefinitionProvider _audiencesDefinitionProvider;
 
+	@Reference(
+		cardinality = ReferenceCardinality.MULTIPLE,
+		policy = ReferencePolicy.DYNAMIC,
+		policyOption = ReferencePolicyOption.GREEDY
+	)
+	private volatile List<AudiencesServerAttributeProvider>
+		_audiencesServerAttributeProviders;
+
 	@Reference
 	private ConfigurationProvider _configurationProvider;
 
 	@Reference
 	private ElementVariationsProvider _elementVariationsProvider;
-
-	@Reference
-	private IPGeocoder _ipGeocoder;
 
 	@Reference
 	private Portal _portal;
