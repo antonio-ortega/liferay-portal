@@ -381,10 +381,10 @@ describe('detection', () => {
 		});
 	});
 
-	describe('attribute segments', () => {
+	describe('attribute segment_erc', () => {
 		it('positive test', async () => {
 			mockAudiencesDefinitionWithAttribute(
-				'segments',
+				'segment_erc',
 				'includes',
 				'SEGMENT_REAL_TIME'
 			);
@@ -396,7 +396,7 @@ describe('detection', () => {
 
 		it('negative test', async () => {
 			mockAudiencesDefinitionWithAttribute(
-				'segments',
+				'segment_erc',
 				'includes',
 				'NON_EXISTENT_SEGMENT'
 			);

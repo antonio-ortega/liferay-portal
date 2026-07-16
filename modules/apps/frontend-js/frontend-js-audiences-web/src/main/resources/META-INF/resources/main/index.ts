@@ -54,7 +54,7 @@ export type Attribute =
 	| 'pathname'
 	| 'referrer'
 	| `request_parameters`
-	| 'segments'
+	| 'segment_erc'
 	| 'timezone'
 	| 'url'
 	| 'user_agent';

@@ -34,6 +34,8 @@ public class AudiencesCriteriaKeys {
 
 	public static final String REQUEST_PARAMETERS = "request_parameters";
 
+	public static final String SEGMENT_ERC = "segment_erc";
+
 	public static final String TIMEZONE = "timezone";
 
 	public static final String URL = "url";
