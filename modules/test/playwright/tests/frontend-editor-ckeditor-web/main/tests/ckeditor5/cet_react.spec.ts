@@ -27,6 +27,7 @@ test(
 			'Redo',
 			'Bold',
 			'Italic',
+			'Link',
 			'Bookmark',
 			'Image',
 			'Video',
@@ -89,7 +90,7 @@ test(
 		await page.keyboard.press('Control+k');
 
 		await expect(
-			page.getByRole('button', {name: 'Select Document'})
+			page.getByRole('button', {name: 'Insert'})
 		).toBeVisible();
 	}
 );
