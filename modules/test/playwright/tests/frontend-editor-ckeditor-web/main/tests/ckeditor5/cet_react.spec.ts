@@ -89,8 +89,6 @@ test(
 		await classicPage.editable.click();
 		await page.keyboard.press('Control+k');
 
-		await expect(
-			page.getByRole('button', {name: 'Insert'})
-		).toBeVisible();
+		await expect(page.getByRole('button', {name: 'Insert'})).toBeVisible();
 	}
 );
