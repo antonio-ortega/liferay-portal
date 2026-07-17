@@ -34,6 +34,8 @@ describe('attributes', () => {
 
 		delete (navigator as any).userAgent;
 
+		sessionStorage.clear();
+
 		window.history.replaceState({}, '', '/');
 	});
 
@@ -232,10 +234,16 @@ describe('attributes', () => {
 	});
 
 	describe('attribute segment_erc', () => {
-		it('works and returns a Set<string>', async () => {
-			const value = getSegmentERC(
-				new Set(['SEGMENT_BATCH', 'SEGMENT_REAL_TIME'])
+		it('returns the segments cached for the current user', async () => {
+			sessionStorage.setItem(
+				'liferay.audiences.acSegments',
+				JSON.stringify({
+					segments: ['SEGMENT_BATCH', 'SEGMENT_REAL_TIME'],
+					userId: '20164',
+				})
 			);
+
+			const value = getSegmentERC();
 
 			expect(value).toBeInstanceOf(Set);
 			expect(value).toEqual(
