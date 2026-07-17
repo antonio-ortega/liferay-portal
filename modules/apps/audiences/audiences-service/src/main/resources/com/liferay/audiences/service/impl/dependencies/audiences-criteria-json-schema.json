@@ -116,7 +116,8 @@
 							"attribute": {
 								"enum": [
 									"cookies",
-									"request_parameters"
+									"request_parameters",
+									"segment_erc"
 								]
 							}
 						},

@@ -248,7 +248,7 @@ describe('check', () => {
 				check(
 					withRule(
 						leafRule({
-							attribute: 'segments',
+							attribute: 'segment_erc',
 							operator: 'includes',
 							value: 123,
 						})

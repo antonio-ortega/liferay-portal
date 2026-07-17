@@ -339,6 +339,17 @@ public class AudiencesCriteriaProviderImpl
 		return new AudiencesCriteriaType(
 			Arrays.asList(
 				AudiencesCriteriaBuilder.setIcon(
+					"braces"
+				).setInputType(
+					AudiencesCriteria.InputType.TEXT
+				).setKey(
+					AudiencesCriteriaKeys.SEGMENT_ERC
+				).setLabel(
+					_language.get(locale, "segment-erc")
+				).setType(
+					AudiencesCriteria.Type.SET
+				).build(),
+				AudiencesCriteriaBuilder.setIcon(
 					"check"
 				).setInputType(
 					AudiencesCriteria.InputType.BOOLEAN

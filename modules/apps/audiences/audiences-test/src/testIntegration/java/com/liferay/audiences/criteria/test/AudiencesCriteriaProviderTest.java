@@ -151,7 +151,13 @@ public class AudiencesCriteriaProviderTest {
 			audiencesCriteriaType.getAudiencesCriterias();
 
 		Assert.assertEquals(
-			audiencesCriterias.toString(), 2, audiencesCriterias.size());
+			audiencesCriterias.toString(), 3, audiencesCriterias.size());
+
+		AudiencesCriteria segmentERCAudiencesCriteria = _getAudiencesCriteria(
+			audiencesCriterias, "segment_erc");
+
+		Assert.assertEquals(
+			AudiencesCriteria.Type.SET, segmentERCAudiencesCriteria.getType());
 
 		AudiencesCriteria authenticationAudiencesCriteria =
 			_getAudiencesCriteria(audiencesCriterias, "user_authentication");
