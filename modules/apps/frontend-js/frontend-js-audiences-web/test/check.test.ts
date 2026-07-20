@@ -248,7 +248,7 @@ describe('check', () => {
 				check(
 					withRule(
 						leafRule({
-							attribute: 'segment_erc',
+							attribute: 'cookies',
 							operator: 'includes',
 							value: 123,
 						})

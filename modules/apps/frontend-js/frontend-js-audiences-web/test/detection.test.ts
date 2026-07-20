@@ -383,7 +383,7 @@ describe('detection', () => {
 		});
 	});
 
-	describe('attribute segment_erc', () => {
+	describe('attribute segments', () => {
 		it('applies variations when a cached segment matches', async () => {
 			sessionStorage.setItem(
 				'liferay.audiences.acSegments',
@@ -394,8 +394,8 @@ describe('detection', () => {
 			);
 
 			mockAudiencesDefinitionWithAttribute(
-				'segment_erc',
-				'includes',
+				'segments',
+				'eq',
 				'SEGMENT_REAL_TIME'
 			);
 
@@ -414,8 +414,8 @@ describe('detection', () => {
 			);
 
 			mockAudiencesDefinitionWithAttribute(
-				'segment_erc',
-				'includes',
+				'segments',
+				'eq',
 				'NON_EXISTENT_SEGMENT'
 			);
 
@@ -436,8 +436,8 @@ describe('detection', () => {
 			);
 
 			mockAudiencesDefinitionWithAttribute(
-				'segment_erc',
-				'includes',
+				'segments',
+				'eq',
 				'SEGMENT_REAL_TIME'
 			);
 
@@ -450,8 +450,8 @@ describe('detection', () => {
 			delete (global as any).Analytics;
 
 			mockAudiencesDefinitionWithAttribute(
-				'segment_erc',
-				'includes',
+				'segments',
+				'eq',
 				'SEGMENT_REAL_TIME'
 			);
 

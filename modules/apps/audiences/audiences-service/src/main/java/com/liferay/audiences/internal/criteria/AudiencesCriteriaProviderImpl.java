@@ -269,7 +269,7 @@ public class AudiencesCriteriaProviderImpl
 					).setKey(
 						AudiencesCriteriaKeys.SEGMENTS
 					).setLabel(
-						_language.get(locale, "segments")
+						_language.get(locale, "segment")
 					).setOptions(
 						segmentsOptions
 					).setType(
