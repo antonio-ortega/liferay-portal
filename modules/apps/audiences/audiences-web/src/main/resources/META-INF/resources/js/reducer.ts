@@ -168,6 +168,9 @@ export function reducer(state: State, action: Action): State {
 	}
 }
 
-export function serializeCriteria(state: State): string {
-	return JSON.stringify(serializeGroup(state.root));
+export function serializeCriteria(
+	state: State,
+	typesByKey: Record<string, AudiencesCriteria['type']>
+): string {
+	return JSON.stringify(serializeGroup(state.root, typesByKey));
 }

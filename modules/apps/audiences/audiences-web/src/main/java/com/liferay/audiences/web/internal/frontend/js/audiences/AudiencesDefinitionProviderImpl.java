@@ -5,10 +5,12 @@
 
 package com.liferay.audiences.web.internal.frontend.js.audiences;
 
+import com.liferay.audiences.constants.AudiencesCriteriaKeys;
 import com.liferay.audiences.model.AudiencesEntry;
 import com.liferay.audiences.service.AudiencesEntryLocalService;
 import com.liferay.frontend.js.audiences.AudiencesDefinition;
 import com.liferay.frontend.js.audiences.AudiencesDefinitionProvider;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.cache.MultiVMPool;
 import com.liferay.portal.kernel.cache.PortalCache;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
@@ -22,6 +24,7 @@ import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.OrderByComparatorFactoryUtil;
+import com.liferay.portal.kernel.util.Portal;
 
 import java.util.List;
 
@@ -60,6 +63,8 @@ public class AudiencesDefinitionProviderImpl
 		for (AudiencesEntry audiencesEntry : audiencesEntries) {
 			JSONObject jsonObject = _getAudiencesEntryJSONObject(
 				audiencesEntry);
+
+			_replaceUserAttributes(jsonObject.getJSONArray("rules"));
 
 			audiencesJSONArray.put(
 				jsonObject.put(
@@ -105,6 +110,44 @@ public class AudiencesDefinitionProviderImpl
 		return _jsonFactory.createJSONObject();
 	}
 
+	private String _getCustomAttribute(String symbol) {
+		return StringBundler.concat(
+			"custom:", _portal.getPathContext(),
+			"/o/frontend-js-audiences-web/__liferay__/custom-attributes.js#",
+			symbol);
+	}
+
+	private void _replaceUserAttributes(JSONArray rulesJSONArray) {
+		if (rulesJSONArray == null) {
+			return;
+		}
+
+		for (int i = 0; i < rulesJSONArray.length(); i++) {
+			JSONObject ruleJSONObject = rulesJSONArray.getJSONObject(i);
+
+			if (ruleJSONObject == null) {
+				continue;
+			}
+
+			if (ruleJSONObject.has("rules")) {
+				_replaceUserAttributes(ruleJSONObject.getJSONArray("rules"));
+
+				continue;
+			}
+
+			String attribute = ruleJSONObject.getString("attribute");
+
+			if (AudiencesCriteriaKeys.USER_AUTHENTICATION.equals(attribute)) {
+				ruleJSONObject.put(
+					"attribute", _getCustomAttribute("signed_in"));
+			}
+			else if (AudiencesCriteriaKeys.USER_LANGUAGE.equals(attribute)) {
+				ruleJSONObject.put(
+					"attribute", _getCustomAttribute("language"));
+			}
+		}
+	}
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		AudiencesDefinitionProviderImpl.class);
 
@@ -116,6 +159,9 @@ public class AudiencesDefinitionProviderImpl
 
 	@Reference
 	private MultiVMPool _multiVMPool;
+
+	@Reference
+	private Portal _portal;
 
 	private PortalCache<Long, AudiencesDefinition> _portalCache;
 

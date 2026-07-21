@@ -25,6 +25,11 @@ import {
 import {AudiencesCriteria, Rule} from '../types';
 import {DropZone, getDropPosition} from '../util/getDropPosition';
 
+const BOOLEAN_OPTIONS = [
+	{label: Liferay.Language.get('true'), value: 'true'},
+	{label: Liferay.Language.get('false'), value: 'false'},
+];
+
 interface IProps {
 	audiencesCriteria?: AudiencesCriteria;
 	canGroup: boolean;
@@ -297,12 +302,14 @@ function RuleValueField({
 	type,
 	value,
 }: RuleValueFieldProps) {
-	if (options.length) {
+	const items = inputType === 'boolean' ? BOOLEAN_OPTIONS : options;
+
+	if (items.length) {
 		return (
 			<Picker
 				aria-label={Liferay.Language.get('value')}
 				className="flex-shrink-0 form-control-sm w-auto"
-				items={options}
+				items={items}
 				onSelectionChange={(key) => onChange(key as string)}
 				selectedKey={value}
 			>

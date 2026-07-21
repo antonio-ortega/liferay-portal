@@ -17,6 +17,8 @@ export function createRule(audiencesCriteria: AudiencesCriteria): Rule {
 				audiencesCriteria.inputType,
 				audiencesCriteria.type
 			)[0] || '',
-		value: audiencesCriteria.options[0]?.value || '',
+		value:
+			audiencesCriteria.options[0]?.value ||
+			(audiencesCriteria.inputType === 'boolean' ? 'false' : ''),
 	};
 }

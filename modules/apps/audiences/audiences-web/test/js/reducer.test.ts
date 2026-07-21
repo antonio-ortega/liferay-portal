@@ -9,7 +9,10 @@ import {
 	initState,
 	serializeCriteria,
 } from '../../src/main/resources/META-INF/resources/js/reducer';
-import {AudiencesCriteriaRulesGroup} from '../../src/main/resources/META-INF/resources/js/types';
+import {
+	AudiencesCriteria,
+	AudiencesCriteriaRulesGroup,
+} from '../../src/main/resources/META-INF/resources/js/types';
 
 describe('reducer', () => {
 	it('normalizes groups when loading stored criteria', () => {
@@ -52,7 +55,9 @@ describe('reducer', () => {
 			],
 		};
 
-		const parsed = JSON.parse(serializeCriteria(initState({rulesGroup})));
+		const parsed = JSON.parse(
+			serializeCriteria(initState({rulesGroup}), {})
+		);
 
 		expect(parsed.rules).toHaveLength(3);
 		expect(parsed.rules[1].conjunction).toBe('OR');
@@ -60,5 +65,38 @@ describe('reducer', () => {
 		expect(parsed.rules[1].rules[0].attribute).toBe('browser_version');
 		expect(parsed.rules[2].attribute).toBe('device_type');
 		expect(parsed.rules[2].rules).toBeUndefined();
+	});
+
+	it('coerces values to the JSON type of their attribute', () => {
+		const rulesGroup: AudiencesCriteriaRulesGroup = {
+			conjunction: 'AND',
+			rules: [
+				{
+					attribute: 'user_authentication',
+					operator: 'eq',
+					value: true,
+				},
+				{attribute: 'local_hour', operator: 'eq', value: 10},
+				{
+					attribute: 'user_language',
+					operator: 'eq',
+					value: 'en-US',
+				},
+			],
+		};
+
+		const typesByKey: Record<string, AudiencesCriteria['type']> = {
+			local_hour: 'number',
+			user_authentication: 'boolean',
+			user_language: 'string',
+		};
+
+		const parsed = JSON.parse(
+			serializeCriteria(initState({rulesGroup}), typesByKey)
+		);
+
+		expect(parsed.rules[0].value).toBe(true);
+		expect(parsed.rules[1].value).toBe(10);
+		expect(parsed.rules[2].value).toBe('en-US');
 	});
 });

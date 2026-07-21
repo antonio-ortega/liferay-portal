@@ -10,7 +10,7 @@ import ClayLayout from '@clayui/layout';
 import ClayLink from '@clayui/link';
 import ClayToolbar from '@clayui/toolbar';
 import {ScreenReaderAnnouncerContextProvider} from '@liferay/layout-js-components-web';
-import React, {useReducer} from 'react';
+import React, {useMemo, useReducer} from 'react';
 import {DndProvider} from 'react-dnd';
 import {HTML5Backend} from 'react-dnd-html5-backend';
 
@@ -53,6 +53,21 @@ export default function AudienceBuilder({
 		reducer,
 		{externalReferenceCode, name, rulesGroup},
 		initState
+	);
+
+	const typesByKey = useMemo(
+		() =>
+			Object.fromEntries(
+				audiencesCriteriaTypes.flatMap((audiencesCriteriaType) =>
+					audiencesCriteriaType.audiencesCriterias.map(
+						(audiencesCriteria) => [
+							audiencesCriteria.key,
+							audiencesCriteria.type,
+						]
+					)
+				)
+			),
+		[audiencesCriteriaTypes]
 	);
 
 	return (
@@ -135,7 +150,7 @@ export default function AudienceBuilder({
 								<input
 									name={`${namespace}json`}
 									type="hidden"
-									value={serializeCriteria(state)}
+									value={serializeCriteria(state, typesByKey)}
 								/>
 
 								<ConditionsPanel
