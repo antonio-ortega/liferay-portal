@@ -93,6 +93,7 @@ import {
 	VisibleFieldNames,
 } from './utils/types';
 import useConfigInURL, {useUpdateConfig} from './utils/useConfigInURL';
+import {useFDSCommands} from './utils/useFDSCommands';
 import ViewsContext, {ISnapshot, ISnapshots} from './views/ViewsContext';
 import getViewComponent from './views/getViewComponent';
 import viewsReducer, {EViewsActionTypes} from './views/viewsReducer';
@@ -378,6 +379,10 @@ const FrontendDataSetContent = ({
 		useState(initialAdditionalAPIURLParameters);
 	const [globalFDSState, setGlobalFDSState] =
 		useLiferayState<IFDSState>(memoizedAtom);
+
+	// lets an FDSConnection drive this data set's filters from outside
+
+	useFDSCommands({fdsName: id, globalFDSState, setGlobalFDSState});
 
 	const [globalFDSStateInitialized, setGlobalFDSStateInitialized] =
 		useState(false);
