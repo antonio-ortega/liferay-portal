@@ -15,10 +15,10 @@ import {waitForFDS} from '../../../../../utils/waitFor';
 import getPageDefinition from '../../../../layout-content-page-editor-web/main/utils/getPageDefinition';
 import {fdsSamplePageTest} from '../../fixtures/fdsSamplePageTest';
 
-const CLASSIC_FDS_NAME =
-	'com_liferay_frontend_data_set_sample_web_internal_portlet_FDSSamplePortlet-classic';
-
 const CONTENT_RENDERERS_FDS_NAME = 'ContentRenderersFrontendDataSet';
+
+const DELEGATED_FILTERS_FDS_NAME =
+	'com_liferay_frontend_data_set_sample_web_internal_portlet_FDSSamplePortlet-delegatedFilters';
 
 const FDS_SAMPLE_WIDGET_NAME =
 	'com_liferay_frontend_data_set_sample_web_internal_portlet_FDSSamplePortlet';
@@ -36,10 +36,19 @@ const test = mergeTests(
 
 let customElement: Locator;
 let customElementFragmentId: string;
-let customElementInput: Locator;
-let fdsPageClassicUrl: string;
+let customElementSearchInput: Locator;
+let fdsPageDelegatedFiltersUrl: string;
 let fdsPageTitle: string;
 let fdsPageUrl: string;
+
+/**
+ * The Custom Element renders its search box first and the box that takes an
+ * OData expression last, with a checkbox per filter the data set declares in
+ * between, so the search box is the first text input.
+ */
+function getSearchInput(element: Locator) {
+	return element.locator('input[type="text"]').first();
+}
 
 test.beforeEach(async ({fdsSamplePage, page, pageEditorPage, site}) => {
 	await test.step('Create a page with the FDS Sample widget', async () => {
@@ -64,26 +73,28 @@ test.beforeEach(async ({fdsSamplePage, page, pageEditorPage, site}) => {
 		);
 
 		customElement = page.locator('liferay-sample-custom-element-7');
-		customElementInput = customElement.locator('input');
+		customElementSearchInput = getSearchInput(customElement);
 	});
 
-	await test.step('Capture the Classic tab URL from the rendered toolbar', async () => {
+	await test.step('Capture the Delegated Filters tab URL from the rendered toolbar', async () => {
 		await page.goto(fdsPageUrl);
 
-		const classicTabHref = await page
+		const delegatedFiltersTabHref = await page
 			.locator('.nav-link')
-			.filter({hasText: 'Classic'})
+			.filter({hasText: 'Delegated Filters'})
 			.getAttribute('href');
 
-		if (!classicTabHref) {
-			throw new Error('Classic FDS tab href was not present on the page');
+		if (!delegatedFiltersTabHref) {
+			throw new Error(
+				'Delegated Filters FDS tab href was not present on the page'
+			);
 		}
 
-		fdsPageClassicUrl = classicTabHref;
+		fdsPageDelegatedFiltersUrl = delegatedFiltersTabHref;
 	});
 
-	await test.step('Reload the page directly on the Classic tab', async () => {
-		await page.goto(fdsPageClassicUrl);
+	await test.step('Reload the page directly on the Delegated Filters tab', async () => {
+		await page.goto(fdsPageDelegatedFiltersUrl);
 
 		await waitForFDS({page});
 	});
@@ -174,7 +185,7 @@ async function setCustomElementProperties({
 }
 
 test(
-	'Liferay Sample Custom Element 7 syncs search with FDS Sample (Classic)',
+	'Liferay Sample Custom Element 7 syncs search with FDS Sample (Delegated Filters)',
 	{
 		tag: ['@LPD-86378'],
 	},
@@ -187,12 +198,12 @@ test(
 		const fdsSearchButton = fdsSamplePage.managementToolbar.searchButton;
 
 		await test.step('Custom Element becomes ready once the FDS atom is registered', async () => {
-			await expect(customElementInput).toBeEnabled();
+			await expect(customElementSearchInput).toBeEnabled();
 			await expect(customElementSearchButton).toBeEnabled();
 		});
 
 		await test.step('Searching from the Custom Element filters the FDS', async () => {
-			await customElementInput.fill('Sample55');
+			await customElementSearchInput.fill('Sample55');
 			await customElementSearchButton.click();
 
 			await expect(fdsSearchInput).toHaveValue('Sample55');
@@ -202,7 +213,7 @@ test(
 			await fdsSearchInput.fill('Sample22');
 			await fdsSearchButton.click();
 
-			await expect(customElementInput).toHaveValue('Sample22');
+			await expect(customElementSearchInput).toHaveValue('Sample22');
 		});
 	}
 );
@@ -225,10 +236,13 @@ test(
 			await page.reload();
 		});
 
-		await test.step('A single subscriber is registered for the Classic FDS search selector', async () => {
+		await test.step('A single subscriber is registered for the Delegated Filters FDS search selector', async () => {
 			await expect(async () => {
 				expect(
-					await getSearchSubscribersCount(page, CLASSIC_FDS_NAME)
+					await getSearchSubscribersCount(
+						page,
+						DELEGATED_FILTERS_FDS_NAME
+					)
 				).toBe(1);
 			}).toPass();
 		});
@@ -246,7 +260,10 @@ test(
 		await test.step('The previous Custom Element subscription is no longer present in the State subscribers map', async () => {
 			await expect(async () => {
 				expect(
-					await getSearchSubscribersCount(page, CLASSIC_FDS_NAME)
+					await getSearchSubscribersCount(
+						page,
+						DELEGATED_FILTERS_FDS_NAME
+					)
 				).toBe(0);
 			}).toPass();
 		});
@@ -260,17 +277,20 @@ test(
 
 			await firstPageMenuItem.click();
 
-			await fdsSamplePage.selectTab('Classic');
+			await fdsSamplePage.selectTab('Delegated Filters');
 
 			await waitForFDS({page});
 
-			await expect(customElementInput).toBeEnabled();
+			await expect(customElementSearchInput).toBeEnabled();
 		});
 
 		await test.step('Exactly one subscriber is registered after returning to the FDS page', async () => {
 			await expect(async () => {
 				expect(
-					await getSearchSubscribersCount(page, CLASSIC_FDS_NAME)
+					await getSearchSubscribersCount(
+						page,
+						DELEGATED_FILTERS_FDS_NAME
+					)
 				).toBe(1);
 			}).toPass();
 		});
@@ -315,7 +335,10 @@ test(
 		await test.step('Open the page in view mode and prepare the two FDS atoms', async () => {
 			await page.goto(fdsPageUrl);
 
-			await selectFDSTab({fdsWidget: firstFDS, label: 'Classic'});
+			await selectFDSTab({
+				fdsWidget: firstFDS,
+				label: 'Delegated Filters',
+			});
 
 			await selectFDSTab({
 				fdsWidget: secondFDS,
@@ -325,21 +348,21 @@ test(
 			await firstFDS.locator('.fds .table').waitFor({state: 'visible'});
 			await secondFDS.locator('.fds .table').waitFor({state: 'visible'});
 
-			await expect(customElementInput).toBeEnabled();
+			await expect(customElementSearchInput).toBeEnabled();
 		});
 
-		await test.step('Searches in the first (Classic) FDS reach the Custom Element', async () => {
+		await test.step('Searches in the first (Delegated Filters) FDS reach the Custom Element', async () => {
 			await firstFDSSearchInput.fill('FirstSample');
 			await firstFDSSearchButton.click();
 
-			await expect(customElementInput).toHaveValue('FirstSample');
+			await expect(customElementSearchInput).toHaveValue('FirstSample');
 		});
 
 		await test.step('Searches in the second (Content Renderers) FDS do not reach the Custom Element', async () => {
 			await secondFDSSearchInput.fill('SecondSample');
 			await secondFDSSearchButton.click();
 
-			await expect(customElementInput).toHaveValue('FirstSample');
+			await expect(customElementSearchInput).toHaveValue('FirstSample');
 		});
 
 		await test.step('Reconfigure the Custom Element to subscribe to the second FDS', async () => {
@@ -358,7 +381,10 @@ test(
 		await test.step('Reload the page and prepare the two FDS atoms again', async () => {
 			await page.goto(fdsPageUrl);
 
-			await selectFDSTab({fdsWidget: firstFDS, label: 'Classic'});
+			await selectFDSTab({
+				fdsWidget: firstFDS,
+				label: 'Delegated Filters',
+			});
 
 			await selectFDSTab({
 				fdsWidget: secondFDS,
@@ -368,21 +394,23 @@ test(
 			await firstFDS.locator('.fds .table').waitFor({state: 'visible'});
 			await secondFDS.locator('.fds .table').waitFor({state: 'visible'});
 
-			await expect(customElementInput).toBeEnabled();
+			await expect(customElementSearchInput).toBeEnabled();
 		});
 
 		await test.step('Searches in the first FDS no longer reach the Custom Element', async () => {
 			await firstFDSSearchInput.fill('FirstAfterReconfig');
 			await firstFDSSearchButton.click();
 
-			await expect(customElementInput).toHaveValue('');
+			await expect(customElementSearchInput).toHaveValue('');
 		});
 
 		await test.step('Searches in the second FDS reach the reconfigured Custom Element', async () => {
 			await secondFDSSearchInput.fill('SecondAfterReconfig');
 			await secondFDSSearchButton.click();
 
-			await expect(customElementInput).toHaveValue('SecondAfterReconfig');
+			await expect(customElementSearchInput).toHaveValue(
+				'SecondAfterReconfig'
+			);
 		});
 	}
 );
@@ -396,12 +424,14 @@ test(
 		const customElements = page.locator('liferay-sample-custom-element-7');
 		const firstCustomElement = customElements.nth(0);
 		const secondCustomElement = customElements.nth(1);
-		const firstCustomElementInput = firstCustomElement.locator('input');
+		const firstCustomElementSearchInput =
+			getSearchInput(firstCustomElement);
 		const firstCustomElementSearchButton = firstCustomElement.getByRole(
 			'button',
 			{name: 'Search'}
 		);
-		const secondCustomElementInput = secondCustomElement.locator('input');
+		const secondCustomElementSearchInput =
+			getSearchInput(secondCustomElement);
 
 		const fdsSearchInput = fdsSamplePage.managementToolbar.searchInput;
 		const fdsSearchButton = fdsSamplePage.managementToolbar.searchButton;
@@ -418,18 +448,21 @@ test(
 		});
 
 		await test.step('Open the page in view mode and wait for both Custom Elements to subscribe', async () => {
-			await page.goto(fdsPageClassicUrl);
+			await page.goto(fdsPageDelegatedFiltersUrl);
 
 			await waitForFDS({page});
 
-			await expect(firstCustomElementInput).toBeEnabled();
-			await expect(secondCustomElementInput).toBeEnabled();
+			await expect(firstCustomElementSearchInput).toBeEnabled();
+			await expect(secondCustomElementSearchInput).toBeEnabled();
 		});
 
 		await test.step('Both Custom Elements have a subscription registered for the FDS search selector', async () => {
 			await expect(async () => {
 				expect(
-					await getSearchSubscribersCount(page, CLASSIC_FDS_NAME)
+					await getSearchSubscribersCount(
+						page,
+						DELEGATED_FILTERS_FDS_NAME
+					)
 				).toBe(2);
 			}).toPass();
 		});
@@ -438,16 +471,16 @@ test(
 			await fdsSearchInput.fill('FromFDS');
 			await fdsSearchButton.click();
 
-			await expect(firstCustomElementInput).toHaveValue('FromFDS');
-			await expect(secondCustomElementInput).toHaveValue('FromFDS');
+			await expect(firstCustomElementSearchInput).toHaveValue('FromFDS');
+			await expect(secondCustomElementSearchInput).toHaveValue('FromFDS');
 		});
 
 		await test.step('A search from the first Custom Element propagates to the FDS and the second Custom Element', async () => {
-			await firstCustomElementInput.fill('FromFirstCustomElement');
+			await firstCustomElementSearchInput.fill('FromFirstCustomElement');
 			await firstCustomElementSearchButton.click();
 
 			await expect(fdsSearchInput).toHaveValue('FromFirstCustomElement');
-			await expect(secondCustomElementInput).toHaveValue(
+			await expect(secondCustomElementSearchInput).toHaveValue(
 				'FromFirstCustomElement'
 			);
 		});
@@ -471,19 +504,22 @@ test(
 		});
 
 		await test.step('Reload the page and confirm only the second Custom Element subscribes', async () => {
-			await page.goto(fdsPageClassicUrl);
+			await page.goto(fdsPageDelegatedFiltersUrl);
 
-			await fdsSamplePage.selectTab('Classic');
+			await fdsSamplePage.selectTab('Delegated Filters');
 
 			await waitForFDS({page});
 
-			await expect(secondCustomElementInput).toBeEnabled();
+			await expect(secondCustomElementSearchInput).toBeEnabled();
 
-			await expect(firstCustomElementInput).toBeDisabled();
+			await expect(firstCustomElementSearchInput).toBeDisabled();
 
 			await expect(async () => {
 				expect(
-					await getSearchSubscribersCount(page, CLASSIC_FDS_NAME)
+					await getSearchSubscribersCount(
+						page,
+						DELEGATED_FILTERS_FDS_NAME
+					)
 				).toBe(1);
 			}).toPass();
 		});
@@ -492,10 +528,10 @@ test(
 			await fdsSearchInput.fill('AfterDisconnect');
 			await fdsSearchButton.click();
 
-			await expect(secondCustomElementInput).toHaveValue(
+			await expect(secondCustomElementSearchInput).toHaveValue(
 				'AfterDisconnect'
 			);
-			await expect(firstCustomElementInput).toHaveValue('');
+			await expect(firstCustomElementSearchInput).toHaveValue('');
 		});
 	}
 );
