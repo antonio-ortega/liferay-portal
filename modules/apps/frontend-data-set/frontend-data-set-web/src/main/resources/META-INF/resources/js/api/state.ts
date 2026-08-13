@@ -50,5 +50,16 @@ interface FDSAtomStateFilter {
 	 */
 	readonly odataFilterString?: string;
 
+	/**
+	 * What is picked now, shaped after the filter type. Only the selection
+	 * members are declared, because those are the only ones handed over: the
+	 * data set copies `preloadedData` in here while preloading, so this covers
+	 * both what the configuration picked and what the user picked since.
+	 */
+	readonly selectedData?: {
+		readonly exclude?: boolean;
+		readonly selectedItems?: ReadonlyArray<{readonly value: string}>;
+	} | null;
+
 	readonly type: string;
 }

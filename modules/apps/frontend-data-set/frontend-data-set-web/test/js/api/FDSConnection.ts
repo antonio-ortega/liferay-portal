@@ -66,6 +66,10 @@ const DECLARED_FILTERS = [
 		label: 'Date',
 		max: {day: 22, month: 11, year: 2024},
 		min: {day: 0, month: 0, year: 0},
+		selectedData: {
+			from: {day: 1, month: 1, year: 2024},
+			to: {day: 22, month: 11, year: 2024},
+		},
 		type: 'dateRange' as const,
 	},
 	{
@@ -125,6 +129,11 @@ describe('FDSConnection filters', () => {
 				id: 'color',
 				label: 'Color',
 				odataFilterString: "color in ('Blue', 'Green')",
+
+				// what the configuration picked, which the data set copies
+				// into the selection while preloading
+
+				selection: {exclude: false, values: ['Blue', 'Green']},
 				type: 'selection',
 			},
 			{
@@ -164,8 +173,38 @@ describe('FDSConnection filters', () => {
 			'id',
 			'label',
 			'odataFilterString',
+			'selection',
 			'type',
 		]);
+	});
+
+	it('hands over no selection for a filter that has nothing picked', async () => {
+		await connect();
+
+		expect(connection.getFilters()?.[1]).not.toHaveProperty('selection');
+	});
+
+	it('hands over no selection for a filter a consumer could not render', async () => {
+		await connect();
+
+		expect(connection.getFilters()?.[2]).not.toHaveProperty('selection');
+	});
+
+	it('keeps the values it declared when the consumer changes what it got', async () => {
+		await connect();
+
+		connection.setFilters([
+			{id: 'color', odataFilterString: "color eq 'Red'"},
+		]);
+
+		const filters = connection.getFilters() as Array<FDSFilterInfo>;
+
+		filters[0].selection?.values.push('Yellow');
+
+		expect(connection.getFilters()?.[0].selection).toEqual({
+			exclude: false,
+			values: ['Blue', 'Green'],
+		});
 	});
 
 	it('keeps the filters it declared when the consumer changes what it got', async () => {

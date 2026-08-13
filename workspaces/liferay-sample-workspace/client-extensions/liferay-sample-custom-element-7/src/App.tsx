@@ -94,6 +94,18 @@ function App({fdsName}: AppProps) {
 						fdsConnectionRef.current?.getFilters() ?? [];
 
 					setDeclaredFilters(filters);
+
+					// Start the picker where the data set left off, so that
+					// taking the filtering over does not widen the results
+					// behind the user.
+
+					const colorFilter = filters.find(
+						({id}) => id === COLOR_FILTER_ID
+					);
+
+					if (colorFilter?.selection) {
+						setColorSelection(colorFilter.selection);
+					}
 				}
 			}
 		);

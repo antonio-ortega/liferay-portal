@@ -46,20 +46,59 @@ type FDSAtomStateFilter = NonNullable<FDSAtomState['filters']>[number];
  * configuration: it writes the expression into the state as it applies a
  * filter and drops it as it clears one, so passing it back is exactly what the
  * data set would have sent, for any filter type it comes to support.
+ *
+ * `selection` is the one exception, and it is here for the consumer that
+ * replaces a filter rather than obeys it: such a consumer draws the control,
+ * so it needs what is picked in the terms it draws with, or its control opens
+ * blank while the data set is filtering and the takeover silently widens the
+ * results. It covers selection filters alone, since a consumer replacing a
+ * filter of another kind has no use for a shape it cannot render, and the
+ * values come without labels because whoever draws the control has its own.
  */
 function toFilterInfo({
 	active,
 	id,
 	label,
 	odataFilterString,
+	selectedData,
 	type,
 }: FDSAtomStateFilter): FDSFilterInfo {
-	return {
+	const filterInfo = {
 		active: Boolean(active),
 		id,
 		label,
 		odataFilterString: odataFilterString ?? '',
 		type,
+	};
+
+	if (type !== 'selection' || !selectedData?.selectedItems?.length) {
+		return filterInfo;
+	}
+
+	return {
+		...filterInfo,
+		selection: {
+			exclude: Boolean(selectedData.exclude),
+			values: selectedData.selectedItems.map(({value}) => value),
+		},
+	};
+}
+
+/**
+ * A copy a consumer owns, down to the selected values: what it does to what it
+ * got back must not reach what the next call returns.
+ */
+function copyFilterInfo({
+	selection,
+	...filterInfo
+}: FDSFilterInfo): FDSFilterInfo {
+	if (!selection) {
+		return filterInfo;
+	}
+
+	return {
+		...filterInfo,
+		selection: {exclude: selection.exclude, values: [...selection.values]},
 	};
 }
 
@@ -203,7 +242,7 @@ export class FDSConnection {
 
 		const filters = this.declaredFilters ?? this.readDeclaredFilters();
 
-		return filters.map((filter) => ({...filter}));
+		return filters.map(copyFilterInfo);
 	};
 
 	/**
