@@ -10,12 +10,7 @@ import type {
 	FDSConnectionInfo,
 	FDSConnectionOptions,
 	FDSConnectionStatus,
-	FDSFilterDate,
-	FDSFilterDateBound,
-	FDSFilterDateSelection,
 	FDSFilterInfo,
-	FDSSelectionFilterItem,
-	FDSSelectionFilterSelection,
 	FDSState,
 	FDSStateChangeCallback,
 } from '@liferay/js-api/data-set';
@@ -35,172 +30,43 @@ interface Selectors {
 
 type FDSAtomStateFilter = NonNullable<FDSAtomState['filters']>[number];
 
-type FDSAtomStateFilterData = FDSAtomStateFilter['selectedData'];
-
-type FDSAtomStateFilterDate = NonNullable<FDSAtomStateFilterData>['from'];
-
 /**
- * A date the data set would ignore reads as absent: it zeroes the parts of a
- * bound it does not mean to apply.
+ * A filter the data set declares, in the terms a consumer needs to obey it:
+ * what it is, whether the data set had it applied, and the expression it
+ * contributed while it did.
+ *
+ * What the filter offers and how to draw it are deliberately absent. A
+ * consumer that takes the filtering over renders its own controls, so the
+ * values, bounds, and selections behind them are its own business, and
+ * republishing the data set's filter model here would tie every filter feature
+ * it grows to this contract. A client extension that means to draw a filter
+ * the data set configures has the `FDSFilter` contract for it instead.
+ *
+ * `odataFilterString` is the data set's own work rather than a reading of the
+ * configuration: it writes the expression into the state as it applies a
+ * filter and drops it as it clears one, so passing it back is exactly what the
+ * data set would have sent, for any filter type it comes to support.
  */
-function toFilterDate(
-	date: FDSAtomStateFilterDate | undefined
-): FDSFilterDate | null {
-	if (!date?.year) {
-		return null;
-	}
-
-	const {day, hour, minute, month, offset, year} = date;
-
+function toFilterInfo({
+	active,
+	id,
+	label,
+	odataFilterString,
+	type,
+}: FDSAtomStateFilter): FDSFilterInfo {
 	return {
-		day: day ?? 0,
-		month: month ?? 0,
-		year,
-		...(hour === undefined ? {} : {hour}),
-		...(minute === undefined ? {} : {minute}),
-		...(offset === undefined ? {} : {offset}),
-	};
-}
-
-function toFilterDateBound(
-	bound: FDSAtomStateFilter['max']
-): FDSFilterDateBound | null {
-
-	// The data set serializes a bound that follows the clock as "now".
-
-	if (typeof bound === 'string') {
-		return 'now';
-	}
-
-	return toFilterDate(bound);
-}
-
-function toFilterDateSelection(
-	data: FDSAtomStateFilterData
-): FDSFilterDateSelection | null {
-	const from = toFilterDate(data?.from);
-	const to = toFilterDate(data?.to);
-
-	if (!from && !to) {
-		return null;
-	}
-
-	return {from, to};
-}
-
-/**
- * Selected items reach the state without a label when the data set restores
- * them from the URL, so they are named after the values the filter offers.
- */
-function toSelectionFilterSelection(
-	data: FDSAtomStateFilterData,
-	items: Array<FDSSelectionFilterItem>
-): FDSSelectionFilterSelection | null {
-	if (!data?.selectedItems?.length) {
-		return null;
-	}
-
-	return {
-		exclude: Boolean(data.exclude),
-		items: data.selectedItems.map(({label, value}) => ({
-			label:
-				label ??
-				items.find((item) => item.value === value)?.label ??
-				value,
-			value,
-		})),
-	};
-}
-
-/**
- * Resolves a filter the data set declares into the shape a consumer reads,
- * which describes what the filter matches rather than how the data set tracks
- * it. Every member is copied out of the state, so the result owns its data:
- * the state it came from is deep frozen, and it goes on changing while this
- * snapshot must not.
- */
-function toFilterInfo(
-	fdsAtomStateFilter: FDSAtomStateFilter
-): FDSFilterInfo | null {
-	const {
-		active,
-		entityFieldType,
-		id,
-		label,
-		odataFilterString,
-		preloadedData,
-		selectedData,
-		type,
-	} = fdsAtomStateFilter;
-
-	const filterInfo = {
 		active: Boolean(active),
-		entityFieldType,
 		id,
 		label,
 		odataFilterString: odataFilterString ?? '',
+		type,
 	};
-
-	if (type === 'dateRange' || type === 'dateTimeRange') {
-		return {
-			...filterInfo,
-			max: toFilterDateBound(fdsAtomStateFilter.max),
-			min: toFilterDateBound(fdsAtomStateFilter.min),
-			preselection: toFilterDateSelection(preloadedData),
-			selection: toFilterDateSelection(selectedData),
-			type,
-		};
-	}
-
-	if (type === 'selection') {
-		const {
-			apiURL,
-			autocompleteEnabled,
-			inputPlaceholder,
-			itemKey,
-			itemLabel,
-		} = fdsAtomStateFilter;
-
-		const items = (fdsAtomStateFilter.items ?? []).map(
-			({label, value}) => ({
-				label: label ?? value,
-				value,
-			})
-		);
-
-		return {
-			...filterInfo,
-			autocomplete:
-				autocompleteEnabled && apiURL
-					? {
-							apiURL,
-							itemKey: itemKey ?? '',
-							itemLabel: itemLabel ?? '',
-							placeholder: inputPlaceholder ?? '',
-						}
-					: null,
-			items,
-			multiple: Boolean(fdsAtomStateFilter.multiple),
-			preselection: toSelectionFilterSelection(preloadedData, items),
-			selection: toSelectionFilterSelection(selectedData, items),
-			type,
-		};
-	}
-
-	// Whatever is left is rendered by a client extension, which reaches its
-	// own extension through the FDSFilter contract instead.
-
-	return null;
 }
 
 function toFilterInfos(
 	fdsAtomState: Liferay.State.Immutable<FDSAtomState>
 ): Array<FDSFilterInfo> {
-	return (fdsAtomState.filters ?? [])
-		.map(toFilterInfo)
-		.filter(
-			(filterInfo): filterInfo is FDSFilterInfo => filterInfo !== null
-		);
+	return (fdsAtomState.filters ?? []).map(toFilterInfo);
 }
 
 export class FDSConnection {
@@ -314,9 +180,11 @@ export class FDSConnection {
 	};
 
 	/**
-	 * The filters the data set declares in its configuration, here to be
-	 * obeyed, or ignored, by whoever takes the filtering over through
-	 * `setFilters()`.
+	 * The filters the data set declares, each with the expression it
+	 * contributes, here to be obeyed or ignored by whoever takes the filtering
+	 * over through `setFilters()`. Obeying one costs nothing more than passing
+	 * it back, so a consumer needs to understand no filter it does not mean to
+	 * replace.
 	 *
 	 * A data set that still owns its filtering goes on showing its filter UI,
 	 * so what it declares is read afresh on every call and follows what the

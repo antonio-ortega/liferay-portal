@@ -8,10 +8,7 @@
 // deals with it: a consumer influences the data set through the FDSConnection
 // API alone, and the package publishes the shared contracts only.
 
-import type {
-	FDSFilterEntityFieldType,
-	FDSState,
-} from '@liferay/js-api/data-set';
+import type {FDSState} from '@liferay/js-api/data-set';
 
 /**
  * The whole shape of the data set atom, as the connection reads it: the
@@ -31,74 +28,27 @@ export interface FDSAtomState extends FDSState {
 }
 
 /**
- * A declared filter as it sits in the state, which is how the data set
- * serializes its configuration and then tracks what the user picked. The
- * connection resolves this into the `FDSFilterInfo` a consumer reads: the
- * members below are unset or zeroed depending on the filter type and on
- * whether the filter is applied, and only some of them mean anything to a
- * consumer.
+ * A declared filter as the connection needs to read it, which is the part of
+ * the data set's filter state a consumer can act on without understanding the
+ * filter. Everything the data set tracks to draw the filter and to work out
+ * what it matches is left out, so a filter type it grows a new member for
+ * needs nothing here.
+ *
+ * `type` is a plain string on purpose: a consumer reads it to recognize the
+ * filters it means to replace, and a type the data set adds arrives as a value
+ * it does not know rather than as a change to this contract.
  */
 interface FDSAtomStateFilter {
 	readonly active?: boolean;
-	readonly apiURL?: string;
-	readonly autocompleteEnabled?: boolean;
-	readonly entityFieldType: FDSFilterEntityFieldType;
 	readonly id: string;
-	readonly inputPlaceholder?: string;
-	readonly itemKey?: string;
-	readonly itemLabel?: string;
-	readonly items?: ReadonlyArray<FDSAtomStateFilterItem>;
 	readonly label: string;
-	readonly max?: FDSAtomStateFilterDate | 'now';
-	readonly min?: FDSAtomStateFilterDate | 'now';
-	readonly multiple?: boolean;
+
+	/**
+	 * What the data set contributes to the request for this filter, which it
+	 * writes as it applies the filter and drops as it clears it. Absent for a
+	 * filter the data set is not applying.
+	 */
 	readonly odataFilterString?: string;
 
-	/**
-	 * What the configuration picks on the data set's behalf. The data set
-	 * copies it into `selectedData` while preloading the filters, so a filter
-	 * with preloaded data starts out applied.
-	 */
-	readonly preloadedData?: FDSAtomStateFilterData | null;
-
-	/**
-	 * What is picked now, which the data set clears whenever the filter is
-	 * deactivated. Shaped after the filter type: selected items for a
-	 * selection filter, a range for a date one.
-	 */
-	readonly selectedData?: FDSAtomStateFilterData | null;
-	readonly type: FDSAtomStateFilterType;
-}
-
-/**
- * The filter types the data set holds in its state. A `clientExtension`
- * filter never reaches a consumer through the connection: it reaches its own
- * extension through the `FDSFilter` contract, which describes both what it
- * matches and how it draws it.
- */
-type FDSAtomStateFilterType =
-	| 'clientExtension'
-	| 'dateRange'
-	| 'dateTimeRange'
-	| 'selection';
-
-interface FDSAtomStateFilterData {
-	readonly exclude?: boolean;
-	readonly from?: FDSAtomStateFilterDate | null;
-	readonly selectedItems?: ReadonlyArray<FDSAtomStateFilterItem>;
-	readonly to?: FDSAtomStateFilterDate | null;
-}
-
-interface FDSAtomStateFilterDate {
-	readonly day?: number;
-	readonly hour?: number;
-	readonly minute?: number;
-	readonly month?: number;
-	readonly offset?: string;
-	readonly year?: number;
-}
-
-interface FDSAtomStateFilterItem {
-	readonly label?: string;
-	readonly value: string;
+	readonly type: string;
 }

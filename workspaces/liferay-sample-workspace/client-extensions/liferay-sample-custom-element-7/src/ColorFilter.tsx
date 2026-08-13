@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {FDSSelectionFilterItem} from '@liferay/frontend-data-set-web/api';
 import React from 'react';
 
 /**
@@ -17,9 +16,10 @@ export interface ColorSelection {
 }
 
 /**
- * The color to paint each swatch with, which the data set does not hand over:
- * it declares the values a filter offers, not how to draw them. A value with
- * no entry here still gets a chip, only an empty one.
+ * The colors this element offers, and the swatch it paints each one with. Both
+ * are its own business: it draws its own filter UI, so the data set hands over
+ * which filters it declares and what each one contributes, not the values
+ * behind them nor how to render them.
  */
 const SWATCHES: Record<string, string> = {
 	Blue: '#3a76e0',
@@ -28,17 +28,28 @@ const SWATCHES: Record<string, string> = {
 	Yellow: '#f0b429',
 };
 
+const COLORS: Array<ColorItem> = Object.keys(SWATCHES).map((value) => ({
+	label: value,
+	value,
+}));
+
+interface ColorItem {
+	label: string;
+	value: string;
+}
+
 /**
- * The OData expression a selection filter turns into, built the way the data
- * set builds it for a string field, so that what this element applies is
- * indistinguishable from what the data set would have applied on its own.
+ * The OData expression this element applies, which it writes itself: taking
+ * the filtering over means owning the whole expression, so how a selection
+ * turns into one is the consumer's call rather than something the data set
+ * hands down.
  *
  * An empty selection yields nothing rather than an expression matching
  * nothing: picking no color filters by no color.
  */
 export function getSelectionOdataFilterString(
 	id: string,
-	{exclude, multiple, values}: ColorSelection & {multiple: boolean}
+	{exclude, values}: ColorSelection
 ): string {
 	if (!values.length) {
 		return '';
@@ -48,7 +59,7 @@ export function getSelectionOdataFilterString(
 		(value) => `'${value.replace(/'/g, "''")}'`
 	);
 
-	if (values.length === 1 && !multiple) {
+	if (values.length === 1) {
 		return `${id} ${exclude ? 'ne' : 'eq'} ${quotedValues[0]}`;
 	}
 
@@ -61,16 +72,13 @@ export function getSelectionOdataFilterString(
  * What the selection amounts to, in the terms the rows are in rather than the
  * ones the filter is in.
  */
-function describeSelection(
-	{exclude, values}: ColorSelection,
-	items: Array<FDSSelectionFilterItem>
-): string {
+function describeSelection({exclude, values}: ColorSelection): string {
 	if (!values.length) {
 		return 'Every color';
 	}
 
 	const labels = values.map(
-		(value) => items.find((item) => item.value === value)?.label ?? value
+		(value) => COLORS.find((color) => color.value === value)?.label ?? value
 	);
 
 	return `${exclude ? 'Every color but ' : ''}${labels.join(', ')}`;
@@ -78,19 +86,12 @@ function describeSelection(
 
 interface ColorFilterProps {
 	disabled: boolean;
-	items: Array<FDSSelectionFilterItem>;
 	label: string;
 	onChange: (colorSelection: ColorSelection) => void;
 	selection: ColorSelection;
 }
 
-function ColorFilter({
-	disabled,
-	items,
-	label,
-	onChange,
-	selection,
-}: ColorFilterProps) {
+function ColorFilter({disabled, label, onChange, selection}: ColorFilterProps) {
 	const {exclude, values} = selection;
 
 	const toggleValue = (value: string) =>
@@ -144,7 +145,7 @@ function ColorFilter({
 			</div>
 
 			<div className="d-flex flex-wrap gap-sm">
-				{items.map((item) => {
+				{COLORS.map((item) => {
 					const {value} = item;
 
 					const selected = values.includes(value);
@@ -180,7 +181,7 @@ function ColorFilter({
 			</div>
 
 			<small className="d-block mt-2">
-				{describeSelection(selection, items)}
+				{describeSelection(selection)}
 			</small>
 		</div>
 	);

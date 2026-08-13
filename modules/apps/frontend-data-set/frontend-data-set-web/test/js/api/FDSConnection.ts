@@ -116,82 +116,56 @@ describe('FDSConnection filters', () => {
 		(Liferay.on as jest.Mock).mockReset();
 	});
 
-	it('describes what a selection filter matches, and what it preselects', async () => {
+	it('hands over what it takes to obey every declared filter', async () => {
 		await connect();
 
-		expect(connection.getFilters()?.[0]).toEqual({
-			active: true,
-			autocomplete: null,
-			entityFieldType: 'string',
-			id: 'color',
-			items: [
-				{label: 'Blue', value: 'Blue'},
-				{label: 'Green', value: 'Green'},
-				{label: 'Red', value: 'Red'},
-			],
-			label: 'Color',
-			multiple: true,
-			odataFilterString: "color in ('Blue', 'Green')",
-
-			// named after the values the filter offers, since the data set
-			// leaves the label out of what it restores from the URL
-
-			preselection: {
-				exclude: false,
-				items: [
-					{label: 'Blue', value: 'Blue'},
-					{label: 'Green', value: 'Green'},
-				],
+		expect(connection.getFilters()).toEqual([
+			{
+				active: true,
+				id: 'color',
+				label: 'Color',
+				odataFilterString: "color in ('Blue', 'Green')",
+				type: 'selection',
 			},
-			selection: {
-				exclude: false,
-				items: [
-					{label: 'Blue', value: 'Blue'},
-					{label: 'Green', value: 'Green'},
-				],
+			{
+				active: false,
+				id: 'title',
+				label: 'Title',
+				odataFilterString: '',
+				type: 'selection',
 			},
-			type: 'selection',
-		});
+			{
+				active: false,
+				id: 'date',
+				label: 'Date',
+				odataFilterString: '',
+				type: 'dateRange',
+			},
+
+			// A filter another client extension draws still contributes an
+			// expression, so a consumer taking the filtering over has to be
+			// able to obey it.
+
+			{
+				active: false,
+				id: 'custom',
+				label: 'Custom',
+				odataFilterString: '',
+				type: 'clientExtension',
+			},
+		]);
 	});
 
-	it('describes where an autocomplete filter takes its values from', async () => {
+	it('leaves the data set its own filter model', async () => {
 		await connect();
 
-		expect(connection.getFilters()?.[1]).toEqual({
-			active: false,
-			autocomplete: {
-				apiURL: 'o/c/fdssamples',
-				itemKey: 'title',
-				itemLabel: 'title',
-				placeholder: 'Search titles',
-			},
-			entityFieldType: 'string',
-			id: 'title',
-			items: [],
-			label: 'Title',
-			multiple: true,
-			odataFilterString: '',
-			preselection: null,
-			selection: null,
-			type: 'selection',
-		});
-	});
-
-	it('describes the bounds of a date range filter, dropping the ones the data set ignores', async () => {
-		await connect();
-
-		expect(connection.getFilters()?.[2]).toEqual({
-			active: false,
-			entityFieldType: 'date',
-			id: 'date',
-			label: 'Date',
-			max: {day: 22, month: 11, year: 2024},
-			min: null,
-			odataFilterString: '',
-			preselection: null,
-			selection: null,
-			type: 'dateRange',
-		});
+		expect(Object.keys(connection.getFilters()?.[0] ?? {}).sort()).toEqual([
+			'active',
+			'id',
+			'label',
+			'odataFilterString',
+			'type',
+		]);
 	});
 
 	it('keeps the filters it declared when the consumer changes what it got', async () => {
@@ -202,7 +176,7 @@ describe('FDSConnection filters', () => {
 		filters.push(filters[0]);
 		filters[0].label = 'Changed';
 
-		expect(connection.getFilters()).toHaveLength(3);
+		expect(connection.getFilters()).toHaveLength(4);
 		expect(connection.getFilters()?.[0].label).toBe('Color');
 	});
 
@@ -239,6 +213,7 @@ describe('FDSConnection filters', () => {
 			expect.objectContaining({id: 'color'}),
 			expect.objectContaining({id: 'title'}),
 			expect.objectContaining({id: 'date'}),
+			expect.objectContaining({id: 'custom'}),
 		]);
 	});
 
@@ -252,15 +227,6 @@ describe('FDSConnection filters', () => {
 		};
 
 		expect(fdsState.search.query).toBe('');
-	});
-
-	it('leaves out the filters another client extension renders', async () => {
-		await connect();
-
-		expect(connection.getFilters()).toHaveLength(3);
-		expect(connection.getFilters()?.some(({id}) => id === 'custom')).toBe(
-			false
-		);
 	});
 
 	it('takes the filtering over when the consumer sets its own filters', async () => {

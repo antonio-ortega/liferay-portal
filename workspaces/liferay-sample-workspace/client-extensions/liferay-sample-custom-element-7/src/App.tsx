@@ -18,8 +18,6 @@ import {
 	FDSConnectionFilter,
 	FDSConnectionInfo,
 	FDSConnectionStatus,
-	FDSFilterDate,
-	FDSFilterDateBound,
 	FDSFilterInfo,
 } from '@liferay/frontend-data-set-web/api';
 import React, {useEffect, useRef, useState} from 'react';
@@ -45,67 +43,6 @@ const PLACEHOLDERS: Record<FDSConnectionStatus, string> = {
 	ready: 'Type search query...',
 	timeout: 'Search is not available',
 };
-
-const pad = (value: number) => String(value).padStart(2, '0');
-
-function formatDate(date: FDSFilterDate | null): string {
-	if (!date) {
-		return 'any';
-	}
-
-	const {day, hour, minute, month, year} = date;
-
-	const time = hour === undefined ? '' : ` ${pad(hour)}:${pad(minute ?? 0)}`;
-
-	return `${year}-${pad(month)}-${pad(day)}${time}`;
-}
-
-function formatDateBound(bound: FDSFilterDateBound | null): string {
-	return bound === 'now' ? 'now' : formatDate(bound);
-}
-
-/**
- * What a filter matches, read off the description the data set hands over.
- * Narrowing on the type is what gives access to it.
- */
-function describeFilter(filter: FDSFilterInfo): string {
-	if (filter.type === 'selection') {
-		if (filter.autocomplete) {
-			return `values from ${filter.autocomplete.apiURL}`;
-		}
-
-		return `values: ${filter.items.map(({label}) => label).join(', ')}`;
-	}
-
-	return `between ${formatDateBound(filter.min)} and ${formatDateBound(
-		filter.max
-	)}`;
-}
-
-/**
- * What the data set would have filtered by on its own, which is where a
- * consumer starts from to behave the way it would have.
- */
-function describePreselection(filter: FDSFilterInfo): string | null {
-	if (filter.type === 'selection' && filter.preselection) {
-		const {exclude, items} = filter.preselection;
-
-		return `${exclude ? 'all but ' : ''}${items
-			.map(({label}) => label)
-			.join(', ')}`;
-	}
-
-	if (
-		(filter.type === 'dateRange' || filter.type === 'dateTimeRange') &&
-		filter.preselection
-	) {
-		const {from, to} = filter.preselection;
-
-		return `${formatDate(from)} to ${formatDate(to)}`;
-	}
-
-	return null;
-}
 
 /**
  * A heading for one of the things this element drives, so that the search box
@@ -157,26 +94,6 @@ function App({fdsName}: AppProps) {
 						fdsConnectionRef.current?.getFilters() ?? [];
 
 					setDeclaredFilters(filters);
-
-					const colorFilter = filters.find(
-						({id}) => id === COLOR_FILTER_ID
-					);
-
-					if (colorFilter?.type === 'selection') {
-						const selection =
-							colorFilter.selection ?? colorFilter.preselection;
-
-						setColorSelection(
-							selection
-								? {
-										exclude: selection.exclude,
-										values: selection.items.map(
-											({value}) => value
-										),
-									}
-								: NO_COLORS
-						);
-					}
 				}
 			}
 		);
@@ -203,11 +120,7 @@ function App({fdsName}: AppProps) {
 
 	const colorOdataFilterString = getSelectionOdataFilterString(
 		COLOR_FILTER_ID,
-		{
-			...colorSelection,
-			multiple:
-				colorFilter?.type === 'selection' ? colorFilter.multiple : true,
-		}
+		colorSelection
 	);
 
 	const rawOdataFilterString = customExpression.trim();
@@ -303,12 +216,10 @@ function App({fdsName}: AppProps) {
 					/>
 				) : null}
 
-				{colorFilterMode === 'picker' &&
-				colorFilter?.type === 'selection' ? (
+				{colorFilterMode === 'picker' ? (
 					<ColorFilter
 						disabled={disabled}
-						items={colorFilter.items}
-						label={colorFilter.label}
+						label={colorFilter?.label ?? 'Color'}
 						onChange={setColorSelection}
 						selection={colorSelection}
 					/>
@@ -354,14 +265,6 @@ function App({fdsName}: AppProps) {
 										'(not applied by the data set)'}
 								</code>
 							</label>
-
-							<small className="d-block text-secondary">
-								{describeFilter(filter)}
-
-								{describePreselection(filter)
-									? `, preselected: ${describePreselection(filter)}`
-									: ''}
-							</small>
 						</div>
 					))
 				) : (
