@@ -8,11 +8,10 @@
 // types provided by "@liferay/js-api", so the value and its types come from a
 // single import.
 
-// Pair this element with a data set whose "showFilters" prop is false, set
-// through a props transformer: filtering belongs either to the data set or to
-// this element, never to both. From the first setFilters() call on, the
-// filters the data set declares no longer reach the request, so its dropdown
-// would no longer tell the truth.
+// Filtering belongs either to the data set or to this element, never to both.
+// The data set sorts that out on its own: from the first setFilters() call on,
+// the filters it declares no longer reach the request, so it stops showing a
+// dropdown that would no longer tell the truth.
 
 import {
 	FDSConnection,

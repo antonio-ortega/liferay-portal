@@ -7,6 +7,7 @@ import {EEntityFieldType} from '../../../src/main/resources/META-INF/resources/m
 import {
 	IConnectedFDSState,
 	getOdataFiltersStrings,
+	isFilteringDelegated,
 } from '../../../src/main/resources/META-INF/resources/utils/filters/getOdataFiltersStrings';
 import {
 	IBaseFilterState,
@@ -96,5 +97,38 @@ describe('getOdataFiltersStrings', () => {
 		};
 
 		expect(getOdataFiltersStrings(fdsState)).toEqual([]);
+	});
+});
+
+describe('isFilteringDelegated', () => {
+	it('leaves the filtering with a data set no connection took over', () => {
+		const fdsState: IFDSState = {
+			filters: [selectionFilter('status', [{value: 'approved'}])],
+			search: {query: ''},
+		};
+
+		expect(isFilteringDelegated(fdsState)).toBe(false);
+	});
+
+	it('delegates the filtering once a connection applies expressions', () => {
+		const fdsState: IConnectedFDSState = {
+			connectionFilters: [
+				{id: 'status', odataFilterString: "status eq 'draft'"},
+			],
+			filters: [selectionFilter('status', [{value: 'approved'}])],
+			search: {query: ''},
+		};
+
+		expect(isFilteringDelegated(fdsState)).toBe(true);
+	});
+
+	it('keeps the filtering delegated after a connection drops its expressions', () => {
+		const fdsState: IConnectedFDSState = {
+			connectionFilters: [],
+			filters: [selectionFilter('status', [{value: 'approved'}])],
+			search: {query: ''},
+		};
+
+		expect(isFilteringDelegated(fdsState)).toBe(true);
 	});
 });

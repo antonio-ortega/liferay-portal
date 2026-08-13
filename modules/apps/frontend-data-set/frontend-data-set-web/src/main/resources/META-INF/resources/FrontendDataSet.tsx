@@ -59,7 +59,10 @@ import {readConfigFromURL} from './utils/configInURL';
 import EVENTS from './utils/eventsDefinitions';
 import {activateFilter} from './utils/filters/activateFilter';
 import {deactivateFilter} from './utils/filters/deactivateFilter';
-import {getOdataFiltersStrings} from './utils/filters/getOdataFiltersStrings';
+import {
+	getOdataFiltersStrings,
+	isFilteringDelegated,
+} from './utils/filters/getOdataFiltersStrings';
 import {getOrCreateFDSAtom} from './utils/getOrCreateFDSAtom';
 import getRandomId from './utils/getRandomId';
 
@@ -145,7 +148,6 @@ const FrontendDataSetContent = ({
 	selectionType,
 	showBulkActionsManagementBar = true,
 	showBulkActionsManagementBarActions = true,
-	showFilters = true,
 	showManagementBar = true,
 	showNavBarWhenSelected = false,
 	showPagination = true,
@@ -703,24 +705,31 @@ const FrontendDataSetContent = ({
 		sorts,
 	]);
 
+	// Filtering belongs either to this data set or to a connection that took it
+	// over, never to both, so a data set whose filtering is delegated stops
+	// offering controls that no longer tell the truth about the results.
+
+	const filteringDelegated = isFilteringDelegated(globalFDSState);
+
 	const onClearFilters = useCallback(() => {
 		const unfrozenGlobalFDSState: IFDSState = deepClone(globalFDSState);
 
-		// Hidden filters must survive a clear: the user cannot see them, so
-		// removing them would silently change the results.
+		// Hidden filters must survive a clear: they are out of the request
+		// already, and deactivating them would persist a choice the user never
+		// made to a load where nothing takes the filtering over.
 
-		const filters = showFilters
-			? unfrozenGlobalFDSState.filters.map((filter) =>
+		const filters = filteringDelegated
+			? unfrozenGlobalFDSState.filters
+			: unfrozenGlobalFDSState.filters.map((filter) =>
 					deactivateFilter(filter)
-				)
-			: unfrozenGlobalFDSState.filters;
+				);
 
 		setGlobalFDSState({
 			...unfrozenGlobalFDSState,
 			filters,
 			search: {query: ''},
 		});
-	}, [globalFDSState, setGlobalFDSState, showFilters]);
+	}, [filteringDelegated, globalFDSState, setGlobalFDSState]);
 
 	const skipSnapshotsUpdatedChangeRef = useRef(true);
 
@@ -1543,7 +1552,7 @@ const FrontendDataSetContent = ({
 				selectedItemsKey={selectedItemsKey}
 				selectedItemsValue={selectedItemsValue}
 				selectionType={selectionType}
-				showFilters={showFilters}
+				showFilters={!filteringDelegated}
 				showNavBarWhenSelected={showNavBarWhenSelected}
 				showSearch={showSearch}
 				showSelectAll={showSelectAll}
@@ -2025,11 +2034,11 @@ const FrontendDataSetContent = ({
 				onActionDropdownItemClick,
 				onBulkActionItemClick,
 				onClearResultsBar: () => {
-					const filters = showFilters
-						? unfrozenGlobalFDSState.filters.map((filter) =>
+					const filters = filteringDelegated
+						? unfrozenGlobalFDSState.filters
+						: unfrozenGlobalFDSState.filters.map((filter) =>
 								deactivateFilter(filter)
-							)
-						: unfrozenGlobalFDSState.filters;
+							);
 
 					setGlobalFDSState({
 						...unfrozenGlobalFDSState,

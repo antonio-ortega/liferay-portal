@@ -208,9 +208,16 @@ export class FDSConnection {
 
 	private atom!: Atom<FDSState>;
 	private clearFiltersWhenDisconnect = false;
+
+	/**
+	 * What the data set declared when the filtering changed hands, which is
+	 * unset until it does: its presence is what tells this connection that it
+	 * owns the filtering.
+	 */
+	private declaredFilters: Array<FDSFilterInfo> | null = null;
+
 	private disconnected = false;
 	private fdsName: string;
-	private filters: Array<FDSFilterInfo> | null = null;
 	private instanceId: number = ++FDSConnection.instanceCount;
 	private isReady = false;
 	private navigationHandle: {detach: () => void};
@@ -246,15 +253,6 @@ export class FDSConnection {
 						(get) => get(atom).search.query
 					),
 				};
-
-				// the filters the data set declares are fixed: it shows no
-				// filter UI while a connection drives the filtering, so one
-				// snapshot covers everything a consumer needs to know
-
-				const fdsAtomState: Liferay.State.Immutable<FDSAtomState> =
-					Liferay.State.read(atom);
-
-				this.filters = toFilterInfos(fdsAtomState);
 
 				// mark connection as ready, so getters/setters are unblocked and available to callbacks
 
@@ -316,29 +314,36 @@ export class FDSConnection {
 	};
 
 	/**
-	 * The filters the data set declares in its configuration, as they stood
-	 * when the connection became ready. Filtering belongs either to the data
-	 * set or to the consumer, never to both, so these never change behind the
-	 * consumer's back: they are here to be obeyed, or ignored, by whoever
-	 * takes the filtering over through `setFilters()`.
+	 * The filters the data set declares in its configuration, here to be
+	 * obeyed, or ignored, by whoever takes the filtering over through
+	 * `setFilters()`.
+	 *
+	 * A data set that still owns its filtering goes on showing its filter UI,
+	 * so what it declares is read afresh on every call and follows what the
+	 * user picks. The snapshot taken when the filtering changed hands wins from
+	 * then on: filtering belongs either to the data set or to the consumer,
+	 * never to both, so once a consumer owns it these stop changing behind its
+	 * back.
 	 *
 	 * Every call hands over its own copy, so that a consumer working on what
-	 * it got back cannot reach the snapshot the next call returns.
+	 * it got back cannot reach what the next call returns.
 	 */
 	getFilters = (): Array<FDSFilterInfo> | null => {
-		if (!this.isReady || !this.filters) {
+		if (!this.isReady) {
 			return null;
 		}
 
-		return this.filters.map((filter) => ({...filter}));
+		const filters = this.declaredFilters ?? this.readDeclaredFilters();
+
+		return filters.map((filter) => ({...filter}));
 	};
 
 	/**
 	 * Takes the filtering over with the given expressions, replacing whatever
 	 * a previous call passed. From the first call on, the filters the data set
-	 * declares no longer reach the request: the consumer owns the whole filter
-	 * expression, and obeys the declared filters by including the ones it
-	 * wants in the set it passes here.
+	 * declares no longer reach the request and it stops showing them: the
+	 * consumer owns the whole filter expression, and obeys the declared filters
+	 * by including the ones it wants in the set it passes here.
 	 */
 	setFilters = (filters: Array<FDSConnectionFilter>): void => {
 		if (!this.isReady) {
@@ -346,6 +351,14 @@ export class FDSConnection {
 		}
 
 		const current = Liferay.State.read(this.atom);
+
+		// The filtering changes hands on the first call, so keep what the data
+		// set declared as it stood at that moment: it shows no filter UI from
+		// here on, and what a consumer reads must stop moving under it.
+
+		if (!this.declaredFilters) {
+			this.declaredFilters = this.readDeclaredFilters();
+		}
 
 		this.clearFiltersWhenDisconnect = true;
 
@@ -385,10 +398,17 @@ export class FDSConnection {
 		this.subscriptions?.search?.dispose();
 		this.disconnected = true;
 		this.isReady = false;
-		this.filters = null;
+		this.declaredFilters = null;
 		this.navigationHandle.detach();
 		this.notifyStatus('disconnected');
 	};
+
+	private readDeclaredFilters(): Array<FDSFilterInfo> {
+		const fdsAtomState: Liferay.State.Immutable<FDSAtomState> =
+			Liferay.State.read(this.atom);
+
+		return toFilterInfos(fdsAtomState);
+	}
 
 	private warn(msg: string): void {
 		console.warn('[FDSConnection', this.instanceId, ']', msg);

@@ -390,7 +390,6 @@ export interface IFrontendDataSetProps {
 	selectionType?: 'single' | 'multiple';
 	showBulkActionsManagementBar?: boolean;
 	showBulkActionsManagementBarActions?: boolean;
-	showFilters?: boolean;
 	showManagementBar?: boolean;
 	showNavBarWhenSelected?: boolean;
 	showPagination?: boolean;
@@ -428,7 +427,14 @@ export interface IManagementBarProps {
 	selectedItemsKey: string;
 	selectedItemsValue: Array<any>;
 	selectionType?: 'multiple' | 'single';
+
+	/**
+	 * Whether the data set still owns its filtering, which it works out from
+	 * its state rather than taking from whoever renders it: unlike
+	 * `showSearch`, this is not a knob.
+	 */
 	showFilters?: boolean;
+
 	showNavBarWhenSelected?: boolean;
 	showSearch?: boolean;
 	showSelectAll?: boolean;

@@ -206,8 +206,26 @@ describe('FDSConnection filters', () => {
 		expect(connection.getFilters()?.[0].label).toBe('Color');
 	});
 
-	it('keeps handing over the declared filters after the state changes', async () => {
+	it('follows what the user picks while the data set still owns its filtering', async () => {
 		await connect();
+
+		State.write(
+			atom as never,
+			{
+				...readState(),
+				filters: [],
+			} as never
+		);
+
+		expect(connection.getFilters()).toEqual([]);
+	});
+
+	it('stops following the state once the consumer takes the filtering over', async () => {
+		await connect();
+
+		connection.setFilters([
+			{id: 'color', odataFilterString: "color eq 'Red'"},
+		]);
 
 		State.write(
 			atom as never,

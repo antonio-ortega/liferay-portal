@@ -70,7 +70,7 @@ describe('NavBar', () => {
 		expect(screen.queryByText('filter')).toBeInTheDocument();
 	});
 
-	it('does not render the filters dropdown when showFilters is false', () => {
+	it('does not render the filters dropdown when the data set no longer owns its filtering', () => {
 		renderNavBar({showFilters: false}, FILTERS);
 
 		expect(screen.queryByText('filter')).not.toBeInTheDocument();

@@ -57,3 +57,23 @@ export function getOdataFiltersStrings(
 		return filterImplementation.getOdataString(filter);
 	});
 }
+
+/**
+ * Whether a connection has taken the filtering over, which the presence of the
+ * slice it owns settles: it appears with the first `setFilters()` call and stays
+ * from then on, so that dropping the expressions a consumer applied does not
+ * hand the filtering back.
+ *
+ * The data set reads this to stop offering filter controls of its own, since
+ * filtering belongs either to the data set or to the consumer, never to both. A
+ * consumer that only reads the search never takes anything over, and leaves the
+ * filter UI where it was.
+ *
+ * The state is taken in either form the data set has it in, frozen as it holds
+ * it or cloned as it works on it, so that reading this costs no clone.
+ */
+export function isFilteringDelegated(
+	fdsState: IConnectedFDSState | Liferay.State.Immutable<IConnectedFDSState>
+): boolean {
+	return Boolean(fdsState.connectionFilters);
+}

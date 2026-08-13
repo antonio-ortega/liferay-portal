@@ -60,20 +60,20 @@ describe('ResultsBar', () => {
 		expect(screen.queryByText('Status:')).toBeInTheDocument();
 	});
 
-	it('does not resume the filters when showFilters is false', () => {
+	it('does not resume the filters the data set no longer owns', () => {
 		renderResultsBar({showFilters: false});
 
 		expect(screen.queryByText('Status:')).not.toBeInTheDocument();
 	});
 
-	it('keeps the search resume and its clear action when showFilters is false', () => {
+	it('keeps the search resume and its clear action while the filters are hidden', () => {
 		renderResultsBar({showFilters: false});
 
 		expect(screen.queryByText('liferay')).toBeInTheDocument();
 		expect(screen.queryByText('clear')).toBeInTheDocument();
 	});
 
-	it('does not render when showFilters is false and nothing else is resumable', () => {
+	it('does not render when the filters are hidden and nothing else is resumable', () => {
 		renderResultsBar({searchParam: '', showFilters: false});
 
 		expect(screen.queryByText('clear')).not.toBeInTheDocument();
