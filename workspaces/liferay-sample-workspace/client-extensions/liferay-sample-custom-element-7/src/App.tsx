@@ -25,9 +25,20 @@ import {
 } from '@liferay/frontend-data-set-web/api';
 import React, {useEffect, useRef, useState} from 'react';
 
+import ColorFilter, {
+	ColorSelection,
+	getSelectionOdataFilterString,
+} from './ColorFilter';
+
 interface AppProps {
 	fdsName: string;
 }
+
+const COLOR_FILTER_ID = 'color';
+
+const NO_COLORS: ColorSelection = {exclude: false, values: []};
+
+type ColorFilterMode = 'picker' | 'raw';
 
 const PLACEHOLDERS: Record<FDSConnectionStatus, string> = {
 	connecting: 'waiting',
@@ -97,7 +108,23 @@ function describePreselection(filter: FDSFilterInfo): string | null {
 	return null;
 }
 
+/**
+ * A heading for one of the things this element drives, so that the search box
+ * and the filters read as two separate jobs rather than one column of inputs.
+ */
+function SectionLabel({children}: {children: React.ReactNode}) {
+	return (
+		<div className="mb-2 section-label text-secondary text-uppercase">
+			{children}
+		</div>
+	);
+}
+
 function App({fdsName}: AppProps) {
+	const [colorFilterMode, setColorFilterMode] =
+		useState<ColorFilterMode>('picker');
+	const [colorSelection, setColorSelection] =
+		useState<ColorSelection>(NO_COLORS);
 	const [customExpression, setCustomExpression] = useState('');
 	const [disabled, setDisabled] = useState<boolean>(true);
 	const [declaredFilters, setDeclaredFilters] = useState<
@@ -127,9 +154,30 @@ function App({fdsName}: AppProps) {
 				// connection is ready is all it takes.
 
 				if (fdsConnectionInfo.status === 'ready') {
-					setDeclaredFilters(
-						fdsConnectionRef.current?.getFilters() ?? []
+					const filters: Array<FDSFilterInfo> =
+						fdsConnectionRef.current?.getFilters() ?? [];
+
+					setDeclaredFilters(filters);
+
+					const colorFilter = filters.find(
+						({id}) => id === COLOR_FILTER_ID
 					);
+
+					if (colorFilter?.type === 'selection') {
+						const selection =
+							colorFilter.selection ?? colorFilter.preselection;
+
+						setColorSelection(
+							selection
+								? {
+										exclude: selection.exclude,
+										values: selection.items.map(
+											({value}) => value
+										),
+									}
+								: NO_COLORS
+						);
+					}
 				}
 			}
 		);
@@ -148,26 +196,49 @@ function App({fdsName}: AppProps) {
 	const isObeyed = ({active, id}: FDSFilterInfo) =>
 		obeyedIds ? obeyedIds.includes(id) : active;
 
+	const colorFilter = declaredFilters.find(({id}) => id === COLOR_FILTER_ID);
+
+	const obeyableFilters = declaredFilters.filter(
+		({id}) => id !== COLOR_FILTER_ID
+	);
+
+	const colorOdataFilterString = getSelectionOdataFilterString(
+		COLOR_FILTER_ID,
+		{
+			...colorSelection,
+			multiple:
+				colorFilter?.type === 'selection' ? colorFilter.multiple : true,
+		}
+	);
+
+	const rawOdataFilterString = customExpression.trim();
+
+	const appliedFilter: FDSConnectionFilter =
+		colorFilterMode === 'raw'
+			? {id: 'custom', odataFilterString: rawOdataFilterString}
+			: {
+					id: COLOR_FILTER_ID,
+					odataFilterString: colorOdataFilterString,
+				};
+
 	const handleSearch = () => {
 		fdsConnectionRef.current?.setSearch(query);
 	};
 
 	const handleApplyFilters = () => {
-		const connectionFilters: Array<FDSConnectionFilter> = declaredFilters
+		const connectionFilters: Array<FDSConnectionFilter> = obeyableFilters
 			.filter((filter) => !!filter.odataFilterString && isObeyed(filter))
 			.map(({id, odataFilterString}) => ({id, odataFilterString}));
 
-		if (customExpression.trim()) {
-			connectionFilters.push({
-				id: 'custom',
-				odataFilterString: customExpression.trim(),
-			});
+		if (appliedFilter.odataFilterString) {
+			connectionFilters.push(appliedFilter);
 		}
 
 		fdsConnectionRef.current?.setFilters(connectionFilters);
 	};
 
 	const handleClearFilters = () => {
+		setColorSelection(NO_COLORS);
 		setCustomExpression('');
 		setObeyedIds([]);
 
@@ -185,38 +256,86 @@ function App({fdsName}: AppProps) {
 	};
 
 	return (
-		<div style={{display: 'grid', gap: '1rem', padding: '1rem'}}>
-			<div style={{display: 'flex', gap: '0.5rem'}}>
-				<input
-					className="form-control"
-					disabled={disabled}
-					onChange={(event) => setQuery(event.target.value)}
-					onKeyDown={(event) => {
-						if (event.key === 'Enter') {
-							handleSearch();
+		<div className="fds-connection-app">
+			<div>
+				<SectionLabel>Search</SectionLabel>
+
+				<div className="d-flex gap-sm">
+					<input
+						className="flex-grow-1 form-control"
+						disabled={disabled}
+						onChange={(event) => setQuery(event.target.value)}
+						onKeyDown={(event) => {
+							if (event.key === 'Enter') {
+								handleSearch();
+							}
+						}}
+						placeholder={placeholder}
+						type="text"
+						value={query}
+					/>
+
+					<button
+						className="btn btn-primary"
+						disabled={disabled}
+						onClick={handleSearch}
+						type="button"
+					>
+						Search
+					</button>
+				</div>
+			</div>
+
+			<hr className="m-0" />
+
+			<div>
+				<SectionLabel>Filters</SectionLabel>
+
+				{colorFilterMode === 'raw' ? (
+					<input
+						className="form-control"
+						disabled={disabled}
+						onChange={(event) =>
+							setCustomExpression(event.target.value)
 						}
-					}}
-					placeholder={placeholder}
-					style={{flex: 1}}
-					type="text"
-					value={query}
-				/>
+						placeholder="Filter with OData, such as name eq 'Liferay'"
+						type="text"
+						value={customExpression}
+					/>
+				) : null}
+
+				{colorFilterMode === 'picker' &&
+				colorFilter?.type === 'selection' ? (
+					<ColorFilter
+						disabled={disabled}
+						items={colorFilter.items}
+						label={colorFilter.label}
+						onChange={setColorSelection}
+						selection={colorSelection}
+					/>
+				) : null}
 
 				<button
-					className="btn btn-primary"
+					className="btn btn-unstyled link-primary mt-2"
 					disabled={disabled}
-					onClick={handleSearch}
+					onClick={() =>
+						setColorFilterMode(
+							colorFilterMode === 'raw' ? 'picker' : 'raw'
+						)
+					}
 					type="button"
 				>
-					Search
+					{colorFilterMode === 'raw'
+						? 'Pick colors instead'
+						: 'Write the expression by hand instead'}
 				</button>
 			</div>
 
 			<div>
-				<strong>Filters declared in the data set</strong>
+				<strong>Other filters declared in the data set</strong>
 
-				{declaredFilters.length ? (
-					declaredFilters.map((filter) => (
+				{obeyableFilters.length ? (
+					obeyableFilters.map((filter) => (
 						<div className="form-check" key={filter.id}>
 							<label>
 								<input
@@ -231,13 +350,13 @@ function App({fdsName}: AppProps) {
 
 								{filter.label}
 
-								<code style={{marginLeft: '0.5rem'}}>
+								<code className="ml-2 text-secondary">
 									{filter.odataFilterString ||
 										'(not applied by the data set)'}
 								</code>
 							</label>
 
-							<small style={{display: 'block'}}>
+							<small className="d-block text-secondary">
 								{describeFilter(filter)}
 
 								{describePreselection(filter)
@@ -247,23 +366,13 @@ function App({fdsName}: AppProps) {
 						</div>
 					))
 				) : (
-					<p>This data set declares no filter.</p>
+					<p className="text-secondary">
+						This data set declares no other filter.
+					</p>
 				)}
 			</div>
 
-			<div style={{display: 'flex', gap: '0.5rem'}}>
-				<input
-					className="form-control"
-					disabled={disabled}
-					onChange={(event) =>
-						setCustomExpression(event.target.value)
-					}
-					placeholder="Filter with OData, such as name eq 'Liferay'"
-					style={{flex: 1}}
-					type="text"
-					value={customExpression}
-				/>
-
+			<div className="d-flex gap-sm">
 				<button
 					className="btn btn-primary"
 					disabled={disabled}
@@ -281,6 +390,16 @@ function App({fdsName}: AppProps) {
 				>
 					Clear filters
 				</button>
+			</div>
+
+			<div className="card mb-0">
+				<div className="card-body">
+					<SectionLabel>What this element will apply</SectionLabel>
+
+					<code className="text-secondary">
+						{appliedFilter.odataFilterString || '(no filter)'}
+					</code>
+				</div>
 			</div>
 		</div>
 	);

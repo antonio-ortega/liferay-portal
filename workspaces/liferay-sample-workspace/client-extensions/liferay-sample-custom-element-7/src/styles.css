@@ -1,0 +1,47 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
+/* A client extension's stylesheet is injected into the page as a whole, not
+ * into this element alone, so every rule is scoped under the element's own
+ * tag. That name is already unique, which makes it a namespace no class
+ * prefix has to reinvent.
+ *
+ * Only what Clay has no class for lives here. Spacing, alignment, and colors
+ * it already covers stay as its utilities in the markup, which is what keeps
+ * this file short enough to read in one go. */
+
+liferay-sample-custom-element-7 .fds-connection-app {
+	display: grid;
+	gap: 1rem;
+	padding: 1rem;
+}
+
+/* Clay builds on Bootstrap 4, which predates the flexbox gap utilities, so
+ * the two spacings this element needs are declared rather than borrowed. */
+
+liferay-sample-custom-element-7 .gap-sm {
+	gap: 0.5rem;
+}
+
+liferay-sample-custom-element-7 .gap-md {
+	gap: 1rem;
+}
+
+liferay-sample-custom-element-7 .section-label {
+	font-size: 0.75rem;
+	font-weight: 600;
+	letter-spacing: 0.05em;
+}
+
+/* The data set declares which values the filter offers but not how to draw
+ * them, so the color arrives from the markup as a custom property. */
+
+liferay-sample-custom-element-7 .color-swatch {
+	background-color: var(--color-swatch, transparent);
+	border: 1px solid rgba(0, 0, 0, 0.2);
+	display: inline-block;
+	height: 0.875rem;
+	width: 0.875rem;
+}

@@ -2,6 +2,8 @@ assemble:
     -   from: build/static
         into: static
 liferay-sample-custom-element-7:
+    cssURLs:
+        -   index.*.css
     friendlyURLMapping: liferay-sample-custom-element-7
     htmlElementName: liferay-sample-custom-element-7
     instanceable: true

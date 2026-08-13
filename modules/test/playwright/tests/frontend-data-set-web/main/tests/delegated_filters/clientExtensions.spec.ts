@@ -42,9 +42,11 @@ let fdsPageTitle: string;
 let fdsPageUrl: string;
 
 /**
- * The Custom Element renders its search box first and the box that takes an
- * OData expression last, with a checkbox per filter the data set declares in
- * between, so the search box is the first text input.
+ * The Custom Element renders its search box first, so it is the first text
+ * input. The color picker that follows contributes buttons rather than inputs,
+ * and the box that takes an OData expression by hand replaces the picker only
+ * once asked for, so in the default state the search box is the only text
+ * input.
  */
 function getSearchInput(element: Locator) {
 	return element.locator('input[type="text"]').first();
@@ -214,6 +216,138 @@ test(
 			await fdsSearchButton.click();
 
 			await expect(customElementSearchInput).toHaveValue('Sample22');
+		});
+	}
+);
+
+test(
+	'Liferay Sample Custom Element 7 filters FDS Sample by color (Delegated Filters)',
+	{
+		tag: ['@LPD-96001'],
+	},
+	async ({page}) => {
+		const applyFiltersButton = customElement.getByRole('button', {
+			name: 'Apply filters',
+		});
+		const excludeButton = customElement.getByRole('button', {
+			name: 'Exclude',
+		});
+		const redChip = customElement.getByRole('button', {name: 'Red'});
+		const resetButton = customElement.getByRole('button', {name: 'Reset'});
+
+		// The color column renders through a cell renderer that draws green
+		// as an apple.
+
+		const blueCells = page.getByRole('cell', {name: 'Blue'});
+		const greenCells = page
+			.getByRole('cell', {name: 'Green'})
+			.or(page.getByRole('cell', {name: '🍏'}));
+		const redCells = page.getByRole('cell', {name: 'Red'});
+		const yellowCells = page.getByRole('cell', {name: 'Yellow'});
+
+		await test.step('The color picker starts off where the data set does, so no red row is listed', async () => {
+			await expect(redChip).toBeEnabled();
+			await expect(redChip).toHaveAttribute('aria-pressed', 'false');
+
+			await expect(async () => {
+				expect(await redCells.count()).toEqual(0);
+				expect(await blueCells.count()).toBeGreaterThan(0);
+			}).toPass();
+		});
+
+		await test.step('Picking red alone leaves only red rows', async () => {
+			await resetButton.click();
+			await redChip.click();
+
+			await expect(redChip).toHaveAttribute('aria-pressed', 'true');
+
+			await applyFiltersButton.click();
+
+			await expect(async () => {
+				expect(await redCells.count()).toBeGreaterThan(0);
+				expect(await blueCells.count()).toEqual(0);
+				expect(await greenCells.count()).toEqual(0);
+				expect(await yellowCells.count()).toEqual(0);
+			}).toPass();
+		});
+
+		await test.step('Excluding red instead drops every red row and keeps the rest', async () => {
+			await excludeButton.click();
+			await applyFiltersButton.click();
+
+			await expect(async () => {
+				expect(await redCells.count()).toEqual(0);
+				expect(await blueCells.count()).toBeGreaterThan(0);
+				expect(await greenCells.count()).toBeGreaterThan(0);
+				expect(await yellowCells.count()).toBeGreaterThan(0);
+			}).toPass();
+		});
+	}
+);
+
+test(
+	'Liferay Sample Custom Element 7 swaps the color picker for a hand-written expression (Delegated Filters)',
+	{
+		tag: ['@LPD-96001'],
+	},
+	async ({page}) => {
+		const applyFiltersButton = customElement.getByRole('button', {
+			name: 'Apply filters',
+		});
+		const pickColorsLink = customElement.getByRole('button', {
+			name: 'Pick colors instead',
+		});
+		const rawExpressionInput = customElement.locator(
+			'input[placeholder^="Filter with OData"]'
+		);
+		const redChip = customElement.getByRole('button', {name: 'Red'});
+		const writeByHandLink = customElement.getByRole('button', {
+			name: 'Write the expression by hand instead',
+		});
+
+		const redCells = page.getByRole('cell', {name: 'Red'});
+		const yellowCells = page.getByRole('cell', {name: 'Yellow'});
+
+		await test.step('The picker shows and the expression box stays out of the way', async () => {
+			await expect(redChip).toBeVisible();
+			await expect(rawExpressionInput).toBeHidden();
+			await expect(writeByHandLink).toBeVisible();
+		});
+
+		await test.step('Asking to write the expression by hand hides the picker', async () => {
+			await writeByHandLink.click();
+
+			await expect(rawExpressionInput).toBeVisible();
+			await expect(redChip).toBeHidden();
+			await expect(pickColorsLink).toBeVisible();
+		});
+
+		await test.step('The hand-written expression is what filters the data set', async () => {
+			await rawExpressionInput.fill("color eq 'Red'");
+
+			await applyFiltersButton.click();
+
+			await expect(async () => {
+				expect(await redCells.count()).toBeGreaterThan(0);
+				expect(await yellowCells.count()).toEqual(0);
+			}).toPass();
+		});
+
+		await test.step('Going back to the picker restores the colors it held and applies them again', async () => {
+			await pickColorsLink.click();
+
+			await expect(redChip).toBeVisible();
+			await expect(rawExpressionInput).toBeHidden();
+
+			// The picker kept the selection the data set preselected, which
+			// leaves out red.
+
+			await applyFiltersButton.click();
+
+			await expect(async () => {
+				expect(await redCells.count()).toEqual(0);
+				expect(await yellowCells.count()).toBeGreaterThan(0);
+			}).toPass();
 		});
 	}
 );

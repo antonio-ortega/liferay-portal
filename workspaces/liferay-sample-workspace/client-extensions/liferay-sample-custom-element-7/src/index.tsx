@@ -8,6 +8,8 @@ import {Root, createRoot} from 'react-dom/client';
 
 import App from './App';
 
+import './styles.css';
+
 // The "Delegated Filters" tab of the Frontend Data Set Sample widget: a data
 // set that declares filters and shows no filter UI, so that this element
 // provides it.
