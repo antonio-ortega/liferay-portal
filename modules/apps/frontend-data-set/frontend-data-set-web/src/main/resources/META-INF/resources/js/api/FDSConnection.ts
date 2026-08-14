@@ -30,6 +30,32 @@ interface Selectors {
 
 type FDSAtomStateFilter = NonNullable<FDSAtomState['filters']>[number];
 
+const pad = (value: number) => String(value).padStart(2, '0');
+
+/**
+ * An end of a range in the terms a date control reads and writes, which is
+ * "YYYY-MM-DD", or the same with a time when the filter tracks one.
+ *
+ * An end the data set would ignore reads as absent: it zeroes the parts of a
+ * bound it does not mean to apply, and a partial date is nothing a control can
+ * open on.
+ */
+function toRangeBound(
+	date: NonNullable<FDSAtomStateFilter['selectedData']>['from']
+): string | null {
+	if (!date?.day || !date?.month || !date?.year) {
+		return null;
+	}
+
+	const day = `${date.year}-${pad(date.month)}-${pad(date.day)}`;
+
+	if (date.hour === undefined) {
+		return day;
+	}
+
+	return `${day}T${pad(date.hour)}:${pad(date.minute ?? 0)}`;
+}
+
 /**
  * A filter the data set declares, in the terms a consumer needs to obey it:
  * what it is, whether the data set had it applied, and the expression it
@@ -47,13 +73,18 @@ type FDSAtomStateFilter = NonNullable<FDSAtomState['filters']>[number];
  * filter and drops it as it clears one, so passing it back is exactly what the
  * data set would have sent, for any filter type it comes to support.
  *
- * `selection` is the one exception, and it is here for the consumer that
- * replaces a filter rather than obeys it: such a consumer draws the control,
- * so it needs what is picked in the terms it draws with, or its control opens
- * blank while the data set is filtering and the takeover silently widens the
- * results. It covers selection filters alone, since a consumer replacing a
- * filter of another kind has no use for a shape it cannot render, and the
- * values come without labels because whoever draws the control has its own.
+ * `selection` and `range` are the exceptions, and they are here for the
+ * consumer that replaces a filter rather than obeys it: such a consumer draws
+ * the control, so it needs what is picked in the terms it draws with, or its
+ * control opens blank while the data set is filtering and the takeover
+ * silently widens the results. One member per kind of control rather than one
+ * member holding either shape, so that reading a range costs no narrowing.
+ *
+ * Only what is picked is handed over, never what the filter offers: the values
+ * come without labels and a range comes without its bounds, because whoever
+ * draws the control has its own. A range is a string apiece so that a date and
+ * a date with a time read the same way, and so that no shape for a date has to
+ * be published alongside.
  */
 function toFilterInfo({
 	active,
@@ -70,6 +101,17 @@ function toFilterInfo({
 		odataFilterString: odataFilterString ?? '',
 		type,
 	};
+
+	if (type === 'dateRange' || type === 'dateTimeRange') {
+		const from = toRangeBound(selectedData?.from);
+		const to = toRangeBound(selectedData?.to);
+
+		if (!from && !to) {
+			return filterInfo;
+		}
+
+		return {...filterInfo, range: {from, to}};
+	}
 
 	if (type !== 'selection' || !selectedData?.selectedItems?.length) {
 		return filterInfo;
@@ -89,16 +131,21 @@ function toFilterInfo({
  * got back must not reach what the next call returns.
  */
 function copyFilterInfo({
+	range,
 	selection,
 	...filterInfo
 }: FDSFilterInfo): FDSFilterInfo {
-	if (!selection) {
-		return filterInfo;
-	}
-
 	return {
 		...filterInfo,
-		selection: {exclude: selection.exclude, values: [...selection.values]},
+		...(range ? {range: {...range}} : {}),
+		...(selection
+			? {
+					selection: {
+						exclude: selection.exclude,
+						values: [...selection.values],
+					},
+				}
+			: {}),
 	};
 }
 

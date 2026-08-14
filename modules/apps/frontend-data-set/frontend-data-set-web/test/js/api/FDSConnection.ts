@@ -148,6 +148,11 @@ describe('FDSConnection filters', () => {
 				id: 'date',
 				label: 'Date',
 				odataFilterString: '',
+
+				// what is picked, in the terms a date control reads, and
+				// without the bounds the data set keeps for its own control
+
+				range: {from: '2024-01-01', to: '2024-11-22'},
 				type: 'dateRange',
 			},
 
@@ -184,10 +189,40 @@ describe('FDSConnection filters', () => {
 		expect(connection.getFilters()?.[1]).not.toHaveProperty('selection');
 	});
 
-	it('hands over no selection for a filter a consumer could not render', async () => {
+	it('hands over the range a date filter has picked', async () => {
 		await connect();
 
-		expect(connection.getFilters()?.[2]).not.toHaveProperty('selection');
+		expect(Object.keys(connection.getFilters()?.[2] ?? {}).sort()).toEqual([
+			'active',
+			'id',
+			'label',
+			'odataFilterString',
+			'range',
+			'type',
+		]);
+	});
+
+	it('hands over no range for a filter with neither end picked', async () => {
+		await connect();
+
+		expect(connection.getFilters()?.[0]).not.toHaveProperty('range');
+	});
+
+	it('keeps the range it declared when the consumer changes what it got', async () => {
+		await connect();
+
+		connection.setFilters([
+			{id: 'date', odataFilterString: 'date ge 2020-01-01'},
+		]);
+
+		const filters = connection.getFilters() as Array<FDSFilterInfo>;
+
+		delete filters[2].range;
+
+		expect(connection.getFilters()?.[2].range).toEqual({
+			from: '2024-01-01',
+			to: '2024-11-22',
+		});
 	});
 
 	it('keeps the values it declared when the consumer changes what it got', async () => {

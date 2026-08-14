@@ -58,8 +58,23 @@ interface FDSAtomStateFilter {
 	 */
 	readonly selectedData?: {
 		readonly exclude?: boolean;
+		readonly from?: FDSAtomStateFilterDate | null;
 		readonly selectedItems?: ReadonlyArray<{readonly value: string}>;
+		readonly to?: FDSAtomStateFilterDate | null;
 	} | null;
 
 	readonly type: string;
+}
+
+/**
+ * An end of a range as the data set tracks it. Every part is optional because
+ * the data set zeroes the ones it does not mean to apply, and an end it would
+ * ignore reads as absent rather than as a date at year zero.
+ */
+interface FDSAtomStateFilterDate {
+	readonly day?: number;
+	readonly hour?: number;
+	readonly minute?: number;
+	readonly month?: number;
+	readonly year?: number;
 }
