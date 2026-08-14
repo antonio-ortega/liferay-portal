@@ -26,12 +26,19 @@ import ColorFilter, {
 	ColorSelection,
 	getSelectionOdataFilterString,
 } from './ColorFilter';
+import DateRangeFilter, {
+	DateRangeSelection,
+	NO_DATE_RANGE,
+	getDateRangeOdataFilterString,
+} from './DateRangeFilter';
 
 interface AppProps {
 	fdsName: string;
 }
 
 const COLOR_FILTER_ID = 'color';
+
+const DATE_FILTER_ID = 'date';
 
 const NO_COLORS: ColorSelection = {exclude: false, values: []};
 
@@ -62,6 +69,8 @@ function App({fdsName}: AppProps) {
 	const [colorSelection, setColorSelection] =
 		useState<ColorSelection>(NO_COLORS);
 	const [customExpression, setCustomExpression] = useState('');
+	const [dateRangeSelection, setDateRangeSelection] =
+		useState<DateRangeSelection>(NO_DATE_RANGE);
 	const [disabled, setDisabled] = useState<boolean>(true);
 	const [declaredFilters, setDeclaredFilters] = useState<
 		Array<FDSFilterInfo>
@@ -103,6 +112,17 @@ function App({fdsName}: AppProps) {
 						({id}) => id === COLOR_FILTER_ID
 					);
 
+					const dateFilter = filters.find(
+						({id}) => id === DATE_FILTER_ID
+					);
+
+					if (dateFilter?.range) {
+						setDateRangeSelection({
+							from: dateFilter.range.from ?? '',
+							to: dateFilter.range.to ?? '',
+						});
+					}
+
 					if (colorFilter?.selection) {
 						setColorSelection(colorFilter.selection);
 					}
@@ -126,8 +146,10 @@ function App({fdsName}: AppProps) {
 
 	const colorFilter = declaredFilters.find(({id}) => id === COLOR_FILTER_ID);
 
+	const dateFilter = declaredFilters.find(({id}) => id === DATE_FILTER_ID);
+
 	const obeyableFilters = declaredFilters.filter(
-		({id}) => id !== COLOR_FILTER_ID
+		({id}) => id !== COLOR_FILTER_ID && id !== DATE_FILTER_ID
 	);
 
 	const colorOdataFilterString = getSelectionOdataFilterString(
@@ -145,6 +167,20 @@ function App({fdsName}: AppProps) {
 					odataFilterString: colorOdataFilterString,
 				};
 
+	// What this element owns, the color filter or the expression standing in for
+	// it, plus the range it drives on its own.
+
+	const appliedFilters: Array<FDSConnectionFilter> = [
+		appliedFilter,
+		{
+			id: DATE_FILTER_ID,
+			odataFilterString: getDateRangeOdataFilterString(
+				DATE_FILTER_ID,
+				dateRangeSelection
+			),
+		},
+	].filter(({odataFilterString}) => !!odataFilterString);
+
 	const handleSearch = () => {
 		fdsConnectionRef.current?.setSearch(query);
 	};
@@ -154,16 +190,16 @@ function App({fdsName}: AppProps) {
 			.filter((filter) => !!filter.odataFilterString && isObeyed(filter))
 			.map(({id, odataFilterString}) => ({id, odataFilterString}));
 
-		if (appliedFilter.odataFilterString) {
-			connectionFilters.push(appliedFilter);
-		}
-
-		fdsConnectionRef.current?.setFilters(connectionFilters);
+		fdsConnectionRef.current?.setFilters([
+			...connectionFilters,
+			...appliedFilters,
+		]);
 	};
 
 	const handleClearFilters = () => {
 		setColorSelection(NO_COLORS);
 		setCustomExpression('');
+		setDateRangeSelection(NO_DATE_RANGE);
 		setObeyedIds([]);
 
 		fdsConnectionRef.current?.clearFilters();
@@ -235,6 +271,17 @@ function App({fdsName}: AppProps) {
 						onChange={setColorSelection}
 						selection={colorSelection}
 					/>
+				) : null}
+
+				{dateFilter ? (
+					<div className="mt-3">
+						<DateRangeFilter
+							disabled={disabled}
+							label={dateFilter.label}
+							onChange={setDateRangeSelection}
+							selection={dateRangeSelection}
+						/>
+					</div>
 				) : null}
 
 				<button
@@ -311,7 +358,14 @@ function App({fdsName}: AppProps) {
 					<SectionLabel>What this element will apply</SectionLabel>
 
 					<code className="text-secondary">
-						{appliedFilter.odataFilterString || '(no filter)'}
+						{appliedFilters.length
+							? appliedFilters
+									.map(
+										({odataFilterString}) =>
+											`(${odataFilterString})`
+									)
+									.join(' and ')
+							: '(no filter)'}
 					</code>
 				</div>
 			</div>
