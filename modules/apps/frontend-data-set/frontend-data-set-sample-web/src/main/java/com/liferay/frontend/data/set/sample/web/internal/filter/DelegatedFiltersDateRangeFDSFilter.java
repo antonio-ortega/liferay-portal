@@ -10,7 +10,6 @@ import com.liferay.frontend.data.set.filter.BaseDateRangeFDSFilter;
 import com.liferay.frontend.data.set.filter.DateFDSFilterItem;
 import com.liferay.frontend.data.set.filter.FDSFilter;
 import com.liferay.frontend.data.set.sample.web.internal.constants.FDSSampleFDSNames;
-import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 
 import java.util.Calendar;
@@ -62,24 +61,16 @@ public class DelegatedFiltersDateRangeFDSFilter extends BaseDateRangeFDSFilter {
 
 	@Override
 	public Map<String, Object> getPreloadedData() {
+
+		// Each end of the range is a DateFDSFilterItem, which is what the
+		// serializer turns into the day, month, and year the filter reads. A
+		// JSONObject nested here does not survive the serialization, and the
+		// filter reads the range as zeroed instead.
+
 		return HashMapBuilder.<String, Object>put(
-			"from",
-			JSONUtil.put(
-				"day", 1
-			).put(
-				"month", 1
-			).put(
-				"year", 2021
-			)
+			"from", new DateFDSFilterItem(1, 1, 2021)
 		).put(
-			"to",
-			JSONUtil.put(
-				"day", 31
-			).put(
-				"month", 12
-			).put(
-				"year", 2021
-			)
+			"to", new DateFDSFilterItem(31, 12, 2021)
 		).build();
 	}
 
