@@ -14,6 +14,13 @@
 // Driving the search of a data set is what
 // "liferay-sample-custom-element-7" shows.
 
+// Owning the filtering means owning what a data set otherwise does with it:
+// the filters a data set applies itself go in the page URL, and the ones sent
+// through a connection do not. So this element keeps them there itself, in a
+// parameter of its own beside the data set's. Every apply below therefore
+// comes in two forms, one that only filters and one that also records what it
+// filtered by, because restoring from the URL must not write the URL back.
+
 import {
 	FDSConnection,
 	FDSConnectionInfo,
@@ -22,12 +29,15 @@ import React, {useEffect, useRef, useState} from 'react';
 
 import AppliedFilters from './AppliedFilters';
 import FilterPanels from './FilterPanels';
+import {readFilterURLState, writeFilterURLState} from './filterURL';
 import {
 	FILTERS,
 	FilterDefinition,
+	MANUAL_FILTER_ID,
 	Selections,
 	getOdataFilterString,
 	getSelectedValues,
+	getValidSelections,
 	toggleOption,
 } from './filters';
 
@@ -41,30 +51,7 @@ function App({fdsName}: AppProps) {
 	const [manual, setManual] = useState(false);
 	const [selections, setSelections] = useState<Selections>({});
 	const fdsConnectionRef = useRef<FDSConnection | null>(null);
-
-	useEffect(() => {
-
-		// The connection reports the search query to every consumer, whether
-		// it drives the search or not. This one only filters, so it ignores it.
-
-		fdsConnectionRef.current = new FDSConnection(
-			fdsName,
-			{
-				search: () => {},
-			},
-			(fdsConnectionInfo: FDSConnectionInfo) => {
-				setDisabled(fdsConnectionInfo.status !== 'ready');
-			},
-			{owns: ['filters']}
-		);
-
-		return () => {
-			if (fdsConnectionRef?.current) {
-				fdsConnectionRef?.current.disconnect();
-				fdsConnectionRef.current = null;
-			}
-		};
-	}, [fdsName]);
+	const readyRef = useRef(false);
 
 	const applySelections = (selections: Selections) => {
 		setSelections(selections);
@@ -80,6 +67,106 @@ function App({fdsName}: AppProps) {
 		);
 	};
 
+	const applyExpression = (expression: string) => {
+		setExpression(expression);
+
+		fdsConnectionRef.current?.setFilters(
+			expression
+				? [{id: MANUAL_FILTER_ID, odataFilterString: expression}]
+				: []
+		);
+	};
+
+	// What the user did, as opposed to what the URL already said: only a
+	// change the user makes belongs in the browser's history.
+
+	const changeSelections = (selections: Selections) => {
+		applySelections(selections);
+
+		writeFilterURLState(fdsName, {selections});
+	};
+
+	const changeExpression = (expression: string) => {
+		applyExpression(expression);
+
+		writeFilterURLState(fdsName, {expression});
+	};
+
+	// Filters the URL carries, applied without being written back. Which of
+	// the two ways of filtering was in use is restored along with them, since
+	// a manually typed expression can only be seen or undone in the mode that
+	// produced it.
+	//
+	// Nothing can be applied before the connection is ready, so a URL that
+	// arrives first has to wait for it. The data set is not told any of this
+	// is coming and has already asked for the unfiltered page by then, which
+	// is why a filtered link shows its results twice: once unfiltered, then
+	// again as the filters land.
+
+	const restoreFromURL = () => {
+		if (!readyRef.current) {
+			return;
+		}
+
+		const filterURLState = readFilterURLState(fdsName);
+
+		if (filterURLState?.expression !== undefined) {
+			setManual(true);
+			setSelections({});
+
+			applyExpression(filterURLState.expression);
+
+			return;
+		}
+
+		setManual(false);
+		setExpression('');
+
+		applySelections(getValidSelections(filterURLState?.selections || {}));
+	};
+
+	useEffect(() => {
+
+		// The connection reports the search query to every consumer, whether
+		// it drives the search or not. This one only filters, so it ignores it.
+
+		fdsConnectionRef.current = new FDSConnection(
+			fdsName,
+			{
+				search: () => {},
+			},
+			(fdsConnectionInfo: FDSConnectionInfo) => {
+				readyRef.current = fdsConnectionInfo.status === 'ready';
+
+				setDisabled(!readyRef.current);
+
+				if (readyRef.current) {
+					restoreFromURL();
+				}
+			},
+			{owns: ['filters']}
+		);
+
+		return () => {
+			if (fdsConnectionRef?.current) {
+				fdsConnectionRef?.current.disconnect();
+				fdsConnectionRef.current = null;
+			}
+		};
+	}, [fdsName]);
+
+	// The back and forward buttons move a data set between filters the way
+	// they move it between pages, and the data set listens for them to do it.
+	// Nothing tells this element, so it listens too.
+
+	useEffect(() => {
+		const handlePopState = () => restoreFromURL();
+
+		window.addEventListener('popstate', handlePopState);
+
+		return () => window.removeEventListener('popstate', handlePopState);
+	}, [fdsName]);
+
 	// Only one of the two ways of filtering is on screen at a time, so
 	// leaving one behind applied would filter the data set by something the
 	// user can no longer see, let alone undo.
@@ -90,6 +177,8 @@ function App({fdsName}: AppProps) {
 		setManual((manual) => !manual);
 
 		fdsConnectionRef.current?.clearFilters();
+
+		writeFilterURLState(fdsName, {});
 	};
 
 	return (
@@ -123,14 +212,7 @@ function App({fdsName}: AppProps) {
 					<button
 						className="btn btn-primary flex-shrink-0"
 						disabled={disabled || !expression.trim()}
-						onClick={() =>
-							fdsConnectionRef.current?.setFilters([
-								{
-									id: 'manual',
-									odataFilterString: expression.trim(),
-								},
-							])
-						}
+						onClick={() => changeExpression(expression.trim())}
 						type="button"
 					>
 						Apply
@@ -139,9 +221,9 @@ function App({fdsName}: AppProps) {
 			) : (
 				<>
 					<AppliedFilters
-						onClearAll={() => applySelections({})}
+						onClearAll={() => changeSelections({})}
 						onClearFilter={(filterId: string) =>
-							applySelections({...selections, [filterId]: []})
+							changeSelections({...selections, [filterId]: []})
 						}
 						selections={selections}
 					/>
@@ -152,7 +234,7 @@ function App({fdsName}: AppProps) {
 							filterDefinition: FilterDefinition,
 							value: string
 						) =>
-							applySelections(
+							changeSelections(
 								toggleOption(
 									selections,
 									filterDefinition,

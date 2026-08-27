@@ -30,6 +30,13 @@ export interface FilterDefinition {
 
 export type Selections = Readonly<Record<string, ReadonlyArray<string>>>;
 
+/**
+ * The filter a manually typed expression is applied under. No
+ * FilterDefinition backs it: the expression the user typed is the whole
+ * filter.
+ */
+export const MANUAL_FILTER_ID = 'manual';
+
 export const FILTERS: Array<FilterDefinition> = [
 	{
 		entityFieldType: 'string',
@@ -124,6 +131,41 @@ export function toggleOption(
 	}
 
 	return {...selections, [id]: multiple ? [...values, value] : [value]};
+}
+
+/**
+ * The given selections, less anything this element cannot draw.
+ *
+ * Selections that come back from a URL have to pass through here first: the
+ * link may have been made by an older version of this element, or by hand, so
+ * a filter or an option that no longer exists has to be dropped rather than
+ * applied. A stale link then filters by as much of itself as still holds
+ * instead of failing.
+ */
+export function getValidSelections(selections: Selections): Selections {
+	const validSelections: Record<string, ReadonlyArray<string>> = {};
+
+	Object.entries(selections).forEach(([filterId, values]) => {
+		const filterDefinition = FILTERS.find(
+			(filterDefinition) => filterDefinition.id === filterId
+		);
+
+		if (!filterDefinition) {
+			return;
+		}
+
+		const validValues = values.filter((value) =>
+			filterDefinition.options.some((option) => option.value === value)
+		);
+
+		if (validValues.length) {
+			validSelections[filterId] = filterDefinition.multiple
+				? validValues
+				: validValues.slice(0, 1);
+		}
+	});
+
+	return validSelections;
 }
 
 export function getOptionLabels(
