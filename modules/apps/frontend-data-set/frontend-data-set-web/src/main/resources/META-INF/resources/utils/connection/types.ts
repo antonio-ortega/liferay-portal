@@ -43,4 +43,15 @@ export interface IConnectedFDSState extends IFDSState {
 	 * now still says what it says once several consumers can share it.
 	 */
 	connectionState?: Readonly<Record<string, unknown>>;
+
+	/**
+	 * The app id of the connection that owns the filtering, and the only
+	 * thing that says the filtering is owned at all.
+	 *
+	 * It is not inferred from `connectionFilters`, which a consumer only
+	 * writes once it has a filter to apply: a consumer owns the filtering
+	 * from the moment it connects, and the data set has to stop offering its
+	 * own filter UI then rather than a moment later.
+	 */
+	filteringOwnerAppId?: string;
 }

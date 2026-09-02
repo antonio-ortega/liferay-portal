@@ -18,8 +18,8 @@ import {IBaseFilterState} from '../types';
 export function getOdataFiltersStrings(
 	fdsState: IConnectedFDSState
 ): Array<string> {
-	if (fdsState.connectionFilters) {
-		return fdsState.connectionFilters
+	if (fdsState.filteringOwnerAppId) {
+		return (fdsState.connectionFilters ?? [])
 			.map(({odataFilterString}) => odataFilterString)
 			.filter(Boolean);
 	}

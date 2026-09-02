@@ -166,19 +166,19 @@ describe('FDSConnection filters', () => {
 	it('takes the filtering over as soon as a consumer that owns it connects', async () => {
 		await connectOwningFilters();
 
-		expect(readState().connectionFilters).toEqual([]);
+		expect(readState().filteringOwnerAppId).toBe(CONNECTION_ID);
 	});
 
 	it('leaves the filtering to the data set when a consumer only owns the search', async () => {
 		await connect({owns: ['search']});
 
-		expect(readState().connectionFilters).toBeUndefined();
+		expect(readState().filteringOwnerAppId).toBeUndefined();
 	});
 
 	it('leaves the filtering to the data set when a consumer declares nothing', async () => {
 		await connect();
 
-		expect(readState().connectionFilters).toBeUndefined();
+		expect(readState().filteringOwnerAppId).toBeUndefined();
 	});
 
 	it('applies the filters the consumer sets', async () => {
@@ -240,6 +240,7 @@ describe('FDSConnection filters', () => {
 
 		connection.disconnect();
 
+		expect(readState().filteringOwnerAppId).toBeUndefined();
 		expect(readState().connectionFilters).toBeUndefined();
 		expect(readState().connectionState).toBeUndefined();
 	});
@@ -525,13 +526,15 @@ describe('FDSConnection filters', () => {
 			{id: 'other', odataFilterString: "author eq 'joe'"},
 		]);
 
-		expect(readState().connectionFilters).toEqual([]);
+		expect(readState().connectionFilters).toBeUndefined();
 
 		expect(console.warn).toHaveBeenCalledWith(
 			expect.anything(),
 			expect.anything(),
 			expect.anything(),
-			expect.stringContaining('another connection owns the filtering')
+			expect.stringContaining(
+				'the filtering was refused to this connection'
+			)
 		);
 	});
 
@@ -542,7 +545,7 @@ describe('FDSConnection filters', () => {
 
 		secondConnection.disconnect();
 
-		expect(readState().connectionFilters).toEqual([]);
+		expect(readState().filteringOwnerAppId).toBe(CONNECTION_ID);
 	});
 
 	it('leaves the state the data set restores to the consumer that owns the filtering', async () => {
@@ -686,6 +689,6 @@ describe('FDSConnection filters', () => {
 			expect.objectContaining({status: 'ready'})
 		);
 
-		expect(readState().connectionFilters).toEqual([]);
+		expect(readState().filteringOwnerAppId).toBe(OTHER_CONNECTION_ID);
 	});
 });

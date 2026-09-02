@@ -388,13 +388,13 @@ const FrontendDataSetContent = ({
 	// state, so the consumer can read them and decide which ones to obey,
 	// and they come back the moment the connection releases the filtering.
 
+	const {connectionFilters, connectionState, filteringOwnerAppId} =
+		globalFDSState as IConnectedFDSState;
+
 	const filteringDelegated = Boolean(
-		(globalFDSState as IConnectedFDSState).connectionFilters ||
+		filteringOwnerAppId ||
 			globalFDSState.restoredConnectionState !== undefined
 	);
-
-	const {connectionFilters, connectionState} =
-		globalFDSState as IConnectedFDSState;
 
 	const {getConnectionState, restored: connectionStateRestored} =
 		useRestoredConnectionState({
@@ -830,7 +830,7 @@ const FrontendDataSetContent = ({
 		);
 
 		const shouldUpdateConnectionState =
-			connectionFilters &&
+			filteringOwnerAppId &&
 			(filteredByConnection ||
 				configInURL?.[EConfigInURLKeys.CONNECTION_STATE] !== undefined);
 
@@ -860,6 +860,7 @@ const FrontendDataSetContent = ({
 	}, [
 		connectionFilters,
 		connectionState,
+		filteringOwnerAppId,
 		globalFDSState,
 		globalFDSStateInitialized,
 		id,
@@ -1273,7 +1274,7 @@ const FrontendDataSetContent = ({
 		const urlConnectionState = getConnectionState();
 
 		const restoredConnectionState =
-			connectionFilters || urlConnectionState !== undefined
+			filteringOwnerAppId || urlConnectionState !== undefined
 				? urlConnectionState ?? null
 				: undefined;
 
@@ -1344,7 +1345,7 @@ const FrontendDataSetContent = ({
 			});
 		}
 	}, [
-		connectionFilters,
+		filteringOwnerAppId,
 		getActiveSorts,
 		getConnectionState,
 		getDelta,

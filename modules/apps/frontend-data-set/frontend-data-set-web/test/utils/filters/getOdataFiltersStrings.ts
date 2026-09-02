@@ -50,6 +50,7 @@ describe('getOdataFiltersStrings', () => {
 				{id: 'status', odataFilterString: "status eq 'draft'"},
 				{id: 'author', odataFilterString: "author eq 'joe'"},
 			],
+			filteringOwnerAppId: 'sampleCustomElement',
 			filters: [selectionFilter('status', [{value: 'approved'}])],
 			search: {query: ''},
 		};
@@ -66,6 +67,7 @@ describe('getOdataFiltersStrings', () => {
 				{id: 'status', odataFilterString: ''},
 				{id: 'author', odataFilterString: "author eq 'joe'"},
 			],
+			filteringOwnerAppId: 'sampleCustomElement',
 			filters: [],
 			search: {query: ''},
 		};
@@ -76,6 +78,7 @@ describe('getOdataFiltersStrings', () => {
 	it('sends no filter when a connection owns an empty set', () => {
 		const fdsState: IConnectedFDSState = {
 			connectionFilters: [],
+			filteringOwnerAppId: 'sampleCustomElement',
 			filters: [selectionFilter('status', [{value: 'approved'}])],
 			search: {query: ''},
 		};
