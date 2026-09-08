@@ -97,6 +97,13 @@ export class FDSConnection {
 				// Before the restore below, since a refused connection must
 				// not consume what the URL left for the owner.
 
+				this.subscriptions = {
+					search: Liferay.State.subscribe(
+						this.selectors.search,
+						fdsStateChangeCallback.search
+					),
+				};
+
 				if (this.requestedOwnership.includes('filters')) {
 					if (!this.appId) {
 						this.warn(
@@ -117,16 +124,11 @@ export class FDSConnection {
 									this.selectors.restoredConnectionState,
 									this.handleRestoredConnectionState
 								);
+						} else {
+							this.warnFilteringTaken();
 						}
 					}
 				}
-
-				this.subscriptions = {
-					search: Liferay.State.subscribe(
-						this.selectors.search,
-						fdsStateChangeCallback.search
-					),
-				};
 
 				// initialize consumer's state
 
@@ -301,10 +303,10 @@ export class FDSConnection {
 			);
 		}
 
-//		this.dropRestoredConnectionState();
+		this.dropRestoredConnectionState();
 	}
 
-/*	private dropRestoredConnectionState(): void {
+	private dropRestoredConnectionState(): void {
 		const fdsState = {...Liferay.State.read(this.atom)};
 
 		const remaining = this.withoutOwnKey(fdsState.restoredConnectionState);
@@ -318,8 +320,6 @@ export class FDSConnection {
 
 		Liferay.State.write(this.atom, fdsState);
 	}
-
- */
 
 	/**
 	 * The given slice without this connection's key, or nothing at all once
@@ -398,32 +398,6 @@ export class FDSConnection {
 				this.fdsName +
 				' to this connection: ' +
 				reason
-		);
-	}
-
-
-	private resolveFilteringOwnership(): void {
-		if (this.ownsFiltering()) {
-			if (!this.appId) {
-				this.refuseFiltering(
-					'connect with an appId to own the filtering, since what' +
-						' a connection filters by is kept in the URL under it'
-				);
-			}
-		/*	else if (this.isFilteringOwned()) {
-				this.refuseFiltering(
-					'another connection already owns it, and a data set can' +
-						' only have one filtering owner'
-				);
-
-				this.warnFilteringTaken();
-			}
-		} */
-	}
-
-	private isFilteringRefused(): boolean {
-		return (
-			this.requestedOwnership.includes('filters') && !this.ownsFiltering()
 		);
 	}
 
