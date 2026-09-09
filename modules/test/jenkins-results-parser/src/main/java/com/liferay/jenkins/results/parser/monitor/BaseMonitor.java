@@ -24,6 +24,10 @@ public abstract class BaseMonitor implements Monitor {
 		return _monitorConfig;
 	}
 
+	@Override
+	public void prepareCycle() {
+	}
+
 	protected BaseMonitor(MonitorConfig monitorConfig) {
 		_monitorConfig = monitorConfig;
 	}
@@ -98,8 +102,6 @@ public abstract class BaseMonitor implements Monitor {
 		if (timeoutSeconds <= 0) {
 			timeoutSeconds = MonitorConfig.SECONDS_TIMEOUT_DEFAULT;
 		}
-
-		timeoutSeconds = Math.min(timeoutSeconds, Integer.MAX_VALUE / 1000);
 
 		return timeoutSeconds * 1000;
 	}

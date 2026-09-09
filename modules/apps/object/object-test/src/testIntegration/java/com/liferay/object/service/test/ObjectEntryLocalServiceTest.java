@@ -133,6 +133,7 @@ import com.liferay.object.service.ObjectStateLocalService;
 import com.liferay.object.service.ObjectStateTransitionLocalService;
 import com.liferay.object.service.ObjectValidationRuleLocalService;
 import com.liferay.object.service.test.util.ObjectFieldTestUtil;
+import com.liferay.object.test.util.EncryptedObjectFieldTestUtil;
 import com.liferay.object.test.util.ObjectDefinitionTestUtil;
 import com.liferay.object.test.util.ObjectEntryFolderTestUtil;
 import com.liferay.object.test.util.ObjectRelationshipTestUtil;
@@ -231,6 +232,7 @@ import com.liferay.portal.kernel.util.Localization;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.TempFileEntryUtil;
@@ -1065,6 +1067,49 @@ public class ObjectEntryLocalServiceTest {
 					).build());
 			});
 
+		Group group3 = GroupTestUtil.addGroup();
+
+		_groupLocalService.updateGroup(
+			group3.getGroupId(),
+			UnicodePropertiesBuilder.create(
+				true
+			).fastLoad(
+				group3.getTypeSettings()
+			).put(
+				PropsKeys.LOCALES, "en_US"
+			).put(
+				"inheritLocales", Boolean.FALSE.toString()
+			).buildString());
+
+		ObjectDefinition siteObjectDefinition =
+			ObjectDefinitionTestUtil.publishObjectDefinition(
+				Collections.singletonList(
+					new TextObjectFieldBuilder(
+					).labelMap(
+						RandomTestUtil.randomLocaleStringMap()
+					).localized(
+						true
+					).name(
+						"localizedTextField"
+					).build()),
+				ObjectDefinitionConstants.SCOPE_SITE);
+
+		AssertUtils.assertFailure(
+			ObjectEntryValuesException.InvalidLanguageId.class,
+			"The language ID \"pt_BR\" is invalid for object field \"" +
+				"localizedTextField\"",
+			() -> _addObjectEntry(
+				group3.getGroupId(),
+				siteObjectDefinition.getObjectDefinitionId(),
+				HashMapBuilder.<String, Serializable>put(
+					"localizedTextField_i18n",
+					HashMapBuilder.put(
+						"en_US", RandomTestUtil.randomString()
+					).put(
+						"pt_BR", RandomTestUtil.randomString()
+					).build()
+				).build()));
+
 		ObjectField objectField = _objectFieldLocalService.fetchObjectField(
 			_objectDefinition.getObjectDefinitionId(), "upload");
 
@@ -1187,10 +1232,10 @@ public class ObjectEntryLocalServiceTest {
 					"name", "Peter"
 				).build()));
 
-		Group group3 = GroupTestUtil.addGroup();
+		Group group4 = GroupTestUtil.addGroup();
 
 		_addObjectEntry(
-			group3.getGroupId(), objectDefinition.getObjectDefinitionId(),
+			group4.getGroupId(), objectDefinition.getObjectDefinitionId(),
 			HashMapBuilder.<String, Serializable>put(
 				"name", "Peter"
 			).build());
@@ -1200,12 +1245,12 @@ public class ObjectEntryLocalServiceTest {
 			"Unique value constraint violation for " +
 				objectDefinition.getDBTableName() + ".name_ with value Peter",
 			() -> _addObjectEntry(
-				group3.getGroupId(), finalObjectDefinitionId,
+				group4.getGroupId(), finalObjectDefinitionId,
 				HashMapBuilder.<String, Serializable>put(
 					"name", "Peter"
 				).build()));
 
-		_testAddObjectEntryWithLocalizedValues(objectDefinition, group3);
+		_testAddObjectEntryWithLocalizedValues(objectDefinition, group4);
 
 		_objectDefinitionLocalService.deleteObjectDefinition(objectDefinition);
 
@@ -1227,7 +1272,7 @@ public class ObjectEntryLocalServiceTest {
 			modifiableSystemObjectDefinition.getObjectDefinitionId());
 
 		_testAddObjectEntryWithLocalizedValues(
-			modifiableSystemObjectDefinition, group3);
+			modifiableSystemObjectDefinition, group4);
 
 		_objectDefinitionLocalService.deleteObjectDefinition(
 			modifiableSystemObjectDefinition.getObjectDefinitionId());
@@ -2103,9 +2148,9 @@ public class ObjectEntryLocalServiceTest {
 
 	@Test
 	public void testAddObjectEntryWithEncryptedObjectField() throws Exception {
-		String key = ObjectFieldTestUtil.generateKey("AES");
+		String key = EncryptedObjectFieldTestUtil.generateKey("AES");
 
-		ObjectFieldTestUtil.withEncryptedObjectFieldProperties(
+		EncryptedObjectFieldTestUtil.withEncryptedObjectFieldProperties(
 			"AES", true, key,
 			() -> {
 				_addCustomObjectField(
@@ -2148,7 +2193,7 @@ public class ObjectEntryLocalServiceTest {
 			"objectEntryERC", ObjectDefinitionConstants.GROUP_ID_DEFAULT,
 			_objectDefinition.getObjectDefinitionId());
 
-		ObjectFieldTestUtil.withEncryptedObjectFieldProperties(
+		EncryptedObjectFieldTestUtil.withEncryptedObjectFieldProperties(
 			"", true, "",
 			() -> {
 				AssertUtils.assertFailure(
@@ -2174,7 +2219,7 @@ public class ObjectEntryLocalServiceTest {
 
 				_assertCount(1);
 			});
-		ObjectFieldTestUtil.withEncryptedObjectFieldProperties(
+		EncryptedObjectFieldTestUtil.withEncryptedObjectFieldProperties(
 			"", true, key,
 			() -> {
 				AssertUtils.assertFailure(
@@ -2207,7 +2252,7 @@ public class ObjectEntryLocalServiceTest {
 
 				_assertCount(1);
 			});
-		ObjectFieldTestUtil.withEncryptedObjectFieldProperties(
+		EncryptedObjectFieldTestUtil.withEncryptedObjectFieldProperties(
 			"AES", true, "",
 			() -> {
 				AssertUtils.assertFailure(

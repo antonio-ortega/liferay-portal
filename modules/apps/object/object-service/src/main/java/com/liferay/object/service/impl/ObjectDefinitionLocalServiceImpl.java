@@ -13,7 +13,6 @@ import com.liferay.depot.constants.DepotRolesConstants;
 import com.liferay.depot.service.DepotEntryGroupRelLocalService;
 import com.liferay.depot.service.DepotEntryLocalService;
 import com.liferay.document.library.kernel.service.DLFileEntryLocalService;
-import com.liferay.document.library.text.DLFileEntryTextProvider;
 import com.liferay.exportimport.kernel.empty.model.EmptyModelManager;
 import com.liferay.exportimport.kernel.empty.model.EmptyModelManagerUtil;
 import com.liferay.fragment.cache.FragmentEntryLinkCache;
@@ -142,7 +141,6 @@ import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.mass.delete.MassDeleteCacheThreadLocal;
-import com.liferay.portal.kernel.model.ClassName;
 import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.SystemEventConstants;
@@ -729,14 +727,6 @@ public class ObjectDefinitionLocalServiceImpl
 
 			undeployObjectDefinition(objectDefinition);
 
-			// undeployObjectDefinition calls _invalidatePortalCache which calls
-			// _classNameLocalService#getClassNameId
-
-			ClassName className = _classNameLocalService.getClassName(
-				objectDefinition.getClassName());
-
-			_classNameLocalService.deleteClassName(className);
-
 			_registerTransactionCallbackForCluster(
 				_undeployObjectDefinitionMethodKey, objectDefinition);
 		}
@@ -1078,10 +1068,10 @@ public class ObjectDefinitionLocalServiceImpl
 			_accountEntryLocalService, _accountEntryOrganizationRelLocalService,
 			_assetEntryLocalService, _bundleContext,
 			_depotEntryGroupRelLocalService, _depotEntryLocalService,
-			_dlFileEntryLocalService, _dlFileEntryTextProvider,
-			_groupLocalService, _kaleoDefinitionLocalService,
-			_listTypeLocalService, _objectActionLocalService,
-			objectDefinitionLocalService, _objectDefinitionSettingLocalService,
+			_dlFileEntryLocalService, _groupLocalService,
+			_kaleoDefinitionLocalService, _listTypeLocalService,
+			_objectActionLocalService, objectDefinitionLocalService,
+			_objectDefinitionSettingLocalService,
 			_objectEntryFolderLocalService, _objectEntryLocalService,
 			_objectEntryService, _objectFieldBusinessTypeRegistry,
 			_objectFieldLocalService, _objectFolderLocalService,
@@ -1199,21 +1189,26 @@ public class ObjectDefinitionLocalServiceImpl
 			return;
 		}
 
-		_undeploy(
-			_objectDefinitionDeployer,
-			_objectDefinitionDeployerServiceRegistrationsMap, objectDefinition);
+		try (SafeCloseable safeCloseable = CompanyThreadLocal.lock(
+				objectDefinition.getCompanyId())) {
 
-		for (Map.Entry
-				<ObjectDefinitionDeployer,
-				 Map<String, List<ServiceRegistration<?>>>> entry :
-					_activeServiceRegistrationsMaps.entrySet()) {
+			_undeploy(
+				_objectDefinitionDeployer,
+				_objectDefinitionDeployerServiceRegistrationsMap,
+				objectDefinition);
 
-			_undeploy(entry.getKey(), entry.getValue(), objectDefinition);
+			for (Map.Entry
+					<ObjectDefinitionDeployer,
+					 Map<String, List<ServiceRegistration<?>>>> entry :
+						_activeServiceRegistrationsMaps.entrySet()) {
+
+				_undeploy(entry.getKey(), entry.getValue(), objectDefinition);
+			}
+
+			_unregister(objectDefinition, _inactiveServiceRegistrationsMap);
+
+			_invalidatePortalCache(objectDefinition);
 		}
-
-		_unregister(objectDefinition, _inactiveServiceRegistrationsMap);
-
-		_invalidatePortalCache(objectDefinition);
 	}
 
 	@Indexable(type = IndexableType.REINDEX)
@@ -4082,9 +4077,6 @@ public class ObjectDefinitionLocalServiceImpl
 
 	@Reference
 	private DLFileEntryLocalService _dlFileEntryLocalService;
-
-	@Reference
-	private DLFileEntryTextProvider _dlFileEntryTextProvider;
 
 	@Reference
 	private EmptyModelManager _emptyModelManager;
