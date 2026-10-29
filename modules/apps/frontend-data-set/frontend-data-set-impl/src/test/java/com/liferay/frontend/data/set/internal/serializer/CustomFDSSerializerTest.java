@@ -1123,7 +1123,7 @@ public class CustomFDSSerializerTest extends BaseFDSSerializerTestCase {
 				JSONUtil.put(
 					"contentRenderer", "cards"
 				).put(
-					"default", false
+					"default", true
 				).put(
 					"name", "cards"
 				).put(
@@ -1206,7 +1206,7 @@ public class CustomFDSSerializerTest extends BaseFDSSerializerTestCase {
 				JSONUtil.put(
 					"contentRenderer", "list"
 				).put(
-					"default", false
+					"default", true
 				).put(
 					"name", "list"
 				).put(
@@ -1312,7 +1312,7 @@ public class CustomFDSSerializerTest extends BaseFDSSerializerTestCase {
 				JSONUtil.put(
 					"contentRenderer", "table"
 				).put(
-					"default", false
+					"default", true
 				).put(
 					"name", "table"
 				).put(
@@ -1465,6 +1465,7 @@ public class CustomFDSSerializerTest extends BaseFDSSerializerTestCase {
 
 		JSONObject jsonObject = jsonArray.getJSONObject(0);
 
+		Assert.assertTrue(jsonObject.getBoolean("default"));
 		Assert.assertEquals("table", jsonObject.getString("name"));
 
 		JSONAssert.assertEquals(
@@ -1478,7 +1479,7 @@ public class CustomFDSSerializerTest extends BaseFDSSerializerTestCase {
 				"contentRendererModuleURL",
 				"default from /o/" + cetExternalReferenceCode + "/index.js"
 			).put(
-				"default", true
+				"default", false
 			).put(
 				"label", LABELS[1]
 			).put(
@@ -1491,6 +1492,39 @@ public class CustomFDSSerializerTest extends BaseFDSSerializerTestCase {
 		jsonObject = jsonArray.getJSONObject(2);
 
 		Assert.assertEquals("list", jsonObject.getString("name"));
+
+		_resetFDSSerializer();
+
+		// Visualization modes without order
+
+		_mockSerializeViewsCardsOrList(
+			FDS_NAMES[0], sectionsMap, "dataSetToDataSetCardsSections");
+		_mockSerializeViewsCardsOrList(
+			FDS_NAMES[0], sectionsMap, "dataSetToDataSetListSections");
+
+		Mockito.when(
+			_customFDSSerializer.getDataSetObjectEntryProperties(
+				FDS_NAMES[0], httpServletRequest)
+		).thenReturn(
+			HashMapBuilder.<String, Object>put(
+				"defaultVisualizationMode", "list"
+			).build()
+		);
+
+		jsonArray = _customFDSSerializer.serializeViews(
+			FDS_NAMES[0], httpServletRequest);
+
+		Assert.assertEquals(2, jsonArray.length());
+
+		jsonObject = jsonArray.getJSONObject(0);
+
+		Assert.assertTrue(jsonObject.getBoolean("default"));
+		Assert.assertEquals("list", jsonObject.getString("name"));
+
+		jsonObject = jsonArray.getJSONObject(1);
+
+		Assert.assertFalse(jsonObject.getBoolean("default"));
+		Assert.assertEquals("cards", jsonObject.getString("name"));
 	}
 
 	private boolean _containsLabel(

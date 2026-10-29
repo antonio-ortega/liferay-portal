@@ -140,6 +140,59 @@ test('Order and enable visualization modes @LPD-107930', async ({
 	});
 });
 
+test('The first visualization mode displayed is the default one @LPD-107930', async ({
+	dataSetManagerApiHelpers,
+	page,
+	visualizationModesPage,
+}) => {
+	await test.step('Assign a field to the cards and list visualization modes', async () => {
+		await dataSetManagerApiHelpers.createDataSetCardsSection({
+			dataSetERC,
+		});
+		await dataSetManagerApiHelpers.createDataSetListSection({
+			dataSetERC,
+		});
+	});
+
+	await test.step('Check the cards visualization mode is the default one', async () => {
+		await visualizationModesPage.goto({
+			dataSetLabel,
+		});
+
+		await expect(
+			visualizationModesPage
+				.getVisualizationModeRow('Cards')
+				.getByText('Default', {exact: true})
+		).toBeVisible();
+	});
+
+	await test.step('Move the list visualization mode to the top', async () => {
+		await page.getByRole('button', {name: 'Drag List'}).focus();
+
+		await page.keyboard.press('Enter');
+		await page.keyboard.press('ArrowUp');
+
+		await Promise.all([
+			page.waitForResponse(
+				(response) =>
+					response.request().method() === 'PATCH' && response.ok()
+			),
+			page.keyboard.press('Enter'),
+		]);
+
+		await expect(
+			visualizationModesPage
+				.getVisualizationModeRow('List')
+				.getByText('Default', {exact: true})
+		).toBeVisible();
+		await expect(
+			visualizationModesPage
+				.getVisualizationModeRow('Cards')
+				.getByText('Default', {exact: true})
+		).toBeHidden();
+	});
+});
+
 test('Configure cards visualization mode @LPD-10735', async ({
 	page,
 	visualizationModesPage,

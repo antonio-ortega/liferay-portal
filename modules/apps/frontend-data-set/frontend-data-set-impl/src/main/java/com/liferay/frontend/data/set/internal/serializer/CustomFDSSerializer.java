@@ -623,7 +623,7 @@ public class CustomFDSSerializer
 	public JSONArray serializeViews(
 		String fdsName, HttpServletRequest httpServletRequest) {
 
-		JSONArray defaultViewsJSONArray = _jsonFactory.createJSONArray();
+		JSONArray predefinedViewsJSONArray = _jsonFactory.createJSONArray();
 
 		Map<String, Object> dataSetObjectEntryProperties =
 			getDataSetObjectEntryProperties(fdsName, httpServletRequest);
@@ -696,7 +696,7 @@ public class CustomFDSSerializer
 			}
 		}
 
-		defaultViewsJSONArray.put(
+		predefinedViewsJSONArray.put(
 			() -> {
 				List<ObjectEntry> objectEntries = getRelatedObjectEntries(
 					fdsName, httpServletRequest, (Predicate)null,
@@ -708,8 +708,6 @@ public class CustomFDSSerializer
 
 				return JSONUtil.put(
 					"contentRenderer", "cards"
-				).put(
-					"default", defaultVisualizationMode.equals("cards")
 				).put(
 					"label", LanguageUtil.get(httpServletRequest, "cards")
 				).put(
@@ -732,8 +730,6 @@ public class CustomFDSSerializer
 
 				return JSONUtil.put(
 					"contentRenderer", "list"
-				).put(
-					"default", defaultVisualizationMode.equals("list")
 				).put(
 					"label", LanguageUtil.get(httpServletRequest, "list[noun]")
 				).put(
@@ -832,8 +828,6 @@ public class CustomFDSSerializer
 				return JSONUtil.put(
 					"contentRenderer", "table"
 				).put(
-					"default", defaultVisualizationMode.equals("table")
-				).put(
 					"label", LanguageUtil.get(httpServletRequest, "table")
 				).put(
 					"name", "table"
@@ -846,7 +840,8 @@ public class CustomFDSSerializer
 		);
 
 		return _getEnabledViewsJSONArray(
-			defaultViewsJSONArray, defaultVisualizationMode, httpServletRequest,
+			predefinedViewsJSONArray, defaultVisualizationMode,
+			httpServletRequest,
 			MapUtil.getString(
 				dataSetObjectEntryProperties, "visualizationModes"));
 	}
@@ -946,42 +941,49 @@ public class CustomFDSSerializer
 	}
 
 	private JSONArray _getEnabledViewsJSONArray(
-		JSONArray defaultViewsJSONArray, String defaultVisualizationMode,
+		JSONArray predefinedViewsJSONArray, String defaultVisualizationMode,
 		HttpServletRequest httpServletRequest, String visualizationModes) {
 
 		JSONArray jsonArray = _jsonFactory.createJSONArray();
 
-		Map<String, JSONObject> defaultViewJSONObjects = new HashMap<>();
+		Map<String, JSONObject> predefinedViewJSONObjects = new HashMap<>();
 
-		for (int i = 0; i < defaultViewsJSONArray.length(); i++) {
-			JSONObject defaultViewJSONObject =
-				defaultViewsJSONArray.getJSONObject(i);
+		for (int i = 0; i < predefinedViewsJSONArray.length(); i++) {
+			JSONObject predefinedViewJSONObject =
+				predefinedViewsJSONArray.getJSONObject(i);
 
-			defaultViewJSONObjects.put(
-				defaultViewJSONObject.getString("name"), defaultViewJSONObject);
+			predefinedViewJSONObjects.put(
+				predefinedViewJSONObject.getString("name"),
+				predefinedViewJSONObject);
 		}
 
 		for (JSONObject visualizationModeJSONObject :
-				_getEnabledVisualizationModeJSONObjects(visualizationModes)) {
+				_getEnabledVisualizationModeJSONObjects(
+					defaultVisualizationMode, visualizationModes)) {
 
 			String name = visualizationModeJSONObject.getString("name");
 
-			if (_defaultVisualizationModeNames.contains(name)) {
-				jsonArray.put(() -> defaultViewJSONObjects.get(name));
+			if (_predefinedVisualizationModeNames.contains(name)) {
+				jsonArray.put(() -> predefinedViewJSONObjects.get(name));
 			}
 			else {
 				jsonArray.put(
 					() -> _serializeClientExtensionView(
-						defaultVisualizationMode, httpServletRequest,
-						visualizationModeJSONObject));
+						httpServletRequest, visualizationModeJSONObject));
 			}
+		}
+
+		for (int i = 0; i < jsonArray.length(); i++) {
+			JSONObject jsonObject = jsonArray.getJSONObject(i);
+
+			jsonObject.put("default", i == 0);
 		}
 
 		return jsonArray;
 	}
 
 	private List<JSONObject> _getEnabledVisualizationModeJSONObjects(
-		String visualizationModes) {
+		String defaultVisualizationMode, String visualizationModes) {
 
 		List<JSONObject> enabledVisualizationModeJSONObjects =
 			new ArrayList<>();
@@ -1021,9 +1023,18 @@ public class CustomFDSSerializer
 			}
 		}
 
-		// Default visualization modes are enabled unless stated otherwise
+		// Predefined visualization modes are enabled unless stated otherwise,
+		// and the default visualization mode of a data set saved before
+		// visualization modes could be ordered goes first
 
-		for (String name : _defaultVisualizationModeNames) {
+		List<String> predefinedVisualizationModeNames = new ArrayList<>(
+			_predefinedVisualizationModeNames);
+
+		if (predefinedVisualizationModeNames.remove(defaultVisualizationMode)) {
+			predefinedVisualizationModeNames.add(0, defaultVisualizationMode);
+		}
+
+		for (String name : predefinedVisualizationModeNames) {
 			if (visualizationModeNames.contains(name)) {
 				continue;
 			}
@@ -1172,7 +1183,7 @@ public class CustomFDSSerializer
 	}
 
 	private JSONObject _serializeClientExtensionView(
-		String defaultVisualizationMode, HttpServletRequest httpServletRequest,
+		HttpServletRequest httpServletRequest,
 		JSONObject visualizationModeJSONObject) {
 
 		String externalReferenceCode = visualizationModeJSONObject.getString(
@@ -1204,8 +1215,6 @@ public class CustomFDSSerializer
 		).put(
 			"contentRendererModuleURL",
 			"default from " + fdsVisualizationModeCET.getURL()
-		).put(
-			"default", defaultVisualizationMode.equals(externalReferenceCode)
 		).put(
 			"label",
 			fdsVisualizationModeCET.getName(
@@ -1554,7 +1563,7 @@ public class CustomFDSSerializer
 	private static final Log _log = LogFactoryUtil.getLog(
 		CustomFDSSerializer.class);
 
-	private static final List<String> _defaultVisualizationModeNames =
+	private static final List<String> _predefinedVisualizationModeNames =
 		Arrays.asList("cards", "list", "table");
 
 	@Reference

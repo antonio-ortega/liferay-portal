@@ -475,6 +475,7 @@ export class DataSetManagerApiHelpers extends ApiHelpers {
 		searchSuggestionsEnabled,
 		showSearch,
 		snapshotsEnabled,
+		visualizationModes,
 	}: {
 		additionalAPIURLParameters?: string;
 		defaultItemsPerPage?: number;
@@ -488,6 +489,7 @@ export class DataSetManagerApiHelpers extends ApiHelpers {
 		searchSuggestionsEnabled?: boolean;
 		showSearch?: boolean;
 		snapshotsEnabled?: boolean;
+		visualizationModes?: Array<{enabled: boolean; name: string}>;
 	}) {
 		const url = getDataSetResourceURL({
 			dataSetERC: erc,
@@ -505,6 +507,9 @@ export class DataSetManagerApiHelpers extends ApiHelpers {
 			searchSuggestionsEnabled,
 			showSearch,
 			snapshotsEnabled,
+			visualizationModes: visualizationModes
+				? JSON.stringify(visualizationModes)
+				: undefined,
 		};
 
 		return this.patch(url, data);

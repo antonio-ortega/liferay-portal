@@ -10,10 +10,7 @@ import {DataSetPage} from '../DataSetPage';
 export class SettingsPage {
 	readonly cancelButton: Locator;
 	readonly dataSetPage: DataSetPage;
-	readonly goToVisualizationModesLink: Locator;
-	readonly defaultVisualizationModeLabel: Locator;
 	readonly manageUserViewsButton: Locator;
-	readonly notConfiguredPlaceholder: Locator;
 	readonly page: Page;
 	readonly saveButton: Locator;
 	readonly toastContainer: Locator;
@@ -21,19 +18,11 @@ export class SettingsPage {
 	constructor(page: Page) {
 		this.cancelButton = page.getByRole('button', {name: 'Cancel'});
 		this.dataSetPage = new DataSetPage(page);
-		this.goToVisualizationModesLink = page.getByText(
-			'Go to Visualization Modes'
-		);
-		this.defaultVisualizationModeLabel = page.getByLabel(
-			'Default Visualization Mode',
-			{exact: true}
-		);
 		this.manageUserViewsButton = page.getByRole('button', {
 			exact: true,
 			name: 'Manage User Views',
 		});
 		this.page = page;
-		this.notConfiguredPlaceholder = page.getByPlaceholder('Not Configured');
 		this.saveButton = page.getByRole('button', {name: 'Save'});
 		this.toastContainer = page.locator('.alert-container');
 	}

@@ -86,7 +86,6 @@ export interface IDataSetSectionProps {
 	filterableFieldTreeItems: Array<IFieldTreeItem>;
 	manageUserViewsURL: string;
 	namespace: string;
-	onActiveSectionChange: (section: number) => void;
 	onDataSetUpdate: (data: IDataSet) => void;
 	resolvedRESTSchemas: string[];
 	restApplications: string[];
@@ -224,7 +223,6 @@ const DataSet = ({
 							filterableFieldTreeItems={filterableFieldTreeItems}
 							manageUserViewsURL={manageUserViewsURL}
 							namespace={namespace}
-							onActiveSectionChange={(tab) => setActiveIndex(tab)}
 							onDataSetUpdate={(updatedDataSet) => {
 								setDataSet({...dataSet, ...updatedDataSet});
 							}}

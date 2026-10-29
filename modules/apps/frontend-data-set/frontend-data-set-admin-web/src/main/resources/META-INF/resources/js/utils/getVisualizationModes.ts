@@ -44,8 +44,11 @@ function parseVisualizationModes(
 
 /**
  * Returns every visualization mode available to the data set, in the order
- * the data set shows them. Visualization modes the data set does not persist
- * yet go last: the default ones enabled and the client extensions disabled.
+ * the data set shows them, so the first one displayed is the default one.
+ * Visualization modes the data set does not persist yet go last: the
+ * predefined ones enabled, led by the default visualization mode of a data
+ * set saved before visualization modes could be ordered, and the client
+ * extensions disabled.
  */
 export default function getVisualizationModes({
 	dataSet,
@@ -59,15 +62,25 @@ export default function getVisualizationModes({
 		IDataSetVisualizationMode
 	>();
 
-	DEFAULT_VISUALIZATION_MODES.forEach(({label, mode, thumbnail}) =>
-		availableVisualizationModes.set(mode, {
-			clientExtension: false,
-			enabled: true,
-			label,
-			name: mode,
-			thumbnail,
-		})
-	);
+	[...DEFAULT_VISUALIZATION_MODES]
+		.sort(
+			(visualizationMode1, visualizationMode2) =>
+				Number(
+					visualizationMode2.mode === dataSet.defaultVisualizationMode
+				) -
+				Number(
+					visualizationMode1.mode === dataSet.defaultVisualizationMode
+				)
+		)
+		.forEach(({label, mode, thumbnail}) =>
+			availableVisualizationModes.set(mode, {
+				clientExtension: false,
+				enabled: true,
+				label,
+				name: mode,
+				thumbnail,
+			})
+		);
 
 	visualizationModeClientExtensions.forEach(
 		({externalReferenceCode, icon, name}) =>
@@ -98,7 +111,7 @@ export default function getVisualizationModes({
 }
 
 /**
- * Returns the names of the default visualization modes with at least one field
+ * Returns the names of the predefined visualization modes with at least one field
  * assigned, given a data set fetched with their relationships as nested fields.
  */
 export function getMappedVisualizationModeNames(dataSet: {

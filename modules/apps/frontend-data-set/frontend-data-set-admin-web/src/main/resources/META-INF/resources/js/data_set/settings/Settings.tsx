@@ -4,13 +4,8 @@
  */
 
 import ClayButton from '@clayui/button';
-import {Option, Picker, Text} from '@clayui/core';
-import DropDown from '@clayui/drop-down';
 import {ClayToggle} from '@clayui/form';
-import ClayIcon from '@clayui/icon';
 import ClayLayout from '@clayui/layout';
-import ClayLink from '@clayui/link';
-import {ClayTooltipProvider} from '@clayui/tooltip';
 import {
 	getConfigParamName,
 	serializeFDSConfig,
@@ -18,42 +13,22 @@ import {
 import {fetch, navigate} from 'frontend-js-web';
 import React, {useCallback, useEffect, useState} from 'react';
 
-import {
-	DEFAULT_FETCH_HEADERS,
-	OBJECT_RELATIONSHIP,
-} from '../../utils/constants';
+import {DEFAULT_FETCH_HEADERS} from '../../utils/constants';
 import getDataSetResourceURL from '../../utils/getDataSetResourceURL';
-import getVisualizationModes, {
-	getMappedVisualizationModeNames,
-	isVisualizationModeDisplayed,
-} from '../../utils/getVisualizationModes';
 import openDefaultFailureToast from '../../utils/openDefaultFailureToast';
 import openDefaultSuccessToast from '../../utils/openDefaultSuccessToast';
-import {IDataSetVisualizationMode} from '../../utils/types';
 import {IDataSetSectionProps} from '../DataSet';
-
-const NOT_CONFIGURED_VISUALIZATION_MODE = {
-	label: Liferay.Language.get('go-to-visualization-modes'),
-	thumbnail: 'plus',
-	type: Liferay.Language.get('not-configured'),
-};
 
 const Settings = ({
 	backURL,
 	dataSet,
 	manageUserViewsURL,
 	namespace,
-	onActiveSectionChange,
 	onDataSetUpdate,
-	spritemap,
-	visualizationModeClientExtensions,
 }: IDataSetSectionProps) => {
 	const [snapshotsEnabled, setSnapshotsEnabled] = useState<boolean>(
 		dataSet.snapshotsEnabled
 	);
-	const [defaultVisualizationMode, setDefaultVisualizationMode] = useState<
-		string | undefined
-	>(NOT_CONFIGURED_VISUALIZATION_MODE.type);
 	const [hideManagementBarInEmptyState, setHideManagementBarInEmptyState] =
 		useState(dataSet.hideManagementBarInEmptyState ?? true);
 	const [loading, setLoading] = useState(true);
@@ -64,9 +39,6 @@ const Settings = ({
 		dataSet.searchSuggestionsEnabled ?? false
 	);
 	const [showSearch, setShowSearch] = useState(dataSet.showSearch ?? true);
-	const [visualizationModes, setVisualizationModes] = useState<
-		Array<IDataSetVisualizationMode>
-	>([]);
 
 	const handleToggleChange = useCallback(
 		() => setHideManagementBarInEmptyState(!hideManagementBarInEmptyState),
@@ -105,7 +77,6 @@ const Settings = ({
 
 	const updateFDSViewSettings = async () => {
 		const body = {
-			defaultVisualizationMode,
 			hideManagementBarInEmptyState,
 			searchAsYouType,
 			searchSuggestionsEnabled,
@@ -143,17 +114,10 @@ const Settings = ({
 
 	useEffect(() => {
 		const fetchSettings = async () => {
-			const fields = [
-				OBJECT_RELATIONSHIP.DATA_SET_CARDS_SECTIONS,
-				OBJECT_RELATIONSHIP.DATA_SET_LIST_SECTIONS,
-				OBJECT_RELATIONSHIP.DATA_SET_TABLE_SECTIONS,
-			].join(',');
-
 			const url = getDataSetResourceURL({
 				dataSetERC: dataSet.externalReferenceCode,
 				params: {
-					fields: `${fields},hideManagementBarInEmptyState`,
-					nestedFields: fields,
+					fields: 'hideManagementBarInEmptyState',
 				},
 			});
 
@@ -164,8 +128,6 @@ const Settings = ({
 
 				if (!response.ok) {
 					openDefaultFailureToast();
-
-					setVisualizationModes([]);
 
 					setLoading(false);
 
@@ -180,38 +142,6 @@ const Settings = ({
 					hideManagementBarInEmptyState:
 						persistedHideManagementBarInEmptyState,
 				} = responseJSON;
-
-				const mappedVisualizationModeNames =
-					getMappedVisualizationModeNames(responseJSON);
-
-				const displayedVisualizationModes = getVisualizationModes({
-					dataSet,
-					visualizationModeClientExtensions,
-				}).filter((visualizationMode) =>
-					isVisualizationModeDisplayed({
-						mappedVisualizationModeNames,
-						visualizationMode,
-					})
-				);
-
-				setVisualizationModes(displayedVisualizationModes);
-
-				setDefaultVisualizationMode(() => {
-					if (
-						displayedVisualizationModes.find(
-							(visualizationMode) =>
-								visualizationMode.name ===
-								dataSet.defaultVisualizationMode
-						)
-					) {
-						return dataSet.defaultVisualizationMode;
-					}
-					else {
-						return displayedVisualizationModes.length
-							? displayedVisualizationModes[0].name
-							: NOT_CONFIGURED_VISUALIZATION_MODE.type;
-					}
-				});
 
 				const serverHideManagementBarValue =
 					persistedHideManagementBarInEmptyState || false;
@@ -229,7 +159,6 @@ const Settings = ({
 			}
 			catch (error) {
 				openDefaultFailureToast();
-				setVisualizationModes([]);
 				setLoading(false);
 			}
 		};
@@ -248,151 +177,6 @@ const Settings = ({
 						{Liferay.Language.get('settings')}
 					</h2>
 				</ClayLayout.SheetHeader>
-
-				<ClayLayout.SheetSection>
-					<h3 className="sheet-subtitle">
-						{Liferay.Language.get('fragment-defaults')}
-					</h3>
-
-					<ClayLayout.Row className="align-items-center justify-content-between">
-						<ClayLayout.Col size={9}>
-							<div>
-								<label
-									htmlFor="view-mode-picker"
-									id="view-mode"
-								>
-									{Liferay.Language.get(
-										'default-visualization-mode'
-									)}
-								</label>
-
-								<ClayTooltipProvider>
-									<span
-										className="ml-1 text-secondary"
-										data-tooltip-align="top"
-										title={Liferay.Language.get(
-											'default-visualization-mode-tooltip'
-										)}
-									>
-										<ClayIcon
-											spritemap={spritemap}
-											symbol="question-circle-full"
-										/>
-									</span>
-								</ClayTooltipProvider>
-							</div>
-
-							<div>
-								{Liferay.Language.get(
-									'default-visualization-mode-help'
-								)}
-							</div>
-						</ClayLayout.Col>
-
-						<ClayLayout.Col size={3}>
-							{!loading && (
-								<Picker
-									aria-labelledby="view-mode"
-									className="mb-2"
-									disabled={!visualizationModes.length}
-									id="view-mode-picker"
-									items={visualizationModes}
-									messages={{
-										itemDescribedby: Liferay.Language.get(
-											'you-are-currently-on-a-text-element,-inside-of-a-list-box'
-										),
-										itemSelected:
-											Liferay.Language.get('x-selected'),
-										scrollToBottomAriaLabel:
-											Liferay.Language.get(
-												'scroll-to-bottom'
-											),
-										scrollToTopAriaLabel:
-											Liferay.Language.get(
-												'scroll-to-top'
-											),
-									}}
-									onSelectionChange={(option: React.Key) => {
-										if (
-											option !==
-											NOT_CONFIGURED_VISUALIZATION_MODE.type
-										) {
-											setDefaultVisualizationMode(
-												option as string
-											);
-										}
-									}}
-									placeholder={
-										NOT_CONFIGURED_VISUALIZATION_MODE.type
-									}
-									selectedKey={defaultVisualizationMode}
-								>
-									{visualizationModes.length ? (
-										({label, name, thumbnail}) => (
-											<Option
-												key={name}
-												textValue={label}
-											>
-												<ClayIcon
-													className="mr-3"
-													symbol={thumbnail}
-												/>
-
-												{label}
-											</Option>
-										)
-									) : (
-										<DropDown.Group
-											header={Liferay.Language.get(
-												'not-configured'
-											)}
-										>
-											<Option
-												key={
-													NOT_CONFIGURED_VISUALIZATION_MODE.type
-												}
-												textValue={
-													NOT_CONFIGURED_VISUALIZATION_MODE.type
-												}
-											>
-												<ClayLayout.Row>
-													<ClayLayout.Col>
-														<Text size={3}>
-															{
-																NOT_CONFIGURED_VISUALIZATION_MODE.label
-															}
-														</Text>
-													</ClayLayout.Col>
-												</ClayLayout.Row>
-											</Option>
-										</DropDown.Group>
-									)}
-								</Picker>
-							)}
-
-							{!loading && !visualizationModes.length && (
-								<ClayLink
-									borderless
-									onClick={() => onActiveSectionChange(1)}
-									onKeyPress={() => onActiveSectionChange(1)}
-									tabIndex={0}
-									weight="semi-bold"
-								>
-									<span className="inline-item inline-item-before">
-										<ClayIcon
-											spritemap={spritemap}
-											symbol="shortcut"
-										/>
-									</span>
-
-									{Liferay.Language.get(
-										'go-to-visualization-modes'
-									)}
-								</ClayLink>
-							)}
-						</ClayLayout.Col>
-					</ClayLayout.Row>
-				</ClayLayout.SheetSection>
 
 				<ClayLayout.SheetSection>
 					<h3 className="sheet-subtitle">

@@ -32,7 +32,6 @@ const DEFAULT_PROPS = {
 	filterableFieldTreeItems: [],
 	manageUserViewsURL: '/manage-user-views',
 	namespace: 'testNamespace_',
-	onActiveSectionChange: jest.fn(),
 	onDataSetUpdate: jest.fn(),
 	resolvedRESTSchemas: [],
 	restApplications: [DATA_SET.restApplication],
@@ -179,6 +178,44 @@ describe('VisualizationModes', () => {
 			enabled: true,
 			name: 'LXC:undeployed',
 		});
+	});
+
+	it('marks the first visualization mode displayed as the default one', async () => {
+		renderVisualizationModes({
+			dataSet: {
+				...DATA_SET,
+				visualizationModes: JSON.stringify([
+					{enabled: false, name: 'LXC:timeline'},
+					{enabled: true, name: 'cards'},
+					{enabled: true, name: 'table'},
+				]),
+			},
+		});
+
+		expect(
+			await within(getRow('table')).findByText('default')
+		).toBeVisible();
+
+		expect(
+			within(getRow('cards')).queryByText('default')
+		).not.toBeInTheDocument();
+	});
+
+	it('lists the default visualization mode of a data set without order first', async () => {
+		renderVisualizationModes({
+			dataSet: {...DATA_SET, defaultVisualizationMode: 'table'},
+		});
+
+		expect(getRowNames()).toEqual([
+			'table',
+			'cards',
+			'list[noun]',
+			'Timeline',
+		]);
+
+		expect(
+			await within(getRow('table')).findByText('default')
+		).toBeVisible();
 	});
 
 	it('keeps at least one visualization mode enabled', async () => {
