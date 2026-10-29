@@ -198,10 +198,14 @@ test('When the default visualization mode is changed in the Data Set Manager, th
 			.isVisible();
 	});
 
-	await test.step('Change default visualization mode to Cards', async () => {
+	await test.step('Move Cards to the top of the visualization modes', async () => {
 		await dataSetManagerApiHelpers.updateDataSet({
-			defaultVisualizationMode: 'cards',
 			erc: settingsDataSetERC,
+			visualizationModes: [
+				{enabled: true, name: 'cards'},
+				{enabled: true, name: 'list'},
+				{enabled: true, name: 'table'},
+			],
 		});
 	});
 

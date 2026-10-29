@@ -23,6 +23,7 @@ import {
 import getDataSetResourceURL from '../../utils/getDataSetResourceURL';
 import getVisualizationModes, {
 	getMappedVisualizationModeNames,
+	isVisualizationModeDisplayed,
 	serializeVisualizationModes,
 } from '../../utils/getVisualizationModes';
 import openDefaultFailureToast from '../../utils/openDefaultFailureToast';
@@ -35,6 +36,7 @@ import Table from './modes/Table';
 
 interface IVisualizationModeItem extends IDataSetVisualizationMode {
 	active: boolean;
+	default: boolean;
 	externalReferenceCode: string;
 	lastEnabled: boolean;
 	missingFields: boolean;
@@ -103,6 +105,12 @@ function NameCell({
 				/>
 			) : (
 				<span>{item.label}</span>
+			)}
+
+			{item.default && (
+				<ClayLabel className="ml-2" displayType="info">
+					{Liferay.Language.get('default')}
+				</ClayLabel>
 			)}
 
 			{item.missingFields && (
@@ -290,6 +298,15 @@ export default function VisualizationModes(props: IDataSetSectionProps) {
 		({enabled}) => enabled
 	).length;
 
+	const defaultVisualizationMode = mappedVisualizationModeNames
+		? visualizationModes.find((visualizationMode) =>
+				isVisualizationModeDisplayed({
+					mappedVisualizationModeNames,
+					visualizationMode,
+				})
+			)
+		: undefined;
+
 	const items: IVisualizationModeItem[] = visualizationModes.map(
 		(visualizationMode) => {
 			const lastEnabled =
@@ -299,6 +316,7 @@ export default function VisualizationModes(props: IDataSetSectionProps) {
 			return {
 				...visualizationMode,
 				active: visualizationMode.enabled,
+				default: visualizationMode === defaultVisualizationMode,
 				externalReferenceCode: visualizationMode.name,
 				lastEnabled,
 				missingFields:
@@ -314,7 +332,7 @@ export default function VisualizationModes(props: IDataSetSectionProps) {
 				toggleDisabled: saving || lastEnabled,
 				type: visualizationMode.clientExtension
 					? Liferay.Language.get('client-extension')
-					: Liferay.Language.get('default'),
+					: Liferay.Language.get('predefined'),
 			};
 		}
 	);
