@@ -11,9 +11,11 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.internal.util.ContextResourcePathsUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.model.PortletApp;
 import com.liferay.portal.kernel.portlet.LiferayPortlet;
 import com.liferay.portal.kernel.portlet.LiferayPortletConfig;
+import com.liferay.portal.kernel.portlet.LiferayPortletMode;
 import com.liferay.portal.kernel.portlet.bridges.mvc.constants.MVCRenderConstants;
 import com.liferay.portal.kernel.service.PortletLocalServiceUtil;
 import com.liferay.portal.kernel.servlet.SessionMessages;
@@ -21,6 +23,7 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -55,6 +58,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -348,7 +352,9 @@ public class MVCPortlet extends LiferayPortlet {
 
 		String path = getPath(resourceRequest, resourceResponse);
 
-		if (path != null) {
+		if ((path != null) &&
+			!_isUnauthorizedConfigurationPath(resourceRequest, path)) {
+
 			include(
 				path, resourceRequest, resourceResponse,
 				PortletRequest.RESOURCE_PHASE);
@@ -489,7 +495,9 @@ public class MVCPortlet extends LiferayPortlet {
 
 		String path = getPath(renderRequest, renderResponse);
 
-		if (path != null) {
+		if ((path != null) &&
+			!_isUnauthorizedConfigurationPath(renderRequest, path)) {
+
 			WindowState windowState = renderRequest.getWindowState();
 
 			if (windowState.equals(WindowState.MINIMIZED)) {
@@ -739,6 +747,23 @@ public class MVCPortlet extends LiferayPortlet {
 		return _validPaths;
 	}
 
+	private boolean _hasConfigurationAction(PortletRequest portletRequest) {
+		LiferayPortletConfig liferayPortletConfig =
+			(LiferayPortletConfig)getPortletConfig();
+
+		Portlet portlet = PortletLocalServiceUtil.getPortletById(
+			PortalUtil.getCompanyId(portletRequest),
+			liferayPortletConfig.getPortletId());
+
+		if ((portlet == null) ||
+			(portlet.getConfigurationActionInstance() == null)) {
+
+			return false;
+		}
+
+		return true;
+	}
+
 	private Set<String> _initValidPaths(String rootPath) {
 		PortletContext portletContext = getPortletContext();
 
@@ -796,6 +821,36 @@ public class MVCPortlet extends LiferayPortlet {
 			});
 	}
 
+	private boolean _isUnauthorizedConfigurationPath(
+		PortletRequest portletRequest, String path) {
+
+		if (Objects.equals(
+				portletRequest.getPortletMode(), LiferayPortletMode.CONFIG)) {
+
+			return false;
+		}
+
+		if (path.startsWith(_PATH_META_INF_RESOURCES + StringPool.SLASH)) {
+			path = path.substring(_PATH_META_INF_RESOURCES.length());
+		}
+
+		if (configTemplate != null) {
+			if (path.equals(configTemplate)) {
+				return true;
+			}
+		}
+		else if (!_hasConfigurationAction(portletRequest)) {
+			return false;
+		}
+
+		if (path.contains(_PATH_CONFIGURATION_DIRECTORY)) {
+			return true;
+		}
+
+		return _configurationJSPFileNames.contains(
+			path.substring(path.lastIndexOf(CharPool.SLASH) + 1));
+	}
+
 	private Set<String> _visitResources(
 		PortletContext portletContext, String path, String pattern) {
 
@@ -818,11 +873,16 @@ public class MVCPortlet extends LiferayPortlet {
 			});
 	}
 
+	private static final String _PATH_CONFIGURATION_DIRECTORY =
+		"/configuration/";
+
 	private static final String _PATH_META_INF_RESOURCES =
 		"/META-INF/resources";
 
 	private static final Log _log = LogFactoryUtil.getLog(MVCPortlet.class);
 
+	private static final Set<String> _configurationJSPFileNames =
+		SetUtil.fromArray("configuration.jsp", "configuration_browse.jsp");
 	private static final Map<String, Map<String, Set<String>>> _validPathsMaps =
 		new ConcurrentHashMap<>();
 
