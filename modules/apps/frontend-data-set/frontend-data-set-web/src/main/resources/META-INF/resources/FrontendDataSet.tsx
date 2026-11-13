@@ -593,11 +593,17 @@ const FrontendDataSetContent = ({
 		);
 
 	const getInitialViewsState = () => {
+		const initialDelta = pagination?.initialDelta;
+
+		// A Data Set with hidden pagination still requests the first page
+		// with its initial delta. Without one, it does not send a page size
+		// and leaves it to the API.
+
 		const defaultSnapshot: any = {
 			modifiedFields: {},
 			paginationDelta:
-				showPagination &&
-				(pagination?.initialDelta || DEFAULT_PAGINATION_DELTA),
+				(showPagination || initialDelta) &&
+				(initialDelta || DEFAULT_PAGINATION_DELTA),
 		};
 
 		let initialActiveView =
