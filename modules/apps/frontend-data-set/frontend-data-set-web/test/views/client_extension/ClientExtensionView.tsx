@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {render, screen} from '@testing-library/react';
+import {act, render, screen} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 
@@ -16,6 +16,8 @@ import type {
 	FDSVisualizationMode,
 	FDSVisualizationModeArgs,
 } from '@liferay/js-api/data-set';
+
+const MODULE_URL = 'http://localhost/o/cx/index.js';
 
 const ITEMS = [
 	{id: 1, name: 'Sample1'},
@@ -80,6 +82,7 @@ const renderClientExtensionView = ({
 		>
 			<ClientExtensionView
 				items={ITEMS}
+				moduleURL={MODULE_URL}
 				onItemSelectionChange={onItemSelectionChange}
 				schema={{title: 'name'}}
 				visualizationMode={visualizationMode}
@@ -201,5 +204,86 @@ describe('ClientExtensionView', () => {
 		expect(
 			screen.getByText('this-visualization-mode-could-not-be-displayed')
 		).toBeInTheDocument();
+	});
+
+	describe('when an error escapes the client extension try/catch', () => {
+		const ERROR_MESSAGE = 'this-visualization-mode-could-not-be-displayed';
+
+		const dispatchError = (filename: string, error: Error) =>
+			act(() => {
+				window.dispatchEvent(
+					new ErrorEvent('error', {
+						error,
+						filename,
+						message: error.message,
+					})
+				);
+			});
+
+		const dispatchRejection = (reason: unknown) => {
+			const event: any = new Event('unhandledrejection');
+
+			event.reason = reason;
+
+			act(() => {
+				window.dispatchEvent(event);
+			});
+		};
+
+		beforeEach(() => {
+			jest.spyOn(console, 'error').mockImplementation(() => {});
+		});
+
+		it('shows an error and destroys the client extension on an uncaught error thrown by its module', () => {
+			renderClientExtensionView({});
+
+			dispatchError(MODULE_URL, new Error('Broken'));
+
+			expect(screen.getByText(ERROR_MESSAGE)).toBeInTheDocument();
+			expect(destroy).toHaveBeenCalledTimes(1);
+		});
+
+		it('shows an error on an unhandled rejection coming from its module', () => {
+			renderClientExtensionView({});
+
+			const reason = new Error('Broken');
+
+			reason.stack = `Error: Broken\n    at run (${MODULE_URL}:1:1)`;
+
+			dispatchRejection(reason);
+
+			expect(screen.getByText(ERROR_MESSAGE)).toBeInTheDocument();
+		});
+
+		it('ignores errors that do not come from its module', () => {
+			renderClientExtensionView({});
+
+			dispatchError('http://localhost/other.js', new Error('Other'));
+			dispatchRejection(new Error('Other'));
+			dispatchRejection('Not an error');
+
+			expect(screen.queryByText(ERROR_MESSAGE)).not.toBeInTheDocument();
+			expect(screen.getByText('Sample1')).toBeInTheDocument();
+		});
+
+		it('removes its listeners when the view goes away', () => {
+			const removeEventListenerSpy = jest.spyOn(
+				window,
+				'removeEventListener'
+			);
+
+			const {unmount} = renderClientExtensionView({});
+
+			unmount();
+
+			expect(removeEventListenerSpy).toHaveBeenCalledWith(
+				'error',
+				expect.any(Function)
+			);
+			expect(removeEventListenerSpy).toHaveBeenCalledWith(
+				'unhandledrejection',
+				expect.any(Function)
+			);
+		});
 	});
 });

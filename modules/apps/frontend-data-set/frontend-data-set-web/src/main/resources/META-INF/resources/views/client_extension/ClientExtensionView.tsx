@@ -20,12 +20,22 @@ import type {
 
 interface IClientExtensionViewProps {
 	items: Array<FDSVisualizationModeItem>;
+	moduleURL?: string;
 	onItemSelectionChange: (
 		item: FDSVisualizationModeItem,
 		forceSingleSelection: boolean
 	) => void;
 	schema?: FDSVisualizationModeSchema;
 	visualizationMode?: FDSVisualizationMode;
+}
+
+function isFromModule(moduleURL: string | undefined, error: unknown) {
+	return (
+		!!moduleURL &&
+		error instanceof Error &&
+		typeof error.stack === 'string' &&
+		error.stack.includes(moduleURL)
+	);
 }
 
 function logError(
@@ -43,6 +53,7 @@ function logError(
 
 export default function ClientExtensionView({
 	items,
+	moduleURL,
 	onItemSelectionChange,
 	schema,
 	visualizationMode,
@@ -128,6 +139,40 @@ export default function ClientExtensionView({
 	}, [args, error, visualizationMode]);
 
 	useEffect(() => {
+
+		// Errors thrown from async callbacks, unhandled promise rejections and
+		// DOM event listeners do not reach the try/catch blocks above, so
+		// listen globally and only react to those originating in this module.
+
+		const handleError = (event: ErrorEvent) => {
+			if (
+				event.filename === moduleURL ||
+				isFromModule(moduleURL, event.error)
+			) {
+				logError(visualizationMode, event.error ?? event.message);
+
+				setError(true);
+			}
+		};
+
+		const handleRejection = (event: PromiseRejectionEvent) => {
+			if (isFromModule(moduleURL, event.reason)) {
+				logError(visualizationMode, event.reason);
+
+				setError(true);
+			}
+		};
+
+		window.addEventListener('error', handleError);
+		window.addEventListener('unhandledrejection', handleRejection);
+
+		return () => {
+			window.removeEventListener('error', handleError);
+			window.removeEventListener('unhandledrejection', handleRejection);
+		};
+	}, [moduleURL, visualizationMode]);
+
+	useEffect(() => {
 		const {current: container} = containerRef;
 
 		return () => {
@@ -166,14 +211,19 @@ export default function ClientExtensionView({
 }
 
 export function getClientExtensionViewComponent(
-	visualizationMode?: FDSVisualizationMode
+	visualizationMode?: FDSVisualizationMode,
+	moduleURL?: string
 ) {
 	return function VisualizationModeClientExtensionView(
-		props: Omit<IClientExtensionViewProps, 'visualizationMode'>
+		props: Omit<
+			IClientExtensionViewProps,
+			'moduleURL' | 'visualizationMode'
+		>
 	) {
 		return (
 			<ClientExtensionView
 				{...props}
+				moduleURL={moduleURL}
 				visualizationMode={visualizationMode}
 			/>
 		);

@@ -1588,7 +1588,8 @@ const FrontendDataSetContent = ({
 						value: {
 							component: contentRendererClientExtension
 								? getClientExtensionViewComponent(
-										binding as FDSVisualizationMode
+										binding as FDSVisualizationMode,
+										contentRendererModuleURL
 									)
 								: binding,
 							name: activeViewName,
