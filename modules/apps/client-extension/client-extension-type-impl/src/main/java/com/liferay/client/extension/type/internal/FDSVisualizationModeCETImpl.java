@@ -41,6 +41,11 @@ public class FDSVisualizationModeCETImpl
 	}
 
 	@Override
+	public String getSchema() {
+		return getString("schema");
+	}
+
+	@Override
 	public String getType() {
 		return ClientExtensionEntryConstants.TYPE_FDS_VISUALIZATION_MODE;
 	}
