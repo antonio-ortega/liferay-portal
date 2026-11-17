@@ -9,6 +9,12 @@ import com.liferay.client.extension.exception.ClientExtensionEntryTypeSettingsEx
 import com.liferay.client.extension.type.FDSVisualizationModeCET;
 import com.liferay.client.extension.type.internal.FDSVisualizationModeCETImpl;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.json.JSONArray;
+import com.liferay.portal.kernel.json.JSONException;
+import com.liferay.portal.kernel.json.JSONFactory;
+import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
@@ -17,7 +23,9 @@ import com.liferay.portal.kernel.util.Validator;
 import jakarta.portlet.PortletRequest;
 
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Properties;
+import java.util.Set;
 
 /**
  * @author Antonio Ortega
@@ -25,8 +33,10 @@ import java.util.Properties;
 public class FDSVisualizationModeCETImplFactoryImpl
 	extends BaseCETImplFactoryImpl<FDSVisualizationModeCET> {
 
-	public FDSVisualizationModeCETImplFactoryImpl() {
+	public FDSVisualizationModeCETImplFactoryImpl(JSONFactory jsonFactory) {
 		super(FDSVisualizationModeCET.class);
+
+		_jsonFactory = jsonFactory;
 	}
 
 	@Override
@@ -51,6 +61,8 @@ public class FDSVisualizationModeCETImplFactoryImpl
 		).put(
 			"icon", ParamUtil.getString(portletRequest, "icon")
 		).put(
+			"schema", ParamUtil.getString(portletRequest, "schema")
+		).put(
 			"url", ParamUtil.getString(portletRequest, "url")
 		).build();
 	}
@@ -71,6 +83,64 @@ public class FDSVisualizationModeCETImplFactoryImpl
 			throw new ClientExtensionEntryTypeSettingsException(
 				"Icon is null", "please-select-an-icon");
 		}
+
+		_validateSchema(newFDSVisualizationModeCET.getSchema());
 	}
+
+	private void _validateSchema(String schema) throws PortalException {
+		if (Validator.isBlank(schema)) {
+			return;
+		}
+
+		JSONObject jsonObject = null;
+
+		try {
+			jsonObject = _jsonFactory.createJSONObject(schema);
+		}
+		catch (JSONException jsonException) {
+			_log.error(jsonException);
+
+			throw new ClientExtensionEntryTypeSettingsException(
+				"Invalid schema JSON: " + schema,
+				"the-schema-is-not-valid-json");
+		}
+
+		JSONArray partsJSONArray = jsonObject.getJSONArray("parts");
+
+		if ((partsJSONArray == null) || (partsJSONArray.length() == 0)) {
+			throw new ClientExtensionEntryTypeSettingsException(
+				"Schema must declare at least one part",
+				"the-schema-must-declare-at-least-one-part");
+		}
+
+		Set<String> names = new HashSet<>();
+
+		for (int i = 0; i < partsJSONArray.length(); i++) {
+			JSONObject partJSONObject = partsJSONArray.getJSONObject(i);
+
+			String name = null;
+
+			if (partJSONObject != null) {
+				name = partJSONObject.getString("name");
+			}
+
+			if (Validator.isBlank(name)) {
+				throw new ClientExtensionEntryTypeSettingsException(
+					"Every schema part must have a name",
+					"every-schema-part-must-have-a-name");
+			}
+
+			if (!names.add(name)) {
+				throw new ClientExtensionEntryTypeSettingsException(
+					"Duplicate schema part name: " + name,
+					"schema-part-name-x-is-duplicated", name);
+			}
+		}
+	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		FDSVisualizationModeCETImplFactoryImpl.class);
+
+	private final JSONFactory _jsonFactory;
 
 }

@@ -22,6 +22,11 @@ public interface FDSVisualizationModeCET extends CET {
 	)
 	public String getIcon();
 
+	@CETProperty(
+		defaultValue = "", name = "schema", type = CETProperty.Type.String
+	)
+	public String getSchema();
+
 	@CETProperty(defaultValue = "", name = "url", type = CETProperty.Type.URL)
 	public String getURL();
 

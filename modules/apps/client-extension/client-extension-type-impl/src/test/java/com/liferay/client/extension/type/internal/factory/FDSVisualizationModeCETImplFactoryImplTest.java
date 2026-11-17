@@ -9,6 +9,7 @@ import com.liferay.client.extension.exception.ClientExtensionEntryTypeSettingsEx
 import com.liferay.client.extension.type.FDSVisualizationModeCET;
 import com.liferay.client.extension.type.internal.FDSVisualizationModeCETImpl;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.json.JSONFactoryImpl;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
@@ -33,17 +34,48 @@ public class FDSVisualizationModeCETImplFactoryImplTest {
 	public void testValidate() throws PortalException {
 		_fdsVisualizationModeCETImplFactoryImpl.validate(
 			_createFDSVisualizationModeCET(
-				RandomTestUtil.randomString(), RandomTestUtil.randomString()),
+				RandomTestUtil.randomString(), StringPool.BLANK,
+				RandomTestUtil.randomString()),
+			null);
+		_fdsVisualizationModeCETImplFactoryImpl.validate(
+			_createFDSVisualizationModeCET(
+				RandomTestUtil.randomString(),
+				"{\"parts\": [{\"name\": \"title\"}, {\"label\": \"Image\", " +
+					"\"name\": \"image\"}]}",
+				RandomTestUtil.randomString()),
 			null);
 
 		_assertValidateFails(
 			_createFDSVisualizationModeCET(
-				RandomTestUtil.randomString(), StringPool.BLANK),
+				RandomTestUtil.randomString(), StringPool.BLANK,
+				StringPool.BLANK),
 			"please-enter-at-least-one-javascript-url");
 		_assertValidateFails(
 			_createFDSVisualizationModeCET(
-				StringPool.BLANK, RandomTestUtil.randomString()),
+				StringPool.BLANK, StringPool.BLANK,
+				RandomTestUtil.randomString()),
 			"please-select-an-icon");
+		_assertValidateFails(
+			_createFDSVisualizationModeCET(
+				RandomTestUtil.randomString(), "not json",
+				RandomTestUtil.randomString()),
+			"the-schema-is-not-valid-json");
+		_assertValidateFails(
+			_createFDSVisualizationModeCET(
+				RandomTestUtil.randomString(), "{\"parts\": []}",
+				RandomTestUtil.randomString()),
+			"the-schema-must-declare-at-least-one-part");
+		_assertValidateFails(
+			_createFDSVisualizationModeCET(
+				RandomTestUtil.randomString(), "{\"parts\": [{}]}",
+				RandomTestUtil.randomString()),
+			"every-schema-part-must-have-a-name");
+		_assertValidateFails(
+			_createFDSVisualizationModeCET(
+				RandomTestUtil.randomString(),
+				"{\"parts\": [{\"name\": \"a\"}, {\"name\": \"a\"}]}",
+				RandomTestUtil.randomString()),
+			"schema-part-name-x-is-duplicated");
 	}
 
 	private void _assertValidateFails(
@@ -66,7 +98,7 @@ public class FDSVisualizationModeCETImplFactoryImplTest {
 	}
 
 	private FDSVisualizationModeCET _createFDSVisualizationModeCET(
-		String icon, String url) {
+		String icon, String schema, String url) {
 
 		return new FDSVisualizationModeCETImpl(
 			StringPool.BLANK, 0, null, StringPool.BLANK, StringPool.BLANK, null,
@@ -74,12 +106,14 @@ public class FDSVisualizationModeCETImplFactoryImplTest {
 			UnicodePropertiesBuilder.put(
 				"icon", icon
 			).put(
+				"schema", schema
+			).put(
 				"url", url
 			).build());
 	}
 
 	private final FDSVisualizationModeCETImplFactoryImpl
 		_fdsVisualizationModeCETImplFactoryImpl =
-			new FDSVisualizationModeCETImplFactoryImpl();
+			new FDSVisualizationModeCETImplFactoryImpl(new JSONFactoryImpl());
 
 }

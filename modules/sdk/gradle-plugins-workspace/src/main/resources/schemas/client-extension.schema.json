@@ -209,6 +209,14 @@
 					"allOf": [
 						{
 							"$ref": "#/definitions/propertySets/properties/url"
+						},
+						{
+							"properties": {
+								"schema": {
+									"description": "Optional JSON declaring the parts of an item that the visualization mode draws, as {\"parts\": [{\"label\": \"Title\", \"name\": \"title\", \"required\": true}]}. Data set managers map each part to a field.",
+									"type": "string"
+								}
+							}
 						}
 					],
 					"description": "Description for fdsVisualizationMode"

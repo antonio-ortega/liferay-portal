@@ -11,6 +11,8 @@
 EditClientExtensionEntryDisplayContext<FDSVisualizationModeCET> editClientExtensionEntryDisplayContext = (EditClientExtensionEntryDisplayContext)renderRequest.getAttribute(ClientExtensionAdminWebKeys.EDIT_CLIENT_EXTENSION_ENTRY_DISPLAY_CONTEXT);
 
 FDSVisualizationModeCET fdsVisualizationModeCET = editClientExtensionEntryDisplayContext.getCET();
+
+String schemaPlaceholder = "{\"parts\": [{\"label\": \"Title\", \"name\": \"title\", \"required\": true}]}";
 %>
 
 <aui:field-wrapper cssClass="form-group">
@@ -33,3 +35,9 @@ FDSVisualizationModeCET fdsVisualizationModeCET = editClientExtensionEntryDispla
 		%>'
 	/>
 </aui:field-wrapper>
+
+<aui:input label="schema" name="schema" placeholder="<%= HtmlUtil.escapeAttribute(schemaPlaceholder) %>" rows="6" type="textarea" value="<%= fdsVisualizationModeCET.getSchema() %>" />
+
+<div class="form-text mb-3">
+	<liferay-ui:message key="fds-visualization-mode-schema-help" />
+</div>
