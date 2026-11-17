@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import ClayAlert from '@clayui/alert';
 import ClayBreadcrumb from '@clayui/breadcrumb';
 import {ClayButtonWithIcon} from '@clayui/button';
 import ClayIcon from '@clayui/icon';
@@ -21,6 +20,11 @@ import {
 	FUZZY_OPTIONS,
 } from '../../utils/constants';
 import getDataSetResourceURL from '../../utils/getDataSetResourceURL';
+import {
+	getSchemaMapping,
+	getSchemaParts,
+	hasMissingRequiredParts,
+} from '../../utils/getVisualizationModeSchema';
 import getVisualizationModes, {
 	getMappedVisualizationModeNames,
 	serializeVisualizationModes,
@@ -29,6 +33,7 @@ import openDefaultFailureToast from '../../utils/openDefaultFailureToast';
 import openDefaultSuccessToast from '../../utils/openDefaultSuccessToast';
 import {IDataSetVisualizationMode} from '../../utils/types';
 import {IDataSetSectionProps} from '../DataSet';
+import ClientExtensionVisualizationMode from './components/ClientExtensionVisualizationMode';
 import Cards from './modes/Cards';
 import List from './modes/List';
 import Table from './modes/Table';
@@ -51,20 +56,6 @@ const VISUALIZATION_MODE_COMPONENT_MAP: {
 	list: List,
 	table: Table,
 };
-
-function ClientExtensionVisualizationMode() {
-	return (
-		<ClayAlert
-			displayType="info"
-			title={`${Liferay.Language.get('info')}:`}
-			variant="stripe"
-		>
-			{Liferay.Language.get(
-				'this-visualization-mode-is-provided-by-a-client-extension-and-receives-all-the-fields-of-each-item'
-			)}
-		</ClayAlert>
-	);
-}
 
 function EditCell({item}: {item: IVisualizationModeItem}) {
 	const label = Liferay.Util.sub(Liferay.Language.get('edit-x'), item.label);
@@ -310,11 +301,24 @@ export default function VisualizationModes(props: IDataSetSectionProps) {
 				lastEnabled,
 				missingFields:
 					visualizationMode.enabled &&
-					!visualizationMode.clientExtension &&
-					!!mappedVisualizationModeNames &&
-					!mappedVisualizationModeNames.includes(
-						visualizationMode.name
-					),
+					(visualizationMode.clientExtension
+						? hasMissingRequiredParts(
+								getSchemaMapping(
+									dataSet,
+									visualizationMode.name
+								),
+								getSchemaParts(
+									visualizationModeClientExtensions.find(
+										({externalReferenceCode}) =>
+											externalReferenceCode ===
+											visualizationMode.name
+									)?.schema
+								)
+							)
+						: !!mappedVisualizationModeNames &&
+							!mappedVisualizationModeNames.includes(
+								visualizationMode.name
+							)),
 				onEdit: () =>
 					setActiveVisualizationModeName(visualizationMode.name),
 				onToggle: () => toggleVisualizationMode(visualizationMode.name),
@@ -349,15 +353,14 @@ export default function VisualizationModes(props: IDataSetSectionProps) {
 	}
 
 	const ActiveVisualizationModeComponent = activeVisualizationMode
-		? VISUALIZATION_MODE_COMPONENT_MAP[activeVisualizationMode.name] ||
-			ClientExtensionVisualizationMode
+		? VISUALIZATION_MODE_COMPONENT_MAP[activeVisualizationMode.name]
 		: null;
 
 	return (
 		<ClayLayout.ContainerFluid className="mt-3 visualization-modes">
 			<ClayBreadcrumb className="my-2" items={breadcrumbItems} />
 
-			{activeVisualizationMode && ActiveVisualizationModeComponent ? (
+			{activeVisualizationMode ? (
 				<ClayLayout.Sheet className="visualization-mode-detail">
 					<ClayLayout.SheetHeader className="mb-4">
 						<h2 className="mb-0">
@@ -365,7 +368,14 @@ export default function VisualizationModes(props: IDataSetSectionProps) {
 						</h2>
 					</ClayLayout.SheetHeader>
 
-					<ActiveVisualizationModeComponent {...props} />
+					{ActiveVisualizationModeComponent ? (
+						<ActiveVisualizationModeComponent {...props} />
+					) : (
+						<ClientExtensionVisualizationMode
+							{...props}
+							visualizationModeName={activeVisualizationMode.name}
+						/>
+					)}
 				</ClayLayout.Sheet>
 			) : (
 				<OrderableTable

@@ -1228,6 +1228,18 @@ public class CustomFDSSerializer
 		).put(
 			"name", externalReferenceCode
 		).put(
+			"schema",
+			() -> {
+				JSONObject configurationJSONObject =
+					visualizationModeJSONObject.getJSONObject("configuration");
+
+				if (configurationJSONObject == null) {
+					return null;
+				}
+
+				return configurationJSONObject.getJSONObject("schema");
+			}
+		).put(
 			"thumbnail",
 			GetterUtil.getString(fdsVisualizationModeCET.getIcon(), "view")
 		);
