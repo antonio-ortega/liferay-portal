@@ -94,3 +94,73 @@ test(
 		await expect(page.getByText('Please select an icon.')).toBeVisible();
 	}
 );
+
+test(
+	'Verify that the schema is optional and is kept when provided',
+	{tag: '@LPD-107424'},
+	async ({clientExtensionsPage, editFDSVisualizationModePage}) => {
+		await editFDSVisualizationModePage.goto();
+
+		const name = getRandomString();
+
+		const schema =
+			'{"parts": [{"label": "Title", "name": "title", "required": true}]}';
+
+		await editFDSVisualizationModePage.nameInput.fill(name);
+		await editFDSVisualizationModePage.javaScriptURLInput.fill(
+			'http://www.myplace.com/myvisualizationmode.js'
+		);
+		await editFDSVisualizationModePage.selectIcon('cards2');
+		await editFDSVisualizationModePage.schemaInput.fill(schema);
+		await editFDSVisualizationModePage.publish(WaitAction.SUCCESS);
+
+		await clientExtensionsPage.goto();
+
+		const editedFDSVisualizationModePage =
+			await clientExtensionsPage.editClientExtension(
+				name,
+				EditFDSVisualizationModePage
+			);
+
+		await expect(editedFDSVisualizationModePage.schemaInput).toHaveValue(
+			schema
+		);
+
+		await editedFDSVisualizationModePage.schemaInput.fill('');
+		await editedFDSVisualizationModePage.publish(WaitAction.SUCCESS);
+
+		await test.step('Cleanup', async () => {
+			await clientExtensionsPage.goto();
+
+			await clientExtensionsPage.deleteClientExtension(name);
+		});
+	}
+);
+
+test(
+	'Verify that it is not possible to publish when the schema is invalid',
+	{tag: '@LPD-107424'},
+	async ({editFDSVisualizationModePage, page}) => {
+		await editFDSVisualizationModePage.goto();
+
+		await editFDSVisualizationModePage.nameInput.fill(getRandomString());
+		await editFDSVisualizationModePage.javaScriptURLInput.fill(
+			'http://www.myplace.com/myvisualizationmode.js'
+		);
+		await editFDSVisualizationModePage.selectIcon('cards2');
+
+		await editFDSVisualizationModePage.schemaInput.fill('not json');
+		await editFDSVisualizationModePage.publish(WaitAction.NONE);
+
+		await expect(
+			page.getByText('The schema is not valid JSON.')
+		).toBeVisible();
+
+		await editFDSVisualizationModePage.schemaInput.fill('{"parts": []}');
+		await editFDSVisualizationModePage.publish(WaitAction.NONE);
+
+		await expect(
+			page.getByText('The schema must declare at least one part.')
+		).toBeVisible();
+	}
+);
