@@ -96,9 +96,10 @@ public class CreateClientExtensionConfigTask extends DefaultTask {
 				"site-initializer/site-initializer.json");
 		}
 
-		if (Objects.equals(clientExtension.type, "themeCSS") &&
-			clientExtension.typeSettings.containsKey(
-				"frontendTokenDefinitionJSON")) {
+		String jsonFileKey = _jsonFileKeys.get(clientExtension.type);
+
+		if ((jsonFileKey != null) &&
+			clientExtension.typeSettings.containsKey(jsonFileKey)) {
 
 			TaskInputs taskInputs = getInputs();
 
@@ -106,8 +107,7 @@ public class CreateClientExtensionConfigTask extends DefaultTask {
 
 			taskInputs.file(
 				providerFactory.provider(
-					() -> clientExtension.typeSettings.get(
-						"frontendTokenDefinitionJSON")));
+					() -> clientExtension.typeSettings.get(jsonFileKey)));
 		}
 	}
 
@@ -153,8 +153,12 @@ public class CreateClientExtensionConfigTask extends DefaultTask {
 						"Liferay-Virtual-Instance-Id", _virtualInstanceId);
 				}
 			}
+			else if (Objects.equals(type, "fdsVisualizationMode")) {
+				_inlineJSONFile(clientExtension, "schema", null);
+			}
 			else if (Objects.equals(type, "themeCSS")) {
-				_inlineFrontendTokenDefinitionJSON(clientExtension);
+				_inlineJSONFile(
+					clientExtension, "frontendTokenDefinitionJSON", "{}");
 			}
 
 			if (Objects.equals(
@@ -594,36 +598,37 @@ public class CreateClientExtensionConfigTask extends DefaultTask {
 			fileName);
 	}
 
-	private void _inlineFrontendTokenDefinitionJSON(
-		ClientExtension clientExtension) {
+	private void _inlineJSONFile(
+		ClientExtension clientExtension, String key, String blankJSON) {
 
 		Map<String, Object> typeSettings = clientExtension.typeSettings;
 
-		Object frontendTokenDefinitionFile = typeSettings.remove(
-			"frontendTokenDefinitionJSON");
+		Object file = typeSettings.remove(key);
 
-		if (frontendTokenDefinitionFile == null) {
+		if (file == null) {
 			return;
 		}
 
 		String json = ResourceUtil.readString(
-			ResourceUtil.getLocalFileResolver(
-				_project.file(frontendTokenDefinitionFile)));
+			ResourceUtil.getLocalFileResolver(_project.file(file)));
 
 		if (StringUtil.isBlank(json)) {
-			json = "{}";
+			if (blankJSON == null) {
+				return;
+			}
+
+			json = blankJSON;
 		}
 
 		try {
 			typeSettings.put(
-				"frontendTokenDefinitionJSON",
+				key,
 				_objectMapper.writeValueAsString(
 					_objectMapper.readValue(json, Map.class)));
 		}
 		catch (JsonParseException jsonParseException) {
 			throw new GradleException(
-				"Unable to JSON from file " + frontendTokenDefinitionFile,
-				jsonParseException);
+				"Unable to JSON from file " + file, jsonParseException);
 		}
 		catch (JsonProcessingException jsonProcessingException) {
 			throw new GradleException(
@@ -939,6 +944,13 @@ public class CreateClientExtensionConfigTask extends DefaultTask {
 		"configuration", "frontend");
 	private static final Set<String> _groupMicroservice = Sets.newHashSet(
 		"configuration", "microservice");
+	private static final Map<String, String> _jsonFileKeys =
+		new HashMap<String, String>() {
+			{
+				put("fdsVisualizationMode", "schema");
+				put("themeCSS", "frontendTokenDefinitionJSON");
+			}
+		};
 	private static final Map<String, String>
 		_typeSettingsToSiteInitializerJsonKeyMap =
 			new HashMap<String, String>() {

@@ -1,0 +1,6 @@
+fds-visualization-mode-with-schema:
+    icon: date-time
+    name: fds-visualization-mode-with-schema
+    schema: src/schema.json
+    type: fdsVisualizationMode
+    url: index.js

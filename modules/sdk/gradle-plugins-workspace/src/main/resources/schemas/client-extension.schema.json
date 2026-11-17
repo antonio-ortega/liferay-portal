@@ -213,7 +213,7 @@
 						{
 							"properties": {
 								"schema": {
-									"description": "Optional JSON declaring the parts of an item that the visualization mode draws, as {\"parts\": [{\"label\": \"Title\", \"name\": \"title\", \"required\": true}]}. Data set managers map each part to a field.",
+									"description": "Optional path to a JSON file declaring the parts of an item that the visualization mode draws, as {\"parts\": [{\"label\": \"Title\", \"name\": \"title\", \"required\": true}]}. Data set managers map each part to a field. An empty file declares no schema.",
 									"type": "string"
 								}
 							}

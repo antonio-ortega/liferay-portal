@@ -1,0 +1,5 @@
+fds-visualization-mode-without-schema:
+    icon: date-time
+    name: fds-visualization-mode-without-schema
+    type: fdsVisualizationMode
+    url: index.js

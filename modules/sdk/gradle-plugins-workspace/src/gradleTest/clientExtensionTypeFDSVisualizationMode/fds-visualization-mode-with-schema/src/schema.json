@@ -1,0 +1,13 @@
+{
+	"parts": [
+		{
+			"label": "Title",
+			"name": "title",
+			"required": true
+		},
+		{
+			"label": "Date",
+			"name": "date"
+		}
+	]
+}
