@@ -10,6 +10,7 @@ import {EditClientExtensionsPage} from '../../pages/EditClientExtensionsPage';
 export class EditFDSVisualizationModePage extends EditClientExtensionsPage {
 	readonly iconInput: Locator;
 	readonly javaScriptURLInput: Locator;
+	readonly schemaInput: Locator;
 
 	constructor(page: Page) {
 		super(page, 'fdsVisualizationMode');
@@ -18,6 +19,7 @@ export class EditFDSVisualizationModePage extends EditClientExtensionsPage {
 		this.javaScriptURLInput = page.locator(
 			`[name=_${this.portletName}_url]`
 		);
+		this.schemaInput = page.locator(`[name=_${this.portletName}_schema]`);
 	}
 
 	async selectIcon(icon: string) {
