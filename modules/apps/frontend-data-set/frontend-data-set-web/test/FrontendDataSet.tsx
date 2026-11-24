@@ -6,7 +6,7 @@
 import {act, render, screen, waitFor} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import fetch from 'jest-fetch-mock';
-import React, {useContext} from 'react';
+import React, {useContext, useEffect} from 'react';
 
 import '@testing-library/jest-dom';
 
@@ -283,6 +283,205 @@ describe('FrontendDataSet', () => {
 
 		expect(screen.queryByText('stale-refresh')).not.toBeInTheDocument();
 		expect(screen.getByText('newer')).toBeInTheDocument();
+	});
+
+	describe('A view of its own', () => {
+		const captured: {requestPage?: (page: number) => Promise<any>} = {};
+
+		const requestPage = (page: number) => captured.requestPage!(page);
+
+		// A view gets the Data Set through its context and decides what to do
+		// with the pages it requests
+
+		function PageView({
+			items,
+			onItemSelectionChange,
+		}: {
+			items: Array<{id: number; name: string}>;
+			onItemSelectionChange: (item: any, forceSingle: boolean) => void;
+		}) {
+			const context = useContext(FrontendDataSetContext) as any;
+
+			useEffect(() => {
+				captured.requestPage = context.requestPage;
+			});
+
+			return (
+				<>
+					<ul>
+						{items.map(({id, name}) => (
+							<li key={id}>{name}</li>
+						))}
+					</ul>
+
+					<button
+						onClick={() =>
+							onItemSelectionChange(
+								{id: 99, name: 'loaded by the view'},
+								false
+							)
+						}
+					>
+						select a row the view loaded
+					</button>
+				</>
+			);
+		}
+
+		const PAGE_VIEWS = [
+			{
+				component: PageView,
+				default: true,
+				label: 'Pages',
+				name: 'pages',
+				showPagination: false,
+			},
+		];
+
+		it('requests a page with the current search and the page size without changing the items', async () => {
+			const requests = mockPendingRequests();
+
+			render(
+				<FrontendDataSet
+					apiURL="/o/products"
+					id={id}
+					pagination={{initialDelta: 3}}
+					views={PAGE_VIEWS}
+				/>
+			);
+
+			await waitFor(() => expect(requests).toHaveLength(1));
+
+			act(() => requests[0].resolve(itemsResponse(['first'])));
+
+			expect(await screen.findByText('first')).toBeInTheDocument();
+
+			let page: Promise<any>;
+
+			act(() => {
+				page = requestPage(2);
+			});
+
+			await waitFor(() => expect(requests).toHaveLength(2));
+
+			const {searchParams} = new URL(requests[1].url);
+
+			expect(searchParams.get('page')).toBe('2');
+			expect(searchParams.get('pageSize')).toBe('3');
+
+			act(() =>
+				requests[1].resolve(
+					JSON.stringify({
+						items: [{id: 2, name: 'second'}],
+						lastPage: 2,
+						page: 2,
+						pageSize: 3,
+						totalCount: 2,
+					})
+				)
+			);
+
+			await expect(page!).resolves.toEqual(
+				expect.objectContaining({
+					items: [{id: 2, name: 'second'}],
+					lastPage: 2,
+					page: 2,
+					totalCount: 2,
+				})
+			);
+
+			expect(screen.getByText('first')).toBeInTheDocument();
+			expect(screen.queryByText('second')).not.toBeInTheDocument();
+		});
+
+		it('rejects when the page request fails', async () => {
+			const requests = mockPendingRequests();
+
+			render(
+				<FrontendDataSet
+					apiURL="/o/products"
+					id={id}
+					views={PAGE_VIEWS}
+				/>
+			);
+
+			await waitFor(() => expect(requests).toHaveLength(1));
+
+			act(() => requests[0].resolve(itemsResponse(['first'])));
+
+			expect(await screen.findByText('first')).toBeInTheDocument();
+
+			fetch.mockReject(new Error('Failed'));
+
+			await expect(requestPage(2)).rejects.toThrow();
+		});
+
+		it('does not make a reload in flight stale', async () => {
+			const requests = mockPendingRequests();
+
+			render(
+				<FrontendDataSet
+					apiURL="/o/products"
+					id={id}
+					views={PAGE_VIEWS}
+				/>
+			);
+
+			await waitFor(() => expect(requests).toHaveLength(1));
+
+			act(() => requests[0].resolve(itemsResponse(['first'])));
+
+			expect(await screen.findByText('first')).toBeInTheDocument();
+
+			refreshFromTheOutside(id);
+
+			await waitFor(() => expect(requests).toHaveLength(2));
+
+			act(() => {
+				requestPage(2);
+			});
+
+			await waitFor(() => expect(requests).toHaveLength(3));
+
+			act(() => requests[2].resolve(itemsResponse(['second'])));
+
+			await settle();
+
+			act(() => requests[1].resolve(itemsResponse(['reloaded'])));
+
+			expect(await screen.findByText('reloaded')).toBeInTheDocument();
+		});
+
+		it('selects a row that is not in the items of the Data Set', async () => {
+			const requests = mockPendingRequests();
+
+			const onSelectedItemsChange = jest.fn();
+
+			render(
+				<FrontendDataSet
+					apiURL="/o/products"
+					id={id}
+					onSelectedItemsChange={onSelectedItemsChange}
+					selectedItemsKey="id"
+					selectionType="multiple"
+					views={PAGE_VIEWS}
+				/>
+			);
+
+			await waitFor(() => expect(requests).toHaveLength(1));
+
+			act(() => requests[0].resolve(itemsResponse(['first'])));
+
+			await userEvent.click(
+				await screen.findByRole('button', {
+					name: 'select a row the view loaded',
+				})
+			);
+
+			expect(onSelectedItemsChange).toHaveBeenCalledWith([
+				{id: 99, name: 'loaded by the view'},
+			]);
+		});
 	});
 
 	it('renders client extension cells when a view without fields follows the table', async () => {
