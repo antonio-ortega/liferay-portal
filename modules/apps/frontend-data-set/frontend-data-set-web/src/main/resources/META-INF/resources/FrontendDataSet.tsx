@@ -779,7 +779,7 @@ const FrontendDataSetContent = ({
 	const requestIdRef = useRef(0);
 
 	const requestData = useCallback(
-		(signal?: AbortSignal) => {
+		(signal?: AbortSignal, page = pageNumber, tracked = true) => {
 			if (!apiURL) {
 				return;
 			}
@@ -801,12 +801,17 @@ const FrontendDataSetContent = ({
 				currentURL,
 				delta: paginationDelta,
 				odataFiltersStrings: activeFiltersOdataStrings,
-				page: pageNumber,
+				page,
 				searchParam: unfrozenGlobalFDSState.search.query,
 				sorts: activeSorts,
 			};
 
-			const requestId = ++requestIdRef.current;
+			// A request that does not replace the items must not make the one
+			// that does stale.
+
+			const requestId = tracked
+				? ++requestIdRef.current
+				: requestIdRef.current;
 
 			return loadData({
 				...loadDataArgs,
@@ -1299,8 +1304,17 @@ const FrontendDataSetContent = ({
 		setSelectedItems(newSelectedItems);
 	}
 
-	function selectItems(value: any, forceSingleSelection = false) {
+	function selectItems(
+		value: any,
+		forceSingleSelection = false,
+		selectedItem?: any
+	) {
 		const values = Array.isArray(value) ? value : [value];
+
+		// A view can render rows that are not in the items, like the ones it
+		// loaded by itself, so the clicked row is part of the lookup.
+
+		const knownItems = selectedItem ? [...items, selectedItem] : items;
 
 		if (forceSingleSelection) {
 			setSelectedItems(
@@ -1308,7 +1322,7 @@ const FrontendDataSetContent = ({
 					selectedItemsValue.includes(value)
 					? []
 					: [
-							items.find(
+							knownItems.find(
 								(item) =>
 									getObjectValueFromPath({
 										object: item,
@@ -1337,7 +1351,7 @@ const FrontendDataSetContent = ({
 
 		const nextSelectedItems = nextSelectedValues
 			.map((val) =>
-				[...selectedItems, ...items].find(
+				[...selectedItems, ...knownItems].find(
 					(item) =>
 						getObjectValueFromPath({
 							object: item,
@@ -1509,6 +1523,23 @@ const FrontendDataSetContent = ({
 		statePaginationDelta,
 		viewsDispatch,
 	]);
+
+	// Fetches a page with the current search, filters and sorts, and changes
+	// nothing in the Data Set: what to do with the page is up to the view.
+
+	const requestPage = useCallback(
+		(page: number): Promise<IDataSetData> => {
+			const request = requestData(undefined, page, false);
+
+			return request
+				? request.then(({data}) => ({
+						...data,
+						items: transformDataSetItems(data.items),
+					}))
+				: Promise.reject(new Error('The Data Set has no API URL'));
+		},
+		[requestData]
+	);
 
 	const refreshData = useCallback(
 		(successNotification?: ISuccessNotification) => {
@@ -1900,7 +1931,8 @@ const FrontendDataSetContent = ({
 										object: selectedItem,
 										path: selectedItemsKey,
 									}),
-									forceSingleSelection
+									forceSingleSelection,
+									selectedItem
 								);
 							}
 						}}
@@ -2510,6 +2542,7 @@ const FrontendDataSetContent = ({
 				openModal,
 				openSidePanel,
 				portletId,
+				requestPage,
 				saveDataSetUserConfigurationURL,
 				searchAsYouType,
 				searchParam: unfrozenGlobalFDSState.search.query,
@@ -2527,6 +2560,7 @@ const FrontendDataSetContent = ({
 				sorts,
 				style,
 				toggleItemInlineEdit,
+				total,
 				uniformActionsDisplay,
 				updateActiveSorts,
 				updateAdditionalAPIURLParameters,
