@@ -49,20 +49,24 @@ export default function ClientExtensionView({
 }: IClientExtensionViewProps) {
 	const {
 		loadData,
+		requestPage,
 		selectable,
 		selectedItemsKey,
 		selectedItemsValue,
 		selectionType,
+		total,
 	}: IFrontendDataSetContext = useContext(FrontendDataSetContext);
 
 	const containerRef = useRef<HTMLDivElement>(null);
 	const [error, setError] = useState(false);
 	const instanceRef = useRef<FDSVisualizationModeInstance | null>(null);
 	const loadDataRef = useRef(loadData);
+	const requestPageRef = useRef(requestPage);
 	const onItemSelectionChangeRef = useRef(onItemSelectionChange);
 
 	useEffect(() => {
 		loadDataRef.current = loadData;
+		requestPageRef.current = requestPage;
 		onItemSelectionChangeRef.current = onItemSelectionChange;
 	});
 
@@ -71,6 +75,25 @@ export default function ClientExtensionView({
 			items,
 			loadData: async () => {
 				await loadDataRef.current();
+			},
+			loadPage: async (page) => {
+				if (!requestPageRef.current) {
+					throw new Error('The data set cannot load pages');
+				}
+
+				const {
+					items,
+					lastPage,
+					page: loadedPage,
+					totalCount,
+				} = await requestPageRef.current(page);
+
+				return {
+					items,
+					lastPage,
+					page: loadedPage,
+					total: totalCount,
+				};
 			},
 			schema,
 			selection:
@@ -86,6 +109,7 @@ export default function ClientExtensionView({
 							type: selectionType,
 						}
 					: undefined,
+			total: total ?? items.length,
 		}),
 		[
 			items,
@@ -94,6 +118,7 @@ export default function ClientExtensionView({
 			selectedItemsKey,
 			selectedItemsValue,
 			selectionType,
+			total,
 		]
 	);
 

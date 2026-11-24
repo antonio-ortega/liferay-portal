@@ -203,3 +203,105 @@ describe('ClientExtensionView', () => {
 		).toBeInTheDocument();
 	});
 });
+
+describe('ClientExtensionView page loading', () => {
+	const PAGE = {
+		items: [{id: 3, name: 'Sample3'}],
+		lastPage: 2,
+		page: 2,
+		totalCount: 3,
+	};
+
+	const renderPageView = ({
+		requestPage,
+	}: {
+		requestPage?: (page: number) => Promise<typeof PAGE>;
+	}) => {
+		const update = jest.fn();
+		const visualizationMode = jest.fn(() => ({destroy, update}));
+
+		const getElement = (items: typeof ITEMS) => (
+			<FrontendDataSetContext.Provider
+				value={
+					{
+						loadData: jest.fn(),
+						requestPage,
+						selectedItemsKey: 'id',
+						selectedItemsValue: [],
+						total: 3,
+					} as any
+				}
+			>
+				<ClientExtensionView
+					items={items}
+					onItemSelectionChange={jest.fn()}
+					visualizationMode={visualizationMode}
+				/>
+			</FrontendDataSetContext.Provider>
+		);
+
+		const {rerender} = render(getElement(ITEMS));
+
+		return {
+			rerenderWithItems: (items: typeof ITEMS) =>
+				rerender(getElement(items)),
+			update,
+			visualizationMode,
+		};
+	};
+
+	const getLastArgs = (update: jest.Mock): FDSVisualizationModeArgs =>
+		update.mock.calls[update.mock.calls.length - 1][0];
+
+	beforeEach(() => {
+		jest.clearAllMocks();
+	});
+
+	it('tells the client extension how many items the data set matches', () => {
+		const {update} = renderPageView({});
+
+		expect(getLastArgs(update).total).toBe(3);
+	});
+
+	it('lets the client extension load a page without changing the items', async () => {
+		const requestPage = jest.fn().mockResolvedValue(PAGE);
+
+		const {update} = renderPageView({requestPage});
+
+		const page = await getLastArgs(update).loadPage(2);
+
+		expect(requestPage).toHaveBeenCalledWith(2);
+		expect(page).toEqual({
+			items: PAGE.items,
+			lastPage: 2,
+			page: 2,
+			total: 3,
+		});
+		expect(getLastArgs(update).items).toEqual(ITEMS);
+	});
+
+	it('rejects when the data set cannot load pages', async () => {
+		const {update} = renderPageView({});
+
+		await expect(getLastArgs(update).loadPage(2)).rejects.toThrow();
+	});
+
+	it('rejects when the page request fails', async () => {
+		const {update} = renderPageView({
+			requestPage: jest.fn().mockRejectedValue(new Error('Failed')),
+		});
+
+		await expect(getLastArgs(update).loadPage(2)).rejects.toThrow('Failed');
+	});
+
+	it('keeps the same instance when the items change', () => {
+		const {rerenderWithItems, visualizationMode} = renderPageView({
+			requestPage: jest.fn().mockResolvedValue(PAGE),
+		});
+
+		rerenderWithItems([...ITEMS, {id: 3, name: 'Sample3'}]);
+
+		expect(visualizationMode).toHaveBeenCalledTimes(1);
+		expect(destroy).not.toHaveBeenCalled();
+	});
+});
