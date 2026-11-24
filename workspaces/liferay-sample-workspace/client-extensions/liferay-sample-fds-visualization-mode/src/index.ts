@@ -112,16 +112,102 @@ const fdsVisualizationMode: FDSVisualizationMode = (container) => {
 
 	container.append(timeline);
 
-	const draw = ({items, schema, selection}: FDSVisualizationModeArgs) => {
+	// The data set shows only its first page, with its own pagination hidden by
+	// the view. This visualization mode keeps the pages it loads after it, and
+	// loads the next one when the sentinel, always the last entry, scrolls into
+	// view. Selecting an item calls update() again on this same instance, so
+	// the pages kept here are drawn again with the data set's.
+
+	const loadedItems: Array<FDSVisualizationModeItem> = [];
+
+	let args: FDSVisualizationModeArgs | undefined;
+	let destroyed = false;
+	let failed = false;
+	let loading = false;
+	let nextPage = 2;
+	let pagesLeft = true;
+
+	const sentinel = document.createElement('li');
+
+	sentinel.ariaHidden = 'true';
+	sentinel.className = 'liferay-sample-fds-timeline-sentinel';
+
+	const getItems = () => [...(args?.items ?? []), ...loadedItems];
+
+	const observer = new IntersectionObserver((entries) => {
+		if (
+			!args ||
+			!entries.some((entry) => entry.isIntersecting) ||
+			!pagesLeft ||
+			loading ||
+			failed
+		) {
+			return;
+		}
+
+		loading = true;
+
+		args.loadPage(nextPage)
+			.then((page) => {
+				const itemsKey = args?.selection?.itemsKey;
+
+				const loadedValues = new Set(
+					getItems().map((item) => (itemsKey ? item[itemsKey] : item))
+				);
+
+				loadedItems.push(
+					...page.items.filter(
+						(item) => !itemsKey || !loadedValues.has(item[itemsKey])
+					)
+				);
+
+				nextPage = page.page + 1;
+				pagesLeft = !!page.items.length && page.page < page.lastPage;
+			})
+			.catch(() => {
+				failed = true;
+
+				sentinel.textContent = 'Could not load more items';
+			})
+			.finally(() => {
+				loading = false;
+
+				if (args && !destroyed) {
+					draw(args);
+				}
+			});
+	});
+
+	const draw = (nextArgs: FDSVisualizationModeArgs) => {
+		args = nextArgs;
+
+		const items = getItems();
+
 		timeline.replaceChildren(
 			...items.map((item) =>
-				createEntry(dateTimeFormat, item, schema, selection)
-			)
+				createEntry(
+					dateTimeFormat,
+					item,
+					nextArgs.schema,
+					nextArgs.selection
+				)
+			),
+			...(pagesLeft && items.length < nextArgs.total ? [sentinel] : [])
 		);
+
+		// Observing again reports the sentinel even if it never left the view,
+		// which a page that does not fill the viewport needs.
+
+		observer.unobserve(sentinel);
+		observer.observe(sentinel);
 	};
 
 	return {
-		destroy: () => {},
+		destroy: () => {
+			destroyed = true;
+
+			observer.disconnect();
+		},
 		update: draw,
 	};
 };

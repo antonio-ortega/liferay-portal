@@ -33,6 +33,7 @@ export default function propsTransformer({
 				contentRenderer: 'clientExtension',
 				contentRendererClientExtension: true,
 				contentRendererModuleURL: `default from ${fdsVisualizationModeCET.url}`,
+				initialPaginationDelta: 5,
 				label: fdsVisualizationModeCET.label,
 				name: `clientExtension-${fdsVisualizationModeCET.externalReferenceCode}`,
 				schema: {
@@ -40,6 +41,7 @@ export default function propsTransformer({
 					description: 'description',
 					title: 'title',
 				},
+				showPagination: false,
 				thumbnail: fdsVisualizationModeCET.icon,
 			},
 		],
