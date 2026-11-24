@@ -82,6 +82,7 @@ export interface IFrontendDataSetContext {
 	openModal: Function;
 	openSidePanel: Function;
 	portletId?: string;
+	requestPage?: (page: number) => Promise<IDataSetData>;
 	saveDataSetUserConfigurationURL?: string;
 	searchAsYouType: boolean;
 	searchParam?: string;
@@ -99,6 +100,7 @@ export interface IFrontendDataSetContext {
 	sorts?: Array<TSort>;
 	style?: string;
 	toggleItemInlineEdit: Function;
+	total?: number;
 	uniformActionsDisplay?: boolean;
 	updateActiveSorts: IConfigInURLUpdaterThunk<EConfigInURLKeys.ACTIVE_SORTS>;
 	updateAdditionalAPIURLParameters: (parameters: string) => void;
