@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {TSort} from '@liferay/frontend-data-set-web';
+import {IDataSetData, TSort} from '@liferay/frontend-data-set-web';
 import {useCallback, useMemo, useState} from 'react';
 
 import {getSubtasks} from '../../../../../utils/api';
@@ -46,18 +46,37 @@ function toTreeTask(task: ITask): TreeTask {
 }
 
 /**
- * Builds the tree from the data set items (the top-level tasks), the
- * subtasks loaded on expand, and the tasks updated by row actions.
+ * Builds the tree from the top-level tasks (the data set items plus the
+ * pages this hook requested), the subtasks loaded on expand, and the tasks
+ * updated by row actions.
  */
 export default function useTaskTree({
 	apiURL,
 	items,
+	requestPage,
 	sorts,
+	total,
 }: {
 	apiURL: string;
 	items: ITask[];
+	requestPage?: (page: number) => Promise<IDataSetData>;
 	sorts?: TSort[];
+	total: number;
 }) {
+
+	// The pages requested after the one the data set shows belong to the
+	// items they follow, so a new set of items drops them.
+
+	const [nextPages, setNextPages] = useState<{
+		items: ITask[];
+		loadedItems: ITask[];
+		page: number;
+	}>({items, loadedItems: [], page: 1});
+
+	if (nextPages.items !== items) {
+		setNextPages({items, loadedItems: [], page: 1});
+	}
+
 	const [subtasksByTaskId, setSubtasksByTaskId] = useState(
 		new Map<number, ITask[]>()
 	);
@@ -80,8 +99,38 @@ export default function useTaskTree({
 					: treeTask;
 			});
 
-		return buildTreeTasks(items);
-	}, [items, subtasksByTaskId, updatesByTaskId]);
+		return buildTreeTasks([...items, ...nextPages.loadedItems]);
+	}, [items, nextPages.loadedItems, subtasksByTaskId, updatesByTaskId]);
+
+	const hasMore =
+		!!requestPage && items.length + nextPages.loadedItems.length < total;
+
+	const loadMore = useCallback(async () => {
+		const data = await requestPage!(nextPages.page + 1);
+
+		setNextPages((nextPages) => {
+			if (nextPages.items !== items) {
+				return nextPages;
+			}
+
+			const taskIds = new Set(
+				[...items, ...nextPages.loadedItems].map(
+					(task) => task.embedded.id
+				)
+			);
+
+			return {
+				...nextPages,
+				loadedItems: [
+					...nextPages.loadedItems,
+					...(data.items as ITask[]).filter(
+						(task) => !taskIds.has(task.embedded.id)
+					),
+				],
+				page: data.page,
+			};
+		});
+	}, [items, nextPages.page, requestPage]);
 
 	const loadSubtasks = useCallback(
 		async (task: ITask) => {
@@ -112,5 +161,5 @@ export default function useTaskTree({
 		[]
 	);
 
-	return {loadSubtasks, treeTasks, updateTask};
+	return {hasMore, loadMore, loadSubtasks, treeTasks, updateTask};
 }

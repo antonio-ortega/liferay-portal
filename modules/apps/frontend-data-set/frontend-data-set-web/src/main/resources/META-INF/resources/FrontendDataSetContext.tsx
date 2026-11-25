@@ -49,7 +49,6 @@ export interface IFrontendDataSetContext {
 	formId?: string;
 	formName?: string;
 	globalFDSState: IFDSState;
-	hasMoreItems?: boolean;
 	hideManagementBarInEmptyState?: boolean;
 	highlightItems: Function;
 	highlightedItemsValue?: Array<string>;
@@ -64,7 +63,6 @@ export interface IFrontendDataSetContext {
 	itemsActions?: Array<IItemsActions>;
 	itemsChanges?: {[key: string]: any};
 	loadData: Function;
-	loadMoreItems?: () => Promise<void>;
 	modalId?: string;
 	namespace?: string;
 	nestedItemsKey?: string;

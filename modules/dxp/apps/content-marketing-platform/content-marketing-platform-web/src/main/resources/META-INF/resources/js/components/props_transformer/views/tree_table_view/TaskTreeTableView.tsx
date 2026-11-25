@@ -73,7 +73,7 @@ interface TaskTreeTableViewProps {
 
 /**
  * Lists the tasks of a project as a tree. The data set items are the
- * top-level tasks, and the data set loads the next ones on scroll. Subtasks
+ * top-level tasks, and the view requests the next ones on scroll. Subtasks
  * load when their task is expanded. With a search or a filter, the list is
  * flat and shows the parent of each task.
  */
@@ -83,8 +83,9 @@ export default function TaskTreeTableView({
 	itemsActions,
 	onItemSelectionChange,
 }: TaskTreeTableViewProps) {
-	const {globalFDSState, hasMoreItems, loadMoreItems, selectable, sorts} =
-		useContext(FrontendDataSetContext);
+	const {globalFDSState, requestPage, selectable, sorts, total} = useContext(
+		FrontendDataSetContext
+	);
 
 	const flat =
 		!!globalFDSState?.search?.query ||
@@ -92,15 +93,18 @@ export default function TaskTreeTableView({
 			(filter: {active?: boolean}) => filter.active
 		);
 
-	const {loadSubtasks, treeTasks, updateTask} = useTaskTree({
-		apiURL,
-		items,
-		sorts,
-	});
+	const {hasMore, loadMore, loadSubtasks, treeTasks, updateTask} =
+		useTaskTree({
+			apiURL,
+			items,
+			requestPage,
+			sorts,
+			total: total ?? 0,
+		});
 
 	const {loading, sentinelRef} = useInfiniteScroll({
-		hasMore: !!hasMoreItems && !!loadMoreItems,
-		onLoadMore: loadMoreItems!,
+		hasMore,
+		onLoadMore: loadMore,
 	});
 
 	const columns = useMemo(
