@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import ClayAlert from '@clayui/alert';
 import React, {useContext, useEffect, useMemo, useRef, useState} from 'react';
 
 import FrontendDataSetContext, {
 	IFrontendDataSetContext,
 } from '../../FrontendDataSetContext';
+import ViewErrorAlert from '../ViewErrorAlert';
 
 import type {
 	FDSVisualizationMode,
@@ -29,12 +29,47 @@ interface IClientExtensionViewProps {
 	visualizationMode?: FDSVisualizationMode;
 }
 
+/**
+ * The module URL of a view is expressed as "<export> from <url>".
+ */
+export function getModuleURL(contentRendererModuleURL?: string) {
+	return contentRendererModuleURL?.replace(/^\S+ from /, '');
+}
+
+/**
+ * A module can load chunks that live next to it, so errors thrown from any
+ * script in the same directory are attributed to it. A module served from the
+ * root of an origin is only matched by its exact URL, since its directory
+ * would also cover unrelated scripts.
+ */
+function getModuleScope(moduleURL: string) {
+	try {
+		const {origin, pathname} = new URL(moduleURL, window.location.href);
+
+		const directory = pathname.slice(0, pathname.lastIndexOf('/') + 1);
+
+		return directory.length > 1 ? origin + directory : moduleURL;
+	}
+	catch {
+		return moduleURL;
+	}
+}
+
+function isModuleFile(moduleURL: string | undefined, filename?: string) {
+	return (
+		!!moduleURL &&
+		!!filename &&
+		(filename === moduleURL ||
+			filename.startsWith(getModuleScope(moduleURL)))
+	);
+}
+
 function isFromModule(moduleURL: string | undefined, error: unknown) {
 	return (
 		!!moduleURL &&
 		error instanceof Error &&
 		typeof error.stack === 'string' &&
-		error.stack.includes(moduleURL)
+		error.stack.includes(getModuleScope(moduleURL))
 	);
 }
 
@@ -146,7 +181,7 @@ export default function ClientExtensionView({
 
 		const handleError = (event: ErrorEvent) => {
 			if (
-				event.filename === moduleURL ||
+				isModuleFile(moduleURL, event.filename) ||
 				isFromModule(moduleURL, event.error)
 			) {
 				logError(visualizationMode, event.error ?? event.message);
@@ -193,17 +228,7 @@ export default function ClientExtensionView({
 
 	return (
 		<>
-			{error && (
-				<ClayAlert
-					className="m-3"
-					displayType="danger"
-					title={Liferay.Language.get('error')}
-				>
-					{Liferay.Language.get(
-						'this-visualization-mode-could-not-be-displayed'
-					)}
-				</ClayAlert>
-			)}
+			{error && <ViewErrorAlert />}
 
 			<div hidden={error} ref={containerRef} />
 		</>
@@ -211,9 +236,11 @@ export default function ClientExtensionView({
 }
 
 export function getClientExtensionViewComponent(
-	visualizationMode?: FDSVisualizationMode,
-	moduleURL?: string
+	visualizationMode: FDSVisualizationMode,
+	contentRendererModuleURL: string
 ) {
+	const moduleURL = getModuleURL(contentRendererModuleURL);
+
 	return function VisualizationModeClientExtensionView(
 		props: Omit<
 			IClientExtensionViewProps,

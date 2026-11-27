@@ -98,6 +98,8 @@ import {
 	VisibleFieldNames,
 } from './utils/types';
 import useConfigInURL, {useUpdateConfig} from './utils/useConfigInURL';
+import ViewErrorAlert from './views/ViewErrorAlert';
+import ViewErrorBoundary from './views/ViewErrorBoundary';
 import ViewsContext, {
 	ISnapshot,
 	ISnapshots,
@@ -1609,13 +1611,18 @@ const FrontendDataSetContent = ({
 					return;
 				}
 
-				console.error(error);
+				console.error(
+					'The visualization mode client extension module',
+					contentRendererModuleURL,
+					'could not be loaded.',
+					error
+				);
 
 				if (isMounted()) {
 					viewsDispatch({
 						type: EViewsActionTypes.UPDATE_VIEW_COMPONENT,
 						value: {
-							component: getClientExtensionViewComponent(),
+							component: ViewErrorAlert,
 							name: activeViewName,
 						},
 					});
@@ -1869,45 +1876,47 @@ const FrontendDataSetContent = ({
 				{items?.length ||
 				overrideEmptyResultView ||
 				inlineAddingSettings ? (
-					<View
-						frontendDataSetContext={FrontendDataSetContext}
-						header={header}
-						items={items}
-						itemsActions={itemsActions}
-						onItemSelectionChange={(
-							selectedItem: ISelectionFilterStateItem,
-							forceSingleSelection: boolean
-						) => {
-							if (allItemsSelectedActive) {
-								setSelectedItems(
-									items.filter(
-										(item) =>
-											getObjectValueFromPath({
-												object: item,
-												path: selectedItemsKey,
-											}) !==
-											getObjectValueFromPath({
-												object: selectedItem,
-												path: selectedItemsKey,
-											})
-									)
-								);
+					<ViewErrorBoundary key={activeViewName}>
+						<View
+							frontendDataSetContext={FrontendDataSetContext}
+							header={header}
+							items={items}
+							itemsActions={itemsActions}
+							onItemSelectionChange={(
+								selectedItem: ISelectionFilterStateItem,
+								forceSingleSelection: boolean
+							) => {
+								if (allItemsSelectedActive) {
+									setSelectedItems(
+										items.filter(
+											(item) =>
+												getObjectValueFromPath({
+													object: item,
+													path: selectedItemsKey,
+												}) !==
+												getObjectValueFromPath({
+													object: selectedItem,
+													path: selectedItemsKey,
+												})
+										)
+									);
 
-								setAllItemsSelectedActive(false);
-							}
-							else {
-								selectItems(
-									getObjectValueFromPath({
-										object: selectedItem,
-										path: selectedItemsKey,
-									}),
-									forceSingleSelection
-								);
-							}
-						}}
-						style={style}
-						{...currentViewProps}
-					/>
+									setAllItemsSelectedActive(false);
+								}
+								else {
+									selectItems(
+										getObjectValueFromPath({
+											object: selectedItem,
+											path: selectedItemsKey,
+										}),
+										forceSingleSelection
+									);
+								}
+							}}
+							style={style}
+							{...currentViewProps}
+						/>
+					</ViewErrorBoundary>
 				) : (
 					<EmptyState
 						creationMenu={creationMenu}

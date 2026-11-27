@@ -353,6 +353,38 @@ describe('FrontendDataSet', () => {
 		consoleErrorSpy.mockRestore();
 	});
 
+	it('keeps the rest of the data set usable when a view throws while rendering', async () => {
+		const consoleErrorSpy = jest
+			.spyOn(console, 'error')
+			.mockImplementation(() => {});
+
+		fetch.mockResponse(itemsResponse(['Blue']));
+
+		render(
+			<FrontendDataSet
+				apiURL="/o/products"
+				id={id}
+				views={[
+					{
+						...VIEWS[0],
+						component: () => {
+							throw new Error('Broken');
+						},
+					},
+				]}
+			/>
+		);
+
+		expect(
+			await screen.findByText(
+				'this-visualization-mode-could-not-be-displayed'
+			)
+		).toBeInTheDocument();
+		expect(screen.getByRole('searchbox')).toBeInTheDocument();
+
+		consoleErrorSpy.mockRestore();
+	});
+
 	it('keeps a stable onSearch identity across renders', async () => {
 		const requests = mockPendingRequests();
 

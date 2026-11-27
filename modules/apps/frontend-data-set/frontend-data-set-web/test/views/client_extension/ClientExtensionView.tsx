@@ -10,7 +10,7 @@ import React from 'react';
 import '@testing-library/jest-dom';
 
 import FrontendDataSetContext from '../../../src/main/resources/META-INF/resources/FrontendDataSetContext';
-import ClientExtensionView from '../../../src/main/resources/META-INF/resources/views/client_extension/ClientExtensionView';
+import {getClientExtensionViewComponent} from '../../../src/main/resources/META-INF/resources/views/client_extension/ClientExtensionView';
 
 import type {
 	FDSVisualizationMode,
@@ -68,6 +68,11 @@ const renderClientExtensionView = ({
 	selectionType?: 'multiple' | 'single';
 	visualizationMode?: FDSVisualizationMode;
 }) => {
+	const ClientExtensionView = getClientExtensionViewComponent(
+		visualizationMode,
+		`default from ${MODULE_URL}`
+	);
+
 	const getElement = (selectedItemsValue: Array<unknown>) => (
 		<FrontendDataSetContext.Provider
 			value={
@@ -82,10 +87,8 @@ const renderClientExtensionView = ({
 		>
 			<ClientExtensionView
 				items={ITEMS}
-				moduleURL={MODULE_URL}
 				onItemSelectionChange={onItemSelectionChange}
 				schema={{title: 'name'}}
-				visualizationMode={visualizationMode}
 			/>
 		</FrontendDataSetContext.Provider>
 	);
@@ -253,6 +256,30 @@ describe('ClientExtensionView', () => {
 			dispatchRejection(reason);
 
 			expect(screen.getByText(ERROR_MESSAGE)).toBeInTheDocument();
+		});
+
+		it('shows an error on an uncaught error thrown by a chunk next to its module', () => {
+			renderClientExtensionView({});
+
+			dispatchError(
+				'http://localhost/o/cx/chunk.123.js',
+				new Error('Broken')
+			);
+
+			expect(screen.getByText(ERROR_MESSAGE)).toBeInTheDocument();
+		});
+
+		it('ignores an unhandled rejection that has no stack', () => {
+			renderClientExtensionView({});
+
+			const reason = new Error('Broken');
+
+			reason.stack = '';
+
+			dispatchRejection(reason);
+			dispatchRejection('Broken');
+
+			expect(screen.queryByText(ERROR_MESSAGE)).not.toBeInTheDocument();
 		});
 
 		it('ignores errors that do not come from its module', () => {
